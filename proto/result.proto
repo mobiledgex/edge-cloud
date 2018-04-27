@@ -1,0 +1,11 @@
+// result
+
+syntax = "proto3";
+package proto;
+
+import "google/api/annotations.proto";
+
+message Result {
+  string message = 1;
+  int32 code = 2;
+}

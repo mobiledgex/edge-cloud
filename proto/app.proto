@@ -1,0 +1,43 @@
+// Application proto
+
+syntax = "proto3";
+package proto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+
+// key that uniquely identifies an application
+message AppKey {
+  // developer name
+  string dev_name = 1;
+  // application name
+  string app_name = 2;
+  // version of the app
+  string version = 3;
+  //option (protogen.generate_matches) = true;
+}
+
+// Applications are created and uploaded by developers
+// Only registered applications can access location and cloudlet services
+message App {
+  AppKey key = 1;
+  // Path to the application binary on shared storage
+  string app_path = 4;
+  // app cert?
+  // manifest - which cloudlets can this run on?
+  // which countries this can run on
+  //option (protogen.generate_matches) = true;
+  //option (protogen.generate_cud) = true;
+}
+
+service AppApi {
+  rpc CreateApp(App) returns (Result) {
+  }
+  rpc DeleteApp(App) returns (Result) {
+  }
+  rpc UpdateApp(App) returns (Result) {
+  }
+  rpc ShowApp(App) returns (stream App) {
+  }
+}

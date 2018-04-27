@@ -1,0 +1,17 @@
+// Operator proto
+
+syntax = "proto3";
+package proto;
+
+import "google/api/annotations.proto";
+
+message Operator {
+  // Company or Organization name of the operator
+  string name = 1;
+  // Internally generated unique ID of the operator
+  uint64 id = 2;
+  // Operator code consists of two pars, a mobile network code (MNC)
+  // and a mobile country code (MCC)
+  uint32 mnc = 3;
+  uint32 mcc = 4;
+}
