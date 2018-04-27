@@ -97,8 +97,18 @@ func (m *Loc) GetTimestamp() *google_protobuf1.Timestamp {
 func init() {
 	proto1.RegisterType((*Loc)(nil), "proto.Loc")
 }
-
-// message name Loc
+func (m *Loc) CopyInFields(src *Loc) {
+	m.Lat = src.Lat
+	m.Long = src.Long
+	m.HorizontalAccuracy = src.HorizontalAccuracy
+	m.VerticalAccuracy = src.VerticalAccuracy
+	m.Altitude = src.Altitude
+	m.Course = src.Course
+	m.Speed = src.Speed
+	if m.Timestamp != nil && src.Timestamp != nil {
+		*m.Timestamp = *src.Timestamp
+	}
+}
 
 func init() { proto1.RegisterFile("loc.proto", fileDescriptor5) }
 

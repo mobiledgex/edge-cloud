@@ -60,8 +60,12 @@ func (m *Operator) GetMcc() uint32 {
 func init() {
 	proto1.RegisterType((*Operator)(nil), "proto.Operator")
 }
-
-// message name Operator
+func (m *Operator) CopyInFields(src *Operator) {
+	m.Name = src.Name
+	m.Id = src.Id
+	m.Mnc = src.Mnc
+	m.Mcc = src.Mcc
+}
 
 func init() { proto1.RegisterFile("operator.proto", fileDescriptor7) }
 
