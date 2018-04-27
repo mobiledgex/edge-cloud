@@ -63,8 +63,12 @@ func (m *AppInst) GetPort() uint32 {
 func init() {
 	proto1.RegisterType((*AppInst)(nil), "proto.AppInst")
 }
-
-// message name AppInst
+func (m *AppInst) CopyInFields(src *AppInst) {
+	m.AppId = src.AppId
+	m.CloudletId = src.CloudletId
+	copy(m.Ip, src.Ip)
+	m.Port = src.Port
+}
 
 func init() { proto1.RegisterFile("app_inst.proto", fileDescriptor1) }
 
