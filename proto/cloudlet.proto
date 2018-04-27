@@ -1,0 +1,21 @@
+// Cloudlet proto
+
+syntax = "proto3";
+package proto;
+
+import "google/api/annotations.proto";
+
+// Cloudlet Sites are created and uploaded by Operators
+// This information is used to connect to and manage Cloudlets
+message Cloudlet {
+  // Name of the cloudlet
+  string name = 1;
+  // Internally generated unique ID of the cloudlet site
+  uint64 id = 2;
+  // Operator id of the cloudlet site
+  uint64 oper_id = 3;
+  // IP to use to connect to and control cloudlet site
+  bytes access_ip = 4;
+  // Location of the cloudlet site (lat, long?)
+  // Certs for accessing cloudlet site
+}
