@@ -1,0 +1,20 @@
+// gomex options
+
+syntax = "proto3";
+package protogen;
+
+import "google/protobuf/descriptor.proto";
+
+// For reference, types of options are:
+// FileOptions
+// MessageOptions
+// FieldOptions
+// EnumOptions
+// EnumValueOptions
+// ServiceOptions
+// MethodOptions
+
+extend google.protobuf.MessageOptions {
+  bool generate_matches = 51005;
+  bool generate_cud = 51006;
+}

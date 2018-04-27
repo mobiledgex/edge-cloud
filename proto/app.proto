@@ -15,7 +15,7 @@ message AppKey {
   string app_name = 2;
   // version of the app
   string version = 3;
-  //option (protogen.generate_matches) = true;
+  option (protogen.generate_matches) = true;
 }
 
 // Applications are created and uploaded by developers
@@ -27,8 +27,8 @@ message App {
   // app cert?
   // manifest - which cloudlets can this run on?
   // which countries this can run on
-  //option (protogen.generate_matches) = true;
-  //option (protogen.generate_cud) = true;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
 }
 
 service AppApi {
