@@ -1,0 +1,44 @@
+// Developer proto
+
+syntax = "proto3";
+package proto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "result.proto";
+
+message DeveloperKey {
+  //bytes fields = 1;
+  // Organization or Company Name
+  string name = 2;
+  //option (protogen.generate_matches) = true;
+}
+
+message Developer {
+  bytes fields = 1;
+  // Unique identifier key
+  DeveloperKey key = 2;
+  // auth scheme plus generic hash instead of user/pass
+  // Login name
+  string username = 3;
+  // encrypted password
+  string passhash = 4;
+  // Address
+  string address = 5;
+  // Contact email
+  string email = 6;
+  // login cert?
+  //option (protogen.generate_matches) = true;
+  //option (protogen.generate_cud) = true;
+}
+
+service DeveloperApi {
+  rpc CreateDeveloper(Developer) returns (Result) {
+  }
+  rpc DeleteDeveloper(Developer) returns (Result) {
+  }
+  rpc UpdateDeveloper(Developer) returns (Result) {
+  }
+  rpc ShowDeveloper(Developer) returns (stream Developer) {
+  }
+}
