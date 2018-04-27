@@ -62,8 +62,12 @@ func (m *Cloudlet) GetAccessIp() []byte {
 func init() {
 	proto1.RegisterType((*Cloudlet)(nil), "proto.Cloudlet")
 }
-
-// message name Cloudlet
+func (m *Cloudlet) CopyInFields(src *Cloudlet) {
+	m.Name = src.Name
+	m.Id = src.Id
+	m.OperId = src.OperId
+	copy(m.AccessIp, src.AccessIp)
+}
 
 func init() { proto1.RegisterFile("cloudlet.proto", fileDescriptor2) }
 

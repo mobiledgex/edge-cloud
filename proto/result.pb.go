@@ -40,8 +40,10 @@ func (m *Result) GetCode() int32 {
 func init() {
 	proto1.RegisterType((*Result)(nil), "proto.Result")
 }
-
-// message name Result
+func (m *Result) CopyInFields(src *Result) {
+	m.Message = src.Message
+	m.Code = src.Code
+}
 
 func init() { proto1.RegisterFile("result.proto", fileDescriptor8) }
 
