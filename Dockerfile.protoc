@@ -1,6 +1,6 @@
 #
 # docker build -t mobiledgex/protoc -f Dockerfile.protoc .
-# docker run --rm -it -v `pwd`/gosrc/github.com/mobiledgex/edge-cloud mobiledgex/protoc -l gomex -d proto 
+# docker run --rm -it -v `pwd`/go/src/github.com/mobiledgex/edge-cloud mobiledgex/protoc -l gomex -d proto 
 #   this will process all proto files under proto directory and generated files will
 #   be placed under gen/
 #
