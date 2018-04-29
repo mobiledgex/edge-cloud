@@ -1,0 +1,58 @@
+#
+# docker build -t mobiledgex/protoc -f Dockerfile.protoc .
+# docker run --rm -it -v `pwd`/go/src/github.com/mobiledgex/edge-cloud mobiledgex/protoc -l gomex -d proto 
+#   this will process all proto files under proto directory and generated files will
+#   be placed under gen/
+#
+FROM golang:alpine AS build
+
+RUN set -ex && apk --update --no-cache add \
+    bash \
+    make \
+    cmake \
+    autoconf \
+    automake \
+    curl \
+    tar \
+    libtool \
+    g++ \
+    git \
+    openjdk8-jre 
+
+WORKDIR /tmp
+COPY install-protobuf.sh /tmp
+RUN chmod +x /tmp/install-protobuf.sh
+RUN /tmp/install-protobuf.sh
+RUN git clone https://github.com/googleapis/googleapis
+
+FROM golang:alpine
+
+RUN set -ex && apk --update --no-cache add \
+    bash \
+    git \
+    libstdc++
+
+RUN go get -u google.golang.org/grpc
+RUN go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+RUN go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+RUN go get -u github.com/golang/protobuf/protoc-gen-go
+
+RUN go get -u github.com/gogo/protobuf/protoc-gen-gogo
+RUN go get -u github.com/gogo/protobuf/protoc-gen-gogofast
+RUN go get -u github.com/ckaznocha/protoc-gen-lint
+
+COPY --from=build /tmp/grpc/bins/opt/grpc_* /usr/local/bin/
+COPY --from=build /tmp/grpc/bins/opt/protobuf/protoc /usr/local/bin/
+COPY --from=build /tmp/grpc/libs/opt/ /usr/local/lib/
+COPY --from=build /tmp/grpc-java/compiler/build/exe/java_plugin/protoc-gen-grpc-java /usr/local/bin/
+COPY --from=build /tmp/googleapis/google /usr/include/google
+COPY --from=build /usr/local/include/google /usr/local/include/google
+
+ADD entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+RUN mkdir -p /go/src/github.com/mobiledgex/edge-cloud
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
+COPY . /go/src/github.com/mobiledgex/edge-cloud/
+RUN cd /go/src/github.com/mobiledgex/edge-cloud/protoc-gen-gomex && go get ./... && go build . && cp protoc-gen-gomex /usr/local/bin/
+ENTRYPOINT [ "entrypoint.sh" ]
