@@ -1,0 +1,22 @@
+#
+# docker build -t mobiledgex/edge-cloud -f Dockerfile.edge-cloud .
+# docker run -it --rm mobiledgex/edge-cloud 
+#   entry point here is bash. Inside docker ls /go/bin, you will
+#   see protoc-gen-gomex
+# This is just a starting point. It let's you compile Go code here.
+# Once service is coded, entry point will point to service.
+# Also, please see Dockderfile.protoc. That one will let you 
+# create the protocol buffer stubs from proto files.
+# All the tools will be inside the docker.
+#
+
+FROM golang:latest AS build
+
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud
+COPY . .
+
+RUN go clean ./...
+RUN go get -d -v ./...
+RUN go install -v ./...
+
+ENTRYPOINT [ "bash" ]
