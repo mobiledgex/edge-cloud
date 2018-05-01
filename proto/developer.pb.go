@@ -375,8 +375,8 @@ type DeveloperCud interface {
 	ValidateKey(in *Developer) error
 	// Get key string for etcd access
 	GetKeyString(in *Developer) string
-	//Etcd IO interface
-	EtcdIO
+	//Object storage IO interface
+	ObjStore
 	// Refresh is called after create/update/delete to update in-memory cache
 	Refresh(in *Developer, key string) error
 }
