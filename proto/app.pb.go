@@ -372,8 +372,8 @@ type AppCud interface {
 	ValidateKey(in *App) error
 	// Get key string for etcd access
 	GetKeyString(in *App) string
-	//Etcd IO interface
-	EtcdIO
+	//Object storage IO interface
+	ObjStore
 	// Refresh is called after create/update/delete to update in-memory cache
 	Refresh(in *App, key string) error
 }
