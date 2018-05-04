@@ -1,9 +1,12 @@
 package mexgen
 
 import (
-	"github.com/golang/protobuf/proto"
-	"github.com/golang/protobuf/protoc-gen-go/descriptor"
-	"github.com/golang/protobuf/protoc-gen-go/generator"
+	"text/template"
+
+	"github.com/gogo/protobuf/gogoproto"
+	"github.com/gogo/protobuf/proto"
+	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
@@ -16,8 +19,9 @@ func init() {
 }
 
 type mex struct {
-	gen  *generator.Generator
-	msgs map[string]*descriptor.DescriptorProto
+	gen         *generator.Generator
+	msgs        map[string]*descriptor.DescriptorProto
+	cudTemplate *template.Template
 }
 
 func (m *mex) Name() string {
@@ -27,6 +31,7 @@ func (m *mex) Name() string {
 func (m *mex) Init(gen *generator.Generator) {
 	m.gen = gen
 	m.msgs = make(map[string]*descriptor.DescriptorProto)
+	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 }
 
 // P forwards to g.gen.P
@@ -69,33 +74,209 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 }
 
+func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto) {
+	if field.Type == nil {
+		return
+	}
+	name := generator.CamelCase(*field.Name)
+	switch *field.Type {
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		if gogoproto.IsNullable(field) {
+			m.P("if filter.", name, " != nil && !m.", name, ".Matches(filter.", name, ") {")
+		} else {
+			m.P("if !m.", name, ".Matches(&filter.", name, ") {")
+		}
+		m.P("return false")
+		m.P("}")
+	case descriptor.FieldDescriptorProto_TYPE_GROUP:
+		// deprecated in proto3
+	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		// TODO
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		m.P("if filter.", name, " != \"\" && filter.", name, " != m.", name, "{")
+		m.P("return false")
+		m.P("}")
+	default:
+		m.P("if filter.", name, " != 0 && filter.", name, " != m.", name, "{")
+		m.P("return false")
+		m.P("}")
+	}
+}
+
+func (m *mex) generateFieldKeyString(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto) {
+	if field.Type == nil {
+		return
+	}
+	name := generator.CamelCase(*field.Name)
+	switch *field.Type {
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		m.P("s = append(s, m.", name, ".GetKeyString())")
+	case descriptor.FieldDescriptorProto_TYPE_GROUP:
+		// deprecated in proto3
+	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		// TODO
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		m.P("s = append(s, m.", name, ")")
+	default:
+		m.P("s = append(s, string(m.", name, "))")
+	}
+}
+
+func (m *mex) generateFieldCopyIn(message *descriptor.DescriptorProto, ii int, field *descriptor.FieldDescriptorProto) {
+	if ii == 0 && *field.Name == "fields" {
+		// skip fields
+		return
+	}
+	if field.OneofIndex != nil {
+		// no support for copy OneOf fields
+		return
+	}
+	name := generator.CamelCase(*field.Name)
+	if HasGrpcFields(message) {
+		m.P("if set, _ := util.GrpcFieldsGet(src.Fields, ", field.Number, "); set == true {")
+	}
+	switch *field.Type {
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		msg, ok := m.msgs[*field.TypeName]
+		if !ok || !HasGrpcFields(msg) {
+			if gogoproto.IsNullable(field) {
+				m.P("if m.", name, " != nil && src.", name, " != nil {")
+				m.P("*m.", name, " = *src.", name)
+				m.P("}")
+			} else {
+				m.P("m.", name, " = src.", name)
+			}
+		} else {
+			if gogoproto.IsNullable(field) {
+				m.P("m.", name, ".CopyInFields(src.", name, ")")
+			} else {
+				m.P("m.", name, ".CopyInFields(&src.", name, ")")
+			}
+		}
+	case descriptor.FieldDescriptorProto_TYPE_GROUP:
+		// deprecated in proto3
+	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		m.P("copy(m.", name, ", src.", name, ")")
+	default:
+		m.P("m.", name, " = src.", name)
+	}
+	if HasGrpcFields(message) {
+		m.P("}")
+	}
+}
+
+type cudTemplateArgs struct {
+	Name      string
+	KeyName   string
+	CudName   string
+	HasFields bool
+}
+
+var cudTemplateIn = `
+type {{.CudName}} interface {
+	// Validate all fields for create/update
+	Validate(in *{{.Name}}) error
+	// Validate only key fields for delete
+	ValidateKey(key *{{.KeyName}}) error
+	// Get key string for saving to persistent object storage
+	GetObjStoreKeyString(key *{{.KeyName}}) string
+	// Object storage IO interface
+	ObjStore
+	// Refresh is called after create/update/delete to update in-memory cache
+	Refresh(in *{{.Name}}, key string) error
+	// Get key string for loading all objects of this type
+	GetLoadKeyString() string
+}
+
+func (m *{{.Name}}) Create(cud {{.CudName}}) (*Result, error) {
+	err := cud.Validate(m)
+	if err != nil { return nil, err }
+	key := cud.GetObjStoreKeyString(&m.Key)
+	val, err := json.Marshal(m)
+	if err != nil { return nil, err }
+	err = cud.Create(key, string(val))
+	if err != nil { return nil, err }
+	err = cud.Refresh(m, key)
+	return &Result{}, err
+}
+
+func (m *{{.Name}}) Update(cud {{.CudName}}) (*Result, error) {
+	err := cud.Validate(m)
+	if err != nil { return nil, err }
+	key := cud.GetObjStoreKeyString(&m.Key)
+	var vers int64 = 0
+{{- if (.HasFields)}}
+	curBytes, vers, err := cud.Get(key)
+	if err != nil { return nil, err }
+	var cur {{.Name}}
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil { return nil, err }
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+{{- else}}
+	val, err := json.Marshal(m)
+{{- end}}
+	if err != nil { return nil, err }
+	err = cud.Update(key, string(val), vers)
+	if err != nil { return nil, err }
+	err = cud.Refresh(m, key)
+	return &Result{}, err
+}
+
+func (m *{{.Name}}) Delete(cud {{.CudName}}) (*Result, error) {
+	err := cud.ValidateKey(&m.Key)
+	if err != nil { return nil, err }
+	key := cud.GetObjStoreKeyString(&m.Key)
+	err = cud.Delete(key)
+	if err != nil { return nil, err }
+	err = cud.Refresh(m, key)
+	return &Result{}, err
+}
+
+type LoadAll{{.Name}}sCb func(m *{{.Name}}) error
+
+func LoadAll{{.Name}}s(cud {{.CudName}}, cb LoadAll{{.Name}}sCb) error {
+	loadkey := cud.GetLoadKeyString()
+	err := cud.List(loadkey, func(key, val []byte) error {
+		var obj {{.Name}}
+		err := json.Unmarshal(val, &obj)
+		if err != nil {
+			util.WarnLog("Failed to parse {{.Name}} data", "val", string(val))
+			return nil
+		}
+		err = cb(&obj)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
+}
+
+func LoadOne{{.Name}}(cud {{.CudName}}, key string) (*{{.Name}}, error) {
+	val, _, err := cud.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var obj {{.Name}}
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		util.DebugLog(util.DebugLevelApi, "Failed to parse {{.Name}} data", "val", string(val))
+		return nil, err
+	}
+	return &obj, nil
+}
+
+`
+
 func (m *mex) generateMessage(file *generator.FileDescriptor, message *descriptor.DescriptorProto) {
 	if GetGenerateMatches(message) && message.Field != nil {
 		m.P("func (m *", message.Name, ") Matches(filter *", message.Name, ") bool {")
 		m.P("if filter == nil { return true }")
 		for _, field := range message.Field {
-			if field.Type == nil {
-				continue
-			}
-			name := generator.CamelCase(*field.Name)
-			switch *field.Type {
-			case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-				m.P("if filter.", name, " != nil && !filter.", name, ".Matches(m.", name, ") {")
-				m.P("return false")
-				m.P("}")
-			case descriptor.FieldDescriptorProto_TYPE_GROUP:
-				// deprecated in proto3
-			case descriptor.FieldDescriptorProto_TYPE_BYTES:
-				// TODO
-			case descriptor.FieldDescriptorProto_TYPE_STRING:
-				m.P("if filter.", name, " != \"\" && filter.", name, " != m.", name, "{")
-				m.P("return false")
-				m.P("}")
-			default:
-				m.P("if filter.", name, " != 0 && filter.", name, " != m.", name, "{")
-				m.P("return false")
-				m.P("}")
-			}
+			m.generateFieldMatches(message, field)
 		}
 		m.P("return true")
 		m.P("}")
@@ -113,103 +294,36 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, message *descripto
 	}
 	m.P("func (m *", message.Name, ") CopyInFields(src *", message.Name, ") {")
 	for ii, field := range message.Field {
-		if ii == 0 && *field.Name == "fields" {
-			// skip fields
-			continue
-		}
-		if field.OneofIndex != nil {
-			// no support for copy OneOf fields
-			continue
-		}
-		name := generator.CamelCase(*field.Name)
-		if HasGrpcFields(message) {
-			m.P("if set, _ := util.GrpcFieldsGet(src.Fields, ", field.Number, "); set == true {")
-		}
-		switch *field.Type {
-		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			msg, ok := m.msgs[*field.TypeName]
-			if !ok || !HasGrpcFields(msg) {
-				m.P("if m.", name, " != nil && src.", name, " != nil {")
-				m.P("*m.", name, " = *src.", name)
-				m.P("}")
-			} else {
-				m.P("m.", name, ".CopyInFields(src.", name, ")")
-			}
-		case descriptor.FieldDescriptorProto_TYPE_GROUP:
-			// deprecated in proto3
-		case descriptor.FieldDescriptorProto_TYPE_BYTES:
-			m.P("copy(m.", name, ", src.", name, ")")
-		default:
-			m.P("m.", name, " = src.", name)
-		}
-		if HasGrpcFields(message) {
-			m.P("}")
-		}
+		m.generateFieldCopyIn(message, ii, field)
 	}
 	m.P("}")
+	m.P("")
 
 	if GetGenerateCud(message) {
-		m.P("type ", message.Name, "Cud interface {")
-		m.P("// Validate all fields for create/update")
-		m.P("Validate(in *", message.Name, ") error")
-		m.P("// Validate only Key fields for delete")
-		m.P("ValidateKey(in *", message.Name, ") error")
-		m.P("// Get key string for etcd access")
-		m.P("GetKeyString(in *", message.Name, ") string")
-		m.P("//Object storage IO interface")
-		m.P("ObjStore")
-		m.P("// Refresh is called after create/update/delete to update in-memory cache")
-		m.P("Refresh(in *", message.Name, ", key string) error")
-		m.P("}")
-		m.P("")
-
-		m.P("func (m *", message.Name, ") Create(cud ", message.Name, "Cud) (*Result, error) {")
-		m.P("err := cud.Validate(m)")
-		m.P("if err != nil { return nil, err }")
-		m.P("key := cud.GetKeyString(m)")
-		m.P("val, err := json.Marshal(m)")
-		m.P("if err != nil { return nil, err }")
-		m.P("err = cud.Create(key, string(val))")
-		m.P("if err != nil { return nil, err }")
-		m.P("err = cud.Refresh(m, key)")
-		m.P("return &Result{}, err")
-		m.P("}")
-		m.P("")
-
-		m.P("func (m *", message.Name, ") Update(cud ", message.Name, "Cud) (*Result, error) {")
-		m.P("err := cud.Validate(m)")
-		m.P("if err != nil { return nil, err }")
-		m.P("key := cud.GetKeyString(m)")
-		m.P("var vers int64 = 0")
-		if HasGrpcFields(message) {
-			m.P("curBytes, vers, err := cud.Get(key)")
-			m.P("if err != nil { return nil, err }")
-			m.P("var cur ", message.Name)
-			m.P("err = json.Unmarshal(curBytes, &cur)")
-			m.P("if err != nil { return nil, err }")
-			m.P("cur.CopyInFields(m)")
-			m.P("// never save fields")
-			m.P("cur.Fields = nil")
-			m.P("val, err := json.Marshal(cur)")
-		} else {
-			m.P("val, err := json.Marshal(m)")
+		if !HasMessageKey(message) {
+			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
-		m.P("if err != nil { return nil, err }")
-		m.P("err = cud.Update(key, string(val), vers)")
-		m.P("if err != nil { return nil, err }")
-		m.P("err = cud.Refresh(m, key)")
-		m.P("return &Result{}, err")
+		args := cudTemplateArgs{
+			Name:      *message.Name,
+			CudName:   *message.Name + "Cud",
+			KeyName:   *message.Name + "Key",
+			HasFields: HasGrpcFields(message),
+		}
+		m.cudTemplate.Execute(m.gen.Buffer, args)
+	}
+	if GetObjKey(message) {
+		m.P("func (m *", message.Name, ") GetKeyString() string {")
+		m.P("s := make([]string, 0, ", len(message.Field), ")")
+		for _, field := range message.Field {
+			m.generateFieldKeyString(message, field)
+		}
+		m.P("return strings.Join(s, \"/\")")
 		m.P("}")
 		m.P("")
-
-		m.P("func (m *", message.Name, ") Delete(cud ", message.Name, "Cud) (*Result, error) {")
-		m.P("err := cud.ValidateKey(m)")
-		m.P("if err != nil { return nil, err }")
-		m.P("key := cud.GetKeyString(m)")
-		m.P("err = cud.Delete(key)")
-		m.P("if err != nil { return nil, err }")
-		m.P("err = cud.Refresh(m, key)")
-		m.P("return &Result{}, err")
+	}
+	if HasMessageKey(message) {
+		m.P("func (m *", message.Name, ") GetKey() ObjKey {")
+		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
 	}
@@ -218,49 +332,47 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, message *descripto
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {
 	if len(service.Method) != 0 {
 		for _, method := range service.Method {
-			m.generateMethod(file, method)
+			m.generateMethod(file, service, method)
 		}
 	}
 }
 
-func (m *mex) generateMethod(file *generator.FileDescriptor, method *descriptor.MethodDescriptorProto) {
+func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
 
 }
 
 func HasGrpcFields(message *descriptor.DescriptorProto) bool {
-	if message.Field != nil && *message.Field[0].Name == "fields" && *message.Field[0].Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+	if message.Field != nil && len(message.Field) > 0 && *message.Field[0].Name == "fields" && *message.Field[0].Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+		return true
+	}
+	return false
+}
+
+func HasMessageKey(message *descriptor.DescriptorProto) bool {
+	if message.Field == nil {
+		return false
+	}
+	if len(message.Field) > 0 && *message.Field[0].Name == "key" {
+		return true
+	}
+	if len(message.Field) > 1 && HasGrpcFields(message) && *message.Field[1].Name == "key" {
 		return true
 	}
 	return false
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {
-	return getMessageOptionBool(message, protogen.E_GenerateMatches, false)
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateMatches, false)
 }
 
 func GetGenerateCud(message *descriptor.DescriptorProto) bool {
-	return getMessageOptionBool(message, protogen.E_GenerateCud, false)
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
 }
 
-func getMethodOptionBool(method *descriptor.MethodDescriptorProto, extension *proto.ExtensionDesc, defVal bool) bool {
-	if method.Options == nil {
-		return defVal
-	}
-	ex, err := proto.GetExtension(method.Options, extension)
-	if err != nil || ex == nil {
-		return defVal
-	}
-	return *(ex.(*bool))
-
+func GetObjKey(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_ObjKey, false)
 }
 
-func getMessageOptionBool(message *descriptor.DescriptorProto, extension *proto.ExtensionDesc, defVal bool) bool {
-	if message.Options == nil {
-		return defVal
-	}
-	ex, err := proto.GetExtension(message.Options, extension)
-	if err != nil || ex == nil {
-		return defVal
-	}
-	return *(ex.(*bool))
+func GetShowObjStream(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protogen.E_ShowObjStream, false)
 }

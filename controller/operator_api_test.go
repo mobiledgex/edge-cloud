@@ -7,14 +7,15 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
-func TestDeveloperApi(t *testing.T) {
+func TestOperatorApi(t *testing.T) {
 	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelApi)
+	InitRegion(1)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	api := InitDeveloperApi(&dummy)
-	testutil.InternalDeveloperCudTest(t, api, DevData)
+	api := InitOperatorApi(&dummy)
 
+	testutil.InternalOperatorCudTest(t, api, OperatorData)
 	dummy.Stop()
 }

@@ -8,7 +8,7 @@ import (
 	"regexp"
 )
 
-var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&]*$")
+var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 
 func ValidName(name string) bool {
 	return nameMatch.MatchString(name)

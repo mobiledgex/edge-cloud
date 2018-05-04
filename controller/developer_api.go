@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/proto"
@@ -25,16 +24,8 @@ func InitDeveloperApi(objStore proto.ObjStore) *DeveloperApi {
 	api.mux.Lock()
 	defer api.mux.Unlock()
 
-	// read existing data into memory
-	key := proto.Developer{}
-	err := objStore.List(api.GetKeyString(&key), func(key, val []byte) error {
-		var dev proto.Developer
-		err := json.Unmarshal(val, &dev)
-		if err != nil {
-			util.WarnLog("Failed to parse developer data", "val", string(val))
-			return nil
-		}
-		api.developers[*dev.Key] = &dev
+	err := proto.LoadAllDevelopers(api, func(obj *proto.Developer) error {
+		api.developers[obj.Key] = obj
 		return nil
 	})
 	if err != nil {
@@ -43,41 +34,44 @@ func InitDeveloperApi(objStore proto.ObjStore) *DeveloperApi {
 	return api
 }
 
-func (s *DeveloperApi) ValidateKey(in *proto.Developer) error {
-	if in.Key == nil {
-		errors.New("Developer key not specified")
+func (s *DeveloperApi) ValidateKey(key *proto.DeveloperKey) error {
+	if key == nil {
+		return errors.New("Developer key not specified")
 	}
-	if !util.ValidName(in.Key.Name) {
-		errors.New("invalid developer name")
+	if !util.ValidName(key.Name) {
+		return errors.New("invalid developer name")
 	}
 	return nil
 }
 
 func (s *DeveloperApi) Validate(in *proto.Developer) error {
-	return s.ValidateKey(in)
+	return s.ValidateKey(&in.Key)
 }
 
-func (s *DeveloperApi) GetKeyString(in *proto.Developer) string {
-	if in.Key == nil {
-		return GetObjStoreKey(DeveloperType, "")
-	}
-	return GetObjStoreKey(DeveloperType, in.Key.Name)
+func (s *DeveloperApi) HasDeveloper(key *proto.DeveloperKey) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	_, found := s.developers[*key]
+	return found
+}
+
+func (s *DeveloperApi) GetObjStoreKeyString(key *proto.DeveloperKey) string {
+	return GetObjStoreKey(DeveloperType, key.GetKeyString())
+}
+
+func (s *DeveloperApi) GetLoadKeyString() string {
+	return GetObjStoreKey(DeveloperType, "")
 }
 
 func (s *DeveloperApi) Refresh(in *proto.Developer, key string) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	val, _, err := s.ObjStore.Get(key)
+	obj, err := proto.LoadOneDeveloper(s, key)
 	if err == nil {
-		var dev proto.Developer
-		err = json.Unmarshal(val, &dev)
-		if err != nil {
-			util.DebugLog(util.DebugLevelApi, "Failed to parse developer data", "val", string(val))
-			return err
-		}
-		s.developers[*in.Key] = &dev
+		s.developers[in.Key] = obj
 	} else if err == proto.ObjStoreErrKeyNotFound {
-		delete(s.developers, *in.Key)
+		delete(s.developers, in.Key)
 		err = nil
 	}
 	return err

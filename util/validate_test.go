@@ -19,6 +19,8 @@ func TestValidName(t *testing.T) {
 	checkValidName(t, "Deusche Telekom AG", true)
 	checkValidName(t, "Telefonica S.A.", true)
 	checkValidName(t, "AT&T Inc.", true)
+	checkValidName(t, "Niantic, Inc.", true)
+	checkValidName(t, "Pokemon Go!", true)
 	checkValidName(t, "", false)
 	checkValidName(t, " name", false)
 	checkValidName(t, "-name", false)

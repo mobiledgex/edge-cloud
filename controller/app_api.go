@@ -4,9 +4,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -20,24 +18,20 @@ type AppApi struct {
 	apps map[proto.AppKey]*proto.App
 	// table lock
 	mux util.Mutex
+	// reference to developers
+	devApi *DeveloperApi
 }
 
-func InitAppApi(objStore proto.ObjStore) *AppApi {
+func InitAppApi(objStore proto.ObjStore, devApi *DeveloperApi) *AppApi {
 	api := &AppApi{ObjStore: objStore}
 	api.apps = make(map[proto.AppKey]*proto.App)
+	api.devApi = devApi
 
 	api.mux.Lock()
 	defer api.mux.Unlock()
 
-	key := proto.App{}
-	err := objStore.List(api.GetKeyString(&key), func(key, val []byte) error {
-		var app proto.App
-		err := json.Unmarshal(val, &app)
-		if err != nil {
-			util.WarnLog("Failed to parse app data", "val", string(val))
-			return nil
-		}
-		api.apps[*app.Key] = &app
+	err := proto.LoadAllApps(api, func(obj *proto.App) error {
+		api.apps[obj.Key] = obj
 		return nil
 	})
 	if err != nil {
@@ -46,55 +40,54 @@ func InitAppApi(objStore proto.ObjStore) *AppApi {
 	return api
 }
 
-func (s *AppApi) ValidateKey(in *proto.App) error {
-	if in.Key == nil {
-		errors.New("App key not specified")
+func (s *AppApi) ValidateKey(key *proto.AppKey) error {
+	if key == nil {
+		return errors.New("App key not specified")
 	}
-	if !util.ValidName(in.Key.DevName) {
-		return errors.New("Invalid app developer name")
+	if err := s.devApi.ValidateKey(&key.DeveloperKey); err != nil {
+		return err
 	}
-	if !util.ValidName(in.Key.AppName) {
+	if !s.devApi.HasDeveloper(&key.DeveloperKey) {
+		return errors.New("Specified developer not found")
+	}
+	if !util.ValidName(key.Name) {
 		return errors.New("Invalid app name")
 	}
-	if !util.ValidName(in.Key.Version) {
+	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
 	return nil
 }
 
 func (s *AppApi) Validate(in *proto.App) error {
-	return s.ValidateKey(in)
+	// TODO: validate other fields?
+	return s.ValidateKey(&in.Key)
 }
 
-func (s *AppApi) GetKeyString(in *proto.App) string {
-	var str string
-	key := in.Key
-	if key == nil || key.DevName == "" {
-		str = ""
-	} else if key.AppName == "" {
-		str = key.DevName
-	} else if key.Version == "" {
-		str = fmt.Sprintf("%s/%s", key.DevName, key.AppName)
-	} else {
-		str = fmt.Sprintf("%s/%s/%s", key.DevName, key.AppName, key.Version)
-	}
-	return GetObjStoreKey(AppType, str)
+func (s *AppApi) HasApp(key *proto.AppKey) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+
+	_, found := s.apps[*key]
+	return found
+}
+
+func (s *AppApi) GetObjStoreKeyString(key *proto.AppKey) string {
+	return GetObjStoreKey(AppType, key.GetKeyString())
+}
+
+func (s *AppApi) GetLoadKeyString() string {
+	return GetObjStoreKey(AppType, "")
 }
 
 func (s *AppApi) Refresh(in *proto.App, key string) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	val, _, err := s.ObjStore.Get(key)
+	obj, err := proto.LoadOneApp(s, key)
 	if err == nil {
-		var app proto.App
-		err = json.Unmarshal(val, &app)
-		if err != nil {
-			util.DebugLog(util.DebugLevelApi, "Failed to parse app data", "val", string(val))
-			return err
-		}
-		s.apps[*in.Key] = &app
+		s.apps[in.Key] = obj
 	} else if err == proto.ObjStoreErrKeyNotFound {
-		delete(s.apps, *in.Key)
+		delete(s.apps, in.Key)
 		err = nil
 	}
 	return err
