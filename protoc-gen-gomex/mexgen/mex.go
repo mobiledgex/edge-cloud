@@ -372,7 +372,3 @@ func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 func GetObjKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjKey, false)
 }
-
-func GetShowObjStream(method *descriptor.MethodDescriptorProto) bool {
-	return proto.GetBoolExtension(method.Options, protogen.E_ShowObjStream, false)
-}
