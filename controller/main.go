@@ -59,11 +59,27 @@ func main() {
 	}
 
 	developerApi := InitDeveloperApi(objStore)
-	appApi := InitAppApi(objStore)
+	if developerApi == nil {
+		util.FatalLog("Failed to initialize developer API")
+	}
+	appApi := InitAppApi(objStore, developerApi)
+	if appApi == nil {
+		util.FatalLog("Failed to initialize app API")
+	}
+	operatorApi := InitOperatorApi(objStore)
+	if operatorApi == nil {
+		util.FatalLog("Failed to initialize operator API")
+	}
+	cloudletApi := InitCloudletApi(objStore, operatorApi)
+	if cloudletApi == nil {
+		util.FatalLog("Failed to initialize cloudlet API")
+	}
 
 	server := grpc.NewServer()
 	pb.RegisterDeveloperApiServer(server, developerApi)
 	pb.RegisterAppApiServer(server, appApi)
+	pb.RegisterOperatorApiServer(server, operatorApi)
+	pb.RegisterCloudletApiServer(server, cloudletApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
