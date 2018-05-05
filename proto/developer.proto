@@ -6,18 +6,21 @@ package proto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message DeveloperKey {
   //bytes fields = 1;
   // Organization or Company Name
   string name = 2;
   option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
 }
 
 message Developer {
   bytes fields = 1;
   // Unique identifier key
-  DeveloperKey key = 2;
+  DeveloperKey key = 2 [(gogoproto.nullable) = false];
   // auth scheme plus generic hash instead of user/pass
   // Login name
   string username = 3;
@@ -26,7 +29,7 @@ message Developer {
   // Address
   string address = 5;
   // Contact email
-  string email = 6;
+  string email = 6 [(protogen.test_update) = true];
   // login cert?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

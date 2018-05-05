@@ -19,3 +19,11 @@ type ObjStore interface {
 var ObjStoreErrNotInitialized = errors.New("Object Storage not initialized")
 var ObjStoreErrKeyNotFound = errors.New("Key not found")
 var ObjStoreErrKeyExists = errors.New("Key already exists")
+
+type ObjKey interface {
+	GetKeyString() string
+}
+
+type CudObj interface {
+	GetKey() ObjKey
+}
