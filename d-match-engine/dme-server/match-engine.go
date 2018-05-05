@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	dme "../dme-proto"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
 const (
