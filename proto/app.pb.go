@@ -7,30 +7,23 @@
 	It is generated from these files:
 		app.proto
 		cloudlet.proto
-		debug.proto
 		developer.proto
 		loc.proto
-		matcher.proto
 		operator.proto
 		result.proto
-		update.proto
 
 	It has these top-level messages:
 		AppKey
 		App
 		CloudletKey
 		Cloudlet
-		DebugLevel
 		DeveloperKey
 		Developer
 		Loc
-		ServiceRequest
-		ServiceReply
 		OperatorCode
 		OperatorKey
 		Operator
 		Result
-		Update
 */
 package proto
 
