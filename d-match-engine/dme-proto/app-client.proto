@@ -1,0 +1,86 @@
+// Device service APIs
+
+syntax = "proto3";
+package distributed_match_engine;
+
+//import "loc.proto";
+
+message Loc {
+  // latitude in WGS 84 coordinates
+  double lat = 1;
+  // longitude in WGS 84 coordinates
+  double long = 2;
+  // horizontal accuracy (radius in meters)
+  double horizontal_accuracy = 3;
+  // veritical accuracy (meters)
+  double vertical_accuracy = 4;
+  // On android only lat and long are guaranteed to be supplied
+  // altitude in meters
+  double altitude = 5;
+  // course (IOS) / bearing (Android) (degrees east relative to true north)
+  double course = 6;
+  // speed (IOS) / velocity (Android) (meters/sec)
+  double speed = 7;
+  // timestamp
+  //google.protobuf.Timestamp timestamp = 8;
+}
+
+
+message Match_Engine_Request {
+  uint32 ver = 1;
+  // User ID type - IMEI, MSISDN etc
+  enum ID_type {
+    IMEI = 0;
+    MSISDN = 1;
+  }
+  ID_type id_type = 2;
+  // Actual ID
+  string id = 3;
+  // The carrier that user is connected to
+  uint64 carrier = 4;
+  // The tower that user is currently connected to
+  uint64 tower = 5;
+  // The GPS location of the user 
+  Loc gps_location = 6;
+  // Edge-cloud assigned application ID
+  uint64 app_id = 7;
+  // Protocol application uses
+  bytes protocol = 8;
+  // The protocol port on the server side
+  bytes server_port = 9;
+    // Id of the application
+}
+
+message Match_Engine_Reply {
+  uint32 ver = 1;
+  // ip of the app service
+  bytes service_ip = 2;
+  // port of the app service?
+  uint32 server_port = 3;
+  // location of the cloudlet?
+  Loc cloudlet_location = 4;
+}
+
+message Match_Engine_Loc_Verify {
+  uint32 ver = 1;
+  // Status of the reply
+  enum Tower_Status {
+    UNKNOWN = 0;
+    CONNECTED_TO_SPECIFIED_TOWER = 1;
+    NOT_CONNECTED_TO_SPECIFIED_TOWER = 2;
+  }
+  Tower_Status tower_status = 2;
+  enum GPS_Location_Status {
+    LOC_UNKNOWN = 0;
+    LOC_WITHIN_1M = 1;
+    LOC_WITHIN_10M = 2;
+  }
+  GPS_Location_Status gps_location_status = 3;
+}
+
+service Match_Engine_Api {
+  rpc FindCloudlet(Match_Engine_Request) returns (Match_Engine_Reply) {}
+  rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
+}
+
+
