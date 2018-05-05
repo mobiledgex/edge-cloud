@@ -4,14 +4,45 @@ syntax = "proto3";
 package proto;
 
 import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "result.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-message Operator {
+message OperatorCode {
+  // Operator code consists of two pars, a mobile network code (MNC)
+  // and a mobile country code (MCC). These are strings instead of
+  // integers to preserve leading zeros which have meaning.
+  // A single operator (like AT&T) may have multiple operator codes
+  // across countries and in the same country for different wireless bands.
+  string MNC = 1;
+  string MCC = 2;
+  option (protogen.generate_matches) = true;
+}
+
+message OperatorKey {
   // Company or Organization name of the operator
   string name = 1;
-  // Internally generated unique ID of the operator
-  uint64 id = 2;
-  // Operator code consists of two pars, a mobile network code (MNC)
-  // and a mobile country code (MCC)
-  uint32 mnc = 3;
-  uint32 mcc = 4;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message Operator {
+  bytes fields = 1;
+  // Unique identifier key
+  OperatorKey key = 2 [(gogoproto.nullable) = false];
+  // TODO: access schema/credentials
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+}
+
+service OperatorApi {
+  rpc CreateOperator(Operator) returns (Result) {
+  }
+  rpc DeleteOperator(Operator) returns (Result) {
+  }
+  rpc UpdateOperator(Operator) returns (Result) {
+  }
+  rpc ShowOperator(Operator) returns (stream Operator) {
+  }
 }
