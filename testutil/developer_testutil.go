@@ -22,6 +22,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Auto-generated code: DO NOT EDIT
+
 type ShowDeveloper struct {
 	data map[string]edgeproto.Developer
 	grpc.ServerStream

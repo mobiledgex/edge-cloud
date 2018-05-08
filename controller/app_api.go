@@ -34,7 +34,7 @@ func InitAppApi(objStore proto.ObjStore, devApi *DeveloperApi) *AppApi {
 		api.apps[obj.Key] = obj
 		return nil
 	})
-	if err != nil {
+	if err != nil && err == context.DeadlineExceeded {
 		util.WarnLog("Init apps failed", "error", err)
 	}
 	return api
