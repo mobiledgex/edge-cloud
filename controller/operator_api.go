@@ -25,7 +25,7 @@ func InitOperatorApi(objStore proto.ObjStore) *OperatorApi {
 		api.operators[obj.Key] = obj
 		return nil
 	})
-	if err != nil {
+	if err != nil && err == context.DeadlineExceeded {
 		util.WarnLog("Init Operators failed", "error", err)
 	}
 	return api

@@ -42,11 +42,27 @@ message App {
 
 service AppApi {
   rpc CreateApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/app"
+      body: "*"
+    };
   }
   rpc DeleteApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/app"
+      body: "*"
+    };
   }
   rpc UpdateApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/app"
+      body: "*"
+    };
   }
   rpc ShowApp(App) returns (stream App) {
+    option (google.api.http) = {
+      post: "/show/app"
+      body: "*"
+    };
   }
 }

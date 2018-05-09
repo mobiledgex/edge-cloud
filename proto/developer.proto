@@ -37,11 +37,27 @@ message Developer {
 
 service DeveloperApi {
   rpc CreateDeveloper(Developer) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/developer"
+      body: "*"
+    };
   }
   rpc DeleteDeveloper(Developer) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/developer"
+      body: "*"
+    };
   }
   rpc UpdateDeveloper(Developer) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/developer"
+      body: "*"
+    };
   }
   rpc ShowDeveloper(Developer) returns (stream Developer) {
+    option (google.api.http) = {
+      post: "/show/developer"
+      body: "*"
+    };
   }
 }

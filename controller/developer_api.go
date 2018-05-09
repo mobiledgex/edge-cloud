@@ -28,7 +28,7 @@ func InitDeveloperApi(objStore proto.ObjStore) *DeveloperApi {
 		api.developers[obj.Key] = obj
 		return nil
 	})
-	if err != nil {
+	if err != nil && err == context.DeadlineExceeded {
 		util.WarnLog("Init developers failed", "error", err)
 	}
 	return api

@@ -38,11 +38,27 @@ message Operator {
 
 service OperatorApi {
   rpc CreateOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/operator"
+      body: "*"
+    };
   }
   rpc DeleteOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/operator"
+      body: "*"
+    };
   }
   rpc UpdateOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/operator"
+      body: "*"
+    };
   }
   rpc ShowOperator(Operator) returns (stream Operator) {
+    option (google.api.http) = {
+      post: "/show/operator"
+      body: "*"
+    };
   }
 }
