@@ -53,6 +53,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Auto-generated code: DO NOT EDIT
+
 type ShowApp struct {
 	data map[string]edgeproto.App
 	grpc.ServerStream

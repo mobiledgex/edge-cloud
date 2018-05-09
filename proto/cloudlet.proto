@@ -35,11 +35,27 @@ message Cloudlet {
 
 service CloudletApi {
   rpc CreateCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/developer"
+      body: "*"
+    };
   }
   rpc DeleteCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/developer"
+      body: "*"
+    };
   }
   rpc UpdateCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/developer"
+      body: "*"
+    };
   }
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
+    option (google.api.http) = {
+      post: "/show/developer"
+      body: "*"
+    };
   }
 }

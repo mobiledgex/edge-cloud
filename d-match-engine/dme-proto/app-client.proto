@@ -3,28 +3,7 @@
 syntax = "proto3";
 package distributed_match_engine;
 
-//import "loc.proto";
-
-message Loc {
-  // latitude in WGS 84 coordinates
-  double lat = 1;
-  // longitude in WGS 84 coordinates
-  double long = 2;
-  // horizontal accuracy (radius in meters)
-  double horizontal_accuracy = 3;
-  // veritical accuracy (meters)
-  double vertical_accuracy = 4;
-  // On android only lat and long are guaranteed to be supplied
-  // altitude in meters
-  double altitude = 5;
-  // course (IOS) / bearing (Android) (degrees east relative to true north)
-  double course = 6;
-  // speed (IOS) / velocity (Android) (meters/sec)
-  double speed = 7;
-  // timestamp
-  //google.protobuf.Timestamp timestamp = 8;
-}
-
+import "github.com/mobiledgex/edge-cloud/proto/loc.proto";
 
 message Match_Engine_Request {
   uint32 ver = 1;
@@ -41,7 +20,7 @@ message Match_Engine_Request {
   // The tower that user is currently connected to
   uint64 tower = 5;
   // The GPS location of the user 
-  Loc gps_location = 6;
+  proto.Loc gps_location = 6;
   // Edge-cloud assigned application ID
   uint64 app_id = 7;
   // Protocol application uses
@@ -58,7 +37,7 @@ message Match_Engine_Reply {
   // port of the app service?
   uint32 server_port = 3;
   // location of the cloudlet?
-  Loc cloudlet_location = 4;
+  proto.Loc cloudlet_location = 4;
 }
 
 message Match_Engine_Loc_Verify {
