@@ -29,7 +29,7 @@ func InitCloudletApi(objStore proto.ObjStore, opApi *OperatorApi) *CloudletApi {
 		api.cloudlets[obj.Key] = obj
 		return nil
 	})
-	if err != nil {
+	if err != nil && err == context.DeadlineExceeded {
 		util.WarnLog("Init cloudlets failed", "error", err)
 	}
 	return api

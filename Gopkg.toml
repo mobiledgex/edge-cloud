@@ -24,13 +24,15 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+  "github.com/golang/protobuf/protoc-gen-go",
+  "github.com/gogo/protobuf/protoc-gen-gogo",
+  "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
+]
+
 [[constraint]]
   name = "github.com/coreos/etcd"
   version = "3.3.4"
-
-[[constraint]]
-  name = "github.com/golang/protobuf"
-  version = "1.0.0"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
@@ -60,6 +62,22 @@
     name = "github.com/gogo/googleapis"
     non-go = false
 
+  [[prune.project]]
+    name = "github.com/golang/protobuf"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/grpc-ecosystem/grpc-gateway"
+    non-go = false
+
 [[constraint]]
   name = "github.com/spf13/cobra"
   version = "0.0.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/gogo/gateway"
+
+[[constraint]]
+  version = "1.1.0"
+  name = "github.com/golang/protobuf"

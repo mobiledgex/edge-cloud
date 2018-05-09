@@ -3,9 +3,11 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 
@@ -20,7 +22,8 @@ var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testi
 var region = flag.Uint("region", 1, "Region")
 var clientIP = flag.String("clientIP", "127.0.0.1", "client listener port")
 var clientPort = flag.Uint("clientPort", 2380, "client listener port")
-var apiPort = flag.Uint("apiPort", 55001, "API listener port ")
+var apiPort = flag.Uint("apiPort", 55001, "API listener port")
+var httpPort = flag.Uint("httpPort", 8091, "HTTP listener port")
 
 func GetRootDir() string {
 	return *rootDir
@@ -88,6 +91,26 @@ func main() {
 		}
 	}()
 	defer server.Stop()
+
+	// REST gateway
+	mux := http.NewServeMux()
+	gw, err := grpcGateway(address)
+	if err != nil {
+		util.FatalLog("Failed to create grpc gateway", "error", err)
+	}
+	mux.Handle("/", gw)
+	httpAddress := fmt.Sprintf("%s:%d", *clientIP, *httpPort)
+	httpServer := &http.Server{
+		Addr:    httpAddress,
+		Handler: mux,
+	}
+	go func() {
+		// Serve REST gateway
+		if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+			util.FatalLog("Failed to serve HTTP", "error", err)
+		}
+	}()
+	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)

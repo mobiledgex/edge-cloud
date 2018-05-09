@@ -21,6 +21,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Auto-generated code: DO NOT EDIT
+
 type ShowCloudlet struct {
 	data map[string]edgeproto.Cloudlet
 	grpc.ServerStream
