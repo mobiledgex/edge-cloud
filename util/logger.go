@@ -7,6 +7,7 @@ import "go.uber.org/zap"
 const (
 	DebugLevelEtcd uint64 = 1 << iota
 	DebugLevelApi
+	DebugLevelNotify
 )
 
 var slogger *zap.SugaredLogger

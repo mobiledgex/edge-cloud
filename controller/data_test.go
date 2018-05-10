@@ -124,3 +124,55 @@ var CloudletData = []proto.Cloudlet{
 		AccessIp: []byte{172, 30, 0, 1},
 	},
 }
+var AppInstData = []proto.AppInst{
+	proto.AppInst{
+		Key: proto.AppInstKey{
+			AppKey:      AppData[0].Key,
+			CloudletKey: CloudletData[0].Key,
+			Id:          1,
+		},
+		Liveness: proto.AppInst_STATIC,
+		Ip:       []byte{10, 100, 10, 1},
+		Port:     8089,
+	},
+	proto.AppInst{
+		Key: proto.AppInstKey{
+			AppKey:      AppData[0].Key,
+			CloudletKey: CloudletData[0].Key,
+			Id:          2,
+		},
+		Liveness: proto.AppInst_DYNAMIC,
+		Ip:       []byte{10, 100, 10, 2},
+		Port:     8089,
+	},
+	proto.AppInst{
+		Key: proto.AppInstKey{
+			AppKey:      AppData[0].Key,
+			CloudletKey: CloudletData[1].Key,
+			Id:          1,
+		},
+		Liveness: proto.AppInst_STATIC,
+		Ip:       []byte{172, 24, 1, 1},
+		Port:     1443,
+	},
+	proto.AppInst{
+		Key: proto.AppInstKey{
+			AppKey:      AppData[1].Key,
+			CloudletKey: CloudletData[1].Key,
+			Id:          1,
+		},
+		Liveness: proto.AppInst_STATIC,
+		Ip:       []byte{172, 24, 1, 1},
+		Port:     2443,
+	},
+	proto.AppInst{
+		Key: proto.AppInstKey{
+			AppKey:      AppData[2].Key,
+			CloudletKey: CloudletData[2].Key,
+			Id:          1,
+		},
+		Liveness: proto.AppInst_STATIC,
+		Ip:       []byte{192, 168, 1, 1},
+		Port:     54321,
+	},
+}
