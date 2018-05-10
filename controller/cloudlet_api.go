@@ -79,7 +79,26 @@ func (s *CloudletApi) Refresh(in *proto.Cloudlet, key string) error {
 		delete(s.cloudlets, in.Key)
 		err = nil
 	}
+	// TODO: If location changed, update location in all associate app insts
 	return err
+}
+
+func (s *CloudletApi) GetAllKeys(keys map[proto.CloudletKey]bool) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	for key, _ := range s.cloudlets {
+		keys[key] = true
+	}
+}
+
+func (s *CloudletApi) GetCloudlet(key *proto.CloudletKey, val *proto.Cloudlet) bool {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	inst, found := s.cloudlets[*key]
+	if found {
+		*val = *inst
+	}
+	return found
 }
 
 func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *proto.Cloudlet) (*proto.Result, error) {

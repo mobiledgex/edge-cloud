@@ -6,31 +6,32 @@
 
 	It is generated from these files:
 		app.proto
+		app_inst.proto
 		cloudlet.proto
 		debug.proto
 		developer.proto
 		loc.proto
-		matcher.proto
+		notice.proto
 		operator.proto
 		result.proto
-		update.proto
 
 	It has these top-level messages:
 		AppKey
 		App
+		AppInstKey
+		AppInst
 		CloudletKey
 		Cloudlet
 		DebugLevel
 		DeveloperKey
 		Developer
 		Loc
-		ServiceRequest
-		ServiceReply
+		Notice
+		NoticeReply
 		OperatorCode
 		OperatorKey
 		Operator
 		Result
-		Update
 */
 package proto
 

@@ -1,6 +1,7 @@
 package mexgen
 
 import (
+	"fmt"
 	"text/template"
 
 	"github.com/gogo/protobuf/gogoproto"
@@ -81,10 +82,16 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	name := generator.CamelCase(*field.Name)
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		nullcheck := ""
+		ref := "&"
 		if gogoproto.IsNullable(field) {
-			m.P("if filter.", name, " != nil && !m.", name, ".Matches(filter.", name, ") {")
+			nullcheck = fmt.Sprintf("filter.%s != nil && m.%s != nil && ", name, name)
+			ref = ""
+		}
+		if *field.TypeName == ".google.protobuf.Timestamp" {
+			m.P("if ", nullcheck, "(m.", name, ".Seconds != filter.", name, ".Seconds || m.", name, ".Nanos != filter.", name, ".Nanos) {")
 		} else {
-			m.P("if !m.", name, ".Matches(&filter.", name, ") {")
+			m.P("if ", nullcheck, "!m.", name, ".Matches(", ref, "filter.", name, ") {")
 		}
 		m.P("return false")
 		m.P("}")

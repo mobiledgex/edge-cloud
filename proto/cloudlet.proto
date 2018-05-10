@@ -7,6 +7,7 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "operator.proto";
 import "result.proto";
+import "loc.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message CloudletKey {
@@ -28,6 +29,7 @@ message Cloudlet {
   // IP to use to connect to and control cloudlet site
   bytes access_ip = 4;
   // Location of the cloudlet site (lat, long?)
+  Loc location = 5 [(gogoproto.nullable) = false];
   // Certs for accessing cloudlet site
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
