@@ -77,6 +77,11 @@ func main() {
 	if cloudletApi == nil {
 		util.FatalLog("Failed to initialize cloudlet API")
 	}
+	appInstApi := InitAppInstApi(objStore, appApi, cloudletApi)
+	if appInstApi == nil {
+		util.FatalLog("Failed to initialize app inst API")
+	}
+	InitNotifySenders(appInstApi, cloudletApi)
 
 	server := grpc.NewServer()
 	pb.RegisterDeveloperApiServer(server, developerApi)

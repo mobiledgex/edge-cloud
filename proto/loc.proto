@@ -8,6 +8,7 @@ syntax = "proto3";
 package proto;
 
 import "google/protobuf/timestamp.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
 message Loc {
   // latitude in WGS 84 coordinates
@@ -27,4 +28,5 @@ message Loc {
   double speed = 7;
   // timestamp
   google.protobuf.Timestamp timestamp = 8;
+  option (protogen.generate_matches) = true;
 }

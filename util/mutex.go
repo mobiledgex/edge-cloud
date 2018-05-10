@@ -15,3 +15,7 @@ func (m *Mutex) Lock() {
 func (m *Mutex) Unlock() {
 	m.mux.Unlock()
 }
+
+func (m *Mutex) InitCond(cond *sync.Cond) {
+	cond.L = &m.mux
+}
