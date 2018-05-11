@@ -10,7 +10,9 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/notify"
 	pb "github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
@@ -20,10 +22,13 @@ import (
 var rootDir = flag.String("r", "", "root directory; set for testing")
 var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testing")
 var region = flag.Uint("region", 1, "Region")
-var clientIP = flag.String("clientIP", "127.0.0.1", "client listener port")
-var clientPort = flag.Uint("clientPort", 2380, "client listener port")
+var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
+var apiIP = flag.String("apiIP", "127.0.0.1", "API listener IP")
 var apiPort = flag.Uint("apiPort", 55001, "API listener port")
 var httpPort = flag.Uint("httpPort", 8091, "HTTP listener port")
+var matcherAddrs = flag.String("matcherAddrs", "", "comma separated list of distributed matching engine addresses")
+var cloudletMgrAddrs = flag.String("cloudletMgrAddrs", "", "comma separated list of cloudlet manager addresses")
+var debugLevels = flag.String("d", "", "comma separated list of debug levels")
 
 func GetRootDir() string {
 	return *rootDir
@@ -36,6 +41,7 @@ var mainStarted chan struct{}
 
 func main() {
 	flag.Parse()
+	util.SetDebugLevelStrs(*debugLevels)
 
 	util.InfoLog("Start up", "rootDir", *rootDir, "apiPort", *apiPort)
 	InitRegion(uint32(*region))
@@ -45,16 +51,19 @@ func main() {
 		if err != nil {
 			util.FatalLog("No clientIP and clientPort specified, starting local etcd server failed: %s", err)
 		}
-		clientIP = &etcdServer.Config.ClientIP
-		clientPort = &etcdServer.Config.ClientPort
+		etcdUrls = &etcdServer.Config.ClientUrls
 		defer etcdServer.Stop()
 	}
-	objStore, err := GetEtcdClientBasic(*clientIP, *clientPort)
+	objStore, err := GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
 		util.FatalLog("Failed to initialize Object Store")
 	}
+	err = objStore.CheckConnected(50, 20*time.Millisecond)
+	if err != nil {
+		util.FatalLog("Failed to connect to etcd servers")
+	}
 
-	address := fmt.Sprintf("%s:%d", *clientIP, *apiPort)
+	address := fmt.Sprintf("%s:%d", *apiIP, *apiPort)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		util.FatalLog("Failed to listen on address", "address", address,
@@ -81,7 +90,9 @@ func main() {
 	if appInstApi == nil {
 		util.FatalLog("Failed to initialize app inst API")
 	}
-	InitNotifySenders(appInstApi, cloudletApi)
+	notify.InitNotifySenders(NewControllerNotifier(appInstApi, cloudletApi))
+	notify.RegisterMatcherAddrs(*matcherAddrs)
+	notify.RegisterCloudletAddrs(*cloudletMgrAddrs)
 
 	server := grpc.NewServer()
 	pb.RegisterDeveloperApiServer(server, developerApi)
@@ -104,7 +115,7 @@ func main() {
 		util.FatalLog("Failed to create grpc gateway", "error", err)
 	}
 	mux.Handle("/", gw)
-	httpAddress := fmt.Sprintf("%s:%d", *clientIP, *httpPort)
+	httpAddress := fmt.Sprintf("%s:%d", *apiIP, *httpPort)
 	httpServer := &http.Server{
 		Addr:    httpAddress,
 		Handler: mux,
@@ -123,6 +134,7 @@ func main() {
 	if mainStarted != nil {
 		close(mainStarted)
 	}
+	util.InfoLog("Ready")
 
 	// wait until process in killed/interrupted
 	sig := <-sigChan

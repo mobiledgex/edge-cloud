@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -79,6 +80,7 @@ func (s *CloudletApi) Refresh(in *proto.Cloudlet, key string) error {
 		delete(s.cloudlets, in.Key)
 		err = nil
 	}
+	notify.UpdateCloudlet(&in.Key)
 	// TODO: If location changed, update location in all associate app insts
 	return err
 }

@@ -1,4 +1,4 @@
-package main
+package testutil
 
 import "github.com/mobiledgex/edge-cloud/proto"
 

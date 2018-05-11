@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/proto"
@@ -39,14 +41,29 @@ func TestController(t *testing.T) {
 	operApi := proto.NewOperatorApiClient(conn)
 	cloudletApi := proto.NewCloudletApiClient(conn)
 
-	testutil.ClientDeveloperCudTest(t, devApi, DevData)
-	testutil.ClientAppCudTest(t, appApi, AppData)
-	testutil.ClientOperatorCudTest(t, operApi, OperatorData)
-	testutil.ClientCloudletCudTest(t, cloudletApi, CloudletData)
+	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
+	testutil.ClientAppCudTest(t, appApi, testutil.AppData)
+	testutil.ClientOperatorCudTest(t, operApi, testutil.OperatorData)
+	testutil.ClientCloudletCudTest(t, cloudletApi, testutil.CloudletData)
 
 	util.InfoLog("done")
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly
 	<-mainDone
+}
+
+func TestDataGen(t *testing.T) {
+	out, err := os.Create("data_test.json")
+	if err != nil {
+		assert.Nil(t, err, "open file")
+		return
+	}
+	for _, obj := range testutil.DevData {
+		val, err := json.Marshal(&obj)
+		assert.Nil(t, err, "marshal %s", obj.Key.GetKeyString())
+		out.Write(val)
+		out.WriteString("\n")
+	}
+	out.Close()
 }

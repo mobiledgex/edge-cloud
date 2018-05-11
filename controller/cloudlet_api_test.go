@@ -21,17 +21,17 @@ func TestCloudletApi(t *testing.T) {
 
 	// cannot create cloudlets without apps
 	ctx := context.TODO()
-	for _, obj := range CloudletData {
+	for _, obj := range testutil.CloudletData {
 		_, err := api.CreateCloudlet(ctx, &obj)
 		assert.NotNil(t, err, "Create cloudlet without operator")
 	}
 
 	// create operators
-	for _, obj := range OperatorData {
+	for _, obj := range testutil.OperatorData {
 		_, err := operApi.CreateOperator(ctx, &obj)
 		assert.Nil(t, err, "Create operator")
 	}
 
-	testutil.InternalCloudletCudTest(t, api, CloudletData)
+	testutil.InternalCloudletCudTest(t, api, testutil.CloudletData)
 	dummy.Stop()
 }
