@@ -94,7 +94,7 @@ func TestEtcdReal(t *testing.T) {
 	_, err = os.Stat(etcd.Config.LogFile)
 	assert.Nil(t, err, "Stat log file %s", etcd.Config.LogFile)
 
-	objStore, err := GetEtcdClientBasic(etcd.Config.ClientIP, etcd.Config.ClientPort)
+	objStore, err := GetEtcdClientBasic(etcd.Config.ClientUrls)
 	assert.Nil(t, err, "Etcd client")
 	if err != nil {
 		return
