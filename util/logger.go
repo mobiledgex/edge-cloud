@@ -2,12 +2,25 @@
 
 package util
 
-import "go.uber.org/zap"
+import (
+	"strings"
+
+	"go.uber.org/zap"
+)
 
 const (
 	DebugLevelEtcd uint64 = 1 << iota
 	DebugLevelApi
 	DebugLevelNotify
+)
+
+// these must be in the same order as above
+var (
+	DebugLevelStrs = []string{
+		"etcd",
+		"api",
+		"notify",
+	}
 )
 
 var slogger *zap.SugaredLogger
@@ -48,4 +61,21 @@ func ClearDebugLevel(lvl uint64) {
 
 func GetDebugLevel() uint64 {
 	return debugLevel
+}
+
+func SetDebugLevelStr(str string) {
+	for ii, def := range DebugLevelStrs {
+		if str == def {
+			SetDebugLevel(uint64(1) << uint(ii))
+			return
+		}
+	}
+	InfoLog("Debug level not found", "string", str)
+}
+
+func SetDebugLevelStrs(list string) {
+	strs := strings.Split(list, ",")
+	for _, str := range strs {
+		SetDebugLevelStr(str)
+	}
 }

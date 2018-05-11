@@ -21,18 +21,18 @@ func TestAppApi(t *testing.T) {
 
 	// cannot create apps without developer
 	ctx := context.TODO()
-	for _, obj := range AppData {
+	for _, obj := range testutil.AppData {
 		_, err := api.CreateApp(ctx, &obj)
 		assert.NotNil(t, err, "Create app without developer")
 	}
 
 	// create developers
-	for _, obj := range DevData {
+	for _, obj := range testutil.DevData {
 		_, err := devApi.CreateDeveloper(ctx, &obj)
 		assert.Nil(t, err, "Create developer")
 	}
 
-	testutil.InternalAppCudTest(t, api, AppData)
+	testutil.InternalAppCudTest(t, api, testutil.AppData)
 
 	dummy.Stop()
 }

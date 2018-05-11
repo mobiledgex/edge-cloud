@@ -15,12 +15,13 @@
 // the server is sending the updates, and on send failure, has no way to tell
 // the client that it needs to reconnect to the server.
 
-package main
+package notify
 
 import (
 	"context"
 	"errors"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -42,6 +43,21 @@ const (
 	NotifyTypeCloudletMgr
 )
 
+type NotifySendHandler interface {
+	// Get all the keys for known app insts.
+	// The value associated with the key is ignored.
+	GetAllAppInstKeys(keys map[proto.AppInstKey]bool)
+	// Copy back the value for the app inst.
+	// If the app inst was not found, return false instead of true.
+	GetAppInst(key *proto.AppInstKey, buf *proto.AppInst) bool
+	// Get all the keys for known cloudlets.
+	// The value associated with the key is ignored.
+	GetAllCloudletKeys(keys map[proto.CloudletKey]bool)
+	// Copy back the value for the cloudlet.
+	// If the cloudlet was not found, return false instead of true.
+	GetCloudlet(key *proto.CloudletKey, buf *proto.Cloudlet) bool
+}
+
 type NotifySenderStats struct {
 	AppInstsSent  uint64
 	CloudletsSent uint64
@@ -49,33 +65,50 @@ type NotifySenderStats struct {
 }
 
 type NotifySender struct {
-	addr        string
-	appInsts    map[proto.AppInstKey]bool
-	cloudlets   map[proto.CloudletKey]bool
-	mux         util.Mutex
-	cond        sync.Cond
-	done        bool
-	appInstApi  *AppInstApi
-	cloudletApi *CloudletApi
-	stats       NotifySenderStats
-	version     uint32
-	ntype       NotifyType
-	running     chan int
+	addr      string
+	appInsts  map[proto.AppInstKey]bool
+	cloudlets map[proto.CloudletKey]bool
+	mux       util.Mutex
+	cond      sync.Cond
+	done      bool
+	handler   NotifySendHandler
+	stats     NotifySenderStats
+	version   uint32
+	ntype     NotifyType
+	running   chan int
 }
 
 type NotifySenders struct {
-	table       map[string]*NotifySender
-	mux         util.Mutex
-	appInstApi  *AppInstApi
-	cloudletApi *CloudletApi
+	table   map[string]*NotifySender
+	mux     util.Mutex
+	handler NotifySendHandler
 }
 
 var notifySenders NotifySenders
 
-func InitNotifySenders(appInstApi *AppInstApi, cloudletApi *CloudletApi) {
+func InitNotifySenders(handler NotifySendHandler) {
 	notifySenders.table = make(map[string]*NotifySender)
-	notifySenders.appInstApi = appInstApi
-	notifySenders.cloudletApi = cloudletApi
+	notifySenders.handler = handler
+}
+
+func RegisterMatcherAddrs(addrs string) {
+	if addrs == "" {
+		return
+	}
+	list := strings.Split(addrs, ",")
+	for _, addr := range list {
+		RegisterReceiver(addr, NotifyTypeMatcher)
+	}
+}
+
+func RegisterCloudletAddrs(addrs string) {
+	if addrs == "" {
+		return
+	}
+	list := strings.Split(addrs, ",")
+	for _, addr := range list {
+		RegisterReceiver(addr, NotifyTypeCloudletMgr)
+	}
 }
 
 func RegisterReceiver(addr string, ntype NotifyType) {
@@ -90,7 +123,7 @@ func RegisterReceiver(addr string, ntype NotifyType) {
 	notifier.addr = addr
 	notifier.appInsts = make(map[proto.AppInstKey]bool)
 	notifier.mux.InitCond(&notifier.cond)
-	notifier.appInstApi = notifySenders.appInstApi
+	notifier.handler = notifySenders.handler
 	notifier.ntype = ntype
 	notifier.running = make(chan int)
 	notifySenders.table[addr] = notifier
@@ -228,7 +261,7 @@ func (s *NotifySender) Run() {
 			sendAll = true
 		}
 		s.mux.Lock()
-		for len(s.appInsts) == 0 && !s.done && !sendAll {
+		for len(s.appInsts) == 0 && len(s.cloudlets) == 0 && !s.done && !sendAll {
 			s.cond.Wait()
 		}
 		appInsts := s.appInsts
@@ -242,16 +275,16 @@ func (s *NotifySender) Run() {
 		if sendAll {
 			util.DebugLog(util.DebugLevelNotify, "Send all", "addr", s.addr)
 			if s.ntype == NotifyTypeMatcher {
-				s.appInstApi.GetAllKeys(appInsts)
+				s.handler.GetAllAppInstKeys(appInsts)
 			}
 			if s.ntype == NotifyTypeCloudletMgr {
-				s.cloudletApi.GetAllKeys(cloudlets)
+				s.handler.GetAllCloudletKeys(cloudlets)
 			}
 		}
 		// send appInsts
 		notice.Data = &noticeAppInst
 		for key, _ := range appInsts {
-			found := s.appInstApi.GetAppInst(&key, &appInst)
+			found := s.handler.GetAppInst(&key, &appInst)
 			if found {
 				notice.Action = proto.NoticeAction_UPDATE
 			} else {
@@ -268,7 +301,7 @@ func (s *NotifySender) Run() {
 		// send cloudlets
 		notice.Data = &noticeCloudlet
 		for key, _ := range cloudlets {
-			found := s.cloudletApi.GetCloudlet(&key, &cloudlet)
+			found := s.handler.GetCloudlet(&key, &cloudlet)
 			if found {
 				notice.Action = proto.NoticeAction_UPDATE
 			} else {

@@ -16,6 +16,6 @@ func TestOperatorApi(t *testing.T) {
 
 	api := InitOperatorApi(&dummy)
 
-	testutil.InternalOperatorCudTest(t, api, OperatorData)
+	testutil.InternalOperatorCudTest(t, api, testutil.OperatorData)
 	dummy.Stop()
 }
