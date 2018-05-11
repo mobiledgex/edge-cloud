@@ -4,7 +4,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
@@ -13,7 +13,7 @@ import (
 )
 
 type EtcdClient struct {
-	client clientv3.KV
+	client *clientv3.Client
 	config clientv3.Config
 }
 
@@ -22,15 +22,15 @@ var (
 	ReadRequestTimeout  = 2 * time.Second
 )
 
-func GetEtcdClientBasic(clientIP string, clientPort uint) (proto.ObjStore, error) {
-	clientUrl := fmt.Sprintf("http://%s:%d", clientIP, clientPort)
+func GetEtcdClientBasic(clientUrls string) (*EtcdClient, error) {
+	endpoints := strings.Split(clientUrls, ",")
 	cfg := clientv3.Config{
-		Endpoints: []string{clientUrl},
+		Endpoints: endpoints,
 	}
 	return GetEtcdClient(&cfg)
 }
 
-func GetEtcdClient(cfg *clientv3.Config) (proto.ObjStore, error) {
+func GetEtcdClient(cfg *clientv3.Config) (*EtcdClient, error) {
 	client, err := clientv3.New(*cfg)
 	if err != nil {
 		return nil, err
@@ -40,6 +40,20 @@ func GetEtcdClient(cfg *clientv3.Config) (proto.ObjStore, error) {
 		config: *cfg,
 	}
 	return &etcdClient, nil
+}
+
+// Do a member list call to see if we're connected
+func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
+	var err error
+	for ii := 0; ii < tries; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+		_, err = e.client.MemberList(ctx)
+		cancel()
+		if err == nil {
+			return nil
+		}
+	}
+	return err
 }
 
 // create fails if key already exists

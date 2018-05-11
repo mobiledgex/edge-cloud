@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -84,7 +85,7 @@ func (s *AppInstApi) Refresh(in *proto.AppInst, key string) error {
 		err = nil
 	}
 	defer s.mux.Unlock()
-	UpdateAppInst(&in.Key)
+	notify.UpdateAppInst(&in.Key)
 	return err
 }
 
