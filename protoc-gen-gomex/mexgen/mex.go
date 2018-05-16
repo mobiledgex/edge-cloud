@@ -41,10 +41,8 @@ func (m *mex) P(args ...interface{}) {
 }
 
 func (m *mex) Generate(file *generator.FileDescriptor) {
-	if len(file.FileDescriptorProto.MessageType) != 0 {
-		for _, msg := range file.FileDescriptorProto.MessageType {
-			m.generateMessage(file, msg)
-		}
+	for _, desc := range file.Messages() {
+		m.generateMessage(file, desc)
 	}
 	if len(file.FileDescriptorProto.Service) != 0 {
 		for _, service := range file.FileDescriptorProto.Service {
@@ -56,16 +54,15 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	hasGenerateCud := false
 	hasGrpcFields := false
-	if len(file.FileDescriptorProto.MessageType) != 0 {
-		for _, msg := range file.FileDescriptorProto.MessageType {
-			if GetGenerateCud(msg) {
-				hasGenerateCud = true
-			}
-			if HasGrpcFields(msg) {
-				hasGrpcFields = true
-			}
-			m.msgs[*msg.Name] = msg
+	for _, desc := range file.Messages() {
+		msg := desc.DescriptorProto
+		if GetGenerateCud(msg) {
+			hasGenerateCud = true
 		}
+		if HasGrpcFields(msg) {
+			hasGrpcFields = true
+		}
+		m.msgs[*msg.Name] = msg
 	}
 	if hasGenerateCud {
 		m.P("import \"encoding/json\"")
@@ -129,7 +126,28 @@ func (m *mex) generateFieldKeyString(message *descriptor.DescriptorProto, field 
 	}
 }
 
-func (m *mex) generateFieldCopyIn(message *descriptor.DescriptorProto, ii int, field *descriptor.FieldDescriptorProto) {
+func (m *mex) printCopyInMakeArray(desc *generator.Descriptor, field *descriptor.FieldDescriptorProto) {
+	name := generator.CamelCase(*field.Name)
+	typ, _ := m.gen.GoType(desc, field)
+	m.P("if m.", name, " == nil {")
+	m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
+	m.P("}")
+}
+
+func (m *mex) getFieldDesc(field *descriptor.FieldDescriptorProto) *generator.Descriptor {
+	obj := m.gen.ObjectNamed(field.GetTypeName())
+	if obj == nil {
+		return nil
+	}
+	desc, ok := obj.(*generator.Descriptor)
+	if ok {
+		return desc
+	}
+	return nil
+}
+
+func (m *mex) generateFieldCopyIn(desc *generator.Descriptor, ii int, field *descriptor.FieldDescriptorProto) {
+	message := desc.DescriptorProto
 	if ii == 0 && *field.Name == "fields" {
 		// skip fields
 		return
@@ -142,30 +160,54 @@ func (m *mex) generateFieldCopyIn(message *descriptor.DescriptorProto, ii int, f
 	if HasGrpcFields(message) {
 		m.P("if set, _ := util.GrpcFieldsGet(src.Fields, ", field.Number, "); set == true {")
 	}
+	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+		m.printCopyInMakeArray(desc, field)
+	}
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		msg, ok := m.msgs[*field.TypeName]
-		if !ok || !HasGrpcFields(msg) {
+		fieldDesc := m.getFieldDesc(field)
+		msgtyp := m.gen.TypeName(fieldDesc)
+		idx := ""
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			idx = "[ii]"
+			m.P("for ii := 0; ii < len(m.", name, ") && ii < len(src.", name, "); ii++ {")
+		}
+		if gogoproto.IsNullable(field) {
+			m.P("if src.", name, idx, " != nil {")
+			m.P("if m.", name, idx, " == nil {")
+			m.P("m.", name, idx, " = &", msgtyp, "{}")
+			m.P("}")
+		}
+		if fieldDesc == nil || !HasGrpcFields(fieldDesc.DescriptorProto) {
 			if gogoproto.IsNullable(field) {
-				m.P("if m.", name, " != nil && src.", name, " != nil {")
-				m.P("*m.", name, " = *src.", name)
-				m.P("}")
+				m.P("*m.", name, idx, " = *src.", name, idx)
 			} else {
-				m.P("m.", name, " = src.", name)
+				m.P("m.", name, idx, " = src.", name, idx)
 			}
 		} else {
 			if gogoproto.IsNullable(field) {
-				m.P("m.", name, ".CopyInFields(src.", name, ")")
+				m.P("m.", name, idx, ".CopyInFields(src.", name, idx, ")")
 			} else {
-				m.P("m.", name, ".CopyInFields(&src.", name, ")")
+				m.P("m.", name, idx, ".CopyInFields(&src.", name, idx, ")")
 			}
+		}
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			m.P("}")
+		}
+		if gogoproto.IsNullable(field) {
+			m.P("}")
 		}
 	case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		// deprecated in proto3
 	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		m.printCopyInMakeArray(desc, field)
 		m.P("copy(m.", name, ", src.", name, ")")
 	default:
-		m.P("m.", name, " = src.", name)
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			m.P("copy(m.", name, ", src.", name, ")")
+		} else {
+			m.P("m.", name, " = src.", name)
+		}
 	}
 	if HasGrpcFields(message) {
 		m.P("}")
@@ -278,7 +320,8 @@ func LoadOne{{.Name}}(cud {{.CudName}}, key string) (*{{.Name}}, error) {
 
 `
 
-func (m *mex) generateMessage(file *generator.FileDescriptor, message *descriptor.DescriptorProto) {
+func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
+	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
 		m.P("func (m *", message.Name, ") Matches(filter *", message.Name, ") bool {")
 		m.P("if filter == nil { return true }")
@@ -299,9 +342,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, message *descripto
 		}
 		m.P("")
 	}
-	m.P("func (m *", message.Name, ") CopyInFields(src *", message.Name, ") {")
+	msgtyp := m.gen.TypeName(desc)
+	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
 	for ii, field := range message.Field {
-		m.generateFieldCopyIn(message, ii, field)
+		m.generateFieldCopyIn(desc, ii, field)
 	}
 	m.P("}")
 	m.P("")

@@ -413,6 +413,9 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 		m.Key = src.Key
 	}
 	if set, _ := util.GrpcFieldsGet(src.Fields, 4); set == true {
+		if m.AccessIp == nil {
+			m.AccessIp = make([]byte, len(src.AccessIp))
+		}
 		copy(m.AccessIp, src.AccessIp)
 	}
 	if set, _ := util.GrpcFieldsGet(src.Fields, 5); set == true {
