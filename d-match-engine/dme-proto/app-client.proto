@@ -9,8 +9,9 @@ message Match_Engine_Request {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
   enum ID_type {
-    IMEI = 0;
-    MSISDN = 1;
+	  IMEI = 0;
+	  MSISDN = 1;
+	  IPADDR = 2;
   }
   ID_type id_type = 2;
   // Actual ID
@@ -32,12 +33,14 @@ message Match_Engine_Request {
 
 message Match_Engine_Reply {
   uint32 ver = 1;
+  // domain name
+  string uri = 2;
   // ip of the app service
-  bytes service_ip = 2;
+  bytes service_ip = 3;
   // port of the app service?
-  uint32 server_port = 3;
+  uint32 service_port = 4;
   // location of the cloudlet?
-  edgeproto.Loc cloudlet_location = 4;
+  edgeproto.Loc cloudlet_location = 5;
 }
 
 message Match_Engine_Loc_Verify {
