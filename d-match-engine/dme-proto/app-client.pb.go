@@ -439,19 +439,34 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.Id = src.Id
 	m.Carrier = src.Carrier
 	m.Tower = src.Tower
-	if m.GpsLocation != nil && src.GpsLocation != nil {
+	if src.GpsLocation != nil {
+		if m.GpsLocation == nil {
+			m.GpsLocation = &edgeproto.Loc{}
+		}
 		*m.GpsLocation = *src.GpsLocation
 	}
 	m.AppId = src.AppId
+	if m.Protocol == nil {
+		m.Protocol = make([]byte, len(src.Protocol))
+	}
 	copy(m.Protocol, src.Protocol)
+	if m.ServerPort == nil {
+		m.ServerPort = make([]byte, len(src.ServerPort))
+	}
 	copy(m.ServerPort, src.ServerPort)
 }
 
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	m.Ver = src.Ver
+	if m.ServiceIp == nil {
+		m.ServiceIp = make([]byte, len(src.ServiceIp))
+	}
 	copy(m.ServiceIp, src.ServiceIp)
 	m.ServerPort = src.ServerPort
-	if m.CloudletLocation != nil && src.CloudletLocation != nil {
+	if src.CloudletLocation != nil {
+		if m.CloudletLocation == nil {
+			m.CloudletLocation = &edgeproto.Loc{}
+		}
 		*m.CloudletLocation = *src.CloudletLocation
 	}
 }
