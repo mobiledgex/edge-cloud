@@ -1,7 +1,7 @@
 // Application proto
 
 syntax = "proto3";
-package proto;
+package edgeproto;
 
 import "google/api/annotations.proto";
 import "result.proto";

@@ -4,7 +4,7 @@
 package testutil
 
 import "google.golang.org/grpc"
-import edgeproto "github.com/mobiledgex/edge-cloud/proto"
+import "github.com/mobiledgex/edge-cloud/edgeproto"
 import "io"
 import "testing"
 import "context"

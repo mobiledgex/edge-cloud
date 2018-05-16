@@ -4,29 +4,29 @@ import (
 	"context"
 	"errors"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type CloudletApi struct {
-	proto.ObjStore
-	cloudlets   map[proto.CloudletKey]*proto.Cloudlet
+	edgeproto.ObjStore
+	cloudlets   map[edgeproto.CloudletKey]*edgeproto.Cloudlet
 	mux         util.Mutex
 	operatorApi *OperatorApi
 }
 
-func InitCloudletApi(objStore proto.ObjStore, opApi *OperatorApi) *CloudletApi {
+func InitCloudletApi(objStore edgeproto.ObjStore, opApi *OperatorApi) *CloudletApi {
 	api := &CloudletApi{
 		ObjStore:    objStore,
 		operatorApi: opApi,
 	}
-	api.cloudlets = make(map[proto.CloudletKey]*proto.Cloudlet)
+	api.cloudlets = make(map[edgeproto.CloudletKey]*edgeproto.Cloudlet)
 
 	api.mux.Lock()
 	defer api.mux.Unlock()
 
-	err := proto.LoadAllCloudlets(api, func(obj *proto.Cloudlet) error {
+	err := edgeproto.LoadAllCloudlets(api, func(obj *edgeproto.Cloudlet) error {
 		api.cloudlets[obj.Key] = obj
 		return nil
 	})
@@ -36,7 +36,7 @@ func InitCloudletApi(objStore proto.ObjStore, opApi *OperatorApi) *CloudletApi {
 	return api
 }
 
-func (s *CloudletApi) ValidateKey(key *proto.CloudletKey) error {
+func (s *CloudletApi) ValidateKey(key *edgeproto.CloudletKey) error {
 	if key == nil {
 		return errors.New("Cloudlet key not specified")
 	}
@@ -52,7 +52,7 @@ func (s *CloudletApi) ValidateKey(key *proto.CloudletKey) error {
 	return nil
 }
 
-func (s *CloudletApi) Validate(in *proto.Cloudlet) error {
+func (s *CloudletApi) Validate(in *edgeproto.Cloudlet) error {
 	if err := s.ValidateKey(&in.Key); err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (s *CloudletApi) Validate(in *proto.Cloudlet) error {
 	return nil
 }
 
-func (s *CloudletApi) GetObjStoreKeyString(key *proto.CloudletKey) string {
+func (s *CloudletApi) GetObjStoreKeyString(key *edgeproto.CloudletKey) string {
 	return GetObjStoreKey(CloudletType, key.GetKeyString())
 }
 
@@ -70,13 +70,13 @@ func (s *CloudletApi) GetLoadKeyString() string {
 	return GetObjStoreKey(CloudletType, "")
 }
 
-func (s *CloudletApi) Refresh(in *proto.Cloudlet, key string) error {
+func (s *CloudletApi) Refresh(in *edgeproto.Cloudlet, key string) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	obj, err := proto.LoadOneCloudlet(s, key)
+	obj, err := edgeproto.LoadOneCloudlet(s, key)
 	if err == nil {
 		s.cloudlets[in.Key] = obj
-	} else if err == proto.ObjStoreErrKeyNotFound {
+	} else if err == edgeproto.ObjStoreErrKeyNotFound {
 		delete(s.cloudlets, in.Key)
 		err = nil
 	}
@@ -85,7 +85,7 @@ func (s *CloudletApi) Refresh(in *proto.Cloudlet, key string) error {
 	return err
 }
 
-func (s *CloudletApi) GetAllKeys(keys map[proto.CloudletKey]bool) {
+func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]bool) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	for key, _ := range s.cloudlets {
@@ -93,7 +93,7 @@ func (s *CloudletApi) GetAllKeys(keys map[proto.CloudletKey]bool) {
 	}
 }
 
-func (s *CloudletApi) GetCloudlet(key *proto.CloudletKey, val *proto.Cloudlet) bool {
+func (s *CloudletApi) GetCloudlet(key *edgeproto.CloudletKey, val *edgeproto.Cloudlet) bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	inst, found := s.cloudlets[*key]
@@ -103,19 +103,19 @@ func (s *CloudletApi) GetCloudlet(key *proto.CloudletKey, val *proto.Cloudlet) b
 	return found
 }
 
-func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *proto.Cloudlet) (*proto.Result, error) {
+func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	return in.Create(s)
 }
 
-func (s *CloudletApi) UpdateCloudlet(ctx context.Context, in *proto.Cloudlet) (*proto.Result, error) {
+func (s *CloudletApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	return in.Update(s)
 }
 
-func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *proto.Cloudlet) (*proto.Result, error) {
+func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	return in.Delete(s)
 }
 
-func (s *CloudletApi) ShowCloudlet(in *proto.Cloudlet, cb proto.CloudletApi_ShowCloudletServer) error {
+func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 

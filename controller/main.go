@@ -12,8 +12,8 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
-	pb "github.com/mobiledgex/edge-cloud/proto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 )
@@ -95,10 +95,10 @@ func main() {
 	notify.RegisterCloudletAddrs(*cloudletMgrAddrs)
 
 	server := grpc.NewServer()
-	pb.RegisterDeveloperApiServer(server, developerApi)
-	pb.RegisterAppApiServer(server, appApi)
-	pb.RegisterOperatorApiServer(server, operatorApi)
-	pb.RegisterCloudletApiServer(server, cloudletApi)
+	edgeproto.RegisterDeveloperApiServer(server, developerApi)
+	edgeproto.RegisterAppApiServer(server, appApi)
+	edgeproto.RegisterOperatorApiServer(server, operatorApi)
+	edgeproto.RegisterCloudletApiServer(server, cloudletApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called

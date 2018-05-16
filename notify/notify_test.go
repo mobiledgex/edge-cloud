@@ -5,31 +5,31 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
 type DummySendHandler struct {
-	appInsts  map[proto.AppInstKey]proto.AppInst
-	cloudlets map[proto.CloudletKey]proto.Cloudlet
+	appInsts  map[edgeproto.AppInstKey]edgeproto.AppInst
+	cloudlets map[edgeproto.CloudletKey]edgeproto.Cloudlet
 }
 
 func NewDummySendHandler() *DummySendHandler {
 	handler := &DummySendHandler{}
-	handler.appInsts = make(map[proto.AppInstKey]proto.AppInst)
-	handler.cloudlets = make(map[proto.CloudletKey]proto.Cloudlet)
+	handler.appInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
+	handler.cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
 	return handler
 }
 
-func (s *DummySendHandler) GetAllAppInstKeys(keys map[proto.AppInstKey]bool) {
+func (s *DummySendHandler) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]bool) {
 	for key, _ := range s.appInsts {
 		keys[key] = true
 	}
 }
 
-func (s *DummySendHandler) GetAppInst(key *proto.AppInstKey, buf *proto.AppInst) bool {
+func (s *DummySendHandler) GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool {
 	obj, found := s.appInsts[*key]
 	if found {
 		*buf = obj
@@ -37,13 +37,13 @@ func (s *DummySendHandler) GetAppInst(key *proto.AppInstKey, buf *proto.AppInst)
 	return found
 }
 
-func (s *DummySendHandler) GetAllCloudletKeys(keys map[proto.CloudletKey]bool) {
+func (s *DummySendHandler) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]bool) {
 	for key, _ := range s.cloudlets {
 		keys[key] = true
 	}
 }
 
-func (s *DummySendHandler) GetCloudlet(key *proto.CloudletKey, buf *proto.Cloudlet) bool {
+func (s *DummySendHandler) GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
 	obj, found := s.cloudlets[*key]
 	if found {
 		*buf = obj
@@ -51,29 +51,29 @@ func (s *DummySendHandler) GetCloudlet(key *proto.CloudletKey, buf *proto.Cloudl
 	return found
 }
 
-func (s *DummySendHandler) CreateAppInst(in *proto.AppInst) {
+func (s *DummySendHandler) CreateAppInst(in *edgeproto.AppInst) {
 	s.appInsts[in.Key] = *in
 	UpdateAppInst(&in.Key)
 }
 
-func (s *DummySendHandler) DeleteAppInst(in *proto.AppInst) {
+func (s *DummySendHandler) DeleteAppInst(in *edgeproto.AppInst) {
 	delete(s.appInsts, in.Key)
 	UpdateAppInst(&in.Key)
 }
 
-func (s *DummySendHandler) CreateCloudlet(in *proto.Cloudlet) {
+func (s *DummySendHandler) CreateCloudlet(in *edgeproto.Cloudlet) {
 	s.cloudlets[in.Key] = *in
 	UpdateCloudlet(&in.Key)
 }
 
-func (s *DummySendHandler) DeleteCloudlet(in *proto.Cloudlet) {
+func (s *DummySendHandler) DeleteCloudlet(in *edgeproto.Cloudlet) {
 	delete(s.cloudlets, in.Key)
 	UpdateCloudlet(&in.Key)
 }
 
 type DummyRecvHandler struct {
-	appInsts           map[proto.AppInstKey]proto.AppInst
-	cloudlets          map[proto.CloudletKey]proto.Cloudlet
+	appInsts           map[edgeproto.AppInstKey]edgeproto.AppInst
+	cloudlets          map[edgeproto.CloudletKey]edgeproto.Cloudlet
 	numAppInstUpdates  int
 	numCloudletUpdates int
 	numUpdates         int
@@ -81,8 +81,8 @@ type DummyRecvHandler struct {
 
 func NewDummyRecvHandler() *DummyRecvHandler {
 	handler := &DummyRecvHandler{}
-	handler.appInsts = make(map[proto.AppInstKey]proto.AppInst)
-	handler.cloudlets = make(map[proto.CloudletKey]proto.Cloudlet)
+	handler.appInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
+	handler.cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
 	return handler
 }
 
@@ -99,21 +99,21 @@ func (s *DummyRecvHandler) HandleSendAllDone(maps *NotifySendAllMaps) {
 	}
 }
 
-func (s *DummyRecvHandler) HandleNotice(notice *proto.Notice) error {
+func (s *DummyRecvHandler) HandleNotice(notice *edgeproto.Notice) error {
 	appInst := notice.GetAppInst()
 	if appInst != nil {
-		if notice.Action == proto.NoticeAction_UPDATE {
+		if notice.Action == edgeproto.NoticeAction_UPDATE {
 			s.appInsts[appInst.Key] = *appInst
-		} else if notice.Action == proto.NoticeAction_DELETE {
+		} else if notice.Action == edgeproto.NoticeAction_DELETE {
 			delete(s.appInsts, appInst.Key)
 		}
 		s.numAppInstUpdates++
 	}
 	cloudlet := notice.GetCloudlet()
 	if cloudlet != nil {
-		if notice.Action == proto.NoticeAction_UPDATE {
+		if notice.Action == edgeproto.NoticeAction_UPDATE {
 			s.cloudlets[cloudlet.Key] = *cloudlet
-		} else if notice.Action == proto.NoticeAction_DELETE {
+		} else if notice.Action == edgeproto.NoticeAction_DELETE {
 			delete(s.cloudlets, cloudlet.Key)
 		}
 		s.numCloudletUpdates++
