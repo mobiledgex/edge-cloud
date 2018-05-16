@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
@@ -36,10 +36,10 @@ func TestController(t *testing.T) {
 	}
 	defer conn.Close()
 
-	devApi := proto.NewDeveloperApiClient(conn)
-	appApi := proto.NewAppApiClient(conn)
-	operApi := proto.NewOperatorApiClient(conn)
-	cloudletApi := proto.NewCloudletApiClient(conn)
+	devApi := edgeproto.NewDeveloperApiClient(conn)
+	appApi := edgeproto.NewAppApiClient(conn)
+	operApi := edgeproto.NewOperatorApiClient(conn)
+	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 
 	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
 	testutil.ClientAppCudTest(t, appApi, testutil.AppData)

@@ -1,7 +1,7 @@
 // Send updates to distributed matching engine when things change
 
 syntax = "proto3";
-package proto;
+package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
