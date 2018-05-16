@@ -164,7 +164,10 @@ func (m *Loc) CopyInFields(src *Loc) {
 	m.Altitude = src.Altitude
 	m.Course = src.Course
 	m.Speed = src.Speed
-	if m.Timestamp != nil && src.Timestamp != nil {
+	if src.Timestamp != nil {
+		if m.Timestamp == nil {
+			m.Timestamp = &google_protobuf1.Timestamp{}
+		}
 		*m.Timestamp = *src.Timestamp
 	}
 }

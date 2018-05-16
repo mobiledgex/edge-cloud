@@ -481,6 +481,9 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 		m.CloudletLoc = src.CloudletLoc
 	}
 	if set, _ := util.GrpcFieldsGet(src.Fields, 4); set == true {
+		if m.Ip == nil {
+			m.Ip = make([]byte, len(src.Ip))
+		}
 		copy(m.Ip, src.Ip)
 	}
 	if set, _ := util.GrpcFieldsGet(src.Fields, 5); set == true {
