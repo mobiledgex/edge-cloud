@@ -6,12 +6,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
-func testCalls(t *testing.T, objStore proto.ObjStore) {
+func testCalls(t *testing.T, objStore edgeproto.ObjStore) {
 	count := 0
 	m := make(map[string]string)
 	key1 := "1/1/2222222"
@@ -27,7 +27,7 @@ func testCalls(t *testing.T, objStore proto.ObjStore) {
 		assert.Nil(t, err, "Create failed for key %s", key)
 	}
 	err := objStore.Create(key1, val1)
-	assert.Equal(t, proto.ObjStoreErrKeyExists, err, "Create object that already exists")
+	assert.Equal(t, edgeproto.ObjStoreErrKeyExists, err, "Create object that already exists")
 
 	// test get and list
 	val, vers, err := objStore.Get(key1)
@@ -35,7 +35,7 @@ func testCalls(t *testing.T, objStore proto.ObjStore) {
 	assert.Equal(t, val1, string(val), "Get key %s value", key1)
 	assert.EqualValues(t, 1, vers, "version for key %s", key1)
 	val, vers, err = objStore.Get("No such key")
-	assert.Equal(t, proto.ObjStoreErrKeyNotFound, err, "Get non-existent key")
+	assert.Equal(t, edgeproto.ObjStoreErrKeyNotFound, err, "Get non-existent key")
 
 	count = 0
 	err = objStore.List("", func(key, val []byte) error {
@@ -54,20 +54,20 @@ func testCalls(t *testing.T, objStore proto.ObjStore) {
 	assert.EqualValues(t, 2, vers, "version for key %s", key1)
 	err = objStore.Update(key1, val2, 1)
 	assert.NotNil(t, err, "Update with wrong mod value")
-	err = objStore.Update(key1, val2, proto.ObjStoreUpdateVersionAny)
+	err = objStore.Update(key1, val2, edgeproto.ObjStoreUpdateVersionAny)
 	assert.Nil(t, err, "Update any version")
 	val, vers, err = objStore.Get(key1)
 	assert.Nil(t, err, "Get key %s", key1)
 	assert.EqualValues(t, 3, vers, "version for key %s", key1)
 
 	err = objStore.Update("no-such-key", "", 0)
-	assert.Equal(t, proto.ObjStoreErrKeyNotFound, err, "Update non-existent key")
+	assert.Equal(t, edgeproto.ObjStoreErrKeyNotFound, err, "Update non-existent key")
 
 	// test delete
 	err = objStore.Delete(key1)
 	assert.Nil(t, err, "Delete key %s", key1)
 	val, _, err = objStore.Get(key1)
-	assert.Equal(t, proto.ObjStoreErrKeyNotFound, err, "Get deleted key")
+	assert.Equal(t, edgeproto.ObjStoreErrKeyNotFound, err, "Get deleted key")
 	count = 0
 	err = objStore.List("", func(key, val []byte) error {
 		count++

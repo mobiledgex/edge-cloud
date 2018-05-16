@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -25,11 +25,11 @@ func (e *dummyEtcd) Stop() {
 
 func (e *dummyEtcd) Create(key, val string) error {
 	if e.db == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	_, ok := e.db[key]
 	if ok {
-		return proto.ObjStoreErrKeyExists
+		return edgeproto.ObjStoreErrKeyExists
 	}
 	e.db[key] = val
 	e.vers[key] = 1
@@ -39,14 +39,14 @@ func (e *dummyEtcd) Create(key, val string) error {
 
 func (e *dummyEtcd) Update(key, val string, version int64) error {
 	if e.db == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	_, ok := e.db[key]
 	if !ok {
-		return proto.ObjStoreErrKeyNotFound
+		return edgeproto.ObjStoreErrKeyNotFound
 	}
 	ver := e.vers[key]
-	if version != proto.ObjStoreUpdateVersionAny && ver != version {
+	if version != edgeproto.ObjStoreUpdateVersionAny && ver != version {
 		return errors.New("Invalid version")
 	}
 
@@ -58,7 +58,7 @@ func (e *dummyEtcd) Update(key, val string, version int64) error {
 
 func (e *dummyEtcd) Delete(key string) error {
 	if e.db == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	delete(e.db, key)
 	util.DebugLog(util.DebugLevelEtcd, "Delete", "key", key)
@@ -67,11 +67,11 @@ func (e *dummyEtcd) Delete(key string) error {
 
 func (e *dummyEtcd) Get(key string) ([]byte, int64, error) {
 	if e.db == nil {
-		return nil, 0, proto.ObjStoreErrNotInitialized
+		return nil, 0, edgeproto.ObjStoreErrNotInitialized
 	}
 	val, ok := e.db[key]
 	if !ok {
-		return nil, 0, proto.ObjStoreErrKeyNotFound
+		return nil, 0, edgeproto.ObjStoreErrKeyNotFound
 	}
 	ver := e.vers[key]
 
@@ -79,9 +79,9 @@ func (e *dummyEtcd) Get(key string) ([]byte, int64, error) {
 	return ([]byte)(val), ver, nil
 }
 
-func (e *dummyEtcd) List(key string, cb proto.ListCb) error {
+func (e *dummyEtcd) List(key string, cb edgeproto.ListCb) error {
 	if e.db == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	for k, v := range e.db {
 		if !strings.HasPrefix(k, key) {

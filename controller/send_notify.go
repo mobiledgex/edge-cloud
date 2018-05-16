@@ -1,6 +1,6 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/proto"
+import "github.com/mobiledgex/edge-cloud/edgeproto"
 
 type ControllerNotifier struct {
 	*AppInstApi
@@ -14,10 +14,10 @@ func NewControllerNotifier(appInstApi *AppInstApi, cloudletApi *CloudletApi) *Co
 	return &n
 }
 
-func (s *ControllerNotifier) GetAllAppInstKeys(keys map[proto.AppInstKey]bool) {
+func (s *ControllerNotifier) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]bool) {
 	s.AppInstApi.GetAllKeys(keys)
 }
 
-func (s *ControllerNotifier) GetAllCloudletKeys(keys map[proto.CloudletKey]bool) {
+func (s *ControllerNotifier) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]bool) {
 	s.CloudletApi.GetAllKeys(keys)
 }

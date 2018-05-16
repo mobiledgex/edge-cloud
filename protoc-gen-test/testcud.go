@@ -214,7 +214,7 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 		return
 	}
 	t.PrintImport("", "google.golang.org/grpc")
-	t.PrintImport("edgeproto", "github.com/mobiledgex/edge-cloud/proto")
+	t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgeproto")
 	t.PrintImport("", "io")
 	t.PrintImport("", "testing")
 	t.PrintImport("", "context")

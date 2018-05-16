@@ -6,31 +6,31 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
 // Should only be one of these instantiated in main
 type AppApi struct {
 	// object database - methods of interface are promoted to this object
-	proto.ObjStore
+	edgeproto.ObjStore
 	// list of all apps
-	apps map[proto.AppKey]*proto.App
+	apps map[edgeproto.AppKey]*edgeproto.App
 	// table lock
 	mux util.Mutex
 	// reference to developers
 	devApi *DeveloperApi
 }
 
-func InitAppApi(objStore proto.ObjStore, devApi *DeveloperApi) *AppApi {
+func InitAppApi(objStore edgeproto.ObjStore, devApi *DeveloperApi) *AppApi {
 	api := &AppApi{ObjStore: objStore}
-	api.apps = make(map[proto.AppKey]*proto.App)
+	api.apps = make(map[edgeproto.AppKey]*edgeproto.App)
 	api.devApi = devApi
 
 	api.mux.Lock()
 	defer api.mux.Unlock()
 
-	err := proto.LoadAllApps(api, func(obj *proto.App) error {
+	err := edgeproto.LoadAllApps(api, func(obj *edgeproto.App) error {
 		api.apps[obj.Key] = obj
 		return nil
 	})
@@ -40,7 +40,7 @@ func InitAppApi(objStore proto.ObjStore, devApi *DeveloperApi) *AppApi {
 	return api
 }
 
-func (s *AppApi) ValidateKey(key *proto.AppKey) error {
+func (s *AppApi) ValidateKey(key *edgeproto.AppKey) error {
 	if key == nil {
 		return errors.New("App key not specified")
 	}
@@ -59,12 +59,12 @@ func (s *AppApi) ValidateKey(key *proto.AppKey) error {
 	return nil
 }
 
-func (s *AppApi) Validate(in *proto.App) error {
+func (s *AppApi) Validate(in *edgeproto.App) error {
 	// TODO: validate other fields?
 	return s.ValidateKey(&in.Key)
 }
 
-func (s *AppApi) HasApp(key *proto.AppKey) bool {
+func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
@@ -72,7 +72,7 @@ func (s *AppApi) HasApp(key *proto.AppKey) bool {
 	return found
 }
 
-func (s *AppApi) GetObjStoreKeyString(key *proto.AppKey) string {
+func (s *AppApi) GetObjStoreKeyString(key *edgeproto.AppKey) string {
 	return GetObjStoreKey(AppType, key.GetKeyString())
 }
 
@@ -80,32 +80,32 @@ func (s *AppApi) GetLoadKeyString() string {
 	return GetObjStoreKey(AppType, "")
 }
 
-func (s *AppApi) Refresh(in *proto.App, key string) error {
+func (s *AppApi) Refresh(in *edgeproto.App, key string) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	obj, err := proto.LoadOneApp(s, key)
+	obj, err := edgeproto.LoadOneApp(s, key)
 	if err == nil {
 		s.apps[in.Key] = obj
-	} else if err == proto.ObjStoreErrKeyNotFound {
+	} else if err == edgeproto.ObjStoreErrKeyNotFound {
 		delete(s.apps, in.Key)
 		err = nil
 	}
 	return err
 }
 
-func (s *AppApi) CreateApp(ctx context.Context, in *proto.App) (*proto.Result, error) {
+func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	return in.Create(s)
 }
 
-func (s *AppApi) UpdateApp(ctx context.Context, in *proto.App) (*proto.Result, error) {
+func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	return in.Update(s)
 }
 
-func (s *AppApi) DeleteApp(ctx context.Context, in *proto.App) (*proto.Result, error) {
+func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	return in.Delete(s)
 }
 
-func (s *AppApi) ShowApp(in *proto.App, cb proto.AppApi_ShowAppServer) error {
+func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
