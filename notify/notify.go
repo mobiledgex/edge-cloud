@@ -25,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -46,16 +46,16 @@ const (
 type NotifySendHandler interface {
 	// Get all the keys for known app insts.
 	// The value associated with the key is ignored.
-	GetAllAppInstKeys(keys map[proto.AppInstKey]bool)
+	GetAllAppInstKeys(keys map[edgeproto.AppInstKey]bool)
 	// Copy back the value for the app inst.
 	// If the app inst was not found, return false instead of true.
-	GetAppInst(key *proto.AppInstKey, buf *proto.AppInst) bool
+	GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool
 	// Get all the keys for known cloudlets.
 	// The value associated with the key is ignored.
-	GetAllCloudletKeys(keys map[proto.CloudletKey]bool)
+	GetAllCloudletKeys(keys map[edgeproto.CloudletKey]bool)
 	// Copy back the value for the cloudlet.
 	// If the cloudlet was not found, return false instead of true.
-	GetCloudlet(key *proto.CloudletKey, buf *proto.Cloudlet) bool
+	GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool
 }
 
 type NotifySenderStats struct {
@@ -66,8 +66,8 @@ type NotifySenderStats struct {
 
 type NotifySender struct {
 	addr      string
-	appInsts  map[proto.AppInstKey]bool
-	cloudlets map[proto.CloudletKey]bool
+	appInsts  map[edgeproto.AppInstKey]bool
+	cloudlets map[edgeproto.CloudletKey]bool
 	mux       util.Mutex
 	cond      sync.Cond
 	done      bool
@@ -121,7 +121,7 @@ func RegisterReceiver(addr string, ntype NotifyType) {
 	}
 	notifier := &NotifySender{}
 	notifier.addr = addr
-	notifier.appInsts = make(map[proto.AppInstKey]bool)
+	notifier.appInsts = make(map[edgeproto.AppInstKey]bool)
 	notifier.mux.InitCond(&notifier.cond)
 	notifier.handler = notifySenders.handler
 	notifier.ntype = ntype
@@ -155,7 +155,7 @@ func GetNotifySenderStats(addr string) *NotifySenderStats {
 	return stats
 }
 
-func UpdateAppInst(key *proto.AppInstKey) {
+func UpdateAppInst(key *edgeproto.AppInstKey) {
 	notifySenders.mux.Lock()
 	defer notifySenders.mux.Unlock()
 	for _, notifier := range notifySenders.table {
@@ -166,7 +166,7 @@ func UpdateAppInst(key *proto.AppInstKey) {
 	}
 }
 
-func UpdateCloudlet(key *proto.CloudletKey) {
+func UpdateCloudlet(key *edgeproto.CloudletKey) {
 	notifySenders.mux.Lock()
 	defer notifySenders.mux.Unlock()
 	for _, notifier := range notifySenders.table {
@@ -177,14 +177,14 @@ func UpdateCloudlet(key *proto.CloudletKey) {
 	}
 }
 
-func (s *NotifySender) UpdateAppInst(key *proto.AppInstKey) {
+func (s *NotifySender) UpdateAppInst(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.appInsts[*key] = true
 	s.cond.Signal()
 }
 
-func (s *NotifySender) UpdateCloudlet(key *proto.CloudletKey) {
+func (s *NotifySender) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cloudlets[*key] = true
@@ -194,13 +194,13 @@ func (s *NotifySender) UpdateCloudlet(key *proto.CloudletKey) {
 func (s *NotifySender) Run() {
 	var conn *grpc.ClientConn
 	var sendAll bool
-	var notice proto.Notice
-	var noticeAppInst proto.Notice_AppInst
-	var noticeCloudlet proto.Notice_Cloudlet
-	var appInst proto.AppInst
-	var cloudlet proto.Cloudlet
-	var client proto.NotifyApi_StreamNoticeClient
-	var reply *proto.NoticeReply
+	var notice edgeproto.Notice
+	var noticeAppInst edgeproto.Notice_AppInst
+	var noticeCloudlet edgeproto.Notice_Cloudlet
+	var appInst edgeproto.AppInst
+	var cloudlet edgeproto.Cloudlet
+	var client edgeproto.NotifyApi_StreamNoticeClient
+	var reply *edgeproto.NoticeReply
 	var err error
 	var sendErr error
 
@@ -226,7 +226,7 @@ func (s *NotifySender) Run() {
 				}
 				continue
 			}
-			api := proto.NewNotifyApiClient(conn)
+			api := edgeproto.NewNotifyApiClient(conn)
 			client, err = api.StreamNotice(context.Background())
 			if err != nil {
 				util.DebugLog(util.DebugLevelNotify, "NotifySender get client", "addr", s.addr, "error", err)
@@ -240,7 +240,7 @@ func (s *NotifySender) Run() {
 			// Send our version and read back remote version.
 			// We use the lowest common version.
 			notice.Version = NotifyVersion
-			notice.Action = proto.NoticeAction_VERSION
+			notice.Action = edgeproto.NoticeAction_VERSION
 			notice.ConnectionId = s.stats.Connects
 			notice.Data = nil
 			sendErr = client.Send(&notice)
@@ -266,8 +266,8 @@ func (s *NotifySender) Run() {
 		}
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
-		s.appInsts = make(map[proto.AppInstKey]bool)
-		s.cloudlets = make(map[proto.CloudletKey]bool)
+		s.appInsts = make(map[edgeproto.AppInstKey]bool)
+		s.cloudlets = make(map[edgeproto.CloudletKey]bool)
 		s.mux.Unlock()
 		if s.done {
 			break
@@ -286,9 +286,9 @@ func (s *NotifySender) Run() {
 		for key, _ := range appInsts {
 			found := s.handler.GetAppInst(&key, &appInst)
 			if found {
-				notice.Action = proto.NoticeAction_UPDATE
+				notice.Action = edgeproto.NoticeAction_UPDATE
 			} else {
-				notice.Action = proto.NoticeAction_DELETE
+				notice.Action = edgeproto.NoticeAction_DELETE
 				appInst.Key = key
 			}
 			util.DebugLog(util.DebugLevelNotify, "Send app inst", "addr", s.addr, "action", notice.Action, "key", appInst.Key.GetKeyString())
@@ -303,9 +303,9 @@ func (s *NotifySender) Run() {
 		for key, _ := range cloudlets {
 			found := s.handler.GetCloudlet(&key, &cloudlet)
 			if found {
-				notice.Action = proto.NoticeAction_UPDATE
+				notice.Action = edgeproto.NoticeAction_UPDATE
 			} else {
-				notice.Action = proto.NoticeAction_DELETE
+				notice.Action = edgeproto.NoticeAction_DELETE
 				cloudlet.Key = key
 			}
 			util.DebugLog(util.DebugLevelNotify, "Send cloudlet", "addr", s.addr, "action", notice.Action, "key", cloudlet.Key.GetKeyString())
@@ -316,7 +316,7 @@ func (s *NotifySender) Run() {
 			s.stats.CloudletsSent++
 		}
 		if sendAll && sendErr == nil {
-			notice.Action = proto.NoticeAction_SENDALL_END
+			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Data = nil
 			sendErr = client.Send(&notice)
 			if sendErr != nil {
@@ -345,8 +345,8 @@ func (s *NotifySender) Stop() {
 }
 
 type NotifySendAllMaps struct {
-	appInsts  map[proto.AppInstKey]bool
-	cloudlets map[proto.CloudletKey]bool
+	appInsts  map[edgeproto.AppInstKey]bool
+	cloudlets map[edgeproto.CloudletKey]bool
 }
 
 type NotifyRecvHandler interface {
@@ -356,7 +356,7 @@ type NotifyRecvHandler interface {
 	// sender.
 	HandleSendAllDone(allMaps *NotifySendAllMaps)
 	// Handle an update or delete notice from the sender
-	HandleNotice(notice *proto.Notice) error
+	HandleNotice(notice *edgeproto.Notice) error
 }
 
 type NotifyReceiver struct {
@@ -407,7 +407,7 @@ func (s *NotifyReceiver) Run() {
 		}
 		s.server = grpc.NewServer()
 		s.mux.Unlock()
-		proto.RegisterNotifyApiServer(s.server, s)
+		edgeproto.RegisterNotifyApiServer(s.server, s)
 
 		err = s.server.Serve(lis)
 		util.DebugLog(util.DebugLevelNotify, "NotifyReceiver serve", "error", err)
@@ -433,9 +433,9 @@ func (s *NotifyReceiver) Stop() {
 	s.running = nil
 }
 
-func (s *NotifyReceiver) StreamNotice(stream proto.NotifyApi_StreamNoticeServer) error {
-	var notice *proto.Notice
-	var reply proto.NoticeReply
+func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) error {
+	var notice *edgeproto.Notice
+	var reply edgeproto.NoticeReply
 	var err error
 
 	defer func() {
@@ -457,8 +457,8 @@ func (s *NotifyReceiver) StreamNotice(stream proto.NotifyApi_StreamNoticeServer)
 	if err != nil {
 		return err
 	}
-	if notice.Action != proto.NoticeAction_VERSION {
-		util.DebugLog(util.DebugLevelNotify, "NotifyReceiver bad action", "expected", proto.NoticeAction_VERSION, "got", notice.Action)
+	if notice.Action != edgeproto.NoticeAction_VERSION {
+		util.DebugLog(util.DebugLevelNotify, "NotifyReceiver bad action", "expected", edgeproto.NoticeAction_VERSION, "got", notice.Action)
 		return errors.New("NotifyReceiver expected action version")
 	}
 	// use lowest common version
@@ -469,15 +469,15 @@ func (s *NotifyReceiver) StreamNotice(stream proto.NotifyApi_StreamNoticeServer)
 	}
 	s.connectionId = notice.ConnectionId
 	// send back my version
-	reply.Action = proto.NoticeAction_VERSION
+	reply.Action = edgeproto.NoticeAction_VERSION
 	reply.Version = s.version
 	err = stream.Send(&reply)
 	if err != nil {
 		return err
 	}
 	sendAllMaps := &NotifySendAllMaps{}
-	sendAllMaps.appInsts = make(map[proto.AppInstKey]bool)
-	sendAllMaps.cloudlets = make(map[proto.CloudletKey]bool)
+	sendAllMaps.appInsts = make(map[edgeproto.AppInstKey]bool)
+	sendAllMaps.cloudlets = make(map[edgeproto.CloudletKey]bool)
 	util.DebugLog(util.DebugLevelNotify, "NotifyReceiver connected", "version", s.version, "supported-version", NotifyVersion)
 
 	for !s.done {
@@ -491,7 +491,7 @@ func (s *NotifyReceiver) StreamNotice(stream proto.NotifyApi_StreamNoticeServer)
 		if notice.ConnectionId != s.connectionId {
 			return errors.New("Bad connection id")
 		}
-		if sendAllMaps != nil && notice.Action == proto.NoticeAction_UPDATE {
+		if sendAllMaps != nil && notice.Action == edgeproto.NoticeAction_UPDATE {
 			appInst := notice.GetAppInst()
 			if appInst != nil {
 				sendAllMaps.appInsts[appInst.Key] = true
@@ -501,12 +501,12 @@ func (s *NotifyReceiver) StreamNotice(stream proto.NotifyApi_StreamNoticeServer)
 				sendAllMaps.cloudlets[cloudlet.Key] = true
 			}
 		}
-		if notice.Action == proto.NoticeAction_SENDALL_END {
+		if notice.Action == edgeproto.NoticeAction_SENDALL_END {
 			s.handler.HandleSendAllDone(sendAllMaps)
 			sendAllMaps = nil
 			continue
 		}
-		if notice.Action != proto.NoticeAction_UPDATE && notice.Action != proto.NoticeAction_DELETE {
+		if notice.Action != edgeproto.NoticeAction_UPDATE && notice.Action != edgeproto.NoticeAction_DELETE {
 			return errors.New("Unexpected notice action, not update or delete")
 		}
 		err = s.handler.HandleNotice(notice)

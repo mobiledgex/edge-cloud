@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -59,7 +59,7 @@ func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
 // create fails if key already exists
 func (e *EtcdClient) Create(key, val string) error {
 	if e.client == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
@@ -71,7 +71,7 @@ func (e *EtcdClient) Create(key, val string) error {
 		return err
 	}
 	if !resp.Succeeded {
-		return proto.ObjStoreErrKeyExists
+		return edgeproto.ObjStoreErrKeyExists
 	}
 	util.DebugLog(util.DebugLevelEtcd, "create data", "key", key, "val", val)
 	return nil
@@ -80,11 +80,11 @@ func (e *EtcdClient) Create(key, val string) error {
 // update fails if key does not exist
 func (e *EtcdClient) Update(key, val string, version int64) error {
 	if e.client == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
-	if version == proto.ObjStoreUpdateVersionAny {
+	if version == edgeproto.ObjStoreUpdateVersionAny {
 		// version 0 means it doesn't exist yet
 		txn = txn.If(clientv3.Compare(clientv3.Version(key), "!=", 0))
 	} else {
@@ -97,7 +97,7 @@ func (e *EtcdClient) Update(key, val string, version int64) error {
 		return err
 	}
 	if !resp.Succeeded {
-		return proto.ObjStoreErrKeyNotFound
+		return edgeproto.ObjStoreErrKeyNotFound
 	}
 	util.DebugLog(util.DebugLevelEtcd, "update data", "key", key, "val", val)
 	return nil
@@ -105,7 +105,7 @@ func (e *EtcdClient) Update(key, val string, version int64) error {
 
 func (e *EtcdClient) Delete(key string) error {
 	if e.client == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	_, err := e.client.Delete(ctx, key)
@@ -119,7 +119,7 @@ func (e *EtcdClient) Delete(key string) error {
 
 func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 	if e.client == nil {
-		return nil, 0, proto.ObjStoreErrNotInitialized
+		return nil, 0, edgeproto.ObjStoreErrNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key)
@@ -128,7 +128,7 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 		return nil, 0, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, 0, proto.ObjStoreErrKeyNotFound
+		return nil, 0, edgeproto.ObjStoreErrKeyNotFound
 	}
 	obj := resp.Kvs[0]
 	util.DebugLog(util.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version)
@@ -136,9 +136,9 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 }
 
 // Get records that have the given key prefix
-func (e *EtcdClient) List(key string, cb proto.ListCb) error {
+func (e *EtcdClient) List(key string, cb edgeproto.ListCb) error {
 	if e.client == nil {
-		return proto.ObjStoreErrNotInitialized
+		return edgeproto.ObjStoreErrNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())

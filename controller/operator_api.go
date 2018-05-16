@@ -4,24 +4,24 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type OperatorApi struct {
-	proto.ObjStore
-	operators map[proto.OperatorKey]*proto.Operator
+	edgeproto.ObjStore
+	operators map[edgeproto.OperatorKey]*edgeproto.Operator
 	mux       util.Mutex
 }
 
-func InitOperatorApi(objStore proto.ObjStore) *OperatorApi {
+func InitOperatorApi(objStore edgeproto.ObjStore) *OperatorApi {
 	api := &OperatorApi{ObjStore: objStore}
-	api.operators = make(map[proto.OperatorKey]*proto.Operator)
+	api.operators = make(map[edgeproto.OperatorKey]*edgeproto.Operator)
 
 	api.mux.Lock()
 	defer api.mux.Unlock()
 
-	err := proto.LoadAllOperators(api, func(obj *proto.Operator) error {
+	err := edgeproto.LoadAllOperators(api, func(obj *edgeproto.Operator) error {
 		api.operators[obj.Key] = obj
 		return nil
 	})
@@ -31,7 +31,7 @@ func InitOperatorApi(objStore proto.ObjStore) *OperatorApi {
 	return api
 }
 
-func (s *OperatorApi) ValidateKey(key *proto.OperatorKey) error {
+func (s *OperatorApi) ValidateKey(key *edgeproto.OperatorKey) error {
 	if key == nil {
 		return errors.New("Operator key not specified")
 	}
@@ -41,11 +41,11 @@ func (s *OperatorApi) ValidateKey(key *proto.OperatorKey) error {
 	return nil
 }
 
-func (s *OperatorApi) Validate(in *proto.Operator) error {
+func (s *OperatorApi) Validate(in *edgeproto.Operator) error {
 	return s.ValidateKey(&in.Key)
 }
 
-func (s *OperatorApi) GetObjStoreKeyString(key *proto.OperatorKey) string {
+func (s *OperatorApi) GetObjStoreKeyString(key *edgeproto.OperatorKey) string {
 	return GetObjStoreKey(OperatorType, key.GetKeyString())
 }
 
@@ -53,7 +53,7 @@ func (s *OperatorApi) GetLoadKeyString() string {
 	return GetObjStoreKey(OperatorType, "")
 }
 
-func (s *OperatorApi) HasOperator(key *proto.OperatorKey) bool {
+func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 
@@ -61,32 +61,32 @@ func (s *OperatorApi) HasOperator(key *proto.OperatorKey) bool {
 	return found
 }
 
-func (s *OperatorApi) Refresh(in *proto.Operator, key string) error {
+func (s *OperatorApi) Refresh(in *edgeproto.Operator, key string) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	obj, err := proto.LoadOneOperator(s, key)
+	obj, err := edgeproto.LoadOneOperator(s, key)
 	if err == nil {
 		s.operators[in.Key] = obj
-	} else if err == proto.ObjStoreErrKeyNotFound {
+	} else if err == edgeproto.ObjStoreErrKeyNotFound {
 		delete(s.operators, in.Key)
 		err = nil
 	}
 	return err
 }
 
-func (s *OperatorApi) CreateOperator(ctx context.Context, in *proto.Operator) (*proto.Result, error) {
+func (s *OperatorApi) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	return in.Create(s)
 }
 
-func (s *OperatorApi) UpdateOperator(ctx context.Context, in *proto.Operator) (*proto.Result, error) {
+func (s *OperatorApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	return in.Update(s)
 }
 
-func (s *OperatorApi) DeleteOperator(ctx context.Context, in *proto.Operator) (*proto.Result, error) {
+func (s *OperatorApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
 	return in.Delete(s)
 }
 
-func (s *OperatorApi) ShowOperator(in *proto.Operator, cb proto.OperatorApi_ShowOperatorServer) error {
+func (s *OperatorApi) ShowOperator(in *edgeproto.Operator, cb edgeproto.OperatorApi_ShowOperatorServer) error {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 

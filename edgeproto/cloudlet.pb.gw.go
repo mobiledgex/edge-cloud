@@ -2,11 +2,11 @@
 // source: cloudlet.proto
 
 /*
-Package proto is a reverse proxy.
+Package edgeproto is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package proto
+package edgeproto
 
 import (
 	"io"

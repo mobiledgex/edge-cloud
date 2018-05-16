@@ -6,7 +6,7 @@ import (
 
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/mobiledgex/edge-cloud/proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 )
@@ -32,10 +32,10 @@ func grpcGateway(addr string) (http.Handler, error) {
 		gwruntime.WithProtoErrorHandler(gwruntime.DefaultHTTPProtoErrorHandler),
 	)
 	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-		proto.RegisterDeveloperApiHandler,
-		proto.RegisterAppApiHandler,
-		proto.RegisterOperatorApiHandler,
-		proto.RegisterCloudletApiHandler,
+		edgeproto.RegisterDeveloperApiHandler,
+		edgeproto.RegisterAppApiHandler,
+		edgeproto.RegisterOperatorApiHandler,
+		edgeproto.RegisterCloudletApiHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err
