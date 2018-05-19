@@ -24,6 +24,11 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+  "github.com/golang/protobuf/protoc-gen-go",
+  "github.com/gogo/protobuf/protoc-gen-gogo",
+  "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
+]
 
 [[constraint]]
   name = "github.com/bobbae/q"
@@ -84,3 +89,15 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+  [[prune.project]]
+    name = "github.com/gogo/protobuf"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/golang/protobuf"
+    non-go = false
+
+  [[prune.project]]
+    name = "github.com/grpc-ecosystem/grpc-gateway"
+    non-go = false

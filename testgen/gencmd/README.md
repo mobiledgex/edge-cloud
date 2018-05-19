@@ -1,0 +1,1 @@
+Directory for generated cmd output from sample test proto

@@ -99,6 +99,7 @@ func main() {
 	edgeproto.RegisterAppApiServer(server, appApi)
 	edgeproto.RegisterOperatorApiServer(server, operatorApi)
 	edgeproto.RegisterCloudletApiServer(server, cloudletApi)
+	edgeproto.RegisterAppInstApiServer(server, appInstApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called

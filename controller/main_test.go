@@ -40,11 +40,13 @@ func TestController(t *testing.T) {
 	appApi := edgeproto.NewAppApiClient(conn)
 	operApi := edgeproto.NewOperatorApiClient(conn)
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
+	appInstApi := edgeproto.NewAppInstApiClient(conn)
 
 	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
 	testutil.ClientAppCudTest(t, appApi, testutil.AppData)
 	testutil.ClientOperatorCudTest(t, operApi, testutil.OperatorData)
 	testutil.ClientCloudletCudTest(t, cloudletApi, testutil.CloudletData)
+	testutil.ClientAppInstCudTest(t, appInstApi, testutil.AppInstData)
 
 	util.InfoLog("done")
 	// closing the signal channel triggers main to exit
