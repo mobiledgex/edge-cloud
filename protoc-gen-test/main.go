@@ -1,8 +1,8 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/gensupport"
 
 func main() {
 	testcud := TestCud{}
-	util.RunMain("testutil", "_testutil.go", &testcud)
+	gensupport.RunMain("testutil", "_testutil.go", &testcud, nil)
 }

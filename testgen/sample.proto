@@ -76,3 +76,7 @@ message TestGen {
   repeated edgeproto.Loc repeated_loc = 35;
   repeated edgeproto.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
 }
+
+service TestApi {
+  rpc Request(TestGen) returns (TestGen) {}
+}

@@ -8,8 +8,8 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protogen"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 const edgeproto = "edgeproto"
@@ -259,7 +259,7 @@ func (t *TestCud) generateTestCud(message *descriptor.DescriptorProto) {
 			args.UpdateField = generator.CamelCase(*field.Name)
 		}
 	}
-	t.P(util.AutoGenComment)
+	t.P(gensupport.AutoGenComment)
 	t.cudTmpl.Execute(t, args)
 }
 
