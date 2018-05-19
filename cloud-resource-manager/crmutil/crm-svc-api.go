@@ -12,7 +12,6 @@ import (
 
 type CloudResourceData struct {
 	CloudResources []*edgeproto.CloudResource
-	mux            sync.Mutex
 }
 
 var crdb = CloudResourceData{
@@ -44,6 +43,7 @@ var resourceID int32 = 0
 
 // CloudResourceManagerServer describes Cloud Resource Manager Server instance container
 type CloudResourceManagerServer struct {
+	mux               sync.Mutex
 	CloudResourceData CloudResourceData
 }
 
@@ -57,8 +57,8 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 	var err error
 	q.Q("ListCloudResource", *cr)
 
-	server.CloudResourceData.mux.Lock()
-	defer server.CloudResourceData.mux.Unlock()
+	server.mux.Lock()
+	defer server.mux.Unlock()
 
 	for _, obj := range server.CloudResourceData.CloudResources {
 		q.Q(obj)
@@ -81,8 +81,8 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 // Add Cloud Resource
 func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
 	q.Q("AddCloudResource", *cr)
-	server.CloudResourceData.mux.Lock()
-	defer server.CloudResourceData.mux.Unlock()
+	server.mux.Lock()
+	defer server.mux.Unlock()
 
 	cr.Id = resourceID
 	resourceID = resourceID + 1
@@ -95,8 +95,8 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
 	q.Q("DeleteCloudResource", *cr)
 
-	server.CloudResourceData.mux.Lock()
-	defer server.CloudResourceData.mux.Unlock()
+	server.mux.Lock()
+	defer server.mux.Unlock()
 
 	found := false
 	foundIndex := -1
