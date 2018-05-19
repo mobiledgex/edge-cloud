@@ -11,3 +11,4 @@ build:
 	protoc ${INCLUDE} --gomex_out=plugins=grpc+mex,${BUILTIN}:. *.proto
 	protoc ${INCLUDE} --test_out=${BUILTIN}:./testutil *.proto
 	protoc ${INCLUDE} --grpc-gateway_out=${BUILTIN}:. *.proto
+	protoc ${INCLUDE} --cmd_out=${BUILTIN}:./gencmd *.proto

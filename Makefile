@@ -6,10 +6,12 @@ build:
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
+	go install ./protoc-gen-cmd
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine
 	go build ./...
+	go vet ./...
 
 install:
 	go install ./...
