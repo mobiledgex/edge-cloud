@@ -235,6 +235,7 @@ func doDeployApplication() {
 	image := cmd.String("image", "", "Image name and version (e.g. myapp:1.1.1) of the application (required)")
 	namespace := cmd.String("namespace", "default", "Namespace of the application")
 	replicas := cmd.Int("replicas", 1, "Number of replicas for the application")
+	exposure := cmd.String("exposure", "", "Exposure specification, e.g. http,80 (required)")
 
 	//TODO context, limitfactor, cpu, memory, repository, ...
 
@@ -261,6 +262,7 @@ func doDeployApplication() {
 	edgeapp.Image = *image
 	edgeapp.Namespace = *namespace
 	edgeapp.Replicas = int32(*replicas)
+	edgeapp.Exposure = *exposure
 
 	app := edgeproto.App{}
 
