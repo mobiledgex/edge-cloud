@@ -7,8 +7,8 @@
 	It is generated from these files:
 		app.proto
 		app_inst.proto
+		cloud-resource-manager.proto
 		cloudlet.proto
-		debug.proto
 		developer.proto
 		loc.proto
 		notice.proto
@@ -20,9 +20,11 @@
 		App
 		AppInstKey
 		AppInst
+		CloudResource
+		EdgeCloudApp
+		EdgeCloudApplication
 		CloudletKey
 		Cloudlet
-		DebugLevel
 		DeveloperKey
 		Developer
 		Loc
