@@ -16,8 +16,8 @@ func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerSe
 	err := prepCloudletData(srv)
 	ctx := context.TODO()
 
-	srv.CloudResourceData.mux.Lock()
-	defer srv.CloudResourceData.mux.Unlock()
+	srv.mux.Lock()
+	defer srv.mux.Unlock()
 
 	q.Q("call cloudlet api", len(srv.CloudResourceData.CloudResources))
 
@@ -35,8 +35,8 @@ func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerSe
 }
 
 func prepCloudletData(srv *CloudResourceManagerServer) error {
-	srv.CloudResourceData.mux.Lock()
-	defer srv.CloudResourceData.mux.Unlock()
+	srv.mux.Lock()
+	defer srv.mux.Unlock()
 
 	if len(CloudletData) < len(srv.CloudResourceData.CloudResources) {
 		return fmt.Errorf("insufficient cloudlet test data")
