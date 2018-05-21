@@ -71,6 +71,7 @@
     "protoc-gen-gogo/generator",
     "protoc-gen-gogo/grpc",
     "protoc-gen-gogo/plugin",
+    "protoc-gen-gogofast",
     "sortkeys",
     "types",
     "vanity",
@@ -503,6 +504,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c07536f2529dfa0885f0a7e546157693ad7026a71d8e82f2e9d32716582f2369"
+  inputs-digest = "4dcefe1bfea9b2580748011c677ca44478651fd56b18c4b4e220145756e4f8da"
   solver-name = "gps-cdcl"
   solver-version = 1
