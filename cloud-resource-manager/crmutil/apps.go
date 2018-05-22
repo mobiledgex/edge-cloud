@@ -31,7 +31,28 @@ func RunApp(app *edgeproto.EdgeCloudApplication) error {
 		if err := createKubernetesDeployment(app.Apps[0]); err != nil {
 			return err
 		}
+	case "openstack-simple":
+		if len(app.Apps) < 1 {
+			return fmt.Errorf("no apps specified")
+		}
+		app0 := app.Apps[0]
+		client, err := GetOpenstackClient(app0.Region)
+		if err != nil {
+			return err
+		}
+
+		args := OpenstackServerArgs{
+			Name:    app0.Name,
+			Region:  app0.Region,
+			Image:   app0.Image,
+			Flavor:  app0.Flavor,
+			Network: app0.Network,
+		}
+		if err := CreateOpenstackServer(client, &args); err != nil {
+			return err
+		}
 	default:
+		return fmt.Errorf("Invalid app Kind")
 	}
 
 	return nil
@@ -54,7 +75,21 @@ func KillApp(app *edgeproto.EdgeCloudApplication) error {
 		if err := deleteKubernetesDeployment(app.Apps[0]); err != nil {
 			return err
 		}
+	case "openstack-simple":
+		if len(app.Apps) < 1 {
+			return fmt.Errorf("no apps specified")
+		}
+		app0 := app.Apps[0]
+		client, err := GetOpenstackClient(app0.Region)
+		if err != nil {
+			return err
+		}
+
+		if err := DeleteOpenstackServer(client, app0.Name); err != nil {
+			return err
+		}
 	default:
+		return fmt.Errorf("Invalid app Kind")
 	}
 	return nil
 }
