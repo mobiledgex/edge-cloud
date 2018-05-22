@@ -42,7 +42,7 @@ var Match_Engine_RequestInIdType string
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
 	s := make([]string, 0, 9)
 	s = append(s, string(in.Ver))
-	s = append(s, string(in.IdType))
+	s = append(s, distributed_match_engine.Match_Engine_Request_IDType_name[int32(in.IdType)])
 	s = append(s, in.Id)
 	s = append(s, string(in.Carrier))
 	s = append(s, string(in.Tower))
@@ -59,8 +59,8 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	if in.GpsLocation.Timestamp == nil {
 		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
 	}
-	timestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
-	s = append(s, timestampTime.String())
+	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
+	s = append(s, _GpsLocation_TimestampTime.String())
 	s = append(s, string(in.AppId))
 	return s
 }
@@ -102,8 +102,8 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	if in.CloudletLocation.Timestamp == nil {
 		in.CloudletLocation.Timestamp = &google_protobuf.Timestamp{}
 	}
-	timestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
-	s = append(s, timestampTime.String())
+	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
+	s = append(s, _CloudletLocation_TimestampTime.String())
 	return s
 }
 
@@ -126,8 +126,8 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc_Verify) []string {
 	s := make([]string, 0, 3)
 	s = append(s, string(in.Ver))
-	s = append(s, string(in.TowerStatus))
-	s = append(s, string(in.GpsLocationStatus))
+	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status_name[int32(in.TowerStatus)])
+	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
 	return s
 }
 

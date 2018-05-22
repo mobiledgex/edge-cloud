@@ -73,10 +73,10 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	if in.CloudletLoc.Timestamp == nil {
 		in.CloudletLoc.Timestamp = &google_protobuf.Timestamp{}
 	}
-	timestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
-	s = append(s, timestampTime.String())
+	_CloudletLoc_TimestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
+	s = append(s, _CloudletLoc_TimestampTime.String())
 	s = append(s, string(in.Port))
-	s = append(s, string(in.Liveness))
+	s = append(s, edgeproto.AppInst_Liveness_name[int32(in.Liveness)])
 	return s
 }
 

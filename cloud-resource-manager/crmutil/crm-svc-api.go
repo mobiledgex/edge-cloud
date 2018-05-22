@@ -45,11 +45,12 @@ var resourceID int32 = 0
 type CloudResourceManagerServer struct {
 	mux               sync.Mutex
 	CloudResourceData CloudResourceData
+	ControllerData    *ControllerData
 }
 
 // NewCloudResourceManagerServer Creates new Cloud Resource Manager Service instance
-func NewCloudResourceManagerServer() (*CloudResourceManagerServer, error) {
-	return &CloudResourceManagerServer{CloudResourceData: crdb}, nil
+func NewCloudResourceManagerServer(cd *ControllerData) (*CloudResourceManagerServer, error) {
+	return &CloudResourceManagerServer{CloudResourceData: crdb, ControllerData: cd}, nil
 }
 
 // List Cloud Resource
@@ -88,6 +89,11 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 	resourceID = resourceID + 1
 
 	server.CloudResourceData.CloudResources = append(server.CloudResourceData.CloudResources, cr)
+	cloudlet := edgeproto.Cloudlet{}
+	found := server.ControllerData.GetCloudlet(cr.CloudletKey, &cloudlet)
+	if !found {
+		// controller has no such cloudlet, should fail
+	}
 
 	return &edgeproto.Result{}, nil
 }
@@ -117,6 +123,12 @@ func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Contex
 func (server *CloudResourceManagerServer) DeployApplication(ctx context.Context, app *edgeproto.EdgeCloudApplication) (*edgeproto.Result, error) {
 	if err := RunApp(app); err != nil {
 		return nil, err
+	}
+
+	appInst := edgeproto.AppInst{}
+	found := server.ControllerData.GetAppInst(app.Apps[0].AppInstKey, &appInst)
+	if !found {
+		// controller has no such app inst, should fail
 	}
 
 	return &edgeproto.Result{}, nil
