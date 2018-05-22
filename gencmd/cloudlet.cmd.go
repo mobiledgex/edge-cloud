@@ -59,8 +59,8 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	if in.Location.Timestamp == nil {
 		in.Location.Timestamp = &google_protobuf.Timestamp{}
 	}
-	timestampTime := time.Unix(in.Location.Timestamp.Seconds, int64(in.Location.Timestamp.Nanos))
-	s = append(s, timestampTime.String())
+	_Location_TimestampTime := time.Unix(in.Location.Timestamp.Seconds, int64(in.Location.Timestamp.Nanos))
+	s = append(s, _Location_TimestampTime.String())
 	return s
 }
 

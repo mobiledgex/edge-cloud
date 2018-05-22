@@ -101,13 +101,12 @@ func doAddCloudResource() {
 
 	ctx := context.TODO()
 
-	cloudlet := edgeproto.Cloudlet{}
 	okey := edgeproto.OperatorKey{Name: *opkey}
-	cloudlet.Key = edgeproto.CloudletKey{OperatorKey: okey, Name: *opkeyname}
-	cloudlet.AccessIp = net.ParseIP(*address)
+	cloudletKey := edgeproto.CloudletKey{OperatorKey: okey, Name: *opkeyname}
 
-	cr := edgeproto.CloudResource{Cloudlet: &cloudlet}
+	cr := edgeproto.CloudResource{CloudletKey: &cloudletKey}
 	cr.Name = *name
+	cr.AccessIp = net.ParseIP(*address)
 
 	res, err := api.AddCloudResource(ctx, &cr)
 
@@ -148,8 +147,8 @@ func doListCloudResource() {
 	}
 
 	ctx := context.TODO()
-	cloudlet := edgeproto.Cloudlet{}
-	cr := edgeproto.CloudResource{Cloudlet: &cloudlet}
+	cloudletKey := edgeproto.CloudletKey{}
+	cr := edgeproto.CloudResource{CloudletKey: &cloudletKey}
 	cr.Category = edgeproto.CloudResourceCategory(*category)
 
 	q.Q("calling ListCloudResource")
@@ -208,14 +207,12 @@ func doDeleteCloudResource() {
 
 	ctx := context.TODO()
 
-	cloudlet := edgeproto.Cloudlet{}
-
 	okey := edgeproto.OperatorKey{Name: *opkey}
-	cloudlet.Key = edgeproto.CloudletKey{OperatorKey: okey, Name: *opkeyname}
-	cloudlet.AccessIp = net.ParseIP(*address)
+	cloudletKey := edgeproto.CloudletKey{OperatorKey: okey, Name: *opkeyname}
 
-	cr := edgeproto.CloudResource{Cloudlet: &cloudlet}
+	cr := edgeproto.CloudResource{CloudletKey: &cloudletKey}
 	cr.Name = *name
+	cr.AccessIp = net.ParseIP(*address)
 
 	res, err := api.DeleteCloudResource(ctx, &cr)
 
@@ -264,9 +261,9 @@ func doDeployApplication() {
 	edgeapp.Replicas = int32(*replicas)
 	edgeapp.Exposure = *exposure
 
-	app := edgeproto.App{}
+	appInstKey := edgeproto.AppInstKey{}
 
-	edgeapp.App = &app
+	edgeapp.AppInstKey = &appInstKey
 	edgeapplication.Apps = []*edgeproto.EdgeCloudApp{&edgeapp}
 
 	res, err := api.DeployApplication(ctx, &edgeapplication)
@@ -310,9 +307,9 @@ func doDeleteApplication() {
 	edgeapp.Name = *name
 	edgeapp.Namespace = *namespace
 
-	app := edgeproto.App{}
+	appInstKey := edgeproto.AppInstKey{}
 
-	edgeapp.App = &app
+	edgeapp.AppInstKey = &appInstKey
 	edgeapplication.Apps = []*edgeproto.EdgeCloudApp{&edgeapp}
 
 	res, err := api.DeleteApplication(ctx, &edgeapplication)

@@ -27,7 +27,7 @@ var apiIP = flag.String("apiIP", "127.0.0.1", "API listener IP")
 var apiPort = flag.Uint("apiPort", 55001, "API listener port")
 var httpPort = flag.Uint("httpPort", 8091, "HTTP listener port")
 var matcherAddrs = flag.String("matcherAddrs", "", "comma separated list of distributed matching engine addresses")
-var cloudletMgrAddrs = flag.String("cloudletMgrAddrs", "", "comma separated list of cloudlet manager addresses")
+var crmAddrs = flag.String("crmAddrs", "", "comma separated list of cloudlet resource manager addresses")
 var debugLevels = flag.String("d", "", "comma separated list of debug levels")
 
 func GetRootDir() string {
@@ -92,7 +92,7 @@ func main() {
 	}
 	notify.InitNotifySenders(NewControllerNotifier(appInstApi, cloudletApi))
 	notify.RegisterMatcherAddrs(*matcherAddrs)
-	notify.RegisterCloudletAddrs(*cloudletMgrAddrs)
+	notify.RegisterCloudletAddrs(*crmAddrs)
 
 	server := grpc.NewServer()
 	edgeproto.RegisterDeveloperApiServer(server, developerApi)

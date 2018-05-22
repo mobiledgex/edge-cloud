@@ -31,8 +31,8 @@ func LocSlicer(in *edgeproto.Loc) []string {
 	if in.Timestamp == nil {
 		in.Timestamp = &google_protobuf.Timestamp{}
 	}
-	timestampTime := time.Unix(in.Timestamp.Seconds, int64(in.Timestamp.Nanos))
-	s = append(s, timestampTime.String())
+	_TimestampTime := time.Unix(in.Timestamp.Seconds, int64(in.Timestamp.Nanos))
+	s = append(s, _TimestampTime.String())
 	return s
 }
 

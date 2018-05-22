@@ -88,12 +88,12 @@ func NewDummyRecvHandler() *DummyRecvHandler {
 
 func (s *DummyRecvHandler) HandleSendAllDone(maps *NotifySendAllMaps) {
 	for key, _ := range s.appInsts {
-		if _, ok := maps.appInsts[key]; !ok {
+		if _, ok := maps.AppInsts[key]; !ok {
 			delete(s.appInsts, key)
 		}
 	}
 	for key, _ := range s.cloudlets {
-		if _, ok := maps.cloudlets[key]; !ok {
+		if _, ok := maps.Cloudlets[key]; !ok {
 			delete(s.cloudlets, key)
 		}
 	}
