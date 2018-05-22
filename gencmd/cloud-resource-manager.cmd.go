@@ -57,7 +57,7 @@ func CloudResourceHeaderSlicer() []string {
 }
 
 func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 14)
 	s = append(s, in.Name)
 	s = append(s, in.Repository)
 	s = append(s, in.Image)
@@ -68,6 +68,9 @@ func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
 	s = append(s, string(in.Replicas))
 	s = append(s, in.Context)
 	s = append(s, in.Namespace)
+	s = append(s, in.Region)
+	s = append(s, in.Flavor)
+	s = append(s, in.Network)
 	if in.AppInstKey == nil {
 		in.AppInstKey = &edgeproto.AppInstKey{}
 	}
@@ -81,7 +84,7 @@ func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
 }
 
 func EdgeCloudAppHeaderSlicer() []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 14)
 	s = append(s, "Name")
 	s = append(s, "Repository")
 	s = append(s, "Image")
@@ -92,6 +95,9 @@ func EdgeCloudAppHeaderSlicer() []string {
 	s = append(s, "Replicas")
 	s = append(s, "Context")
 	s = append(s, "Namespace")
+	s = append(s, "Region")
+	s = append(s, "Flavor")
+	s = append(s, "Network")
 	s = append(s, "AppInstKey-AppKey-DeveloperKey-Name")
 	s = append(s, "AppInstKey-AppKey-Name")
 	s = append(s, "AppInstKey-AppKey-Version")
@@ -119,6 +125,9 @@ func EdgeCloudApplicationSlicer(in *edgeproto.EdgeCloudApplication) []string {
 	s = append(s, string(in.Apps[0].Replicas))
 	s = append(s, in.Apps[0].Context)
 	s = append(s, in.Apps[0].Namespace)
+	s = append(s, in.Apps[0].Region)
+	s = append(s, in.Apps[0].Flavor)
+	s = append(s, in.Apps[0].Network)
 	if in.Apps[0].AppInstKey == nil {
 		in.Apps[0].AppInstKey = &edgeproto.AppInstKey{}
 	}
@@ -145,6 +154,9 @@ func EdgeCloudApplicationHeaderSlicer() []string {
 	s = append(s, "Apps-Replicas")
 	s = append(s, "Apps-Context")
 	s = append(s, "Apps-Namespace")
+	s = append(s, "Apps-Region")
+	s = append(s, "Apps-Flavor")
+	s = append(s, "Apps-Network")
 	s = append(s, "Apps-AppInstKey-AppKey-DeveloperKey-Name")
 	s = append(s, "Apps-AppInstKey-AppKey-Name")
 	s = append(s, "Apps-AppInstKey-AppKey-Version")
@@ -320,6 +332,9 @@ func init() {
 	EdgeCloudApplicationFlagSet.Int32Var(&EdgeCloudApplicationIn.Apps[0].Replicas, "apps-replicas", 0, "Apps[0].Replicas")
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Context, "apps-context", "", "Apps[0].Context")
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Namespace, "apps-namespace", "", "Apps[0].Namespace")
+	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Region, "apps-region", "", "Apps[0].Region")
+	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Flavor, "apps-flavor", "", "Apps[0].Flavor")
+	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Network, "apps-network", "", "Apps[0].Network")
 	EdgeCloudApplicationIn.Apps[0].AppInstKey = &edgeproto.AppInstKey{}
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.AppKey.DeveloperKey.Name, "apps-appinstkey-appkey-developerkey-name", "", "Apps[0].AppInstKey.AppKey.DeveloperKey.Name")
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.AppKey.Name, "apps-appinstkey-appkey-name", "", "Apps[0].AppInstKey.AppKey.Name")
