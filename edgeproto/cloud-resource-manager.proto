@@ -4,7 +4,7 @@ package edgeproto;
 
 import "cloudlet.proto";
 import "result.proto";
-import "app.proto";
+import "app_inst.proto";
 
 service CloudResourceManager {
   rpc ListCloudResource(CloudResource) returns (stream CloudResource) {}
@@ -35,9 +35,12 @@ enum CloudResourceCategory {
 message CloudResource {
   string name = 1;
   CloudResourceCategory category = 2;
-  Cloudlet cloudlet = 3;
+  CloudletKey cloudletKey = 3;
   bool active = 4;
   int32 id = 5;
+  // AccessIp should come from the cloudlet, but for testing it
+  // is configurable here. This will need to be removed later.
+  bytes access_ip = 100;
 }
 
 message EdgeCloudApp {
@@ -51,7 +54,7 @@ message EdgeCloudApp {
   int32 replicas = 9;
   string context = 10;
   string namespace = 11;
-  App app = 12;
+  AppInstKey appInstKey = 12;
 }
 
 message EdgeCloudApplication {

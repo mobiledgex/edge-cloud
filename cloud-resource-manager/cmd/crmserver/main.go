@@ -10,12 +10,14 @@ import (
 	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 var bindAddress = flag.String("bind", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
+var notifyAddr = flag.String("notifyAddr", "127.0.0.1:51001", "Notify listener address")
 
 var sigChan chan os.Signal
 
@@ -27,10 +29,17 @@ func main() {
 		log.Fatalf("Failed to bind to %v, %v", *bindAddress, err)
 	}
 
-	srv, err := crmutil.NewCloudResourceManagerServer()
+	controllerData := crmutil.NewControllerData()
+	srv, err := crmutil.NewCloudResourceManagerServer(controllerData)
 
 	grpcServer := grpc.NewServer()
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
+
+	recvHandler := NewNotifyHandler(controllerData)
+	recv := notify.NewNotifyReceiver("tcp", *notifyAddr, recvHandler)
+	go recv.Run()
+	defer recv.Stop()
+	q.Q("running notify handler at %v", *notifyAddr)
 
 	q.Q("registered CRM API server")
 	reflection.Register(grpcServer)
@@ -51,6 +60,9 @@ func main() {
 	}
 	defer conn.Close()
 
+	// Cloudlet, Operator, AppInst data should come from controller
+	// via notify API, but may be pre-populated here programmatically
+	// for testing.
 	cloudletAPI := edgeproto.NewCloudletApiClient(conn)
 	operatorAPI := edgeproto.NewOperatorApiClient(conn)
 

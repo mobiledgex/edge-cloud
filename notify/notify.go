@@ -345,8 +345,8 @@ func (s *NotifySender) Stop() {
 }
 
 type NotifySendAllMaps struct {
-	appInsts  map[edgeproto.AppInstKey]bool
-	cloudlets map[edgeproto.CloudletKey]bool
+	AppInsts  map[edgeproto.AppInstKey]bool
+	Cloudlets map[edgeproto.CloudletKey]bool
 }
 
 type NotifyRecvHandler interface {
@@ -476,8 +476,8 @@ func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeSer
 		return err
 	}
 	sendAllMaps := &NotifySendAllMaps{}
-	sendAllMaps.appInsts = make(map[edgeproto.AppInstKey]bool)
-	sendAllMaps.cloudlets = make(map[edgeproto.CloudletKey]bool)
+	sendAllMaps.AppInsts = make(map[edgeproto.AppInstKey]bool)
+	sendAllMaps.Cloudlets = make(map[edgeproto.CloudletKey]bool)
 	util.DebugLog(util.DebugLevelNotify, "NotifyReceiver connected", "version", s.version, "supported-version", NotifyVersion)
 
 	for !s.done {
@@ -494,11 +494,11 @@ func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeSer
 		if sendAllMaps != nil && notice.Action == edgeproto.NoticeAction_UPDATE {
 			appInst := notice.GetAppInst()
 			if appInst != nil {
-				sendAllMaps.appInsts[appInst.Key] = true
+				sendAllMaps.AppInsts[appInst.Key] = true
 			}
 			cloudlet := notice.GetCloudlet()
 			if cloudlet != nil {
-				sendAllMaps.cloudlets[cloudlet.Key] = true
+				sendAllMaps.Cloudlets[cloudlet.Key] = true
 			}
 		}
 		if notice.Action == edgeproto.NoticeAction_SENDALL_END {

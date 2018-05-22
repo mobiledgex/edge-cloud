@@ -142,7 +142,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		if _, found := g.inMessages[msgName]; !found {
 			continue
 		}
-		visited := make(map[*generator.Descriptor]bool)
+		visited := make([]*generator.Descriptor, 0)
 		g.generateVarFlags(msgName, make([]string, 0), desc, visited)
 	}
 	// Add per input struct flag sets to the commands.
@@ -186,12 +186,14 @@ func (g *GenCmd) generateInputVars() {
 		g.importPflag = true
 		g.P("var ", flatType, "In ", g.FQTypeName(desc))
 		g.P("var ", flatType, "FlagSet = pflag.NewFlagSet(\"", flatType, "\", pflag.ExitOnError)")
-		g.generateEnumVars(flatType, desc, make([]string, 0), make(map[*generator.Descriptor]bool))
+		g.generateEnumVars(flatType, desc, make([]string, 0), make([]*generator.Descriptor, 0))
 	}
 }
 
-func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents []string, visited map[*generator.Descriptor]bool) {
-	visited[desc] = true
+func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
+	if wasVisited(desc, visited) {
+		return
+	}
 	for _, field := range desc.DescriptorProto.Field {
 		if field.Type == nil {
 			continue
@@ -200,7 +202,7 @@ func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, p
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			g.generateEnumVars(flatType, subDesc, append(parents, name), visited)
+			g.generateEnumVars(flatType, subDesc, append(parents, name), append(visited, desc))
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			inVar := flatType + "In" + strings.Join(append(parents, name), "")
 			g.P("var ", inVar, " string")
@@ -231,12 +233,21 @@ type fieldArgs struct {
 var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, "{{.Field}}")
 `
 
-func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, visited map[*generator.Descriptor]bool) {
-	visited[desc] = true
+func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	if wasVisited(desc, visited) {
+		// Break recursion. Googleapis HttpRule
+		// includes itself, so is a recursive
+		// definition.
+		return
+	}
 	msg := desc.DescriptorProto
 	for _, field := range msg.Field {
 		if !supportedField(field) {
 			continue
+		}
+		idx := ""
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			idx = "[0]"
 		}
 
 		name := generator.CamelCase(*field.Name)
@@ -246,7 +257,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		hierField := strings.Join(append(parents, name), ".")
 		fargs := &fieldArgs{
 			MsgName:  msgName,
-			Ref:      "&" + msgName + "In" + "." + hierField,
+			Ref:      "&" + msgName + "In" + "." + hierField + idx,
 			Field:    hierField,
 			Arg:      argName(append(parents, name)),
 			Type:     "String",
@@ -255,17 +266,18 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			if _, found := visited[subDesc]; found {
-				// Break recursion. Googleapis HttpRule
-				// includes itself, so is a recursive
-				// definition.
-				continue
-			}
 			subType := g.FQTypeName(subDesc)
-			if gogoproto.IsNullable(field) {
-				g.P(msgName, "In.", hierField, " = &", subType, "{}")
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				ref := ""
+				if gogoproto.IsNullable(field) {
+					ref = "*"
+				}
+				g.P(msgName, "In.", hierField, " = make([]", ref, g.FQTypeName(subDesc), ", 1)")
 			}
-			g.generateVarFlags(msgName, append(parents, name), subDesc, visited)
+			if gogoproto.IsNullable(field) {
+				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
+			}
+			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, append(visited, desc))
 			continue
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
 			fallthrough
@@ -348,25 +360,31 @@ func (g *GenCmd) generateSlicer(desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	g.P("func ", gensupport.GetMsgName(desc), "Slicer(in *", g.FQTypeName(desc), ") []string {")
 	g.P("s := make([]string, 0, ", len(message.Field), ")")
-	g.generateSlicerFields(desc, make([]string, 0), make(map[*generator.Descriptor]bool))
+	g.generateSlicerFields(desc, make([]string, 0), make([]*generator.Descriptor, 0))
 	g.P("return s")
 	g.P("}")
 	g.P()
 
 	g.P("func ", gensupport.GetMsgName(desc), "HeaderSlicer() []string {")
 	g.P("s := make([]string, 0, ", len(message.Field), ")")
-	g.generateHeaderSlicerFields(desc, make([]string, 0), make(map[*generator.Descriptor]bool))
+	g.generateHeaderSlicerFields(desc, make([]string, 0), make([]*generator.Descriptor, 0))
 	g.P("return s")
 	g.P("}")
 	g.P()
 
 }
 
-func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []string, visited map[*generator.Descriptor]bool) {
-	visited[desc] = true
+func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
+	if wasVisited(desc, visited) {
+		return
+	}
 	for _, field := range desc.DescriptorProto.Field {
 		if !supportedField(field) {
 			continue
+		}
+		idx := ""
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			idx = "[0]"
 		}
 
 		name := generator.CamelCase(*field.Name)
@@ -374,43 +392,56 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			if _, found := visited[subDesc]; found {
-				// break recursion
-				continue
-			}
 			if gogoproto.IsNullable(field) {
 				g.P("if in.", hierName, " == nil {")
-				g.P("in.", hierName, " = &", g.FQTypeName(subDesc), "{}")
+				if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+					ref := ""
+					if gogoproto.IsNullable(field) {
+						ref = "*"
+					}
+					g.P("in.", hierName, " = make([]", ref, g.FQTypeName(subDesc), ", 1)")
+				}
+				g.P("in.", hierName, idx, " = &", g.FQTypeName(subDesc), "{}")
 				g.P("}")
 			}
 			if *field.TypeName == ".google.protobuf.Timestamp" {
 				g.importTime = true
-				g.P(field.Name, "Time := time.Unix(in.", hierName, ".Seconds, int64(in.", hierName, ".Nanos))")
-				g.P("s = append(s, ", field.Name, "Time.String())")
+				tempField := "_" + strings.Map(strFixer, hierName)
+				g.P(tempField, "Time := time.Unix(in.", hierName, idx, ".Seconds, int64(in.", hierName, idx, ".Nanos))")
+				g.P("s = append(s, ", tempField, "Time.String())")
 				break
 			}
-			g.generateSlicerFields(subDesc, append(parents, name), visited)
+			g.generateSlicerFields(subDesc, append(parents, name+idx), append(visited, desc))
 		case descriptor.FieldDescriptorProto_TYPE_GROUP:
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
 			// TODO
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
-			g.P("s = append(s, strconv.FormatBool(in.", hierName, "))")
+			g.importStrconv = true
+			g.P("s = append(s, strconv.FormatBool(in.", hierName, idx, "))")
 		case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
 			fallthrough
 		case descriptor.FieldDescriptorProto_TYPE_FLOAT:
 			g.importStrconv = true
-			g.P("s = append(s, strconv.FormatFloat(float64(in.", hierName, "), 'e', -1, 32))")
+			g.P("s = append(s, strconv.FormatFloat(float64(in.", hierName, idx, "), 'e', -1, 32))")
 		case descriptor.FieldDescriptorProto_TYPE_STRING:
-			g.P("s = append(s, in.", hierName, ")")
+			g.P("s = append(s, in.", hierName, idx, ")")
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
+			en := g.GetEnumDesc(field.GetTypeName())
+			if en == nil {
+				g.Fail("Enum for ", *desc.DescriptorProto.Name, " field ", name, " not found")
+			}
+			g.P("s = append(s, ", g.FQTypeName(en), "_name[int32(in.", hierName, idx, ")])")
 		default:
-			g.P("s = append(s, string(in.", hierName, "))")
+			g.P("s = append(s, string(in.", hierName, idx, "))")
 		}
 	}
 }
 
-func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents []string, visited map[*generator.Descriptor]bool) {
-	visited[desc] = true
+func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
+	if wasVisited(desc, visited) {
+		return
+	}
 	for _, field := range desc.DescriptorProto.Field {
 		if !supportedField(field) {
 			continue
@@ -422,11 +453,7 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 		}
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && *field.TypeName != ".google.protobuf.Timestamp" {
 			subDesc := g.GetDesc(field.GetTypeName())
-			if _, found := visited[subDesc]; found {
-				// break recursion
-				continue
-			}
-			g.generateHeaderSlicerFields(subDesc, append(parents, name), visited)
+			g.generateHeaderSlicerFields(subDesc, append(parents, name), append(visited, desc))
 		} else {
 			g.P("s = append(s, \"", strings.Join(append(parents, name), "-"), "\")")
 		}
@@ -627,12 +654,28 @@ func supportedField(field *descriptor.FieldDescriptorProto) bool {
 	}
 	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 		// not supported yet
-		return false
+		//return false
 	}
 	return true
 }
 
 func argName(strs []string) string {
 	str := strings.Join(strs, "-")
-	return strings.ToLower(str)
+	return strings.ToLower(strings.Replace(str, "[0]", "", -1))
+}
+
+func wasVisited(desc *generator.Descriptor, visited []*generator.Descriptor) bool {
+	for _, d := range visited {
+		if desc == d {
+			return true
+		}
+	}
+	return false
+}
+
+func strFixer(r rune) rune {
+	if r == '.' || r == '[' || r == ']' {
+		return '_'
+	}
+	return r
 }

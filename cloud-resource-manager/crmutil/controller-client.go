@@ -21,14 +21,14 @@ func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerSe
 
 	q.Q("call cloudlet api", len(srv.CloudResourceData.CloudResources))
 
-	for _, cr := range srv.CloudResourceData.CloudResources {
+	for i, cr := range srv.CloudResourceData.CloudResources {
 		q.Q(cr)
-		_, err = api.CreateCloudlet(ctx, cr.Cloudlet)
+		_, err = api.CreateCloudlet(ctx, &CloudletData[i])
 		if err != nil {
 			q.Q(err)
 			break
 		}
-		q.Q("CreateCloudlet", cr.Cloudlet)
+		q.Q("CreateCloudlet", CloudletData[i])
 	}
 
 	return err
@@ -43,7 +43,7 @@ func prepCloudletData(srv *CloudResourceManagerServer) error {
 	}
 
 	for i, cr := range srv.CloudResourceData.CloudResources {
-		cr.Cloudlet = &CloudletData[i]
+		cr.CloudletKey = &CloudletData[i].Key
 	}
 
 	return nil

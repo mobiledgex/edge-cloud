@@ -21,7 +21,7 @@ var NotifyApiCmd edgeproto.NotifyApiClient
 
 func NoticeSlicer(in *edgeproto.Notice) []string {
 	s := make([]string, 0, 5)
-	s = append(s, string(in.Action))
+	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, string(in.ConnectionId))
 	s = append(s, string(in.Version))
 	return s
@@ -37,7 +37,7 @@ func NoticeHeaderSlicer() []string {
 
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
 	s := make([]string, 0, 2)
-	s = append(s, string(in.Action))
+	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, string(in.Version))
 	return s
 }
