@@ -23,8 +23,8 @@ var controllerCmd = &cobra.Command{
 var dmeCmd = &cobra.Command{
 	Use: "dme",
 }
-var cloudletCmd = &cobra.Command{
-	Use: "cloudlet",
+var crmCmd = &cobra.Command{
+	Use: "crm",
 }
 
 func connect(cmd *cobra.Command, args []string) {
@@ -39,6 +39,7 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.CloudletApiCmd = edgeproto.NewCloudletApiClient(conn)
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
+	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
 }
 
 func close(cmd *cobra.Command, args []string) {
@@ -48,7 +49,7 @@ func close(cmd *cobra.Command, args []string) {
 func main() {
 	rootCmd.AddCommand(controllerCmd)
 	rootCmd.AddCommand(dmeCmd)
-	rootCmd.AddCommand(cloudletCmd)
+	rootCmd.AddCommand(crmCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 
 	controllerCmd.AddCommand(gencmd.CreateDeveloperCmd)
@@ -78,6 +79,12 @@ func main() {
 
 	dmeCmd.AddCommand(gencmd.FindCloudletCmd)
 	dmeCmd.AddCommand(gencmd.VerifyLocationCmd)
+
+	crmCmd.AddCommand(gencmd.ListCloudResourceCmd)
+	crmCmd.AddCommand(gencmd.AddCloudResourceCmd)
+	crmCmd.AddCommand(gencmd.DeleteCloudResourceCmd)
+	crmCmd.AddCommand(gencmd.DeployApplicationCmd)
+	crmCmd.AddCommand(gencmd.DeleteApplicationCmd)
 
 	rootCmd.Execute()
 }
