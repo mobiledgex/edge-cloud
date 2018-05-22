@@ -228,11 +228,14 @@ func doDeployApplication() {
 
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 	name := cmd.String("name", "", "Name of the application (required)")
-	kind := cmd.String("kind", "", "Type of the application, e.g. k8s-simple, k8s-manifest, (required)")
-	image := cmd.String("image", "", "Image name and version (e.g. myapp:1.1.1) of the application (required)")
+	kind := cmd.String("kind", "", "Type of the application, e.g. k8s-simple, k8s-manifest, openstack-simple (required)")
+	image := cmd.String("image", "", "Image name and version (e.g. myapp:1.1.1 or a VM image UUID) of the application (required)")
 	namespace := cmd.String("namespace", "default", "Namespace of the application")
 	replicas := cmd.Int("replicas", 1, "Number of replicas for the application")
-	exposure := cmd.String("exposure", "", "Exposure specification, e.g. http,80 (required)")
+	exposure := cmd.String("exposure", "", "Exposure specification, e.g. http,80 (required if k8s application)")
+	flavor := cmd.String("flavor", "", "Flavor UUID of the application (required if openstack)")
+	network := cmd.String("network", "", "Network UUID of the application (required if openstack)")
+	region := cmd.String("region", "", "Region of the application")
 
 	//TODO context, limitfactor, cpu, memory, repository, ...
 
@@ -241,6 +244,22 @@ func doDeployApplication() {
 	if *crm == "" || *name == "" || *kind == "" || *image == "" {
 		cmd.PrintDefaults()
 		os.Exit(1)
+	}
+
+	if strings.HasPrefix(*kind, "k8s-") {
+		if *exposure == "" {
+			cmd.PrintDefaults()
+			os.Exit(1)
+		}
+		//TODO validate k8s kubeconfig
+	}
+
+	if strings.HasPrefix(*kind, "openstack-") {
+		if *flavor == "" || *network == "" || *region == "" {
+			cmd.PrintDefaults()
+			os.Exit(1)
+		}
+		//TODO validate Openstack Environment credentials
 	}
 
 	ctx := context.TODO()
@@ -260,6 +279,9 @@ func doDeployApplication() {
 	edgeapp.Namespace = *namespace
 	edgeapp.Replicas = int32(*replicas)
 	edgeapp.Exposure = *exposure
+	edgeapp.Network = *network
+	edgeapp.Flavor = *flavor
+	edgeapp.Region = *region
 
 	appInstKey := edgeproto.AppInstKey{}
 
@@ -284,12 +306,21 @@ func doDeleteApplication() {
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 	kind := cmd.String("kind", "", "Type of the application, e.g. k8s-simple, k8s-manifest, (required)")
 	namespace := cmd.String("namespace", "default", "Namespace of the application")
+	region := cmd.String("region", "", "Region of the application")
 
 	cmd.Parse(os.Args[2:])
 
 	if *crm == "" || *name == "" || *kind == "" {
 		cmd.PrintDefaults()
 		os.Exit(1)
+	}
+
+	if strings.HasPrefix(*kind, "openstack-") {
+		if *region == "" {
+			cmd.PrintDefaults()
+			os.Exit(1)
+		}
+		//TODO validate Openstack Environment credentials
 	}
 
 	ctx := context.TODO()
@@ -305,6 +336,7 @@ func doDeleteApplication() {
 
 	edgeapp := edgeproto.EdgeCloudApp{}
 	edgeapp.Name = *name
+	edgeapp.Region = *region
 	edgeapp.Namespace = *namespace
 
 	appInstKey := edgeproto.AppInstKey{}
