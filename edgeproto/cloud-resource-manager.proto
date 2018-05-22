@@ -54,7 +54,10 @@ message EdgeCloudApp {
   int32 replicas = 9;
   string context = 10;
   string namespace = 11;
-  AppInstKey appInstKey = 12;
+  string region = 12;
+  string flavor = 13;
+  string network = 14;
+  AppInstKey appInstKey = 15;
 }
 
 message EdgeCloudApplication {
