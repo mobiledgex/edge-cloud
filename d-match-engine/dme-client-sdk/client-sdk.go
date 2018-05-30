@@ -36,9 +36,11 @@ func main() {
 
 	var req = &dme.Match_Engine_Request{};
 	req.Ver = uint32(defaultversion);
-	resp, err := client.FindCloudlet(ctx, req);
+	resp, err := client.VerifyLocation(ctx, req);
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
 	log.Printf("Got Version: %d", resp.Ver)
+
+	find_cloudlets(client)
 }

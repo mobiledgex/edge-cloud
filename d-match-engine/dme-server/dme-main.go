@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"flag"
 	"log"
 	"net"
@@ -25,17 +26,22 @@ var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener a
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
-func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply, error) {
-	//var m dme.Match_Engine_Reply;
-	//var me = &m;
-	log.Printf("FindCloudlet - Got Version: %d", req.Ver)
+func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
+	error) {
+	
+	var mreq *dme.Match_Engine_Reply;
+	var ipaddr net.IP
 
-	var me = &dme.Match_Engine_Reply{}
-	me.Ver = 5
-	return me, nil
+	mreq = new (dme.Match_Engine_Reply)
+	find_cloudlet(req, mreq)
+	ipaddr = mreq.ServiceIp
+	fmt.Printf("FindCloudlet: Found Sewrvice IP %s\n", ipaddr.String())
+	return mreq, nil
 }
 
-func (s *server) VerifyLocation(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
+func (s *server) VerifyLocation(ctx context.Context,
+	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
+	
 	log.Printf("VerifyLocation - Got Version: %d", req.Ver)
 	var loc = &dme.Match_Engine_Loc_Verify{}
 	loc.Ver = 6

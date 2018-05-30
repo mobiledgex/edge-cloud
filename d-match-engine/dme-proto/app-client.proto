@@ -41,6 +41,8 @@ message Match_Engine_Reply {
   uint32 service_port = 4;
   // location of the cloudlet?
   edgeproto.Loc cloudlet_location = 5;
+  // Status return
+  bool Status = 6;
 }
 
 message Match_Engine_Loc_Verify {

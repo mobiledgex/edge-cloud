@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"sync"
+	"math"
+	"net"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	//"github.com/mobiledgex/edge-cloud/util"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
 type cloudlet struct {
@@ -47,8 +49,38 @@ func setup_match_engine() {
 	carrier_app_tbl.apps = make(map[app_carrier_key]*carrier_app_cloudlet)
 
 	populate_tbl()
+	list_appinst_tbl()
 }
 
+func torads(deg float64) float64 {
+  return deg * math.Pi / 180;
+}
+
+// Use the ‘haversine’ formula to calculate the great-circle distance between two points
+func distance_between(loc1, loc2 edgeproto.Loc) float64 {
+	radiusofearth := 6371;
+	var diff_lat, diff_long float64
+	var a, c, dist float64
+	var lat1, long1, lat2, long2 float64
+
+	lat1 = loc1.Lat
+	long1 = loc1.Long
+	lat2 = loc2.Lat
+	long2 = loc2.Long
+
+	diff_lat = torads(lat2 - lat1)
+	diff_long = torads(long2 - long1)
+
+	rad_lat1 := torads(lat1)
+	rad_lat2 := torads(lat2)
+
+	a = math.Sin(diff_lat/2) * math.Sin(diff_lat/2) + math.Sin(diff_long/2) *
+		math.Sin(diff_long/2) * math.Cos(rad_lat1) * math.Cos(rad_lat2)
+	c = 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1 - a))
+	dist = c * float64(radiusofearth)
+	
+	return dist
+}
 
 func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 	var key app_carrier_key
@@ -93,4 +125,69 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 		cloudlet_inst.location.Lat, cloudlet_inst.location.Long);
 	carrier.Unlock()
 	tbl.Unlock()
+}
+
+func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
+	var key app_carrier_key
+	var c, found *cloudlet
+	var carrier *carrier_app_cloudlet
+	var distance, d float64
+	var tbl *carrier_app
+	var ipaddr net.IP
+
+	tbl = carrier_app_tbl	
+	key.carrier_id = mreq.Carrier
+	key.app_id = mreq.AppId
+	tbl.RLock()
+	carrier, ok := tbl.apps[key]
+	if (!ok) {
+		// mreply.Status = false
+		tbl.RUnlock()
+		return
+	}
+
+	// mreply.Status = true
+	distance = 10000
+	c = carrier.app_cloudlet_inst
+	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)
+	for ; c != nil; c = c.next {
+		d = distance_between(*mreq.GpsLocation, c.location)
+		fmt.Printf("Loc = %f/%f is at dist %f. ",
+			c.location.Lat, c.location.Long, d);
+		if (d < distance) {
+			fmt.Printf("Repl. with new dist %f.", d)
+			distance = d
+			found = c
+			mreply.ServiceIp = c.accessIp
+			mreply.CloudletLocation = &c.location
+		}
+		fmt.Printf("\n");
+	}
+	ipaddr = found.accessIp
+	fmt.Printf("Found Loc = %f/%f with IP %s\n",
+		found.location.Lat, found.location.Long, ipaddr.String());
+	tbl.RUnlock()
+}
+
+// add function delete and find
+
+func list_appinst_tbl() {
+	var c *cloudlet
+	var carrier *carrier_app_cloudlet
+	var tbl *carrier_app
+
+	tbl = carrier_app_tbl
+	tbl.RLock()
+	for a := range tbl.apps {
+		carrier = tbl.apps[a]
+		fmt.Printf(">> app = %s/%s info for carrier %s\n", carrier.app_name,
+			carrier.app_vers, carrier.carrier_name);
+		c = carrier.app_cloudlet_inst
+		for ; c != nil; c = c.next {
+			fmt.Printf("app = %s/%s info for carrier = %s, Loc = %f/%f\n",
+				carrier.app_name, carrier.app_vers, carrier.carrier_name,
+				c.location.Lat, c.location.Long);
+		}
+	}
+	tbl.RUnlock()
 }
