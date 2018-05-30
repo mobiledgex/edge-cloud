@@ -1,65 +1,96 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"net"
-
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"fmt"
+	"sync"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+	//"github.com/mobiledgex/edge-cloud/util"
 )
 
-const (
-	//port = "192.168.1.27:50051"
-	port = ":50051"
-)
-
-// Command line options
-var rootDir = flag.String("r", "", "root directory for testing")
-var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
-
-// server is used to implement helloworld.GreeterServer.
-type server struct{}
-
-func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply, error) {
-	//var m dme.Match_Engine_Reply;
-	//var me = &m;
-	log.Printf("FindCloudlet - Got Version: %d", req.Ver)
-
-	var me = &dme.Match_Engine_Reply{}
-	me.Ver = 5
-	return me, nil
+type cloudlet struct {
+	// Unique identifier key
+	id uint64
+	//Carrier
+	carrier string
+	// IP to use to connect to and control cloudlet site
+	accessIp []byte
+	// Location of the cloudlet site (lat, long?)
+	location edgeproto.Loc
+	// Next cloudlet
+	next *cloudlet
 }
 
-func (s *server) VerifyLocation(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
-	log.Printf("VerifyLocation - Got Version: %d", req.Ver)
-	var loc = &dme.Match_Engine_Loc_Verify{}
-	loc.Ver = 6
-	return loc, nil
+type app_carrier_key struct {
+	carrier_id uint64
+	app_id uint64
 }
 
-func main() {
-	flag.Parse()
+type carrier_app_cloudlet struct {
+	sync.RWMutex
+	carrier_id uint64
+	carrier_name string
+	app_name string
+	app_vers string
+	app_developer string
+	app_cloudlet_inst *cloudlet
+}
 
-	recvHandler := &NotifyHandler{}
-	recv := notify.NewNotifyReceiver("tcp", *notifyAddr, recvHandler)
-	go recv.Run()
-	defer recv.Stop()
-	util.InfoLog("notify listener", "addr", *notifyAddr)
+type carrier_app struct {
+	sync.RWMutex
+	apps map[app_carrier_key]*carrier_app_cloudlet
+}
 
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+var carrier_app_tbl *carrier_app
+
+func setup_match_engine() {
+	carrier_app_tbl = new(carrier_app)
+	carrier_app_tbl.apps = make(map[app_carrier_key]*carrier_app_cloudlet)
+
+	populate_tbl()
+}
+
+
+func add_app(app_inst *app, cloudlet_inst *cloudlet) {
+	var key app_carrier_key
+	var c, c_new *cloudlet
+	var carrier *carrier_app_cloudlet
+	var tbl *carrier_app
+
+	tbl = carrier_app_tbl
+	key.carrier_id = cloudlet_inst.id
+	key.app_id = app_inst.id
+
+	tbl.Lock()
+	_, ok := tbl.apps[key]
+	if (!ok) {
+		// Key doesn't exists
+		carrier = new(carrier_app_cloudlet)
+		carrier.carrier_id = cloudlet_inst.id
+		carrier.carrier_name = cloudlet_inst.carrier
+		carrier.app_name = app_inst.name
+		carrier.app_vers = app_inst.vers
+		carrier.app_developer = app_inst.developer
+		tbl.apps[key] = carrier
+		fmt.Printf("Adding App %s/%s for Carrier = %s\n",
+			carrier.app_name, carrier.app_vers, cloudlet_inst.carrier);
+	} else {
+		carrier = tbl.apps[key]
 	}
-	s := grpc.NewServer()
-	dme.RegisterMatch_Engine_ApiServer(s, &server{})
-	// Register reflection service on gRPC server.
-	reflection.Register(s)
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+
+	// Todo: Check for updates
+	
+	c_new = new (cloudlet)
+	*c_new = *cloudlet_inst
+	carrier.Lock()
+	// check if the cloudlet already exists
+	c = carrier.app_cloudlet_inst
+	if (c != nil) {
+		c_new.next = c
 	}
+	carrier.app_cloudlet_inst = c_new
+	fmt.Printf("Adding App %s/%s for Carrier = %s, Loc = %f/%f\n",
+		carrier.app_name, carrier.app_vers, cloudlet_inst.carrier,
+		cloudlet_inst.location.Lat, cloudlet_inst.location.Long);
+	carrier.Unlock()
+	tbl.Unlock()
 }
