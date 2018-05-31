@@ -27,6 +27,12 @@
   version = "v1.1.0"
 
 [[projects]]
+  name = "github.com/daviddengcn/go-colortext"
+  packages = ["."]
+  revision = "17e75f6184bc9e727756cd0d82e0af58b1fc7191"
+  version = "1.0.0"
+
+[[projects]]
   name = "github.com/ghodss/yaml"
   packages = ["."]
   revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
@@ -130,6 +136,25 @@
 
 [[projects]]
   branch = "master"
+  name = "github.com/gophercloud/gophercloud"
+  packages = [
+    ".",
+    "internal",
+    "openstack",
+    "openstack/compute/v2/flavors",
+    "openstack/compute/v2/images",
+    "openstack/compute/v2/servers",
+    "openstack/identity/v2/tenants",
+    "openstack/identity/v2/tokens",
+    "openstack/identity/v3/tokens",
+    "openstack/imageservice/v2/images",
+    "openstack/utils",
+    "pagination"
+  ]
+  revision = "7112fcd50da4ea27e8d4d499b30f04eea143bec2"
+
+[[projects]]
+  branch = "master"
   name = "github.com/gregjones/httpcache"
   packages = [
     ".",
@@ -227,7 +252,10 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = ["assert"]
+  packages = [
+    "assert",
+    "require"
+  ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
 
@@ -504,6 +532,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4dcefe1bfea9b2580748011c677ca44478651fd56b18c4b4e220145756e4f8da"
+  inputs-digest = "f647bf3671a56bdc749a52341ec48fa3a8b1dbc80e8dbd2050ec9ab185aa343a"
   solver-name = "gps-cdcl"
   solver-version = 1
