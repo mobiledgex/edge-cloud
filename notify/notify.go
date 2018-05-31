@@ -46,13 +46,13 @@ const (
 type NotifySendHandler interface {
 	// Get all the keys for known app insts.
 	// The value associated with the key is ignored.
-	GetAllAppInstKeys(keys map[edgeproto.AppInstKey]bool)
+	GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{})
 	// Copy back the value for the app inst.
 	// If the app inst was not found, return false instead of true.
 	GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool
 	// Get all the keys for known cloudlets.
 	// The value associated with the key is ignored.
-	GetAllCloudletKeys(keys map[edgeproto.CloudletKey]bool)
+	GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{})
 	// Copy back the value for the cloudlet.
 	// If the cloudlet was not found, return false instead of true.
 	GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool
@@ -66,8 +66,8 @@ type NotifySenderStats struct {
 
 type NotifySender struct {
 	addr      string
-	appInsts  map[edgeproto.AppInstKey]bool
-	cloudlets map[edgeproto.CloudletKey]bool
+	appInsts  map[edgeproto.AppInstKey]struct{}
+	cloudlets map[edgeproto.CloudletKey]struct{}
 	mux       util.Mutex
 	cond      sync.Cond
 	done      bool
@@ -97,6 +97,7 @@ func RegisterMatcherAddrs(addrs string) {
 	}
 	list := strings.Split(addrs, ",")
 	for _, addr := range list {
+		util.InfoLog("register matcher", "addr", addr)
 		RegisterReceiver(addr, NotifyTypeMatcher)
 	}
 }
@@ -107,6 +108,7 @@ func RegisterCloudletAddrs(addrs string) {
 	}
 	list := strings.Split(addrs, ",")
 	for _, addr := range list {
+		util.InfoLog("register cloudlet", "addr", addr)
 		RegisterReceiver(addr, NotifyTypeCloudletMgr)
 	}
 }
@@ -121,7 +123,8 @@ func RegisterReceiver(addr string, ntype NotifyType) {
 	}
 	notifier := &NotifySender{}
 	notifier.addr = addr
-	notifier.appInsts = make(map[edgeproto.AppInstKey]bool)
+	notifier.appInsts = make(map[edgeproto.AppInstKey]struct{})
+	notifier.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	notifier.mux.InitCond(&notifier.cond)
 	notifier.handler = notifySenders.handler
 	notifier.ntype = ntype
@@ -180,14 +183,14 @@ func UpdateCloudlet(key *edgeproto.CloudletKey) {
 func (s *NotifySender) UpdateAppInst(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	s.appInsts[*key] = true
+	s.appInsts[*key] = struct{}{}
 	s.cond.Signal()
 }
 
 func (s *NotifySender) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	s.cloudlets[*key] = true
+	s.cloudlets[*key] = struct{}{}
 	s.cond.Signal()
 }
 
@@ -266,8 +269,8 @@ func (s *NotifySender) Run() {
 		}
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
-		s.appInsts = make(map[edgeproto.AppInstKey]bool)
-		s.cloudlets = make(map[edgeproto.CloudletKey]bool)
+		s.appInsts = make(map[edgeproto.AppInstKey]struct{})
+		s.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 		s.mux.Unlock()
 		if s.done {
 			break
@@ -345,8 +348,8 @@ func (s *NotifySender) Stop() {
 }
 
 type NotifySendAllMaps struct {
-	AppInsts  map[edgeproto.AppInstKey]bool
-	Cloudlets map[edgeproto.CloudletKey]bool
+	AppInsts  map[edgeproto.AppInstKey]struct{}
+	Cloudlets map[edgeproto.CloudletKey]struct{}
 }
 
 type NotifyRecvHandler interface {
@@ -476,8 +479,8 @@ func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeSer
 		return err
 	}
 	sendAllMaps := &NotifySendAllMaps{}
-	sendAllMaps.AppInsts = make(map[edgeproto.AppInstKey]bool)
-	sendAllMaps.Cloudlets = make(map[edgeproto.CloudletKey]bool)
+	sendAllMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
+	sendAllMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	util.DebugLog(util.DebugLevelNotify, "NotifyReceiver connected", "version", s.version, "supported-version", NotifyVersion)
 
 	for !s.done {
@@ -494,11 +497,11 @@ func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeSer
 		if sendAllMaps != nil && notice.Action == edgeproto.NoticeAction_UPDATE {
 			appInst := notice.GetAppInst()
 			if appInst != nil {
-				sendAllMaps.AppInsts[appInst.Key] = true
+				sendAllMaps.AppInsts[appInst.Key] = struct{}{}
 			}
 			cloudlet := notice.GetCloudlet()
 			if cloudlet != nil {
-				sendAllMaps.Cloudlets[cloudlet.Key] = true
+				sendAllMaps.Cloudlets[cloudlet.Key] = struct{}{}
 			}
 		}
 		if notice.Action == edgeproto.NoticeAction_SENDALL_END {
@@ -515,4 +518,8 @@ func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeSer
 		}
 	}
 	return nil
+}
+
+func (s *NotifyReceiver) GetConnnectionId() uint64 {
+	return s.connectionId
 }

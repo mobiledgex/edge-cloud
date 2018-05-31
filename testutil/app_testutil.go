@@ -42,6 +42,7 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 import "io"
 import "testing"
 import "context"
+import "time"
 import "github.com/stretchr/testify/assert"
 import "github.com/mobiledgex/edge-cloud/util"
 import proto "github.com/gogo/protobuf/proto"
@@ -82,12 +83,16 @@ func (x *ShowApp) ReadStream(stream edgeproto.AppApi_ShowAppClient, err error) {
 		if err == io.EOF {
 			break
 		}
-		//util.InfoLog("show App", "key", obj.Key.GetKeyString())
 		if err != nil {
 			break
 		}
 		x.data[obj.Key.GetKeyString()] = *obj
 	}
+}
+
+func (x *ShowApp) CheckFound(obj *edgeproto.App) bool {
+	_, found := x.data[obj.Key.GetKeyString()]
+	return found
 }
 
 func (x *ShowApp) AssertFound(t *testing.T, obj *edgeproto.App) {
@@ -101,6 +106,37 @@ func (x *ShowApp) AssertFound(t *testing.T, obj *edgeproto.App) {
 func (x *ShowApp) AssertNotFound(t *testing.T, obj *edgeproto.App) {
 	_, found := x.data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find App %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundApp(t *testing.T, api edgeproto.AppApiClient, obj *edgeproto.App, count int, retry time.Duration) {
+	show := ShowApp{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowApp(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundApp(t *testing.T, api edgeproto.AppApiClient, obj *edgeproto.App, count int, retry time.Duration) {
+	show := ShowApp{}
+	filterNone := edgeproto.App{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowApp(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
 }
 
 // Wrap the api with a common interface
