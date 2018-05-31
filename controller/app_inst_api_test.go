@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
@@ -11,7 +12,7 @@ import (
 
 func TestAppInstApi(t *testing.T) {
 	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelApi)
-	InitRegion(1)
+	objstore.InitRegion(1)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -21,6 +22,11 @@ func TestAppInstApi(t *testing.T) {
 	devApi := InitDeveloperApi(&dummy)
 	appApi := InitAppApi(&dummy, devApi)
 	api := InitAppInstApi(&dummy, appApi, cloudletApi)
+	operApi.WaitInitDone()
+	cloudletApi.WaitInitDone()
+	devApi.WaitInitDone()
+	appApi.WaitInitDone()
+	api.WaitInitDone()
 
 	// cannote create instances without apps and cloudlets
 	ctx := context.TODO()

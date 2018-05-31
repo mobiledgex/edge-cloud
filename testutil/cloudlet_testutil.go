@@ -8,6 +8,7 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 import "io"
 import "testing"
 import "context"
+import "time"
 import "github.com/stretchr/testify/assert"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -47,12 +48,16 @@ func (x *ShowCloudlet) ReadStream(stream edgeproto.CloudletApi_ShowCloudletClien
 		if err == io.EOF {
 			break
 		}
-		//util.InfoLog("show Cloudlet", "key", obj.Key.GetKeyString())
 		if err != nil {
 			break
 		}
 		x.data[obj.Key.GetKeyString()] = *obj
 	}
+}
+
+func (x *ShowCloudlet) CheckFound(obj *edgeproto.Cloudlet) bool {
+	_, found := x.data[obj.Key.GetKeyString()]
+	return found
 }
 
 func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
@@ -66,6 +71,37 @@ func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
 func (x *ShowCloudlet) AssertNotFound(t *testing.T, obj *edgeproto.Cloudlet) {
 	_, found := x.data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Cloudlet %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundCloudlet(t *testing.T, api edgeproto.CloudletApiClient, obj *edgeproto.Cloudlet, count int, retry time.Duration) {
+	show := ShowCloudlet{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowCloudlet(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundCloudlet(t *testing.T, api edgeproto.CloudletApiClient, obj *edgeproto.Cloudlet, count int, retry time.Duration) {
+	show := ShowCloudlet{}
+	filterNone := edgeproto.Cloudlet{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowCloudlet(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
 }
 
 // Wrap the api with a common interface
