@@ -415,7 +415,21 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 		case descriptor.FieldDescriptorProto_TYPE_GROUP:
 			// deprecated in proto3
 		case descriptor.FieldDescriptorProto_TYPE_BYTES:
-			// TODO
+
+			g.P("s = append(s, \"\")")
+			// append the to the current s index.  If this is an Ip address, separate with dots
+			if strings.HasSuffix(hierName, "Ip") {
+				g.P("for i,b := range in.", hierName, idx, " {")
+				g.P("s[len(s)-1] += fmt.Sprintf(\"%v\", b)")
+				g.P("if i < 3 {")
+				g.P("s[len(s)-1] += \".\"")
+				g.P("}")
+				g.P("}")
+			} else {
+				g.P("for _,b := range in.", hierName, idx, " {")
+				g.P("s[len(s)-1] += fmt.Sprintf(\"%v\", b)")
+				g.P("}")
+			}
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
 			g.importStrconv = true
 			g.P("s = append(s, strconv.FormatBool(in.", hierName, idx, "))")
@@ -433,7 +447,9 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 			}
 			g.P("s = append(s, ", g.FQTypeName(en), "_name[int32(in.", hierName, idx, ")])")
 		default:
-			g.P("s = append(s, string(in.", hierName, idx, "))")
+			// all integers
+			g.importStrconv = true
+			g.P("s = append(s, strconv.FormatUint(uint64(in.", hierName, idx, "),10))")
 		}
 	}
 }
@@ -448,7 +464,7 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 		}
 
 		name := generator.CamelCase(*field.Name)
-		if *field.Type == descriptor.FieldDescriptorProto_TYPE_GROUP || *field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_GROUP {
 			continue
 		}
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && *field.TypeName != ".google.protobuf.Timestamp" {
