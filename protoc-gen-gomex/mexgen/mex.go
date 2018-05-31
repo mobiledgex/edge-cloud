@@ -54,10 +54,14 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	hasGenerateCud := false
 	hasGrpcFields := false
+	hasGenerateCache := false
 	for _, desc := range file.Messages() {
 		msg := desc.DescriptorProto
 		if GetGenerateCud(msg) {
 			hasGenerateCud = true
+			if GetGenerateCache(msg) {
+				hasGenerateCache = true
+			}
 		}
 		if HasGrpcFields(msg) {
 			hasGrpcFields = true
@@ -66,6 +70,10 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if hasGenerateCud {
 		m.P("import \"encoding/json\"")
+		m.P("import \"github.com/mobiledgex/edge-cloud/objstore\"")
+	}
+	if hasGenerateCache {
+		m.P("import \"sync\"")
 	}
 	if hasGrpcFields {
 		m.P("import \"github.com/mobiledgex/edge-cloud/util\"")
@@ -104,25 +112,6 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		m.P("if filter.", name, " != 0 && filter.", name, " != m.", name, "{")
 		m.P("return false")
 		m.P("}")
-	}
-}
-
-func (m *mex) generateFieldKeyString(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto) {
-	if field.Type == nil {
-		return
-	}
-	name := generator.CamelCase(*field.Name)
-	switch *field.Type {
-	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		m.P("s = append(s, m.", name, ".GetKeyString())")
-	case descriptor.FieldDescriptorProto_TYPE_GROUP:
-		// deprecated in proto3
-	case descriptor.FieldDescriptorProto_TYPE_BYTES:
-		// TODO
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
-		m.P("s = append(s, m.", name, ")")
-	default:
-		m.P("s = append(s, string(m.", name, "))")
 	}
 }
 
@@ -219,43 +208,55 @@ type cudTemplateArgs struct {
 	KeyName   string
 	CudName   string
 	HasFields bool
+	GenCache  bool
 }
 
 var cudTemplateIn = `
-type {{.CudName}} interface {
-	// Validate all fields for create/update
-	Validate(in *{{.Name}}) error
-	// Validate only key fields for delete
-	ValidateKey(key *{{.KeyName}}) error
-	// Get key string for saving to persistent object storage
-	GetObjStoreKeyString(key *{{.KeyName}}) string
-	// Object storage IO interface
-	ObjStore
-	// Refresh is called after create/update/delete to update in-memory cache
-	Refresh(in *{{.Name}}, key string) error
-	// Get key string for loading all objects of this type
-	GetLoadKeyString() string
+func (s *{{.Name}}) HasFields() bool {
+{{- if (.HasFields)}}
+	return true
+{{- else}}
+	return false
+{{- end}}
 }
 
-func (m *{{.Name}}) Create(cud {{.CudName}}) (*Result, error) {
-	err := cud.Validate(m)
+type {{.Name}}Store struct {
+	objstore objstore.ObjStore
+	list{{.Name}} map[{{.Name}}Key]struct{}
+}
+
+func New{{.Name}}Store(objstore objstore.ObjStore) {{.Name}}Store {
+	return {{.Name}}Store{objstore: objstore}
+}
+
+type {{.Name}}Cacher interface {
+	Sync{{.Name}}Update(m *{{.Name}}, rev int64)
+	Sync{{.Name}}Delete(m *{{.Name}}, rev int64)
+	Sync{{.Name}}Prune(current map[{{.Name}}Key]struct{})
+	Sync{{.Name}}RevOnly(rev int64)
+}
+
+func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error) {
+	err := m.Validate()
 	if err != nil { return nil, err }
-	key := cud.GetObjStoreKeyString(&m.Key)
+	key := objstore.DbKeyString(m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil { return nil, err }
-	err = cud.Create(key, string(val))
+	rev, err := s.objstore.Create(key, string(val))
 	if err != nil { return nil, err }
-	err = cud.Refresh(m, key)
+	if wait != nil {
+		wait(rev)
+	}
 	return &Result{}, err
 }
 
-func (m *{{.Name}}) Update(cud {{.CudName}}) (*Result, error) {
-	err := cud.Validate(m)
+func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error) {
+	err := m.Validate()
 	if err != nil { return nil, err }
-	key := cud.GetObjStoreKeyString(&m.Key)
+	key := objstore.DbKeyString(m.GetKey())
 	var vers int64 = 0
 {{- if (.HasFields)}}
-	curBytes, vers, err := cud.Get(key)
+	curBytes, vers, err := s.objstore.Get(key)
 	if err != nil { return nil, err }
 	var cur {{.Name}}
 	err = json.Unmarshal(curBytes, &cur)
@@ -268,27 +269,31 @@ func (m *{{.Name}}) Update(cud {{.CudName}}) (*Result, error) {
 	val, err := json.Marshal(m)
 {{- end}}
 	if err != nil { return nil, err }
-	err = cud.Update(key, string(val), vers)
+	rev, err := s.objstore.Update(key, string(val), vers)
 	if err != nil { return nil, err }
-	err = cud.Refresh(m, key)
+	if wait != nil {
+		wait(rev)
+	}
 	return &Result{}, err
 }
 
-func (m *{{.Name}}) Delete(cud {{.CudName}}) (*Result, error) {
-	err := cud.ValidateKey(&m.Key)
+func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error) {
+	err := m.GetKey().Validate()
 	if err != nil { return nil, err }
-	key := cud.GetObjStoreKeyString(&m.Key)
-	err = cud.Delete(key)
+	key := objstore.DbKeyString(m.GetKey())
+	rev, err := s.objstore.Delete(key)
 	if err != nil { return nil, err }
-	err = cud.Refresh(m, key)
+	if wait != nil {
+		wait(rev)
+	}
 	return &Result{}, err
 }
 
-type LoadAll{{.Name}}sCb func(m *{{.Name}}) error
+type {{.Name}}Cb func(m *{{.Name}}) error
 
-func LoadAll{{.Name}}s(cud {{.CudName}}, cb LoadAll{{.Name}}sCb) error {
-	loadkey := cud.GetLoadKeyString()
-	err := cud.List(loadkey, func(key, val []byte) error {
+func (s *{{.Name}}Store) LoadAll(cb {{.Name}}Cb) error {
+	loadkey := objstore.DbKeyPrefixString(&{{.Name}}Key{})
+	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
 		var obj {{.Name}}
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
@@ -304,19 +309,219 @@ func LoadAll{{.Name}}s(cud {{.CudName}}, cb LoadAll{{.Name}}sCb) error {
 	return err
 }
 
-func LoadOne{{.Name}}(cud {{.CudName}}, key string) (*{{.Name}}, error) {
-	val, _, err := cud.Get(key)
+func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
+	val, rev, err := s.objstore.Get(key)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	var obj {{.Name}}
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
 		util.DebugLog(util.DebugLevelApi, "Failed to parse {{.Name}} data", "val", string(val))
-		return nil, err
+		return nil, 0, err
 	}
-	return &obj, nil
+	return &obj, rev, nil
 }
+
+// Sync will sync changes for any {{.Name}} objects.
+func (s *{{.Name}}Store) Sync(ctx context.Context, cacher {{.Name}}Cacher) error {
+	str := objstore.DbKeyPrefixString(&{{.Name}}Key{})
+	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
+		obj := {{.Name}}{}
+		// Even on parse error, we should still call back to keep
+		// the revision numbers in sync so no caller hangs on wait.
+		action := in.Action
+		if action == objstore.SyncUpdate || action == objstore.SyncList {
+			err := json.Unmarshal(in.Value, &obj)
+			if err != nil {
+				util.WarnLog("Failed to parse {{.Name}} data", "val", string(in.Value))
+				action = objstore.SyncRevOnly
+			}
+		} else if action == objstore.SyncDelete {
+			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
+			{{.Name}}KeyStringParse(keystr, obj.GetKey())
+		}
+		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
+		switch action {
+		case objstore.SyncUpdate:
+			cacher.Sync{{.Name}}Update(&obj, in.Rev)
+		case objstore.SyncDelete:
+			cacher.Sync{{.Name}}Delete(&obj, in.Rev)
+		case objstore.SyncListStart:
+			s.list{{.Name}} = make(map[{{.Name}}Key]struct{})
+		case objstore.SyncList:
+			s.list{{.Name}}[obj.Key] = struct{}{}
+			cacher.Sync{{.Name}}Update(&obj, in.Rev)
+		case objstore.SyncListEnd:
+			cacher.Sync{{.Name}}Prune(s.list{{.Name}})
+			s.list{{.Name}} = nil
+		case objstore.SyncRevOnly:
+			cacher.Sync{{.Name}}RevOnly(in.Rev)
+		}
+	})
+}
+
+{{if (.GenCache)}}
+// {{.Name}}Cache caches {{.Name}} objects in memory in a hash table
+// and keeps them in sync with the database.
+type {{.Name}}Cache struct {
+	Store *{{.Name}}Store
+	Objs map[{{.Name}}Key]*{{.Name}}
+	Rev int64
+	Mux util.Mutex
+	Cond sync.Cond
+	initWait bool
+	syncDone bool
+	syncCancel context.CancelFunc
+	notifyCb func(obj *{{.Name}}Key)
+}
+
+func New{{.Name}}Cache(store *{{.Name}}Store) *{{.Name}}Cache {
+	cache := {{.Name}}Cache{
+		Store: store,
+		Objs: make(map[{{.Name}}Key]*{{.Name}}),
+		initWait: true,
+	}
+	cache.Mux.InitCond(&cache.Cond)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cache.syncCancel = cancel
+	go func() {
+		err := cache.Store.Sync(ctx, &cache)
+		if err != nil {
+			util.WarnLog("{{.Name}} Sync failed", "err", err)
+		}
+		cache.syncDone = true
+		cache.Cond.Broadcast()
+	}()
+	return &cache
+}
+
+func (c *{{.Name}}Cache) WaitInitSyncDone() {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for c.initWait {
+		c.Cond.Wait()
+	}
+}
+
+func (c *{{.Name}}Cache) Done() {
+	c.syncCancel()
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for !c.syncDone {
+		c.Cond.Wait()
+	}
+}
+
+func (c *{{.Name}}Cache) Get(key *{{.Name}}Key, valbuf *{{.Name}}) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		*valbuf = *inst
+	}
+	return found
+}
+
+func (c *{{.Name}}Cache) HasKey(key *{{.Name}}Key) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.Name}}Key]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		keys[key] = struct{}{}
+	}
+}
+
+func (c *{{.Name}}Cache) Sync{{.Name}}Update(in *{{.Name}}, rev int64) {
+	c.Mux.Lock()
+	c.Objs[*in.GetKey()] = in
+	c.Rev = rev
+	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	c.Cond.Broadcast()
+	c.Mux.Unlock()
+	if c.notifyCb != nil {
+		c.notifyCb(in.GetKey())
+	}
+}
+
+func (c *{{.Name}}Cache) Sync{{.Name}}Delete(in *{{.Name}}, rev int64) {
+	c.Mux.Lock()
+	delete(c.Objs, *in.GetKey())
+	c.Rev = rev
+	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	c.Cond.Broadcast()
+	c.Mux.Unlock()
+	if c.notifyCb != nil {
+		c.notifyCb(in.GetKey())
+	}
+}
+
+func (c *{{.Name}}Cache) Sync{{.Name}}Prune(current map[{{.Name}}Key]struct{}) {
+	deleted := make(map[{{.Name}}Key]struct{})
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, found := current[key]; !found {
+			delete(c.Objs, key)
+			deleted[key] = struct{}{}
+		}
+	}
+	if c.initWait {
+		c.initWait = false
+		c.Cond.Broadcast()
+	}
+	c.Mux.Unlock()
+	if c.notifyCb != nil {
+		for key, _ := range deleted {
+			c.notifyCb(&key)
+		}
+	}
+}
+
+func (c *{{.Name}}Cache) Sync{{.Name}}RevOnly(rev int64) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	c.Rev = rev
+	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
+	c.Cond.Broadcast()
+}
+
+func (c *{{.Name}}Cache) SyncWait(rev int64) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
+	for c.Rev < rev {
+		c.Cond.Wait()
+	}
+}
+
+func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
+	util.DebugLog(util.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, obj := range c.Objs {
+		if !obj.Matches(filter) {
+			continue
+		}
+		util.DebugLog(util.DebugLevelApi, "Show {{.Name}}", "obj", obj)
+		err := cb(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.Name}}Key)) {
+	c.notifyCb = fn
+}
+{{- end}}
 
 `
 
@@ -359,21 +564,30 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			CudName:   *message.Name + "Cud",
 			KeyName:   *message.Name + "Key",
 			HasFields: HasGrpcFields(message),
+			GenCache:  GetGenerateCache(message),
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
 	}
 	if GetObjKey(message) {
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
-		m.P("s := make([]string, 0, ", len(message.Field), ")")
-		for _, field := range message.Field {
-			m.generateFieldKeyString(message, field)
-		}
-		m.P("return strings.Join(s, \"/\")")
+		m.P("key, err := json.Marshal(m)")
+		m.P("if err != nil {")
+		m.P("util.FatalLog(\"Failed to marshal ", message.Name, " key string\", \"obj\", m)")
+		m.P("}")
+		m.P("return string(key)")
+		m.P("}")
+		m.P("")
+
+		m.P("func ", message.Name, "StringParse(str string, key *", message.Name, ") {")
+		m.P("err := json.Unmarshal([]byte(str), key)")
+		m.P("if err != nil {")
+		m.P("util.FatalLog(\"Failed to unmarshal ", message.Name, " key string\", \"str\", str)")
+		m.P("}")
 		m.P("}")
 		m.P("")
 	}
 	if HasMessageKey(message) {
-		m.P("func (m *", message.Name, ") GetKey() ObjKey {")
+		m.P("func (m *", message.Name, ") GetKey() *", message.Name, "Key {")
 		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
@@ -418,6 +632,10 @@ func GetGenerateMatches(message *descriptor.DescriptorProto) bool {
 
 func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
+}
+
+func GetGenerateCache(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
 }
 
 func GetObjKey(message *descriptor.DescriptorProto) bool {

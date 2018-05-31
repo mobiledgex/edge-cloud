@@ -14,6 +14,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 )
@@ -23,9 +24,8 @@ var rootDir = flag.String("r", "", "root directory; set for testing")
 var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testing")
 var region = flag.Uint("region", 1, "Region")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
-var apiIP = flag.String("apiIP", "127.0.0.1", "API listener IP")
-var apiPort = flag.Uint("apiPort", 55001, "API listener port")
-var httpPort = flag.Uint("httpPort", 8091, "HTTP listener port")
+var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
+var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var matcherAddrs = flag.String("matcherAddrs", "", "comma separated list of distributed matching engine addresses")
 var crmAddrs = flag.String("crmAddrs", "", "comma separated list of cloudlet resource manager addresses")
 var debugLevels = flag.String("d", "", "comma separated list of debug levels")
@@ -43,8 +43,8 @@ func main() {
 	flag.Parse()
 	util.SetDebugLevelStrs(*debugLevels)
 
-	util.InfoLog("Start up", "rootDir", *rootDir, "apiPort", *apiPort)
-	InitRegion(uint32(*region))
+	util.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr)
+	objstore.InitRegion(uint32(*region))
 
 	if *localEtcd {
 		etcdServer, err := StartLocalEtcdServer()
@@ -63,10 +63,9 @@ func main() {
 		util.FatalLog("Failed to connect to etcd servers")
 	}
 
-	address := fmt.Sprintf("%s:%d", *apiIP, *apiPort)
-	lis, err := net.Listen("tcp", address)
+	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
-		util.FatalLog("Failed to listen on address", "address", address,
+		util.FatalLog("Failed to listen on address", "address", *apiAddr,
 			"error", err)
 	}
 
@@ -90,6 +89,12 @@ func main() {
 	if appInstApi == nil {
 		util.FatalLog("Failed to initialize app inst API")
 	}
+	developerApi.WaitInitDone()
+	appApi.WaitInitDone()
+	operatorApi.WaitInitDone()
+	cloudletApi.WaitInitDone()
+	appInstApi.WaitInitDone()
+
 	notify.InitNotifySenders(NewControllerNotifier(appInstApi, cloudletApi))
 	notify.RegisterMatcherAddrs(*matcherAddrs)
 	notify.RegisterCloudletAddrs(*crmAddrs)
@@ -111,14 +116,13 @@ func main() {
 
 	// REST gateway
 	mux := http.NewServeMux()
-	gw, err := grpcGateway(address)
+	gw, err := grpcGateway(*apiAddr)
 	if err != nil {
 		util.FatalLog("Failed to create grpc gateway", "error", err)
 	}
 	mux.Handle("/", gw)
-	httpAddress := fmt.Sprintf("%s:%d", *apiIP, *httpPort)
 	httpServer := &http.Server{
-		Addr:    httpAddress,
+		Addr:    *httpAddr,
 		Handler: mux,
 	}
 	go func() {

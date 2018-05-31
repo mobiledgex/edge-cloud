@@ -33,6 +33,7 @@ message Cloudlet {
   // Certs for accessing cloudlet site
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
 }
 
 service CloudletApi {

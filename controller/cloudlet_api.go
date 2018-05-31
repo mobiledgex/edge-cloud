@@ -6,127 +6,56 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type CloudletApi struct {
-	edgeproto.ObjStore
-	cloudlets   map[edgeproto.CloudletKey]*edgeproto.Cloudlet
-	mux         util.Mutex
+	store       edgeproto.CloudletStore
+	cache       *edgeproto.CloudletCache
 	operatorApi *OperatorApi
 }
 
-func InitCloudletApi(objStore edgeproto.ObjStore, opApi *OperatorApi) *CloudletApi {
+func InitCloudletApi(objStore objstore.ObjStore, opApi *OperatorApi) *CloudletApi {
 	api := &CloudletApi{
-		ObjStore:    objStore,
+		store:       edgeproto.NewCloudletStore(objStore),
 		operatorApi: opApi,
 	}
-	api.cloudlets = make(map[edgeproto.CloudletKey]*edgeproto.Cloudlet)
-
-	api.mux.Lock()
-	defer api.mux.Unlock()
-
-	err := edgeproto.LoadAllCloudlets(api, func(obj *edgeproto.Cloudlet) error {
-		api.cloudlets[obj.Key] = obj
-		return nil
-	})
-	if err != nil && err == context.DeadlineExceeded {
-		util.WarnLog("Init cloudlets failed", "error", err)
-	}
+	api.cache = edgeproto.NewCloudletCache(&api.store)
+	api.cache.SetNotifyCb(notify.UpdateCloudlet)
 	return api
 }
 
-func (s *CloudletApi) ValidateKey(key *edgeproto.CloudletKey) error {
-	if key == nil {
-		return errors.New("Cloudlet key not specified")
-	}
-	if err := s.operatorApi.ValidateKey(&key.OperatorKey); err != nil {
-		return err
-	}
-	if !s.operatorApi.HasOperator(&key.OperatorKey) {
-		return errors.New("Specified cloudlet operator not found")
-	}
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid cloudlet name")
-	}
-	return nil
+func (s *CloudletApi) WaitInitDone() {
+	s.cache.WaitInitSyncDone()
 }
 
-func (s *CloudletApi) Validate(in *edgeproto.Cloudlet) error {
-	if err := s.ValidateKey(&in.Key); err != nil {
-		return err
-	}
-	if in.AccessIp != nil && !util.ValidIp(in.AccessIp) {
-		return errors.New("Invalid access ip format")
-	}
-	return nil
-}
-
-func (s *CloudletApi) GetObjStoreKeyString(key *edgeproto.CloudletKey) string {
-	return GetObjStoreKey(CloudletType, key.GetKeyString())
-}
-
-func (s *CloudletApi) GetLoadKeyString() string {
-	return GetObjStoreKey(CloudletType, "")
-}
-
-func (s *CloudletApi) Refresh(in *edgeproto.Cloudlet, key string) error {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	obj, err := edgeproto.LoadOneCloudlet(s, key)
-	if err == nil {
-		s.cloudlets[in.Key] = obj
-	} else if err == edgeproto.ObjStoreErrKeyNotFound {
-		delete(s.cloudlets, in.Key)
-		err = nil
-	}
-	notify.UpdateCloudlet(&in.Key)
-	// TODO: If location changed, update location in all associate app insts
-	return err
-}
-
-func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]bool) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	for key, _ := range s.cloudlets {
-		keys[key] = true
-	}
+func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]struct{}) {
+	s.cache.GetAllKeys(keys)
 }
 
 func (s *CloudletApi) GetCloudlet(key *edgeproto.CloudletKey, val *edgeproto.Cloudlet) bool {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	inst, found := s.cloudlets[*key]
-	if found {
-		*val = *inst
-	}
-	return found
+	return s.cache.Get(key, val)
 }
 
 func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	return in.Create(s)
+	if !s.operatorApi.HasOperator(&in.Key.OperatorKey) {
+		return &edgeproto.Result{}, errors.New("Specified cloudlet operator not found")
+	}
+	return s.store.Create(in, s.cache.SyncWait)
 }
 
 func (s *CloudletApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	return in.Update(s)
+	return s.store.Update(in, s.cache.SyncWait)
 }
 
 func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	return in.Delete(s)
+	return s.store.Delete(in, s.cache.SyncWait)
 }
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-
-	for _, obj := range s.cloudlets {
-		if !obj.Matches(in) {
-			continue
-		}
+	err := s.cache.Show(in, func(obj *edgeproto.Cloudlet) error {
 		err := cb.Send(obj)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+		return err
+	})
+	return err
 }

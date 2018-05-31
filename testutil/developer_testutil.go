@@ -8,6 +8,7 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 import "io"
 import "testing"
 import "context"
+import "time"
 import "github.com/stretchr/testify/assert"
 import "github.com/mobiledgex/edge-cloud/util"
 import proto "github.com/gogo/protobuf/proto"
@@ -48,12 +49,16 @@ func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperCl
 		if err == io.EOF {
 			break
 		}
-		//util.InfoLog("show Developer", "key", obj.Key.GetKeyString())
 		if err != nil {
 			break
 		}
 		x.data[obj.Key.GetKeyString()] = *obj
 	}
+}
+
+func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
+	_, found := x.data[obj.Key.GetKeyString()]
+	return found
 }
 
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
@@ -67,6 +72,37 @@ func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
 func (x *ShowDeveloper) AssertNotFound(t *testing.T, obj *edgeproto.Developer) {
 	_, found := x.data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundDeveloper(t *testing.T, api edgeproto.DeveloperApiClient, obj *edgeproto.Developer, count int, retry time.Duration) {
+	show := ShowDeveloper{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowDeveloper(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundDeveloper(t *testing.T, api edgeproto.DeveloperApiClient, obj *edgeproto.Developer, count int, retry time.Duration) {
+	show := ShowDeveloper{}
+	filterNone := edgeproto.Developer{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowDeveloper(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
 }
 
 // Wrap the api with a common interface

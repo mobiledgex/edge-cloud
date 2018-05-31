@@ -60,12 +60,16 @@ func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Cli
 		if (err == io.EOF) {
 			break
 		}
-		//util.InfoLog("show {{.Name}}", "key", obj.Key.GetKeyString())
 		if err != nil {
 			break
 		}
 		x.data[obj.Key.GetKeyString()] = *obj
 	}
+}
+
+func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
+	_, found := x.data[obj.Key.GetKeyString()]
+	return found
 }
 
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
@@ -79,6 +83,37 @@ func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 func (x *Show{{.Name}}) AssertNotFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 	_, found := x.data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFound{{.Name}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, obj *{{.Pkg}}.{{.Name}}, count int, retry time.Duration) {
+	show := Show{{.Name}}{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.Show{{.Name}}(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFound{{.Name}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, obj *{{.Pkg}}.{{.Name}}, count int, retry time.Duration) {
+	show := Show{{.Name}}{}
+	filterNone := {{.Pkg}}.{{.Name}}{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.Show{{.Name}}(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
 }
 
 // Wrap the api with a common interface
@@ -218,6 +253,7 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	t.PrintImport("", "io")
 	t.PrintImport("", "testing")
 	t.PrintImport("", "context")
+	t.PrintImport("", "time")
 	t.PrintImport("", "github.com/stretchr/testify/assert")
 	for _, msg := range file.Messages() {
 		for _, field := range msg.DescriptorProto.Field {

@@ -34,6 +34,7 @@ message Operator {
   // TODO: access schema/credentials
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
 }
 
 service OperatorApi {

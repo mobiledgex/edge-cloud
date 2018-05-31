@@ -14,6 +14,7 @@ func TestDeveloperApi(t *testing.T) {
 	dummy.Start()
 
 	api := InitDeveloperApi(&dummy)
+	api.WaitInitDone()
 	testutil.InternalDeveloperCudTest(t, api, testutil.DevData)
 
 	dummy.Stop()

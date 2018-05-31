@@ -18,6 +18,7 @@ extend google.protobuf.MessageOptions {
   bool generate_matches = 51005;
   bool generate_cud = 51006;
   bool obj_key = 51007;
+  bool generate_cache = 51008;
 }
 
 extend google.protobuf.FieldOptions {
