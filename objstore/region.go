@@ -8,7 +8,7 @@
 // as simple as creating a new etcd cluster with a new region
 // ID, and adding that region name to the mapping.
 
-package main
+package objstore
 
 import "github.com/mobiledgex/edge-cloud/util"
 

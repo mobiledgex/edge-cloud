@@ -8,6 +8,7 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 import "io"
 import "testing"
 import "context"
+import "time"
 import "github.com/stretchr/testify/assert"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -47,12 +48,16 @@ func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClien
 		if err == io.EOF {
 			break
 		}
-		//util.InfoLog("show Operator", "key", obj.Key.GetKeyString())
 		if err != nil {
 			break
 		}
 		x.data[obj.Key.GetKeyString()] = *obj
 	}
+}
+
+func (x *ShowOperator) CheckFound(obj *edgeproto.Operator) bool {
+	_, found := x.data[obj.Key.GetKeyString()]
+	return found
 }
 
 func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
@@ -66,6 +71,37 @@ func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
 func (x *ShowOperator) AssertNotFound(t *testing.T, obj *edgeproto.Operator) {
 	_, found := x.data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Operator %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundOperator(t *testing.T, api edgeproto.OperatorApiClient, obj *edgeproto.Operator, count int, retry time.Duration) {
+	show := ShowOperator{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowOperator(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundOperator(t *testing.T, api edgeproto.OperatorApiClient, obj *edgeproto.Operator, count int, retry time.Duration) {
+	show := ShowOperator{}
+	filterNone := edgeproto.Operator{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowOperator(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
 }
 
 // Wrap the api with a common interface

@@ -14,10 +14,10 @@ func NewControllerNotifier(appInstApi *AppInstApi, cloudletApi *CloudletApi) *Co
 	return &n
 }
 
-func (s *ControllerNotifier) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]bool) {
+func (s *ControllerNotifier) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{}) {
 	s.AppInstApi.GetAllKeys(keys)
 }
 
-func (s *ControllerNotifier) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]bool) {
+func (s *ControllerNotifier) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{}) {
 	s.CloudletApi.GetAllKeys(keys)
 }
