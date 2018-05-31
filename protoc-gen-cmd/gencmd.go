@@ -430,9 +430,6 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 				g.P("s[len(s)-1] += fmt.Sprintf(\"%v\", b)")
 				g.P("}")
 			}
-		case descriptor.FieldDescriptorProto_TYPE_UINT32:
-			g.importStrconv = true
-			g.P("s = append(s, strconv.FormatUint(uint64(in.", hierName, idx, "),10))")
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
 			g.importStrconv = true
 			g.P("s = append(s, strconv.FormatBool(in.", hierName, idx, "))")
@@ -450,7 +447,9 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 			}
 			g.P("s = append(s, ", g.FQTypeName(en), "_name[int32(in.", hierName, idx, ")])")
 		default:
-			g.P("s = append(s, string(in.", hierName, idx, "))")
+			// all integers
+			g.importStrconv = true
+			g.P("s = append(s, strconv.FormatUint(uint64(in.", hierName, idx, "),10))")
 		}
 	}
 }
