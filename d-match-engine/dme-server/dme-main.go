@@ -41,11 +41,11 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request
 
 func (s *server) VerifyLocation(ctx context.Context,
 	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
-	
-	log.Printf("VerifyLocation - Got Version: %d", req.Ver)
-	var loc = &dme.Match_Engine_Loc_Verify{}
-	loc.Ver = 6
-	return loc, nil
+
+	var mreq *dme.Match_Engine_Loc_Verify;
+	mreq = new (dme.Match_Engine_Loc_Verify)
+	VerifyClientLoc(req, mreq)
+	return mreq, nil
 }
 
 func main() {

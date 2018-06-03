@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"time"
 	"log"
-	"net"
 	"golang.org/x/net/context"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
-func find_cloudlets(client dme.Match_Engine_ApiClient) {
+func TestLocations(client dme.Match_Engine_ApiClient) {
 	var mreq []dme.Match_Engine_Request
-	var ipaddr net.IP
 	//var mreply dme.Match_Engine_Reply
 	
 	mreq = []dme.Match_Engine_Request {
@@ -45,12 +43,11 @@ func find_cloudlets(client dme.Match_Engine_ApiClient) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
 	fmt.Println(">>>>>>>Finding Right Cloudlets<<<<<<<<<")
 	for _, m := range mreq {
-		mreply, err := client.FindCloudlet(ctx, &m)
+		mreply, err := client.VerifyLocation(ctx, &m)
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)
 		}
-		ipaddr = mreply.ServiceIp
-		fmt.Printf("Found Loc = %f/%f with IP %s\n",
-			mreply.CloudletLocation.Lat, mreply.CloudletLocation.Long, ipaddr.String());
+		fmt.Printf("Verify Loc = %f/%f status %d\n",
+			m.GpsLocation.Lat, m.GpsLocation.Long, mreply.GpsLocationStatus);
 	}
 }

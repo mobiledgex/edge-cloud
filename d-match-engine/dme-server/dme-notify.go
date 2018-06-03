@@ -39,6 +39,7 @@ func (s *NotifyHandler) HandleNotice(notice *edgeproto.Notice) error {
 			app_inst.vers = appkey.AppKey.Version
 			app_inst.developer = appkey.AppKey.DeveloperKey.Name
 
+			// Todo: Carrier ID needs to be there
 			cloudlet_inst.id = uint64(cloudletID)
 			cloudletID = cloudletID + 1
 			cloudletkey = &appkey.CloudletKey

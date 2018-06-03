@@ -90,6 +90,7 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 
 	tbl = carrier_app_tbl
 	key.carrier_id = cloudlet_inst.id
+	// Todo: Use Appkey?? or Dev + App Name + Ver as key
 	key.app_id = app_inst.id
 
 	tbl.Lock()
@@ -151,6 +152,7 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	c = carrier.app_cloudlet_inst
 	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)
 	for ; c != nil; c = c.next {
+		//Todo: Check the usage of embedded pointer to Loc in proto files
 		d = distance_between(*mreq.GpsLocation, c.location)
 		fmt.Printf("Loc = %f/%f is at dist %f. ",
 			c.location.Lat, c.location.Long, d);
