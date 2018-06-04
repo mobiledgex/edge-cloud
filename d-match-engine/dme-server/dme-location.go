@@ -16,9 +16,9 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 
 	tbl = carrier_app_tbl	
 	key.carrier_id = mreq.Carrier
-	key.app_key.DeveloperKey = mreq.dev_name
-	key.app_key.Name = mreq.app_name
-	key.app_key.Version = mreq.app_vers
+	key.app_key.DeveloperKey.Name = mreq.DevName
+	key.app_key.Name = mreq.AppName
+	key.app_key.Version = mreq.AppVers
 	
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]

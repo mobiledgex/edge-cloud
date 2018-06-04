@@ -90,9 +90,9 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 
 	tbl = carrier_app_tbl
 	key.carrier_id = cloudlet_inst.id
-	key.app_key.DeveloperKey = app.developer
-	key.app_key.Name = app.name
-	key.app_key.Version = app.vers
+	key.app_key.DeveloperKey.Name = app_inst.developer
+	key.app_key.Name = app_inst.name
+	key.app_key.Version = app_inst.vers
 
 	tbl.Lock()
 	_, ok := tbl.apps[key]
@@ -139,9 +139,9 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 
 	tbl = carrier_app_tbl	
 	key.carrier_id = mreq.Carrier
-	key.app_key.DeveloperKey = mreq.dev_name
-	key.app_key.Name = mreq.app_name
-	key.app_key.Version = mreq.app_vers
+	key.app_key.DeveloperKey.Name = mreq.DevName
+	key.app_key.Name = mreq.AppName
+	key.app_key.Version = mreq.AppVers
 	
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]

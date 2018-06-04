@@ -8,32 +8,32 @@ import "github.com/mobiledgex/edge-cloud/edgeproto/loc.proto";
 message Match_Engine_Request {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
-  enum ID_type {
+  enum IDType {
 	  IMEI = 0;
 	  MSISDN = 1;
 	  IPADDR = 2;
   }
-  ID_type id_type = 2;
+  IDType IdType = 2;
   // Actual ID
-  string id = 3;
+  string Id = 3;
   // The carrier that user is connected to
-  uint64 carrier = 4;
+  uint64 Carrier = 4;
   // The tower that user is currently connected to
-  uint64 tower = 5;
+  uint64 Tower = 5;
   // The GPS location of the user 
-  edgeproto.Loc gps_location = 6;
+  edgeproto.Loc GpsLocation = 6;
   // Edge-cloud assigned application ID
-  uint64 app_id = 7;
+  uint64 AppId = 7;
   // Protocol application uses
-  bytes protocol = 8;
+  bytes Protocol = 8;
   // The protocol port on the server side
-  bytes server_port = 9;
+  bytes ServerPort = 9;
   // App Developer Name
-  string dev_name = 10;
+  string DevName = 10;
   // App Name
-  string app_name = 11;
+  string AppName = 11;
   // App Version
-  string app_vers = 12;
+  string AppVers = 12;
 }
 
 message Match_Engine_Reply {
