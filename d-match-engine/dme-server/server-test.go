@@ -18,13 +18,13 @@ func populate_tbl () {
 			id: 5005,
 			name: "Pokemon-go",
 			vers: "2.1",
-			developer: "NIantic Labs",
+			developer: "Niantic Labs",
 		},
 		app {
 			id: 5006,
 			name: "HarryPotter-go",
 			vers: "1.0",
-			developer: "NIantic Labs",
+			developer: "Niantic Labs",
 		},
 		app {
 			id: 5010,

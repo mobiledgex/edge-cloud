@@ -28,7 +28,12 @@ message Match_Engine_Request {
   bytes protocol = 8;
   // The protocol port on the server side
   bytes server_port = 9;
-    // Id of the application
+  // App Developer Name
+  string dev_name = 10;
+  // App Name
+  string app_name = 11;
+  // App Version
+  string app_vers = 12;
 }
 
 message Match_Engine_Reply {
