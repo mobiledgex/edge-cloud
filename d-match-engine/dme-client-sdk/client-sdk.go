@@ -3,7 +3,6 @@ package main
 
 import (
 	"log"
-	"os"
 	"time"
 
 	"golang.org/x/net/context"
@@ -27,18 +26,11 @@ func main() {
 
 	client := dme.NewMatch_Engine_ApiClient(conn)
 
-	defaultversion := version
-	if len(os.Args) > 1 {
-		defaultversion = int(os.Args[1][0])
-	}
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
+	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	var req = &dme.Match_Engine_Request{};
-	req.Ver = uint32(defaultversion);
-	resp, err := client.FindCloudlet(ctx, req);
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Got Version: %d", resp.Ver)
+
+	find_cloudlets(client)
+	TestLocations(client)
 }
