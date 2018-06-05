@@ -81,6 +81,10 @@ func AppKeyHeaderSlicer() []string {
 
 func AppSlicer(in *edgeproto.App) []string {
 	s := make([]string, 0, 3)
+	s = append(s, "")
+	for _, b := range in.Fields {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
 	s = append(s, in.Key.DeveloperKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.Key.Version)
@@ -90,6 +94,7 @@ func AppSlicer(in *edgeproto.App) []string {
 
 func AppHeaderSlicer() []string {
 	s := make([]string, 0, 3)
+	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Key-Version")

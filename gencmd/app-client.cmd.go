@@ -40,12 +40,12 @@ var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag
 var Match_Engine_RequestInIdType string
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
-	s := make([]string, 0, 9)
-	s = append(s, string(in.Ver))
+	s := make([]string, 0, 12)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Request_IDType_name[int32(in.IdType)])
 	s = append(s, in.Id)
-	s = append(s, string(in.Carrier))
-	s = append(s, string(in.Tower))
+	s = append(s, strconv.FormatUint(uint64(in.Carrier), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.GpsLocation == nil {
 		in.GpsLocation = &edgeproto.Loc{}
 	}
@@ -61,12 +61,23 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	}
 	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
 	s = append(s, _GpsLocation_TimestampTime.String())
-	s = append(s, string(in.AppId))
+	s = append(s, strconv.FormatUint(uint64(in.AppId), 10))
+	s = append(s, "")
+	for _, b := range in.Protocol {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
+	s = append(s, "")
+	for _, b := range in.ServerPort {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
+	s = append(s, in.DevName)
+	s = append(s, in.AppName)
+	s = append(s, in.AppVers)
 	return s
 }
 
 func Match_Engine_RequestHeaderSlicer() []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 12)
 	s = append(s, "Ver")
 	s = append(s, "IdType")
 	s = append(s, "Id")
@@ -81,14 +92,26 @@ func Match_Engine_RequestHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Speed")
 	s = append(s, "GpsLocation-Timestamp")
 	s = append(s, "AppId")
+	s = append(s, "Protocol")
+	s = append(s, "ServerPort")
+	s = append(s, "DevName")
+	s = append(s, "AppName")
+	s = append(s, "AppVers")
 	return s
 }
 
 func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) []string {
-	s := make([]string, 0, 5)
-	s = append(s, string(in.Ver))
+	s := make([]string, 0, 6)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.Uri)
-	s = append(s, string(in.ServicePort))
+	s = append(s, "")
+	for i, b := range in.ServiceIp {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+		if i < 3 {
+			s[len(s)-1] += "."
+		}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.ServicePort), 10))
 	if in.CloudletLocation == nil {
 		in.CloudletLocation = &edgeproto.Loc{}
 	}
@@ -104,13 +127,15 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
+	s = append(s, strconv.FormatBool(in.Status))
 	return s
 }
 
 func Match_Engine_ReplyHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Ver")
 	s = append(s, "Uri")
+	s = append(s, "ServiceIp")
 	s = append(s, "ServicePort")
 	s = append(s, "CloudletLocation-Lat")
 	s = append(s, "CloudletLocation-Long")
@@ -120,12 +145,13 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 	s = append(s, "CloudletLocation-Course")
 	s = append(s, "CloudletLocation-Speed")
 	s = append(s, "CloudletLocation-Timestamp")
+	s = append(s, "Status")
 	return s
 }
 
 func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc_Verify) []string {
 	s := make([]string, 0, 3)
-	s = append(s, string(in.Ver))
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status_name[int32(in.TowerStatus)])
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
 	return s
@@ -215,6 +241,9 @@ func init() {
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.AppId, "appid", 0, "AppId")
 	Match_Engine_RequestFlagSet.BytesHexVar(&Match_Engine_RequestIn.Protocol, "protocol", nil, "Protocol")
 	Match_Engine_RequestFlagSet.BytesHexVar(&Match_Engine_RequestIn.ServerPort, "serverport", nil, "ServerPort")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.DevName, "devname", "", "DevName")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppName, "appname", "", "AppName")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppVers, "appvers", "", "AppVers")
 	FindCloudletCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 }

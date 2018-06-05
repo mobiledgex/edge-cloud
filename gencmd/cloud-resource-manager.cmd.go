@@ -25,11 +25,11 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudResourceManagerCmd edgeproto.CloudResourceManagerClient
+var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
+var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
 var CloudResourceIn edgeproto.CloudResource
 var CloudResourceFlagSet = pflag.NewFlagSet("CloudResource", pflag.ExitOnError)
 var CloudResourceInCategory string
-var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
-var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
 
 func CloudResourceSlicer(in *edgeproto.CloudResource) []string {
 	s := make([]string, 0, 6)
@@ -41,7 +41,14 @@ func CloudResourceSlicer(in *edgeproto.CloudResource) []string {
 	s = append(s, in.CloudletKey.OperatorKey.Name)
 	s = append(s, in.CloudletKey.Name)
 	s = append(s, strconv.FormatBool(in.Active))
-	s = append(s, string(in.Id))
+	s = append(s, strconv.FormatUint(uint64(in.Id), 10))
+	s = append(s, "")
+	for i, b := range in.AccessIp {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+		if i < 3 {
+			s[len(s)-1] += "."
+		}
+	}
 	return s
 }
 
@@ -53,6 +60,7 @@ func CloudResourceHeaderSlicer() []string {
 	s = append(s, "CloudletKey-Name")
 	s = append(s, "Active")
 	s = append(s, "Id")
+	s = append(s, "AccessIp")
 	return s
 }
 
@@ -63,9 +71,9 @@ func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
 	s = append(s, in.Image)
 	s = append(s, in.Cpu)
 	s = append(s, in.Memory)
-	s = append(s, string(in.Limitfactor))
+	s = append(s, strconv.FormatUint(uint64(in.Limitfactor), 10))
 	s = append(s, in.Exposure)
-	s = append(s, string(in.Replicas))
+	s = append(s, strconv.FormatUint(uint64(in.Replicas), 10))
 	s = append(s, in.Context)
 	s = append(s, in.Namespace)
 	s = append(s, in.Region)
@@ -79,7 +87,7 @@ func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
 	s = append(s, in.AppInstKey.AppKey.Version)
 	s = append(s, in.AppInstKey.CloudletKey.OperatorKey.Name)
 	s = append(s, in.AppInstKey.CloudletKey.Name)
-	s = append(s, string(in.AppInstKey.Id))
+	s = append(s, strconv.FormatUint(uint64(in.AppInstKey.Id), 10))
 	return s
 }
 
@@ -120,9 +128,9 @@ func EdgeCloudApplicationSlicer(in *edgeproto.EdgeCloudApplication) []string {
 	s = append(s, in.Apps[0].Image)
 	s = append(s, in.Apps[0].Cpu)
 	s = append(s, in.Apps[0].Memory)
-	s = append(s, string(in.Apps[0].Limitfactor))
+	s = append(s, strconv.FormatUint(uint64(in.Apps[0].Limitfactor), 10))
 	s = append(s, in.Apps[0].Exposure)
-	s = append(s, string(in.Apps[0].Replicas))
+	s = append(s, strconv.FormatUint(uint64(in.Apps[0].Replicas), 10))
 	s = append(s, in.Apps[0].Context)
 	s = append(s, in.Apps[0].Namespace)
 	s = append(s, in.Apps[0].Region)
@@ -136,7 +144,7 @@ func EdgeCloudApplicationSlicer(in *edgeproto.EdgeCloudApplication) []string {
 	s = append(s, in.Apps[0].AppInstKey.AppKey.Version)
 	s = append(s, in.Apps[0].AppInstKey.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Apps[0].AppInstKey.CloudletKey.Name)
-	s = append(s, string(in.Apps[0].AppInstKey.Id))
+	s = append(s, strconv.FormatUint(uint64(in.Apps[0].AppInstKey.Id), 10))
 	return s
 }
 

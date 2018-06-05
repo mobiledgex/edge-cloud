@@ -47,8 +47,19 @@ func CloudletKeyHeaderSlicer() []string {
 
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s := make([]string, 0, 4)
+	s = append(s, "")
+	for _, b := range in.Fields {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
+	s = append(s, "")
+	for i, b := range in.AccessIp {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+		if i < 3 {
+			s[len(s)-1] += "."
+		}
+	}
 	s = append(s, strconv.FormatFloat(float64(in.Location.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Long), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.HorizontalAccuracy), 'e', -1, 32))
@@ -66,8 +77,10 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 
 func CloudletHeaderSlicer() []string {
 	s := make([]string, 0, 4)
+	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
+	s = append(s, "AccessIp")
 	s = append(s, "Location-Lat")
 	s = append(s, "Location-Long")
 	s = append(s, "Location-HorizontalAccuracy")
