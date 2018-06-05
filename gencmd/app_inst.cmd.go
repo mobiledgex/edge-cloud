@@ -40,7 +40,7 @@ func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s = append(s, in.AppKey.Version)
 	s = append(s, in.CloudletKey.OperatorKey.Name)
 	s = append(s, in.CloudletKey.Name)
-	s = append(s, string(in.Id))
+	s = append(s, strconv.FormatUint(uint64(in.Id), 10))
 	return s
 }
 
@@ -57,12 +57,16 @@ func AppInstKeyHeaderSlicer() []string {
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s := make([]string, 0, 6)
+	s = append(s, "")
+	for _, b := range in.Fields {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, string(in.Key.Id))
+	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Long), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.HorizontalAccuracy), 'e', -1, 32))
@@ -75,13 +79,21 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	}
 	_CloudletLoc_TimestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
 	s = append(s, _CloudletLoc_TimestampTime.String())
-	s = append(s, string(in.Port))
+	s = append(s, "")
+	for i, b := range in.Ip {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+		if i < 3 {
+			s[len(s)-1] += "."
+		}
+	}
+	s = append(s, strconv.FormatUint(uint64(in.Port), 10))
 	s = append(s, edgeproto.AppInst_Liveness_name[int32(in.Liveness)])
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
 	s := make([]string, 0, 6)
+	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
@@ -96,6 +108,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CloudletLoc-Course")
 	s = append(s, "CloudletLoc-Speed")
 	s = append(s, "CloudletLoc-Timestamp")
+	s = append(s, "Ip")
 	s = append(s, "Port")
 	s = append(s, "Liveness")
 	return s

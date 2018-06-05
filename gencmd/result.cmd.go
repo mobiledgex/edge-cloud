@@ -4,6 +4,7 @@
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import "strconv"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -18,7 +19,7 @@ var _ = math.Inf
 func ResultSlicer(in *edgeproto.Result) []string {
 	s := make([]string, 0, 2)
 	s = append(s, in.Message)
-	s = append(s, string(in.Code))
+	s = append(s, strconv.FormatUint(uint64(in.Code), 10))
 	return s
 }
 
