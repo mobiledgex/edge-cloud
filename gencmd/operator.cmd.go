@@ -57,12 +57,17 @@ func OperatorKeyHeaderSlicer() []string {
 
 func OperatorSlicer(in *edgeproto.Operator) []string {
 	s := make([]string, 0, 2)
+	s = append(s, "")
+	for _, b := range in.Fields {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
 	s = append(s, in.Key.Name)
 	return s
 }
 
 func OperatorHeaderSlicer() []string {
 	s := make([]string, 0, 2)
+	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	return s
 }
