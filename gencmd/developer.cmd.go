@@ -43,6 +43,10 @@ func DeveloperKeyHeaderSlicer() []string {
 
 func DeveloperSlicer(in *edgeproto.Developer) []string {
 	s := make([]string, 0, 6)
+	s = append(s, "")
+	for _, b := range in.Fields {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
 	s = append(s, in.Key.Name)
 	s = append(s, in.Username)
 	s = append(s, in.Passhash)
@@ -53,6 +57,7 @@ func DeveloperSlicer(in *edgeproto.Developer) []string {
 
 func DeveloperHeaderSlicer() []string {
 	s := make([]string, 0, 6)
+	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	s = append(s, "Username")
 	s = append(s, "Passhash")

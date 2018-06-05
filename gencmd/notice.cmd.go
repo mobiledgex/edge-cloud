@@ -4,6 +4,7 @@
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import "strconv"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -22,8 +23,8 @@ var NotifyApiCmd edgeproto.NotifyApiClient
 func NoticeSlicer(in *edgeproto.Notice) []string {
 	s := make([]string, 0, 5)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
-	s = append(s, string(in.ConnectionId))
-	s = append(s, string(in.Version))
+	s = append(s, strconv.FormatUint(uint64(in.ConnectionId), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
@@ -38,7 +39,7 @@ func NoticeHeaderSlicer() []string {
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
 	s := make([]string, 0, 2)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
-	s = append(s, string(in.Version))
+	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
