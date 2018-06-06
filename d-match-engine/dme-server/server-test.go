@@ -32,6 +32,12 @@ func populate_tbl () {
 			vers: "1.7",
 			developer: "Ever.AI",
 		},
+		app{
+			id: 5011,
+			name: "EmptyMatchEngineApp",
+			vers: "1",
+			developer: "EmptyMatchEngineApp",
+		},
 	}
 	cloudlets = []cloudlet {
 		cloudlet {
