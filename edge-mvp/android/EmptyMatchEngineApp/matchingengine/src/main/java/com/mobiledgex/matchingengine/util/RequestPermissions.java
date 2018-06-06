@@ -86,8 +86,6 @@ public class RequestPermissions {
                         activity.getString(R.string.request_permission))
                         .show(activity.getSupportFragmentManager(), "dialog");
             }
-        } else {
-            activity.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
