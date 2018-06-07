@@ -13,9 +13,9 @@ import io.grpc.ManagedChannelBuilder;
 public class VerifyLocation implements Callable {
     public static final String TAG = "VerifyLocationTask";
 
-    MatchingEngine mMatchingEngine;
-    AppClient.Match_Engine_Request mRequest; // Singleton.
-    long mTimeoutInMilliseconds = -1;
+    private MatchingEngine mMatchingEngine;
+    private AppClient.Match_Engine_Request mRequest; // Singleton.
+    private long mTimeoutInMilliseconds = -1;
 
     VerifyLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
@@ -27,7 +27,7 @@ public class VerifyLocation implements Callable {
         }
         mRequest = request;
 
-        if (timeoutInMilliseconds < 0) {
+        if (timeoutInMilliseconds <= 0) {
             throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
         }
         mTimeoutInMilliseconds = timeoutInMilliseconds;
@@ -50,6 +50,7 @@ public class VerifyLocation implements Callable {
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .verifyLocation(mRequest);
         } catch (Exception e) {
+            e.printStackTrace();
             throw e;
         } finally {
             if (channel != null) {
