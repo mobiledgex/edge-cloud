@@ -26,39 +26,64 @@ import distributed_match_engine.AppClient;
 // Location API:
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
-    MatchingEngine mMatchingEngine;
-    String someText = null;
+    private MatchingEngine mMatchingEngine;
+    private String someText = null;
 
-    RequestPermissions rpUtil = new RequestPermissions();
+    private RequestPermissions mRpUtil;
+    private FusedLocationProviderClient mFusedLocationClient;
+
+    private LocationCallback mLocationCallback;
+    private LocationRequest mLocationRequest;
+    private boolean mDoLocationUpdates;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final Activity activity = this;
-
 
         /**
-         * MatchEngine APIs require special user apporved permissions to READ_PHONE_STATE and
+         * MatchEngine APIs require special user approved permissions to READ_PHONE_STATE and
          * one of the following:
-         * ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION. This creates a dialog.
+         * ACCESS_FINE_LOCATION or ACCESS_COARSE_LOCATION. This creates a dialog, if needed.
          */
-        RequestPermissions rp = new RequestPermissions();
-        rp.requestMultiplePermissions(this);
-
+        mRpUtil = new RequestPermissions();
+        mRpUtil.requestMultiplePermissions(this);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mLocationRequest = new LocationRequest();
 
         mMatchingEngine = new MatchingEngine();
+        mDoLocationUpdates = true;
 
 
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                String clientLocText = "";
+                for (Location location : locationResult.getLocations()) {
+                    // Update UI with client location data
+                    clientLocText += "[" + location.toString() + "]";
+                }
+                TextView tv = findViewById(R.id.client_location_content);
+                tv.setText(clientLocText);
+            };
+        };
+
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -94,28 +119,56 @@ public class MainActivity extends AppCompatActivity {
     public void onResume() {
         super.onResume();
 
-        //doEnhancedLocationVerification();
+        if (mDoLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    /**
+     * See documentation for Google's FusedLocationProviderClient for additional usage information.
+     */
+    private void startLocationUpdates() {
+        try {
+            if (mFusedLocationClient == null) {
+                mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            }
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback,
+                    null /* Looper */);
+        } catch (SecurityException se) {
+            se.printStackTrace();
+            Log.i(TAG, "App should Request location permissions during onCreate().");
+        }
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         // Or replace with an app specific dialog set.
-        rpUtil.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
+        mRpUtil.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
     }
 
     public void doEnhancedLocationVerification() throws SecurityException {
         final Activity ctx = this;
 
         // As of Android 23, permissions can be asked for while the app is still running.
-        if (rpUtil.getNeededPermissions(this).size() > 0) {
-            rpUtil.requestMultiplePermissions(this);
+        if (mRpUtil.getNeededPermissions(this).size() > 0) {
+            mRpUtil.requestMultiplePermissions(this);
             return;
         }
 
-        FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(ctx);
-
-        fusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+        // Run in the background and post to the UI thread. Here, it is simply attached to a button
+        // on the current UI Thread.
+        mFusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
             @Override
             public void onComplete(Task<Location> task) {
                 if (task.isSuccessful() && task.getResult() != null) {
@@ -132,9 +185,10 @@ public class MainActivity extends AppCompatActivity {
                         someText = "[Location Verified: " + verifiedLocation + "]\n";
 
 
-                        /// Closest Cloudlet (Blocking, or use findCloudletFuture):
+                        // Find the closest cloudlet for your application to use.
+                        // (Blocking call, or use findCloudletFuture):
                         FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
-                        // FIXME: It's not possible to get a http(s) service path on just a service IP + port!
+                        // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
                         String serverip = null;
                         if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
                             serverip = closestCloudlet.server[0] + ", ";
@@ -144,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                             serverip += closestCloudlet.server[closestCloudlet.server.length-1];
                         }
                         someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
-                        TextView tv = findViewById(R.id.content_text);
+                        TextView tv = findViewById(R.id.mex_verified_location_content);
                         tv.setText(someText);
                     } catch (InterruptedException ie) {
                         ie.printStackTrace();
@@ -153,6 +207,10 @@ public class MainActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.w(TAG, "getLastLocation:exception", task.getException());
+                    someText = "Last location not found, or has never been used. Location cannot be verified using 'getLastLocation()'. " +
+                            "Use the requestLocationUpdates() instead if applicable for location verification.";
+                    TextView tv = findViewById(R.id.mex_verified_location_content);
+                    tv.setText(someText);
                 }
             }
         });
