@@ -24,7 +24,7 @@ import android.content.pm.PackageInfo;
 
 // TODO: GRPC (which needs http/2).
 public class MatchingEngine {
-    final String TAG = "MatchingEngine";
+    public static final String TAG = "MatchingEngine";
     private String host = "192.168.28.162"; // FIXME: Your available external server IP until the real server is up.
     //private String host = "192.168.1.91"; // FIXME: Your available external server IP until the real server is up.
     private int port = 50051;
