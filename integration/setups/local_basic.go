@@ -4,6 +4,7 @@ import "github.com/mobiledgex/edge-cloud/integration/process"
 
 var localBasicEtcdCluster = "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
 var localBasicEtcdAddrs = "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+var localBasicNotifyAddrs = "127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003"
 
 var LocalBasic = process.ProcessSetup{
 	Etcds: []process.EtcdProcess{
@@ -31,42 +32,45 @@ var LocalBasic = process.ProcessSetup{
 	},
 	Controllers: []process.ControllerProcess{
 		&process.ControllerLocal{
-			Name:      "ctrl1",
-			EtcdAddrs: localBasicEtcdAddrs,
-			ApiAddr:   "127.0.0.1:35001",
-			HttpAddr:  "127.0.0.1:36001",
+			Name:       "ctrl1",
+			EtcdAddrs:  localBasicEtcdAddrs,
+			ApiAddr:    "127.0.0.1:35001",
+			HttpAddr:   "127.0.0.1:36001",
+			NotifyAddr: "127.0.0.1:37001",
 		},
 		&process.ControllerLocal{
-			Name:      "ctrl2",
-			EtcdAddrs: localBasicEtcdAddrs,
-			ApiAddr:   "127.0.0.1:35002",
-			HttpAddr:  "127.0.0.1:36002",
+			Name:       "ctrl2",
+			EtcdAddrs:  localBasicEtcdAddrs,
+			ApiAddr:    "127.0.0.1:35002",
+			HttpAddr:   "127.0.0.1:36002",
+			NotifyAddr: "127.0.0.1:37002",
 		},
 		&process.ControllerLocal{
-			Name:      "ctrl3",
-			EtcdAddrs: localBasicEtcdAddrs,
-			ApiAddr:   "127.0.0.1:35003",
-			HttpAddr:  "127.0.0.1:36003",
+			Name:       "ctrl3",
+			EtcdAddrs:  localBasicEtcdAddrs,
+			ApiAddr:    "127.0.0.1:35003",
+			HttpAddr:   "127.0.0.1:36003",
+			NotifyAddr: "127.0.0.1:37003",
 		},
 	},
 	Dmes: []process.DmeProcess{
 		&process.DmeLocal{
-			Name:       "dme1",
-			NotifyAddr: "127.0.0.1:31001",
+			Name:        "dme1",
+			NotifyAddrs: localBasicNotifyAddrs,
 		},
 		&process.DmeLocal{
-			Name:       "dme2",
-			NotifyAddr: "127.0.0.1:31002",
+			Name:        "dme2",
+			NotifyAddrs: localBasicNotifyAddrs,
 		},
 	},
 	Crms: []process.CrmProcess{
 		&process.CrmLocal{
-			Name:       "crm1",
-			NotifyAddr: "127.0.0.1:33001",
+			Name:        "crm1",
+			NotifyAddrs: localBasicNotifyAddrs,
 		},
 		&process.CrmLocal{
-			Name:       "crm2",
-			NotifyAddr: "127.0.0.1:33002",
+			Name:        "crm2",
+			NotifyAddrs: localBasicNotifyAddrs,
 		},
 	},
 }

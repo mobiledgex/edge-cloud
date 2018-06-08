@@ -1,7 +1,0 @@
-# etcd instances
-etcd1: etcd --name etcd1 --data-dir /var/tmp/edge-cloud-local-cluster/etcd1 --listen-client-urls http://127.0.0.1:30001 --advertise-client-urls http://127.0.0.1:30001 --listen-peer-urls http://127.0.0.1:30011
-etcd2: etcd --name etcd2 --data-dir /var/tmp/edge-cloud-local-cluster/etcd2 --listen-client-urls http://127.0.0.1:30002 --advertise-client-urls http://127.0.0.1:30002 --listen-peer-urls http://127.0.0.1:30012
-etcd3: etcd --name etcd3 --data-dir /var/tmp/edge-cloud-local-cluster/etcd3 --listen-client-urls http://127.0.0.1:30003 --advertise-client-urls http://127.0.0.1:30003 --listen-peer-urls http://127.0.0.1:30013
-ctrl1: controller -r /var/tmp/edge-cloud-local-cluster/controller1 --etcdUrls "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003" --apiAddr "127.0.0.1:40101" --httpAddr "127.0.0.1:50101" --matcherAddrs "127.0.0.1:30021" --crmAddrs "127.0.0.1:30101" -d api,notify,etcd
-dme1: dme-server --notifyAddr "127.0.0.1:30021"
-crm1: crmserver --controller "127.0.0.1:40101" --notifyAddr "127.0.0.1:30101"

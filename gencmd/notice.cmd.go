@@ -20,33 +20,35 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var NotifyApiCmd edgeproto.NotifyApiClient
 
-func NoticeSlicer(in *edgeproto.Notice) []string {
-	s := make([]string, 0, 5)
-	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
-	s = append(s, strconv.FormatUint(uint64(in.ConnectionId), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
-	return s
-}
-
-func NoticeHeaderSlicer() []string {
-	s := make([]string, 0, 5)
-	s = append(s, "Action")
-	s = append(s, "ConnectionId")
-	s = append(s, "Version")
-	return s
-}
-
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
 func NoticeReplyHeaderSlicer() []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, "Action")
 	s = append(s, "Version")
+	return s
+}
+
+func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
+	s := make([]string, 0, 4)
+	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
+	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
+	s = append(s, edgeproto.NoticeRequestor_name[int32(in.Requestor)])
+	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
+	return s
+}
+
+func NoticeRequestHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "Action")
+	s = append(s, "Version")
+	s = append(s, "Requestor")
+	s = append(s, "Revision")
 	return s
 }
 
