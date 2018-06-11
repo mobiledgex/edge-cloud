@@ -14,8 +14,8 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 		
 	mreq = []dme.Match_Engine_Request {
 		dme.Match_Engine_Request {
-			Carrier: 1,
-			//Todo: Check the usage of embedded pointer to Loc in proto files
+			CarrierID: 1,
+			CarrierName: "GDDT",
 			GpsLocation: &edgeproto.Loc{Lat: 50.75, Long: 7.9050},
 			AppId: 5000,
 			DevName: "Untomt",
@@ -23,8 +23,8 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 			AppVers: "1.1",
 		},
 		dme.Match_Engine_Request {
-			Carrier: 1,
-			//Todo: Check the usage of embedded pointer to Loc in proto files
+			CarrierID: 1,
+			CarrierName: "GDDT",
 			GpsLocation: &edgeproto.Loc{Lat: 52.75, Long: 12.9050},
 			AppId: 5005,
 			DevName: "Atlantic Labs",
@@ -32,8 +32,8 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 			AppVers: "2.1",
 		},
 		dme.Match_Engine_Request {
-			Carrier: 1,
-			//Todo: Check the usage of embedded pointer to Loc in proto files
+			CarrierID: 1,
+			CarrierName: "GDDT",
 			GpsLocation: &edgeproto.Loc{Lat: 50.75, Long: 11.9050},
 			AppId: 5006,
 			DevName: "Atlantic Labs",
@@ -41,8 +41,8 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 			AppVers: "1.0",
 		},
 		dme.Match_Engine_Request {
-			Carrier: 3,
-			//Todo: Check the usage of embedded pointer to Loc in proto files
+			CarrierID: 3,
+			CarrierName: "DMUUS",
 			GpsLocation: &edgeproto.Loc{Lat: 47.75, Long: 122.9050},
 			AppId: 5010,
 			DevName: "Ever.AI",
