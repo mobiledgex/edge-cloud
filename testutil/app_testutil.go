@@ -44,7 +44,6 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/assert"
-import "github.com/mobiledgex/edge-cloud/util"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -243,8 +242,8 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	updater := edgeproto.App{}
 	updater.Key = testData[0].Key
 	updater.AppPath = "update just this"
-	updater.Fields = util.GrpcFieldsNew()
-	util.GrpcFieldsSet(updater.Fields, edgeproto.AppFieldAppPath)
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, edgeproto.AppFieldAppPath)
 	_, err = api.UpdateApp(ctx, &updater)
 	assert.Nil(t, err, "Update App %s", testData[0].Key.GetKeyString())
 

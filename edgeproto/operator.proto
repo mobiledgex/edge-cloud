@@ -28,7 +28,7 @@ message OperatorKey {
 }
 
 message Operator {
-  bytes fields = 1;
+  repeated string fields = 1;
   // Unique identifier key
   OperatorKey key = 2 [(gogoproto.nullable) = false];
   // TODO: access schema/credentials

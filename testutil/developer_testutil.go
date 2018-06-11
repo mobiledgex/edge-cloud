@@ -10,7 +10,6 @@ import "testing"
 import "context"
 import "time"
 import "github.com/stretchr/testify/assert"
-import "github.com/mobiledgex/edge-cloud/util"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -209,8 +208,8 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	updater := edgeproto.Developer{}
 	updater.Key = testData[0].Key
 	updater.Email = "update just this"
-	updater.Fields = util.GrpcFieldsNew()
-	util.GrpcFieldsSet(updater.Fields, edgeproto.DeveloperFieldEmail)
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, edgeproto.DeveloperFieldEmail)
 	_, err = api.UpdateDeveloper(ctx, &updater)
 	assert.Nil(t, err, "Update Developer %s", testData[0].Key.GetKeyString())
 

@@ -43,10 +43,10 @@ func DeveloperKeyHeaderSlicer() []string {
 
 func DeveloperSlicer(in *edgeproto.Developer) []string {
 	s := make([]string, 0, 6)
-	s = append(s, "")
-	for _, b := range in.Fields {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
 	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
 	s = append(s, in.Username)
 	s = append(s, in.Passhash)
@@ -120,6 +120,7 @@ var UpdateDeveloperCmd = &cobra.Command{
 			return
 		}
 		var err error
+		DeveloperSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		out, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
 		cancel()
@@ -181,4 +182,23 @@ func init() {
 	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
+}
+
+func DeveloperSetFields() {
+	DeveloperIn.Fields = make([]string, 0)
+	if DeveloperFlagSet.Lookup("key-name").Changed {
+		DeveloperIn.Fields = append(DeveloperIn.Fields, "2.2")
+	}
+	if DeveloperFlagSet.Lookup("username").Changed {
+		DeveloperIn.Fields = append(DeveloperIn.Fields, "3")
+	}
+	if DeveloperFlagSet.Lookup("passhash").Changed {
+		DeveloperIn.Fields = append(DeveloperIn.Fields, "4")
+	}
+	if DeveloperFlagSet.Lookup("address").Changed {
+		DeveloperIn.Fields = append(DeveloperIn.Fields, "5")
+	}
+	if DeveloperFlagSet.Lookup("email").Changed {
+		DeveloperIn.Fields = append(DeveloperIn.Fields, "6")
+	}
 }
