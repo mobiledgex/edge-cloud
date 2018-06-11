@@ -121,6 +121,8 @@ func EdgeCloudApplicationSlicer(in *edgeproto.EdgeCloudApplication) []string {
 	s = append(s, in.Kind)
 	if in.Apps == nil {
 		in.Apps = make([]*edgeproto.EdgeCloudApp, 1)
+	}
+	if in.Apps[0] == nil {
 		in.Apps[0] = &edgeproto.EdgeCloudApp{}
 	}
 	s = append(s, in.Apps[0].Name)

@@ -81,10 +81,10 @@ func AppKeyHeaderSlicer() []string {
 
 func AppSlicer(in *edgeproto.App) []string {
 	s := make([]string, 0, 3)
-	s = append(s, "")
-	for _, b := range in.Fields {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
 	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.DeveloperKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.Key.Version)
@@ -156,6 +156,7 @@ var UpdateAppCmd = &cobra.Command{
 			return
 		}
 		var err error
+		AppSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		out, err := AppApiCmd.UpdateApp(ctx, &AppIn)
 		cancel()
@@ -216,4 +217,20 @@ func init() {
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	ShowAppCmd.Flags().AddFlagSet(AppFlagSet)
+}
+
+func AppSetFields() {
+	AppIn.Fields = make([]string, 0)
+	if AppFlagSet.Lookup("key-developerkey-name").Changed {
+		AppIn.Fields = append(AppIn.Fields, "2.1.2")
+	}
+	if AppFlagSet.Lookup("key-name").Changed {
+		AppIn.Fields = append(AppIn.Fields, "2.2")
+	}
+	if AppFlagSet.Lookup("key-version").Changed {
+		AppIn.Fields = append(AppIn.Fields, "2.3")
+	}
+	if AppFlagSet.Lookup("apppath").Changed {
+		AppIn.Fields = append(AppIn.Fields, "4")
+	}
 }

@@ -221,8 +221,8 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	updater := {{.Pkg}}.{{.Name}}{}
 	updater.Key = testData[0].Key
 	updater.{{.UpdateField}} = "update just this"
-	updater.Fields = util.GrpcFieldsNew()
-	util.GrpcFieldsSet(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
 	assert.Nil(t, err, "Update {{.Name}} %s", testData[0].Key.GetKeyString())
 
@@ -239,7 +239,6 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	hasGenerateCud := false
-	hasTestUpdate := false
 	for _, msg := range file.Messages() {
 		if GetGenerateCud(msg.DescriptorProto) {
 			hasGenerateCud = true
@@ -255,16 +254,6 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	t.PrintImport("", "context")
 	t.PrintImport("", "time")
 	t.PrintImport("", "github.com/stretchr/testify/assert")
-	for _, msg := range file.Messages() {
-		for _, field := range msg.DescriptorProto.Field {
-			if GetTestUpdate(field) {
-				hasTestUpdate = true
-			}
-		}
-	}
-	if hasTestUpdate {
-		t.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
-	}
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
