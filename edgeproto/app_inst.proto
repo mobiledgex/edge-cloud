@@ -26,7 +26,7 @@ message AppInstKey {
 // AppInsts are instances of an application instantiated
 // on a cloudlet, like a docker or VM instance.
 message AppInst {
-  bytes fields = 1;
+  repeated string fields = 1;
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cache the location of the cloudlet

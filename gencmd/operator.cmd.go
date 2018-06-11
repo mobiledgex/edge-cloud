@@ -57,10 +57,10 @@ func OperatorKeyHeaderSlicer() []string {
 
 func OperatorSlicer(in *edgeproto.Operator) []string {
 	s := make([]string, 0, 2)
-	s = append(s, "")
-	for _, b := range in.Fields {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
 	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
 	return s
 }
@@ -126,6 +126,7 @@ var UpdateOperatorCmd = &cobra.Command{
 			return
 		}
 		var err error
+		OperatorSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		out, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
 		cancel()
@@ -183,4 +184,11 @@ func init() {
 	DeleteOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	UpdateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	ShowOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
+}
+
+func OperatorSetFields() {
+	OperatorIn.Fields = make([]string, 0)
+	if OperatorFlagSet.Lookup("key-name").Changed {
+		OperatorIn.Fields = append(OperatorIn.Fields, "2.1")
+	}
 }

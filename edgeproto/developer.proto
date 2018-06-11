@@ -18,7 +18,7 @@ message DeveloperKey {
 }
 
 message Developer {
-  bytes fields = 1;
+  repeated string fields = 1;
   // Unique identifier key
   DeveloperKey key = 2 [(gogoproto.nullable) = false];
   // auth scheme plus generic hash instead of user/pass

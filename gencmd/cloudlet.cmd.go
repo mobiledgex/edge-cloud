@@ -47,10 +47,10 @@ func CloudletKeyHeaderSlicer() []string {
 
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s := make([]string, 0, 4)
-	s = append(s, "")
-	for _, b := range in.Fields {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
 	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, "")
@@ -146,6 +146,7 @@ var UpdateCloudletCmd = &cobra.Command{
 			return
 		}
 		var err error
+		CloudletSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		out, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
 		cancel()
@@ -215,4 +216,44 @@ func init() {
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	UpdateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	ShowCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
+}
+
+func CloudletSetFields() {
+	CloudletIn.Fields = make([]string, 0)
+	if CloudletFlagSet.Lookup("key-operatorkey-name").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "2.1.1")
+	}
+	if CloudletFlagSet.Lookup("key-name").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "2.2")
+	}
+	if CloudletFlagSet.Lookup("accessip").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "4")
+	}
+	if CloudletFlagSet.Lookup("location-lat").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.1")
+	}
+	if CloudletFlagSet.Lookup("location-long").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.2")
+	}
+	if CloudletFlagSet.Lookup("location-horizontalaccuracy").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.3")
+	}
+	if CloudletFlagSet.Lookup("location-verticalaccuracy").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.4")
+	}
+	if CloudletFlagSet.Lookup("location-altitude").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.5")
+	}
+	if CloudletFlagSet.Lookup("location-course").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.6")
+	}
+	if CloudletFlagSet.Lookup("location-speed").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.7")
+	}
+	if CloudletFlagSet.Lookup("location-timestamp-seconds").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.1")
+	}
+	if CloudletFlagSet.Lookup("location-timestamp-nanos").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
+	}
 }

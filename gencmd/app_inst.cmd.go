@@ -57,10 +57,10 @@ func AppInstKeyHeaderSlicer() []string {
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s := make([]string, 0, 6)
-	s = append(s, "")
-	for _, b := range in.Fields {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
 	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
@@ -183,6 +183,7 @@ var UpdateAppInstCmd = &cobra.Command{
 			fmt.Println("UpdateAppInst: ", err)
 			return
 		}
+		AppInstSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		out, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
 		cancel()
@@ -265,6 +266,63 @@ func init() {
 	ShowAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 }
 
+func AppInstSetFields() {
+	AppInstIn.Fields = make([]string, 0)
+	if AppInstFlagSet.Lookup("key-appkey-developerkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.1.2")
+	}
+	if AppInstFlagSet.Lookup("key-appkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.2")
+	}
+	if AppInstFlagSet.Lookup("key-appkey-version").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.3")
+	}
+	if AppInstFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.1.1")
+	}
+	if AppInstFlagSet.Lookup("key-cloudletkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.2")
+	}
+	if AppInstFlagSet.Lookup("key-id").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.3")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-lat").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-long").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.2")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-horizontalaccuracy").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.3")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-verticalaccuracy").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.4")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-altitude").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.5")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-course").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.6")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-speed").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.7")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-timestamp-seconds").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.1")
+	}
+	if AppInstFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
+	}
+	if AppInstFlagSet.Lookup("ip").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "4")
+	}
+	if AppInstFlagSet.Lookup("port").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "5")
+	}
+	if AppInstFlagSet.Lookup("liveness").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "6")
+	}
+}
 func parseAppInstEnums() error {
 	if AppInstInLiveness != "" {
 		switch AppInstInLiveness {

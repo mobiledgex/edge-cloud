@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -128,8 +127,7 @@ func TestCopyIn(t *testing.T) {
 		}
 	}
 
-	src.Fields = util.GrpcFieldsNew()
-	util.GrpcFieldsSetAll(src.Fields)
+	src.Fields = TestGenAllFields
 	dst.CopyInFields(&src)
 	// clear fields so they're not figured into the equals call
 	src.Fields = nil
