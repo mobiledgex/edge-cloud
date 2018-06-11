@@ -29,10 +29,10 @@ type EtcdLocal struct {
 	cmd            *exec.Cmd
 }
 
-func (p *EtcdLocal) Start() error {
+func (p *EtcdLocal) Start(logfile *string) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "etcd", args)
+	p.cmd, err = StartLocal(p.Name, "etcd", args, logfile)
 	return err
 }
 
@@ -55,7 +55,7 @@ type ControllerLocal struct {
 	cmd        *exec.Cmd
 }
 
-func (p *ControllerLocal) Start(opts ...StartOp) error {
+func (p *ControllerLocal) Start(logfile *string, opts ...StartOp) error {
 	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -73,7 +73,7 @@ func (p *ControllerLocal) Start(opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "controller", args)
+	p.cmd, err = StartLocal(p.Name, "controller", args, logfile)
 	return err
 }
 
@@ -106,10 +106,10 @@ type DmeLocal struct {
 	cmd         *exec.Cmd
 }
 
-func (p *DmeLocal) Start() error {
+func (p *DmeLocal) Start(logfile *string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "dme-server", args)
+	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)
 	return err
 }
 
@@ -130,10 +130,10 @@ type CrmLocal struct {
 	cmd         *exec.Cmd
 }
 
-func (p *CrmLocal) Start() error {
+func (p *CrmLocal) Start(logfile *string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "crmserver", args)
+	p.cmd, err = StartLocal(p.Name, "crmserver", args, logfile)
 	return err
 }
 
@@ -148,11 +148,24 @@ func (p *CrmLocal) ConnectAPI() (*grpc.ClientConn, error) {
 
 // Support funcs
 
-func StartLocal(name, bin string, args []string) (*exec.Cmd, error) {
+func StartLocal(name, bin string, args []string, logfile *string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
-	writer := NewColorWriter(name)
-	cmd.Stdout = writer
-	cmd.Stderr = writer
+	if logfile == nil {
+		writer := NewColorWriter(name)
+		cmd.Stdout = writer
+		cmd.Stderr = writer
+	} else {
+		fmt.Printf("Creating logfile %v\n", *logfile)
+		// open the out file for writing
+		outfile, err := os.Create(*logfile)
+		if err != nil {
+			fmt.Printf("ERROR Creating logfile %v -- %v\n", logfile, err)
+			panic(err)
+		}
+		cmd.Stdout = outfile
+		cmd.Stderr = outfile
+	}
+
 	err := cmd.Start()
 	if err != nil {
 		return nil, err
