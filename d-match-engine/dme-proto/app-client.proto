@@ -16,24 +16,28 @@ message Match_Engine_Request {
   IDType IdType = 2;
   // Actual ID
   string Id = 3;
-  // The carrier that user is connected to
-  uint64 Carrier = 4;
+  // The carrier ID that user is connected to ("Mobile Country Code")
+  uint64 CarrierID = 4;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 5;
   // The tower that user is currently connected to
-  uint64 Tower = 5;
+  uint64 Tower = 6;
   // The GPS location of the user 
-  edgeproto.Loc GpsLocation = 6;
+  edgeproto.Loc GpsLocation = 7;
   // Edge-cloud assigned application ID
-  uint64 AppId = 7;
+  uint64 AppId = 8;
   // Protocol application uses
-  bytes Protocol = 8;
+  bytes Protocol = 9;
   // The protocol port on the server side
-  bytes ServerPort = 9;
+  bytes ServerPort = 10;
   // App Developer Name
-  string DevName = 10;
+  string DevName = 11;
   // App Name
-  string AppName = 11;
+  string AppName = 12;
   // App Version
-  string AppVers = 12;
+  string AppVers = 13;
+  // Token provided by the Operator for subsequent calls
+  string Token = 14;
 }
 
 message Match_Engine_Reply {
@@ -48,6 +52,8 @@ message Match_Engine_Reply {
   edgeproto.Loc cloudlet_location = 5;
   // Status return
   bool Status = 6;
+  // Token
+  string Token = 7;
 }
 
 message Match_Engine_Loc_Verify {
@@ -61,15 +67,56 @@ message Match_Engine_Loc_Verify {
   Tower_Status tower_status = 2;
   enum GPS_Location_Status {
     LOC_UNKNOWN = 0;
-    LOC_WITHIN_1M = 1;
-    LOC_WITHIN_10M = 2;
+    LOC_WITHIN_2KM = 1;
+    LOC_WITHIN_10KM = 2;
+    LOC_WITHIN_100KM = 3;
+    LOC_MISMATCH = 4;
+    LOC_OTHER_COUNTRY = 5;
   }
   GPS_Location_Status gps_location_status = 3;
+  // Token
+  string Token = 4;
+}
+
+message Match_Engine_Loc {
+  uint32 ver = 1;
+  // Status of the reply
+  enum Loc_Status {
+    LOC_UNKNOWN = 0;
+    LOC_FOUND = 1;
+    // The user does not allow his location to be tracked
+    LOC_DENIED = 2;
+  }
+  Loc_Status Status = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+  // The tower that user is currently connected to
+  uint64 Tower = 4;
+  // The GPS location of the user 
+  edgeproto.Loc NetworkLocation = 5;
+  // Token
+  string Token = 6;
+}
+
+message Match_Engine_Status {
+  uint32 ver = 1;
+  // Status of the reply
+  enum ME_Status {
+    ME_SUCCESS = 0;
+    ME_FAIL = 1;
+  }
+  ME_Status Status = 2;
+  // Error Code based on Failure
+  uint32 ErrorCode = 3;
+  // Token
+  string Token = 4;
 }
 
 service Match_Engine_Api {
   rpc FindCloudlet(Match_Engine_Request) returns (Match_Engine_Reply) {}
   rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
+  rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
+  rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
 }
 
 
