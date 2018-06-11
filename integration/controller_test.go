@@ -57,9 +57,11 @@ func testControllerSync(t *testing.T, setup *process.ProcessSetup) {
 
 	// update a developer and make sure it syncs
 	testutil.DevData[0].Email = "updated email"
+	testutil.DevData[0].Fields = []string{edgeproto.DeveloperFieldEmail}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	_, err = devApis[0].UpdateDeveloper(ctx, &testutil.DevData[0])
 	cancel()
+	testutil.DevData[0].Fields = nil
 	for ii := 0; ii < numproc; ii++ {
 		testutil.WaitAssertFoundDeveloper(t, devApis[ii], &testutil.DevData[0], retries, interval)
 	}

@@ -11,6 +11,8 @@ It has these top-level messages:
 	Match_Engine_Request
 	Match_Engine_Reply
 	Match_Engine_Loc_Verify
+	Match_Engine_Loc
+	Match_Engine_Status
 */
 package gencmd
 
@@ -40,11 +42,12 @@ var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag
 var Match_Engine_RequestInIdType string
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 14)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Request_IDType_name[int32(in.IdType)])
 	s = append(s, in.Id)
-	s = append(s, strconv.FormatUint(uint64(in.Carrier), 10))
+	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
+	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.GpsLocation == nil {
 		in.GpsLocation = &edgeproto.Loc{}
@@ -73,15 +76,17 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	s = append(s, in.DevName)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
+	s = append(s, in.Token)
 	return s
 }
 
 func Match_Engine_RequestHeaderSlicer() []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 14)
 	s = append(s, "Ver")
 	s = append(s, "IdType")
 	s = append(s, "Id")
-	s = append(s, "Carrier")
+	s = append(s, "CarrierID")
+	s = append(s, "CarrierName")
 	s = append(s, "Tower")
 	s = append(s, "GpsLocation-Lat")
 	s = append(s, "GpsLocation-Long")
@@ -97,11 +102,12 @@ func Match_Engine_RequestHeaderSlicer() []string {
 	s = append(s, "DevName")
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
+	s = append(s, "Token")
 	return s
 }
 
 func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.Uri)
 	s = append(s, "")
@@ -128,11 +134,12 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
 	s = append(s, strconv.FormatBool(in.Status))
+	s = append(s, in.Token)
 	return s
 }
 
 func Match_Engine_ReplyHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Ver")
 	s = append(s, "Uri")
 	s = append(s, "ServiceIp")
@@ -146,22 +153,86 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 	s = append(s, "CloudletLocation-Speed")
 	s = append(s, "CloudletLocation-Timestamp")
 	s = append(s, "Status")
+	s = append(s, "Token")
 	return s
 }
 
 func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc_Verify) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status_name[int32(in.TowerStatus)])
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
+	s = append(s, in.Token)
 	return s
 }
 
 func Match_Engine_Loc_VerifyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, "Ver")
 	s = append(s, "TowerStatus")
 	s = append(s, "GpsLocationStatus")
+	s = append(s, "Token")
+	return s
+}
+
+func Match_Engine_LocSlicer(in *distributed_match_engine.Match_Engine_Loc) []string {
+	s := make([]string, 0, 6)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, distributed_match_engine.Match_Engine_Loc_Loc_Status_name[int32(in.Status)])
+	s = append(s, in.CarrierName)
+	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
+	if in.NetworkLocation == nil {
+		in.NetworkLocation = &edgeproto.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Lat), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Speed), 'e', -1, 32))
+	if in.NetworkLocation.Timestamp == nil {
+		in.NetworkLocation.Timestamp = &google_protobuf.Timestamp{}
+	}
+	_NetworkLocation_TimestampTime := time.Unix(in.NetworkLocation.Timestamp.Seconds, int64(in.NetworkLocation.Timestamp.Nanos))
+	s = append(s, _NetworkLocation_TimestampTime.String())
+	s = append(s, in.Token)
+	return s
+}
+
+func Match_Engine_LocHeaderSlicer() []string {
+	s := make([]string, 0, 6)
+	s = append(s, "Ver")
+	s = append(s, "Status")
+	s = append(s, "CarrierName")
+	s = append(s, "Tower")
+	s = append(s, "NetworkLocation-Lat")
+	s = append(s, "NetworkLocation-Long")
+	s = append(s, "NetworkLocation-HorizontalAccuracy")
+	s = append(s, "NetworkLocation-VerticalAccuracy")
+	s = append(s, "NetworkLocation-Altitude")
+	s = append(s, "NetworkLocation-Course")
+	s = append(s, "NetworkLocation-Speed")
+	s = append(s, "NetworkLocation-Timestamp")
+	s = append(s, "Token")
+	return s
+}
+
+func Match_Engine_StatusSlicer(in *distributed_match_engine.Match_Engine_Status) []string {
+	s := make([]string, 0, 4)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, distributed_match_engine.Match_Engine_Status_ME_Status_name[int32(in.Status)])
+	s = append(s, strconv.FormatUint(uint64(in.ErrorCode), 10))
+	s = append(s, in.Token)
+	return s
+}
+
+func Match_Engine_StatusHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "Ver")
+	s = append(s, "Status")
+	s = append(s, "ErrorCode")
+	s = append(s, "Token")
 	return s
 }
 
@@ -221,11 +292,68 @@ var VerifyLocationCmd = &cobra.Command{
 	},
 }
 
+var GetLocationCmd = &cobra.Command{
+	Use: "GetLocation",
+	Run: func(cmd *cobra.Command, args []string) {
+		if Match_Engine_ApiCmd == nil {
+			fmt.Println("Match_Engine_Api client not initialized")
+			return
+		}
+		var err error
+		err = parseMatch_Engine_RequestEnums()
+		if err != nil {
+			fmt.Println("GetLocation: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		out, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
+		cancel()
+		if err != nil {
+			fmt.Println("GetLocation failed: ", err)
+		} else {
+			headers := Match_Engine_LocHeaderSlicer()
+			data := Match_Engine_LocSlicer(out)
+			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
+				fmt.Println(headers[ii] + ": " + data[ii])
+			}
+		}
+	},
+}
+
+var RegisterClientCmd = &cobra.Command{
+	Use: "RegisterClient",
+	Run: func(cmd *cobra.Command, args []string) {
+		if Match_Engine_ApiCmd == nil {
+			fmt.Println("Match_Engine_Api client not initialized")
+			return
+		}
+		var err error
+		err = parseMatch_Engine_RequestEnums()
+		if err != nil {
+			fmt.Println("RegisterClient: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		out, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
+		cancel()
+		if err != nil {
+			fmt.Println("RegisterClient failed: ", err)
+		} else {
+			headers := Match_Engine_StatusHeaderSlicer()
+			data := Match_Engine_StatusSlicer(out)
+			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
+				fmt.Println(headers[ii] + ": " + data[ii])
+			}
+		}
+	},
+}
+
 func init() {
 	Match_Engine_RequestFlagSet.Uint32Var(&Match_Engine_RequestIn.Ver, "ver", 0, "Ver")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "Match_Engine_RequestInIdType")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Id, "id", "", "Id")
-	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.Carrier, "carrier", 0, "Carrier")
+	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CarrierName, "carriername", "", "CarrierName")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.Tower, "tower", 0, "Tower")
 	Match_Engine_RequestIn.GpsLocation = &edgeproto.Loc{}
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.Lat, "gpslocation-lat", 0, "GpsLocation.Lat")
@@ -244,8 +372,11 @@ func init() {
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.DevName, "devname", "", "DevName")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppName, "appname", "", "AppName")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppVers, "appvers", "", "AppVers")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Token, "token", "", "Token")
 	FindCloudletCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
+	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
+	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 }
 
 func parseMatch_Engine_RequestEnums() error {

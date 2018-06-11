@@ -28,7 +28,7 @@ message AppKey {
 // Applications are created and uploaded by developers
 // Only registered applications can access location and cloudlet services
 message App {
-  bytes fields = 1;
+  repeated string fields = 1;
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
   // Path to the application binary on shared storage

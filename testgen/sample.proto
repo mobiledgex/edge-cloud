@@ -29,7 +29,7 @@ message IncludeFields {
 }
 
 message TestGen {
-  bytes fields = 1;
+  repeated string fields = 1;
   string name = 2;
   double db = 3;
   float fl = 4;

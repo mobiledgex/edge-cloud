@@ -23,7 +23,7 @@ message CloudletKey {
 // Cloudlet Sites are created and uploaded by Operators
 // This information is used to connect to and manage Cloudlets
 message Cloudlet {
-  bytes fields = 1;
+  repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
   // IP to use to connect to and control cloudlet site

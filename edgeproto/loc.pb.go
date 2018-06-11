@@ -11,6 +11,8 @@ import _ "github.com/mobiledgex/edge-cloud/protogen"
 
 import binary "encoding/binary"
 
+import google_protobuf "github.com/gogo/protobuf/types"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -165,10 +167,9 @@ func (m *Loc) CopyInFields(src *Loc) {
 	m.Course = src.Course
 	m.Speed = src.Speed
 	if src.Timestamp != nil {
-		if m.Timestamp == nil {
-			m.Timestamp = &google_protobuf1.Timestamp{}
-		}
-		*m.Timestamp = *src.Timestamp
+		m.Timestamp = &google_protobuf.Timestamp{}
+		m.Timestamp.Seconds = src.Timestamp.Seconds
+		m.Timestamp.Nanos = src.Timestamp.Nanos
 	}
 }
 
