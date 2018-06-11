@@ -35,7 +35,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request
 	mreq = new (dme.Match_Engine_Reply)
 	find_cloudlet(req, mreq)
 	ipaddr = mreq.ServiceIp
-	fmt.Printf("FindCloudlet: Found Sewrvice IP %s\n", ipaddr.String())
+	fmt.Printf("FindCloudlet: Found Service IP %s\n", ipaddr.String())
 	return mreq, nil
 }
 
@@ -47,6 +47,34 @@ func (s *server) VerifyLocation(ctx context.Context,
 	VerifyClientLoc(req, mreq)
 	return mreq, nil
 }
+
+func (s *server) GetLocation(ctx context.Context,
+	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc, error) {
+
+	var mloc *dme.Match_Engine_Loc;
+	mloc = new (dme.Match_Engine_Loc)
+	//Todo: Implement the function to actually get the location
+	GetClientLoc(req, mloc)
+	if (mloc.Status == 1) {
+		fmt.Printf("GetLocation: Found Location\n")
+	} else {
+		fmt.Printf("GetLocation: Location NOT Found\n")
+	}
+
+	return mloc, nil
+}
+
+func (s *server) RegisterClient(ctx context.Context,
+	req *dme.Match_Engine_Request) (*dme.Match_Engine_Status, error) {
+
+	//Todo: Implement the Reqister client/token Function
+	var mstatus *dme.Match_Engine_Status
+	mstatus = new (dme.Match_Engine_Status)
+	mstatus.Status = 0
+
+	return mstatus, nil
+}
+	
 
 func main() {
 	flag.Parse()

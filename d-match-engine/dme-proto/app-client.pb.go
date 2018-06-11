@@ -11,6 +11,8 @@
 		Match_Engine_Request
 		Match_Engine_Reply
 		Match_Engine_Loc_Verify
+		Match_Engine_Loc
+		Match_Engine_Status
 */
 package distributed_match_engine
 
@@ -115,29 +117,85 @@ func (Match_Engine_Loc_Verify_GPS_Location_Status) EnumDescriptor() ([]byte, []i
 	return fileDescriptorAppClient, []int{2, 1}
 }
 
+// Status of the reply
+type Match_Engine_Loc_Loc_Status int32
+
+const (
+	Match_Engine_Loc_LOC_UNKNOWN Match_Engine_Loc_Loc_Status = 0
+	Match_Engine_Loc_LOC_FOUND   Match_Engine_Loc_Loc_Status = 1
+	// The user does not allow his location to be tracked
+	Match_Engine_Loc_LOC_DENIED Match_Engine_Loc_Loc_Status = 2
+)
+
+var Match_Engine_Loc_Loc_Status_name = map[int32]string{
+	0: "LOC_UNKNOWN",
+	1: "LOC_FOUND",
+	2: "LOC_DENIED",
+}
+var Match_Engine_Loc_Loc_Status_value = map[string]int32{
+	"LOC_UNKNOWN": 0,
+	"LOC_FOUND":   1,
+	"LOC_DENIED":  2,
+}
+
+func (x Match_Engine_Loc_Loc_Status) String() string {
+	return proto.EnumName(Match_Engine_Loc_Loc_Status_name, int32(x))
+}
+func (Match_Engine_Loc_Loc_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{3, 0}
+}
+
+// Status of the reply
+type Match_Engine_Status_ME_Status int32
+
+const (
+	Match_Engine_Status_ME_SUCCESS Match_Engine_Status_ME_Status = 0
+	Match_Engine_Status_ME_FAIL    Match_Engine_Status_ME_Status = 1
+)
+
+var Match_Engine_Status_ME_Status_name = map[int32]string{
+	0: "ME_SUCCESS",
+	1: "ME_FAIL",
+}
+var Match_Engine_Status_ME_Status_value = map[string]int32{
+	"ME_SUCCESS": 0,
+	"ME_FAIL":    1,
+}
+
+func (x Match_Engine_Status_ME_Status) String() string {
+	return proto.EnumName(Match_Engine_Status_ME_Status_name, int32(x))
+}
+func (Match_Engine_Status_ME_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{4, 0}
+}
+
 type Match_Engine_Request struct {
 	Ver    uint32                      `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	IdType Match_Engine_Request_IDType `protobuf:"varint,2,opt,name=IdType,proto3,enum=distributed_match_engine.Match_Engine_Request_IDType" json:"IdType,omitempty"`
 	// Actual ID
 	Id string `protobuf:"bytes,3,opt,name=Id,proto3" json:"Id,omitempty"`
-	// The carrier that user is connected to
-	Carrier uint64 `protobuf:"varint,4,opt,name=Carrier,proto3" json:"Carrier,omitempty"`
+	// The carrier ID that user is connected to ("Mobile Country Code")
+	CarrierID uint64 `protobuf:"varint,4,opt,name=CarrierID,proto3" json:"CarrierID,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,5,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The tower that user is currently connected to
-	Tower uint64 `protobuf:"varint,5,opt,name=Tower,proto3" json:"Tower,omitempty"`
+	Tower uint64 `protobuf:"varint,6,opt,name=Tower,proto3" json:"Tower,omitempty"`
 	// The GPS location of the user
-	GpsLocation *edgeproto.Loc `protobuf:"bytes,6,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GpsLocation *edgeproto.Loc `protobuf:"bytes,7,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
 	// Edge-cloud assigned application ID
-	AppId uint64 `protobuf:"varint,7,opt,name=AppId,proto3" json:"AppId,omitempty"`
+	AppId uint64 `protobuf:"varint,8,opt,name=AppId,proto3" json:"AppId,omitempty"`
 	// Protocol application uses
-	Protocol []byte `protobuf:"bytes,8,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
+	Protocol []byte `protobuf:"bytes,9,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
 	// The protocol port on the server side
-	ServerPort []byte `protobuf:"bytes,9,opt,name=ServerPort,proto3" json:"ServerPort,omitempty"`
+	ServerPort []byte `protobuf:"bytes,10,opt,name=ServerPort,proto3" json:"ServerPort,omitempty"`
 	// App Developer Name
-	DevName string `protobuf:"bytes,10,opt,name=DevName,proto3" json:"DevName,omitempty"`
+	DevName string `protobuf:"bytes,11,opt,name=DevName,proto3" json:"DevName,omitempty"`
 	// App Name
-	AppName string `protobuf:"bytes,11,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,12,opt,name=AppName,proto3" json:"AppName,omitempty"`
 	// App Version
-	AppVers string `protobuf:"bytes,12,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	AppVers string `protobuf:"bytes,13,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	// Token provided by the Operator for subsequent calls
+	Token string `protobuf:"bytes,14,opt,name=Token,proto3" json:"Token,omitempty"`
 }
 
 func (m *Match_Engine_Request) Reset()                    { *m = Match_Engine_Request{} }
@@ -157,6 +215,8 @@ type Match_Engine_Reply struct {
 	CloudletLocation *edgeproto.Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
 	// Status return
 	Status bool `protobuf:"varint,6,opt,name=Status,proto3" json:"Status,omitempty"`
+	// Token
+	Token string `protobuf:"bytes,7,opt,name=Token,proto3" json:"Token,omitempty"`
 }
 
 func (m *Match_Engine_Reply) Reset()                    { *m = Match_Engine_Reply{} }
@@ -168,6 +228,8 @@ type Match_Engine_Loc_Verify struct {
 	Ver               uint32                                      `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	TowerStatus       Match_Engine_Loc_Verify_Tower_Status        `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status" json:"tower_status,omitempty"`
 	GpsLocationStatus Match_Engine_Loc_Verify_GPS_Location_Status `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status" json:"gps_location_status,omitempty"`
+	// Token
+	Token string `protobuf:"bytes,4,opt,name=Token,proto3" json:"Token,omitempty"`
 }
 
 func (m *Match_Engine_Loc_Verify) Reset()                    { *m = Match_Engine_Loc_Verify{} }
@@ -175,13 +237,49 @@ func (m *Match_Engine_Loc_Verify) String() string            { return proto.Comp
 func (*Match_Engine_Loc_Verify) ProtoMessage()               {}
 func (*Match_Engine_Loc_Verify) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{2} }
 
+type Match_Engine_Loc struct {
+	Ver    uint32                      `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	Status Match_Engine_Loc_Loc_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_Loc_Loc_Status" json:"Status,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// The tower that user is currently connected to
+	Tower uint64 `protobuf:"varint,4,opt,name=Tower,proto3" json:"Tower,omitempty"`
+	// The GPS location of the user
+	NetworkLocation *edgeproto.Loc `protobuf:"bytes,5,opt,name=NetworkLocation" json:"NetworkLocation,omitempty"`
+	// Token
+	Token string `protobuf:"bytes,6,opt,name=Token,proto3" json:"Token,omitempty"`
+}
+
+func (m *Match_Engine_Loc) Reset()                    { *m = Match_Engine_Loc{} }
+func (m *Match_Engine_Loc) String() string            { return proto.CompactTextString(m) }
+func (*Match_Engine_Loc) ProtoMessage()               {}
+func (*Match_Engine_Loc) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{3} }
+
+type Match_Engine_Status struct {
+	Ver    uint32                        `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	Status Match_Engine_Status_ME_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_Status_ME_Status" json:"Status,omitempty"`
+	// Error Code based on Failure
+	ErrorCode uint32 `protobuf:"varint,3,opt,name=ErrorCode,proto3" json:"ErrorCode,omitempty"`
+	// Token
+	Token string `protobuf:"bytes,4,opt,name=Token,proto3" json:"Token,omitempty"`
+}
+
+func (m *Match_Engine_Status) Reset()                    { *m = Match_Engine_Status{} }
+func (m *Match_Engine_Status) String() string            { return proto.CompactTextString(m) }
+func (*Match_Engine_Status) ProtoMessage()               {}
+func (*Match_Engine_Status) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{4} }
+
 func init() {
 	proto.RegisterType((*Match_Engine_Request)(nil), "distributed_match_engine.Match_Engine_Request")
 	proto.RegisterType((*Match_Engine_Reply)(nil), "distributed_match_engine.Match_Engine_Reply")
 	proto.RegisterType((*Match_Engine_Loc_Verify)(nil), "distributed_match_engine.Match_Engine_Loc_Verify")
+	proto.RegisterType((*Match_Engine_Loc)(nil), "distributed_match_engine.Match_Engine_Loc")
+	proto.RegisterType((*Match_Engine_Status)(nil), "distributed_match_engine.Match_Engine_Status")
 	proto.RegisterEnum("distributed_match_engine.Match_Engine_Request_IDType", Match_Engine_Request_IDType_name, Match_Engine_Request_IDType_value)
 	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status", Match_Engine_Loc_Verify_Tower_Status_name, Match_Engine_Loc_Verify_Tower_Status_value)
 	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status", Match_Engine_Loc_Verify_GPS_Location_Status_name, Match_Engine_Loc_Verify_GPS_Location_Status_value)
+	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Loc_Status", Match_Engine_Loc_Loc_Status_name, Match_Engine_Loc_Loc_Status_value)
+	proto.RegisterEnum("distributed_match_engine.Match_Engine_Status_ME_Status", Match_Engine_Status_ME_Status_name, Match_Engine_Status_ME_Status_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -197,6 +295,8 @@ const _ = grpc.SupportPackageIsVersion4
 type Match_Engine_ApiClient interface {
 	FindCloudlet(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Reply, error)
 	VerifyLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc_Verify, error)
+	GetLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc, error)
+	RegisterClient(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Status, error)
 }
 
 type match_Engine_ApiClient struct {
@@ -225,11 +325,31 @@ func (c *match_Engine_ApiClient) VerifyLocation(ctx context.Context, in *Match_E
 	return out, nil
 }
 
+func (c *match_Engine_ApiClient) GetLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc, error) {
+	out := new(Match_Engine_Loc)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetLocation", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *match_Engine_ApiClient) RegisterClient(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Status, error) {
+	out := new(Match_Engine_Status)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/RegisterClient", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for Match_Engine_Api service
 
 type Match_Engine_ApiServer interface {
 	FindCloudlet(context.Context, *Match_Engine_Request) (*Match_Engine_Reply, error)
 	VerifyLocation(context.Context, *Match_Engine_Request) (*Match_Engine_Loc_Verify, error)
+	GetLocation(context.Context, *Match_Engine_Request) (*Match_Engine_Loc, error)
+	RegisterClient(context.Context, *Match_Engine_Request) (*Match_Engine_Status, error)
 }
 
 func RegisterMatch_Engine_ApiServer(s *grpc.Server, srv Match_Engine_ApiServer) {
@@ -272,6 +392,42 @@ func _Match_Engine_Api_VerifyLocation_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Match_Engine_Api_GetLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Match_Engine_Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Match_Engine_ApiServer).GetLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetLocation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Match_Engine_ApiServer).GetLocation(ctx, req.(*Match_Engine_Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Match_Engine_Api_RegisterClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Match_Engine_Request)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.Match_Engine_Api/RegisterClient",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, req.(*Match_Engine_Request))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "distributed_match_engine.Match_Engine_Api",
 	HandlerType: (*Match_Engine_ApiServer)(nil),
@@ -283,6 +439,14 @@ var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VerifyLocation",
 			Handler:    _Match_Engine_Api_VerifyLocation_Handler,
+		},
+		{
+			MethodName: "GetLocation",
+			Handler:    _Match_Engine_Api_GetLocation_Handler,
+		},
+		{
+			MethodName: "RegisterClient",
+			Handler:    _Match_Engine_Api_RegisterClient_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -320,18 +484,24 @@ func (m *Match_Engine_Request) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Id)))
 		i += copy(dAtA[i:], m.Id)
 	}
-	if m.Carrier != 0 {
+	if m.CarrierID != 0 {
 		dAtA[i] = 0x20
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.Carrier))
+		i = encodeVarintAppClient(dAtA, i, uint64(m.CarrierID))
+	}
+	if len(m.CarrierName) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
+		i += copy(dAtA[i:], m.CarrierName)
 	}
 	if m.Tower != 0 {
-		dAtA[i] = 0x28
+		dAtA[i] = 0x30
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Tower))
 	}
 	if m.GpsLocation != nil {
-		dAtA[i] = 0x32
+		dAtA[i] = 0x3a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
 		n1, err := m.GpsLocation.MarshalTo(dAtA[i:])
@@ -341,39 +511,45 @@ func (m *Match_Engine_Request) MarshalTo(dAtA []byte) (int, error) {
 		i += n1
 	}
 	if m.AppId != 0 {
-		dAtA[i] = 0x38
+		dAtA[i] = 0x40
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.AppId))
 	}
 	if len(m.Protocol) > 0 {
-		dAtA[i] = 0x42
+		dAtA[i] = 0x4a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Protocol)))
 		i += copy(dAtA[i:], m.Protocol)
 	}
 	if len(m.ServerPort) > 0 {
-		dAtA[i] = 0x4a
+		dAtA[i] = 0x52
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.ServerPort)))
 		i += copy(dAtA[i:], m.ServerPort)
 	}
 	if len(m.DevName) > 0 {
-		dAtA[i] = 0x52
+		dAtA[i] = 0x5a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.DevName)))
 		i += copy(dAtA[i:], m.DevName)
 	}
 	if len(m.AppName) > 0 {
-		dAtA[i] = 0x5a
+		dAtA[i] = 0x62
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppName)))
 		i += copy(dAtA[i:], m.AppName)
 	}
 	if len(m.AppVers) > 0 {
-		dAtA[i] = 0x62
+		dAtA[i] = 0x6a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppVers)))
 		i += copy(dAtA[i:], m.AppVers)
+	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x72
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
 	}
 	return i, nil
 }
@@ -435,6 +611,12 @@ func (m *Match_Engine_Reply) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i++
 	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
+	}
 	return i, nil
 }
 
@@ -468,6 +650,106 @@ func (m *Match_Engine_Loc_Verify) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocationStatus))
 	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
+	}
+	return i, nil
+}
+
+func (m *Match_Engine_Loc) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Match_Engine_Loc) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
+	}
+	if len(m.CarrierName) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
+		i += copy(dAtA[i:], m.CarrierName)
+	}
+	if m.Tower != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Tower))
+	}
+	if m.NetworkLocation != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.NetworkLocation.Size()))
+		n3, err := m.NetworkLocation.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
+	}
+	return i, nil
+}
+
+func (m *Match_Engine_Status) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *Match_Engine_Status) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
+	}
+	if m.ErrorCode != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.ErrorCode))
+	}
+	if len(m.Token) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Token)))
+		i += copy(dAtA[i:], m.Token)
+	}
 	return i, nil
 }
 
@@ -484,7 +766,8 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.Ver = src.Ver
 	m.IdType = src.IdType
 	m.Id = src.Id
-	m.Carrier = src.Carrier
+	m.CarrierID = src.CarrierID
+	m.CarrierName = src.CarrierName
 	m.Tower = src.Tower
 	if src.GpsLocation != nil {
 		if m.GpsLocation == nil {
@@ -504,6 +787,7 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.DevName = src.DevName
 	m.AppName = src.AppName
 	m.AppVers = src.AppVers
+	m.Token = src.Token
 }
 
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
@@ -521,12 +805,35 @@ func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 		*m.CloudletLocation = *src.CloudletLocation
 	}
 	m.Status = src.Status
+	m.Token = src.Token
 }
 
 func (m *Match_Engine_Loc_Verify) CopyInFields(src *Match_Engine_Loc_Verify) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
 	m.GpsLocationStatus = src.GpsLocationStatus
+	m.Token = src.Token
+}
+
+func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.CarrierName = src.CarrierName
+	m.Tower = src.Tower
+	if src.NetworkLocation != nil {
+		if m.NetworkLocation == nil {
+			m.NetworkLocation = &edgeproto.Loc{}
+		}
+		*m.NetworkLocation = *src.NetworkLocation
+	}
+	m.Token = src.Token
+}
+
+func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.ErrorCode = src.ErrorCode
+	m.Token = src.Token
 }
 
 func (m *Match_Engine_Request) Size() (n int) {
@@ -542,8 +849,12 @@ func (m *Match_Engine_Request) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if m.Carrier != 0 {
-		n += 1 + sovAppClient(uint64(m.Carrier))
+	if m.CarrierID != 0 {
+		n += 1 + sovAppClient(uint64(m.CarrierID))
+	}
+	l = len(m.CarrierName)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
 	}
 	if m.Tower != 0 {
 		n += 1 + sovAppClient(uint64(m.Tower))
@@ -575,6 +886,10 @@ func (m *Match_Engine_Request) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
 	return n
 }
 
@@ -602,6 +917,10 @@ func (m *Match_Engine_Reply) Size() (n int) {
 	if m.Status {
 		n += 2
 	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
 	return n
 }
 
@@ -616,6 +935,56 @@ func (m *Match_Engine_Loc_Verify) Size() (n int) {
 	}
 	if m.GpsLocationStatus != 0 {
 		n += 1 + sovAppClient(uint64(m.GpsLocationStatus))
+	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *Match_Engine_Loc) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		n += 1 + sovAppClient(uint64(m.Status))
+	}
+	l = len(m.CarrierName)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.Tower != 0 {
+		n += 1 + sovAppClient(uint64(m.Tower))
+	}
+	if m.NetworkLocation != nil {
+		l = m.NetworkLocation.Size()
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *Match_Engine_Status) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		n += 1 + sovAppClient(uint64(m.Status))
+	}
+	if m.ErrorCode != 0 {
+		n += 1 + sovAppClient(uint64(m.ErrorCode))
+	}
+	l = len(m.Token)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
 	}
 	return n
 }
@@ -731,9 +1100,9 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Carrier", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierID", wireType)
 			}
-			m.Carrier = 0
+			m.CarrierID = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -743,12 +1112,41 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Carrier |= (uint64(b) & 0x7F) << shift
+				m.CarrierID |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CarrierName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Tower", wireType)
 			}
@@ -767,7 +1165,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
 			}
@@ -800,7 +1198,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AppId", wireType)
 			}
@@ -819,7 +1217,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 8:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
 			}
@@ -850,7 +1248,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				m.Protocol = []byte{}
 			}
 			iNdEx = postIndex
-		case 9:
+		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ServerPort", wireType)
 			}
@@ -881,7 +1279,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				m.ServerPort = []byte{}
 			}
 			iNdEx = postIndex
-		case 10:
+		case 11:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DevName", wireType)
 			}
@@ -910,7 +1308,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			}
 			m.DevName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 11:
+		case 12:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AppName", wireType)
 			}
@@ -939,7 +1337,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			}
 			m.AppName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 12:
+		case 13:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field AppVers", wireType)
 			}
@@ -967,6 +1365,35 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.AppVers = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1169,6 +1596,35 @@ func (m *Match_Engine_Reply) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.Status = bool(v != 0)
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppClient(dAtA[iNdEx:])
@@ -1276,6 +1732,369 @@ func (m *Match_Engine_Loc_Verify) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Match_Engine_Loc: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Match_Engine_Loc: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (Match_Engine_Loc_Loc_Status(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CarrierName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tower", wireType)
+			}
+			m.Tower = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Tower |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NetworkLocation", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.NetworkLocation == nil {
+				m.NetworkLocation = &edgeproto.Loc{}
+			}
+			if err := m.NetworkLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Match_Engine_Status: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Match_Engine_Status: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (Match_Engine_Status_ME_Status(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ErrorCode", wireType)
+			}
+			m.ErrorCode = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ErrorCode |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Token", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Token = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppClient(dAtA[iNdEx:])
@@ -1405,49 +2224,63 @@ var (
 func init() { proto.RegisterFile("app-client.proto", fileDescriptorAppClient) }
 
 var fileDescriptorAppClient = []byte{
-	// 695 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x54, 0xcd, 0x6e, 0xda, 0x4a,
-	0x14, 0x66, 0x80, 0x10, 0x38, 0x10, 0xae, 0x33, 0x89, 0xee, 0xb5, 0xa2, 0x7b, 0x91, 0x2f, 0xea,
-	0x02, 0x55, 0x8d, 0xf3, 0xd3, 0x76, 0x55, 0xa9, 0x12, 0x05, 0x92, 0x5a, 0x05, 0x83, 0x0c, 0x4d,
-	0x96, 0x23, 0xb0, 0xa7, 0x64, 0x24, 0x83, 0xa7, 0x63, 0x9b, 0x36, 0x0f, 0xd6, 0x45, 0xdf, 0x20,
-	0xbb, 0xf6, 0x11, 0xda, 0xbc, 0x45, 0x77, 0x95, 0xc7, 0x36, 0x21, 0x15, 0xad, 0xc2, 0x06, 0xcd,
-	0x77, 0xce, 0xe1, 0x3b, 0x3f, 0xdf, 0x27, 0x83, 0x32, 0xe6, 0xfc, 0xd0, 0x76, 0x19, 0x9d, 0x07,
-	0x3a, 0x17, 0x5e, 0xe0, 0x61, 0xd5, 0x61, 0x7e, 0x20, 0xd8, 0x24, 0x0c, 0xa8, 0x43, 0x66, 0xe3,
-	0xc0, 0xbe, 0x22, 0x74, 0x3e, 0x65, 0x73, 0x7a, 0xf0, 0x6c, 0xca, 0x82, 0xab, 0x70, 0xa2, 0xdb,
-	0xde, 0xec, 0x68, 0xe6, 0x4d, 0x98, 0x4b, 0x9d, 0x29, 0xfd, 0x78, 0x14, 0xfd, 0x1e, 0xda, 0xae,
-	0x17, 0x3a, 0xf2, 0x29, 0x59, 0x8e, 0x5c, 0xcf, 0x8e, 0xf9, 0xea, 0x9f, 0x72, 0xb0, 0xdf, 0x93,
-	0x34, 0x1d, 0x49, 0x43, 0x2c, 0xfa, 0x3e, 0xa4, 0x7e, 0x80, 0x15, 0xc8, 0x2d, 0xa8, 0x50, 0x91,
-	0x86, 0x1a, 0x3b, 0x56, 0xf4, 0xc4, 0x3d, 0x28, 0x18, 0xce, 0xe8, 0x9a, 0x53, 0x35, 0xab, 0xa1,
-	0x46, 0xf5, 0xf4, 0xb9, 0xfe, 0xbb, 0x59, 0xf4, 0x75, 0x8c, 0xba, 0xd1, 0x8e, 0xfe, 0x6c, 0x25,
-	0x24, 0xb8, 0x0a, 0x59, 0xc3, 0x51, 0x73, 0x1a, 0x6a, 0x94, 0xac, 0xac, 0xe1, 0x60, 0x15, 0xb6,
-	0x5b, 0x63, 0x21, 0x18, 0x15, 0x6a, 0x5e, 0x43, 0x8d, 0xbc, 0x95, 0x42, 0xbc, 0x0f, 0x5b, 0x23,
-	0xef, 0x03, 0x15, 0xea, 0x96, 0x8c, 0xc7, 0x00, 0x1f, 0x43, 0xf9, 0x9c, 0xfb, 0x5d, 0xcf, 0x1e,
-	0x07, 0xcc, 0x9b, 0xab, 0x05, 0x0d, 0x35, 0xca, 0xa7, 0x55, 0x7d, 0xb9, 0xa4, 0xde, 0xf5, 0x6c,
-	0x6b, 0xb5, 0x24, 0xe2, 0x69, 0x72, 0x6e, 0x38, 0xea, 0x76, 0xcc, 0x23, 0x01, 0x3e, 0x80, 0xe2,
-	0x20, 0xaa, 0xb7, 0x3d, 0x57, 0x2d, 0x6a, 0xa8, 0x51, 0xb1, 0x96, 0x18, 0xd7, 0x00, 0x86, 0x54,
-	0x2c, 0xa8, 0x18, 0x78, 0x22, 0x50, 0x4b, 0x32, 0xbb, 0x12, 0x89, 0x66, 0x6e, 0xd3, 0x85, 0x39,
-	0x9e, 0x51, 0x15, 0xe4, 0x22, 0x29, 0x8c, 0x32, 0x4d, 0xce, 0x65, 0xa6, 0x1c, 0x67, 0x12, 0x98,
-	0x64, 0x2e, 0xa8, 0xf0, 0xd5, 0xca, 0x32, 0x13, 0xc1, 0xfa, 0x63, 0x28, 0xc4, 0x37, 0xc2, 0x45,
-	0xc8, 0x1b, 0xbd, 0x8e, 0xa1, 0x64, 0x30, 0x40, 0xa1, 0x37, 0x34, 0x86, 0x6d, 0x53, 0x41, 0xd1,
-	0xdb, 0x18, 0x34, 0xdb, 0x6d, 0x4b, 0xc9, 0xd6, 0xbf, 0x20, 0xc0, 0xbf, 0x5c, 0x99, 0xbb, 0xd7,
-	0x6b, 0x54, 0x53, 0x20, 0x17, 0x0a, 0x26, 0x25, 0x2b, 0x59, 0xd1, 0x13, 0xff, 0x07, 0xe0, 0x53,
-	0xb1, 0x60, 0x36, 0x25, 0x8c, 0x4b, 0x01, 0x2a, 0x56, 0x29, 0x89, 0x18, 0x1c, 0xff, 0x0f, 0x95,
-	0x34, 0xcd, 0xa3, 0xad, 0xf3, 0x92, 0xab, 0x9c, 0xc4, 0xe4, 0xda, 0x2f, 0x60, 0x57, 0x3a, 0xca,
-	0xa5, 0x01, 0x71, 0x53, 0x01, 0xb6, 0xd6, 0x0a, 0xa0, 0xa4, 0x85, 0x4b, 0x15, 0xfe, 0x86, 0xc2,
-	0x30, 0x18, 0x07, 0xa1, 0x2f, 0x25, 0x2b, 0x5a, 0x09, 0xaa, 0x7f, 0xce, 0xc1, 0x3f, 0xf7, 0x36,
-	0xea, 0x7a, 0x36, 0xb9, 0xa0, 0x82, 0xbd, 0x5b, 0xb7, 0xd6, 0x18, 0x2a, 0x41, 0x64, 0x03, 0xe2,
-	0xc7, 0x5c, 0xb1, 0x25, 0x5f, 0x3e, 0xd0, 0x92, 0x77, 0xd4, 0xba, 0x34, 0x13, 0x89, 0x67, 0xb0,
-	0xca, 0x92, 0x33, 0x06, 0x38, 0x84, 0xbd, 0x29, 0xf7, 0x97, 0x0b, 0xa6, 0x9d, 0x72, 0xb2, 0x53,
-	0x67, 0xf3, 0x4e, 0xe7, 0x83, 0x21, 0x49, 0xaf, 0x90, 0x36, 0xdc, 0x9d, 0xde, 0xf9, 0x33, 0xb9,
-	0x83, 0x0d, 0x95, 0xd5, 0x99, 0x70, 0x19, 0xb6, 0xdf, 0x9a, 0x6f, 0xcc, 0xfe, 0xa5, 0xa9, 0x64,
-	0xb0, 0x06, 0xff, 0xb6, 0xfa, 0xa6, 0xd9, 0x69, 0x8d, 0x3a, 0x6d, 0x32, 0xea, 0x93, 0xe1, 0xa0,
-	0xd3, 0x32, 0xce, 0x0c, 0x09, 0x2e, 0x3b, 0x96, 0x82, 0xf0, 0x23, 0xd0, 0xcc, 0xfe, 0x88, 0xfc,
-	0xb1, 0x2a, 0x5b, 0xef, 0xc1, 0xde, 0x9a, 0x71, 0xf0, 0x5f, 0x50, 0xee, 0xf6, 0x5b, 0xe4, 0xae,
-	0xdf, 0x2e, 0xec, 0x44, 0x81, 0x4b, 0x63, 0xf4, 0xda, 0x30, 0xc9, 0x49, 0x4f, 0x41, 0x18, 0x43,
-	0x75, 0x35, 0x74, 0xdc, 0x53, 0xb2, 0xa7, 0x3f, 0x10, 0x28, 0xf7, 0xd6, 0x6e, 0x72, 0x86, 0xe7,
-	0x50, 0x39, 0x63, 0x73, 0xa7, 0x95, 0x18, 0x00, 0xeb, 0x9b, 0x7d, 0x2f, 0x0e, 0x9e, 0x3c, 0xb8,
-	0x9e, 0xbb, 0xd7, 0xf5, 0x0c, 0x0e, 0xa1, 0x1a, 0x5f, 0x7a, 0x69, 0xb5, 0x4d, 0x3b, 0x9e, 0x6c,
-	0x2c, 0x6a, 0x3d, 0xf3, 0x4a, 0xb9, 0xf9, 0x5e, 0xcb, 0xdc, 0xdc, 0xd6, 0xd0, 0xd7, 0xdb, 0x1a,
-	0xfa, 0x76, 0x5b, 0x43, 0x93, 0x82, 0xb4, 0xff, 0xd3, 0x9f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xff,
-	0x32, 0xfd, 0xdd, 0xbe, 0x05, 0x00, 0x00,
+	// 913 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0xd1, 0x6e, 0xa3, 0x46,
+	0x14, 0x35, 0xb6, 0xe3, 0xc4, 0x17, 0xdb, 0x4b, 0x26, 0xab, 0x16, 0x45, 0xa9, 0x45, 0x51, 0x1f,
+	0xac, 0x55, 0x43, 0x76, 0xd3, 0xae, 0x5a, 0xa9, 0x55, 0x25, 0x17, 0x48, 0x8a, 0x6a, 0xb0, 0x05,
+	0xce, 0xe6, 0x11, 0x39, 0x30, 0xf5, 0xa2, 0x10, 0xc3, 0x0e, 0xd8, 0xdb, 0x7c, 0x5a, 0xff, 0x60,
+	0xdf, 0xda, 0xa7, 0x4a, 0x7d, 0x6b, 0x23, 0xf5, 0x03, 0xfa, 0x07, 0xd5, 0x0c, 0x60, 0xb3, 0x5e,
+	0x6f, 0x64, 0xbf, 0x44, 0x73, 0xef, 0x9d, 0x39, 0xf7, 0xce, 0x39, 0x87, 0x89, 0x41, 0x98, 0xc4,
+	0xf1, 0xa9, 0x17, 0x06, 0x78, 0x96, 0x2a, 0x31, 0x89, 0xd2, 0x08, 0x89, 0x7e, 0x90, 0xa4, 0x24,
+	0xb8, 0x99, 0xa7, 0xd8, 0x77, 0xef, 0x26, 0xa9, 0xf7, 0xda, 0xc5, 0xb3, 0x69, 0x30, 0xc3, 0xc7,
+	0x5f, 0x4f, 0x83, 0xf4, 0xf5, 0xfc, 0x46, 0xf1, 0xa2, 0xbb, 0xb3, 0xbb, 0xe8, 0x26, 0x08, 0xb1,
+	0x3f, 0xc5, 0xbf, 0x9e, 0xd1, 0xbf, 0xa7, 0x5e, 0x18, 0xcd, 0x7d, 0xb6, 0x64, 0x28, 0x67, 0x61,
+	0xe4, 0x65, 0x78, 0xf2, 0x7f, 0x35, 0x78, 0x6a, 0x32, 0x18, 0x9d, 0xc1, 0xb8, 0x36, 0x7e, 0x33,
+	0xc7, 0x49, 0x8a, 0x04, 0xa8, 0x2d, 0x30, 0x11, 0x39, 0x89, 0xeb, 0xb5, 0x6d, 0xba, 0x44, 0x26,
+	0x34, 0x0c, 0x7f, 0x7c, 0x1f, 0x63, 0xb1, 0x2a, 0x71, 0xbd, 0xce, 0xf9, 0x4b, 0xe5, 0x63, 0xb3,
+	0x28, 0x9b, 0x10, 0x15, 0x43, 0xa3, 0x87, 0xed, 0x1c, 0x04, 0x75, 0xa0, 0x6a, 0xf8, 0x62, 0x4d,
+	0xe2, 0x7a, 0x4d, 0xbb, 0x6a, 0xf8, 0xe8, 0x04, 0x9a, 0xea, 0x84, 0x90, 0x00, 0x13, 0x43, 0x13,
+	0xeb, 0x12, 0xd7, 0xab, 0xdb, 0xab, 0x04, 0x92, 0x80, 0xcf, 0x03, 0x6b, 0x72, 0x87, 0xc5, 0x3d,
+	0x76, 0xac, 0x9c, 0x42, 0x4f, 0x61, 0x6f, 0x1c, 0xbd, 0xc5, 0x44, 0x6c, 0xb0, 0xb3, 0x59, 0x80,
+	0x9e, 0x03, 0x7f, 0x19, 0x27, 0x83, 0xc8, 0x9b, 0xa4, 0x41, 0x34, 0x13, 0xf7, 0x25, 0xae, 0xc7,
+	0x9f, 0x77, 0x94, 0x25, 0x15, 0xca, 0x20, 0xf2, 0xec, 0xf2, 0x16, 0x8a, 0xd3, 0x8f, 0x63, 0xc3,
+	0x17, 0x0f, 0x32, 0x1c, 0x16, 0xa0, 0x63, 0x38, 0x18, 0xd1, 0xfd, 0x5e, 0x14, 0x8a, 0x4d, 0x89,
+	0xeb, 0xb5, 0xec, 0x65, 0x8c, 0xba, 0x00, 0x0e, 0x26, 0x0b, 0x4c, 0x46, 0x11, 0x49, 0x45, 0x60,
+	0xd5, 0x52, 0x06, 0x89, 0xb0, 0xaf, 0xe1, 0x05, 0x9b, 0x9b, 0x67, 0x73, 0x17, 0x21, 0xad, 0xf4,
+	0xe3, 0x98, 0x55, 0x5a, 0x59, 0x25, 0x0f, 0xf3, 0xca, 0x2b, 0x4c, 0x12, 0xb1, 0xbd, 0xac, 0xd0,
+	0x30, 0xbb, 0xe7, 0x2d, 0x9e, 0x89, 0x1d, 0x96, 0xcf, 0x02, 0xf9, 0x19, 0x34, 0x32, 0x7e, 0xd1,
+	0x01, 0xd4, 0x0d, 0x53, 0x37, 0x84, 0x0a, 0x02, 0x68, 0x98, 0x8e, 0xe1, 0x68, 0x96, 0xc0, 0xd1,
+	0xb5, 0x31, 0xea, 0x6b, 0x9a, 0x2d, 0x54, 0xe5, 0x7f, 0x39, 0x40, 0x6b, 0x0a, 0xc5, 0xe1, 0xfd,
+	0x06, 0xc5, 0x05, 0xa8, 0xcd, 0x49, 0xc0, 0xe4, 0x6e, 0xda, 0x74, 0x89, 0x3e, 0x03, 0x48, 0x30,
+	0x59, 0x04, 0x1e, 0x76, 0x83, 0x98, 0x89, 0xd7, 0xb2, 0x9b, 0x79, 0xc6, 0x88, 0xd1, 0xe7, 0xd0,
+	0x2a, 0xca, 0x31, 0xe5, 0xa2, 0xce, 0xb0, 0xf8, 0x3c, 0xc7, 0xc8, 0xf8, 0x0e, 0x0e, 0x99, 0x1b,
+	0x43, 0x9c, 0xba, 0x61, 0x21, 0xcb, 0xde, 0x46, 0x59, 0x84, 0x62, 0xe3, 0x52, 0x9b, 0x4f, 0xa0,
+	0xe1, 0xa4, 0x93, 0x74, 0x9e, 0x30, 0x91, 0x0f, 0xec, 0x3c, 0x5a, 0x71, 0xb2, 0x5f, 0xe6, 0xe4,
+	0xf7, 0x1a, 0x7c, 0xfa, 0xde, 0x3d, 0x07, 0x91, 0xe7, 0xbe, 0xc2, 0x24, 0xf8, 0x65, 0xd3, 0x65,
+	0x27, 0xd0, 0x4a, 0xa9, 0x65, 0xdc, 0x24, 0xeb, 0x90, 0x99, 0xfc, 0x87, 0x2d, 0x4d, 0xbe, 0x82,
+	0x56, 0x98, 0xf1, 0xdc, 0x6c, 0x32, 0x9b, 0x67, 0x98, 0xf9, 0x98, 0x73, 0x38, 0x9a, 0xc6, 0xc9,
+	0xf2, 0xda, 0x45, 0xa7, 0x1a, 0xeb, 0xa4, 0xef, 0xde, 0xe9, 0x72, 0xe4, 0xb8, 0x05, 0x37, 0x45,
+	0xc3, 0xc3, 0xe9, 0xca, 0xcb, 0xeb, 0xec, 0xd4, 0xcb, 0xec, 0x78, 0xd0, 0x2a, 0x4f, 0x8a, 0x78,
+	0xd8, 0xbf, 0xb2, 0x7e, 0xb6, 0x86, 0xd7, 0x96, 0x50, 0x41, 0x12, 0x9c, 0xa8, 0x43, 0xcb, 0xd2,
+	0xd5, 0xb1, 0xae, 0xb9, 0xe3, 0xa1, 0xeb, 0x8c, 0x74, 0xd5, 0xb8, 0x30, 0x58, 0x70, 0xad, 0xdb,
+	0x02, 0x87, 0xbe, 0x00, 0xc9, 0x1a, 0x8e, 0xdd, 0x47, 0x77, 0x55, 0x65, 0x13, 0x8e, 0x36, 0x0c,
+	0x89, 0x9e, 0x00, 0x3f, 0x18, 0xaa, 0xee, 0xaa, 0xdf, 0x21, 0xb4, 0x69, 0xe2, 0xda, 0x18, 0xff,
+	0x64, 0x58, 0xee, 0x0b, 0x53, 0xe0, 0x10, 0x82, 0x4e, 0x39, 0xf5, 0xdc, 0x14, 0xaa, 0xf2, 0x6f,
+	0x55, 0x10, 0xd6, 0xc9, 0xd8, 0xfc, 0x52, 0x39, 0x65, 0x11, 0x5f, 0x6e, 0x4f, 0x2d, 0x35, 0x5e,
+	0x41, 0x65, 0xe1, 0xae, 0xb5, 0xb7, 0xa7, 0xf6, 0xc8, 0xdb, 0x53, 0x2f, 0xbf, 0x3d, 0xdf, 0xc2,
+	0x13, 0x0b, 0xa7, 0x6f, 0x23, 0x72, 0x3b, 0x78, 0xdc, 0xe8, 0xeb, 0xdb, 0x56, 0x8a, 0x35, 0xca,
+	0x8a, 0x7d, 0x0f, 0xb0, 0x9a, 0xee, 0x43, 0x0e, 0xdb, 0xd0, 0xa4, 0x89, 0x8b, 0xe1, 0x95, 0xa5,
+	0x09, 0x1c, 0xea, 0x00, 0xd0, 0x50, 0xd3, 0x2d, 0x43, 0xd7, 0x84, 0xaa, 0xfc, 0x27, 0x07, 0x47,
+	0xef, 0xdd, 0x36, 0xc7, 0xf9, 0x90, 0xbe, 0xe1, 0x1a, 0x7d, 0xdf, 0x6c, 0x49, 0x5f, 0x76, 0x48,
+	0x31, 0xf5, 0x75, 0x02, 0x4f, 0xa0, 0xa9, 0x13, 0x12, 0x11, 0x35, 0xf2, 0x33, 0xfa, 0xda, 0xf6,
+	0x2a, 0xf1, 0x11, 0x7b, 0xf6, 0xa0, 0xb9, 0x04, 0xa2, 0x77, 0xa1, 0xc1, 0x95, 0xaa, 0xea, 0x8e,
+	0x23, 0x54, 0xa8, 0x57, 0x4d, 0xdd, 0xbd, 0xe8, 0x1b, 0x03, 0x81, 0x3b, 0xff, 0xab, 0xb6, 0x66,
+	0x8a, 0x7e, 0x1c, 0xa0, 0x19, 0xb4, 0x2e, 0x82, 0x99, 0xaf, 0xe6, 0x2f, 0x08, 0x52, 0x76, 0xfb,
+	0x67, 0x75, 0xfc, 0xe5, 0xd6, 0xfb, 0xe3, 0xf0, 0x5e, 0xae, 0xa0, 0x39, 0x74, 0xb2, 0x8f, 0x72,
+	0xa9, 0xe1, 0xae, 0x1d, 0x5f, 0xec, 0xfc, 0xfd, 0xcb, 0x15, 0x74, 0x0b, 0xfc, 0x65, 0xe9, 0x7d,
+	0xdc, 0xb5, 0xe7, 0xb3, 0xed, 0x7b, 0xca, 0x15, 0xf4, 0x06, 0x3a, 0x36, 0x9e, 0x06, 0x49, 0x8a,
+	0x89, 0xca, 0x7e, 0x93, 0xec, 0xdc, 0xef, 0x74, 0x27, 0x27, 0xc9, 0x95, 0x1f, 0x85, 0x77, 0xff,
+	0x74, 0x2b, 0xef, 0x1e, 0xba, 0xdc, 0x1f, 0x0f, 0x5d, 0xee, 0xef, 0x87, 0x2e, 0x77, 0xd3, 0x60,
+	0x9f, 0xcd, 0x57, 0xff, 0x07, 0x00, 0x00, 0xff, 0xff, 0xac, 0x2e, 0x59, 0xaa, 0x1b, 0x09, 0x00,
+	0x00,
 }

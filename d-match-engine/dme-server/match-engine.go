@@ -10,10 +10,12 @@ import (
 )
 
 type cloudlet struct {
-	// Unique identifier key
+	// Unique identifier key for the cloudlet
 	id uint64
-	//Carrier
-	carrier string
+	//Carrier ID for carrier hosting the cloudlet
+	carrierId uint64
+	//Carrier Name for carrier hosting the cloudlet
+	carrierName string
 	// IP to use to connect to and control cloudlet site
 	accessIp []byte
 	// Location of the cloudlet site (lat, long?)
@@ -23,7 +25,7 @@ type cloudlet struct {
 }
 
 type app_carrier_key struct {
-	carrier_id uint64
+	carrier_name string
 	app_key edgeproto.AppKey
 }
 
@@ -89,7 +91,7 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 	var tbl *carrier_app
 
 	tbl = carrier_app_tbl
-	key.carrier_id = cloudlet_inst.id
+	key.carrier_name = cloudlet_inst.carrierName
 	key.app_key.DeveloperKey.Name = app_inst.developer
 	key.app_key.Name = app_inst.name
 	key.app_key.Version = app_inst.vers
@@ -99,14 +101,14 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 	if (!ok) {
 		// Key doesn't exists
 		carrier = new(carrier_app_cloudlet)
-		carrier.carrier_id = cloudlet_inst.id
-		carrier.carrier_name = cloudlet_inst.carrier
+		carrier.carrier_id = cloudlet_inst.carrierId
+		carrier.carrier_name = cloudlet_inst.carrierName
 		carrier.app_name = app_inst.name
 		carrier.app_vers = app_inst.vers
 		carrier.app_developer = app_inst.developer
 		tbl.apps[key] = carrier
 		fmt.Printf("Adding App %s/%s for Carrier = %s\n",
-			carrier.app_name, carrier.app_vers, cloudlet_inst.carrier);
+			carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName);
 	} else {
 		carrier = tbl.apps[key]
 	}
@@ -123,7 +125,7 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 	}
 	carrier.app_cloudlet_inst = c_new
 	fmt.Printf("Adding App %s/%s for Carrier = %s, Loc = %f/%f\n",
-		carrier.app_name, carrier.app_vers, cloudlet_inst.carrier,
+		carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName,
 		cloudlet_inst.location.Lat, cloudlet_inst.location.Long);
 	carrier.Unlock()
 	tbl.Unlock()
@@ -138,7 +140,7 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	var ipaddr net.IP
 
 	tbl = carrier_app_tbl	
-	key.carrier_id = mreq.Carrier
+	key.carrier_name = mreq.CarrierName
 	key.app_key.DeveloperKey.Name = mreq.DevName
 	key.app_key.Name = mreq.AppName
 	key.app_key.Version = mreq.AppVers
@@ -146,12 +148,12 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]
 	if (!ok) {
-		// mreply.Status = false
+		mreply.Status = false
 		tbl.RUnlock()
 		return
 	}
 
-	// mreply.Status = true
+	mreply.Status = true
 	distance = 10000
 	c = carrier.app_cloudlet_inst
 	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)

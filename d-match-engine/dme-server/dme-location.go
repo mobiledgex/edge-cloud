@@ -15,7 +15,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	var ipaddr net.IP
 
 	tbl = carrier_app_tbl	
-	key.carrier_id = mreq.Carrier
+	key.carrier_name = mreq.CarrierName
 	key.app_key.DeveloperKey.Name = mreq.DevName
 	key.app_key.Name = mreq.AppName
 	key.app_key.Version = mreq.AppVers
@@ -53,4 +53,10 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 		mreply.GpsLocationStatus = 0
 	}
 	tbl.RUnlock()
+}
+
+func GetClientLoc(mreq *dme.Match_Engine_Request, mloc *dme.Match_Engine_Loc) {
+	mloc.CarrierName = mreq.CarrierName
+	mloc.Status = 1
+	mloc.NetworkLocation = mreq.GpsLocation
 }
