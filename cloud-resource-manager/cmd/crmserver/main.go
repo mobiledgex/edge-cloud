@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 
 	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
@@ -17,7 +18,7 @@ import (
 
 var bindAddress = flag.String("bind", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
-var notifyAddr = flag.String("notifyAddr", "127.0.0.1:51001", "Notify listener address")
+var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 
 var sigChan chan os.Signal
 
@@ -35,11 +36,10 @@ func main() {
 	grpcServer := grpc.NewServer()
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
-	recvHandler := NewNotifyHandler(controllerData)
-	recv := notify.NewNotifyReceiver("tcp", *notifyAddr, recvHandler)
-	go recv.Run()
-	defer recv.Stop()
-	q.Q("running notify handler at %v", *notifyAddr)
+	notifyHandler := NewNotifyHandler(controllerData)
+	notifyClient := notify.NewCRMClient(strings.Split(*notifyAddrs, ","), notifyHandler)
+	go notifyClient.Run()
+	defer notifyClient.Stop()
 
 	q.Q("registered CRM API server")
 	reflection.Register(grpcServer)

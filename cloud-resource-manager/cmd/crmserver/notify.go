@@ -14,11 +14,11 @@ func NewNotifyHandler(cd *crmutil.ControllerData) *NotifyHandler {
 	return &NotifyHandler{cd: cd}
 }
 
-func (s *NotifyHandler) HandleSendAllDone(allMaps *notify.NotifySendAllMaps) {
+func (s *NotifyHandler) HandleSendAllDone(allMaps *notify.AllMaps) {
 	s.cd.HandleNotifyDone(allMaps)
 }
 
-func (s *NotifyHandler) HandleNotice(notice *edgeproto.Notice) error {
+func (s *NotifyHandler) HandleNotice(notice *edgeproto.NoticeReply) error {
 	appInst := notice.GetAppInst()
 	if appInst != nil {
 		if notice.Action == edgeproto.NoticeAction_UPDATE {

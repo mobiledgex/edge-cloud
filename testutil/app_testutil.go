@@ -28,8 +28,8 @@ It has these top-level messages:
 	DeveloperKey
 	Developer
 	Loc
-	Notice
 	NoticeReply
+	NoticeRequest
 	OperatorCode
 	OperatorKey
 	Operator

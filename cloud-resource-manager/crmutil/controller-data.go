@@ -65,7 +65,7 @@ func (cd *ControllerData) GetCloudlet(key *edgeproto.CloudletKey, inst *edgeprot
 	return false
 }
 
-func (cd *ControllerData) HandleNotifyDone(allMaps *notify.NotifySendAllMaps) {
+func (cd *ControllerData) HandleNotifyDone(allMaps *notify.AllMaps) {
 	cd.appInstsMux.Lock()
 	for key, val := range cd.appInsts {
 		if _, found := allMaps.AppInsts[key]; !found {
