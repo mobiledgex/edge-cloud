@@ -20,15 +20,18 @@ package notify
 import (
 	"context"
 	"errors"
+	"math"
+	"math/rand"
 	"net"
-	"strings"
-	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/stats"
 	"google.golang.org/grpc/status"
 )
 
@@ -36,14 +39,7 @@ var NotifyRetryTime time.Duration = 250 * time.Millisecond
 
 const NotifyVersion uint32 = 1
 
-type NotifyType int
-
-const (
-	NotifyTypeMatcher NotifyType = iota
-	NotifyTypeCloudletMgr
-)
-
-type NotifySendHandler interface {
+type ServerHandler interface {
 	// Get all the keys for known app insts.
 	// The value associated with the key is ignored.
 	GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{})
@@ -58,214 +54,266 @@ type NotifySendHandler interface {
 	GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool
 }
 
-type NotifySenderStats struct {
+type ServerStats struct {
 	AppInstsSent  uint64
 	CloudletsSent uint64
-	Connects      uint64
 }
 
-type NotifySender struct {
-	addr      string
+// Server is on the controller side and sends data to DME/CRM clients.
+// On first connect, it will send all data from the database that is
+// required by the client. After that it will send objects only when
+// they are changed.
+type Server struct {
+	peerAddr  string
 	appInsts  map[edgeproto.AppInstKey]struct{}
 	cloudlets map[edgeproto.CloudletKey]struct{}
 	mux       util.Mutex
-	cond      sync.Cond
+	signal    chan bool
 	done      bool
-	handler   NotifySendHandler
-	stats     NotifySenderStats
+	handler   ServerHandler
+	stats     ServerStats
 	version   uint32
-	ntype     NotifyType
-	running   chan int
+	requestor edgeproto.NoticeRequestor
+	running   chan struct{}
 }
 
-type NotifySenders struct {
-	table   map[string]*NotifySender
+type ServerMgr struct {
+	table   map[string]*Server
 	mux     util.Mutex
-	handler NotifySendHandler
+	handler ServerHandler
+	serv    *grpc.Server
 }
 
-var notifySenders NotifySenders
+var serverMgr ServerMgr
 
-func InitNotifySenders(handler NotifySendHandler) {
-	notifySenders.table = make(map[string]*NotifySender)
-	notifySenders.handler = handler
+// Keepalive parameters to close the connection if the other end
+// goes away unexpectedly. The server and client parameters must be balanced
+// correctly or the connection may be closed incorrectly.
+const (
+	infinity   = time.Duration(math.MaxInt64)
+	kpInterval = 30 * time.Second
+)
+
+var serverParams = keepalive.ServerParameters{
+	MaxConnectionIdle:     3 * kpInterval,
+	MaxConnectionAge:      infinity,
+	MaxConnectionAgeGrace: infinity,
+	Time:    kpInterval,
+	Timeout: kpInterval,
+}
+var clientParams = keepalive.ClientParameters{
+	Time:    kpInterval,
+	Timeout: kpInterval,
+}
+var serverEnforcement = keepalive.EnforcementPolicy{
+	MinTime: 1 * time.Second,
 }
 
-func RegisterMatcherAddrs(addrs string) {
-	if addrs == "" {
+func ServerMgrStart(addr string, handler ServerHandler) {
+	serverMgr.mux.Lock()
+	defer serverMgr.mux.Unlock()
+
+	if serverMgr.table != nil {
 		return
 	}
-	list := strings.Split(addrs, ",")
-	for _, addr := range list {
-		util.InfoLog("register matcher", "addr", addr)
-		RegisterReceiver(addr, NotifyTypeMatcher)
+	serverMgr.table = make(map[string]*Server)
+	serverMgr.handler = handler
+
+	lis, err := net.Listen("tcp", addr)
+	if err != nil {
+		util.FatalLog("ServerMgr listen failed", "err", err)
 	}
+	serverMgr.serv = grpc.NewServer(grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
+	edgeproto.RegisterNotifyApiServer(serverMgr.serv, &serverMgr)
+	util.DebugLog(util.DebugLevelNotify, "ServerMgr listening", "addr", addr)
+	go func() {
+		err = serverMgr.serv.Serve(lis)
+		if err != nil {
+			util.FatalLog("ServerMgr serve failed", "err", err)
+		}
+	}()
 }
 
-func RegisterCloudletAddrs(addrs string) {
-	if addrs == "" {
-		return
+func ServerMgrDone() {
+	serverMgr.mux.Lock()
+	serverMgr.serv.Stop()
+	if serverMgr.table != nil {
+		for _, server := range serverMgr.table {
+			server.Stop()
+		}
 	}
-	list := strings.Split(addrs, ",")
-	for _, addr := range list {
-		util.InfoLog("register cloudlet", "addr", addr)
-		RegisterReceiver(addr, NotifyTypeCloudletMgr)
-	}
+	serverMgr.table = nil
+	serverMgr.handler = nil
+	serverMgr.mux.Unlock()
 }
 
-func RegisterReceiver(addr string, ntype NotifyType) {
-	notifySenders.mux.Lock()
-	defer notifySenders.mux.Unlock()
-
-	_, found := notifySenders.table[addr]
-	if found {
-		return
+func (s *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) error {
+	ctx := stream.Context()
+	peer, ok := peer.FromContext(ctx)
+	if !ok {
+		return errors.New("Notify ServerMgr unable to get peer context")
 	}
-	notifier := &NotifySender{}
-	notifier.addr = addr
-	notifier.appInsts = make(map[edgeproto.AppInstKey]struct{})
-	notifier.cloudlets = make(map[edgeproto.CloudletKey]struct{})
-	notifier.mux.InitCond(&notifier.cond)
-	notifier.handler = notifySenders.handler
-	notifier.ntype = ntype
-	notifier.running = make(chan int)
-	notifySenders.table[addr] = notifier
-	go notifier.Run()
+	peerAddr := peer.Addr.String()
+
+	server := Server{}
+	server.peerAddr = peerAddr
+	server.appInsts = make(map[edgeproto.AppInstKey]struct{})
+	server.cloudlets = make(map[edgeproto.CloudletKey]struct{})
+	server.signal = make(chan bool, 1)
+	server.handler = serverMgr.handler
+	server.running = make(chan struct{})
+	// wakeup makes sure server does send all
+	server.wakeup()
+
+	s.mux.Lock()
+	s.table[peerAddr] = &server
+	s.mux.Unlock()
+
+	err := server.StreamNotice(stream)
+
+	s.mux.Lock()
+	// another connect may come in from the same client so do not
+	// remove it unless it's the same one.
+	if remove, _ := s.table[peerAddr]; remove == &server {
+		delete(s.table, peerAddr)
+	}
+	s.mux.Unlock()
+	return err
 }
 
-func UnregisterReceiver(addr string) {
-	notifySenders.mux.Lock()
-	notifier, found := notifySenders.table[addr]
-	if found {
-		delete(notifySenders.table, addr)
-	}
-	notifySenders.mux.Unlock()
-	if notifier == nil {
-		return
-	}
-	notifier.Stop()
-}
-
-func GetNotifySenderStats(addr string) *NotifySenderStats {
-	stats := &NotifySenderStats{}
-	notifySenders.mux.Lock()
-	defer notifySenders.mux.Unlock()
-	notifier, found := notifySenders.table[addr]
-	if found {
-		stats = &NotifySenderStats{}
-		*stats = notifier.stats
+func GetServerStats(peerAddr string) *ServerStats {
+	stats := &ServerStats{}
+	serverMgr.mux.Lock()
+	defer serverMgr.mux.Unlock()
+	if peerAddr != "" {
+		server, found := serverMgr.table[peerAddr]
+		if found {
+			*stats = server.stats
+		}
 	}
 	return stats
 }
 
 func UpdateAppInst(key *edgeproto.AppInstKey) {
-	notifySenders.mux.Lock()
-	defer notifySenders.mux.Unlock()
-	for _, notifier := range notifySenders.table {
-		if notifier.ntype != NotifyTypeMatcher {
+	serverMgr.mux.Lock()
+	defer serverMgr.mux.Unlock()
+	for _, server := range serverMgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorDME {
 			continue
 		}
-		notifier.UpdateAppInst(key)
+		server.UpdateAppInst(key)
 	}
 }
 
 func UpdateCloudlet(key *edgeproto.CloudletKey) {
-	notifySenders.mux.Lock()
-	defer notifySenders.mux.Unlock()
-	for _, notifier := range notifySenders.table {
-		if notifier.ntype != NotifyTypeCloudletMgr {
+	serverMgr.mux.Lock()
+	defer serverMgr.mux.Unlock()
+	for _, server := range serverMgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
 			continue
 		}
-		notifier.UpdateCloudlet(key)
+		server.UpdateCloudlet(key)
 	}
 }
 
-func (s *NotifySender) UpdateAppInst(key *edgeproto.AppInstKey) {
+func (s *Server) wakeup() {
+	// This puts true in the channel unless it is full,
+	// then the default (noop) case is performed.
+	// The signal channel is used to tell the thread to run.
+	// It is a replacement for a condition variable, which
+	// we cannot use (see comments in Server Run())
+	select {
+	case s.signal <- true:
+	default:
+	}
+}
+
+func (s *Server) UpdateAppInst(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.appInsts[*key] = struct{}{}
-	s.cond.Signal()
+	s.wakeup()
 }
 
-func (s *NotifySender) UpdateCloudlet(key *edgeproto.CloudletKey) {
+func (s *Server) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cloudlets[*key] = struct{}{}
-	s.cond.Signal()
+	s.wakeup()
 }
 
-func (s *NotifySender) Run() {
-	var conn *grpc.ClientConn
-	var sendAll bool
-	var notice edgeproto.Notice
-	var noticeAppInst edgeproto.Notice_AppInst
-	var noticeCloudlet edgeproto.Notice_Cloudlet
+func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) error {
+	var req *edgeproto.NoticeRequest
+	var err error
+	var notice edgeproto.NoticeReply
+	var noticeAppInst edgeproto.NoticeReply_AppInst
+	var noticeCloudlet edgeproto.NoticeReply_Cloudlet
 	var appInst edgeproto.AppInst
 	var cloudlet edgeproto.Cloudlet
-	var client edgeproto.NotifyApi_StreamNoticeClient
-	var reply *edgeproto.NoticeReply
-	var err error
-	var sendErr error
 
 	noticeAppInst.AppInst = &appInst
 	noticeCloudlet.Cloudlet = &cloudlet
-	tries := 0
-	for !s.done {
-		if sendErr != nil {
-			util.DebugLog(util.DebugLevelNotify, "NotifySender sendErr", "addr", s.addr, "error", err)
-			conn.Close()
-			client = nil
-			sendErr = nil
-		}
-		if client == nil {
-			// connect to receiver
-			tries++
-			ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
-			conn, err = grpc.DialContext(ctx, s.addr, grpc.WithInsecure())
-			cancel()
-			if err != nil {
-				if netErr, ok := err.(net.Error); !ok || !netErr.Timeout() {
-					time.Sleep(NotifyRetryTime)
-				}
-				continue
-			}
-			api := edgeproto.NewNotifyApiClient(conn)
-			client, err = api.StreamNotice(context.Background())
-			if err != nil {
-				util.DebugLog(util.DebugLevelNotify, "NotifySender get client", "addr", s.addr, "error", err)
-				conn.Close()
-				client = nil
-				time.Sleep(NotifyRetryTime)
-				continue
-			}
-			s.stats.Connects++
-
-			// Send our version and read back remote version.
-			// We use the lowest common version.
-			notice.Version = NotifyVersion
-			notice.Action = edgeproto.NoticeAction_VERSION
-			notice.ConnectionId = s.stats.Connects
-			notice.Data = nil
-			sendErr = client.Send(&notice)
-			if sendErr != nil {
-				continue
-			}
-			reply, sendErr = client.Recv()
-			if sendErr != nil {
-				continue
-			}
-			if notice.Version > reply.Version {
-				s.version = reply.Version
+	defer func() {
+		// handle failure
+		if err != nil {
+			st, ok := status.FromError(err)
+			if err == context.Canceled || (ok && st.Code() == codes.Canceled) {
+				util.DebugLog(util.DebugLevelNotify, "Notify server connection closed", "client", s.peerAddr, "err", err)
 			} else {
-				s.version = notice.Version
+				util.InfoLog("Notify server connection failed", "client", s.peerAddr, "err", err)
 			}
-			util.DebugLog(util.DebugLevelNotify, "NotifySender connected", "addr", s.addr, "version", s.version, "supported-version", NotifyVersion, "tries", tries)
-			tries = 0
-			sendAll = true
+		}
+
+	}()
+
+	// initial connection is version exchange
+	// this also sets the connection Id so we can ignore spurious old
+	// buffered messages
+	req, err = stream.Recv()
+	if err != nil {
+		return err
+	}
+	if req.Action != edgeproto.NoticeAction_VERSION {
+		util.DebugLog(util.DebugLevelNotify, "Notify server bad action", "expected", edgeproto.NoticeAction_VERSION, "got", notice.Action)
+		return errors.New("Notify server expected action version")
+	}
+	if req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorDME && req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+		return errors.New("Notify server bad requestor value")
+	}
+	// set requestor type
+	s.requestor = req.Requestor
+	// use lowest common version
+	if req.Version > NotifyVersion {
+		s.version = req.Version
+	} else {
+		s.version = NotifyVersion
+	}
+	// send back my version
+	notice.Action = edgeproto.NoticeAction_VERSION
+	notice.Version = s.version
+	err = stream.Send(&notice)
+	if err != nil {
+		return err
+	}
+	util.DebugLog(util.DebugLevelNotify, "Notify server connected", "client", s.peerAddr, "version", s.version, "supported-version", NotifyVersion)
+
+	sendAll := true
+	for !s.done {
+		// Select with channels is used here rather than a condition
+		// variable to be able to detect when the underlying connection
+		// is done/cancelled, as the only way to detect that is via a
+		// channel, and you can't mix waiting on condition variables
+		// and channels.
+		select {
+		case <-s.signal:
+		case <-stream.Context().Done():
+			err = stream.Context().Err()
+			s.done = true
 		}
 		s.mux.Lock()
-		for len(s.appInsts) == 0 && len(s.cloudlets) == 0 && !s.done && !sendAll {
-			s.cond.Wait()
+		if len(s.appInsts) == 0 && len(s.cloudlets) == 0 && !s.done && !sendAll && stream.Context().Err() == nil {
+			s.mux.Unlock()
+			continue
 		}
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
@@ -276,11 +324,11 @@ func (s *NotifySender) Run() {
 			break
 		}
 		if sendAll {
-			util.DebugLog(util.DebugLevelNotify, "Send all", "addr", s.addr)
-			if s.ntype == NotifyTypeMatcher {
+			util.DebugLog(util.DebugLevelNotify, "Send all", "client", s.peerAddr)
+			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorDME {
 				s.handler.GetAllAppInstKeys(appInsts)
 			}
-			if s.ntype == NotifyTypeCloudletMgr {
+			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
 				s.handler.GetAllCloudletKeys(cloudlets)
 			}
 		}
@@ -294,9 +342,9 @@ func (s *NotifySender) Run() {
 				notice.Action = edgeproto.NoticeAction_DELETE
 				appInst.Key = key
 			}
-			util.DebugLog(util.DebugLevelNotify, "Send app inst", "addr", s.addr, "action", notice.Action, "key", appInst.Key.GetKeyString())
-			sendErr = client.Send(&notice)
-			if sendErr != nil {
+			util.DebugLog(util.DebugLevelNotify, "Send app inst", "client", s.peerAddr, "action", notice.Action, "key", appInst.Key.GetKeyString())
+			err = stream.Send(&notice)
+			if err != nil {
 				break
 			}
 			s.stats.AppInstsSent++
@@ -311,215 +359,252 @@ func (s *NotifySender) Run() {
 				notice.Action = edgeproto.NoticeAction_DELETE
 				cloudlet.Key = key
 			}
-			util.DebugLog(util.DebugLevelNotify, "Send cloudlet", "addr", s.addr, "action", notice.Action, "key", cloudlet.Key.GetKeyString())
-			sendErr = client.Send(&notice)
-			if sendErr != nil {
+			util.DebugLog(util.DebugLevelNotify, "Send cloudlet", "client", s.peerAddr, "action", notice.Action, "key", cloudlet.Key.GetKeyString())
+			err = stream.Send(&notice)
+			if err != nil {
 				break
 			}
 			s.stats.CloudletsSent++
 		}
-		if sendAll && sendErr == nil {
+		if sendAll && err == nil {
 			notice.Action = edgeproto.NoticeAction_SENDALL_END
 			notice.Data = nil
-			sendErr = client.Send(&notice)
-			if sendErr != nil {
+			err = stream.Send(&notice)
+			if err != nil {
 				break
 			}
 			sendAll = false
 		}
 		appInsts = nil
 		cloudlets = nil
-		if sendErr != nil {
-			continue
-		}
-	}
-	if client != nil {
-		conn.Close()
 	}
 	close(s.running)
+	return err
 }
 
-func (s *NotifySender) Stop() {
+func (s *Server) Stop() {
 	s.mux.Lock()
 	s.done = true
-	s.cond.Signal()
+	s.wakeup()
 	s.mux.Unlock()
 	<-s.running
 }
 
-type NotifySendAllMaps struct {
+type AllMaps struct {
 	AppInsts  map[edgeproto.AppInstKey]struct{}
 	Cloudlets map[edgeproto.CloudletKey]struct{}
 }
 
-type NotifyRecvHandler interface {
+type ClientHandler interface {
 	// NotifySendAllMaps contains all the keys that were updated in
 	// the initial send of all data. Any keys that were not sent should
 	// be purged from local memory since they no longer exist on the
 	// sender.
-	HandleSendAllDone(allMaps *NotifySendAllMaps)
+	HandleSendAllDone(allMaps *AllMaps)
 	// Handle an update or delete notice from the sender
-	HandleNotice(notice *edgeproto.Notice) error
+	HandleNotice(reply *edgeproto.NoticeReply) error
 }
 
-type NotifyReceiver struct {
-	network      string
-	address      string
-	handler      NotifyRecvHandler
-	server       *grpc.Server
-	version      uint32
-	connectionId uint64
-	mux          util.Mutex
-	done         bool
-	running      chan int
+type ClientStats struct {
+	Connects uint64
 }
 
-func NewNotifyReceiver(network, address string, handler NotifyRecvHandler) *NotifyReceiver {
-	s := &NotifyReceiver{}
-	s.network = network
-	s.address = address
+type Client struct {
+	addrs     []string
+	handler   ClientHandler
+	requestor edgeproto.NoticeRequestor
+	version   uint32
+	stats     ClientStats
+	mux       util.Mutex
+	done      bool
+	running   chan struct{}
+	cancel    context.CancelFunc
+	localAddr string
+}
+
+func cancelNoop() {}
+
+func NewDMEClient(addrs []string, handler ClientHandler) *Client {
+	return newClient(addrs, handler, edgeproto.NoticeRequestor_NoticeRequestorDME)
+}
+
+func NewCRMClient(addrs []string, handler ClientHandler) *Client {
+	return newClient(addrs, handler, edgeproto.NoticeRequestor_NoticeRequestorCRM)
+}
+
+func newClient(addrs []string, handler ClientHandler, requestor edgeproto.NoticeRequestor) *Client {
+	s := &Client{}
+	s.addrs = addrs
 	s.handler = handler
+	s.requestor = requestor
 	return s
 }
 
-func (s *NotifyReceiver) Run() {
-	s.mux.Lock()
-	if s.running != nil || s.done {
-		// already another thread running this or we're already done
-		s.mux.Unlock()
-		return
+func (s *Client) Run() {
+	var conn *grpc.ClientConn
+	var request edgeproto.NoticeRequest
+	var reply *edgeproto.NoticeReply
+	var err error
+	var commErr error
+	var stream edgeproto.NotifyApi_StreamNoticeClient
+
+	s.done = false
+	s.cancel = cancelNoop
+	s.SetLocalAddr("")
+	s.running = make(chan struct{})
+	addrIdx := rand.Int() % len(s.addrs)
+	tries := 0
+
+	cleanup := func() {
+		if conn != nil {
+			err = conn.Close()
+		}
+		s.cancel()
+		s.cancel = cancelNoop
+		s.SetLocalAddr("")
+		stream = nil
+		commErr = nil
 	}
-	s.running = make(chan int)
-	s.mux.Unlock()
 
 	for !s.done {
-		lis, err := net.Listen(s.network, s.address)
-		if err != nil {
-			util.InfoLog("Failed to listen", "address", s.network+":"+s.address, "error", err)
-			time.Sleep(NotifyRetryTime)
-			continue
+		if commErr != nil {
+			util.DebugLog(util.DebugLevelNotify, "Notify client communication err", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "error", commErr)
+			cleanup()
 		}
-		// to avoid race conditions with NotifyReceiver.Stop() calling
-		// s.server.Stop() when s.server is being modified, we always
-		// hold the lock when modifying s.server.
-		s.mux.Lock()
-		if s.done {
-			lis.Close()
-			s.mux.Unlock()
-			break
-		}
-		s.server = grpc.NewServer()
-		s.mux.Unlock()
-		edgeproto.RegisterNotifyApiServer(s.server, s)
+		if stream == nil {
+			// connect to server
+			tries++
+			addrIdx++
+			if addrIdx == len(s.addrs) {
+				addrIdx = 0
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
+			conn, err = grpc.DialContext(ctx, s.addrs[addrIdx], grpc.WithInsecure(), grpc.WithStatsHandler(&grpcStatsHandler{client: s}), grpc.WithKeepaliveParams(clientParams))
+			cancel()
+			if err != nil {
+				if netErr, ok := err.(net.Error); !ok || !netErr.Timeout() {
+					time.Sleep(NotifyRetryTime)
+				}
+				continue
+			}
+			api := edgeproto.NewNotifyApiClient(conn)
+			ctx, cancel = context.WithCancel(context.Background())
+			stream, err = api.StreamNotice(ctx)
+			s.cancel = cancel
+			if err != nil {
+				util.DebugLog(util.DebugLevelNotify, "Notify client get client", "addr", s.addrs[addrIdx], "error", err)
+				cleanup()
+				time.Sleep(NotifyRetryTime)
+				continue
+			}
+			s.stats.Connects++
 
-		err = s.server.Serve(lis)
-		util.DebugLog(util.DebugLevelNotify, "NotifyReceiver serve", "error", err)
-		if !s.done {
-			time.Sleep(NotifyRetryTime)
+			// Send our version and read back remote version.
+			// We use the lowest common version.
+			request.Version = NotifyVersion
+			request.Action = edgeproto.NoticeAction_VERSION
+			request.Requestor = s.requestor
+			commErr = stream.Send(&request)
+			if commErr != nil {
+				continue
+			}
+			reply, commErr = stream.Recv()
+			if commErr != nil {
+				continue
+			}
+			if request.Version > reply.Version {
+				s.version = reply.Version
+			} else {
+				s.version = request.Version
+			}
+			util.DebugLog(util.DebugLevelNotify, "Notify client connected", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "version", s.version, "supported-version", NotifyVersion, "tries", tries)
+			tries = 0
 		}
+		// server will send all data first
+		sendAllMaps := &AllMaps{}
+		sendAllMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
+		sendAllMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
+		for !s.done {
+			reply, commErr = stream.Recv()
+			if s.done {
+				break
+			}
+			if commErr != nil {
+				break
+			}
+			if sendAllMaps != nil && reply.Action == edgeproto.NoticeAction_UPDATE {
+				appInst := reply.GetAppInst()
+				if appInst != nil {
+					sendAllMaps.AppInsts[appInst.Key] = struct{}{}
+				}
+				cloudlet := reply.GetCloudlet()
+				if cloudlet != nil {
+					sendAllMaps.Cloudlets[cloudlet.Key] = struct{}{}
+				}
+			}
+			if reply.Action == edgeproto.NoticeAction_SENDALL_END {
+				s.handler.HandleSendAllDone(sendAllMaps)
+				sendAllMaps = nil
+				continue
+			}
+			if reply.Action != edgeproto.NoticeAction_UPDATE && reply.Action != edgeproto.NoticeAction_DELETE {
+				commErr = errors.New("Unexpected notice action, not update or delete")
+				break
+			}
+			commErr = s.handler.HandleNotice(reply)
+			if commErr != nil {
+				break
+			}
+		}
+	}
+	util.DebugLog(util.DebugLevelNotify, "Notify client cancelled", "local", s.GetLocalAddr())
+	if stream != nil {
+		cleanup()
 	}
 	close(s.running)
 }
 
-func (s *NotifyReceiver) Stop() {
+func (s *Client) Stop() {
 	s.mux.Lock()
 	s.done = true
-	if s.server != nil {
-		s.server.Stop()
-	}
+	s.cancel()
 	s.mux.Unlock()
-	// now that we've set done, s.running will never change
 	if s.running != nil {
 		<-s.running
 	}
-	s.done = false
-	s.running = nil
 }
 
-func (s *NotifyReceiver) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) error {
-	var notice *edgeproto.Notice
-	var reply edgeproto.NoticeReply
-	var err error
-
-	defer func() {
-		// handle failure
-		if err != nil {
-			st, ok := status.FromError(err)
-			if ok && st.Code() == codes.Canceled {
-				util.DebugLog(util.DebugLevelNotify, "NotifyReceiver stream cancelled", "error", err)
-			} else {
-				util.InfoLog("NotifyReceiver stream", "error", err)
-			}
-		}
-	}()
-
-	// initial connection is version exchange
-	// this also sets the connection Id so we can ignore spurious old
-	// buffered messages
-	notice, err = stream.Recv()
-	if err != nil {
-		return err
-	}
-	if notice.Action != edgeproto.NoticeAction_VERSION {
-		util.DebugLog(util.DebugLevelNotify, "NotifyReceiver bad action", "expected", edgeproto.NoticeAction_VERSION, "got", notice.Action)
-		return errors.New("NotifyReceiver expected action version")
-	}
-	// use lowest common version
-	if notice.Version > NotifyVersion {
-		s.version = notice.Version
-	} else {
-		s.version = NotifyVersion
-	}
-	s.connectionId = notice.ConnectionId
-	// send back my version
-	reply.Action = edgeproto.NoticeAction_VERSION
-	reply.Version = s.version
-	err = stream.Send(&reply)
-	if err != nil {
-		return err
-	}
-	sendAllMaps := &NotifySendAllMaps{}
-	sendAllMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
-	sendAllMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
-	util.DebugLog(util.DebugLevelNotify, "NotifyReceiver connected", "version", s.version, "supported-version", NotifyVersion)
-
-	for !s.done {
-		notice, err = stream.Recv()
-		if s.done {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		if notice.ConnectionId != s.connectionId {
-			return errors.New("Bad connection id")
-		}
-		if sendAllMaps != nil && notice.Action == edgeproto.NoticeAction_UPDATE {
-			appInst := notice.GetAppInst()
-			if appInst != nil {
-				sendAllMaps.AppInsts[appInst.Key] = struct{}{}
-			}
-			cloudlet := notice.GetCloudlet()
-			if cloudlet != nil {
-				sendAllMaps.Cloudlets[cloudlet.Key] = struct{}{}
-			}
-		}
-		if notice.Action == edgeproto.NoticeAction_SENDALL_END {
-			s.handler.HandleSendAllDone(sendAllMaps)
-			sendAllMaps = nil
-			continue
-		}
-		if notice.Action != edgeproto.NoticeAction_UPDATE && notice.Action != edgeproto.NoticeAction_DELETE {
-			return errors.New("Unexpected notice action, not update or delete")
-		}
-		err = s.handler.HandleNotice(notice)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (s *Client) GetStats() *ClientStats {
+	stats := &ClientStats{}
+	*stats = s.stats
+	return stats
 }
 
-func (s *NotifyReceiver) GetConnnectionId() uint64 {
-	return s.connectionId
+func (s *Client) SetLocalAddr(addr string) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.localAddr = addr
 }
+
+func (s *Client) GetLocalAddr() string {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	return s.localAddr
+}
+
+type grpcStatsHandler struct {
+	client *Client
+}
+
+func (s *grpcStatsHandler) TagRPC(ctx context.Context, tag *stats.RPCTagInfo) context.Context {
+	return ctx
+}
+
+func (s *grpcStatsHandler) HandleRPC(ctx context.Context, rpcStats stats.RPCStats) {}
+
+func (s *grpcStatsHandler) TagConn(ctx context.Context, info *stats.ConnTagInfo) context.Context {
+	s.client.SetLocalAddr(info.LocalAddr.String())
+	return ctx
+}
+
+func (s *grpcStatsHandler) HandleConn(ctx context.Context, connStats stats.ConnStats) {}

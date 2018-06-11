@@ -47,17 +47,16 @@ func (p *EtcdLocal) ResetData() error {
 // ControllerLocal
 
 type ControllerLocal struct {
-	Name         string
-	EtcdAddrs    string
-	ApiAddr      string
-	HttpAddr     string
-	MatcherAddrs string
-	CRMAddrs     string
-	cmd          *exec.Cmd
+	Name       string
+	EtcdAddrs  string
+	ApiAddr    string
+	HttpAddr   string
+	NotifyAddr string
+	cmd        *exec.Cmd
 }
 
 func (p *ControllerLocal) Start(opts ...StartOp) error {
-	args := []string{"--etcdUrls", p.EtcdAddrs, "--matcherAddrs", p.MatcherAddrs, "--crmAddrs", p.CRMAddrs}
+	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
@@ -102,13 +101,13 @@ func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, e
 // DmeLocal
 
 type DmeLocal struct {
-	Name       string
-	NotifyAddr string
-	cmd        *exec.Cmd
+	Name        string
+	NotifyAddrs string
+	cmd         *exec.Cmd
 }
 
 func (p *DmeLocal) Start() error {
-	args := []string{"--notifyAddr", p.NotifyAddr}
+	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "dme-server", args)
 	return err
@@ -126,13 +125,13 @@ func (p *DmeLocal) ConnectAPI() (*grpc.ClientConn, error) {
 // CrmLocal
 
 type CrmLocal struct {
-	Name       string
-	NotifyAddr string
-	cmd        *exec.Cmd
+	Name        string
+	NotifyAddrs string
+	cmd         *exec.Cmd
 }
 
 func (p *CrmLocal) Start() error {
-	args := []string{"--notifyAddr", p.NotifyAddr}
+	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "crmserver", args)
 	return err

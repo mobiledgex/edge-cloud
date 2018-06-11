@@ -17,11 +17,15 @@ enum NoticeAction {
   SENDALL_END = 4;
 }
 
-message Notice {
+enum NoticeRequestor {
+  NoticeRequestorNone = 0;
+  NoticeRequestorDME = 1;
+  NoticeRequestorCRM = 2;
+}
+
+message NoticeReply {
   // action to perform
   NoticeAction action = 1;
-  // connect count, used to ignore invalid buffered messages
-  uint64 connectionId = 2;
   // protocol version supported by sender
   uint32 version = 3;
   // data included (for UPDATE and DELETE)
@@ -31,14 +35,18 @@ message Notice {
   }
 }
 
-message NoticeReply {
+message NoticeRequest {
   // action
   NoticeAction action = 1;
   // protocol version supported by receiver
   uint32 version = 2;
+  // client requestor type
+  NoticeRequestor requestor = 3;
+  // revision of database
+  uint64 revision = 4;
 }
 
 service NotifyApi {
-  // Send update is used to send database changes to other nodes
-  rpc StreamNotice(stream Notice) returns (stream NoticeReply) {}
+  // Stream notice sends info from Server to Client
+  rpc StreamNotice(stream NoticeRequest) returns (stream NoticeReply) {}
 }

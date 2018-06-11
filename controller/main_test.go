@@ -38,18 +38,7 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 func TestController(t *testing.T) {
 	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
 
-	dmes := "127.0.0.1:44441"
-	crms := "127.0.0.1:44442"
-	os.Args = append(os.Args, "-matcherAddrs="+dmes)
-	os.Args = append(os.Args, "-crmAddrs="+crms)
 	os.Args = append(os.Args, "-localEtcd")
-
-	crmNotify := notify.NewDummyRecvHandler()
-	crmNotify.Start("tcp", crms)
-	defer crmNotify.Stop()
-	dmeNotify := notify.NewDummyRecvHandler()
-	dmeNotify.Start("tcp", dmes)
-	defer dmeNotify.Stop()
 
 	conn, mainDone, err := startMain(t)
 	if err != nil {
@@ -58,14 +47,25 @@ func TestController(t *testing.T) {
 	}
 	defer conn.Close()
 
+	// test notify clients
+	notifyAddrs := []string{*notifyAddr}
+	crmNotify := notify.NewDummyClientHandler()
+	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
+	go crmClient.Run()
+	defer crmClient.Stop()
+	dmeNotify := notify.NewDummyClientHandler()
+	dmeClient := notify.NewDMEClient(notifyAddrs, dmeNotify)
+	go dmeClient.Run()
+	defer dmeClient.Stop()
+
 	devApi := edgeproto.NewDeveloperApiClient(conn)
 	appApi := edgeproto.NewAppApiClient(conn)
 	operApi := edgeproto.NewOperatorApiClient(conn)
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
 
-	crmNotify.WaitForConnect(1)
-	dmeNotify.WaitForConnect(1)
+	crmClient.WaitForConnect(1)
+	dmeClient.WaitForConnect(1)
 
 	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
 	testutil.ClientAppCudTest(t, appApi, testutil.AppData)
@@ -78,8 +78,6 @@ func TestController(t *testing.T) {
 
 	assert.Equal(t, 5, len(dmeNotify.AppInsts), "num appinsts")
 	assert.Equal(t, 4, len(crmNotify.Cloudlets), "num cloudlets")
-	assert.Equal(t, uint64(1), dmeNotify.Recv.GetConnnectionId(), "dme connects")
-	assert.Equal(t, uint64(1), crmNotify.Recv.GetConnnectionId(), "crm connects")
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)

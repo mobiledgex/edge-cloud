@@ -28,8 +28,8 @@
 		DeveloperKey
 		Developer
 		Loc
-		Notice
 		NoticeReply
+		NoticeRequest
 		OperatorCode
 		OperatorKey
 		Operator
