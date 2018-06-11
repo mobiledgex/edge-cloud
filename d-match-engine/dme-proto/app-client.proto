@@ -67,8 +67,11 @@ message Match_Engine_Loc_Verify {
   Tower_Status tower_status = 2;
   enum GPS_Location_Status {
     LOC_UNKNOWN = 0;
-    LOC_WITHIN_1M = 1;
-    LOC_WITHIN_10M = 2;
+    LOC_WITHIN_2KM = 1;
+    LOC_WITHIN_10KM = 2;
+    LOC_WITHIN_100KM = 3;
+    LOC_MISMATCH = 4;
+    LOC_OTHER_COUNTRY = 5;
   }
   GPS_Location_Status gps_location_status = 3;
   // Token

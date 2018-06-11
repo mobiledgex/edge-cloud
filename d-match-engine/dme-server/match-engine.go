@@ -145,20 +145,18 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	key.app_key.Name = mreq.AppName
 	key.app_key.Version = mreq.AppVers
 	
+	mreply.Status = false
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]
 	if (!ok) {
-		mreply.Status = false
 		tbl.RUnlock()
 		return
 	}
 
-	mreply.Status = true
 	distance = 10000
 	c = carrier.app_cloudlet_inst
 	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)
 	for ; c != nil; c = c.next {
-		//Todo: Check the usage of embedded pointer to Loc in proto files
 		d = distance_between(*mreq.GpsLocation, c.location)
 		fmt.Printf("Loc = %f/%f is at dist %f. ",
 			c.location.Lat, c.location.Long, d);
@@ -171,9 +169,12 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 		}
 		fmt.Printf("\n");
 	}
-	ipaddr = found.accessIp
-	fmt.Printf("Found Loc = %f/%f with IP %s\n",
-		found.location.Lat, found.location.Long, ipaddr.String());
+	if (found != nil) {
+		ipaddr = found.accessIp
+		fmt.Printf("Found Loc = %f/%f with IP %s\n",
+			found.location.Lat, found.location.Long, ipaddr.String());
+		mreply.Status = true
+	}
 	tbl.RUnlock()
 }
 
