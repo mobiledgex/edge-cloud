@@ -41,33 +41,37 @@ func populate_tbl () {
 	}
 	cloudlets = []cloudlet {
 		cloudlet {
-			id: 1,
-			carrier: "TDG",
+			id: 111,
+			carrierId: 1,
+			carrierName: "TDG",
 			accessIp: []byte {10,1,10,1},
 			location: edgeproto.Loc{Lat: 50.7374, Long: 7.0982},
 		},
 		cloudlet {
-			id: 1,
-			carrier: "TDG",
+			id: 222,
+			carrierId: 1,
+			carrierName: "TDG",
 			accessIp: []byte {11,1,11,1},
 			location: edgeproto.Loc{Lat: 52.7374, Long: 13.4050},
 		},
 		cloudlet {
-			id: 1,
-			carrier: "TDG",
+			id: 333,
+			carrierId: 1,
+			carrierName: "TDG",
 			accessIp: []byte {12,1,12,1},
 			location: edgeproto.Loc{Lat: 48.1351, Long: 11.5820},
 		},
 		cloudlet {
-			id: 3,
-			carrier: "TMUS",
+			id: 444,
+			carrierId: 3,
+			carrierName: "TMUS",
 			accessIp: []byte {13,1,13,1},
 			location: edgeproto.Loc{Lat: 47.6062, Long: 122.3321},
 		},
 	}
 	
 	for _, c := range cloudlets {
-		fmt.Printf("Key = %d, name = %s\n", c.id, c.carrier)
+		fmt.Printf("Key = %d, name = %s\n", c.id, c.carrierName)
 		for _, a := range apps {
 			add_app(&a, &c)
 		}	
