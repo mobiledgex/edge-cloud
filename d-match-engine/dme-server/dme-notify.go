@@ -10,25 +10,25 @@ import (
 var cloudletID = 5000
 
 type app struct {
-	id uint64
-	name string
-	vers string
+	id        uint64
+	name      string
+	vers      string
 	developer string
 }
 
 type NotifyHandler struct {
 }
 
-func (s *NotifyHandler) HandleSendAllDone(allMaps *notify.NotifySendAllMaps) {
+func (s *NotifyHandler) HandleSendAllDone(allMaps *notify.AllMaps) {
 	util.InfoLog("Handle send all")
 }
 
-func (s *NotifyHandler) HandleNotice(notice *edgeproto.Notice) error {
+func (s *NotifyHandler) HandleNotice(notice *edgeproto.NoticeReply) error {
 	var app_inst app
 	var cloudlet_inst cloudlet
 	var appkey *edgeproto.AppInstKey
 	var cloudletkey *edgeproto.CloudletKey
-	
+
 	appInst := notice.GetAppInst()
 	if appInst != nil {
 		if notice.Action == edgeproto.NoticeAction_UPDATE {
@@ -56,4 +56,3 @@ func (s *NotifyHandler) HandleNotice(notice *edgeproto.Notice) error {
 	}
 	return nil
 }
-
