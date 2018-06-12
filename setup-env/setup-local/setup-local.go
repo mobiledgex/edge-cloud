@@ -13,9 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud/integration/process"
-
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -43,14 +42,15 @@ type processData struct {
 	Crms        []process.CrmLocal        `yaml:"crms"`
 }
 
-var actionChoices = map[string]bool{"start": true,
+var actionChoices = map[string]bool{
+	"start":   true,
 	"stop":    true,
 	"status":  true,
 	"cleanup": true}
 
 var data applicationData
 
-var apiConnectTimeout = 15 * time.Second
+var apiConnectTimeout = 5 * time.Second
 
 var actionList = fmt.Sprintf("%v", reflect.ValueOf(actionChoices).MapKeys())
 
@@ -94,15 +94,62 @@ func readApplicationData(datafile string) {
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
-
 	yaml.Marshal(data)
-	/*
-		log.Printf("OPERATORS %+v", data.Operators)
-		log.Printf("CLOUDLETS %+v", data.Cloudlets)
-		log.Printf("DEVELOPERS %+v", data.Developers)
-		log.Printf("APPLICATIONS %+v", data.Applications)
-		log.Printf("APPINSTS %+v", data.AppInstances)
-	*/
+
+}
+
+// TODO, would be nice to figure how to do these 3 with the same implementation
+func connectController(p *process.ControllerLocal, c chan string) {
+	log.Printf("attempt to connect to process %v", (*p).Name)
+	api, err := (*p).ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- "Failed to connect to " + (*p).Name
+	} else {
+		c <- "OK connect to " + (*p).Name
+	}
+	api.Close()
+}
+
+func connectCrm(p *process.CrmLocal, c chan string) {
+	log.Printf("attempt to connect to process %v", (*p).Name)
+	api, err := (*p).ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- "Failed to connect to " + (*p).Name
+	} else {
+		c <- "OK connect to " + (*p).Name
+	}
+	api.Close()
+}
+
+func connectDme(p *process.DmeLocal, c chan string) {
+	log.Printf("attempt to connect to process %v", (*p).Name)
+	api, err := (*p).ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- "Failed to connect to " + (*p).Name
+	} else {
+		c <- "OK connect to " + (*p).Name
+	}
+	api.Close()
+}
+
+func waitForProcesses() {
+	log.Println("Wait for processes to respond to APIs")
+	c := make(chan string)
+	var numProcs = len(procs.Controllers) + len(procs.Crms) + len(procs.Dmes)
+
+	for _, ctrl := range procs.Controllers {
+		go connectController(&ctrl, c)
+	}
+	for _, dme := range procs.Dmes {
+		go connectDme(&dme, c)
+	}
+	for _, crm := range procs.Crms {
+		go connectCrm(&crm, c)
+	}
+	for i := 0; i < numProcs; i++ {
+		log.Println(<-c)
+	}
+
 }
 
 func applyApplicationData() {
@@ -181,12 +228,6 @@ func readProcessData(datafile string) {
 
 	yaml.Marshal(procs)
 
-	/*
-		log.Printf("ETCDS %+v", procs.Etcds)
-		log.Printf("CONTROLLERS %+v", procs.Controllers)
-		log.Printf("CRMS %+v", procs.Crms)
-		log.Printf("DMES %+v", procs.Dmes)
-	*/
 }
 
 func stopProcesses() {
@@ -226,11 +267,12 @@ func cleanup() {
 }
 
 func startProcesses() bool {
+
 	for _, etcd := range procs.Etcds {
 		log.Printf("Starting Etcd %+v", etcd)
 		etcd.ResetData()
 		logfile := getLogFile(etcd.Name)
-		err := etcd.Start(&logfile)
+		err := etcd.Start(logfile)
 		if err != nil {
 			log.Printf("Error on Etcd startup: %v", err)
 			return false
@@ -240,7 +282,7 @@ func startProcesses() bool {
 	for _, ctrl := range procs.Controllers {
 		log.Printf("Starting Controller %+v\n", ctrl)
 		logfile := getLogFile(ctrl.Name)
-		err := ctrl.Start(&logfile)
+		err := ctrl.Start(logfile)
 		if err != nil {
 			log.Printf("Error on controller startup: %v", err)
 			return false
@@ -249,7 +291,7 @@ func startProcesses() bool {
 	for _, crm := range procs.Crms {
 		log.Printf("Starting CRM %+v\n", crm)
 		logfile := getLogFile(crm.Name)
-		err := crm.Start(&logfile)
+		err := crm.Start(logfile)
 		if err != nil {
 			log.Printf("Error on CRM startup: %v", err)
 			return false
@@ -258,7 +300,7 @@ func startProcesses() bool {
 	for _, dme := range procs.Dmes {
 		log.Printf("Starting DME %+v\n", dme)
 		logfile := getLogFile(dme.Name)
-		err := dme.Start(&logfile)
+		err := dme.Start(logfile)
 		if err != nil {
 			log.Printf("Error on DME startup: %v", err)
 			return false
@@ -274,11 +316,11 @@ func validateArgs() {
 
 	errFound := false
 
-	if !(validAction) {
+	if !validAction {
 		fmt.Printf("ERROR: --action must be one of: %v\n", actionList)
 		errFound = true
 	}
-	if !(validDeployment) {
+	if !validDeployment {
 		fmt.Printf("ERROR: --deployment must be one of: %v\n", deploymentList)
 		errFound = true
 	}
@@ -315,8 +357,7 @@ func main() {
 	switch *action {
 	case "start":
 		if startProcesses() {
-			fmt.Println("Sleeping 10 seconds to allow processes to start")
-			time.Sleep(10 * time.Second)
+			waitForProcesses()
 		} else {
 			stopProcesses()
 			log.Fatal("Startup failed, exiting")

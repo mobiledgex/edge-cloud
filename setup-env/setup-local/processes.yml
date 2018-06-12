@@ -20,15 +20,17 @@ etcds:
 controllers:
 - name: ctrl1
   etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
-  apiaddr: 127.0.0.1:35001
+  apiaddr: 127.0.0.1:55001
   httpaddr: 127.0.0.1:36001
   notifyaddr: 127.0.0.1:37001
 
 dmes:
 - name: dme1
+  apiaddr: 127.0.0.1:50051
   notifyaddrs: 127.0.0.1:37001
 
 crms:
 - name: crm1
+  apiaddr: 127.0.0.1:55099
   notifyaddrs: 127.0.0.1:37001
 

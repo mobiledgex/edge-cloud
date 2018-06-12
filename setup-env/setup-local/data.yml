@@ -5,7 +5,6 @@ operators:
 
 - key:
     name: ATT
-  fields: [1,2,3,4]
 
 cloudlets:
 - key:

@@ -2,7 +2,6 @@ package process
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -29,7 +28,7 @@ type EtcdLocal struct {
 	cmd            *exec.Cmd
 }
 
-func (p *EtcdLocal) Start(logfile *string) error {
+func (p *EtcdLocal) Start(logfile string) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "etcd", args, logfile)
@@ -55,7 +54,7 @@ type ControllerLocal struct {
 	cmd        *exec.Cmd
 }
 
-func (p *ControllerLocal) Start(logfile *string, opts ...StartOp) error {
+func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -81,32 +80,37 @@ func (p *ControllerLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
-func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	// Wait for controller to be ready to connect.
+func connectAPIImpl(timeout time.Duration, apiaddr string) (*grpc.ClientConn, error) {
+	// Wait for service to be ready to connect.
 	// Note: using grpc WithBlock() takes about a second longer
 	// than doing the retry connect below so requires a larger timeout.
 	wait := 20 * time.Millisecond
 	for {
-		_, err := net.Dial("tcp", p.ApiAddr)
+		_, err := net.Dial("tcp", apiaddr)
 		if err == nil || timeout < wait {
 			break
 		}
 		timeout -= wait
 		time.Sleep(wait)
 	}
-	conn, err := grpc.Dial(p.ApiAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(apiaddr, grpc.WithInsecure())
 	return conn, err
+}
+
+func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+	return connectAPIImpl(timeout, p.ApiAddr)
 }
 
 // DmeLocal
 
 type DmeLocal struct {
 	Name        string
+	ApiAddr     string
 	NotifyAddrs string
 	cmd         *exec.Cmd
 }
 
-func (p *DmeLocal) Start(logfile *string) error {
+func (p *DmeLocal) Start(logfile string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)
@@ -117,20 +121,20 @@ func (p *DmeLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
-func (p *DmeLocal) ConnectAPI() (*grpc.ClientConn, error) {
-	// TODO
-	return nil, errors.New("TODO")
+func (p *DmeLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+	return connectAPIImpl(timeout, p.ApiAddr)
 }
 
 // CrmLocal
 
 type CrmLocal struct {
 	Name        string
+	ApiAddr     string
 	NotifyAddrs string
 	cmd         *exec.Cmd
 }
 
-func (p *CrmLocal) Start(logfile *string) error {
+func (p *CrmLocal) Start(logfile string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "crmserver", args, logfile)
@@ -141,23 +145,22 @@ func (p *CrmLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
-func (p *CrmLocal) ConnectAPI() (*grpc.ClientConn, error) {
-	// TODO
-	return nil, errors.New("TODO")
+func (p *CrmLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+	return connectAPIImpl(timeout, p.ApiAddr)
 }
 
 // Support funcs
 
-func StartLocal(name, bin string, args []string, logfile *string) (*exec.Cmd, error) {
+func StartLocal(name, bin string, args []string, logfile string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
-	if logfile == nil {
+	if logfile == "" {
 		writer := NewColorWriter(name)
 		cmd.Stdout = writer
 		cmd.Stderr = writer
 	} else {
-		fmt.Printf("Creating logfile %v\n", *logfile)
+		fmt.Printf("Creating logfile %v\n", logfile)
 		// open the out file for writing
-		outfile, err := os.Create(*logfile)
+		outfile, err := os.Create(logfile)
 		if err != nil {
 			fmt.Printf("ERROR Creating logfile %v -- %v\n", logfile, err)
 			panic(err)

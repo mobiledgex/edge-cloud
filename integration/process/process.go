@@ -29,27 +29,27 @@ type ProcessSetup struct {
 }
 
 type EtcdProcess interface {
-	Start(logfile *string) error
+	Start(logfile string) error
 	Stop()
 	ResetData() error
 }
 
 type ControllerProcess interface {
-	Start(logfile *string, opts ...StartOp) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }
 
 type DmeProcess interface {
-	Start(logfile *string) error
+	Start(logfile string) error
 	Stop()
-	ConnectAPI() (*grpc.ClientConn, error)
+	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }
 
 type CrmProcess interface {
-	Start(logfile *string) error
+	Start(logfile string) error
 	Stop()
-	ConnectAPI() (*grpc.ClientConn, error)
+	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }
 
 // options
@@ -101,7 +101,7 @@ func ResetEtcds(t *testing.T, setup *ProcessSetup, count int) {
 
 func StartEtcds(t *testing.T, setup *ProcessSetup, count int) {
 	for ii := 0; ii < count; ii++ {
-		err := setup.Etcds[ii].Start(nil)
+		err := setup.Etcds[ii].Start("")
 		require.Nil(t, err, "start etcd ", ii)
 	}
 }
@@ -114,7 +114,7 @@ func StopEtcds(setup *ProcessSetup, count int) {
 
 func StartControllers(t *testing.T, setup *ProcessSetup, count int, opts ...StartOp) {
 	for ii := 0; ii < count; ii++ {
-		err := setup.Controllers[ii].Start(nil, opts...)
+		err := setup.Controllers[ii].Start("", opts...)
 		require.Nil(t, err, "start controller ", ii)
 	}
 }

@@ -56,20 +56,24 @@ var LocalBasic = process.ProcessSetup{
 	Dmes: []process.DmeProcess{
 		&process.DmeLocal{
 			Name:        "dme1",
+			ApiAddr:     "127.0.0.1:50051", //TODO: DME has hardcoded listen port
 			NotifyAddrs: localBasicNotifyAddrs,
 		},
 		&process.DmeLocal{
 			Name:        "dme2",
+			ApiAddr:     "127.0.0.1:50051", //TODO: DME has hardcoded listen port
 			NotifyAddrs: localBasicNotifyAddrs,
 		},
 	},
 	Crms: []process.CrmProcess{
 		&process.CrmLocal{
 			Name:        "crm1",
+			ApiAddr:     "127.0.0.1:55099", //TODO: CRM has hardcoded listen port
 			NotifyAddrs: localBasicNotifyAddrs,
 		},
 		&process.CrmLocal{
 			Name:        "crm2",
+			ApiAddr:     "127.0.0.1:55099", //TODO: CRM has hardcoded listen port
 			NotifyAddrs: localBasicNotifyAddrs,
 		},
 	},

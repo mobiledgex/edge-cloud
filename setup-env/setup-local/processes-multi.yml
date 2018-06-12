@@ -38,20 +38,26 @@ controllers:
 
 dmes:
 - name: dme1
+  apiaddr: 127.0.0.1:50051
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
-- name: dme1
+- name: dme2
+  apiaddr: 127.0.0.1:50051 ## TODO: needs to be configured in dme
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
-- name: dme1
+- name: dme3
+  apiaddr: 127.0.0.1:50051
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 crms:
 - name: crm1
+  apiaddr: 127.0.0.1:55099
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: crm2
+  apiaddr: 127.0.0.1:55099  ##TODO: needs to be configured in crm
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: crm3
+  apiaddr: 127.0.0.1:55099
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
