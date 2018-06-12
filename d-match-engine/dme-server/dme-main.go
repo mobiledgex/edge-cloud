@@ -18,7 +18,7 @@ import (
 // Command line options
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
-var port = flag.String("port", ":50051", "DME port number ")
+var apiAddr = flag.String("apiAddr", "127.0.0.1:50051", "API listener address")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -83,7 +83,7 @@ func main() {
 	defer notifyClient.Stop()
 	util.InfoLog("notify client to", "addrs", *notifyAddrs)
 
-	lis, err := net.Listen("tcp", *port)
+	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
