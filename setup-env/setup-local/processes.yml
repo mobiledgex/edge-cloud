@@ -1,0 +1,36 @@
+etcds:
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: http://127.0.0.1:30011
+  clientaddrs: http://127.0.0.1:30001
+  initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: http://127.0.0.1:30012
+  clientaddrs: http://127.0.0.1:30002
+  initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: http://127.0.0.1:30013
+  clientaddrs: http://127.0.0.1:30003
+  initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+
+controllers:
+- name: ctrl1
+  etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
+  apiaddr: 127.0.0.1:55001
+  httpaddr: 127.0.0.1:36001
+  notifyaddr: 127.0.0.1:37001
+
+dmes:
+- name: dme1
+  apiaddr: 127.0.0.1:50051
+  notifyaddrs: 127.0.0.1:37001
+
+crms:
+- name: crm1
+  apiaddr: 127.0.0.1:55099
+  notifyaddrs: 127.0.0.1:37001
+
