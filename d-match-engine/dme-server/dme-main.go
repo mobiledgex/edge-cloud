@@ -15,14 +15,10 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-const (
-	//port = "192.168.1.27:50051"
-	port = ":50051"
-)
-
 // Command line options
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
+var apiAddr = flag.String("apiAddr", "127.0.0.1:50051", "API listener address")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -52,11 +48,11 @@ func (s *server) VerifyLocation(ctx context.Context,
 func (s *server) GetLocation(ctx context.Context,
 	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc, error) {
 
-	var mloc *dme.Match_Engine_Loc;
-	mloc = new (dme.Match_Engine_Loc)
+	var mloc *dme.Match_Engine_Loc
+	mloc = new(dme.Match_Engine_Loc)
 	//Todo: Implement the function to actually get the location
 	GetClientLoc(req, mloc)
-	if (mloc.Status == 1) {
+	if mloc.Status == 1 {
 		fmt.Printf("GetLocation: Found Location\n")
 	} else {
 		fmt.Printf("GetLocation: Location NOT Found\n")
@@ -70,12 +66,11 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	//Todo: Implement the Reqister client/token Function
 	var mstatus *dme.Match_Engine_Status
-	mstatus = new (dme.Match_Engine_Status)
+	mstatus = new(dme.Match_Engine_Status)
 	mstatus.Status = 0
 
 	return mstatus, nil
 }
-	
 
 func main() {
 	flag.Parse()
@@ -88,7 +83,7 @@ func main() {
 	defer notifyClient.Stop()
 	util.InfoLog("notify client to", "addrs", *notifyAddrs)
 
-	lis, err := net.Listen("tcp", port)
+	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
