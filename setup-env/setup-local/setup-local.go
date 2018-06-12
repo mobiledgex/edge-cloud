@@ -91,10 +91,29 @@ func readApplicationData(datafile string) {
 	}
 
 	err = yaml.UnmarshalStrict(yamlFile, &data)
+
+	fatal := false
 	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+		errstr := err.Error()
+
+		for _, err1 := range strings.Split(errstr, "\n") {
+			if strings.Contains(err1, "ip_str not found") {
+				// as a workaround for ansible to cli, we allow ip_str fields
+				//which are easier to handle in ansible.  Ignore unmarshal errors
+				//for this.  TODO: remove this when we go to URI strings
+				log.Printf("notice: unmarshal: %v ignored\n", err1)
+			} else if strings.Contains(err1, "yaml: unmarshal errors") {
+				// ignore this summary error
+			} else {
+				//all other errors are unexpected and mean something is wrong in the yaml
+				log.Printf("Fatal Unmarshal Error: %v\n", err1)
+				fatal = true
+			}
+		}
 	}
-	yaml.Marshal(data)
+	if fatal {
+		log.Fatal("One or more fatal unmarshal errors, exiting")
+	}
 
 }
 
@@ -138,13 +157,16 @@ func waitForProcesses() {
 	var numProcs = len(procs.Controllers) + len(procs.Crms) + len(procs.Dmes)
 
 	for _, ctrl := range procs.Controllers {
-		go connectController(&ctrl, c)
+		ctrlp := ctrl
+		go connectController(&ctrlp, c)
 	}
 	for _, dme := range procs.Dmes {
-		go connectDme(&dme, c)
+		dmep := dme
+		go connectDme(&dmep, c)
 	}
 	for _, crm := range procs.Crms {
-		go connectCrm(&crm, c)
+		crmp := crm
+		go connectCrm(&crmp, c)
 	}
 	for i := 0; i < numProcs; i++ {
 		log.Println(<-c)
