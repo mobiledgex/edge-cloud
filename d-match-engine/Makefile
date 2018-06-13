@@ -1,5 +1,7 @@
 # Makefile
 
+include ../Makedefs
+
 all: build install
 
 build:
@@ -8,8 +10,8 @@ build:
 
 linux:
 	make -C dme-proto
-	GO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./...
-	GO_ENABLED=0 GOOS=linux GOARCH=amd64 go install ./...
+	${LINUX_XCOMPILE_ENV} go build ./...
+	${LINUX_XCOMPILE_ENV} go install ./...
 
 install:
 	go install ./...

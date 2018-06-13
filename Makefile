@@ -1,5 +1,9 @@
 # Makefile
-all: build install build-linux install-linux
+include Makedefs
+
+all: build install 
+
+linux: build-linux install-linux
 
 build:
 	make -C protogen
@@ -13,14 +17,14 @@ build:
 	go vet ./...
 
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ./...
+	${LINUX_XCOMPILE_ENV} go build ./...
 	make -C d-match-engine linux
 
 install:
 	go install ./...
 
 install-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install ./...
+	${LINUX_XCOMPILE_ENV} go install ./...
  
 tools:
 	go install ./vendor/github.com/golang/protobuf/protoc-gen-go
