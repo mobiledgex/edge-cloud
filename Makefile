@@ -1,6 +1,9 @@
 # Makefile
+include Makedefs
 
-all: build install
+all: build install 
+
+linux: build-linux install-linux
 
 build:
 	make -C protogen
@@ -13,9 +16,16 @@ build:
 	go build ./...
 	go vet ./...
 
+build-linux:
+	${LINUX_XCOMPILE_ENV} go build ./...
+	make -C d-match-engine linux
+
 install:
 	go install ./...
 
+install-linux:
+	${LINUX_XCOMPILE_ENV} go install ./...
+ 
 tools:
 	go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
