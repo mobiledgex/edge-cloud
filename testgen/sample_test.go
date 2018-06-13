@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"testing"
 
-	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -46,11 +46,11 @@ func TestCopyIn(t *testing.T) {
 	src.IncludeFieldsNonnull = IncludeFields{
 		Name: "include fields name nonnull",
 	}
-	src.Loc = &edgeproto.Loc{
+	src.Loc = &dme.Loc{
 		Lat:  1.1,
 		Long: 1.2,
 	}
-	src.LocNonnull = edgeproto.Loc{
+	src.LocNonnull = dme.Loc{
 		Lat:  2.1,
 		Long: 2.2,
 	}
@@ -112,16 +112,16 @@ func TestCopyIn(t *testing.T) {
 			Id:  2,
 		}
 	}
-	src.RepeatedLoc = make([]*edgeproto.Loc, 4)
+	src.RepeatedLoc = make([]*dme.Loc, 4)
 	for ii := 0; ii < 4; ii++ {
-		src.RepeatedLoc[ii] = &edgeproto.Loc{
+		src.RepeatedLoc[ii] = &dme.Loc{
 			Lat:  2.1,
 			Long: 2.2,
 		}
 	}
-	src.RepeatedLocNonnull = make([]edgeproto.Loc, 4)
+	src.RepeatedLocNonnull = make([]dme.Loc, 4)
 	for ii := 0; ii < 4; ii++ {
-		src.RepeatedLocNonnull[ii] = edgeproto.Loc{
+		src.RepeatedLocNonnull[ii] = dme.Loc{
 			Lat:  2.1,
 			Long: 2.2,
 		}

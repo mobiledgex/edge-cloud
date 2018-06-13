@@ -3,7 +3,7 @@
 syntax = "proto3";
 package distributed_match_engine;
 
-import "github.com/mobiledgex/edge-cloud/edgeproto/loc.proto";
+import "loc.proto";
 
 message Match_Engine_Request {
   uint32 ver = 1;
@@ -23,7 +23,7 @@ message Match_Engine_Request {
   // The tower that user is currently connected to
   uint64 Tower = 6;
   // The GPS location of the user 
-  edgeproto.Loc GpsLocation = 7;
+  Loc GpsLocation = 7;
   // Edge-cloud assigned application ID
   uint64 AppId = 8;
   // Protocol application uses
@@ -49,7 +49,7 @@ message Match_Engine_Reply {
   // port of the app service?
   uint32 service_port = 4;
   // location of the cloudlet?
-  edgeproto.Loc cloudlet_location = 5;
+  Loc cloudlet_location = 5;
   // Status return
   bool Status = 6;
   // Token
@@ -93,7 +93,7 @@ message Match_Engine_Loc {
   // The tower that user is currently connected to
   uint64 Tower = 4;
   // The GPS location of the user 
-  edgeproto.Loc NetworkLocation = 5;
+  Loc NetworkLocation = 5;
   // Token
   string Token = 6;
 }
