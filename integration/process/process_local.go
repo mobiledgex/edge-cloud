@@ -112,6 +112,10 @@ type DmeLocal struct {
 
 func (p *DmeLocal) Start(logfile string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.ApiAddr != "" {
+		args = append(args, "--apiAddr")
+		args = append(args, p.ApiAddr)
+	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)
 	return err
@@ -136,6 +140,10 @@ type CrmLocal struct {
 
 func (p *CrmLocal) Start(logfile string) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.ApiAddr != "" {
+		args = append(args, "--apiAddr")
+		args = append(args, p.ApiAddr)
+	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "crmserver", args, logfile)
 	return err

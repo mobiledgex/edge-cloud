@@ -11,7 +11,8 @@ cloudlets:
     operatorkey:
        name: TMUS
     name: tmocloud1
-  accessip: [0x0a,0x64,0x0a,0x04] 
+  accessip: [10,100,10,4] 
+  accessip_str: 0a640a04 #for ansible to cli
   location: 
      lat: 99.99
      long: 123.456
@@ -20,7 +21,8 @@ cloudlets:
     operatorkey:
        name: TMUS
     name: tmocloud2
-  accessip: [0x0a,0x64,0x0a,0x05]
+  accessip: [10,100,10,5]
+  accessip_str: 0a640a05 #for ansible to cli
   location:
      lat: 67.89
      long: 11.223
@@ -54,7 +56,8 @@ appinstances:
        name: tmocloud1   
     id: 123
   liveness: 1
-  ip: [0x0a,0x64,0x0a,0x04]
+  ip: [10,100,10,4]
+  ip_str: 0a640a04 #for ansible to cli
   cloudletloc: 
      lat: 55
      long: 66
