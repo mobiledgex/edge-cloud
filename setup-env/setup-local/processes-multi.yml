@@ -20,19 +20,19 @@ etcds:
 controllers:
 - name: ctrl1
   etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
-  apiaddr: 127.0.0.1:35001
+  apiaddr: 127.0.0.1:55001
   httpaddr: 127.0.0.1:36001
   notifyaddr: 127.0.0.1:37001
 
 - name: ctrl2
   etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
-  apiaddr: 127.0.0.1:35002
+  apiaddr: 127.0.0.1:55002
   httpaddr: 127.0.0.1:36002
   notifyaddr: 127.0.0.1:37002
 
 - name: ctrl3
   etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
-  apiaddr: 127.0.0.1:35003
+  apiaddr: 127.0.0.1:55003
   httpaddr: 127.0.0.1:36003
   notifyaddr: 127.0.0.1:37003
 
@@ -42,22 +42,22 @@ dmes:
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: dme2
-  apiaddr: 127.0.0.1:50051 ## TODO: needs to be configured in dme
+  apiaddr: 127.0.0.1:50052
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: dme3
-  apiaddr: 127.0.0.1:50051
+  apiaddr: 127.0.0.1:50053
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 crms:
 - name: crm1
-  apiaddr: 127.0.0.1:55099
+  apiaddr: 127.0.0.1:55091
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: crm2
-  apiaddr: 127.0.0.1:55099  ##TODO: needs to be configured in crm
+  apiaddr: 127.0.0.1:55092 
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
 
 - name: crm3
-  apiaddr: 127.0.0.1:55099
+  apiaddr: 127.0.0.1:55093
   notifyaddrs: 127.0.0.1:37001,127.0.0.1:37002,127.0.0.1:37003
