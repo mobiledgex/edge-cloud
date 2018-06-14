@@ -142,13 +142,10 @@ public class MatchingEngine {
         return submit(registerClient);
     }
 
-    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws InterruptedException, ExecutionException {
+    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         RegisterClient registerClient = new RegisterClient(this);
         registerClient.setRequest(request, timeoutInMilliseconds);
-        Future<AppClient.Match_Engine_Status> responseFuture = submit(registerClient);
-
-        return responseFuture.get();
+        return registerClient.call();
     }
 
     /**
@@ -158,16 +155,10 @@ public class MatchingEngine {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws InterruptedException, ExecutionException {
-        FindCloudletResponse reply;
-
+    public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         FindCloudlet findCloudlet = new FindCloudlet(this);
         findCloudlet.setRequest(request, timeoutInMilliseconds);
-
-        Future<FindCloudletResponse> response = submit(findCloudlet);
-        reply = response.get();
-        return reply;
+        return findCloudlet.call();
     }
 
     /**
@@ -190,14 +181,10 @@ public class MatchingEngine {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-                    throws InterruptedException, ExecutionException {
-
+    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
-
-        Future<AppClient.Match_Engine_Loc_Verify> response = submit(verifyLocation);
-        return response.get();
+        return verifyLocation.call();
     }
 
     /**
@@ -218,16 +205,14 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws InterruptedException, ExecutionException {
+    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         GetLocation getLocation = new GetLocation(this);
         getLocation.setRequest(request, timeoutInMilliseconds);
-        Future<AppClient.Match_Engine_Loc> locFuture = submit(getLocation);
-        return locFuture.get();
+        return getLocation.call();
     }
 
     /**
-     * getLocation returns the network verified location of this device.
+     * getLocation returns the network verified location of this device. Returns a Future.
      * @param request
      * @param timeoutInMilliseconds
      * @return
