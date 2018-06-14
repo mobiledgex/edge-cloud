@@ -9,6 +9,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
+	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 	"github.com/spf13/cobra"
 )
 
@@ -150,8 +151,12 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		if _, found := g.inMessages[msgName]; !found {
 			continue
 		}
+		noconfig := make(map[string]struct{})
+		for _, str := range strings.Split(GetNoConfig(desc.DescriptorProto), ",") {
+			noconfig[str] = struct{}{}
+		}
 		visited := make([]*generator.Descriptor, 0)
-		g.generateVarFlags(msgName, make([]string, 0), desc, visited)
+		g.generateVarFlags(msgName, make([]string, 0), desc, noconfig, visited)
 	}
 	// Add per input struct flag sets to the commands.
 	if len(file.FileDescriptorProto.Service) > 0 {
@@ -258,7 +263,7 @@ type fieldArgs struct {
 var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, "{{.Field}}")
 `
 
-func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor) {
 	if gensupport.WasVisited(desc, visited) {
 		// Break recursion. Googleapis HttpRule
 		// includes itself, so is a recursive
@@ -280,6 +285,9 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			continue
 		}
 		hierField := strings.Join(append(parents, name), ".")
+		if _, found := noconfig[hierField]; found {
+			continue
+		}
 		fargs := &fieldArgs{
 			MsgName:  msgName,
 			Ref:      "&" + msgName + "In" + "." + hierField + idx,
@@ -302,7 +310,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				subType := g.FQTypeName(subDesc)
 				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
 			}
-			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, append(visited, desc))
+			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc))
 			continue
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
 			fallthrough
@@ -783,4 +791,8 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 		return true
 	}
 	return false
+}
+
+func GetNoConfig(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protocmd.E_Noconfig, "")
 }

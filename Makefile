@@ -9,7 +9,7 @@ build:
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
-	go install ./protoc-gen-cmd
+	make -C ./protoc-gen-cmd
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine
@@ -25,7 +25,7 @@ install:
 
 install-linux:
 	${LINUX_XCOMPILE_ENV} go install ./...
- 
+
 tools:
 	go install ./vendor/github.com/golang/protobuf/protoc-gen-go
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
