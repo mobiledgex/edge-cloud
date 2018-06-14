@@ -1,0 +1,109 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.google.protobuf'
+apply plugin: 'maven-publish'
+
+android {
+    compileSdkVersion 27
+
+
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 27
+        versionCode 1
+        versionName "0.0.1"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    sourceSets {
+        main {
+            proto {
+                srcDir '../../../../d-match-engine/dme-proto'
+            }
+            java {
+            }
+        }
+    }
+
+}
+
+protobuf {
+    protoc {
+        artifact = 'com.google.protobuf:protoc:3.5.1-1'
+    }
+    plugins {
+        javalite {
+            artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
+        }
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.12.0' // CURRENT_GRPC_VERSION
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.plugins {
+                javalite {}
+                grpc {
+                    // Options added to --grpc_out
+                    option 'lite'
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:design:27.1.1'
+
+    testImplementation 'junit:junit:4.12'
+
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+
+    // You need to build grpc-java to obtain these libraries below.
+    implementation 'io.grpc:grpc-okhttp:1.12.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-protobuf-lite:1.12.0' // CURRENT_GRPC_VERSION
+    implementation 'io.grpc:grpc-stub:1.12.0' // CURRENT_GRPC_VERSION
+    protobuf 'com.google.protobuf:protobuf-java:3.0.2' // FIXME: Timestamp, for lite version: old lib: https://github.com/google/protobuf/issues/1889
+    implementation 'javax.annotation:javax.annotation-api:1.2'
+
+    // For Google Location Services.
+    implementation 'com.google.android.gms:play-services-location:11.0.0'
+}
+
+publishing {
+    // Publish to local repository
+    repositories {
+        mavenLocal()
+    }
+
+    publications { // Doesn't include generated protobufs?
+        maven(MavenPublication) {
+            // AAR of each library
+            version android.defaultConfig.versionName
+            groupId "com.mobiledgex.matchingengine"
+            artifactId "${project.name}"
+            //artifact "${project.buildDir}/outputs/aar/${project.name}-debug.aar"
+            artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
+        }
+    }
+}

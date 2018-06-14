@@ -1,0 +1,52 @@
+// Send updates to distributed matching engine when things change
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "app_inst.proto";
+import "cloudlet.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+enum NoticeAction {
+  NONE = 0;
+  UPDATE = 1;
+  DELETE = 2;
+  VERSION = 3;
+  SENDALL_END = 4;
+}
+
+enum NoticeRequestor {
+  NoticeRequestorNone = 0;
+  NoticeRequestorDME = 1;
+  NoticeRequestorCRM = 2;
+}
+
+message NoticeReply {
+  // action to perform
+  NoticeAction action = 1;
+  // protocol version supported by sender
+  uint32 version = 3;
+  // data included (for UPDATE and DELETE)
+  oneof data {
+    AppInst appInst = 4;
+    Cloudlet cloudlet = 5;
+  }
+}
+
+message NoticeRequest {
+  // action
+  NoticeAction action = 1;
+  // protocol version supported by receiver
+  uint32 version = 2;
+  // client requestor type
+  NoticeRequestor requestor = 3;
+  // revision of database
+  uint64 revision = 4;
+}
+
+service NotifyApi {
+  // Stream notice sends info from Server to Client
+  rpc StreamNotice(stream NoticeRequest) returns (stream NoticeReply) {}
+}

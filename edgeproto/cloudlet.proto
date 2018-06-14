@@ -1,0 +1,66 @@
+// Cloudlet proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "operator.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message CloudletKey {
+  // Operator of the cloudlet site
+  OperatorKey operator_key = 1 [(gogoproto.nullable) = false];
+  // Name of the cloudlet
+  string name = 2;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// Cloudlet Sites are created and uploaded by Operators
+// This information is used to connect to and manage Cloudlets
+message Cloudlet {
+  repeated string fields = 1;
+  // Unique identifier key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // IP to use to connect to and control cloudlet site
+  bytes access_ip = 4;
+  // Location of the cloudlet site (lat, long?)
+  distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
+  // Certs for accessing cloudlet site
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
+}
+
+service CloudletApi {
+  rpc CreateCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/developer"
+      body: "*"
+    };
+  }
+  rpc DeleteCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/developer"
+      body: "*"
+    };
+  }
+  rpc UpdateCloudlet(Cloudlet) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/developer"
+      body: "*"
+    };
+  }
+  rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
+    option (google.api.http) = {
+      post: "/show/developer"
+      body: "*"
+    };
+  }
+}

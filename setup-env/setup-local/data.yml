@@ -1,0 +1,64 @@
+
+operators:
+- key:
+   name: TMUS
+
+- key:
+    name: ATT
+
+cloudlets:
+- key:
+    operatorkey:
+       name: TMUS
+    name: tmocloud1
+  accessip: [10,100,10,4] 
+  accessip_str: 0a640a04 #for ansible to cli
+  location: 
+     lat: 99.99
+     long: 123.456
+
+- key:
+    operatorkey:
+       name: TMUS
+    name: tmocloud2
+  accessip: [10,100,10,5]
+  accessip_str: 0a640a05 #for ansible to cli
+  location:
+     lat: 67.89
+     long: 11.223
+
+developers:
+- key:
+   name: AcmeAppCo
+  email: acmeapp@xxxx.com
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34 
+  address: 123 Maple Street, Gainesville, FL 32604
+
+apps:
+- key:
+    name: someApplication 
+    version: 1.0
+    developerkey:
+      name: AcmeAppCo
+  apppath: /usr/bin/someapp
+
+appinstances:
+- key:
+    appkey:
+       name: someApplication
+       version: 1.0
+       developerkey:
+          name: AcmeAppCo
+    cloudletkey:
+       operatorkey:
+         name: TMUS
+       name: tmocloud1   
+    id: 123
+  liveness: 1
+  ip: [10,100,10,4]
+  ip_str: 0a640a04 #for ansible to cli
+  cloudletloc: 
+     lat: 55
+     long: 66
+  port: 443 

@@ -1,0 +1,69 @@
+// Application proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "result.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "developer.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// key that uniquely identifies an application
+// It is important that embedded structs are not referenced by a
+// pointer, otherwise the enclosing struct cannot properly function
+// as the key to a hash table. Thus embedded structs have nullable false.
+message AppKey {
+  // developer key
+  DeveloperKey developer_key = 1 [(gogoproto.nullable) = false];
+  // application name
+  string name = 2;
+  // version of the app
+  string version = 3;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// Applications are created and uploaded by developers
+// Only registered applications can access location and cloudlet services
+message App {
+  repeated string fields = 1;
+  // Unique identifier key
+  AppKey key = 2 [(gogoproto.nullable) = false];
+  // Path to the application binary on shared storage
+  string app_path = 4 [(protogen.test_update) = true];
+  // app cert?
+  // manifest - which cloudlets can this run on?
+  // which countries this can run on
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+}
+
+service AppApi {
+  rpc CreateApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/app"
+      body: "*"
+    };
+  }
+  rpc DeleteApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/app"
+      body: "*"
+    };
+  }
+  rpc UpdateApp(App) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/app"
+      body: "*"
+    };
+  }
+  rpc ShowApp(App) returns (stream App) {
+    option (google.api.http) = {
+      post: "/show/app"
+      body: "*"
+    };
+  }
+}

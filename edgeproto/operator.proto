@@ -1,0 +1,65 @@
+// Operator proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "result.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message OperatorCode {
+  // Operator code consists of two pars, a mobile network code (MNC)
+  // and a mobile country code (MCC). These are strings instead of
+  // integers to preserve leading zeros which have meaning.
+  // A single operator (like AT&T) may have multiple operator codes
+  // across countries and in the same country for different wireless bands.
+  string MNC = 1;
+  string MCC = 2;
+  option (protogen.generate_matches) = true;
+}
+
+message OperatorKey {
+  // Company or Organization name of the operator
+  string name = 1;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message Operator {
+  repeated string fields = 1;
+  // Unique identifier key
+  OperatorKey key = 2 [(gogoproto.nullable) = false];
+  // TODO: access schema/credentials
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+}
+
+service OperatorApi {
+  rpc CreateOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/operator"
+      body: "*"
+    };
+  }
+  rpc DeleteOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/operator"
+      body: "*"
+    };
+  }
+  rpc UpdateOperator(Operator) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/operator"
+      body: "*"
+    };
+  }
+  rpc ShowOperator(Operator) returns (stream Operator) {
+    option (google.api.http) = {
+      post: "/show/operator"
+      body: "*"
+    };
+  }
+}

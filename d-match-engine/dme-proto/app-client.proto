@@ -1,0 +1,122 @@
+// Device service APIs
+
+syntax = "proto3";
+package distributed_match_engine;
+
+import "loc.proto";
+
+message Match_Engine_Request {
+  uint32 ver = 1;
+  // User ID type - IMEI, MSISDN etc
+  enum IDType {
+	  IMEI = 0;
+	  MSISDN = 1;
+	  IPADDR = 2;
+  }
+  IDType IdType = 2;
+  // Actual ID
+  string Id = 3;
+  // The carrier ID that user is connected to ("Mobile Country Code")
+  uint64 CarrierID = 4;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 5;
+  // The tower that user is currently connected to
+  uint64 Tower = 6;
+  // The GPS location of the user 
+  Loc GpsLocation = 7;
+  // Edge-cloud assigned application ID
+  uint64 AppId = 8;
+  // Protocol application uses
+  bytes Protocol = 9;
+  // The protocol port on the server side
+  bytes ServerPort = 10;
+  // App Developer Name
+  string DevName = 11;
+  // App Name
+  string AppName = 12;
+  // App Version
+  string AppVers = 13;
+  // Token provided by the Operator for subsequent calls
+  string Token = 14;
+}
+
+message Match_Engine_Reply {
+  uint32 ver = 1;
+  // domain name
+  string uri = 2;
+  // ip of the app service
+  bytes service_ip = 3;
+  // port of the app service?
+  uint32 service_port = 4;
+  // location of the cloudlet?
+  Loc cloudlet_location = 5;
+  // Status return
+  bool Status = 6;
+  // Token
+  string Token = 7;
+}
+
+message Match_Engine_Loc_Verify {
+  uint32 ver = 1;
+  // Status of the reply
+  enum Tower_Status {
+    UNKNOWN = 0;
+    CONNECTED_TO_SPECIFIED_TOWER = 1;
+    NOT_CONNECTED_TO_SPECIFIED_TOWER = 2;
+  }
+  Tower_Status tower_status = 2;
+  enum GPS_Location_Status {
+    LOC_UNKNOWN = 0;
+    LOC_WITHIN_2KM = 1;
+    LOC_WITHIN_10KM = 2;
+    LOC_WITHIN_100KM = 3;
+    LOC_MISMATCH = 4;
+    LOC_OTHER_COUNTRY = 5;
+  }
+  GPS_Location_Status gps_location_status = 3;
+  // Token
+  string Token = 4;
+}
+
+message Match_Engine_Loc {
+  uint32 ver = 1;
+  // Status of the reply
+  enum Loc_Status {
+    LOC_UNKNOWN = 0;
+    LOC_FOUND = 1;
+    // The user does not allow his location to be tracked
+    LOC_DENIED = 2;
+  }
+  Loc_Status Status = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+  // The tower that user is currently connected to
+  uint64 Tower = 4;
+  // The GPS location of the user 
+  Loc NetworkLocation = 5;
+  // Token
+  string Token = 6;
+}
+
+message Match_Engine_Status {
+  uint32 ver = 1;
+  // Status of the reply
+  enum ME_Status {
+    ME_SUCCESS = 0;
+    ME_FAIL = 1;
+  }
+  ME_Status Status = 2;
+  // Error Code based on Failure
+  uint32 ErrorCode = 3;
+  // Token
+  string Token = 4;
+}
+
+service Match_Engine_Api {
+  rpc FindCloudlet(Match_Engine_Request) returns (Match_Engine_Reply) {}
+  rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
+  rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
+  rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
+}
+
+

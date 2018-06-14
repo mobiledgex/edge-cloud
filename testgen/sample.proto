@@ -1,0 +1,82 @@
+// test auto-generator with all types of syntax
+
+syntax = "proto3";
+package testgen;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+
+enum OuterEnum {
+  OUTER0 = 0;
+  OUTER1 = 1;
+  OUTER2 = 2;
+  OUTER3 = 3;
+}
+
+message NestedMessage {
+  string name = 1;
+}
+
+message IncludeMessage {
+  string name = 1;
+  uint64 id = 2;
+  NestedMessage nested_msg = 3;
+}
+
+message IncludeFields {
+  bytes fields = 1;
+  string name = 2;
+}
+
+message TestGen {
+  repeated string fields = 1;
+  string name = 2;
+  double db = 3;
+  float fl = 4;
+  int32 i32 = 5;
+  int64 i64 = 6;
+  uint32 u32 = 7;
+  uint64 u64 = 8;
+  sint32 s32 = 9;
+  sint64 s64 = 10;
+  fixed32 f32 = 11;
+  fixed64 f64 = 12;
+  sfixed32 sf32 = 13;
+  sfixed64 sf64 = 14;
+  bool bb = 15;
+  OuterEnum outer_en = 16;
+  enum InnerEnum {
+    INNER0 = 0;
+    INNER1 = 1;
+    INNER2 = 2;
+    INNER3 = 3;
+  }
+  InnerEnum inner_en = 17;
+  message InnerMessage {
+    string url = 1;
+    int64 id = 2;
+  }
+  InnerMessage inner_msg = 18;
+  InnerMessage inner_msg_nonnull = 19 [(gogoproto.nullable) = false];
+  IncludeMessage include_msg = 20;
+  IncludeMessage include_msg_nonnull = 21 [(gogoproto.nullable) = false];
+  IncludeFields include_fields = 22;
+  IncludeFields include_fields_nonnull = 23 [(gogoproto.nullable) = false];
+  distributed_match_engine.Loc loc = 24;
+  distributed_match_engine.Loc loc_nonnull = 25 [(gogoproto.nullable) = false];
+  repeated int64 repeated_int = 26;
+  bytes ip = 27;
+  repeated string names = 28;
+  repeated IncludeMessage repeated_msg = 29;
+  repeated IncludeMessage repeated_msg_nonnull = 30 [(gogoproto.nullable) = false];
+  repeated IncludeFields repeated_fields = 31;
+  repeated IncludeFields repeated_fields_nonnull = 32 [(gogoproto.nullable) = false];
+  repeated InnerMessage repeated_inner_msg = 33;
+  repeated InnerMessage repeated_inner_msg_nonnull = 34 [(gogoproto.nullable) = false];
+  repeated distributed_match_engine.Loc repeated_loc = 35;
+  repeated distributed_match_engine.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
+}
+
+service TestApi {
+  rpc Request(TestGen) returns (TestGen) {}
+}
