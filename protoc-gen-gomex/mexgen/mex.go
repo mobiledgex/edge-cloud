@@ -107,13 +107,19 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 			nullcheck = fmt.Sprintf("filter.%s != nil && m.%s != nil && ", name, name)
 			ref = ""
 		}
+		subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+		printedCheck := true
 		if *field.TypeName == ".google.protobuf.Timestamp" {
 			m.P("if ", nullcheck, "(m.", name, ".Seconds != filter.", name, ".Seconds || m.", name, ".Nanos != filter.", name, ".Nanos) {")
-		} else {
+		} else if GetGenerateMatches(subDesc.DescriptorProto) {
 			m.P("if ", nullcheck, "!m.", name, ".Matches(", ref, "filter.", name, ") {")
+		} else {
+			printedCheck = false
 		}
-		m.P("return false")
-		m.P("}")
+		if printedCheck {
+			m.P("return false")
+			m.P("}")
+		}
 	case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		// deprecated in proto3
 	case descriptor.FieldDescriptorProto_TYPE_BYTES:

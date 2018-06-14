@@ -34,14 +34,9 @@ android {
     sourceSets {
         main {
             proto {
-                srcDir '../../../../sdkproto'
+                srcDir '../../../../d-match-engine/dme-proto'
             }
             java {
-                //srcDirs 'build/generated/source/sdkproto/debug/grpc' // Debug?
-                //srcDirs 'build/generated/source/sdkproto/debug/javalite' // Debug?
-
-                //srcDirs 'build/generated/source/sdkproto/release/grpc'
-                //srcDirs 'build/generated/source/sdkproto/release/javalite'
             }
         }
     }

@@ -22,7 +22,7 @@ public class MexLocation {
     private static final String TAG = "MexLocation";
     private MatchingEngine mMatchingEngine;
     private Location mLocation;
-    private boolean mWaitingForNotify = false;
+    private volatile boolean mWaitingForNotify = false;
     private Object syncObject = new Object();
     private long mTimeoutInMilliseconds;
 
@@ -44,7 +44,6 @@ public class MexLocation {
             mLocation = null;
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
             try {
-                // Simple last Location only. Toss this into a thread so we can use wait() for the callback.
                 fusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
                     @Override
                     public void onComplete(Task<Location> task) {
@@ -56,8 +55,11 @@ public class MexLocation {
                                 syncObject.notify();
                             }
                         } else {
-                            mWaitingForNotify = false;
-                            Log.w(TAG, "getLastLocation: Exception", task.getException());
+                            synchronized (syncObject) {
+                                mWaitingForNotify = false;
+                                syncObject.notify();
+                            }
+                            Log.w(TAG, "getLastLocation: Exception (if any)", task.getException());
                         }
                     }
                 });
@@ -66,7 +68,7 @@ public class MexLocation {
                     long elapsed = 0;
                     while (mWaitingForNotify == true &&
                             (elapsed = System.currentTimeMillis() - timeStart) < mTimeoutInMilliseconds) {
-                        syncObject.wait(timeStart - elapsed);
+                        syncObject.wait(mTimeoutInMilliseconds - elapsed);
                     }
                 }
             } catch (SecurityException se) {

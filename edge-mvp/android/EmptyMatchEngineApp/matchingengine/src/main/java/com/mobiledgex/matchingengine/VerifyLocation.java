@@ -35,7 +35,7 @@ public class VerifyLocation implements Callable {
     }
 
     @Override
-    public Boolean call() throws MissingRequestException {
+    public AppClient.Match_Engine_Loc_Verify call() throws MissingRequestException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
         }
@@ -62,9 +62,9 @@ public class VerifyLocation implements Callable {
         int ver = -1;
         if (reply != null) {
             ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Loc_Reply: " + ver);
+            Log.d(TAG, "Version of Match_Engine_Loc_Verify: " + ver);
         }
-        // Stub.
-        return reply.getGpsLocationStatusValue() > 0; // TODO: 1,true if < 50.
+
+        return reply;
     }
 }

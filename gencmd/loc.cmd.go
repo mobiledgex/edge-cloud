@@ -3,7 +3,7 @@
 
 package gencmd
 
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import google_protobuf "github.com/gogo/protobuf/types"
 import "time"
 import "strconv"
@@ -11,7 +11,6 @@ import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/types"
-import _ "github.com/mobiledgex/edge-cloud/protogen"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -19,7 +18,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-func LocSlicer(in *edgeproto.Loc) []string {
+func LocSlicer(in *distributed_match_engine.Loc) []string {
 	s := make([]string, 0, 8)
 	s = append(s, strconv.FormatFloat(float64(in.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Long), 'e', -1, 32))

@@ -284,7 +284,6 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			subType := g.FQTypeName(subDesc)
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				ref := ""
 				if gogoproto.IsNullable(field) {
@@ -293,6 +292,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				g.P(msgName, "In.", hierField, " = make([]", ref, g.FQTypeName(subDesc), ", 1)")
 			}
 			if gogoproto.IsNullable(field) {
+				subType := g.FQTypeName(subDesc)
 				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
 			}
 			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, append(visited, desc))
