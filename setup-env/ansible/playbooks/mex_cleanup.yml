@@ -1,0 +1,87 @@
+- name: cleanup etcds
+  gather_facts: yes
+  user: root
+  hosts: etcds
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: reset etcd data
+    file:
+      state: absent
+      path: "{{ item.etcdlocal.datadir }}"
+    when: item.hostname == inventory_hostname 
+    with_items:
+       -  "{{ etcds }}"
+
+  - name: uninstall etcd 
+    package:
+      name: etcd
+      state: absent
+
+
+- name: cleanup controllers
+  gather_facts: yes
+  user: root
+  hosts: controllers
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: remove controller binary
+    file: 
+       name: "{{ controller_bin }}"
+       state: absent
+
+
+- name: cleanup dmes
+  gather_facts: yes
+  user: root
+  hosts: dmes
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove dme binary
+    file: 
+       name: "{{ dme_bin }}"
+       state: absent      
+
+
+- name: cleanup crms
+  gather_facts: yes
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove crm binary
+    file:
+       name: "{{ crm_bin }}"
+       state: absent
+
+- name: cleanup logs
+  gather_facts: no
+  user: root
+  hosts: mexservers
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+ 
+  tasks:
+  
+  - name: delete logfile dir
+    file:
+      path: "{{ remote_log_path }}"
+      state: absent 
