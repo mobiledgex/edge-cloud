@@ -18,7 +18,7 @@ import (
 // Command line options
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
-var apiAddr = flag.String("apiAddr", "127.0.0.1:50051", "API listener address")
+var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}

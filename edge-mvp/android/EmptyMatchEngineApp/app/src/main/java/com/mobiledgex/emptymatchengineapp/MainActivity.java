@@ -181,8 +181,9 @@ public class MainActivity extends AppCompatActivity {
                                 location);
 
                         // Location Verification (Blocking, or use verifyLocationFuture):
-                        boolean verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
-                        someText = "[Location Verified: " + verifiedLocation + "]\n";
+                        AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
+                        someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
+                                ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
 
 
                         // Find the closest cloudlet for your application to use.

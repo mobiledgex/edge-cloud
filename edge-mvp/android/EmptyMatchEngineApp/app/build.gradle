@@ -30,11 +30,11 @@ dependencies {
 
     // Use local project Matching Engine SDK:
     implementation project(":matchingengine")
+    implementation 'io.grpc:grpc-protobuf-lite:1.12.0' // CURRENT_GRPC_VERSION
     // Use maven:
     //implementation 'com.mobiledgex.matchingengine:matchingengine:0.0.1'
     // Dependencies of Matching Engine, if using Maven:
     //implementation 'io.grpc:grpc-okhttp:1.12.0' // CURRENT_GRPC_VERSION
-    //implementation 'io.grpc:grpc-protobuf-lite:1.12.0' // CURRENT_GRPC_VERSION
     //implementation 'io.grpc:grpc-stub:1.12.0' // CURRENT_GRPC_VERSION
 
     // For Google Location Services.
