@@ -19,6 +19,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -204,14 +205,7 @@ func init() {
 	CloudletFlagSet.BytesHexVar(&CloudletIn.AccessIp, "accessip", nil, "AccessIp")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Lat, "location-lat", 0, "Location.Lat")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Long, "location-long", 0, "Location.Long")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.HorizontalAccuracy, "location-horizontalaccuracy", 0, "Location.HorizontalAccuracy")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.VerticalAccuracy, "location-verticalaccuracy", 0, "Location.VerticalAccuracy")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.Course, "location-course", 0, "Location.Course")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.Speed, "location-speed", 0, "Location.Speed")
-	CloudletIn.Location.Timestamp = &google_protobuf.Timestamp{}
-	CloudletFlagSet.Int64Var(&CloudletIn.Location.Timestamp.Seconds, "location-timestamp-seconds", 0, "Location.Timestamp.Seconds")
-	CloudletFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	UpdateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)

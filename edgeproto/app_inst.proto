@@ -6,6 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
 import "cloudlet.proto";
 import "loc.proto";
@@ -45,6 +46,7 @@ message AppInst {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "CloudletLoc";
 }
 
 // This API is for manual configuration of static app instances.
