@@ -8,9 +8,11 @@ import (
 	"go/token"
 	"os"
 	"path"
+	"reflect"
 	"sort"
 	"strings"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
@@ -228,6 +230,17 @@ func ConvTypeName(typeName string) (string, string) {
 	}
 	pkg := typeName[:index]
 	return pkg, strings.Replace(typeName[index+1:], ".", "_", -1)
+}
+
+func GetStringExtension(pb proto.Message, extension *proto.ExtensionDesc, def string) string {
+	if reflect.ValueOf(pb).IsNil() {
+		return def
+	}
+	value, err := proto.GetExtension(pb, extension)
+	if err == nil && value.(*string) != nil {
+		return *(value.(*string))
+	}
+	return def
 }
 
 // RunParseCheck will run the parser to check for parse errors in the
