@@ -6,6 +6,7 @@ Package gencmd is a generated protocol buffer package.
 
 It is generated from these files:
 	app-client.proto
+	loc.proto
 
 It has these top-level messages:
 	Match_Engine_Request
@@ -13,11 +14,11 @@ It has these top-level messages:
 	Match_Engine_Loc_Verify
 	Match_Engine_Loc
 	Match_Engine_Status
+	Loc
 */
 package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import google_protobuf "github.com/gogo/protobuf/types"
 import "time"
 import "strconv"
@@ -28,7 +29,6 @@ import "errors"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "github.com/mobiledgex/edge-cloud/edgeproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -50,7 +50,7 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.GpsLocation == nil {
-		in.GpsLocation = &edgeproto.Loc{}
+		in.GpsLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Long), 'e', -1, 32))
@@ -119,7 +119,7 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	s = append(s, strconv.FormatUint(uint64(in.ServicePort), 10))
 	if in.CloudletLocation == nil {
-		in.CloudletLocation = &edgeproto.Loc{}
+		in.CloudletLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Long), 'e', -1, 32))
@@ -182,7 +182,7 @@ func Match_Engine_LocSlicer(in *distributed_match_engine.Match_Engine_Loc) []str
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.NetworkLocation == nil {
-		in.NetworkLocation = &edgeproto.Loc{}
+		in.NetworkLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Long), 'e', -1, 32))
@@ -355,7 +355,7 @@ func init() {
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CarrierName, "carriername", "", "CarrierName")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.Tower, "tower", 0, "Tower")
-	Match_Engine_RequestIn.GpsLocation = &edgeproto.Loc{}
+	Match_Engine_RequestIn.GpsLocation = &distributed_match_engine.Loc{}
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.Lat, "gpslocation-lat", 0, "GpsLocation.Lat")
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.Long, "gpslocation-long", 0, "GpsLocation.Long")
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")

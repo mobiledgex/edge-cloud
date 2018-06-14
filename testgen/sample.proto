@@ -4,7 +4,7 @@ syntax = "proto3";
 package testgen;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-import "github.com/mobiledgex/edge-cloud/edgeproto/loc.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 
 enum OuterEnum {
   OUTER0 = 0;
@@ -62,8 +62,8 @@ message TestGen {
   IncludeMessage include_msg_nonnull = 21 [(gogoproto.nullable) = false];
   IncludeFields include_fields = 22;
   IncludeFields include_fields_nonnull = 23 [(gogoproto.nullable) = false];
-  edgeproto.Loc loc = 24;
-  edgeproto.Loc loc_nonnull = 25 [(gogoproto.nullable) = false];
+  distributed_match_engine.Loc loc = 24;
+  distributed_match_engine.Loc loc_nonnull = 25 [(gogoproto.nullable) = false];
   repeated int64 repeated_int = 26;
   bytes ip = 27;
   repeated string names = 28;
@@ -73,8 +73,8 @@ message TestGen {
   repeated IncludeFields repeated_fields_nonnull = 32 [(gogoproto.nullable) = false];
   repeated InnerMessage repeated_inner_msg = 33;
   repeated InnerMessage repeated_inner_msg_nonnull = 34 [(gogoproto.nullable) = false];
-  repeated edgeproto.Loc repeated_loc = 35;
-  repeated edgeproto.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
+  repeated distributed_match_engine.Loc repeated_loc = 35;
+  repeated distributed_match_engine.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
 }
 
 service TestApi {
