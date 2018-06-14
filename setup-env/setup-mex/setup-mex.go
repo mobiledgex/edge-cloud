@@ -606,23 +606,22 @@ func main() {
 	case "deploy":
 		deployProcesses()
 	case "start":
-		startrc := true
+		startFailed := false
 		if !startProcesses() {
-			startrc = false
+			startFailed = true
 
 		} else {
 			if !startRemoteProcesses() {
-				startrc = false
+				startFailed = true
 			}
 		}
-		if startrc {
-			waitForProcesses()
-		} else {
+		if startFailed {
 			stopProcesses()
 			stopRemoteProcesses()
 			log.Fatal("Startup failed, exiting")
 			os.Exit(1)
 		}
+		waitForProcesses()
 		if *dataFile != "" {
 			if !applyApplicationData(false) {
 				log.Println("Unable to apply application data. Check connectivity to controller APIs")
