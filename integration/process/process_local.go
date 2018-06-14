@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"os"
 	"os/exec"
@@ -84,15 +85,24 @@ func connectAPIImpl(timeout time.Duration, apiaddr string) (*grpc.ClientConn, er
 	// Wait for service to be ready to connect.
 	// Note: using grpc WithBlock() takes about a second longer
 	// than doing the retry connect below so requires a larger timeout.
+	startTimeMs := time.Now().UnixNano() / int64(time.Millisecond)
+	maxTimeMs := int64(timeout/time.Millisecond) + startTimeMs
 	wait := 20 * time.Millisecond
 	for {
 		_, err := net.Dial("tcp", apiaddr)
-		if err == nil || timeout < wait {
+		currTimeMs := time.Now().UnixNano() / int64(time.Millisecond)
+
+		if currTimeMs > maxTimeMs {
+			log.Printf("Timeout in connection to %v\n", apiaddr)
+			return nil, err
+		}
+		if err == nil {
 			break
 		}
 		timeout -= wait
 		time.Sleep(wait)
 	}
+
 	conn, err := grpc.Dial(apiaddr, grpc.WithInsecure())
 	return conn, err
 }

@@ -1,0 +1,73 @@
+- name: setup log dir
+  gather_facts: no
+  user: root
+  hosts: mexservers
+  vars_files:
+    - mex_vars.yml
+ 
+  tasks:
+  - name: create remote log dir 
+    file:
+       state: directory
+       path: "{{ remote_log_path }}"
+  
+- name: deploy binary to remote controllers
+  gather_facts: yes
+  user: root
+  hosts: controllers
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy controller binary
+    copy:
+       src: "{{ controller_bin }}"
+       dest: "{{ remote_bin_path }}" 
+       mode: 0755
+
+- name: deploy binary to remote crms
+  gather_facts: yes
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy crm binary
+    copy:
+       src: "{{ crm_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+- name: deploy binary to remote dmes
+  gather_facts: yes
+  user: root
+  hosts: dmes
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy dme-server binary
+    copy:
+       src: "{{ dme_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+- name: install etcd to remote etcd nodes
+  gather_facts: no
+  user: root
+  hosts: etcds
+
+  vars_files:
+  - mex_vars.yml
+  
+  tasks:
+  - name: install etcd
+    package:
+       name: etcd
+       state: latest
+
+  
