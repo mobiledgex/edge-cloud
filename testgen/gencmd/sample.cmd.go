@@ -18,12 +18,18 @@ package gencmd
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import google_protobuf "github.com/gogo/protobuf/types"
 import testgen "github.com/mobiledgex/edge-cloud/testgen"
+import "strings"
 import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
+import "os"
+import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
+import "encoding/json"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -391,16 +397,39 @@ var RequestCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := TestApiCmd.Request(ctx, &TestGenIn)
+		objs, err := TestApiCmd.Request(ctx, &TestGenIn)
 		cancel()
 		if err != nil {
 			fmt.Println("Request failed: ", err)
-		} else {
-			headers := TestGenHeaderSlicer()
-			data := TestGenSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(TestGenSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
