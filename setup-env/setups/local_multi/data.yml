@@ -58,7 +58,4 @@ appinstances:
   liveness: 1
   ip: [10,100,10,4]
   ip_str: 0a640a04 #for ansible to cli
-  cloudletloc: 
-     lat: 55
-     long: 66
   port: 443 
