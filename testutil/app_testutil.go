@@ -10,7 +10,6 @@ It is generated from these files:
 	cloud-resource-manager.proto
 	cloudlet.proto
 	developer.proto
-	loc.proto
 	notice.proto
 	operator.proto
 	result.proto
@@ -27,7 +26,6 @@ It has these top-level messages:
 	Cloudlet
 	DeveloperKey
 	Developer
-	Loc
 	NoticeReply
 	NoticeRequest
 	OperatorCode
