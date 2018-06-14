@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
 import distributed_match_engine.AppClient.Match_Engine_Request;
-import edgeproto.LocOuterClass.Loc;
+import distributed_match_engine.LocOuterClass.Loc;
 
 import android.content.pm.PackageInfo;
 
@@ -87,7 +87,7 @@ public class MatchingEngine {
         PackageInfo pInfo;
         String versionName = "";
         String versionCode = "";
-        String appName = "";
+        String appName = packageLabel;
         try {
             pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             versionName = pInfo.versionName;
@@ -113,19 +113,42 @@ public class MatchingEngine {
                 .setVer(5)
                 .setIdType(id_type)
                 .setId((id == null) ? "" : id)
-                .setCarrier(3l) // uint64 --> String? mnc, mcc?
+                .setCarrierID(3l) // uint64 --> String? mnc, mcc?
+                .setCarrierName(mnc.equals("") ? "" : mnc) // Mobile Network Carrier
                 .setTower(cid) // cid and lac (int)
                 .setGpsLocation(aLoc)
                 .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
                 .setProtocol(ByteString.copyFromUtf8("http")) // This one is appId context sensitive.
                 .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
                 .setDevName(packageLabel) // From signing certificate?
-                .setAppName(packageLabel)
+                .setAppName(appName)
                 .setAppVers(versionCode) // Or versionName, which is visual name?
+                .setToken("") // None.
                 .build();
 
 
         return request;
+    }
+
+    /**
+     * Registers device on the MatchingEngine server.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<AppClient.Match_Engine_Status> registerClientFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+        RegisterClient registerClient = new RegisterClient(this);
+        registerClient.setRequest(request, timeoutInMilliseconds);
+        return submit(registerClient);
+    }
+
+    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        RegisterClient registerClient = new RegisterClient(this);
+        registerClient.setRequest(request, timeoutInMilliseconds);
+        Future<AppClient.Match_Engine_Status> responseFuture = submit(registerClient);
+
+        return responseFuture.get();
     }
 
     /**
@@ -167,16 +190,14 @@ public class MatchingEngine {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public boolean verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
                     throws InterruptedException, ExecutionException {
-        boolean verifyResponse = false;
 
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
 
-        Future<Boolean> response = submit(verifyLocation);
-        verifyResponse = response.get();
-        return verifyResponse;
+        Future<AppClient.Match_Engine_Loc_Verify> response = submit(verifyLocation);
+        return response.get();
     }
 
     /**
@@ -185,10 +206,36 @@ public class MatchingEngine {
      * @param request
      * @return Future<Boolean> validated or not.
      */
-    public Future<Boolean> verifyLocationFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Loc_Verify> verifyLocationFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return submit(verifyLocation);
+    }
+
+    /**
+     * getLocation returns the network verified location of this device.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        GetLocation getLocation = new GetLocation(this);
+        getLocation.setRequest(request, timeoutInMilliseconds);
+        Future<AppClient.Match_Engine_Loc> locFuture = submit(getLocation);
+        return locFuture.get();
+    }
+
+    /**
+     * getLocation returns the network verified location of this device.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<AppClient.Match_Engine_Loc> getLocationFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+        GetLocation getLocation = new GetLocation(this);
+        getLocation.setRequest(request, timeoutInMilliseconds);
+        return submit(getLocation);
     }
 
     public String getHost() {

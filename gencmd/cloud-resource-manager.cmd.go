@@ -14,6 +14,9 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
+import "encoding/json"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -190,15 +193,13 @@ var ListCloudResourceCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		count := 0
-		fmt.Fprintln(output, strings.Join(CloudResourceHeaderSlicer(), "\t"))
 		defer cancel()
 		stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
 			fmt.Println("ListCloudResource failed: ", err)
 			return
 		}
+		objs := make([]*edgeproto.CloudResource, 0)
 		for {
 			obj, err := stream.Recv()
 			if err == io.EOF {
@@ -208,10 +209,39 @@ var ListCloudResourceCmd = &cobra.Command{
 				fmt.Println("ListCloudResource recv failed: ", err)
 				break
 			}
-			fmt.Fprintln(output, strings.Join(CloudResourceSlicer(obj), "\t"))
-			count++
+			objs = append(objs, obj)
 		}
-		if count > 0 {
+		if len(objs) == 0 {
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(CloudResourceHeaderSlicer(), "\t"))
+			for _, obj := range objs {
+				fmt.Fprintln(output, strings.Join(CloudResourceSlicer(obj), "\t"))
+			}
 			output.Flush()
 		}
 	},
@@ -231,16 +261,39 @@ var AddCloudResourceCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
+		objs, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
 		cancel()
 		if err != nil {
 			fmt.Println("AddCloudResource failed: ", err)
-		} else {
-			headers := ResultHeaderSlicer()
-			data := ResultSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -259,16 +312,39 @@ var DeleteCloudResourceCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
+		objs, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteCloudResource failed: ", err)
-		} else {
-			headers := ResultHeaderSlicer()
-			data := ResultSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -282,16 +358,39 @@ var DeployApplicationCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
+		objs, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeployApplication failed: ", err)
-		} else {
-			headers := ResultHeaderSlicer()
-			data := ResultSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -305,16 +404,39 @@ var DeleteApplicationCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
+		objs, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteApplication failed: ", err)
-		} else {
-			headers := ResultHeaderSlicer()
-			data := ResultSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }

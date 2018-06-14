@@ -41,6 +41,7 @@ type GenCmd struct {
 	importBuiltinTypes bool
 	importPflag        bool
 	importErrors       bool
+	importOutputGen    bool
 }
 
 func (g *GenCmd) Name() string {
@@ -88,6 +89,11 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 	if g.importErrors {
 		g.PrintImport("", "errors")
 	}
+	if g.importOutputGen {
+		g.PrintImport("", "encoding/json")
+		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
+		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml")
+	}
 }
 
 func (g *GenCmd) Generate(file *generator.FileDescriptor) {
@@ -104,6 +110,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.importBuiltinTypes = false
 	g.importPflag = false
 	g.importErrors = false
+	g.importOutputGen = false
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
 	g.packageName = *file.FileDescriptorProto.Package
@@ -292,7 +299,6 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			subType := g.FQTypeName(subDesc)
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				ref := ""
 				if gogoproto.IsNullable(field) {
@@ -301,6 +307,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				g.P(msgName, "In.", hierField, " = make([]", ref, g.FQTypeName(subDesc), ", 1)")
 			}
 			if gogoproto.IsNullable(field) {
+				subType := g.FQTypeName(subDesc)
 				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
 			}
 			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc))
@@ -545,6 +552,7 @@ type tmplArgs struct {
 	Method       string
 	InType       string
 	OutType      string
+	FQOutType    string
 	ServerStream bool
 	HasEnums     bool
 	SetFields    bool
@@ -572,15 +580,13 @@ var {{.Method}}Cmd = &cobra.Command{
 {{- end}}
 		ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
 {{- if .ServerStream}}
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		count := 0
-		fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
 		defer cancel()
 		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
 			fmt.Println("{{.Method}} failed: ", err)
 			return
 		}
+		objs := make([]*{{.FQOutType}}, 0)
 		for {
 			obj, err := stream.Recv()
 			if err == io.EOF {
@@ -590,25 +596,53 @@ var {{.Method}}Cmd = &cobra.Command{
 				fmt.Println("{{.Method}} recv failed: ", err)
 				break
 			}
-			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
-			count++
+			objs = append(objs, obj)
 		}
-		if count > 0 {
-			output.Flush()
+		if len(objs) == 0 {
+			return
 		}
 {{- else}}
-		out, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
+		objs, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		cancel()
 		if err != nil {
 			fmt.Println("{{.Method}} failed: ", err)
-		} else {
-			headers := {{.OutType}}HeaderSlicer()
-			data := {{.OutType}}Slicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
-			}
+			return
 		}
 {{- end}}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
+{{- if .ServerStream}}
+			for _, obj := range objs {
+				fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
+			}
+{{- else}}
+			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(objs), "\t"))
+{{- end}}
+			output.Flush()
+		}
 	},
 }
 `
@@ -623,12 +657,17 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	g.importCobra = true
 	g.importContext = true
 	g.importTime = true
+	g.importTabwriter = true
+	g.importOS = true
+	g.importStrings = true
+	g.importOutputGen = true
 	_, hasEnums := g.enumArgs[*in.DescriptorProto.Name]
 	cmd := &tmplArgs{
 		Service:      *service.Name,
 		Method:       *method.Name,
 		InType:       g.flatTypeName(*method.InputType),
 		OutType:      g.flatTypeName(*method.OutputType),
+		FQOutType:    g.FQTypeName(g.GetDesc(*method.OutputType)),
 		ServerStream: serverStreaming(method),
 		HasEnums:     hasEnums,
 	}
@@ -636,10 +675,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		cmd.SetFields = true
 	}
 	if cmd.ServerStream {
-		g.importTabwriter = true
-		g.importOS = true
 		g.importIO = true
-		g.importStrings = true
 	}
 	err := g.tmpl.Execute(g, cmd)
 	if err != nil {

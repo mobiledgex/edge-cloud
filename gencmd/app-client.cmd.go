@@ -6,6 +6,7 @@ Package gencmd is a generated protocol buffer package.
 
 It is generated from these files:
 	app-client.proto
+	loc.proto
 
 It has these top-level messages:
 	Match_Engine_Request
@@ -13,22 +14,27 @@ It has these top-level messages:
 	Match_Engine_Loc_Verify
 	Match_Engine_Loc
 	Match_Engine_Status
+	Loc
 */
 package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import google_protobuf "github.com/gogo/protobuf/types"
+import "strings"
 import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
+import "os"
+import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
+import "encoding/json"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "github.com/mobiledgex/edge-cloud/edgeproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -50,7 +56,7 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.GpsLocation == nil {
-		in.GpsLocation = &edgeproto.Loc{}
+		in.GpsLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Long), 'e', -1, 32))
@@ -119,7 +125,7 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	s = append(s, strconv.FormatUint(uint64(in.ServicePort), 10))
 	if in.CloudletLocation == nil {
-		in.CloudletLocation = &edgeproto.Loc{}
+		in.CloudletLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Long), 'e', -1, 32))
@@ -182,7 +188,7 @@ func Match_Engine_LocSlicer(in *distributed_match_engine.Match_Engine_Loc) []str
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.NetworkLocation == nil {
-		in.NetworkLocation = &edgeproto.Loc{}
+		in.NetworkLocation = &distributed_match_engine.Loc{}
 	}
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Long), 'e', -1, 32))
@@ -250,16 +256,39 @@ var FindCloudletCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
+		objs, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("FindCloudlet failed: ", err)
-		} else {
-			headers := Match_Engine_ReplyHeaderSlicer()
-			data := Match_Engine_ReplySlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_ReplyHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_ReplySlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -278,16 +307,39 @@ var VerifyLocationCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
+		objs, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("VerifyLocation failed: ", err)
-		} else {
-			headers := Match_Engine_Loc_VerifyHeaderSlicer()
-			data := Match_Engine_Loc_VerifySlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifyHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifySlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -306,16 +358,39 @@ var GetLocationCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
+		objs, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("GetLocation failed: ", err)
-		} else {
-			headers := Match_Engine_LocHeaderSlicer()
-			data := Match_Engine_LocSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_LocHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_LocSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -334,16 +409,39 @@ var RegisterClientCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		out, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
+		objs, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("RegisterClient failed: ", err)
-		} else {
-			headers := Match_Engine_StatusHeaderSlicer()
-			data := Match_Engine_StatusSlicer(out)
-			for ii := 0; ii < len(headers) && ii < len(data); ii++ {
-				fmt.Println(headers[ii] + ": " + data[ii])
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
 			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(objs), "\t"))
+			output.Flush()
 		}
 	},
 }
@@ -355,7 +453,7 @@ func init() {
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CarrierName, "carriername", "", "CarrierName")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.Tower, "tower", 0, "Tower")
-	Match_Engine_RequestIn.GpsLocation = &edgeproto.Loc{}
+	Match_Engine_RequestIn.GpsLocation = &distributed_match_engine.Loc{}
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.Lat, "gpslocation-lat", 0, "GpsLocation.Lat")
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.Long, "gpslocation-long", 0, "GpsLocation.Long")
 	Match_Engine_RequestFlagSet.Float64Var(&Match_Engine_RequestIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")

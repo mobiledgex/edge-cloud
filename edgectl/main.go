@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
+	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
@@ -27,6 +31,24 @@ var crmCmd = &cobra.Command{
 	Use: "crm",
 }
 
+var completionCmd = &cobra.Command{
+	Use:   "completion-script",
+	Short: "Generates bash completion script",
+	Run: func(cmd *cobra.Command, args []string) {
+		filename := "edgectl-completion.bash"
+		outfile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fmt.Printf("Unable to open file %s in current dir for write: %s\n", filename, err)
+			return
+		}
+		rootCmd.GenBashCompletion(outfile)
+		fmt.Printf("Wrote file %s in current dir. Move it to /usr/local/etc/bash_completion.d/ (OSX) or /etc/bash_completion.d/ (linux)\n", filename)
+		fmt.Println("On OSX, make sure bash completion is installed:")
+		fmt.Println("  brew install bash-completion")
+		outfile.Close()
+	},
+}
+
 func connect(cmd *cobra.Command, args []string) {
 	var err error
 	conn, err = grpc.Dial(addr, grpc.WithInsecure())
@@ -47,10 +69,14 @@ func close(cmd *cobra.Command, args []string) {
 }
 
 func main() {
+	cobra.EnableCommandSorting = false
+
 	rootCmd.AddCommand(controllerCmd)
 	rootCmd.AddCommand(dmeCmd)
 	rootCmd.AddCommand(crmCmd)
+	rootCmd.AddCommand(completionCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
+	cmdsup.AddOutputFormatFlag(rootCmd.PersistentFlags())
 
 	controllerCmd.AddCommand(gencmd.CreateDeveloperCmd)
 	controllerCmd.AddCommand(gencmd.UpdateDeveloperCmd)

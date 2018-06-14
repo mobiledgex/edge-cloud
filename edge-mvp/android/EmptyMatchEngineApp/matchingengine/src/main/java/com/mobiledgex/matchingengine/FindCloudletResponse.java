@@ -9,10 +9,13 @@ public class FindCloudletResponse {
 
     public long version = 0;
 
-    FindCloudletResponse(long version, byte[] server, int port, GPSLocation loc) {
+    public String token = "";
+
+    FindCloudletResponse(long version, String token, byte[] server, int port, GPSLocation loc) {
         this.version = version;
         this.server = server;
         this.port = port;
         this.loc = loc;
+        this.token = token;
     }
 }

@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"math"
 	"net"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"sync"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 type cloudlet struct {
@@ -19,23 +20,23 @@ type cloudlet struct {
 	// IP to use to connect to and control cloudlet site
 	accessIp []byte
 	// Location of the cloudlet site (lat, long?)
-	location edgeproto.Loc
+	location dme.Loc
 	// Next cloudlet
 	next *cloudlet
 }
 
 type app_carrier_key struct {
 	carrier_name string
-	app_key edgeproto.AppKey
+	app_key      edgeproto.AppKey
 }
 
 type carrier_app_cloudlet struct {
 	sync.RWMutex
-	carrier_id uint64
-	carrier_name string
-	app_name string
-	app_vers string
-	app_developer string
+	carrier_id        uint64
+	carrier_name      string
+	app_name          string
+	app_vers          string
+	app_developer     string
 	app_cloudlet_inst *cloudlet
 }
 
@@ -55,12 +56,12 @@ func setup_match_engine() {
 }
 
 func torads(deg float64) float64 {
-  return deg * math.Pi / 180;
+	return deg * math.Pi / 180
 }
 
 // Use the ‘haversine’ formula to calculate the great-circle distance between two points
-func distance_between(loc1, loc2 edgeproto.Loc) float64 {
-	radiusofearth := 6371;
+func distance_between(loc1, loc2 dme.Loc) float64 {
+	radiusofearth := 6371
 	var diff_lat, diff_long float64
 	var a, c, dist float64
 	var lat1, long1, lat2, long2 float64
@@ -76,11 +77,11 @@ func distance_between(loc1, loc2 edgeproto.Loc) float64 {
 	rad_lat1 := torads(lat1)
 	rad_lat2 := torads(lat2)
 
-	a = math.Sin(diff_lat/2) * math.Sin(diff_lat/2) + math.Sin(diff_long/2) *
-		math.Sin(diff_long/2) * math.Cos(rad_lat1) * math.Cos(rad_lat2)
-	c = 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1 - a))
+	a = math.Sin(diff_lat/2)*math.Sin(diff_lat/2) + math.Sin(diff_long/2)*
+		math.Sin(diff_long/2)*math.Cos(rad_lat1)*math.Cos(rad_lat2)
+	c = 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 	dist = c * float64(radiusofearth)
-	
+
 	return dist
 }
 
@@ -98,7 +99,7 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 
 	tbl.Lock()
 	_, ok := tbl.apps[key]
-	if (!ok) {
+	if !ok {
 		// Key doesn't exists
 		carrier = new(carrier_app_cloudlet)
 		carrier.carrier_id = cloudlet_inst.carrierId
@@ -108,25 +109,25 @@ func add_app(app_inst *app, cloudlet_inst *cloudlet) {
 		carrier.app_developer = app_inst.developer
 		tbl.apps[key] = carrier
 		fmt.Printf("Adding App %s/%s for Carrier = %s\n",
-			carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName);
+			carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName)
 	} else {
 		carrier = tbl.apps[key]
 	}
 
 	// Todo: Check for updates
-	
-	c_new = new (cloudlet)
+
+	c_new = new(cloudlet)
 	*c_new = *cloudlet_inst
 	carrier.Lock()
 	// check if the cloudlet already exists
 	c = carrier.app_cloudlet_inst
-	if (c != nil) {
+	if c != nil {
 		c_new.next = c
 	}
 	carrier.app_cloudlet_inst = c_new
 	fmt.Printf("Adding App %s/%s for Carrier = %s, Loc = %f/%f\n",
 		carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName,
-		cloudlet_inst.location.Lat, cloudlet_inst.location.Long);
+		cloudlet_inst.location.Lat, cloudlet_inst.location.Long)
 	carrier.Unlock()
 	tbl.Unlock()
 }
@@ -139,16 +140,16 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	var tbl *carrier_app
 	var ipaddr net.IP
 
-	tbl = carrier_app_tbl	
+	tbl = carrier_app_tbl
 	key.carrier_name = mreq.CarrierName
 	key.app_key.DeveloperKey.Name = mreq.DevName
 	key.app_key.Name = mreq.AppName
 	key.app_key.Version = mreq.AppVers
-	
+
 	mreply.Status = false
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]
-	if (!ok) {
+	if !ok {
 		tbl.RUnlock()
 		return
 	}
@@ -159,20 +160,20 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	for ; c != nil; c = c.next {
 		d = distance_between(*mreq.GpsLocation, c.location)
 		fmt.Printf("Loc = %f/%f is at dist %f. ",
-			c.location.Lat, c.location.Long, d);
-		if (d < distance) {
+			c.location.Lat, c.location.Long, d)
+		if d < distance {
 			fmt.Printf("Repl. with new dist %f.", d)
 			distance = d
 			found = c
 			mreply.ServiceIp = c.accessIp
 			mreply.CloudletLocation = &c.location
 		}
-		fmt.Printf("\n");
+		fmt.Printf("\n")
 	}
-	if (found != nil) {
+	if found != nil {
 		ipaddr = found.accessIp
 		fmt.Printf("Found Loc = %f/%f with IP %s\n",
-			found.location.Lat, found.location.Long, ipaddr.String());
+			found.location.Lat, found.location.Long, ipaddr.String())
 		mreply.Status = true
 	}
 	tbl.RUnlock()
@@ -190,12 +191,12 @@ func list_appinst_tbl() {
 	for a := range tbl.apps {
 		carrier = tbl.apps[a]
 		fmt.Printf(">> app = %s/%s info for carrier %s\n", carrier.app_name,
-			carrier.app_vers, carrier.carrier_name);
+			carrier.app_vers, carrier.carrier_name)
 		c = carrier.app_cloudlet_inst
 		for ; c != nil; c = c.next {
 			fmt.Printf("app = %s/%s info for carrier = %s, Loc = %f/%f\n",
 				carrier.app_name, carrier.app_vers, carrier.carrier_name,
-				c.location.Lat, c.location.Long);
+				c.location.Lat, c.location.Long)
 		}
 	}
 	tbl.RUnlock()

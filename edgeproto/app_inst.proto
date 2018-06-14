@@ -9,7 +9,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
 import "cloudlet.proto";
-import "loc.proto";
+import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message AppInstKey {
@@ -31,7 +31,7 @@ message AppInst {
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cache the location of the cloudlet
-  Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
+  distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // how to connect to this instance
   bytes ip = 4;
   // port to connect to this instance
