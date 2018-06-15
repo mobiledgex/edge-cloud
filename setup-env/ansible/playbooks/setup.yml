@@ -1,0 +1,52 @@
+## First GCP VM external IP 35.230.32.241 internal IP 10.10.0.12
+
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: http://10.10.0.12:30011
+    clientaddrs: http://10.10.0.12:30001
+    initialcluster: etcd1=http://10.10.0.12:30011,etcd2=http://10.10.0.12:30012,etcd3=http://10.10.0.12:30013
+  hostname: 35.230.32.241
+
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: http://10.10.0.12:30012
+    clientaddrs: http://10.10.0.12:30002
+    initialcluster: etcd1=http://10.10.0.12:30011,etcd2=http://10.10.0.12:30012,etcd3=http://10.10.0.12:30013
+  hostname: 35.230.32.241
+
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: http://10.10.0.12:30013
+    clientaddrs: http://10.10.0.12:30003
+    initialcluster: etcd1=http://10.10.0.12:30011,etcd2=http://10.10.0.12:30012,etcd3=http://10.10.0.12:30013
+  hostname: 35.230.32.241
+
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: http://10.10.0.12:30001,http://10.10.0.12:30002,http://10.10.0.12:30003
+    apiaddr: 10.10.0.12:55001
+    httpaddr: 10.10.0.12:36001
+    notifyaddr: 10.10.0.12:37001
+  hostname: 35.230.32.241
+
+## Second GCP VM external IP 35.230.48.195 internal IP 10.10.0.13
+
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: 10.10.0.13:50051
+    notifyaddrs: 10.10.0.12:37001
+  hostname: 35.230.48.195
+
+  
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: 10.10.0.13:55091
+    notifyaddrs: 10.10.0.12:37001
+  hostname: 35.230.48.195

@@ -21,6 +21,11 @@
       name: etcd
       state: absent
 
+  #needed for ubuntu only but will not hurt
+  - name: delete etcd file
+    file:
+       path: "{{ remote_bin_path }}/etcd"
+       state: absent
 
 - name: cleanup controllers
   gather_facts: yes
@@ -35,7 +40,7 @@
 
   - name: remove controller binary
     file: 
-       name: "{{ controller_bin }}"
+       name: "{{ controller_remote_bin }}"
        state: absent
 
 
@@ -51,7 +56,7 @@
   tasks:
   - name: remove dme binary
     file: 
-       name: "{{ dme_bin }}"
+       name: "{{ dme_remote_bin }}"
        state: absent      
 
 
@@ -67,7 +72,7 @@
   tasks:
   - name: remove crm binary
     file:
-       name: "{{ crm_bin }}"
+       name: "{{ crm_remote_bin }}"
        state: absent
 
 - name: cleanup logs
