@@ -37,7 +37,7 @@ public class RegisterClient implements Callable {
     @Override
     public AppClient.Match_Engine_Status call() throws MissingRequestException {
         if (mRequest == null) {
-            throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make location verification call!");
+            throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
 
         AppClient.Match_Engine_Status reply;
