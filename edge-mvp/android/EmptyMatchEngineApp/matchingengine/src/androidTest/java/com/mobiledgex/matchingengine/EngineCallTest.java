@@ -25,6 +25,8 @@ import static org.junit.Assert.assertFalse;
 
 import android.location.Location;
 
+import android.util.Log;
+
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
 
@@ -41,10 +43,6 @@ public class EngineCallTest {
             InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
                     "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
                             + " android.permission.ACCESS_COARSE_LOCATION");
-            /*
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_MOCK_LOCATION");*/
         }
     }
 
@@ -96,13 +94,10 @@ public class EngineCallTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(Context context,
-                                                                          MatchingEngine me,
-                                                                          Location location) {
+    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
-        // Passed in Location (which is a callback interface)
         LocOuterClass.Loc aLoc = LocOuterClass.Loc.newBuilder()
                 .setLat(location.getLatitude())
                 .setLong(location.getLongitude())
@@ -135,7 +130,6 @@ public class EngineCallTest {
 
         MexLocation mexLoc = new MexLocation(me);
         Location location = null;
-        Future<AppClient.Match_Engine_Status> responseFuture = null;
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
@@ -148,9 +142,8 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, 10000);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
-            responseFuture = me.registerClientFuture(request, 10000);
-            response = responseFuture.get();
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            response = me.registerClient(request, 10000);
             assert(response != null);
         } catch (ExecutionException ee) {
             ee.printStackTrace();
@@ -189,7 +182,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, 10000);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
             responseFuture = me.registerClientFuture(request, 10000);
             response = responseFuture.get();
             assert(response != null);
@@ -225,7 +218,7 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, 10000);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
             cloudletResponse = me.findCloudlet(request, 10000);
 
@@ -262,7 +255,7 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, 10000);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
             response = me.findCloudletFuture(request, 10000);
             result = response.get();
@@ -293,7 +286,7 @@ public class EngineCallTest {
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, 10000);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
 
             response = me.verifyLocation(request, 10000);
@@ -331,7 +324,7 @@ public class EngineCallTest {
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, 10000);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
             locFuture = me.verifyLocationFuture(request, 10000);
             response = locFuture.get();
@@ -372,7 +365,7 @@ public class EngineCallTest {
             Location location = mexLoc.getBlocking(context, 10000);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
             verifyLocationResult = me.verifyLocation(request, 10000);
             assert(verifyLocationResult != null);
@@ -411,7 +404,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, 10000);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
             response = me.getLocation(request, 10000);
             assert(response != null);
         } catch (ExecutionException ee) {
@@ -459,7 +452,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, 10000);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(context, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
             responseFuture = me.getLocationFuture(request, 10000);
             response = responseFuture.get();
             assert(response != null);
@@ -488,5 +481,77 @@ public class EngineCallTest {
         assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
     }
 
+    /**
+     * This is an extremely simple and basic end to end test of blocking versus Future using
+     * VerifyLocation.
+     */
+    @Test
+    public void basicLatencyTest() {
+        Context context = InstrumentationRegistry.getTargetContext();
+        MatchingEngine me = new MatchingEngine();
+
+        MexLocation mexLoc = new MexLocation(me);
+        Location location;
+        AppClient.Match_Engine_Loc_Verify response1 = null;
+
+        enableMockLocation(context,true);
+        Location loc = createLocation("getLocationTest", -122.149349, 37.459609);
+
+        long start;
+        long elapsed1[] = new long[20];
+        long elapsed2[] = new long[20];
+        try {
+            setMockLocation(context, loc);
+            location = mexLoc.getBlocking(context, 10000);
+            assertFalse(location == null);
+
+            long sum1 = 0, sum2 = 0;
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            for (int i = 0; i < elapsed1.length; i++){
+                start = System.currentTimeMillis();
+                response1 = me.verifyLocation(request, 10000);
+                elapsed1[i] = System.currentTimeMillis() - start;
+            }
+
+            for (int i = 0; i < elapsed1.length; i++) {
+                Log.i("LatencyTest", i + " VerifyLocation elapsed time: Elapsed1: " + elapsed1[i]);
+                sum1 += elapsed1[i];
+            }
+            Log.i("LatencyTest", "Average1: " + sum1/elapsed1.length);
+            assert(response1 != null);
+
+            // Future
+            request = createMockMatchingEngineRequest(location);
+            AppClient.Match_Engine_Loc_Verify response2 = null;
+            try {
+                for (int i = 0; i < elapsed2.length; i++) {
+                    start = System.currentTimeMillis();
+                    Future<AppClient.Match_Engine_Loc_Verify> locFuture = me.verifyLocationFuture(request, 10000);
+                    // Do something busy()
+                    response2 = locFuture.get();
+                    elapsed2[i] = System.currentTimeMillis() - start;
+                }
+                for (int i = 0; i < elapsed2.length; i++) {
+                    Log.i("LatencyTest", i + " VerifyLocationFuture elapsed time: Elapsed2: " + elapsed2[i]);
+                    sum2 += elapsed2[i];
+                }
+                Log.i("LatencyTest", "Average2: " + sum2/elapsed2.length);
+                assert(response2 != null);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+
+
+        } catch (ExecutionException ee) {
+            ee.printStackTrace();
+            assertFalse("getLocationFutureTest Execution Failed!", true);
+        } catch (InterruptedException ie) {
+            ie.printStackTrace();
+            assertFalse("getLocationFutureTest Execution Interrupted!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
+    }
 
 }

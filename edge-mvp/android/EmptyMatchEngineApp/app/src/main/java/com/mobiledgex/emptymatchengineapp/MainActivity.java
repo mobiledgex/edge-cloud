@@ -173,39 +173,34 @@ public class MainActivity extends AppCompatActivity {
             public void onComplete(Task<Location> task) {
                 if (task.isSuccessful() && task.getResult() != null) {
                     Location location = task.getResult();
-                    try {
-
-                        // Location found. Create a request:
-                        AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(
-                                ctx,
-                                location);
-
-                        // Location Verification (Blocking, or use verifyLocationFuture):
-                        AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
-                        someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
-                                ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
 
 
-                        // Find the closest cloudlet for your application to use.
-                        // (Blocking call, or use findCloudletFuture):
-                        FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
-                        // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
-                        String serverip = null;
-                        if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
-                            serverip = closestCloudlet.server[0] + ", ";
-                            for (int i = 1; i < closestCloudlet.server.length-1; i++) {
-                                serverip += closestCloudlet.server[i] + ", ";
-                            }
-                            serverip += closestCloudlet.server[closestCloudlet.server.length-1];
+                    // Location found. Create a request:
+                    AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(
+                            ctx,
+                            location);
+
+                    // Location Verification (Blocking, or use verifyLocationFuture):
+                    AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
+                    someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
+                            ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
+
+
+                    // Find the closest cloudlet for your application to use.
+                    // (Blocking call, or use findCloudletFuture):
+                    FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
+                    // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
+                    String serverip = null;
+                    if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
+                        serverip = closestCloudlet.server[0] + ", ";
+                        for (int i = 1; i < closestCloudlet.server.length-1; i++) {
+                            serverip += closestCloudlet.server[i] + ", ";
                         }
-                        someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
-                        TextView tv = findViewById(R.id.mex_verified_location_content);
-                        tv.setText(someText);
-                    } catch (InterruptedException ie) {
-                        ie.printStackTrace();
-                    } catch (ExecutionException ee) {
-                        ee.printStackTrace();
+                        serverip += closestCloudlet.server[closestCloudlet.server.length-1];
                     }
+                    someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
+                    TextView tv = findViewById(R.id.mex_verified_location_content);
+                    tv.setText(someText);
                 } else {
                     Log.w(TAG, "getLastLocation:exception", task.getException());
                     someText = "Last location not found, or has never been used. Location cannot be verified using 'getLastLocation()'. " +
