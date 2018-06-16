@@ -15,8 +15,18 @@ import (
 
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
+
+type ShowOperator struct {
+	data map[string]edgeproto.Operator
+	grpc.ServerStream
+}
+
+func (x *ShowOperator) init() {
+	x.data = make(map[string]edgeproto.Operator)
+}
 
 var (
 	commandName = "setup-mex"
@@ -60,10 +70,12 @@ type processData struct {
 }
 
 var actionChoices = map[string]bool{
-	"start":   true,
-	"stop":    true,
-	"status":  true,
+	"start":  true,
+	"stop":   true,
+	"status": true,
+	//	"show":    true, TBD
 	"update":  true,
+	"delete":  true,
 	"create":  true,
 	"deploy":  true,
 	"cleanup": true,
@@ -150,9 +162,9 @@ func readDataFile(datafile string) {
 	}
 }
 
-// TODO, would be nice to figure how to do these 3 with the same implementation
+// TODO, would be nice to figure how to do these with the same implementation
 func connectController(p *process.ControllerLocal, c chan string) {
-	log.Printf("attempt to connect to process %v", (*p).Name)
+	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
 		c <- "Failed to connect to " + (*p).Name
@@ -163,7 +175,7 @@ func connectController(p *process.ControllerLocal, c chan string) {
 }
 
 func connectCrm(p *process.CrmLocal, c chan string) {
-	log.Printf("attempt to connect to process %v", (*p).Name)
+	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
 		c <- "Failed to connect to " + (*p).Name
@@ -174,7 +186,7 @@ func connectCrm(p *process.CrmLocal, c chan string) {
 }
 
 func connectDme(p *process.DmeLocal, c chan string) {
-	log.Printf("attempt to connect to process %v", (*p).Name)
+	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
 		c <- "Failed to connect to " + (*p).Name
@@ -203,17 +215,36 @@ func waitForProcesses() {
 		crmp := crm.CrmLocal
 		go connectCrm(&crmp, c)
 	}
-
 	for i := 0; i < numProcs; i++ {
 		log.Println(<-c)
 	}
-
 }
 
-func applyApplicationData(update bool) bool {
+func getExternalApiAddress(internalApiAddr string, externalHost string) string {
+	//in cloud deployments, the internal address the controller listens to may be different than the
+	//external address which clients need to use.   So use the external hostname and api port
+	return externalHost + ":" + strings.Split(internalApiAddr, ":")[1]
+}
+
+//in cloud deployments, the internal address the controller listens to may be different than the
+//external address which clients need to use as floating IPs are used.  So use the external
+//hostname and api port when connecting to the API.  This needs to be done after startup
+//but before trying to connect to the APIs remotely
+func updateApiAddrs() {
+	for i, ctrl := range procs.Controllers {
+		procs.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
+	}
+	for i, dme := range procs.Dmes {
+		procs.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
+	}
+	for i, crm := range procs.Crms {
+		procs.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+	}
+}
+
+func runApis(mode string) bool {
 	log.Printf("Applying data via APIs\n")
 
-	//just connect to the first controller, it should sync
 	ctrl := procs.Controllers[0]
 	log.Printf("Connecting to controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
 	ctrlapi, err := ctrl.ConnectAPI(apiConnectTimeout)
@@ -225,70 +256,69 @@ func applyApplicationData(update bool) bool {
 		log.Printf("Connected to controller %v success", ctrl.Name)
 		ctx, cancel := context.WithTimeout(context.Background(), apiConnectTimeout)
 		opAPI := edgeproto.NewOperatorApiClient(ctrlapi)
-		for _, op := range data.Operators {
-			log.Printf("API for operator: %v", op.Key.Name)
-			if update {
-				_, err = opAPI.UpdateOperator(ctx, &op)
-			} else {
-				_, err = opAPI.CreateOperator(ctx, &op)
-			}
-			if err != nil {
-				log.Printf("Error api operator: %v", err)
+		for _, o := range data.Operators {
+			log.Printf("API %v for operator: %v", mode, o.Key.Name)
+			switch mode {
+			case "create":
+				_, err = opAPI.CreateOperator(ctx, &o)
+			case "update":
+				_, err = opAPI.UpdateOperator(ctx, &o)
+			case "delete":
+				_, err = opAPI.DeleteOperator(ctx, &o)
+
 			}
 		}
-		devAPI := edgeproto.NewDeveloperApiClient(ctrlapi)
-		for _, dev := range data.Developers {
-			log.Printf("API for developer: %v", dev.Key.Name)
-			if update {
-				_, err = devAPI.UpdateDeveloper(ctx, &dev)
-			} else {
-				_, err = devAPI.CreateDeveloper(ctx, &dev)
-			}
-			if err != nil {
-				log.Printf("Error api developer: %v", err)
+		devApi := edgeproto.NewDeveloperApiClient(ctrlapi)
+		for _, d := range data.Developers {
+			log.Printf("API %v for developer: %v", mode, d.Key.Name)
+			switch mode {
+			case "create":
+				_, err = devApi.CreateDeveloper(ctx, &d)
+			case "update":
+				_, err = devApi.UpdateDeveloper(ctx, &d)
+			case "delete":
+				_, err = devApi.DeleteDeveloper(ctx, &d)
 			}
 		}
 		clAPI := edgeproto.NewCloudletApiClient(ctrlapi)
-		for _, cl := range data.Cloudlets {
-			log.Printf("API for cloudlet: %v", cl.Key.Name)
-			if update {
-				_, err = clAPI.UpdateCloudlet(ctx, &cl)
-			} else {
-				_, err = clAPI.CreateCloudlet(ctx, &cl)
-			}
-			if err != nil {
-				log.Printf("Error api cloudlet: %v", err)
+		for _, c := range data.Cloudlets {
+			log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
+			switch mode {
+			case "create":
+				_, err = clAPI.CreateCloudlet(ctx, &c)
+			case "update":
+				_, err = clAPI.UpdateCloudlet(ctx, &c)
+			case "delete":
+				_, err = clAPI.DeleteCloudlet(ctx, &c)
 			}
 		}
 		appAPI := edgeproto.NewAppApiClient(ctrlapi)
-		for _, app := range data.Applications {
-			log.Printf("API for app: %v", app.Key.Name)
-			if update {
-				_, err = appAPI.UpdateApp(ctx, &app)
-			} else {
-				_, err = appAPI.CreateApp(ctx, &app)
-			}
-			if err != nil {
-				log.Printf("Error api app: %v", err)
+		for _, a := range data.Applications {
+			log.Printf("API %v for app: %v", mode, a.Key.Name)
+			switch mode {
+			case "create":
+				_, err = appAPI.CreateApp(ctx, &a)
+			case "update":
+				_, err = appAPI.UpdateApp(ctx, &a)
+			case "delete":
+				_, err = appAPI.DeleteApp(ctx, &a)
 			}
 		}
 		appinAPI := edgeproto.NewAppInstApiClient(ctrlapi)
-		for _, appin := range data.AppInstances {
-			log.Printf("API for appInst: %v", appin.Key.AppKey.Name)
-			if update {
-				_, err = appinAPI.UpdateAppInst(ctx, &appin)
-			} else {
-				_, err = appinAPI.CreateAppInst(ctx, &appin)
+		for _, a := range data.AppInstances {
+			log.Printf("API %v for appinstance: %v", mode, a.Key.AppKey.Name)
+			switch mode {
+			case "create":
+				_, err = appinAPI.CreateAppInst(ctx, &a)
+			case "update":
+				_, err = appinAPI.UpdateAppInst(ctx, &a)
+			case "delete":
+				_, err = appinAPI.DeleteAppInst(ctx, &a)
 			}
-			if err != nil {
-				log.Printf("Error api appinst: %v", err)
-			}
-
 		}
 		cancel()
 	}
 	ctrlapi.Close()
-	log.Printf("Done applying data\n")
 	return true
 }
 
@@ -621,24 +651,29 @@ func main() {
 			log.Fatal("Startup failed, exiting")
 			os.Exit(1)
 		}
+		updateApiAddrs()
 		waitForProcesses()
 		if *dataFile != "" {
-			if !applyApplicationData(false) {
+			if !runApis("create") {
 				log.Println("Unable to apply application data. Check connectivity to controller APIs")
 			}
 		}
 	case "status":
+		updateApiAddrs()
 		waitForProcesses()
 	case "stop":
 		stopProcesses()
 		stopRemoteProcesses()
 	case "create":
-		if !applyApplicationData(false) {
-			log.Println("Unable to apply application data for create. Check connectivity to controller APIs")
-		}
+		fallthrough
 	case "update":
-		if !applyApplicationData(true) {
-			log.Println("Unable to apply application data for update. Check connectivity to controller APIs")
+		fallthrough
+	case "delete":
+		fallthrough
+	case "show":
+		updateApiAddrs()
+		if !runApis(*action) {
+			log.Printf("Unable to run apis for %s. Check connectivity to controller APIs", *action)
 		}
 	case "cleanup":
 		cleanup()
@@ -647,5 +682,4 @@ func main() {
 		log.Fatal("unexpected action: " + *action)
 	}
 	fmt.Println("Done")
-
 }
