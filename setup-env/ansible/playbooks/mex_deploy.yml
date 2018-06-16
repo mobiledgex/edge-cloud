@@ -63,11 +63,47 @@
 
   vars_files:
   - mex_vars.yml
-  
+
+  vars:
+     ##todo we should derive the os here, but this is only for ubuntu currently anyway
+     etcd_version_os: "etcd-{{ etcd_version }}-linux-amd64"
+     etcd_tarfile: "{{ etcd_version_os }}.tar.gz"
+
   tasks:
-  - name: install etcd
+  - name: install etcd via package manager for non ubuntu
     package:
        name: etcd
        state: latest
+    when: ansible_distribution != "Ubuntu"
+    
+  - name: download etcd via wget for ubuntu
+    get_url:
+       url: "{{ etcd_url }}/{{ etcd_version }}/{{ etcd_tarfile }}"
+       dest: /tmp
+    when: ansible_distribution == "Ubuntu"
+
+  - name: untar etcd package
+    unarchive:
+       src: "/tmp/{{ etcd_tarfile }}"
+       dest: /tmp
+       remote_src: yes
+    when: ansible_distribution == "Ubuntu"
+
+
+  - name: move the etcd file to bin dir
+    command: "mv /tmp/{{ etcd_version_os }}/etcd {{ remote_bin_path }}"
+    when: ansible_distribution == "Ubuntu"
+
+  - name: cleanup tarfile
+    file:
+       path: "/tmp/{{ etcd_tarfile }}"
+       state: absent
+    when: ansible_distribution == "Ubuntu"
+
+  - name: cleanup tar temp dir
+    file:
+       path: "/tmp/{{ etcd_version }}"
+       state: absent
+    when: ansible_distribution == "Ubuntu"
 
   

@@ -6,10 +6,17 @@
  
   - servertype: "{{ ansible_system }}_{{ ansible_architecture }}"
   - local_binpath: "{{ server_to_path[servertype] }}"
-  - setup_local_bin: "{{ local_binpath }}/setup-local"
   - controller_bin: "{{ local_binpath }}/controller"
   - crm_bin: "{{ local_binpath }}/crmserver" 
   - dme_bin: "{{ local_binpath }}/dme-server"
+
   - remote_bin_path: /usr/local/bin
+  - controller_remote_bin: "{{ remote_bin_path }}/controller"
+  - crm_remote_bin: "{{ remote_bin_path }}/crmserver"  
+  - dme_remote_bin: "{{ remote_bin_path }}/dme-server"
+
   - remote_log_path: /var/log/mex
   - setupfile: setup.yml
+  - etcd_url: https://github.com/coreos/etcd/releases/download
+  - etcd_version: v3.3.8
+ 
