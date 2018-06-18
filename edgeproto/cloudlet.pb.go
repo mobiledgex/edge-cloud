@@ -638,7 +638,7 @@ func (s *CloudletStore) LoadOne(key string) (*Cloudlet, int64, error) {
 
 // Sync will sync changes for any Cloudlet objects.
 func (s *CloudletStore) Sync(ctx context.Context, cacher CloudletCacher) error {
-	str := objstore.DbKeyPrefixString(&CloudletKey{})
+	str := objstore.DbKeyPrefixString(&CloudletKey{}) + "/"
 	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
 		obj := Cloudlet{}
 		// Even on parse error, we should still call back to keep

@@ -37,21 +37,21 @@ type tmplArgs struct {
 
 var tmpl = `
 type Show{{.Name}} struct {
-	data map[string]{{.Pkg}}.{{.Name}}
+	Data map[string]{{.Pkg}}.{{.Name}}
 	grpc.ServerStream
 }
 
 func (x *Show{{.Name}}) Init() {
-	x.data = make(map[string]{{.Pkg}}.{{.Name}})
+	x.Data = make(map[string]{{.Pkg}}.{{.Name}})
 }
 
 func (x *Show{{.Name}}) Send(m *{{.Pkg}}.{{.Name}}) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Client, err error) {
-	x.data = make(map[string]{{.Pkg}}.{{.Name}})
+	x.Data = make(map[string]{{.Pkg}}.{{.Name}})
 	if err != nil {
 		return
 	}
@@ -63,17 +63,17 @@ func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Cli
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
 	if found {
 		assert.Equal(t, *obj, check, "{{.Name}} are equal")
@@ -81,7 +81,7 @@ func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 }
 
 func (x *Show{{.Name}}) AssertNotFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
 }
 
@@ -194,7 +194,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
 
 	// test delete
 	_, err = api.Delete{{.Name}}(ctx, &testData[0])
@@ -202,7 +202,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	show.Init()
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData) - 1, len(show.data), "Show count")
+	assert.Equal(t, len(testData) - 1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.Update{{.Name}}(ctx, &testData[0])
@@ -232,6 +232,11 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show {{.Name}}")
 	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.{{.UpdateField}} = testData[0].{{.UpdateField}}
+	_, err = api.Update{{.Name}}(ctx, &updater)
+	assert.Nil(t, err, "Update back {{.Name}}")
 {{- end}}
 }
 

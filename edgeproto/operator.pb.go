@@ -599,7 +599,7 @@ func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
 
 // Sync will sync changes for any Operator objects.
 func (s *OperatorStore) Sync(ctx context.Context, cacher OperatorCacher) error {
-	str := objstore.DbKeyPrefixString(&OperatorKey{})
+	str := objstore.DbKeyPrefixString(&OperatorKey{}) + "/"
 	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
 		obj := Operator{}
 		// Even on parse error, we should still call back to keep
