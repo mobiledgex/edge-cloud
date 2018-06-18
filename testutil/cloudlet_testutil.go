@@ -27,21 +27,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowCloudlet struct {
-	data map[string]edgeproto.Cloudlet
+	Data map[string]edgeproto.Cloudlet
 	grpc.ServerStream
 }
 
 func (x *ShowCloudlet) Init() {
-	x.data = make(map[string]edgeproto.Cloudlet)
+	x.Data = make(map[string]edgeproto.Cloudlet)
 }
 
 func (x *ShowCloudlet) Send(m *edgeproto.Cloudlet) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowCloudlet) ReadStream(stream edgeproto.CloudletApi_ShowCloudletClient, err error) {
-	x.data = make(map[string]edgeproto.Cloudlet)
+	x.Data = make(map[string]edgeproto.Cloudlet)
 	if err != nil {
 		return
 	}
@@ -53,17 +53,17 @@ func (x *ShowCloudlet) ReadStream(stream edgeproto.CloudletApi_ShowCloudletClien
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowCloudlet) CheckFound(obj *edgeproto.Cloudlet) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Cloudlet %s", obj.Key.GetKeyString())
 	if found {
 		assert.Equal(t, *obj, check, "Cloudlet are equal")
@@ -71,7 +71,7 @@ func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
 }
 
 func (x *ShowCloudlet) AssertNotFound(t *testing.T, obj *edgeproto.Cloudlet) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Cloudlet %s", obj.Key.GetKeyString())
 }
 
@@ -184,7 +184,7 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
 
 	// test delete
 	_, err = api.DeleteCloudlet(ctx, &testData[0])
@@ -192,7 +192,7 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	show.Init()
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateCloudlet(ctx, &testData[0])
