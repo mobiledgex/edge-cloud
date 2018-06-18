@@ -392,6 +392,12 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 			continue
 		}
 
+		if field.Type.Kind() == reflect.Array || field.Type.Kind() == reflect.Slice {
+			if field.Type.Elem().Kind() == reflect.Uint8 && strings.HasSuffix(field.Name, "Ip") {
+				info.Flow = true
+			}
+		}
+
 		if tag != "" {
 			info.Key = tag
 		} else {
