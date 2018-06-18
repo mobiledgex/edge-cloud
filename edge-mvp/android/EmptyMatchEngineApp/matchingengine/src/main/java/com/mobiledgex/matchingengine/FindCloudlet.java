@@ -3,12 +3,14 @@ package com.mobiledgex.matchingengine;
 import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
-
 import java.util.concurrent.Callable;
+
 import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class FindCloudlet implements Callable {
     public static final String TAG = "FindCloudlet";
@@ -34,14 +36,14 @@ public class FindCloudlet implements Callable {
     }
 
     @Override
-    public FindCloudletResponse call() throws MissingRequestException {
+    public FindCloudletResponse call() throws MissingRequestException, StatusRuntimeException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: FindCloudlet does not have a request object to use MatchEngine!");
         }
 
         FindCloudletResponse cloudletResponse = null;
 
-        AppClient.Match_Engine_Reply reply = null;
+        AppClient.Match_Engine_Reply reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
@@ -50,9 +52,6 @@ public class FindCloudlet implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .findCloudlet(mRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             if (channel != null) {
                 channel.shutdown();

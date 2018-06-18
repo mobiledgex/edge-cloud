@@ -9,6 +9,7 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class RegisterClient implements Callable {
     public static final String TAG = "RegisterClient";
@@ -35,7 +36,7 @@ public class RegisterClient implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Status call() throws MissingRequestException {
+    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
@@ -49,9 +50,6 @@ public class RegisterClient implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .registerClient(mRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             if (channel != null) {
                 channel.shutdown();

@@ -9,6 +9,7 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class VerifyLocation implements Callable {
     public static final String TAG = "VerifyLocationTask";
@@ -35,7 +36,7 @@ public class VerifyLocation implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Loc_Verify call() throws MissingRequestException {
+    public AppClient.Match_Engine_Loc_Verify call() throws MissingRequestException, StatusRuntimeException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
         }
@@ -49,9 +50,6 @@ public class VerifyLocation implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .verifyLocation(mRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             if (channel != null) {
                 channel.shutdown();
