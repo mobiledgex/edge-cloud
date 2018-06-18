@@ -5,6 +5,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -15,26 +16,19 @@ import (
 
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
 
-type ShowOperator struct {
-	data map[string]edgeproto.Operator
-	grpc.ServerStream
-}
-
-func (x *ShowOperator) init() {
-	x.data = make(map[string]edgeproto.Operator)
-}
-
 var (
-	commandName = "setup-mex"
-	action      = flag.String("action", "", actionList)
-	deployment  = flag.String("deployment", "process", deploymentList)
-	dataFile    = flag.String("datafile", "", "optional yml data file")
-	setupFile   = flag.String("setupfile", "", "mandatory yml topology file")
-	procs       processData
+	commandName  = "setup-mex"
+	actions      = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
+	deployment   = flag.String("deployment", "process", deploymentList)
+	dataFile     = flag.String("datafile", "", "optional yml data file")
+	setupFile    = flag.String("setupfile", "", "mandatory yml topology file")
+	outputDir    = flag.String("outputdir", "", "option directory to store output and logs, TS suffix will be replaced with timestamp")
+	useTimestamp = flag.Bool("timestamp", false, "append current timestamp to outputdir")
+
+	procs processData
 )
 
 type applicationData struct {
@@ -70,15 +64,16 @@ type processData struct {
 }
 
 var actionChoices = map[string]bool{
-	"start":  true,
-	"stop":   true,
-	"status": true,
-	//	"show":    true, TBD
-	"update":  true,
-	"delete":  true,
-	"create":  true,
-	"deploy":  true,
-	"cleanup": true,
+	"start":     true,
+	"stop":      true,
+	"status":    true,
+	"show":      true,
+	"update":    true,
+	"delete":    true,
+	"create":    true,
+	"deploy":    true,
+	"cleanup":   true,
+	"fetchlogs": true,
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -93,6 +88,10 @@ var yamlExceptions = map[string]map[string]bool{
 var data applicationData
 
 var apiConnectTimeout = 5 * time.Second
+
+var actionSlice = make([]string, 0)
+
+var apiAddrsUpdated = false
 
 var actionList = fmt.Sprintf("%v", reflect.ValueOf(actionChoices).MapKeys())
 
@@ -231,6 +230,10 @@ func getExternalApiAddress(internalApiAddr string, externalHost string) string {
 //hostname and api port when connecting to the API.  This needs to be done after startup
 //but before trying to connect to the APIs remotely
 func updateApiAddrs() {
+	if apiAddrsUpdated {
+		//no need to do this more than once
+		return
+	}
 	for i, ctrl := range procs.Controllers {
 		procs.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
 	}
@@ -239,6 +242,74 @@ func updateApiAddrs() {
 	}
 	for i, crm := range procs.Crms {
 		procs.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+	}
+	apiAddrsUpdated = true
+}
+
+func printYaml(i interface{}) {
+	out, err := yaml.Marshal(i)
+	if err != nil {
+		log.Fatalf("Error encoding yaml for %+v: %v", i, err)
+	}
+	s := string(out[:])
+	log.Printf("YAML: %s %s\n", s, out)
+}
+
+//creates an output directory with an optional timestamp.  Server log files, output from APIs, and
+//output from the script itself will all go there if specified
+func createOutputDir() {
+	if *useTimestamp {
+		startTimestamp := time.Now().Format("2006-01-02T15:04:05")
+		*outputDir = *outputDir + "/" + startTimestamp
+	}
+	fmt.Printf("Creating output dir: %s\n", *outputDir)
+	err := os.MkdirAll(*outputDir, 0755)
+	if err != nil {
+		log.Fatalf("Error trying to create directory %v: %v\n", *outputDir, err)
+	}
+
+	logName := *outputDir + "/" + commandName + ".log"
+	logFile, err := os.OpenFile(logName, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
+
+	if err != nil {
+		log.Fatalf("Error creating logfile %s\n", logName)
+	}
+	//log to both stdout and logfile
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
+}
+
+//for specific output that we want to put in a separate file.  If no
+//output dir, just  print to the stdout
+func printToFile(fname string, out string) {
+	if *outputDir == "" {
+		fmt.Print(out)
+	} else {
+		outfile := *outputDir + "/" + fname
+		ofile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
+		}
+		defer ofile.Close()
+		fmt.Fprintf(ofile, out)
+
+	}
+}
+
+func runShowCommands() {
+	var showCmds = map[string]string{
+		"operators:":    "ShowOperator",
+		"developers:":   "ShowDeveloper",
+		"cloudlets:":    "ShowCloudlet",
+		"apps:":         "ShowApp",
+		"appinstances:": "ShowAppInst",
+	}
+	for label, cmd := range showCmds {
+		cmd := exec.Command("edgectl", "--addr", procs.Controllers[0].ApiAddr, "controller", cmd)
+		log.Printf("generating output for %s\n", label)
+		out, _ := cmd.CombinedOutput()
+		printToFile("show-commands.yml", label+"\n"+string(out)+"\n")
 	}
 }
 
@@ -265,7 +336,6 @@ func runApis(mode string) bool {
 				_, err = opAPI.UpdateOperator(ctx, &o)
 			case "delete":
 				_, err = opAPI.DeleteOperator(ctx, &o)
-
 			}
 		}
 		devApi := edgeproto.NewDeveloperApiClient(ctrlapi)
@@ -323,8 +393,11 @@ func runApis(mode string) bool {
 }
 
 func getLogFile(procname string) string {
-	//hardcoding to current dir for now, make this an option maybe
-	return "./" + procname + ".log"
+	if *outputDir == "" {
+		return "./" + procname + ".log"
+	} else {
+		return *outputDir + "/" + procname + ".log"
+	}
 }
 
 func readSetupFile(setupfile string) {
@@ -353,29 +426,6 @@ func stopProcesses() {
 	exec.Command("sh", "-c", "pkill -SIGINT dme-server").Output()
 }
 
-func cleanup() {
-	for _, p := range procs.Etcds {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-	for _, p := range procs.Controllers {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-	for _, p := range procs.Crms {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-	for _, p := range procs.Dmes {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-}
-
 func runPlaybook(playbook string, evars []string) bool {
 	invFile, found := createAnsibleInventoryFile()
 	copySetupFileToAnsible()
@@ -390,11 +440,11 @@ func runPlaybook(playbook string, evars []string) bool {
 		argstr += ev
 		argstr += " "
 	}
-	log.Printf("Running ansible-playbook %s -i %s -e %s", playbook, invFile, "'"+argstr+"'")
+	log.Printf("Running Playbook: %s with extra-vars: %s\n", playbook, argstr)
 	cmd := exec.Command("ansible-playbook", "-i", invFile, "-e", argstr, playbook)
 
 	output, err := cmd.CombinedOutput()
-	fmt.Printf("Ansible Output:\n%v\n", string(output))
+	log.Printf("Ansible Output:\n%v\n", string(output))
 
 	if err != nil {
 		log.Fatalf("Ansible playbook failed: %v", err)
@@ -510,8 +560,6 @@ func deployProcesses() bool {
 }
 
 func startRemoteProcesses() bool {
-	log.Printf("\n\n************ Starting Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_start.yml"
 
@@ -519,23 +567,25 @@ func startRemoteProcesses() bool {
 }
 
 func stopRemoteProcesses() bool {
-	log.Printf("\n\n************ Stopping Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_stop.yml"
 	return runPlaybook(playbook, []string{})
 }
 
 func cleanupRemoteProcesses() bool {
-	log.Printf("\n\n************ Cleanup Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_cleanup.yml"
 	return runPlaybook(playbook, []string{})
 }
 
+func fetchRemoteLogs() bool {
+	ansHome := os.Getenv("ANSIBLE_DIR")
+	playbook := ansHome + "/playbooks/mex_fetch_logs.yml"
+	return runPlaybook(playbook, []string{"local_log_path=" + *outputDir})
+}
+
 func startProcesses() bool {
-	log.Printf("\n\n************ Starting Local Processes ************\n\n ")
+	log.Printf("*** Starting Local Processes")
 	for _, etcd := range procs.Etcds {
 		if etcd.Hostname == "localhost" || etcd.Hostname == "127.0.0.1" {
 			log.Printf("Starting Etcd %+v", etcd)
@@ -586,15 +636,26 @@ func startProcesses() bool {
 
 func validateArgs() {
 	flag.Parse()
-	_, validAction := actionChoices[*action]
 	_, validDeployment := deploymentChoices[*deployment]
-
 	errFound := false
 
-	if !validAction {
-		fmt.Printf("ERROR: -action must be one of: %v\n", actionList)
-		errFound = true
+	actionSlice = strings.Split(*actions, ",")
+	for _, action := range actionSlice {
+		_, validAction := actionChoices[action]
+		if !validAction {
+			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
+			errFound = true
+		} else if (action == "update" || action == "create") && *dataFile == "" {
+			if *dataFile == "" {
+				fmt.Printf("ERROR: if action=update or create, -datafile must be specified\n")
+				errFound = true
+			}
+		} else if action == "fetchlogs" && *outputDir == "" {
+			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
+			errFound = true
+		}
 	}
+
 	if !validDeployment {
 		fmt.Printf("ERROR: -deployment must be one of: %v\n", deploymentList)
 		errFound = true
@@ -604,9 +665,6 @@ func validateArgs() {
 			fmt.Printf("ERROR: file " + *dataFile + " does not exist\n")
 			errFound = true
 		}
-	} else if *action == "update" || *action == "create" {
-		fmt.Printf("ERROR: if -action=update or create, -datafile must be specified\n")
-		errFound = true
 	}
 	if *setupFile == "" {
 		fmt.Printf("ERROR -setupfile is mandatory\n")
@@ -617,6 +675,11 @@ func validateArgs() {
 			errFound = true
 		}
 	}
+	if *useTimestamp && *outputDir == "" {
+		fmt.Printf("ERROR: cannot use -timestamp option without -outputdir\n")
+		errFound = true
+	}
+
 	if errFound {
 		printUsage()
 		os.Exit(1)
@@ -626,60 +689,66 @@ func validateArgs() {
 func main() {
 	validateArgs()
 
+	if *outputDir != "" {
+		createOutputDir()
+	}
 	if *dataFile != "" {
 		readDataFile(*dataFile)
 	}
 	if *setupFile != "" {
 		readSetupFile(*setupFile)
 	}
-	switch *action {
-	case "deploy":
-		deployProcesses()
-	case "start":
-		startFailed := false
-		if !startProcesses() {
-			startFailed = true
 
-		} else {
-			if !startRemoteProcesses() {
+	for _, action := range actionSlice {
+		log.Printf("\n\n************ Begin: %s ************\n\n ", action)
+		switch action {
+		case "deploy":
+			deployProcesses()
+		case "start":
+			startFailed := false
+			if !startProcesses() {
 				startFailed = true
+			} else {
+				if !startRemoteProcesses() {
+					startFailed = true
+				}
 			}
-		}
-		if startFailed {
+			if startFailed {
+				stopProcesses()
+				stopRemoteProcesses()
+				log.Fatal("Startup failed, exiting")
+				os.Exit(1)
+			}
+			updateApiAddrs()
+			waitForProcesses()
+
+		case "status":
+			updateApiAddrs()
+			waitForProcesses()
+		case "stop":
 			stopProcesses()
 			stopRemoteProcesses()
-			log.Fatal("Startup failed, exiting")
-			os.Exit(1)
-		}
-		updateApiAddrs()
-		waitForProcesses()
-		if *dataFile != "" {
-			if !runApis("create") {
-				log.Println("Unable to apply application data. Check connectivity to controller APIs")
+		case "create":
+			fallthrough
+		case "update":
+			fallthrough
+		case "delete":
+			updateApiAddrs()
+			if !runApis(action) {
+				log.Printf("Unable to run apis for %s. Check connectivity to controller API\n", action)
 			}
+		case "show":
+			updateApiAddrs()
+			runShowCommands()
+		case "cleanup":
+			cleanupRemoteProcesses()
+		case "fetchlogs":
+			fetchRemoteLogs()
+		default:
+			log.Fatal("unexpected action: " + action)
 		}
-	case "status":
-		updateApiAddrs()
-		waitForProcesses()
-	case "stop":
-		stopProcesses()
-		stopRemoteProcesses()
-	case "create":
-		fallthrough
-	case "update":
-		fallthrough
-	case "delete":
-		fallthrough
-	case "show":
-		updateApiAddrs()
-		if !runApis(*action) {
-			log.Printf("Unable to run apis for %s. Check connectivity to controller APIs", *action)
-		}
-	case "cleanup":
-		cleanup()
-		cleanupRemoteProcesses()
-	default:
-		log.Fatal("unexpected action: " + *action)
 	}
-	fmt.Println("Done")
+	if *outputDir != "" {
+		fmt.Printf("\nResults in: %s\n", *outputDir)
+	}
 }
