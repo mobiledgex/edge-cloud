@@ -198,9 +198,6 @@ func UpdateAppInst(key *edgeproto.AppInstKey) {
 	serverMgr.mux.Lock()
 	defer serverMgr.mux.Unlock()
 	for _, server := range serverMgr.table {
-		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorDME {
-			continue
-		}
 		server.UpdateAppInst(key)
 	}
 }
@@ -325,9 +322,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 		}
 		if sendAll {
 			util.DebugLog(util.DebugLevelNotify, "Send all", "client", s.peerAddr)
-			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorDME {
-				s.handler.GetAllAppInstKeys(appInsts)
-			}
+			s.handler.GetAllAppInstKeys(appInsts)
 			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
 				s.handler.GetAllCloudletKeys(cloudlets)
 			}

@@ -739,7 +739,7 @@ func (s *AppInstStore) LoadOne(key string) (*AppInst, int64, error) {
 
 // Sync will sync changes for any AppInst objects.
 func (s *AppInstStore) Sync(ctx context.Context, cacher AppInstCacher) error {
-	str := objstore.DbKeyPrefixString(&AppInstKey{})
+	str := objstore.DbKeyPrefixString(&AppInstKey{}) + "/"
 	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
 		obj := AppInst{}
 		// Even on parse error, we should still call back to keep
