@@ -381,7 +381,7 @@ func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
 
 // Sync will sync changes for any {{.Name}} objects.
 func (s *{{.Name}}Store) Sync(ctx context.Context, cacher {{.Name}}Cacher) error {
-	str := objstore.DbKeyPrefixString(&{{.Name}}Key{})
+	str := objstore.DbKeyPrefixString(&{{.Name}}Key{}) + "/"
 	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
 		obj := {{.Name}}{}
 		// Even on parse error, we should still call back to keep

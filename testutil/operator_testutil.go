@@ -25,21 +25,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowOperator struct {
-	data map[string]edgeproto.Operator
+	Data map[string]edgeproto.Operator
 	grpc.ServerStream
 }
 
 func (x *ShowOperator) Init() {
-	x.data = make(map[string]edgeproto.Operator)
+	x.Data = make(map[string]edgeproto.Operator)
 }
 
 func (x *ShowOperator) Send(m *edgeproto.Operator) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClient, err error) {
-	x.data = make(map[string]edgeproto.Operator)
+	x.Data = make(map[string]edgeproto.Operator)
 	if err != nil {
 		return
 	}
@@ -51,17 +51,17 @@ func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClien
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowOperator) CheckFound(obj *edgeproto.Operator) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Operator %s", obj.Key.GetKeyString())
 	if found {
 		assert.Equal(t, *obj, check, "Operator are equal")
@@ -69,7 +69,7 @@ func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
 }
 
 func (x *ShowOperator) AssertNotFound(t *testing.T, obj *edgeproto.Operator) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Operator %s", obj.Key.GetKeyString())
 }
 
@@ -182,7 +182,7 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
 
 	// test delete
 	_, err = api.DeleteOperator(ctx, &testData[0])
@@ -190,7 +190,7 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	show.Init()
 	err = api.ShowOperator(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateOperator(ctx, &testData[0])

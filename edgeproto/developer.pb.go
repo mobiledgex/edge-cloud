@@ -601,7 +601,7 @@ func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
 
 // Sync will sync changes for any Developer objects.
 func (s *DeveloperStore) Sync(ctx context.Context, cacher DeveloperCacher) error {
-	str := objstore.DbKeyPrefixString(&DeveloperKey{})
+	str := objstore.DbKeyPrefixString(&DeveloperKey{}) + "/"
 	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
 		obj := Developer{}
 		// Even on parse error, we should still call back to keep
