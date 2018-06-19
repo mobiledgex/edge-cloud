@@ -6,6 +6,7 @@ Package gencmd is a generated protocol buffer package.
 
 It is generated from these files:
 	app-client.proto
+	dynamic-location-group.proto
 	loc.proto
 
 It has these top-level messages:
@@ -14,6 +15,9 @@ It has these top-level messages:
 	Match_Engine_Loc_Verify
 	Match_Engine_Loc
 	Match_Engine_Status
+	DynamicLocGroupAdd
+	DlgMessage
+	DlgReply
 	Loc
 */
 package gencmd
@@ -48,10 +52,11 @@ var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag
 var Match_Engine_RequestInIdType string
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 15)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Request_IDType_name[int32(in.IdType)])
 	s = append(s, in.Id)
+	s = append(s, in.Uuid)
 	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
@@ -87,10 +92,11 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 }
 
 func Match_Engine_RequestHeaderSlicer() []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 15)
 	s = append(s, "Ver")
 	s = append(s, "IdType")
 	s = append(s, "Id")
+	s = append(s, "Uuid")
 	s = append(s, "CarrierID")
 	s = append(s, "CarrierName")
 	s = append(s, "Tower")
@@ -139,7 +145,7 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
-	s = append(s, strconv.FormatBool(in.Status))
+	s = append(s, distributed_match_engine.Match_Engine_Reply_MrStatus_name[int32(in.Status)])
 	s = append(s, in.Token)
 	return s
 }
@@ -225,20 +231,79 @@ func Match_Engine_LocHeaderSlicer() []string {
 }
 
 func Match_Engine_StatusSlicer(in *distributed_match_engine.Match_Engine_Status) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Status_ME_Status_name[int32(in.Status)])
 	s = append(s, strconv.FormatUint(uint64(in.ErrorCode), 10))
 	s = append(s, in.Token)
+	s = append(s, in.Cookie)
+	s = append(s, in.UserData)
 	return s
 }
 
 func Match_Engine_StatusHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, "Ver")
 	s = append(s, "Status")
 	s = append(s, "ErrorCode")
 	s = append(s, "Token")
+	s = append(s, "Cookie")
+	s = append(s, "UserData")
+	return s
+}
+
+func DynamicLocGroupAddSlicer(in *distributed_match_engine.DynamicLocGroupAdd) []string {
+	s := make([]string, 0, 12)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, distributed_match_engine.DynamicLocGroupAdd_IDType_name[int32(in.IdType)])
+	s = append(s, in.Id)
+	s = append(s, in.Uuid)
+	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
+	s = append(s, in.CarrierName)
+	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
+	if in.GpsLocation == nil {
+		in.GpsLocation = &distributed_match_engine.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Lat), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
+	if in.GpsLocation.Timestamp == nil {
+		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	}
+	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
+	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.LgId), 10))
+	s = append(s, in.Token)
+	s = append(s, distributed_match_engine.DynamicLocGroupAdd_DlgCommType_name[int32(in.CommType)])
+	s = append(s, in.CommCookie)
+	return s
+}
+
+func DynamicLocGroupAddHeaderSlicer() []string {
+	s := make([]string, 0, 12)
+	s = append(s, "Ver")
+	s = append(s, "IdType")
+	s = append(s, "Id")
+	s = append(s, "Uuid")
+	s = append(s, "CarrierID")
+	s = append(s, "CarrierName")
+	s = append(s, "Tower")
+	s = append(s, "GpsLocation-Lat")
+	s = append(s, "GpsLocation-Long")
+	s = append(s, "GpsLocation-HorizontalAccuracy")
+	s = append(s, "GpsLocation-VerticalAccuracy")
+	s = append(s, "GpsLocation-Altitude")
+	s = append(s, "GpsLocation-Course")
+	s = append(s, "GpsLocation-Speed")
+	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "LgId")
+	s = append(s, "Token")
+	s = append(s, "CommType")
+	s = append(s, "CommCookie")
 	return s
 }
 
@@ -446,10 +511,62 @@ var RegisterClientCmd = &cobra.Command{
 	},
 }
 
+var AddUserToGroupCmd = &cobra.Command{
+	Use: "AddUserToGroup",
+	Run: func(cmd *cobra.Command, args []string) {
+		if Match_Engine_ApiCmd == nil {
+			fmt.Println("Match_Engine_Api client not initialized")
+			return
+		}
+		var err error
+		err = parseMatch_Engine_RequestEnums()
+		if err != nil {
+			fmt.Println("AddUserToGroup: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		objs, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &Match_Engine_RequestIn)
+		cancel()
+		if err != nil {
+			fmt.Println("AddUserToGroup failed: ", err)
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(objs), "\t"))
+			output.Flush()
+		}
+	},
+}
+
 func init() {
 	Match_Engine_RequestFlagSet.Uint32Var(&Match_Engine_RequestIn.Ver, "ver", 0, "Ver")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "Match_Engine_RequestInIdType")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Id, "id", "", "Id")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Uuid, "uuid", "", "Uuid")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CarrierName, "carriername", "", "CarrierName")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.Tower, "tower", 0, "Tower")
@@ -475,6 +592,7 @@ func init() {
 	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
+	AddUserToGroupCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 }
 
 func parseMatch_Engine_RequestEnums() error {

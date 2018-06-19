@@ -145,8 +145,8 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 	key.app_key.DeveloperKey.Name = mreq.DevName
 	key.app_key.Name = mreq.AppName
 	key.app_key.Version = mreq.AppVers
-
-	mreply.Status = false
+	
+	mreply.Status = 1
 	tbl.RLock()
 	carrier, ok := tbl.apps[key]
 	if !ok {
@@ -174,7 +174,7 @@ func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Repl
 		ipaddr = found.accessIp
 		fmt.Printf("Found Loc = %f/%f with IP %s\n",
 			found.location.Lat, found.location.Long, ipaddr.String())
-		mreply.Status = true
+		mreply.Status = 0
 	}
 	tbl.RUnlock()
 }

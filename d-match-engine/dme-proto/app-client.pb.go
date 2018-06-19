@@ -29,6 +29,8 @@ import math "math"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import google_protobuf "github.com/gogo/protobuf/types"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1032,17 +1034,26 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.CarrierName = src.CarrierName
 	m.Tower = src.Tower
 	if src.GpsLocation != nil {
-		if m.GpsLocation == nil {
-			m.GpsLocation = &Loc{}
+		m.GpsLocation = &Loc{}
+		m.GpsLocation.Lat = src.GpsLocation.Lat
+		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+		m.GpsLocation.Altitude = src.GpsLocation.Altitude
+		m.GpsLocation.Course = src.GpsLocation.Course
+		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if src.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
-		*m.GpsLocation = *src.GpsLocation
 	}
 	m.AppId = src.AppId
-	if m.Protocol == nil {
+	if m.Protocol == nil || len(m.Protocol) < len(src.Protocol) {
 		m.Protocol = make([]byte, len(src.Protocol))
 	}
 	copy(m.Protocol, src.Protocol)
-	if m.ServerPort == nil {
+	if m.ServerPort == nil || len(m.ServerPort) < len(src.ServerPort) {
 		m.ServerPort = make([]byte, len(src.ServerPort))
 	}
 	copy(m.ServerPort, src.ServerPort)
@@ -1055,16 +1066,25 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	m.Ver = src.Ver
 	m.Uri = src.Uri
-	if m.ServiceIp == nil {
+	if m.ServiceIp == nil || len(m.ServiceIp) < len(src.ServiceIp) {
 		m.ServiceIp = make([]byte, len(src.ServiceIp))
 	}
 	copy(m.ServiceIp, src.ServiceIp)
 	m.ServicePort = src.ServicePort
 	if src.CloudletLocation != nil {
-		if m.CloudletLocation == nil {
-			m.CloudletLocation = &Loc{}
+		m.CloudletLocation = &Loc{}
+		m.CloudletLocation.Lat = src.CloudletLocation.Lat
+		m.CloudletLocation.Long = src.CloudletLocation.Long
+		m.CloudletLocation.HorizontalAccuracy = src.CloudletLocation.HorizontalAccuracy
+		m.CloudletLocation.VerticalAccuracy = src.CloudletLocation.VerticalAccuracy
+		m.CloudletLocation.Altitude = src.CloudletLocation.Altitude
+		m.CloudletLocation.Course = src.CloudletLocation.Course
+		m.CloudletLocation.Speed = src.CloudletLocation.Speed
+		if src.CloudletLocation.Timestamp != nil {
+			m.CloudletLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
+			m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
 		}
-		*m.CloudletLocation = *src.CloudletLocation
 	}
 	m.Status = src.Status
 	m.Token = src.Token
@@ -1083,10 +1103,19 @@ func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
 	m.CarrierName = src.CarrierName
 	m.Tower = src.Tower
 	if src.NetworkLocation != nil {
-		if m.NetworkLocation == nil {
-			m.NetworkLocation = &Loc{}
+		m.NetworkLocation = &Loc{}
+		m.NetworkLocation.Lat = src.NetworkLocation.Lat
+		m.NetworkLocation.Long = src.NetworkLocation.Long
+		m.NetworkLocation.HorizontalAccuracy = src.NetworkLocation.HorizontalAccuracy
+		m.NetworkLocation.VerticalAccuracy = src.NetworkLocation.VerticalAccuracy
+		m.NetworkLocation.Altitude = src.NetworkLocation.Altitude
+		m.NetworkLocation.Course = src.NetworkLocation.Course
+		m.NetworkLocation.Speed = src.NetworkLocation.Speed
+		if src.NetworkLocation.Timestamp != nil {
+			m.NetworkLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
+			m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
 		}
-		*m.NetworkLocation = *src.NetworkLocation
 	}
 	m.Token = src.Token
 }
@@ -1109,10 +1138,19 @@ func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
 	m.CarrierName = src.CarrierName
 	m.Tower = src.Tower
 	if src.GpsLocation != nil {
-		if m.GpsLocation == nil {
-			m.GpsLocation = &Loc{}
+		m.GpsLocation = &Loc{}
+		m.GpsLocation.Lat = src.GpsLocation.Lat
+		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+		m.GpsLocation.Altitude = src.GpsLocation.Altitude
+		m.GpsLocation.Course = src.GpsLocation.Course
+		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if src.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
-		*m.GpsLocation = *src.GpsLocation
 	}
 	m.LgId = src.LgId
 	m.Token = src.Token
