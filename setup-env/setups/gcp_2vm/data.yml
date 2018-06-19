@@ -12,7 +12,6 @@ cloudlets:
        name: TMUS
     name: tmocloud1
   accessip: [10,100,10,4] 
-  accessip_str: 0a640a04 #for ansible to cli
   location: 
      lat: 99.99
      long: 123.456
@@ -22,7 +21,6 @@ cloudlets:
        name: TMUS
     name: tmocloud2
   accessip: [10,100,10,5]
-  accessip_str: 0a640a05 #for ansible to cli
   location:
      lat: 67.89
      long: 11.223
@@ -57,5 +55,4 @@ appinstances:
     id: 123
   liveness: 1
   ip: [10,100,10,4]
-  ip_str: 0a640a04 #for ansible to cli
   port: 443 
