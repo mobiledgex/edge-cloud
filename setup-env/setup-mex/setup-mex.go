@@ -646,10 +646,8 @@ func validateArgs() {
 			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
 			errFound = true
 		} else if (action == "update" || action == "create") && *dataFile == "" {
-			if *dataFile == "" {
-				fmt.Printf("ERROR: if action=update or create, -datafile must be specified\n")
-				errFound = true
-			}
+			fmt.Printf("ERROR: if action=update or create, -datafile must be specified\n")
+			errFound = true
 		} else if action == "fetchlogs" && *outputDir == "" {
 			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
 			errFound = true
