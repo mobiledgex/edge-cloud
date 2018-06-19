@@ -3,8 +3,6 @@
 syntax = "proto3";
 package distributed_match_engine;
 
-import "loc.proto";
-
 message DlgMessage {
   uint32 ver = 1;
   // Dynamic Location Group Id
@@ -12,7 +10,7 @@ message DlgMessage {
   // Comm Cookie if secure
   string CommCookie = 3;
   // Message ID
-  uint64 messageId = 4;
+  uint64 MessageId = 4;
   // Need acknowledgement
   enum DlgAck {
     DlgAckEachMessage = 0;

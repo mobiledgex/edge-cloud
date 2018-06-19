@@ -4,11 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"strings"
 
 	dme "github.com/mobiledgex/sunay-private/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -25,8 +22,9 @@ type server struct{}
 func (s *server) SendToGroup(ctx context.Context, req *dme.DlgMessage) (*dme.DlgReply,
 	error) {
 
-	var mreq *dme.DlgMessage
+	var mreq *dme.DlgReply
 
+	fmt.Printf("SendToGroup: To Group %d\n", req.LgId);
 	mreq = new(dme.DlgReply)
 	mreg.AckId = req.MessageId
 	return mreq, nil
