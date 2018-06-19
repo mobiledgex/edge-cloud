@@ -10,7 +10,6 @@ import com.google.protobuf.ByteString;
 
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -18,6 +17,7 @@ import java.util.concurrent.Future;
 import distributed_match_engine.AppClient;
 import distributed_match_engine.AppClient.Match_Engine_Request;
 import distributed_match_engine.LocOuterClass.Loc;
+import io.grpc.StatusRuntimeException;
 
 import android.content.pm.PackageInfo;
 
@@ -131,7 +131,21 @@ public class MatchingEngine {
     }
 
     /**
-     * Registers device on the MatchingEngine server.
+     * Registers Client using blocking API call.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws StatusRuntimeException
+     */
+    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws StatusRuntimeException {
+        RegisterClient registerClient = new RegisterClient(this);
+        registerClient.setRequest(request, timeoutInMilliseconds);
+        return registerClient.call();
+    }
+
+    /**
+     * Registers device on the MatchingEngine server. Returns a Future.
      * @param request
      * @param timeoutInMilliseconds
      * @return
@@ -142,20 +156,14 @@ public class MatchingEngine {
         return submit(registerClient);
     }
 
-    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
-        RegisterClient registerClient = new RegisterClient(this);
-        registerClient.setRequest(request, timeoutInMilliseconds);
-        return registerClient.call();
-    }
-
     /**
      * findCloudlet finds the closest cloudlet instance as per request.
      * @param request
      * @return cloudlet URI.
-     * @throws InterruptedException
-     * @throws ExecutionException
+     * @throws StatusRuntimeException
      */
-    public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws StatusRuntimeException {
         FindCloudlet findCloudlet = new FindCloudlet(this);
         findCloudlet.setRequest(request, timeoutInMilliseconds);
         return findCloudlet.call();
@@ -178,10 +186,10 @@ public class MatchingEngine {
      * parameters on the subscriber network side.
      * @param request
      * @return boolean validated or not.
-     * @throws InterruptedException
-     * @throws ExecutionException
+     * @throws StatusRuntimeException
      */
-    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws StatusRuntimeException {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return verifyLocation.call();
@@ -204,8 +212,10 @@ public class MatchingEngine {
      * @param request
      * @param timeoutInMilliseconds
      * @return
+     * @throws StatusRuntimeException
      */
-    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws StatusRuntimeException {
         GetLocation getLocation = new GetLocation(this);
         getLocation.setRequest(request, timeoutInMilliseconds);
         return getLocation.call();
