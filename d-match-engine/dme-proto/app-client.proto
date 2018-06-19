@@ -16,28 +16,30 @@ message Match_Engine_Request {
   IDType IdType = 2;
   // Actual ID
   string Id = 3;
+  // App/OS generated ID
+  string Uuid = 4;
   // The carrier ID that user is connected to ("Mobile Country Code")
-  uint64 CarrierID = 4;
+  uint64 CarrierID = 5;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 5;
+  string CarrierName = 6;
   // The tower that user is currently connected to
-  uint64 Tower = 6;
+  uint64 Tower = 7;
   // The GPS location of the user 
-  Loc GpsLocation = 7;
+  Loc GpsLocation = 8;
   // Edge-cloud assigned application ID
-  uint64 AppId = 8;
+  uint64 AppId = 9;
   // Protocol application uses
-  bytes Protocol = 9;
+  bytes Protocol = 10;
   // The protocol port on the server side
-  bytes ServerPort = 10;
+  bytes ServerPort = 11;
   // App Developer Name
-  string DevName = 11;
+  string DevName = 12;
   // App Name
-  string AppName = 12;
+  string AppName = 13;
   // App Version
-  string AppVers = 13;
+  string AppVers = 14;
   // Token provided by the Operator for subsequent calls
-  string Token = 14;
+  string Token = 15;
 }
 
 message Match_Engine_Reply {
@@ -51,7 +53,11 @@ message Match_Engine_Reply {
   // location of the cloudlet?
   Loc cloudlet_location = 5;
   // Status return
-  bool Status = 6;
+  enum MrStatus {
+    MrSUCCESS = 0;
+    MrFAIL = 1;
+  }
+  MrStatus Status = 6;
   // Token
   string Token = 7;
 }
@@ -110,6 +116,45 @@ message Match_Engine_Status {
   uint32 ErrorCode = 3;
   // Token
   string Token = 4;
+  // Cookie to use for future comminication
+  string Cookie = 5;
+  // Not used
+  string UserData = 6;
+}
+
+message DynamicLocGroupAdd {
+  uint32 ver = 1;
+  // User ID type - IMEI, MSISDN etc
+  enum IDType {
+	  IMEI = 0;
+	  MSISDN = 1;
+	  IPADDR = 2;
+  }
+  IDType IdType = 2;
+  // Actual ID
+  string Id = 3;
+  // App/OS generated ID
+  string Uuid = 4;
+  // The carrier ID that user is connected to ("Mobile Country Code")
+  uint64 CarrierID = 5;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 6;
+  // The tower that user is currently connected to
+  uint64 Tower = 7;
+  // The GPS location of the user 
+  Loc GpsLocation = 8;
+  // Dynamic Location Group Id
+  uint64 LgId = 9;
+  // Token
+  string Token = 10;
+  // Use Secure communication or Open  with the group
+  enum DlgCommType {
+    DlgSecure = 0;
+    DlgOpen = 1;
+  }
+  DlgCommType CommType = 11;
+  // Not used
+  string CommCookie = 12;
 }
 
 service Match_Engine_Api {
@@ -117,6 +162,7 @@ service Match_Engine_Api {
   rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
   rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
   rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
+  rpc AddUserToGroup(Match_Engine_Request) returns (Match_Engine_Status) {}
 }
 
 

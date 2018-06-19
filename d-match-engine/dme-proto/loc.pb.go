@@ -133,9 +133,10 @@ func (m *Loc) CopyInFields(src *Loc) {
 	m.Course = src.Course
 	m.Speed = src.Speed
 	if src.Timestamp != nil {
-		m.Timestamp = &google_protobuf.Timestamp{}
-		m.Timestamp.Seconds = src.Timestamp.Seconds
-		m.Timestamp.Nanos = src.Timestamp.Nanos
+		if m.Timestamp == nil {
+			m.Timestamp = &google_protobuf.Timestamp{}
+		}
+		*m.Timestamp = *src.Timestamp
 	}
 }
 

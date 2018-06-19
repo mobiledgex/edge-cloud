@@ -1,0 +1,37 @@
+// Dynamic Location Group APIs
+
+syntax = "proto3";
+package distributed_match_engine;
+
+import "loc.proto";
+
+message DlgMessage {
+  uint32 ver = 1;
+  // Dynamic Location Group Id
+  uint64 LgId = 2;
+  // Comm Cookie if secure
+  string CommCookie = 3;
+  // Message ID
+  uint64 messageId = 4;
+  // Need acknowledgement
+  enum DlgAck {
+    DlgAckEachMessage = 0;
+    DlgAsyEveryNMessage = 1;
+    DlgNoAck = 2;
+  }
+  DlgAck AckType = 5;
+  // Message
+  string Message = 6;
+}
+
+message DlgReply {
+  uint32 ver = 1;
+  // AckId
+  uint64 AckId = 2;
+  // Cookie for Secure comm
+  string CommCookie = 3;
+}
+
+service DynamicLocGroupApi {
+  rpc SendToGroup(DlgMessage) returns (DlgReply) {}
+}
