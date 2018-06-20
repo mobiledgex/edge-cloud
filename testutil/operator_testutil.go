@@ -144,16 +144,24 @@ func (x *OperatorCommonApi) ShowOperator(ctx context.Context, filter *edgeproto.
 	}
 }
 
-func InternalOperatorCudTest(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+func NewInternalOperatorApi(api edgeproto.OperatorApiServer) *OperatorCommonApi {
 	apiWrap := OperatorCommonApi{}
 	apiWrap.internal_api = api
-	basicOperatorCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientOperatorApi(api edgeproto.OperatorApiClient) *OperatorCommonApi {
+	apiWrap := OperatorCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalOperatorCudTest(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
 }
 
 func ClientOperatorCudTest(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
-	apiWrap := OperatorCommonApi{}
-	apiWrap.client_api = api
-	basicOperatorCudTest(t, &apiWrap, testData)
+	basicOperatorCudTest(t, NewClientOperatorApi(api), testData)
 }
 
 func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {

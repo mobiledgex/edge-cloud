@@ -18,7 +18,6 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "sync"
 import "github.com/mobiledgex/edge-cloud/util"
 
 import io "io"
@@ -448,25 +447,19 @@ func (m *Operator) Matches(filter *Operator) bool {
 	return true
 }
 
+const OperatorFieldKey = "2"
 const OperatorFieldKeyName = "2.1"
 
 var OperatorAllFields = []string{
 	OperatorFieldKeyName,
 }
 
+var OperatorAllFieldsMap = map[string]struct{}{
+	OperatorFieldKeyName: struct{}{},
+}
+
 func (m *Operator) CopyInFields(src *Operator) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			m.Key.Name = src.Key.Name
@@ -479,23 +472,15 @@ func (s *Operator) HasFields() bool {
 }
 
 type OperatorStore struct {
-	objstore     objstore.ObjStore
-	listOperator map[OperatorKey]struct{}
+	objstore objstore.ObjStore
 }
 
 func NewOperatorStore(objstore objstore.ObjStore) OperatorStore {
 	return OperatorStore{objstore: objstore}
 }
 
-type OperatorCacher interface {
-	SyncOperatorUpdate(m *Operator, rev int64)
-	SyncOperatorDelete(m *Operator, rev int64)
-	SyncOperatorPrune(current map[OperatorKey]struct{})
-	SyncOperatorRevOnly(rev int64)
-}
-
 func (s *OperatorStore) Create(m *Operator, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	err := m.Validate(OperatorAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
@@ -515,7 +500,8 @@ func (s *OperatorStore) Create(m *Operator, wait func(int64)) (*Result, error) {
 }
 
 func (s *OperatorStore) Update(m *Operator, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
@@ -597,94 +583,18 @@ func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
 	return &obj, rev, nil
 }
 
-// Sync will sync changes for any Operator objects.
-func (s *OperatorStore) Sync(ctx context.Context, cacher OperatorCacher) error {
-	str := objstore.DbKeyPrefixString(&OperatorKey{}) + "/"
-	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
-		obj := Operator{}
-		// Even on parse error, we should still call back to keep
-		// the revision numbers in sync so no caller hangs on wait.
-		action := in.Action
-		if action == objstore.SyncUpdate || action == objstore.SyncList {
-			err := json.Unmarshal(in.Value, &obj)
-			if err != nil {
-				util.WarnLog("Failed to parse Operator data", "val", string(in.Value))
-				action = objstore.SyncRevOnly
-			}
-		} else if action == objstore.SyncDelete {
-			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
-			OperatorKeyStringParse(keystr, obj.GetKey())
-		}
-		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
-		switch action {
-		case objstore.SyncUpdate:
-			cacher.SyncOperatorUpdate(&obj, in.Rev)
-		case objstore.SyncDelete:
-			cacher.SyncOperatorDelete(&obj, in.Rev)
-		case objstore.SyncListStart:
-			s.listOperator = make(map[OperatorKey]struct{})
-		case objstore.SyncList:
-			s.listOperator[obj.Key] = struct{}{}
-			cacher.SyncOperatorUpdate(&obj, in.Rev)
-		case objstore.SyncListEnd:
-			cacher.SyncOperatorPrune(s.listOperator)
-			s.listOperator = nil
-		case objstore.SyncRevOnly:
-			cacher.SyncOperatorRevOnly(in.Rev)
-		}
-	})
-}
-
 // OperatorCache caches Operator objects in memory in a hash table
 // and keeps them in sync with the database.
 type OperatorCache struct {
-	Store      *OperatorStore
-	Objs       map[OperatorKey]*Operator
-	Rev        int64
-	Mux        util.Mutex
-	Cond       sync.Cond
-	initWait   bool
-	syncDone   bool
-	syncCancel context.CancelFunc
-	notifyCb   func(obj *OperatorKey)
+	Objs      map[OperatorKey]*Operator
+	Mux       util.Mutex
+	List      map[OperatorKey]struct{}
+	NotifyCb  func(obj *OperatorKey)
+	UpdatedCb func(old *Operator, new *Operator)
 }
 
-func NewOperatorCache(store *OperatorStore) *OperatorCache {
-	cache := OperatorCache{
-		Store:    store,
-		Objs:     make(map[OperatorKey]*Operator),
-		initWait: true,
-	}
-	cache.Mux.InitCond(&cache.Cond)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cache.syncCancel = cancel
-	go func() {
-		err := cache.Store.Sync(ctx, &cache)
-		if err != nil {
-			util.WarnLog("Operator Sync failed", "err", err)
-		}
-		cache.syncDone = true
-		cache.Cond.Broadcast()
-	}()
-	return &cache
-}
-
-func (c *OperatorCache) WaitInitSyncDone() {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for c.initWait {
-		c.Cond.Wait()
-	}
-}
-
-func (c *OperatorCache) Done() {
-	c.syncCancel()
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for !c.syncDone {
-		c.Cond.Wait()
-	}
+func InitOperatorCache(cache *OperatorCache) {
+	cache.Objs = make(map[OperatorKey]*Operator)
 }
 
 func (c *OperatorCache) Get(key *OperatorKey, valbuf *Operator) bool {
@@ -712,65 +622,29 @@ func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
 	}
 }
 
-func (c *OperatorCache) SyncOperatorUpdate(in *Operator, rev int64) {
+func (c *OperatorCache) Update(in *Operator, rev int64) {
 	c.Mux.Lock()
+	if c.UpdatedCb != nil {
+		old := c.Objs[*in.GetKey()]
+		new := &Operator{}
+		*new = *in
+		defer c.UpdatedCb(old, new)
+	}
 	c.Objs[*in.GetKey()] = in
-	c.Rev = rev
 	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
-	c.Cond.Broadcast()
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.NotifyCb != nil {
+		c.NotifyCb(in.GetKey())
 	}
 }
 
-func (c *OperatorCache) SyncOperatorDelete(in *Operator, rev int64) {
+func (c *OperatorCache) Delete(in *Operator, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	c.Rev = rev
 	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
-	c.Cond.Broadcast()
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
-	}
-}
-
-func (c *OperatorCache) SyncOperatorPrune(current map[OperatorKey]struct{}) {
-	deleted := make(map[OperatorKey]struct{})
-	c.Mux.Lock()
-	for key, _ := range c.Objs {
-		if _, found := current[key]; !found {
-			delete(c.Objs, key)
-			deleted[key] = struct{}{}
-		}
-	}
-	if c.initWait {
-		c.initWait = false
-		c.Cond.Broadcast()
-	}
-	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		for key, _ := range deleted {
-			c.notifyCb(&key)
-		}
-	}
-}
-
-func (c *OperatorCache) SyncOperatorRevOnly(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
-	c.Cond.Broadcast()
-}
-
-func (c *OperatorCache) SyncWait(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
-	for c.Rev < rev {
-		c.Cond.Wait()
+	if c.NotifyCb != nil {
+		c.NotifyCb(in.GetKey())
 	}
 }
 
@@ -792,7 +666,55 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 }
 
 func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey)) {
-	c.notifyCb = fn
+	c.NotifyCb = fn
+}
+
+func (c *OperatorCache) SetUpdatedCb(fn func(old *Operator, new *Operator)) {
+	c.UpdatedCb = fn
+}
+
+func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := Operator{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		util.WarnLog("Failed to parse Operator data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *OperatorCache) SyncDelete(key []byte, rev int64) {
+	obj := Operator{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	OperatorKeyStringParse(keystr, obj.GetKey())
+	c.Delete(&obj, rev)
+}
+
+func (c *OperatorCache) SyncListStart() {
+	c.List = make(map[OperatorKey]struct{})
+}
+
+func (c *OperatorCache) SyncListEnd() {
+	deleted := make(map[OperatorKey]struct{})
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, found := c.List[key]; !found {
+			delete(c.Objs, key)
+			deleted[key] = struct{}{}
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range deleted {
+			c.NotifyCb(&key)
+		}
+	}
 }
 
 func (m *Operator) GetKey() *OperatorKey {
