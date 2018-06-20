@@ -51,13 +51,14 @@ var ErrObjStoreKeyExists = errors.New("Key already exists")
 type Obj interface {
 	// Validate checks all object fields to make sure they do not
 	// contain invalid data. Primarily used to validate data passed
-	// in by a user.
-	Validate() error
+	// in by a user. Fields is an array of specified fields for
+	// update. It will be nil for create.
+	Validate(fields map[string]struct{}) error
 	// CopyInFields copies in modified fields for an Update.
 	CopyInFields(src Obj)
 	// GetKey returns the ObjKey that uniquely identifies the object.
 	GetKey() ObjKey
-	// HasFields returns true if the object contains a Fields bitmap
+	// HasFields returns true if the object contains a Fields []string
 	// field used for updating only certain fields on Update.
 	HasFields() bool
 }
@@ -83,7 +84,6 @@ const (
 	SyncListStart
 	SyncList
 	SyncListEnd
-	SyncRevOnly
 )
 
 var SyncActionStrs = [...]string{
@@ -92,7 +92,6 @@ var SyncActionStrs = [...]string{
 	"list-start",
 	"list",
 	"list-end",
-	"sync-rev-only",
 }
 
 type SyncCb func(data *SyncCbData)
@@ -121,4 +120,23 @@ func DbKeyPrefixRemove(key string) string {
 	key = key[ii+1:]
 	ii = strings.IndexByte(key, '/')
 	return key[ii+1:]
+}
+
+func DbKeyPrefixParse(inkey string) (region, typ, key string, err error) {
+	key = inkey
+	ii := strings.IndexByte(key, '/')
+	if ii == -1 {
+		return "", "", "", errors.New("No region prefix on db key")
+	}
+	region = key[:ii]
+	key = key[ii+1:]
+
+	ii = strings.IndexByte(key, '/')
+	if ii == -1 {
+		return "", "", "", errors.New("No type prefix on db key")
+	}
+	typ = key[:ii]
+	key = key[ii+1:]
+
+	return region, typ, key, nil
 }

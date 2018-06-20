@@ -17,24 +17,24 @@ func TestCloudletApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	operApi := InitOperatorApi(&dummy)
-	api := InitCloudletApi(&dummy, operApi)
-	operApi.WaitInitDone()
-	api.WaitInitDone()
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
 
 	// cannot create cloudlets without apps
 	ctx := context.TODO()
 	for _, obj := range testutil.CloudletData {
-		_, err := api.CreateCloudlet(ctx, &obj)
+		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
 		assert.NotNil(t, err, "Create cloudlet without operator")
 	}
 
 	// create operators
 	for _, obj := range testutil.OperatorData {
-		_, err := operApi.CreateOperator(ctx, &obj)
+		_, err := operatorApi.CreateOperator(ctx, &obj)
 		assert.Nil(t, err, "Create operator")
 	}
 
-	testutil.InternalCloudletCudTest(t, api, testutil.CloudletData)
+	testutil.InternalCloudletCudTest(t, &cloudletApi, testutil.CloudletData)
 	dummy.Stop()
 }

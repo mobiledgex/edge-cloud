@@ -28,7 +28,7 @@ message Cloudlet {
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
   // IP to use to connect to and control cloudlet site
-  bytes access_ip = 4;
+  bytes access_ip = 4 [(protogen.test_update) = true];
   // Location of the cloudlet site (lat, long?)
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
   // Certs for accessing cloudlet site

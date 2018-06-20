@@ -35,7 +35,7 @@ message AppInst {
   // how to connect to this instance
   bytes ip = 4;
   // port to connect to this instance
-  uint32 port = 5;
+  uint32 port = 5 [(protogen.test_update) = true];
   // type of instance
   enum Liveness {
     UNKNOWN = 0;
@@ -43,10 +43,12 @@ message AppInst {
     DYNAMIC = 2;
   }
   Liveness liveness = 6;
+  // cache app path from app
+  string app_path = 7;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
-  option (protocmd.noconfig) = "CloudletLoc";
+  option (protocmd.noconfig) = "CloudletLoc,AppPath";
 }
 
 // This API is for manual configuration of static app instances.
