@@ -7,46 +7,47 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 // Should only be one of these instantiated in main
 type AppApi struct {
-	store  edgeproto.AppStore
-	cache  *edgeproto.AppCache
-	devApi *DeveloperApi
+	sync  *Sync
+	store edgeproto.AppStore
+	cache edgeproto.AppCache
 }
 
-func InitAppApi(objStore objstore.ObjStore, devApi *DeveloperApi) *AppApi {
-	api := &AppApi{
-		store:  edgeproto.NewAppStore(objStore),
-		devApi: devApi,
-	}
-	api.cache = edgeproto.NewAppCache(&api.store)
-	return api
-}
+var appApi = AppApi{}
 
-func (s *AppApi) WaitInitDone() {
-	s.cache.WaitInitSyncDone()
+func InitAppApi(sync *Sync) {
+	appApi.sync = sync
+	appApi.store = edgeproto.NewAppStore(sync.store)
+	edgeproto.InitAppCache(&appApi.cache)
+	sync.RegisterCache(edgeproto.AppKeyTypeString(), &appApi.cache)
+	appApi.cache.SetUpdatedCb(appApi.UpdatedCb)
 }
 
 func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
 
+func (s *AppApi) GetApp(key *edgeproto.AppKey, buf *edgeproto.App) bool {
+	return s.cache.Get(key, buf)
+}
+
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	if !s.devApi.HasDeveloper(&in.Key.DeveloperKey) {
+	if !developerApi.HasDeveloper(&in.Key.DeveloperKey) {
 		return &edgeproto.Result{}, errors.New("Specified developer not found")
 	}
-	return s.store.Create(in, s.cache.SyncWait)
+	return s.store.Create(in, s.sync.syncWait)
 }
 
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	return s.store.Update(in, s.cache.SyncWait)
+	return s.store.Update(in, s.sync.syncWait)
 }
 
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.cache.SyncWait)
+	return s.store.Delete(in, s.sync.syncWait)
 }
 
 func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {
@@ -55,4 +56,23 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
+}
+
+func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
+	if old == nil {
+		return
+	}
+	if old.AppPath != new.AppPath {
+		util.DebugLog(util.DebugLevelApi, "updating app path")
+		appInstApi.cache.Mux.Lock()
+		for _, inst := range appInstApi.cache.Objs {
+			if inst.Key.AppKey.Matches(&new.Key) {
+				inst.AppPath = new.AppPath
+				if appInstApi.cache.NotifyCb != nil {
+					appInstApi.cache.NotifyCb(inst.GetKey())
+				}
+			}
+		}
+		appInstApi.cache.Mux.Unlock()
+	}
 }

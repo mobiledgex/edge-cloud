@@ -33,6 +33,7 @@ type tmplArgs struct {
 	Name        string
 	KeyName     string
 	UpdateField string
+	UpdateValue string
 }
 
 var tmpl = `
@@ -156,16 +157,24 @@ func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}
 	}
 }
 
-func Internal{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+func NewInternal{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiServer) *{{.Name}}CommonApi {
 	apiWrap := {{.Name}}CommonApi{}
 	apiWrap.internal_api = api
-	basic{{.Name}}CudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi {
+	apiWrap := {{.Name}}CommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func Internal{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
 }
 
 func Client{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
-	apiWrap := {{.Name}}CommonApi{}
-	apiWrap.client_api = api
-	basic{{.Name}}CudTest(t, &apiWrap, testData)
+	basic{{.Name}}CudTest(t, NewClient{{.Name}}Api(api), testData)
 }
 
 func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
@@ -220,7 +229,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	// test update
 	updater := {{.Pkg}}.{{.Name}}{}
 	updater.Key = testData[0].Key
-	updater.{{.UpdateField}} = "update just this"
+	updater.{{.UpdateField}} = {{.UpdateValue}}
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
@@ -228,7 +237,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 
 	show.Init()
 	updater = testData[0]
-	updater.{{.UpdateField}} = "update just this"
+	updater.{{.UpdateField}} = {{.UpdateValue}}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show {{.Name}}")
 	show.AssertFound(t, &updater)
@@ -287,6 +296,14 @@ func (t *TestCud) generateTestCud(message *descriptor.DescriptorProto) {
 	for _, field := range message.Field {
 		if GetTestUpdate(field) {
 			args.UpdateField = generator.CamelCase(*field.Name)
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				args.UpdateValue = "\"update just this\""
+			case descriptor.FieldDescriptorProto_TYPE_BYTES:
+				args.UpdateValue = "[]byte{1,2,3,4}"
+			default:
+				args.UpdateValue = "1101"
+			}
 		}
 	}
 	t.P(gensupport.AutoGenComment)

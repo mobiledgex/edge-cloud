@@ -176,16 +176,24 @@ func (x *AppCommonApi) ShowApp(ctx context.Context, filter *edgeproto.App, showD
 	}
 }
 
-func InternalAppCudTest(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
+func NewInternalAppApi(api edgeproto.AppApiServer) *AppCommonApi {
 	apiWrap := AppCommonApi{}
 	apiWrap.internal_api = api
-	basicAppCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientAppApi(api edgeproto.AppApiClient) *AppCommonApi {
+	apiWrap := AppCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalAppCudTest(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
+	basicAppCudTest(t, NewInternalAppApi(api), testData)
 }
 
 func ClientAppCudTest(t *testing.T, api edgeproto.AppApiClient, testData []edgeproto.App) {
-	apiWrap := AppCommonApi{}
-	apiWrap.client_api = api
-	basicAppCudTest(t, &apiWrap, testData)
+	basicAppCudTest(t, NewClientAppApi(api), testData)
 }
 
 func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
@@ -236,24 +244,4 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	_, err = api.CreateApp(ctx, &bad)
 	assert.NotNil(t, err, "Create App with no key info")
 
-	// test update
-	updater := edgeproto.App{}
-	updater.Key = testData[0].Key
-	updater.AppPath = "update just this"
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppFieldAppPath)
-	_, err = api.UpdateApp(ctx, &updater)
-	assert.Nil(t, err, "Update App %s", testData[0].Key.GetKeyString())
-
-	show.Init()
-	updater = testData[0]
-	updater.AppPath = "update just this"
-	err = api.ShowApp(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show App")
-	show.AssertFound(t, &updater)
-
-	// revert change
-	updater.AppPath = testData[0].AppPath
-	_, err = api.UpdateApp(ctx, &updater)
-	assert.Nil(t, err, "Update back App")
 }

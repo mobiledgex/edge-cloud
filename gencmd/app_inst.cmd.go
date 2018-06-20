@@ -61,7 +61,7 @@ func AppInstKeyHeaderSlicer() []string {
 }
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -93,11 +93,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	}
 	s = append(s, strconv.FormatUint(uint64(in.Port), 10))
 	s = append(s, edgeproto.AppInst_Liveness_name[int32(in.Liveness)])
+	s = append(s, in.AppPath)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -116,6 +117,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Ip")
 	s = append(s, "Port")
 	s = append(s, "Liveness")
+	s = append(s, "AppPath")
 	return s
 }
 
@@ -412,6 +414,9 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
+	}
+	if AppInstFlagSet.Lookup("apppath").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "7")
 	}
 }
 func parseAppInstEnums() error {

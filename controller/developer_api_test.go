@@ -13,9 +13,12 @@ func TestDeveloperApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	api := InitDeveloperApi(&dummy)
-	api.WaitInitDone()
-	testutil.InternalDeveloperCudTest(t, api, testutil.DevData)
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	testutil.InternalDeveloperCudTest(t, &developerApi, testutil.DevData)
 
 	dummy.Stop()
 }
