@@ -144,16 +144,24 @@ func (x *DeveloperCommonApi) ShowDeveloper(ctx context.Context, filter *edgeprot
 	}
 }
 
-func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+func NewInternalDeveloperApi(api edgeproto.DeveloperApiServer) *DeveloperCommonApi {
 	apiWrap := DeveloperCommonApi{}
 	apiWrap.internal_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientDeveloperApi(api edgeproto.DeveloperApiClient) *DeveloperCommonApi {
+	apiWrap := DeveloperCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+	basicDeveloperCudTest(t, NewInternalDeveloperApi(api), testData)
 }
 
 func ClientDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
-	apiWrap := DeveloperCommonApi{}
-	apiWrap.client_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	basicDeveloperCudTest(t, NewClientDeveloperApi(api), testData)
 }
 
 func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {

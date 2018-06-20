@@ -26,7 +26,6 @@ import grpc "google.golang.org/grpc"
 
 import binary "encoding/binary"
 
-import strings "strings"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -800,18 +799,27 @@ const TestGenFieldSf64 = "14"
 const TestGenFieldBb = "15"
 const TestGenFieldOuterEn = "16"
 const TestGenFieldInnerEn = "17"
+const TestGenFieldInnerMsg = "18"
 const TestGenFieldInnerMsgUrl = "18.1"
 const TestGenFieldInnerMsgId = "18.2"
+const TestGenFieldInnerMsgNonnull = "19"
 const TestGenFieldInnerMsgNonnullUrl = "19.1"
 const TestGenFieldInnerMsgNonnullId = "19.2"
+const TestGenFieldIncludeMsg = "20"
 const TestGenFieldIncludeMsgName = "20.1"
 const TestGenFieldIncludeMsgId = "20.2"
+const TestGenFieldIncludeMsgNestedMsg = "20.3"
 const TestGenFieldIncludeMsgNestedMsgName = "20.3.1"
+const TestGenFieldIncludeMsgNonnull = "21"
 const TestGenFieldIncludeMsgNonnullName = "21.1"
 const TestGenFieldIncludeMsgNonnullId = "21.2"
+const TestGenFieldIncludeMsgNonnullNestedMsg = "21.3"
 const TestGenFieldIncludeMsgNonnullNestedMsgName = "21.3.1"
+const TestGenFieldIncludeFields = "22"
 const TestGenFieldIncludeFieldsName = "22.2"
+const TestGenFieldIncludeFieldsNonnull = "23"
 const TestGenFieldIncludeFieldsNonnullName = "23.2"
+const TestGenFieldLoc = "24"
 const TestGenFieldLocLat = "24.1"
 const TestGenFieldLocLong = "24.2"
 const TestGenFieldLocHorizontalAccuracy = "24.3"
@@ -819,8 +827,10 @@ const TestGenFieldLocVerticalAccuracy = "24.4"
 const TestGenFieldLocAltitude = "24.5"
 const TestGenFieldLocCourse = "24.6"
 const TestGenFieldLocSpeed = "24.7"
+const TestGenFieldLocTimestamp = "24.8"
 const TestGenFieldLocTimestampSeconds = "24.8.1"
 const TestGenFieldLocTimestampNanos = "24.8.2"
+const TestGenFieldLocNonnull = "25"
 const TestGenFieldLocNonnullLat = "25.1"
 const TestGenFieldLocNonnullLong = "25.2"
 const TestGenFieldLocNonnullHorizontalAccuracy = "25.3"
@@ -828,23 +838,33 @@ const TestGenFieldLocNonnullVerticalAccuracy = "25.4"
 const TestGenFieldLocNonnullAltitude = "25.5"
 const TestGenFieldLocNonnullCourse = "25.6"
 const TestGenFieldLocNonnullSpeed = "25.7"
+const TestGenFieldLocNonnullTimestamp = "25.8"
 const TestGenFieldLocNonnullTimestampSeconds = "25.8.1"
 const TestGenFieldLocNonnullTimestampNanos = "25.8.2"
 const TestGenFieldRepeatedInt = "26"
 const TestGenFieldIp = "27"
 const TestGenFieldNames = "28"
+const TestGenFieldRepeatedMsg = "29"
 const TestGenFieldRepeatedMsgName = "29.1"
 const TestGenFieldRepeatedMsgId = "29.2"
+const TestGenFieldRepeatedMsgNestedMsg = "29.3"
 const TestGenFieldRepeatedMsgNestedMsgName = "29.3.1"
+const TestGenFieldRepeatedMsgNonnull = "30"
 const TestGenFieldRepeatedMsgNonnullName = "30.1"
 const TestGenFieldRepeatedMsgNonnullId = "30.2"
+const TestGenFieldRepeatedMsgNonnullNestedMsg = "30.3"
 const TestGenFieldRepeatedMsgNonnullNestedMsgName = "30.3.1"
+const TestGenFieldRepeatedFields = "31"
 const TestGenFieldRepeatedFieldsName = "31.2"
+const TestGenFieldRepeatedFieldsNonnull = "32"
 const TestGenFieldRepeatedFieldsNonnullName = "32.2"
+const TestGenFieldRepeatedInnerMsg = "33"
 const TestGenFieldRepeatedInnerMsgUrl = "33.1"
 const TestGenFieldRepeatedInnerMsgId = "33.2"
+const TestGenFieldRepeatedInnerMsgNonnull = "34"
 const TestGenFieldRepeatedInnerMsgNonnullUrl = "34.1"
 const TestGenFieldRepeatedInnerMsgNonnullId = "34.2"
+const TestGenFieldRepeatedLoc = "35"
 const TestGenFieldRepeatedLocLat = "35.1"
 const TestGenFieldRepeatedLocLong = "35.2"
 const TestGenFieldRepeatedLocHorizontalAccuracy = "35.3"
@@ -852,8 +872,10 @@ const TestGenFieldRepeatedLocVerticalAccuracy = "35.4"
 const TestGenFieldRepeatedLocAltitude = "35.5"
 const TestGenFieldRepeatedLocCourse = "35.6"
 const TestGenFieldRepeatedLocSpeed = "35.7"
+const TestGenFieldRepeatedLocTimestamp = "35.8"
 const TestGenFieldRepeatedLocTimestampSeconds = "35.8.1"
 const TestGenFieldRepeatedLocTimestampNanos = "35.8.2"
+const TestGenFieldRepeatedLocNonnull = "36"
 const TestGenFieldRepeatedLocNonnullLat = "36.1"
 const TestGenFieldRepeatedLocNonnullLong = "36.2"
 const TestGenFieldRepeatedLocNonnullHorizontalAccuracy = "36.3"
@@ -861,6 +883,7 @@ const TestGenFieldRepeatedLocNonnullVerticalAccuracy = "36.4"
 const TestGenFieldRepeatedLocNonnullAltitude = "36.5"
 const TestGenFieldRepeatedLocNonnullCourse = "36.6"
 const TestGenFieldRepeatedLocNonnullSpeed = "36.7"
+const TestGenFieldRepeatedLocNonnullTimestamp = "36.8"
 const TestGenFieldRepeatedLocNonnullTimestampSeconds = "36.8.1"
 const TestGenFieldRepeatedLocNonnullTimestampNanos = "36.8.2"
 
@@ -946,19 +969,90 @@ var TestGenAllFields = []string{
 	TestGenFieldRepeatedLocNonnullTimestampNanos,
 }
 
+var TestGenAllFieldsMap = map[string]struct{}{
+	TestGenFieldName:                                 struct{}{},
+	TestGenFieldDb:                                   struct{}{},
+	TestGenFieldFl:                                   struct{}{},
+	TestGenFieldI32:                                  struct{}{},
+	TestGenFieldI64:                                  struct{}{},
+	TestGenFieldU32:                                  struct{}{},
+	TestGenFieldU64:                                  struct{}{},
+	TestGenFieldS32:                                  struct{}{},
+	TestGenFieldS64:                                  struct{}{},
+	TestGenFieldF32:                                  struct{}{},
+	TestGenFieldF64:                                  struct{}{},
+	TestGenFieldSf32:                                 struct{}{},
+	TestGenFieldSf64:                                 struct{}{},
+	TestGenFieldBb:                                   struct{}{},
+	TestGenFieldOuterEn:                              struct{}{},
+	TestGenFieldInnerEn:                              struct{}{},
+	TestGenFieldInnerMsgUrl:                          struct{}{},
+	TestGenFieldInnerMsgId:                           struct{}{},
+	TestGenFieldInnerMsgNonnullUrl:                   struct{}{},
+	TestGenFieldInnerMsgNonnullId:                    struct{}{},
+	TestGenFieldIncludeMsgName:                       struct{}{},
+	TestGenFieldIncludeMsgId:                         struct{}{},
+	TestGenFieldIncludeMsgNestedMsgName:              struct{}{},
+	TestGenFieldIncludeMsgNonnullName:                struct{}{},
+	TestGenFieldIncludeMsgNonnullId:                  struct{}{},
+	TestGenFieldIncludeMsgNonnullNestedMsgName:       struct{}{},
+	TestGenFieldIncludeFieldsName:                    struct{}{},
+	TestGenFieldIncludeFieldsNonnullName:             struct{}{},
+	TestGenFieldLocLat:                               struct{}{},
+	TestGenFieldLocLong:                              struct{}{},
+	TestGenFieldLocHorizontalAccuracy:                struct{}{},
+	TestGenFieldLocVerticalAccuracy:                  struct{}{},
+	TestGenFieldLocAltitude:                          struct{}{},
+	TestGenFieldLocCourse:                            struct{}{},
+	TestGenFieldLocSpeed:                             struct{}{},
+	TestGenFieldLocTimestampSeconds:                  struct{}{},
+	TestGenFieldLocTimestampNanos:                    struct{}{},
+	TestGenFieldLocNonnullLat:                        struct{}{},
+	TestGenFieldLocNonnullLong:                       struct{}{},
+	TestGenFieldLocNonnullHorizontalAccuracy:         struct{}{},
+	TestGenFieldLocNonnullVerticalAccuracy:           struct{}{},
+	TestGenFieldLocNonnullAltitude:                   struct{}{},
+	TestGenFieldLocNonnullCourse:                     struct{}{},
+	TestGenFieldLocNonnullSpeed:                      struct{}{},
+	TestGenFieldLocNonnullTimestampSeconds:           struct{}{},
+	TestGenFieldLocNonnullTimestampNanos:             struct{}{},
+	TestGenFieldRepeatedInt:                          struct{}{},
+	TestGenFieldIp:                                   struct{}{},
+	TestGenFieldNames:                                struct{}{},
+	TestGenFieldRepeatedMsgName:                      struct{}{},
+	TestGenFieldRepeatedMsgId:                        struct{}{},
+	TestGenFieldRepeatedMsgNestedMsgName:             struct{}{},
+	TestGenFieldRepeatedMsgNonnullName:               struct{}{},
+	TestGenFieldRepeatedMsgNonnullId:                 struct{}{},
+	TestGenFieldRepeatedMsgNonnullNestedMsgName:      struct{}{},
+	TestGenFieldRepeatedFieldsName:                   struct{}{},
+	TestGenFieldRepeatedFieldsNonnullName:            struct{}{},
+	TestGenFieldRepeatedInnerMsgUrl:                  struct{}{},
+	TestGenFieldRepeatedInnerMsgId:                   struct{}{},
+	TestGenFieldRepeatedInnerMsgNonnullUrl:           struct{}{},
+	TestGenFieldRepeatedInnerMsgNonnullId:            struct{}{},
+	TestGenFieldRepeatedLocLat:                       struct{}{},
+	TestGenFieldRepeatedLocLong:                      struct{}{},
+	TestGenFieldRepeatedLocHorizontalAccuracy:        struct{}{},
+	TestGenFieldRepeatedLocVerticalAccuracy:          struct{}{},
+	TestGenFieldRepeatedLocAltitude:                  struct{}{},
+	TestGenFieldRepeatedLocCourse:                    struct{}{},
+	TestGenFieldRepeatedLocSpeed:                     struct{}{},
+	TestGenFieldRepeatedLocTimestampSeconds:          struct{}{},
+	TestGenFieldRepeatedLocTimestampNanos:            struct{}{},
+	TestGenFieldRepeatedLocNonnullLat:                struct{}{},
+	TestGenFieldRepeatedLocNonnullLong:               struct{}{},
+	TestGenFieldRepeatedLocNonnullHorizontalAccuracy: struct{}{},
+	TestGenFieldRepeatedLocNonnullVerticalAccuracy:   struct{}{},
+	TestGenFieldRepeatedLocNonnullAltitude:           struct{}{},
+	TestGenFieldRepeatedLocNonnullCourse:             struct{}{},
+	TestGenFieldRepeatedLocNonnullSpeed:              struct{}{},
+	TestGenFieldRepeatedLocNonnullTimestampSeconds:   struct{}{},
+	TestGenFieldRepeatedLocNonnullTimestampNanos:     struct{}{},
+}
+
 func (m *TestGen) CopyInFields(src *TestGen) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		m.Name = src.Name
 	}

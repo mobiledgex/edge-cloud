@@ -131,9 +131,11 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{10, 100, 10, 1},
-		Port:     8089,
+		CloudletLoc: CloudletData[0].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Ip:          []byte{10, 100, 10, 1},
+		Port:        8089,
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -141,9 +143,11 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          2,
 		},
-		Liveness: edgeproto.AppInst_DYNAMIC,
-		Ip:       []byte{10, 100, 10, 2},
-		Port:     8089,
+		CloudletLoc: CloudletData[0].Location,
+		Liveness:    edgeproto.AppInst_DYNAMIC,
+		Ip:          []byte{10, 100, 10, 2},
+		Port:        8089,
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -151,9 +155,11 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[1].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{172, 24, 1, 1},
-		Port:     1443,
+		CloudletLoc: CloudletData[1].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Ip:          []byte{172, 24, 1, 1},
+		Port:        1443,
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -161,9 +167,11 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[1].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{172, 24, 1, 1},
-		Port:     2443,
+		CloudletLoc: CloudletData[1].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Ip:          []byte{172, 24, 1, 1},
+		Port:        2443,
+		AppPath:     AppData[1].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -171,8 +179,10 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[2].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{192, 168, 1, 1},
-		Port:     54321,
+		CloudletLoc: CloudletData[2].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Ip:          []byte{192, 168, 1, 1},
+		Port:        54321,
+		AppPath:     AppData[2].AppPath,
 	},
 }

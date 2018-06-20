@@ -15,8 +15,11 @@ func TestOperatorApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	api := InitOperatorApi(&dummy)
-	api.WaitInitDone()
-	testutil.InternalOperatorCudTest(t, api, testutil.OperatorData)
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	testutil.InternalOperatorCudTest(t, &operatorApi, testutil.OperatorData)
 	dummy.Stop()
 }

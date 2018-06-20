@@ -146,16 +146,24 @@ func (x *AppInstCommonApi) ShowAppInst(ctx context.Context, filter *edgeproto.Ap
 	}
 }
 
-func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+func NewInternalAppInstApi(api edgeproto.AppInstApiServer) *AppInstCommonApi {
 	apiWrap := AppInstCommonApi{}
 	apiWrap.internal_api = api
-	basicAppInstCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientAppInstApi(api edgeproto.AppInstApiClient) *AppInstCommonApi {
+	apiWrap := AppInstCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+	basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
 }
 
 func ClientAppInstCudTest(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
-	apiWrap := AppInstCommonApi{}
-	apiWrap.client_api = api
-	basicAppInstCudTest(t, &apiWrap, testData)
+	basicAppInstCudTest(t, NewClientAppInstApi(api), testData)
 }
 
 func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
@@ -206,4 +214,24 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	_, err = api.CreateAppInst(ctx, &bad)
 	assert.NotNil(t, err, "Create AppInst with no key info")
 
+	// test update
+	updater := edgeproto.AppInst{}
+	updater.Key = testData[0].Key
+	updater.Port = 1101
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, edgeproto.AppInstFieldPort)
+	_, err = api.UpdateAppInst(ctx, &updater)
+	assert.Nil(t, err, "Update AppInst %s", testData[0].Key.GetKeyString())
+
+	show.Init()
+	updater = testData[0]
+	updater.Port = 1101
+	err = api.ShowAppInst(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show AppInst")
+	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.Port = testData[0].Port
+	_, err = api.UpdateAppInst(ctx, &updater)
+	assert.Nil(t, err, "Update back AppInst")
 }

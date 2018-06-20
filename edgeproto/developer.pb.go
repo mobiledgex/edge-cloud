@@ -18,7 +18,6 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "sync"
 import "github.com/mobiledgex/edge-cloud/util"
 
 import io "io"
@@ -430,6 +429,7 @@ func (m *Developer) Matches(filter *Developer) bool {
 	return true
 }
 
+const DeveloperFieldKey = "2"
 const DeveloperFieldKeyName = "2.2"
 const DeveloperFieldUsername = "3"
 const DeveloperFieldPasshash = "4"
@@ -444,19 +444,16 @@ var DeveloperAllFields = []string{
 	DeveloperFieldEmail,
 }
 
+var DeveloperAllFieldsMap = map[string]struct{}{
+	DeveloperFieldKeyName:  struct{}{},
+	DeveloperFieldUsername: struct{}{},
+	DeveloperFieldPasshash: struct{}{},
+	DeveloperFieldAddress:  struct{}{},
+	DeveloperFieldEmail:    struct{}{},
+}
+
 func (m *Developer) CopyInFields(src *Developer) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.2"]; set {
 			m.Key.Name = src.Key.Name
@@ -481,23 +478,15 @@ func (s *Developer) HasFields() bool {
 }
 
 type DeveloperStore struct {
-	objstore      objstore.ObjStore
-	listDeveloper map[DeveloperKey]struct{}
+	objstore objstore.ObjStore
 }
 
 func NewDeveloperStore(objstore objstore.ObjStore) DeveloperStore {
 	return DeveloperStore{objstore: objstore}
 }
 
-type DeveloperCacher interface {
-	SyncDeveloperUpdate(m *Developer, rev int64)
-	SyncDeveloperDelete(m *Developer, rev int64)
-	SyncDeveloperPrune(current map[DeveloperKey]struct{})
-	SyncDeveloperRevOnly(rev int64)
-}
-
 func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	err := m.Validate(DeveloperAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +506,8 @@ func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error)
 }
 
 func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
@@ -599,94 +589,18 @@ func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
 	return &obj, rev, nil
 }
 
-// Sync will sync changes for any Developer objects.
-func (s *DeveloperStore) Sync(ctx context.Context, cacher DeveloperCacher) error {
-	str := objstore.DbKeyPrefixString(&DeveloperKey{}) + "/"
-	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
-		obj := Developer{}
-		// Even on parse error, we should still call back to keep
-		// the revision numbers in sync so no caller hangs on wait.
-		action := in.Action
-		if action == objstore.SyncUpdate || action == objstore.SyncList {
-			err := json.Unmarshal(in.Value, &obj)
-			if err != nil {
-				util.WarnLog("Failed to parse Developer data", "val", string(in.Value))
-				action = objstore.SyncRevOnly
-			}
-		} else if action == objstore.SyncDelete {
-			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
-			DeveloperKeyStringParse(keystr, obj.GetKey())
-		}
-		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
-		switch action {
-		case objstore.SyncUpdate:
-			cacher.SyncDeveloperUpdate(&obj, in.Rev)
-		case objstore.SyncDelete:
-			cacher.SyncDeveloperDelete(&obj, in.Rev)
-		case objstore.SyncListStart:
-			s.listDeveloper = make(map[DeveloperKey]struct{})
-		case objstore.SyncList:
-			s.listDeveloper[obj.Key] = struct{}{}
-			cacher.SyncDeveloperUpdate(&obj, in.Rev)
-		case objstore.SyncListEnd:
-			cacher.SyncDeveloperPrune(s.listDeveloper)
-			s.listDeveloper = nil
-		case objstore.SyncRevOnly:
-			cacher.SyncDeveloperRevOnly(in.Rev)
-		}
-	})
-}
-
 // DeveloperCache caches Developer objects in memory in a hash table
 // and keeps them in sync with the database.
 type DeveloperCache struct {
-	Store      *DeveloperStore
-	Objs       map[DeveloperKey]*Developer
-	Rev        int64
-	Mux        util.Mutex
-	Cond       sync.Cond
-	initWait   bool
-	syncDone   bool
-	syncCancel context.CancelFunc
-	notifyCb   func(obj *DeveloperKey)
+	Objs      map[DeveloperKey]*Developer
+	Mux       util.Mutex
+	List      map[DeveloperKey]struct{}
+	NotifyCb  func(obj *DeveloperKey)
+	UpdatedCb func(old *Developer, new *Developer)
 }
 
-func NewDeveloperCache(store *DeveloperStore) *DeveloperCache {
-	cache := DeveloperCache{
-		Store:    store,
-		Objs:     make(map[DeveloperKey]*Developer),
-		initWait: true,
-	}
-	cache.Mux.InitCond(&cache.Cond)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cache.syncCancel = cancel
-	go func() {
-		err := cache.Store.Sync(ctx, &cache)
-		if err != nil {
-			util.WarnLog("Developer Sync failed", "err", err)
-		}
-		cache.syncDone = true
-		cache.Cond.Broadcast()
-	}()
-	return &cache
-}
-
-func (c *DeveloperCache) WaitInitSyncDone() {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for c.initWait {
-		c.Cond.Wait()
-	}
-}
-
-func (c *DeveloperCache) Done() {
-	c.syncCancel()
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for !c.syncDone {
-		c.Cond.Wait()
-	}
+func InitDeveloperCache(cache *DeveloperCache) {
+	cache.Objs = make(map[DeveloperKey]*Developer)
 }
 
 func (c *DeveloperCache) Get(key *DeveloperKey, valbuf *Developer) bool {
@@ -714,65 +628,29 @@ func (c *DeveloperCache) GetAllKeys(keys map[DeveloperKey]struct{}) {
 	}
 }
 
-func (c *DeveloperCache) SyncDeveloperUpdate(in *Developer, rev int64) {
+func (c *DeveloperCache) Update(in *Developer, rev int64) {
 	c.Mux.Lock()
+	if c.UpdatedCb != nil {
+		old := c.Objs[*in.GetKey()]
+		new := &Developer{}
+		*new = *in
+		defer c.UpdatedCb(old, new)
+	}
 	c.Objs[*in.GetKey()] = in
-	c.Rev = rev
 	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
-	c.Cond.Broadcast()
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.NotifyCb != nil {
+		c.NotifyCb(in.GetKey())
 	}
 }
 
-func (c *DeveloperCache) SyncDeveloperDelete(in *Developer, rev int64) {
+func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	c.Rev = rev
 	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
-	c.Cond.Broadcast()
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
-	}
-}
-
-func (c *DeveloperCache) SyncDeveloperPrune(current map[DeveloperKey]struct{}) {
-	deleted := make(map[DeveloperKey]struct{})
-	c.Mux.Lock()
-	for key, _ := range c.Objs {
-		if _, found := current[key]; !found {
-			delete(c.Objs, key)
-			deleted[key] = struct{}{}
-		}
-	}
-	if c.initWait {
-		c.initWait = false
-		c.Cond.Broadcast()
-	}
-	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		for key, _ := range deleted {
-			c.notifyCb(&key)
-		}
-	}
-}
-
-func (c *DeveloperCache) SyncDeveloperRevOnly(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
-	c.Cond.Broadcast()
-}
-
-func (c *DeveloperCache) SyncWait(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
-	for c.Rev < rev {
-		c.Cond.Wait()
+	if c.NotifyCb != nil {
+		c.NotifyCb(in.GetKey())
 	}
 }
 
@@ -794,7 +672,55 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 }
 
 func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey)) {
-	c.notifyCb = fn
+	c.NotifyCb = fn
+}
+
+func (c *DeveloperCache) SetUpdatedCb(fn func(old *Developer, new *Developer)) {
+	c.UpdatedCb = fn
+}
+
+func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := Developer{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		util.WarnLog("Failed to parse Developer data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *DeveloperCache) SyncDelete(key []byte, rev int64) {
+	obj := Developer{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	DeveloperKeyStringParse(keystr, obj.GetKey())
+	c.Delete(&obj, rev)
+}
+
+func (c *DeveloperCache) SyncListStart() {
+	c.List = make(map[DeveloperKey]struct{})
+}
+
+func (c *DeveloperCache) SyncListEnd() {
+	deleted := make(map[DeveloperKey]struct{})
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, found := c.List[key]; !found {
+			delete(c.Objs, key)
+			deleted[key] = struct{}{}
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range deleted {
+			c.NotifyCb(&key)
+		}
+	}
 }
 
 func (m *Developer) GetKey() *DeveloperKey {

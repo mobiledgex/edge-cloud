@@ -146,16 +146,24 @@ func (x *CloudletCommonApi) ShowCloudlet(ctx context.Context, filter *edgeproto.
 	}
 }
 
-func InternalCloudletCudTest(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+func NewInternalCloudletApi(api edgeproto.CloudletApiServer) *CloudletCommonApi {
 	apiWrap := CloudletCommonApi{}
 	apiWrap.internal_api = api
-	basicCloudletCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientCloudletApi(api edgeproto.CloudletApiClient) *CloudletCommonApi {
+	apiWrap := CloudletCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalCloudletCudTest(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+	basicCloudletCudTest(t, NewInternalCloudletApi(api), testData)
 }
 
 func ClientCloudletCudTest(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
-	apiWrap := CloudletCommonApi{}
-	apiWrap.client_api = api
-	basicCloudletCudTest(t, &apiWrap, testData)
+	basicCloudletCudTest(t, NewClientCloudletApi(api), testData)
 }
 
 func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
@@ -206,4 +214,24 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	_, err = api.CreateCloudlet(ctx, &bad)
 	assert.NotNil(t, err, "Create Cloudlet with no key info")
 
+	// test update
+	updater := edgeproto.Cloudlet{}
+	updater.Key = testData[0].Key
+	updater.AccessIp = []byte{1, 2, 3, 4}
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, edgeproto.CloudletFieldAccessIp)
+	_, err = api.UpdateCloudlet(ctx, &updater)
+	assert.Nil(t, err, "Update Cloudlet %s", testData[0].Key.GetKeyString())
+
+	show.Init()
+	updater = testData[0]
+	updater.AccessIp = []byte{1, 2, 3, 4}
+	err = api.ShowCloudlet(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show Cloudlet")
+	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.AccessIp = testData[0].AccessIp
+	_, err = api.UpdateCloudlet(ctx, &updater)
+	assert.Nil(t, err, "Update back Cloudlet")
 }

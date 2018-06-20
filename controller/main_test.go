@@ -82,6 +82,8 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 5, len(dmeNotify.AppInsts), "num appinsts")
 	assert.Equal(t, 4, len(crmNotify.Cloudlets), "num cloudlets")
 
+	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
+
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly

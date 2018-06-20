@@ -32,7 +32,7 @@ message App {
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
   // Path to the application binary on shared storage
-  string app_path = 4 [(protogen.test_update) = true];
+  string app_path = 4;
   // app cert?
   // manifest - which cloudlets can this run on?
   // which countries this can run on
