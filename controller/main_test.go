@@ -103,14 +103,6 @@ func TestDataGen(t *testing.T) {
 	out.Close()
 }
 
-type applicationData struct {
-	Operators    []edgeproto.Operator  `yaml:"operators"`
-	Cloudlets    []edgeproto.Cloudlet  `yaml:"cloudlets"`
-	Developers   []edgeproto.Developer `yaml:"developers"`
-	Applications []edgeproto.App       `yaml:"apps"`
-	AppInstances []edgeproto.AppInst   `yaml:"appinstances"`
-}
-
 func TestEdgeCloudBug26(t *testing.T) {
 	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
 
@@ -163,7 +155,7 @@ appinstances:
   port: 8080
   ip: [10,100,10,4]
 `
-	data := applicationData{}
+	data := edgeproto.ApplicationData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
 	require.Nil(t, err, "unmarshal data")
 
