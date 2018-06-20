@@ -6,6 +6,15 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
+// contains sets of each applications for yaml marshalling
+type ApplicationData struct {
+	Operators    []Operator  `yaml:"operators"`
+	Cloudlets    []Cloudlet  `yaml:"cloudlets"`
+	Developers   []Developer `yaml:"developers"`
+	Applications []App       `yaml:"apps"`
+	AppInstances []AppInst   `yaml:"appinstances"`
+}
+
 // TypeString functions
 
 func (key *DeveloperKey) TypeString() string { return "developer" }

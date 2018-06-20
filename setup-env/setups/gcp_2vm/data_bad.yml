@@ -54,6 +54,6 @@ appinstances:
     lat: 99.99
     long: 123.456
   ip: [10, 100, 10, 4]
-  port: 443
+  port: 8080 
   liveness: 1
 
