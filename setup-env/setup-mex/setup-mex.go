@@ -5,7 +5,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,8 +13,11 @@ import (
 	"strings"
 	"time"
 
+	cmp "github.com/google/go-cmp/cmp"
+
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -27,16 +29,13 @@ var (
 	setupFile    = flag.String("setupfile", "", "mandatory yml topology file")
 	outputDir    = flag.String("outputdir", "", "option directory to store output and logs, TS suffix will be replaced with timestamp")
 	useTimestamp = flag.Bool("timestamp", false, "append current timestamp to outputdir")
-
-	procs processData
+	compareYaml  = flag.String("compareyaml", "", "comma separated list of yamls to compare")
+	procs        processData
 )
 
-type applicationData struct {
-	Operators    []edgeproto.Operator  `yaml:"operators"`
-	Cloudlets    []edgeproto.Cloudlet  `yaml:"cloudlets"`
-	Developers   []edgeproto.Developer `yaml:"developers"`
-	Applications []edgeproto.App       `yaml:"apps"`
-	AppInstances []edgeproto.AppInst   `yaml:"appinstances"`
+type returnCodeWithText struct {
+	success bool
+	text    string
 }
 
 type etcdProcess struct {
@@ -85,7 +84,7 @@ var yamlExceptions = map[string]map[string]bool{
 	},
 }
 
-var data applicationData
+var data edgeproto.ApplicationData
 
 var apiConnectTimeout = 5 * time.Second
 
@@ -147,57 +146,43 @@ func isYamlOk(e error, yamltype string) bool {
 	return rc
 }
 
-func readDataFile(datafile string) {
-	yamlFile, err := ioutil.ReadFile(datafile)
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-		os.Exit(1)
-	}
-	err = yaml.UnmarshalStrict(yamlFile, &data)
-	if err != nil {
-		if !isYamlOk(err, "data") {
-			log.Fatal("One or more fatal unmarshal errors, exiting")
-		}
-	}
-}
-
 // TODO, would be nice to figure how to do these with the same implementation
-func connectController(p *process.ControllerLocal, c chan string) {
+func connectController(p *process.ControllerLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func connectCrm(p *process.CrmLocal, c chan string) {
+func connectCrm(p *process.CrmLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func connectDme(p *process.DmeLocal, c chan string) {
+func connectDme(p *process.DmeLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func waitForProcesses() {
+func waitForProcesses() bool {
 	log.Println("Wait for processes to respond to APIs")
-	c := make(chan string)
+	c := make(chan returnCodeWithText)
 	var numProcs = 0 //len(procs.Controllers) + len(procs.Crms) + len(procs.Dmes)
 	for _, ctrl := range procs.Controllers {
 		numProcs += 1
@@ -214,9 +199,15 @@ func waitForProcesses() {
 		crmp := crm.CrmLocal
 		go connectCrm(&crmp, c)
 	}
+	allpass := true
 	for i := 0; i < numProcs; i++ {
-		log.Println(<-c)
+		rc := <-c
+		log.Println(rc.text)
+		if !rc.success {
+			allpass = false
+		}
 	}
+	return allpass
 }
 
 func getExternalApiAddress(internalApiAddr string, externalHost string) string {
@@ -255,61 +246,48 @@ func printYaml(i interface{}) {
 	log.Printf("YAML: %s %s\n", s, out)
 }
 
-//creates an output directory with an optional timestamp.  Server log files, output from APIs, and
-//output from the script itself will all go there if specified
-func createOutputDir() {
-	if *useTimestamp {
-		startTimestamp := time.Now().Format("2006-01-02T15:04:05")
-		*outputDir = *outputDir + "/" + startTimestamp
-	}
-	fmt.Printf("Creating output dir: %s\n", *outputDir)
-	err := os.MkdirAll(*outputDir, 0755)
-	if err != nil {
-		log.Fatalf("Error trying to create directory %v: %v\n", *outputDir, err)
-	}
-
-	logName := *outputDir + "/" + commandName + ".log"
-	logFile, err := os.OpenFile(logName, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
-
-	if err != nil {
-		log.Fatalf("Error creating logfile %s\n", logName)
-	}
-	//log to both stdout and logfile
-	mw := io.MultiWriter(os.Stdout, logFile)
-	log.SetOutput(mw)
-}
-
 //for specific output that we want to put in a separate file.  If no
 //output dir, just  print to the stdout
-func printToFile(fname string, out string) {
+func printToFile(fname string, out string, truncate bool) {
 	if *outputDir == "" {
 		fmt.Print(out)
 	} else {
 		outfile := *outputDir + "/" + fname
-		ofile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		mode := os.O_APPEND
+		if truncate {
+			mode = os.O_TRUNC
+		}
+		ofile, err := os.OpenFile(outfile, mode|os.O_CREATE|os.O_WRONLY, 0666)
 		defer ofile.Close()
 		if err != nil {
 			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
 		}
 		defer ofile.Close()
 		fmt.Fprintf(ofile, out)
-
 	}
 }
 
 func runShowCommands() {
-	var showCmds = map[string]string{
-		"operators:":    "ShowOperator",
-		"developers:":   "ShowDeveloper",
-		"cloudlets:":    "ShowCloudlet",
-		"apps:":         "ShowApp",
-		"appinstances:": "ShowAppInst",
+	var showCmds = []string{
+		"operators: ShowOperator",
+		"developers: ShowDeveloper",
+		"cloudlets: ShowCloudlet",
+		"apps: ShowApp",
+		"appinstances: ShowAppInst",
 	}
-	for label, cmd := range showCmds {
-		cmd := exec.Command("edgectl", "--addr", procs.Controllers[0].ApiAddr, "controller", cmd)
+
+	for i, c := range showCmds {
+		label := strings.Split(c, " ")[0]
+		cmdstr := strings.Split(c, " ")[1]
+		cmd := exec.Command("edgectl", "--addr", procs.Controllers[0].ApiAddr, "controller", cmdstr)
 		log.Printf("generating output for %s\n", label)
 		out, _ := cmd.CombinedOutput()
-		printToFile("show-commands.yml", label+"\n"+string(out)+"\n")
+		truncate := false
+		//truncate the file for the first command output, afterwards append
+		if i == 0 {
+			truncate = true
+		}
+		printToFile("show-commands.yml", label+"\n"+string(out)+"\n", truncate)
 	}
 }
 
@@ -401,14 +379,17 @@ func getLogFile(procname string) string {
 }
 
 func readSetupFile(setupfile string) {
-	yamlFile, err := ioutil.ReadFile(setupfile)
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-		os.Exit(1)
-	}
-	err = yaml.UnmarshalStrict(yamlFile, &procs)
+	err := util.ReadYamlFile(setupfile, &procs)
 	if err != nil {
 		if !isYamlOk(err, "setup") {
+			log.Fatal("One or more fatal unmarshal errors, exiting")
+		}
+	}
+}
+func readDataFile(datafile string) {
+	err := util.ReadYamlFile(datafile, &data)
+	if err != nil {
+		if !isYamlOk(err, "data") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
 		}
 	}
@@ -424,6 +405,45 @@ func stopProcesses() {
 	exec.Command("sh", "-c", "pkill -SIGINT controller").Output()
 	exec.Command("sh", "-c", "pkill -SIGINT crmserver").Output()
 	exec.Command("sh", "-c", "pkill -SIGINT dme-server").Output()
+}
+
+//substitute variables for datafile, setupfile, outputdir
+func replaceVariables(inputString string) string {
+	s := strings.Replace(inputString, "{{outputdir}}", *outputDir, -1)
+	s = strings.Replace(s, "{{datafile}}", *dataFile, -1)
+	s = strings.Replace(s, "{{setupfile}}", *setupFile, -1)
+	return s
+}
+
+//compares two yaml files for equivalence.
+func compareYamlFiles(firstYamlFile string, secondYamlFile string) bool {
+
+	util.PrintStartBanner("compareYamlFiles")
+	//substitute variables for datafile, setupfile, outputdir
+	firstYamlFile = replaceVariables(firstYamlFile)
+	secondYamlFile = replaceVariables(secondYamlFile)
+
+	log.Printf("Comparing %v to %v\n", firstYamlFile, secondYamlFile)
+	var y1 interface{}
+	var y2 interface{}
+	err1 := util.ReadYamlFile(firstYamlFile, &y1)
+	if err1 != nil {
+		log.Printf("error reading yaml file: %s\n", firstYamlFile)
+		return false
+	}
+	err2 := util.ReadYamlFile(secondYamlFile, &y2)
+	if err2 != nil {
+		log.Printf("error reading yaml file: %s\n", secondYamlFile)
+		return false
+	}
+	if !cmp.Equal(y1, y2) {
+		log.Println("Comparison fail")
+		log.Printf(cmp.Diff(y1, y2))
+		return false
+	}
+	log.Println("Comparison success")
+	return true
+
 }
 
 func runPlaybook(playbook string, evars []string) bool {
@@ -639,7 +659,9 @@ func validateArgs() {
 	_, validDeployment := deploymentChoices[*deployment]
 	errFound := false
 
-	actionSlice = strings.Split(*actions, ",")
+	if *actions != "" {
+		actionSlice = strings.Split(*actions, ",")
+	}
 	for _, action := range actionSlice {
 		_, validAction := actionChoices[action]
 		if !validAction {
@@ -678,6 +700,13 @@ func validateArgs() {
 		errFound = true
 	}
 
+	if *compareYaml != "" {
+		yarray := strings.Split(*compareYaml, ",")
+		if len(yarray) != 2 {
+			fmt.Printf("ERROR: compareyaml must be a string with 2 yaml files separated by comma\n")
+			errFound = true
+		}
+	}
 	if errFound {
 		printUsage()
 		os.Exit(1)
@@ -687,8 +716,9 @@ func validateArgs() {
 func main() {
 	validateArgs()
 
+	errorsFound := 0
 	if *outputDir != "" {
-		createOutputDir()
+		*outputDir = util.CreateOutputDir(*useTimestamp, *outputDir, commandName+".log")
 	}
 	if *dataFile != "" {
 		readDataFile(*dataFile)
@@ -698,34 +728,45 @@ func main() {
 	}
 
 	for _, action := range actionSlice {
-		log.Printf("\n\n************ Begin: %s ************\n\n ", action)
+		util.PrintStartBanner(action)
 		switch action {
 		case "deploy":
-			deployProcesses()
+			if !deployProcesses() {
+				errorsFound += 1
+			}
 		case "start":
 			startFailed := false
 			if !startProcesses() {
 				startFailed = true
+				errorsFound += 1
 			} else {
 				if !startRemoteProcesses() {
 					startFailed = true
+					errorsFound += 1
 				}
 			}
 			if startFailed {
 				stopProcesses()
 				stopRemoteProcesses()
-				log.Fatal("Startup failed, exiting")
-				os.Exit(1)
+				errorsFound += 1
+				break
+
 			}
 			updateApiAddrs()
-			waitForProcesses()
+			if !waitForProcesses() {
+				errorsFound += 1
+			}
 
 		case "status":
 			updateApiAddrs()
-			waitForProcesses()
+			if !waitForProcesses() {
+				errorsFound += 1
+			}
 		case "stop":
 			stopProcesses()
-			stopRemoteProcesses()
+			if !stopRemoteProcesses() {
+				errorsFound += 1
+			}
 		case "create":
 			fallthrough
 		case "update":
@@ -734,19 +775,30 @@ func main() {
 			updateApiAddrs()
 			if !runApis(action) {
 				log.Printf("Unable to run apis for %s. Check connectivity to controller API\n", action)
+				errorsFound += 1
 			}
 		case "show":
 			updateApiAddrs()
 			runShowCommands()
 		case "cleanup":
-			cleanupRemoteProcesses()
+			if !cleanupRemoteProcesses() {
+				errorsFound += 1
+			}
 		case "fetchlogs":
-			fetchRemoteLogs()
+			if !fetchRemoteLogs() {
+				errorsFound += 1
+			}
 		default:
 			log.Fatal("unexpected action: " + action)
 		}
 	}
+	if *compareYaml != "" {
+		if !compareYamlFiles(strings.Split(*compareYaml, ",")[0], strings.Split(*compareYaml, ",")[1]) {
+			errorsFound += 1
+		}
+	}
 	if *outputDir != "" {
-		fmt.Printf("\nResults in: %s\n", *outputDir)
+		fmt.Printf("\nNum Errors found: %d, Results in: %s\n", errorsFound, *outputDir)
+		os.Exit(errorsFound)
 	}
 }
