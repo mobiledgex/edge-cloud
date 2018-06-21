@@ -13,5 +13,6 @@ Usage of e2e-tests:
 
 Variables in -vars are used to substitute entries like {{setupdir}} in the testfile.  This is to make the tests reuseable across setups.
  
-Example:
-e2e-tests -testfile setup-env/e2e-tests/testfiles/example_test.yml -outputdir /tmp/test_out --vars setupdir=setup-env/setups/local_simplex
+Examples:
+e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_show.yml -outputdir /tmp/test_out --vars setupdir=setup-env/setups/local_simplex
+e2e-tests -testfile setup-env/e2e-tests/testfiles/delete_add.yml -outputdir /tmp/test_out --vars setupdir=setup-env/setups/local_simplex

@@ -30,7 +30,8 @@ type e2e_test struct {
 }
 
 type e2e_tests struct {
-	Tests []e2e_test `yaml:"tests"`
+	Description string     `yaml:"description"`
+	Tests       []e2e_test `yaml:"tests"`
 }
 
 var testsToRun e2e_tests

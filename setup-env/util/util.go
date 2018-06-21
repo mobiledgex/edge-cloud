@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 )
 
@@ -80,13 +81,15 @@ func ReadYamlFile(filename string, iface interface{}, varlist string) error {
 }
 
 //compares two yaml files for equivalence
+//TODO need to handle different types of interfaces besides appdata, currently using
+//that to sort
 func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars string) bool {
 
 	PrintStartBanner("compareYamlFiles")
 
 	log.Printf("Comparing %v to %v\n", firstYamlFile, secondYamlFile)
-	var y1 interface{}
-	var y2 interface{}
+	var y1 edgeproto.ApplicationData
+	var y2 edgeproto.ApplicationData
 
 	err1 := ReadYamlFile(firstYamlFile, &y1, replaceVars)
 	if err1 != nil {
@@ -98,6 +101,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars s
 		log.Printf("error reading yaml file: %s\n", secondYamlFile)
 		return false
 	}
+
+	y1.Sort()
+	y2.Sort()
 
 	if !cmp.Equal(y1, y2) {
 		log.Println("Comparison fail")

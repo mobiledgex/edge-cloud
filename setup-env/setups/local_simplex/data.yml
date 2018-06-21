@@ -56,4 +56,5 @@ appinstances:
   ip: [10, 100, 10, 4]
   port: 443
   liveness: 1
+  apppath: /usr/bin/someapp
 

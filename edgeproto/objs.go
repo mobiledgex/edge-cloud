@@ -2,6 +2,7 @@ package edgeproto
 
 import (
 	"errors"
+	"sort"
 	strings "strings"
 
 	"github.com/mobiledgex/edge-cloud/util"
@@ -14,6 +15,25 @@ type ApplicationData struct {
 	Developers   []Developer `yaml:"developers"`
 	Applications []App       `yaml:"apps"`
 	AppInstances []AppInst   `yaml:"appinstances"`
+}
+
+// sort each slice by key
+func (a *ApplicationData) Sort() {
+	sort.Slice(a.AppInstances[:], func(i, j int) bool {
+		return a.AppInstances[i].Key.Id < a.AppInstances[j].Key.Id
+	})
+	sort.Slice(a.Applications[:], func(i, j int) bool {
+		return a.Applications[i].Key.Name < a.Applications[i].Key.Name
+	})
+	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
+		return a.Cloudlets[i].Key.Name < a.Cloudlets[j].Key.Name
+	})
+	sort.Slice(a.Developers[:], func(i, j int) bool {
+		return a.Developers[i].Key.Name < a.Developers[j].Key.Name
+	})
+	sort.Slice(a.Operators[:], func(i, j int) bool {
+		return a.Operators[i].Key.Name < a.Operators[j].Key.Name
+	})
 }
 
 // TypeString functions
