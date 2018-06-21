@@ -399,19 +399,18 @@ func stopProcesses() {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	log.Println("killing processes")
-	//first be graceful
-	exec.Command("sh", "-c", "pkill -SIGINT etcd").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT controller").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT crmserver").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT dme-server").Output()
+	processNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
+	//anything not gracefully exited in maxwait seconds is forcefully killed
+	maxWait := time.Second * 15
+	c := make(chan string)
 
-	// give it 5 seconds and then be sure about it
-	time.Sleep(5 * time.Second)
-	exec.Command("sh", "-c", "pkill -SIGKILL etcd").Output()
-	exec.Command("sh", "-c", "pkill -SIGKILL controller").Output()
-	exec.Command("sh", "-c", "pkill -SIGKILL crmserver").Output()
-	exec.Command("sh", "-c", "pkill -SIGKILL dme-server").Output()
+	for _, p := range processNames {
+		log.Println("killing processes " + p)
+		go util.KillProcessesByName(p, maxWait, c)
+	}
+	for i := 0; i < len(processNames); i++ {
+		log.Printf("kill result: %v\n", <-c)
+	}
 }
 
 func runPlaybook(playbook string, evars []string) bool {

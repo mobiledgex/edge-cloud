@@ -7,14 +7,106 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 )
+
+type processinfo struct {
+	pid   int
+	alive bool
+}
+
+//get list of pids for a process name
+func getPidsByName(processName string) []processinfo {
+	//pidlist is a set of pids and alive bool
+	var processes []processinfo
+	out, perr := exec.Command("sh", "-c", "pgrep -x "+processName).Output()
+	if perr != nil {
+		return processes
+	}
+
+	for _, pid := range strings.Split(string(out), "\n") {
+		p, err := strconv.Atoi(pid)
+		if err != nil {
+			fmt.Printf("Error in finding pid from process: %v -- %v", processName, err)
+		} else {
+			pinfo := processinfo{pid: p, alive: true}
+			processes = append(processes, pinfo)
+		}
+	}
+	return processes
+}
+
+//first tries to kill process with SIGINT, then waits up to maxwait time
+//for it to die.  After that point it kills with SIGKILL
+func KillProcessesByName(processName string, maxwait time.Duration, c chan string) {
+	processes := getPidsByName(processName)
+	waitInterval := 100 * time.Millisecond
+
+	for _, p := range processes {
+		process, err := os.FindProcess(p.pid)
+		if err == nil {
+			//try to kill gracefully
+			log.Printf("Sending interrupt to process %v pid %v\n", processName, p.pid)
+			process.Signal(os.Interrupt)
+		}
+	}
+	for {
+		//loop up to maxwait until either all the processes are gone or
+		//we run out of waiting time
+		time.Sleep(waitInterval)
+		maxwait -= waitInterval
+
+		//loop thru all the processes and see if any are still alive
+		foundOneAlive := false
+		for i, pinfo := range processes {
+			if pinfo.alive {
+				process, err := os.FindProcess(pinfo.pid)
+				if err != nil {
+					log.Printf("Error in FindProcess for pid %v - %v\n", pinfo.pid, err)
+				}
+				if process == nil {
+					//this does not happen in linux
+					processes[i].alive = false
+				} else {
+					err = syscall.Kill(pinfo.pid, 0)
+					//if we get an error from kill -0 then the process is gone
+					if err != nil {
+						//marking it dead so we don't revisit it
+						processes[i].alive = false
+					} else {
+						foundOneAlive = true
+					}
+				}
+			}
+		}
+		if !foundOneAlive {
+			c <- "gracefully shut down " + processName
+			return
+		}
+		if maxwait <= 0 {
+			break
+		}
+	}
+	for _, pinfo := range processes {
+		if pinfo.alive {
+			process, _ := os.FindProcess(pinfo.pid)
+			if process != nil {
+				process.Kill()
+			}
+		}
+	}
+
+	c <- "forcefully shut down " + processName
+}
 
 func PrintStartBanner(label string) {
 	log.Printf("\n\n************ Begin: %s ************\n\n ", label)
