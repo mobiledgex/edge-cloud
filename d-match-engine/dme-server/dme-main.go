@@ -5,11 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -26,13 +23,8 @@ type server struct{}
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
 
-	var mreq *dme.Match_Engine_Reply
-	var ipaddr net.IP
-
-	mreq = new(dme.Match_Engine_Reply)
-	find_cloudlet(req, mreq)
-	ipaddr = mreq.ServiceIp
-	fmt.Printf("FindCloudlet: Found Service IP %s\n", ipaddr.String())
+	mreq := new(dme.Match_Engine_Reply)
+	findCloudlet(req, mreq)
 	return mreq, nil
 }
 
@@ -75,13 +67,12 @@ func (s *server) RegisterClient(ctx context.Context,
 func main() {
 	flag.Parse()
 
-	setup_match_engine()
+	setupMatchEngine()
 
 	notifyHandler := &NotifyHandler{}
-	notifyClient := notify.NewDMEClient(strings.Split(*notifyAddrs, ","), notifyHandler)
+	notifyClient := initNotifyClient(*notifyAddrs, notifyHandler)
 	go notifyClient.Run()
 	defer notifyClient.Stop()
-	util.InfoLog("notify client to", "addrs", *notifyAddrs)
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {

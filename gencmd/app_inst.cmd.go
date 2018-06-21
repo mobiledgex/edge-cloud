@@ -61,7 +61,7 @@ func AppInstKeyHeaderSlicer() []string {
 }
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -84,21 +84,14 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	}
 	_CloudletLoc_TimestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
 	s = append(s, _CloudletLoc_TimestampTime.String())
-	s = append(s, "")
-	for i, b := range in.Ip {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
-		if i < 3 {
-			s[len(s)-1] += "."
-		}
-	}
-	s = append(s, strconv.FormatUint(uint64(in.Port), 10))
+	s = append(s, in.Uri)
 	s = append(s, edgeproto.AppInst_Liveness_name[int32(in.Liveness)])
 	s = append(s, in.AppPath)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -114,8 +107,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CloudletLoc-Course")
 	s = append(s, "CloudletLoc-Speed")
 	s = append(s, "CloudletLoc-Timestamp")
-	s = append(s, "Ip")
-	s = append(s, "Port")
+	s = append(s, "Uri")
 	s = append(s, "Liveness")
 	s = append(s, "AppPath")
 	return s
@@ -350,8 +342,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
-	AppInstFlagSet.BytesHexVar(&AppInstIn.Ip, "ip", nil, "Ip")
-	AppInstFlagSet.Uint32Var(&AppInstIn.Port, "port", 0, "Port")
+	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
 	AppInstFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "AppInstInLiveness")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -406,11 +397,8 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
 	}
-	if AppInstFlagSet.Lookup("ip").Changed {
+	if AppInstFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
-	}
-	if AppInstFlagSet.Lookup("port").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "5")
 	}
 	if AppInstFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")

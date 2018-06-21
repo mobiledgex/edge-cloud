@@ -58,13 +58,7 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
-	s = append(s, "")
-	for i, b := range in.AccessIp {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
-		if i < 3 {
-			s[len(s)-1] += "."
-		}
-	}
+	s = append(s, in.AccessUri)
 	s = append(s, strconv.FormatFloat(float64(in.Location.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Long), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.HorizontalAccuracy), 'e', -1, 32))
@@ -85,7 +79,7 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
-	s = append(s, "AccessIp")
+	s = append(s, "AccessUri")
 	s = append(s, "Location-Lat")
 	s = append(s, "Location-Long")
 	s = append(s, "Location-HorizontalAccuracy")
@@ -302,7 +296,7 @@ var ShowCloudletCmd = &cobra.Command{
 func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletFlagSet.BytesHexVar(&CloudletIn.AccessIp, "accessip", nil, "AccessIp")
+	CloudletFlagSet.StringVar(&CloudletIn.AccessUri, "accessuri", "", "AccessUri")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Lat, "location-lat", 0, "Location.Lat")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Long, "location-long", 0, "Location.Long")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
@@ -320,7 +314,7 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("key-name").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "2.2")
 	}
-	if CloudletFlagSet.Lookup("accessip").Changed {
+	if CloudletFlagSet.Lookup("accessuri").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
 	}
 	if CloudletFlagSet.Lookup("location-lat").Changed {

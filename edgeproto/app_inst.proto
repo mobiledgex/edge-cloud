@@ -32,10 +32,8 @@ message AppInst {
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cache the location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
-  // how to connect to this instance
-  bytes ip = 4;
-  // port to connect to this instance
-  uint32 port = 5 [(protogen.test_update) = true];
+  // URI to connect to this instance
+  string uri = 4 [(protogen.test_update) = true];
   // type of instance
   enum Liveness {
     UNKNOWN = 0;
