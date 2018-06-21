@@ -13,8 +13,6 @@ import (
 	"strings"
 	"time"
 
-	cmp "github.com/google/go-cmp/cmp"
-
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -263,6 +261,7 @@ func printToFile(fname string, out string, truncate bool) {
 			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
 		}
 		defer ofile.Close()
+		log.Printf("writing file: %s\n%s\n", fname, out)
 		fmt.Fprintf(ofile, out)
 	}
 }
@@ -379,7 +378,7 @@ func getLogFile(procname string) string {
 }
 
 func readSetupFile(setupfile string) {
-	err := util.ReadYamlFile(setupfile, &procs)
+	err := util.ReadYamlFile(setupfile, &procs, "")
 	if err != nil {
 		if !isYamlOk(err, "setup") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
@@ -387,7 +386,7 @@ func readSetupFile(setupfile string) {
 	}
 }
 func readDataFile(datafile string) {
-	err := util.ReadYamlFile(datafile, &data)
+	err := util.ReadYamlFile(datafile, &data, "")
 	if err != nil {
 		if !isYamlOk(err, "data") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
@@ -400,50 +399,18 @@ func stopProcesses() {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	log.Println("killing processes")
-	exec.Command("sh", "-c", "pkill -SIGINT etcd").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT controller").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT crmserver").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT dme-server").Output()
-}
+	processNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
+	//anything not gracefully exited in maxwait seconds is forcefully killed
+	maxWait := time.Second * 15
+	c := make(chan string)
 
-//substitute variables for datafile, setupfile, outputdir
-func replaceVariables(inputString string) string {
-	s := strings.Replace(inputString, "{{outputdir}}", *outputDir, -1)
-	s = strings.Replace(s, "{{datafile}}", *dataFile, -1)
-	s = strings.Replace(s, "{{setupfile}}", *setupFile, -1)
-	return s
-}
-
-//compares two yaml files for equivalence.
-func compareYamlFiles(firstYamlFile string, secondYamlFile string) bool {
-
-	util.PrintStartBanner("compareYamlFiles")
-	//substitute variables for datafile, setupfile, outputdir
-	firstYamlFile = replaceVariables(firstYamlFile)
-	secondYamlFile = replaceVariables(secondYamlFile)
-
-	log.Printf("Comparing %v to %v\n", firstYamlFile, secondYamlFile)
-	var y1 interface{}
-	var y2 interface{}
-	err1 := util.ReadYamlFile(firstYamlFile, &y1)
-	if err1 != nil {
-		log.Printf("error reading yaml file: %s\n", firstYamlFile)
-		return false
+	for _, p := range processNames {
+		log.Println("killing processes " + p)
+		go util.KillProcessesByName(p, maxWait, c)
 	}
-	err2 := util.ReadYamlFile(secondYamlFile, &y2)
-	if err2 != nil {
-		log.Printf("error reading yaml file: %s\n", secondYamlFile)
-		return false
+	for i := 0; i < len(processNames); i++ {
+		log.Printf("kill result: %v\n", <-c)
 	}
-	if !cmp.Equal(y1, y2) {
-		log.Println("Comparison fail")
-		log.Printf(cmp.Diff(y1, y2))
-		return false
-	}
-	log.Println("Comparison success")
-	return true
-
 }
 
 func runPlaybook(playbook string, evars []string) bool {
@@ -451,7 +418,7 @@ func runPlaybook(playbook string, evars []string) bool {
 	copySetupFileToAnsible()
 
 	if !found {
-		log.Println("Notice: No remote servers found")
+		log.Println("No remote servers found, local environment only")
 		return true
 	}
 
@@ -793,7 +760,15 @@ func main() {
 		}
 	}
 	if *compareYaml != "" {
-		if !compareYamlFiles(strings.Split(*compareYaml, ",")[0], strings.Split(*compareYaml, ",")[1]) {
+		//separate the arg into two files and then replace variables
+		firstYamlFile := strings.Split(*compareYaml, ",")[0]
+		secondYamlFile := strings.Split(*compareYaml, ",")[1]
+
+		replaceVars := "outputdir=" + *outputDir
+		replaceVars += ",datafile=" + *dataFile
+		replaceVars += ",setupfile=" + *setupFile
+
+		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, replaceVars) {
 			errorsFound += 1
 		}
 	}

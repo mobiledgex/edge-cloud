@@ -15,6 +15,7 @@ var (
 	testFile    = flag.String("testfile", "", "input file with tests")
 	outputDir   = flag.String("outputdir", "", "output directory, timestamp will be appended")
 	stopOnFail  = flag.Bool("stop", false, "stop on failures")
+	vars        = flag.String("vars", "", "optional vars, separated by comma, e.g. setupdir=setups/test2.yml")
 )
 
 type e2e_test struct {
@@ -29,7 +30,8 @@ type e2e_test struct {
 }
 
 type e2e_tests struct {
-	Tests []e2e_test `yaml:"tests"`
+	Description string     `yaml:"description"`
+	Tests       []e2e_test `yaml:"tests"`
 }
 
 var testsToRun e2e_tests
@@ -45,9 +47,17 @@ func validateArgs() {
 }
 
 func readTestFile() {
-	err := util.ReadYamlFile(*testFile, &testsToRun)
+	//outputdir is always appended as a variable
+	varstr := "outputdir=" + *outputDir
+	if *vars != "" {
+		varstr += "," + *vars
+	}
+	err := util.ReadYamlFile(*testFile, &testsToRun, varstr)
 	if err != nil {
-		log.Fatalf("Error in reading test file: %v - err: %v\n", *testFile, err)
+		log.Printf("Error in reading test file: %v - err: %v\n", *testFile, err)
+		if strings.Contains(string(err.Error()), "Unreplaced variables") {
+			log.Printf("\n** re-run with -vars varname=value\n")
+		}
 	}
 }
 
