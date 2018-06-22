@@ -547,7 +547,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.P("")
 
 	if GetGenerateCud(message) {
-		if !HasMessageKey(message) {
+		if GetMessageKey(message) == nil {
 			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
 		args := cudTemplateArgs{
@@ -579,8 +579,8 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("")
 		m.importUtil = true
 	}
-	if HasMessageKey(message) {
-		m.P("func (m *", message.Name, ") GetKey() *", message.Name, "Key {")
+	if field := GetMessageKey(message); field != nil {
+		m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
 		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
@@ -606,17 +606,17 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
-func HasMessageKey(message *descriptor.DescriptorProto) bool {
+func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescriptorProto {
 	if message.Field == nil {
-		return false
+		return nil
 	}
 	if len(message.Field) > 0 && *message.Field[0].Name == "key" {
-		return true
+		return message.Field[0]
 	}
 	if len(message.Field) > 1 && HasGrpcFields(message) && *message.Field[1].Name == "key" {
-		return true
+		return message.Field[1]
 	}
-	return false
+	return nil
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {
