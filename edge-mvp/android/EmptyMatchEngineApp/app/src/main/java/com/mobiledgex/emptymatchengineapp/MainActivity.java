@@ -137,6 +137,11 @@ public class MainActivity extends AppCompatActivity {
      * See documentation for Google's FusedLocationProviderClient for additional usage information.
      */
     private void startLocationUpdates() {
+        // As of Android 23, permissions can be asked for while the app is still running.
+        if (mRpUtil.getNeededPermissions(this).size() > 0) {
+            return;
+        }
+
         try {
             if (mFusedLocationClient == null) {
                 mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
@@ -156,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         // Or replace with an app specific dialog set.
         mRpUtil.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
     }
