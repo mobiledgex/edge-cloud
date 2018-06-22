@@ -121,6 +121,38 @@ func AppInstHeaderSlicer() []string {
 	return s
 }
 
+func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
+	s := make([]string, 0, 6)
+	s = append(s, in.Key.AppKey.DeveloperKey.Name)
+	s = append(s, in.Key.AppKey.Name)
+	s = append(s, in.Key.AppKey.Version)
+	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
+	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Load), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Cpu), 10))
+	s = append(s, strconv.FormatUint(uint64(in.MaxDisk), 10))
+	s = append(s, strconv.FormatUint(uint64(in.NetworkIn), 10))
+	s = append(s, strconv.FormatUint(uint64(in.NetworkOut), 10))
+	return s
+}
+
+func AppInstInfoHeaderSlicer() []string {
+	s := make([]string, 0, 6)
+	s = append(s, "Key-AppKey-DeveloperKey-Name")
+	s = append(s, "Key-AppKey-Name")
+	s = append(s, "Key-AppKey-Version")
+	s = append(s, "Key-CloudletKey-OperatorKey-Name")
+	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "Key-Id")
+	s = append(s, "Load")
+	s = append(s, "Cpu")
+	s = append(s, "MaxDisk")
+	s = append(s, "NetworkIn")
+	s = append(s, "NetworkOut")
+	return s
+}
+
 var CreateAppInstCmd = &cobra.Command{
 	Use: "CreateAppInst",
 	Run: func(cmd *cobra.Command, args []string) {

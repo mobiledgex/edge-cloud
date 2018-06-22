@@ -91,6 +91,24 @@ func CloudletHeaderSlicer() []string {
 	return s
 }
 
+func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
+	s := make([]string, 0, 3)
+	s = append(s, in.Key.OperatorKey.Name)
+	s = append(s, in.Key.Name)
+	s = append(s, edgeproto.CloudletState_name[int32(in.State)])
+	s = append(s, strconv.FormatUint(uint64(in.Resources), 10))
+	return s
+}
+
+func CloudletInfoHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Key-OperatorKey-Name")
+	s = append(s, "Key-Name")
+	s = append(s, "State")
+	s = append(s, "Resources")
+	return s
+}
+
 var CreateCloudletCmd = &cobra.Command{
 	Use: "CreateCloudlet",
 	Run: func(cmd *cobra.Command, args []string) {

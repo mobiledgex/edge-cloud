@@ -44,9 +44,14 @@ message NoticeRequest {
   NoticeRequestor requestor = 3;
   // revision of database
   uint64 revision = 4;
+  // data included (UPDATE)
+  oneof data {
+    CloudletInfo cloudletInfo = 5;
+    AppInstInfo appInstInfo = 6;
+  }
 }
 
 service NotifyApi {
-  // Stream notice sends info from Server to Client
+  // Bidrectional stream for exchanging data between controller and dme/crm
   rpc StreamNotice(stream NoticeRequest) returns (stream NoticeReply) {}
 }
