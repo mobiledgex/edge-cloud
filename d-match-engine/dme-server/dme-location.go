@@ -2,68 +2,75 @@ package main
 
 import (
 	"fmt"
-	"net"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify) {
-	var key app_carrier_key
-	var c, found *cloudlet
-	var carrier *carrier_app_cloudlet
+	var key carrierAppKey
+	var found *carrierAppInst
+	var app *carrierApp
 	var distance, d float64
-	var tbl *carrier_app
-	var ipaddr net.IP
+	var tbl *carrierApps
 
-	tbl = carrier_app_tbl	
-	key.carrier_name = mreq.CarrierName
-	key.app_key.DeveloperKey.Name = mreq.DevName
-	key.app_key.Name = mreq.AppName
-	key.app_key.Version = mreq.AppVers
-	
+	tbl = carrierAppTbl
+	key.carrierName = mreq.CarrierName
+	key.appKey.DeveloperKey.Name = mreq.DevName
+	key.appKey.Name = mreq.AppName
+	key.appKey.Version = mreq.AppVers
+
 	mreply.GpsLocationStatus = 0
-	
+
 	tbl.RLock()
-	carrier, ok := tbl.apps[key]
-	if (!ok) {
+	app, ok := tbl.apps[key]
+	if !ok {
 		tbl.RUnlock()
-		fmt.Printf("Couldn't find the key\n");
+		fmt.Printf("Couldn't find the key\n")
 		return
 	}
 
 	distance = 10000
-	c = carrier.app_cloudlet_inst
-	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)
-	for ; c != nil; c = c.next {
+	util.DebugLog(util.DebugLevelDmeReq, ">>>Verify Location",
+		"appName", key.appKey.Name,
+		"carrier", key.carrierName,
+		"lat", mreq.GpsLocation.Lat,
+		"long", mreq.GpsLocation.Long)
+	for _, c := range app.insts {
 		d = distance_between(*mreq.GpsLocation, c.location)
-		fmt.Printf("Loc = %f/%f is at dist %f. ",
-			c.location.Lat, c.location.Long, d);
-		if (d < distance) {
-			fmt.Printf("Repl. with new dist %f.", d)
+		util.DebugLog(util.DebugLevelDmeReq, "verify location at",
+			"lat", c.location.Lat,
+			"long", c.location.Long,
+			"distance", distance,
+			"this-dist", d)
+		if d < distance {
 			distance = d
 			found = c
 		}
-		fmt.Printf("\n");
 	}
-	if (found != nil) {
-		ipaddr = found.accessIp
-		fmt.Printf("Found Loc = %f/%f with IP %s\n",
-			found.location.Lat, found.location.Long, ipaddr.String());
-		if (d < 2) {
+	if found != nil {
+		if distance < 2 {
 			mreply.GpsLocationStatus = 1
-		} else if (d < 10) {
+		} else if distance < 10 {
 			mreply.GpsLocationStatus = 2
-		} else if (d < 100) {
+		} else if distance < 100 {
 			mreply.GpsLocationStatus = 3
 		} else {
 			mreply.GpsLocationStatus = 4
 		}
+		util.DebugLog(util.DebugLevelDmeReq, "verified location at",
+			"lat", found.location.Lat,
+			"long", found.location.Long,
+			"distance", distance,
+			"status", mreply.GpsLocationStatus,
+			"uri", found.uri)
 	}
-		
+
 	tbl.RUnlock()
 }
 
 func GetClientLoc(mreq *dme.Match_Engine_Request, mloc *dme.Match_Engine_Loc) {
 	mloc.CarrierName = mreq.CarrierName
-	mloc.Status = 1
+	mloc.Status = dme.Match_Engine_Loc_LOC_FOUND
 	mloc.NetworkLocation = mreq.GpsLocation
 }
