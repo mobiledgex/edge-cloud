@@ -217,21 +217,21 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	// test update
 	updater := edgeproto.Cloudlet{}
 	updater.Key = testData[0].Key
-	updater.AccessIp = []byte{1, 2, 3, 4}
+	updater.AccessUri = "update just this"
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.CloudletFieldAccessIp)
+	updater.Fields = append(updater.Fields, edgeproto.CloudletFieldAccessUri)
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update Cloudlet %s", testData[0].Key.GetKeyString())
 
 	show.Init()
 	updater = testData[0]
-	updater.AccessIp = []byte{1, 2, 3, 4}
+	updater.AccessUri = "update just this"
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show Cloudlet")
 	show.AssertFound(t, &updater)
 
 	// revert change
-	updater.AccessIp = testData[0].AccessIp
+	updater.AccessUri = testData[0].AccessUri
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update back Cloudlet")
 }

@@ -217,21 +217,21 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	// test update
 	updater := edgeproto.AppInst{}
 	updater.Key = testData[0].Key
-	updater.Port = 1101
+	updater.Uri = "update just this"
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppInstFieldPort)
+	updater.Fields = append(updater.Fields, edgeproto.AppInstFieldUri)
 	_, err = api.UpdateAppInst(ctx, &updater)
 	assert.Nil(t, err, "Update AppInst %s", testData[0].Key.GetKeyString())
 
 	show.Init()
 	updater = testData[0]
-	updater.Port = 1101
+	updater.Uri = "update just this"
 	err = api.ShowAppInst(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show AppInst")
 	show.AssertFound(t, &updater)
 
 	// revert change
-	updater.Port = testData[0].Port
+	updater.Uri = testData[0].Uri
 	_, err = api.UpdateAppInst(ctx, &updater)
 	assert.Nil(t, err, "Update back AppInst")
 }
