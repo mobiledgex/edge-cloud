@@ -20,6 +20,8 @@ type carrierAppInst struct {
 	carrierName string
 	// URI to connect to app inst in this cloudlet
 	uri string
+	// Ip to connect o app inst in this cloudlet (XXX why is this needed?)
+	ip []byte
 	// Location of the cloudlet site (lat, long?)
 	location dme.Loc
 }
@@ -130,6 +132,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.cloudletKey = appInst.Key.CloudletKey
 		cNew.carrierName = key.carrierName
 		cNew.uri = appInst.Uri
+		cNew.ip = appInst.Ip
 		cNew.location = appInst.CloudletLoc
 		app.insts[cNew.cloudletKey] = cNew
 		util.DebugLog(util.DebugLevelDmeDb, "Adding app inst",
@@ -208,7 +211,6 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	var app *carrierApp
 	var distance, d float64
 	var tbl *carrierApps
-	var loc dme.Loc
 
 	tbl = carrierAppTbl
 	key.carrierName = mreq.CarrierName
@@ -217,6 +219,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	key.appKey.Version = mreq.AppVers
 
 	mreply.Status = false
+	mreply.CloudletLocation = &dme.Loc{}
 	tbl.RLock()
 	app, ok := tbl.apps[key]
 	if !ok {
@@ -239,11 +242,10 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			distance = d
 			found = c
 			mreply.Uri = c.uri
-			loc = c.location
+			*mreply.CloudletLocation = c.location
 		}
 	}
 	if found != nil {
-		mreply.CloudletLocation = &loc
 		util.DebugLog(util.DebugLevelDmeReq, "best cloudlet at",
 			"lat", found.location.Lat,
 			"long", found.location.Long,

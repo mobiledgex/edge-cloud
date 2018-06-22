@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -12,7 +13,7 @@ import (
 func TestNotify(t *testing.T) {
 	util.SetDebugLevel(util.DebugLevelNotify)
 	setupMatchEngine()
-	appInsts := generateAppInsts()
+	appInsts := dmetest.GenerateAppInsts()
 
 	// test dummy server sending notices to dme
 	addr := "127.0.0.1:60001"
