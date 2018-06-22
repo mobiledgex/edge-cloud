@@ -12,6 +12,8 @@ const (
 	DebugLevelEtcd uint64 = 1 << iota
 	DebugLevelApi
 	DebugLevelNotify
+	DebugLevelDmeDb
+	DebugLevelDmeReq
 )
 
 // these must be in the same order as above

@@ -108,10 +108,6 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().Validate(); err != nil {
 		return err
 	}
-	if HasField(fields, CloudletFieldAccessIp) && s.AccessIp != nil &&
-		!util.ValidIp(s.AccessIp) {
-		return errors.New("Invalid access ip format")
-	}
 	return nil
 }
 
@@ -134,9 +130,6 @@ func (s *AppInst) Validate(fields map[string]struct{}) error {
 	}
 	if HasField(fields, AppInstFieldLiveness) && s.Liveness == AppInst_UNKNOWN {
 		return errors.New("Unknown liveness specified")
-	}
-	if HasField(fields, AppInstFieldIp) && !util.ValidIp(s.Ip) {
-		return errors.New("Invalid IP specified")
 	}
 	return nil
 }
