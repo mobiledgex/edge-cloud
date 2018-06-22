@@ -131,6 +131,33 @@ func TestNotify(t *testing.T) {
 	assert.Equal(t, uint64(3), stats.CloudletsSent, "sent cloudlets")
 	checkServerConnections(t, 2)
 
+	// Send data from CRM to server
+	for _, ai := range testutil.AppInstData {
+		msg := edgeproto.NoticeRequest{}
+		data := &edgeproto.NoticeRequest_AppInstInfo{}
+		data.AppInstInfo = &edgeproto.AppInstInfo{}
+		data.AppInstInfo.Key = ai.Key
+		msg.Data = data
+		err := clientCRM.Send(&msg)
+		assert.Nil(t, err, "send to server")
+	}
+	serverHandler.WaitForAppInstInfo(len(testutil.AppInstData))
+	assert.Equal(t, len(testutil.AppInstData), len(serverHandler.AppInstsInfo),
+		"sent appInstInfo")
+
+	for _, cl := range testutil.CloudletData {
+		msg := edgeproto.NoticeRequest{}
+		data := &edgeproto.NoticeRequest_CloudletInfo{}
+		data.CloudletInfo = &edgeproto.CloudletInfo{}
+		data.CloudletInfo.Key = cl.Key
+		msg.Data = data
+		err := clientCRM.Send(&msg)
+		assert.Nil(t, err, "send to server")
+	}
+	serverHandler.WaitForCloudletInfo(len(testutil.CloudletData))
+	assert.Equal(t, len(testutil.CloudletData), len(serverHandler.CloudletsInfo),
+		"sent cloudletInfo")
+
 	clientDME.Stop()
 	clientCRM.Stop()
 }

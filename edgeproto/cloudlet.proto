@@ -64,3 +64,22 @@ service CloudletApi {
     };
   }
 }
+
+enum CloudletState {
+  Unknown = 0;
+  ConfiguringOpenstack = 1;
+  ConfiguringKubernetes = 2;
+  Ready = 3;
+}
+
+// CloudletInfo is the information CRM passes up to the controller
+// about the Cloudlets it is managing.
+message CloudletInfo {
+  // Unique identifier key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // State of cloudlet
+  CloudletState state = 2;
+  // TODO: Not entirely sure how resources will be specified.
+  // This is a placeholder for now.
+  uint64 resources = 3;
+}

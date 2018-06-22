@@ -23,6 +23,7 @@ import (
 	"math"
 	"math/rand"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -52,6 +53,8 @@ type ServerHandler interface {
 	// Copy back the value for the cloudlet.
 	// If the cloudlet was not found, return false instead of true.
 	GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool
+	// Handle message from client
+	HandleNotice(notice *edgeproto.NoticeRequest)
 }
 
 type ServerStats struct {
@@ -294,6 +297,9 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 	}
 	util.DebugLog(util.DebugLevelNotify, "Notify server connected", "client", s.peerAddr, "version", s.version, "supported-version", NotifyVersion)
 
+	// process any updates from client
+	go s.Receive(stream)
+
 	sendAll := true
 	for !s.done {
 		// Select with channels is used here rather than a condition
@@ -377,6 +383,21 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 	return err
 }
 
+func (s *Server) Receive(stream edgeproto.NotifyApi_StreamNoticeServer) {
+	for !s.done {
+		reply, err := stream.Recv()
+		if s.done {
+			break
+		}
+		if err != nil {
+			util.DebugLog(util.DebugLevelNotify, "Server receive", "err", err)
+			continue
+		}
+		// process data from client
+		s.handler.HandleNotice(reply)
+	}
+}
+
 func (s *Server) Stop() {
 	s.mux.Lock()
 	s.done = true
@@ -405,16 +426,18 @@ type ClientStats struct {
 }
 
 type Client struct {
-	addrs     []string
-	handler   ClientHandler
-	requestor edgeproto.NoticeRequestor
-	version   uint32
-	stats     ClientStats
-	mux       util.Mutex
-	done      bool
-	running   chan struct{}
-	cancel    context.CancelFunc
-	localAddr string
+	addrs        []string
+	handler      ClientHandler
+	requestor    edgeproto.NoticeRequestor
+	version      uint32
+	stats        ClientStats
+	mux          sync.RWMutex
+	done         bool
+	running      chan struct{}
+	cancel       context.CancelFunc
+	stream       edgeproto.NotifyApi_StreamNoticeClient
+	localAddr    string
+	localAddrMux util.Mutex
 }
 
 func cancelNoop() {}
@@ -454,10 +477,12 @@ func (s *Client) Run() {
 		if conn != nil {
 			err = conn.Close()
 		}
+		s.mux.Lock()
 		s.cancel()
 		s.cancel = cancelNoop
+		s.stream = nil
+		s.mux.Unlock()
 		s.SetLocalAddr("")
-		stream = nil
 		commErr = nil
 	}
 
@@ -466,7 +491,7 @@ func (s *Client) Run() {
 			util.DebugLog(util.DebugLevelNotify, "Notify client communication err", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "error", commErr)
 			cleanup()
 		}
-		if stream == nil {
+		if s.stream == nil {
 			// connect to server
 			tries++
 			addrIdx++
@@ -514,6 +539,9 @@ func (s *Client) Run() {
 			}
 			util.DebugLog(util.DebugLevelNotify, "Notify client connected", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "version", s.version, "supported-version", NotifyVersion, "tries", tries)
 			tries = 0
+			s.mux.Lock()
+			s.stream = stream
+			s.mux.Unlock()
 		}
 		// server will send all data first
 		sendAllMaps := &AllMaps{}
@@ -553,7 +581,7 @@ func (s *Client) Run() {
 		}
 	}
 	util.DebugLog(util.DebugLevelNotify, "Notify client cancelled", "local", s.GetLocalAddr())
-	if stream != nil {
+	if s.stream != nil {
 		cleanup()
 	}
 	close(s.running)
@@ -569,6 +597,16 @@ func (s *Client) Stop() {
 	}
 }
 
+func (s *Client) Send(req *edgeproto.NoticeRequest) error {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	if s.stream == nil {
+		return errors.New("not connected")
+	}
+	err := s.stream.Send(req)
+	return err
+}
+
 func (s *Client) GetStats() *ClientStats {
 	stats := &ClientStats{}
 	*stats = s.stats
@@ -576,14 +614,14 @@ func (s *Client) GetStats() *ClientStats {
 }
 
 func (s *Client) SetLocalAddr(addr string) {
-	s.mux.Lock()
-	defer s.mux.Unlock()
+	s.localAddrMux.Lock()
+	defer s.localAddrMux.Unlock()
 	s.localAddr = addr
 }
 
 func (s *Client) GetLocalAddr() string {
-	s.mux.Lock()
-	defer s.mux.Unlock()
+	s.localAddrMux.Lock()
+	defer s.localAddrMux.Unlock()
 	return s.localAddr
 }
 

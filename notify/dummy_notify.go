@@ -11,25 +11,29 @@ import (
 )
 
 type DummyServerHandler struct {
-	appInsts  map[edgeproto.AppInstKey]edgeproto.AppInst
-	cloudlets map[edgeproto.CloudletKey]edgeproto.Cloudlet
+	AppInsts      map[edgeproto.AppInstKey]edgeproto.AppInst
+	AppInstsInfo  map[edgeproto.AppInstKey]edgeproto.AppInstInfo
+	Cloudlets     map[edgeproto.CloudletKey]edgeproto.Cloudlet
+	CloudletsInfo map[edgeproto.CloudletKey]edgeproto.CloudletInfo
 }
 
 func NewDummyServerHandler() *DummyServerHandler {
 	handler := &DummyServerHandler{}
-	handler.appInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
-	handler.cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
+	handler.AppInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
+	handler.AppInstsInfo = make(map[edgeproto.AppInstKey]edgeproto.AppInstInfo)
+	handler.Cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
+	handler.CloudletsInfo = make(map[edgeproto.CloudletKey]edgeproto.CloudletInfo)
 	return handler
 }
 
 func (s *DummyServerHandler) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{}) {
-	for key, _ := range s.appInsts {
+	for key, _ := range s.AppInsts {
 		keys[key] = struct{}{}
 	}
 }
 
 func (s *DummyServerHandler) GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool {
-	obj, found := s.appInsts[*key]
+	obj, found := s.AppInsts[*key]
 	if found {
 		*buf = obj
 	}
@@ -37,37 +41,66 @@ func (s *DummyServerHandler) GetAppInst(key *edgeproto.AppInstKey, buf *edgeprot
 }
 
 func (s *DummyServerHandler) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{}) {
-	for key, _ := range s.cloudlets {
+	for key, _ := range s.Cloudlets {
 		keys[key] = struct{}{}
 	}
 }
 
 func (s *DummyServerHandler) GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
-	obj, found := s.cloudlets[*key]
+	obj, found := s.Cloudlets[*key]
 	if found {
 		*buf = obj
 	}
 	return found
 }
 
+func (s *DummyServerHandler) HandleNotice(notice *edgeproto.NoticeRequest) {
+	a := notice.GetAppInstInfo()
+	if a != nil {
+		s.AppInstsInfo[a.Key] = *a
+	}
+	c := notice.GetCloudletInfo()
+	if c != nil {
+		s.CloudletsInfo[c.Key] = *c
+	}
+}
+
 func (s *DummyServerHandler) CreateAppInst(in *edgeproto.AppInst) {
-	s.appInsts[in.Key] = *in
+	s.AppInsts[in.Key] = *in
 	UpdateAppInst(&in.Key)
 }
 
 func (s *DummyServerHandler) DeleteAppInst(in *edgeproto.AppInst) {
-	delete(s.appInsts, in.Key)
+	delete(s.AppInsts, in.Key)
 	UpdateAppInst(&in.Key)
 }
 
 func (s *DummyServerHandler) CreateCloudlet(in *edgeproto.Cloudlet) {
-	s.cloudlets[in.Key] = *in
+	s.Cloudlets[in.Key] = *in
 	UpdateCloudlet(&in.Key)
 }
 
 func (s *DummyServerHandler) DeleteCloudlet(in *edgeproto.Cloudlet) {
-	delete(s.cloudlets, in.Key)
+	delete(s.Cloudlets, in.Key)
 	UpdateCloudlet(&in.Key)
+}
+
+func (s *DummyServerHandler) WaitForAppInstInfo(count int) {
+	for i := 0; i < 10; i++ {
+		if len(s.AppInstsInfo) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func (s *DummyServerHandler) WaitForCloudletInfo(count int) {
+	for i := 0; i < 10; i++ {
+		if len(s.CloudletsInfo) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 type DummyClientHandler struct {
