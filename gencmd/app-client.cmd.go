@@ -50,6 +50,10 @@ var Match_Engine_ApiCmd distributed_match_engine.Match_Engine_ApiClient
 var Match_Engine_RequestIn distributed_match_engine.Match_Engine_Request
 var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag.ExitOnError)
 var Match_Engine_RequestInIdType string
+var DynamicLocGroupAddIn distributed_match_engine.DynamicLocGroupAdd
+var DynamicLocGroupAddFlagSet = pflag.NewFlagSet("DynamicLocGroupAdd", pflag.ExitOnError)
+var DynamicLocGroupAddInIdType string
+var DynamicLocGroupAddInCommType string
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
 	s := make([]string, 0, 15)
@@ -87,7 +91,7 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	s = append(s, in.DevName)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
-	s = append(s, in.Token)
+	s = append(s, in.CommCookie)
 	return s
 }
 
@@ -114,7 +118,7 @@ func Match_Engine_RequestHeaderSlicer() []string {
 	s = append(s, "DevName")
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
-	s = append(s, "Token")
+	s = append(s, "CommCookie")
 	return s
 }
 
@@ -146,7 +150,7 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
 	s = append(s, strconv.FormatBool(in.Status))
-	s = append(s, in.Token)
+	s = append(s, in.CommCookie)
 	return s
 }
 
@@ -165,7 +169,7 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 	s = append(s, "CloudletLocation-Speed")
 	s = append(s, "CloudletLocation-Timestamp")
 	s = append(s, "Status")
-	s = append(s, "Token")
+	s = append(s, "CommCookie")
 	return s
 }
 
@@ -174,7 +178,7 @@ func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status_name[int32(in.TowerStatus)])
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
-	s = append(s, in.Token)
+	s = append(s, in.CommCookie)
 	return s
 }
 
@@ -183,7 +187,7 @@ func Match_Engine_Loc_VerifyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "TowerStatus")
 	s = append(s, "GpsLocationStatus")
-	s = append(s, "Token")
+	s = append(s, "CommCookie")
 	return s
 }
 
@@ -208,7 +212,7 @@ func Match_Engine_LocSlicer(in *distributed_match_engine.Match_Engine_Loc) []str
 	}
 	_NetworkLocation_TimestampTime := time.Unix(in.NetworkLocation.Timestamp.Seconds, int64(in.NetworkLocation.Timestamp.Nanos))
 	s = append(s, _NetworkLocation_TimestampTime.String())
-	s = append(s, in.Token)
+	s = append(s, in.CommCookie)
 	return s
 }
 
@@ -226,7 +230,7 @@ func Match_Engine_LocHeaderSlicer() []string {
 	s = append(s, "NetworkLocation-Course")
 	s = append(s, "NetworkLocation-Speed")
 	s = append(s, "NetworkLocation-Timestamp")
-	s = append(s, "Token")
+	s = append(s, "CommCookie")
 	return s
 }
 
@@ -235,8 +239,8 @@ func Match_Engine_StatusSlicer(in *distributed_match_engine.Match_Engine_Status)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Status_ME_Status_name[int32(in.Status)])
 	s = append(s, strconv.FormatUint(uint64(in.ErrorCode), 10))
-	s = append(s, in.Token)
-	s = append(s, in.Cookie)
+	s = append(s, in.CommCookie)
+	s = append(s, in.GroupCookie)
 	s = append(s, in.UserData)
 	return s
 }
@@ -246,8 +250,8 @@ func Match_Engine_StatusHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "Status")
 	s = append(s, "ErrorCode")
-	s = append(s, "Token")
-	s = append(s, "Cookie")
+	s = append(s, "CommCookie")
+	s = append(s, "GroupCookie")
 	s = append(s, "UserData")
 	return s
 }
@@ -277,9 +281,9 @@ func DynamicLocGroupAddSlicer(in *distributed_match_engine.DynamicLocGroupAdd) [
 	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
 	s = append(s, _GpsLocation_TimestampTime.String())
 	s = append(s, strconv.FormatUint(uint64(in.LgId), 10))
-	s = append(s, in.Token)
-	s = append(s, distributed_match_engine.DynamicLocGroupAdd_DlgCommType_name[int32(in.CommType)])
 	s = append(s, in.CommCookie)
+	s = append(s, distributed_match_engine.DynamicLocGroupAdd_DlgCommType_name[int32(in.CommType)])
+	s = append(s, in.UserData)
 	return s
 }
 
@@ -301,9 +305,9 @@ func DynamicLocGroupAddHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Speed")
 	s = append(s, "GpsLocation-Timestamp")
 	s = append(s, "LgId")
-	s = append(s, "Token")
-	s = append(s, "CommType")
 	s = append(s, "CommCookie")
+	s = append(s, "CommType")
+	s = append(s, "UserData")
 	return s
 }
 
@@ -519,13 +523,13 @@ var AddUserToGroupCmd = &cobra.Command{
 			return
 		}
 		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err = parseDynamicLocGroupAddEnums()
 		if err != nil {
 			fmt.Println("AddUserToGroup: ", err)
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &Match_Engine_RequestIn)
+		objs, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
 		cancel()
 		if err != nil {
 			fmt.Println("AddUserToGroup failed: ", err)
@@ -587,12 +591,34 @@ func init() {
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.DevName, "devname", "", "DevName")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppName, "appname", "", "AppName")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppVers, "appvers", "", "AppVers")
-	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Token, "token", "", "Token")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CommCookie, "commcookie", "", "CommCookie")
+	DynamicLocGroupAddFlagSet.Uint32Var(&DynamicLocGroupAddIn.Ver, "ver", 0, "Ver")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInIdType, "idtype", "", "DynamicLocGroupAddInIdType")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.Id, "id", "", "Id")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.Uuid, "uuid", "", "Uuid")
+	DynamicLocGroupAddFlagSet.Uint64Var(&DynamicLocGroupAddIn.CarrierID, "carrierid", 0, "CarrierID")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.CarrierName, "carriername", "", "CarrierName")
+	DynamicLocGroupAddFlagSet.Uint64Var(&DynamicLocGroupAddIn.Tower, "tower", 0, "Tower")
+	DynamicLocGroupAddIn.GpsLocation = &distributed_match_engine.Loc{}
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.Lat, "gpslocation-lat", 0, "GpsLocation.Lat")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.Long, "gpslocation-long", 0, "GpsLocation.Long")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GpsLocation.VerticalAccuracy")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
+	DynamicLocGroupAddFlagSet.Float64Var(&DynamicLocGroupAddIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
+	DynamicLocGroupAddIn.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	DynamicLocGroupAddFlagSet.Int64Var(&DynamicLocGroupAddIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
+	DynamicLocGroupAddFlagSet.Int32Var(&DynamicLocGroupAddIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	DynamicLocGroupAddFlagSet.Uint64Var(&DynamicLocGroupAddIn.LgId, "lgid", 0, "LgId")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.CommCookie, "commcookie", "", "CommCookie")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInCommType, "commtype", "", "DynamicLocGroupAddInCommType")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.UserData, "userdata", "", "UserData")
 	FindCloudletCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
-	AddUserToGroupCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
+	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddFlagSet)
 }
 
 func parseMatch_Engine_RequestEnums() error {
@@ -606,6 +632,32 @@ func parseMatch_Engine_RequestEnums() error {
 			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(2)
 		default:
 			return errors.New("Invalid value for Match_Engine_RequestInIdType")
+		}
+	}
+	return nil
+}
+
+func parseDynamicLocGroupAddEnums() error {
+	if DynamicLocGroupAddInIdType != "" {
+		switch DynamicLocGroupAddInIdType {
+		case "imei":
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(0)
+		case "msisdn":
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(1)
+		case "ipaddr":
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(2)
+		default:
+			return errors.New("Invalid value for DynamicLocGroupAddInIdType")
+		}
+	}
+	if DynamicLocGroupAddInCommType != "" {
+		switch DynamicLocGroupAddInCommType {
+		case "dlgsecure":
+			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(0)
+		case "dlgopen":
+			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(1)
+		default:
+			return errors.New("Invalid value for DynamicLocGroupAddInCommType")
 		}
 	}
 	return nil

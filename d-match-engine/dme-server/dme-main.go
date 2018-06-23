@@ -69,7 +69,7 @@ func (s *server) RegisterClient(ctx context.Context,
 }
 
 func (s *server) AddUserToGroup(ctx context.Context,
-	req *dme.Match_Engine_Request) (*dme.Match_Engine_Status, error) {
+	req *dme.DynamicLocGroupAdd) (*dme.Match_Engine_Status, error) {
 
 	var mreq *dme.Match_Engine_Status
 	mreq = new(dme.Match_Engine_Status)

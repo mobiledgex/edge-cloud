@@ -7,8 +7,8 @@ message DlgMessage {
   uint32 ver = 1;
   // Dynamic Location Group Id
   uint64 LgId = 2;
-  // Comm Cookie if secure
-  string CommCookie = 3;
+  // Group Cookie if secure
+  string GroupCookie = 3;
   // Message ID
   uint64 MessageId = 4;
   // Need acknowledgement
@@ -26,8 +26,8 @@ message DlgReply {
   uint32 ver = 1;
   // AckId
   uint64 AckId = 2;
-  // Cookie for Secure comm
-  string CommCookie = 3;
+  // Group Cookie for Secure comm
+  string GroupCookie = 3;
 }
 
 service DynamicLocGroupApi {

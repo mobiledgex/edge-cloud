@@ -38,8 +38,8 @@ message Match_Engine_Request {
   string AppName = 13;
   // App Version
   string AppVers = 14;
-  // Token provided by the Operator for subsequent calls
-  string Token = 15;
+  // DME Session Cookie
+  string CommCookie = 15;
 }
 
 message Match_Engine_Reply {
@@ -59,8 +59,8 @@ message Match_Engine_Reply {
   // }
   // MrStatus Status = 6;
   bool Status = 6;
-  // Token
-  string Token = 7;
+  // Cookie provided by the DME for Session or Subsequent calls
+  string CommCookie = 7;
 }
 
 message Match_Engine_Loc_Verify {
@@ -81,8 +81,8 @@ message Match_Engine_Loc_Verify {
     LOC_OTHER_COUNTRY = 5;
   }
   GPS_Location_Status gps_location_status = 3;
-  // Token
-  string Token = 4;
+  // DME Session Cookie
+  string CommCookie = 4;
 }
 
 message Match_Engine_Loc {
@@ -101,8 +101,8 @@ message Match_Engine_Loc {
   uint64 Tower = 4;
   // The GPS location of the user 
   Loc NetworkLocation = 5;
-  // Token
-  string Token = 6;
+  // DME Session Cookie
+  string CommCookie = 6;
 }
 
 message Match_Engine_Status {
@@ -115,10 +115,10 @@ message Match_Engine_Status {
   ME_Status Status = 2;
   // Error Code based on Failure
   uint32 ErrorCode = 3;
-  // Token
-  string Token = 4;
-  // Cookie to use for future comminication
-  string Cookie = 5;
+  // DME Session Cookie
+  string CommCookie = 4;
+    // Group Cookie for Secure Group Communication
+  string GroupCookie = 5;
   // Not used
   string UserData = 6;
 }
@@ -146,16 +146,16 @@ message DynamicLocGroupAdd {
   Loc GpsLocation = 8;
   // Dynamic Location Group Id
   uint64 LgId = 9;
-  // Token
-  string Token = 10;
-  // Use Secure communication or Open  with the group
+  // DME Session Cookie
+  string CommCookie = 10;
+  // Use Secure communication or Open with the group
   enum DlgCommType {
     DlgSecure = 0;
     DlgOpen = 1;
   }
   DlgCommType CommType = 11;
-  // Not used
-  string CommCookie = 12;
+  // Unused
+  string UserData = 12;
 }
 
 service Match_Engine_Api {
@@ -163,7 +163,7 @@ service Match_Engine_Api {
   rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
   rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
   rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
-  rpc AddUserToGroup(Match_Engine_Request) returns (Match_Engine_Status) {}
+  rpc AddUserToGroup(DynamicLocGroupAdd) returns (Match_Engine_Status) {}
 }
 
 
