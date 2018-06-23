@@ -114,4 +114,8 @@ func (e *EtcdServer) Stop() {
 		// clean up all files
 		os.RemoveAll(e.Config.DataDir)
 	}
+	err := e.cmd.Wait()
+	if err != nil {
+		util.InfoLog("Wait for etcd process failed", "pid", e.cmd.Process.Pid, "err", err)
+	}
 }

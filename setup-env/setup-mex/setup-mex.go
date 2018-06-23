@@ -15,34 +15,25 @@ import (
 
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"google.golang.org/grpc"
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	yaml "gopkg.in/yaml.v2"
 )
 
-type ShowOperator struct {
-	data map[string]edgeproto.Operator
-	grpc.ServerStream
-}
-
-func (x *ShowOperator) init() {
-	x.data = make(map[string]edgeproto.Operator)
-}
-
 var (
-	commandName = "setup-mex"
-	action      = flag.String("action", "", actionList)
-	deployment  = flag.String("deployment", "process", deploymentList)
-	dataFile    = flag.String("datafile", "", "optional yml data file")
-	setupFile   = flag.String("setupfile", "", "mandatory yml topology file")
-	procs       processData
+	commandName  = "setup-mex"
+	actions      = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
+	deployment   = flag.String("deployment", "process", deploymentList)
+	dataFile     = flag.String("datafile", "", "optional yml data file")
+	setupFile    = flag.String("setupfile", "", "mandatory yml topology file")
+	outputDir    = flag.String("outputdir", "", "option directory to store output and logs, TS suffix will be replaced with timestamp")
+	useTimestamp = flag.Bool("timestamp", false, "append current timestamp to outputdir")
+	compareYaml  = flag.String("compareyaml", "", "comma separated list of yamls to compare")
+	procs        processData
 )
 
-type applicationData struct {
-	Operators    []edgeproto.Operator  `yaml:"operators"`
-	Cloudlets    []edgeproto.Cloudlet  `yaml:"cloudlets"`
-	Developers   []edgeproto.Developer `yaml:"developers"`
-	Applications []edgeproto.App       `yaml:"apps"`
-	AppInstances []edgeproto.AppInst   `yaml:"appinstances"`
+type returnCodeWithText struct {
+	success bool
+	text    string
 }
 
 type etcdProcess struct {
@@ -70,15 +61,16 @@ type processData struct {
 }
 
 var actionChoices = map[string]bool{
-	"start":  true,
-	"stop":   true,
-	"status": true,
-	//	"show":    true, TBD
-	"update":  true,
-	"delete":  true,
-	"create":  true,
-	"deploy":  true,
-	"cleanup": true,
+	"start":     true,
+	"stop":      true,
+	"status":    true,
+	"show":      true,
+	"update":    true,
+	"delete":    true,
+	"create":    true,
+	"deploy":    true,
+	"cleanup":   true,
+	"fetchlogs": true,
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -90,9 +82,13 @@ var yamlExceptions = map[string]map[string]bool{
 	},
 }
 
-var data applicationData
+var data edgeproto.ApplicationData
 
 var apiConnectTimeout = 5 * time.Second
+
+var actionSlice = make([]string, 0)
+
+var apiAddrsUpdated = false
 
 var actionList = fmt.Sprintf("%v", reflect.ValueOf(actionChoices).MapKeys())
 
@@ -148,57 +144,43 @@ func isYamlOk(e error, yamltype string) bool {
 	return rc
 }
 
-func readDataFile(datafile string) {
-	yamlFile, err := ioutil.ReadFile(datafile)
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-		os.Exit(1)
-	}
-	err = yaml.UnmarshalStrict(yamlFile, &data)
-	if err != nil {
-		if !isYamlOk(err, "data") {
-			log.Fatal("One or more fatal unmarshal errors, exiting")
-		}
-	}
-}
-
 // TODO, would be nice to figure how to do these with the same implementation
-func connectController(p *process.ControllerLocal, c chan string) {
+func connectController(p *process.ControllerLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func connectCrm(p *process.CrmLocal, c chan string) {
+func connectCrm(p *process.CrmLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func connectDme(p *process.DmeLocal, c chan string) {
+func connectDme(p *process.DmeLocal, c chan returnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
 	api, err := (*p).ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- "Failed to connect to " + (*p).Name
+		c <- returnCodeWithText{false, "Failed to connect to " + (*p).Name}
 	} else {
-		c <- "OK connect to " + (*p).Name
+		c <- returnCodeWithText{true, "OK connect to " + (*p).Name}
 		api.Close()
 	}
 }
 
-func waitForProcesses() {
+func waitForProcesses() bool {
 	log.Println("Wait for processes to respond to APIs")
-	c := make(chan string)
+	c := make(chan returnCodeWithText)
 	var numProcs = 0 //len(procs.Controllers) + len(procs.Crms) + len(procs.Dmes)
 	for _, ctrl := range procs.Controllers {
 		numProcs += 1
@@ -215,9 +197,15 @@ func waitForProcesses() {
 		crmp := crm.CrmLocal
 		go connectCrm(&crmp, c)
 	}
+	allpass := true
 	for i := 0; i < numProcs; i++ {
-		log.Println(<-c)
+		rc := <-c
+		log.Println(rc.text)
+		if !rc.success {
+			allpass = false
+		}
 	}
+	return allpass
 }
 
 func getExternalApiAddress(internalApiAddr string, externalHost string) string {
@@ -231,6 +219,10 @@ func getExternalApiAddress(internalApiAddr string, externalHost string) string {
 //hostname and api port when connecting to the API.  This needs to be done after startup
 //but before trying to connect to the APIs remotely
 func updateApiAddrs() {
+	if apiAddrsUpdated {
+		//no need to do this more than once
+		return
+	}
 	for i, ctrl := range procs.Controllers {
 		procs.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
 	}
@@ -239,6 +231,62 @@ func updateApiAddrs() {
 	}
 	for i, crm := range procs.Crms {
 		procs.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+	}
+	apiAddrsUpdated = true
+}
+
+func printYaml(i interface{}) {
+	out, err := yaml.Marshal(i)
+	if err != nil {
+		log.Fatalf("Error encoding yaml for %+v: %v", i, err)
+	}
+	s := string(out[:])
+	log.Printf("YAML: %s %s\n", s, out)
+}
+
+//for specific output that we want to put in a separate file.  If no
+//output dir, just  print to the stdout
+func printToFile(fname string, out string, truncate bool) {
+	if *outputDir == "" {
+		fmt.Print(out)
+	} else {
+		outfile := *outputDir + "/" + fname
+		mode := os.O_APPEND
+		if truncate {
+			mode = os.O_TRUNC
+		}
+		ofile, err := os.OpenFile(outfile, mode|os.O_CREATE|os.O_WRONLY, 0666)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
+		}
+		defer ofile.Close()
+		log.Printf("writing file: %s\n%s\n", fname, out)
+		fmt.Fprintf(ofile, out)
+	}
+}
+
+func runShowCommands() {
+	var showCmds = []string{
+		"operators: ShowOperator",
+		"developers: ShowDeveloper",
+		"cloudlets: ShowCloudlet",
+		"apps: ShowApp",
+		"appinstances: ShowAppInst",
+	}
+
+	for i, c := range showCmds {
+		label := strings.Split(c, " ")[0]
+		cmdstr := strings.Split(c, " ")[1]
+		cmd := exec.Command("edgectl", "--addr", procs.Controllers[0].ApiAddr, "controller", cmdstr)
+		log.Printf("generating output for %s\n", label)
+		out, _ := cmd.CombinedOutput()
+		truncate := false
+		//truncate the file for the first command output, afterwards append
+		if i == 0 {
+			truncate = true
+		}
+		printToFile("show-commands.yml", label+"\n"+string(out)+"\n", truncate)
 	}
 }
 
@@ -265,7 +313,6 @@ func runApis(mode string) bool {
 				_, err = opAPI.UpdateOperator(ctx, &o)
 			case "delete":
 				_, err = opAPI.DeleteOperator(ctx, &o)
-
 			}
 		}
 		devApi := edgeproto.NewDeveloperApiClient(ctrlapi)
@@ -323,19 +370,25 @@ func runApis(mode string) bool {
 }
 
 func getLogFile(procname string) string {
-	//hardcoding to current dir for now, make this an option maybe
-	return "./" + procname + ".log"
+	if *outputDir == "" {
+		return "./" + procname + ".log"
+	} else {
+		return *outputDir + "/" + procname + ".log"
+	}
 }
 
 func readSetupFile(setupfile string) {
-	yamlFile, err := ioutil.ReadFile(setupfile)
-	if err != nil {
-		log.Printf("yamlFile.Get err   #%v ", err)
-		os.Exit(1)
-	}
-	err = yaml.UnmarshalStrict(yamlFile, &procs)
+	err := util.ReadYamlFile(setupfile, &procs, "")
 	if err != nil {
 		if !isYamlOk(err, "setup") {
+			log.Fatal("One or more fatal unmarshal errors, exiting")
+		}
+	}
+}
+func readDataFile(datafile string) {
+	err := util.ReadYamlFile(datafile, &data, "")
+	if err != nil {
+		if !isYamlOk(err, "data") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
 		}
 	}
@@ -346,33 +399,17 @@ func stopProcesses() {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	log.Println("killing processes")
-	exec.Command("sh", "-c", "pkill -SIGINT etcd").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT controller").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT crmserver").Output()
-	exec.Command("sh", "-c", "pkill -SIGINT dme-server").Output()
-}
+	processNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
+	//anything not gracefully exited in maxwait seconds is forcefully killed
+	maxWait := time.Second * 15
+	c := make(chan string)
 
-func cleanup() {
-	for _, p := range procs.Etcds {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
+	for _, p := range processNames {
+		log.Println("killing processes " + p)
+		go util.KillProcessesByName(p, maxWait, c)
 	}
-	for _, p := range procs.Controllers {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-	for _, p := range procs.Crms {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
-	}
-	for _, p := range procs.Dmes {
-		logfile := getLogFile(p.Name)
-		log.Printf("Cleaning logfile %v", logfile)
-		os.Remove(logfile)
+	for i := 0; i < len(processNames); i++ {
+		log.Printf("kill result: %v\n", <-c)
 	}
 }
 
@@ -381,7 +418,7 @@ func runPlaybook(playbook string, evars []string) bool {
 	copySetupFileToAnsible()
 
 	if !found {
-		log.Println("Notice: No remote servers found")
+		log.Println("No remote servers found, local environment only")
 		return true
 	}
 
@@ -390,11 +427,11 @@ func runPlaybook(playbook string, evars []string) bool {
 		argstr += ev
 		argstr += " "
 	}
-	log.Printf("Running ansible-playbook %s -i %s -e %s", playbook, invFile, "'"+argstr+"'")
+	log.Printf("Running Playbook: %s with extra-vars: %s\n", playbook, argstr)
 	cmd := exec.Command("ansible-playbook", "-i", invFile, "-e", argstr, playbook)
 
 	output, err := cmd.CombinedOutput()
-	fmt.Printf("Ansible Output:\n%v\n", string(output))
+	log.Printf("Ansible Output:\n%v\n", string(output))
 
 	if err != nil {
 		log.Fatalf("Ansible playbook failed: %v", err)
@@ -510,8 +547,6 @@ func deployProcesses() bool {
 }
 
 func startRemoteProcesses() bool {
-	log.Printf("\n\n************ Starting Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_start.yml"
 
@@ -519,23 +554,25 @@ func startRemoteProcesses() bool {
 }
 
 func stopRemoteProcesses() bool {
-	log.Printf("\n\n************ Stopping Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_stop.yml"
 	return runPlaybook(playbook, []string{})
 }
 
 func cleanupRemoteProcesses() bool {
-	log.Printf("\n\n************ Cleanup Remote Processes ************\n\n ")
-
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_cleanup.yml"
 	return runPlaybook(playbook, []string{})
 }
 
+func fetchRemoteLogs() bool {
+	ansHome := os.Getenv("ANSIBLE_DIR")
+	playbook := ansHome + "/playbooks/mex_fetch_logs.yml"
+	return runPlaybook(playbook, []string{"local_log_path=" + *outputDir})
+}
+
 func startProcesses() bool {
-	log.Printf("\n\n************ Starting Local Processes ************\n\n ")
+	log.Printf("*** Starting Local Processes")
 	for _, etcd := range procs.Etcds {
 		if etcd.Hostname == "localhost" || etcd.Hostname == "127.0.0.1" {
 			log.Printf("Starting Etcd %+v", etcd)
@@ -586,15 +623,26 @@ func startProcesses() bool {
 
 func validateArgs() {
 	flag.Parse()
-	_, validAction := actionChoices[*action]
 	_, validDeployment := deploymentChoices[*deployment]
-
 	errFound := false
 
-	if !validAction {
-		fmt.Printf("ERROR: -action must be one of: %v\n", actionList)
-		errFound = true
+	if *actions != "" {
+		actionSlice = strings.Split(*actions, ",")
 	}
+	for _, action := range actionSlice {
+		_, validAction := actionChoices[action]
+		if !validAction {
+			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
+			errFound = true
+		} else if (action == "update" || action == "create") && *dataFile == "" {
+			fmt.Printf("ERROR: if action=update or create, -datafile must be specified\n")
+			errFound = true
+		} else if action == "fetchlogs" && *outputDir == "" {
+			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
+			errFound = true
+		}
+	}
+
 	if !validDeployment {
 		fmt.Printf("ERROR: -deployment must be one of: %v\n", deploymentList)
 		errFound = true
@@ -604,9 +652,6 @@ func validateArgs() {
 			fmt.Printf("ERROR: file " + *dataFile + " does not exist\n")
 			errFound = true
 		}
-	} else if *action == "update" || *action == "create" {
-		fmt.Printf("ERROR: if -action=update or create, -datafile must be specified\n")
-		errFound = true
 	}
 	if *setupFile == "" {
 		fmt.Printf("ERROR -setupfile is mandatory\n")
@@ -614,6 +659,18 @@ func validateArgs() {
 	} else {
 		if _, err := os.Stat(*setupFile); err != nil {
 			fmt.Printf("ERROR: file " + *setupFile + " does not exist\n")
+			errFound = true
+		}
+	}
+	if *useTimestamp && *outputDir == "" {
+		fmt.Printf("ERROR: cannot use -timestamp option without -outputdir\n")
+		errFound = true
+	}
+
+	if *compareYaml != "" {
+		yarray := strings.Split(*compareYaml, ",")
+		if len(yarray) != 2 {
+			fmt.Printf("ERROR: compareyaml must be a string with 2 yaml files separated by comma\n")
 			errFound = true
 		}
 	}
@@ -626,60 +683,97 @@ func validateArgs() {
 func main() {
 	validateArgs()
 
+	errorsFound := 0
+	if *outputDir != "" {
+		*outputDir = util.CreateOutputDir(*useTimestamp, *outputDir, commandName+".log")
+	}
 	if *dataFile != "" {
 		readDataFile(*dataFile)
 	}
 	if *setupFile != "" {
 		readSetupFile(*setupFile)
 	}
-	switch *action {
-	case "deploy":
-		deployProcesses()
-	case "start":
-		startFailed := false
-		if !startProcesses() {
-			startFailed = true
 
-		} else {
-			if !startRemoteProcesses() {
+	for _, action := range actionSlice {
+		util.PrintStartBanner(action)
+		switch action {
+		case "deploy":
+			if !deployProcesses() {
+				errorsFound += 1
+			}
+		case "start":
+			startFailed := false
+			if !startProcesses() {
 				startFailed = true
+				errorsFound += 1
+			} else {
+				if !startRemoteProcesses() {
+					startFailed = true
+					errorsFound += 1
+				}
 			}
-		}
-		if startFailed {
+			if startFailed {
+				stopProcesses()
+				stopRemoteProcesses()
+				errorsFound += 1
+				break
+
+			}
+			updateApiAddrs()
+			if !waitForProcesses() {
+				errorsFound += 1
+			}
+
+		case "status":
+			updateApiAddrs()
+			if !waitForProcesses() {
+				errorsFound += 1
+			}
+		case "stop":
 			stopProcesses()
-			stopRemoteProcesses()
-			log.Fatal("Startup failed, exiting")
-			os.Exit(1)
-		}
-		updateApiAddrs()
-		waitForProcesses()
-		if *dataFile != "" {
-			if !runApis("create") {
-				log.Println("Unable to apply application data. Check connectivity to controller APIs")
+			if !stopRemoteProcesses() {
+				errorsFound += 1
 			}
+		case "create":
+			fallthrough
+		case "update":
+			fallthrough
+		case "delete":
+			updateApiAddrs()
+			if !runApis(action) {
+				log.Printf("Unable to run apis for %s. Check connectivity to controller API\n", action)
+				errorsFound += 1
+			}
+		case "show":
+			updateApiAddrs()
+			runShowCommands()
+		case "cleanup":
+			if !cleanupRemoteProcesses() {
+				errorsFound += 1
+			}
+		case "fetchlogs":
+			if !fetchRemoteLogs() {
+				errorsFound += 1
+			}
+		default:
+			log.Fatal("unexpected action: " + action)
 		}
-	case "status":
-		updateApiAddrs()
-		waitForProcesses()
-	case "stop":
-		stopProcesses()
-		stopRemoteProcesses()
-	case "create":
-		fallthrough
-	case "update":
-		fallthrough
-	case "delete":
-		fallthrough
-	case "show":
-		updateApiAddrs()
-		if !runApis(*action) {
-			log.Printf("Unable to run apis for %s. Check connectivity to controller APIs", *action)
-		}
-	case "cleanup":
-		cleanup()
-		cleanupRemoteProcesses()
-	default:
-		log.Fatal("unexpected action: " + *action)
 	}
-	fmt.Println("Done")
+	if *compareYaml != "" {
+		//separate the arg into two files and then replace variables
+		firstYamlFile := strings.Split(*compareYaml, ",")[0]
+		secondYamlFile := strings.Split(*compareYaml, ",")[1]
+
+		replaceVars := "outputdir=" + *outputDir
+		replaceVars += ",datafile=" + *dataFile
+		replaceVars += ",setupfile=" + *setupFile
+
+		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, replaceVars) {
+			errorsFound += 1
+		}
+	}
+	if *outputDir != "" {
+		fmt.Printf("\nNum Errors found: %d, Results in: %s\n", errorsFound, *outputDir)
+		os.Exit(errorsFound)
+	}
 }

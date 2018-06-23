@@ -2,21 +2,56 @@ package edgeproto
 
 import (
 	"errors"
+	"sort"
+	strings "strings"
 
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
+// contains sets of each applications for yaml marshalling
+type ApplicationData struct {
+	Operators    []Operator  `yaml:"operators"`
+	Cloudlets    []Cloudlet  `yaml:"cloudlets"`
+	Developers   []Developer `yaml:"developers"`
+	Applications []App       `yaml:"apps"`
+	AppInstances []AppInst   `yaml:"appinstances"`
+}
+
+// sort each slice by key
+func (a *ApplicationData) Sort() {
+	sort.Slice(a.AppInstances[:], func(i, j int) bool {
+		return a.AppInstances[i].Key.GetKeyString() < a.AppInstances[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Applications[:], func(i, j int) bool {
+		return a.Applications[i].Key.GetKeyString() < a.Applications[i].Key.GetKeyString()
+	})
+	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
+		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Developers[:], func(i, j int) bool {
+		return a.Developers[i].Key.GetKeyString() < a.Developers[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Operators[:], func(i, j int) bool {
+		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
+	})
+}
+
 // TypeString functions
 
-func (key *DeveloperKey) TypeString() string { return "developer" }
+func DeveloperKeyTypeString() string         { return "developer" }
+func (key *DeveloperKey) TypeString() string { return DeveloperKeyTypeString() }
 
-func (key *OperatorKey) TypeString() string { return "operator" }
+func OperatorKeyTypeString() string         { return "operator" }
+func (key *OperatorKey) TypeString() string { return OperatorKeyTypeString() }
 
-func (key *AppKey) TypeString() string { return "app" }
+func AppKeyTypeString() string         { return "app" }
+func (key *AppKey) TypeString() string { return AppKeyTypeString() }
 
-func (key *CloudletKey) TypeString() string { return "cloudlet" }
+func CloudletKeyTypeString() string         { return "cloudlet" }
+func (key *CloudletKey) TypeString() string { return CloudletKeyTypeString() }
 
-func (key *AppInstKey) TypeString() string { return "appinst" }
+func AppInstKeyTypeString() string         { return "appinst" }
+func (key *AppInstKey) TypeString() string { return AppInstKeyTypeString() }
 
 // Validate functions to validate user input
 
@@ -27,7 +62,7 @@ func (key *DeveloperKey) Validate() error {
 	return nil
 }
 
-func (s *Developer) Validate() error {
+func (s *Developer) Validate(fields map[string]struct{}) error {
 	return s.GetKey().Validate()
 }
 
@@ -38,7 +73,7 @@ func (key *OperatorKey) Validate() error {
 	return nil
 }
 
-func (s *Operator) Validate() error {
+func (s *Operator) Validate(fields map[string]struct{}) error {
 	return s.GetKey().Validate()
 }
 
@@ -55,7 +90,7 @@ func (key *AppKey) Validate() error {
 	return nil
 }
 
-func (s *App) Validate() error {
+func (s *App) Validate(fields map[string]struct{}) error {
 	return s.GetKey().Validate()
 }
 
@@ -69,12 +104,9 @@ func (key *CloudletKey) Validate() error {
 	return nil
 }
 
-func (s *Cloudlet) Validate() error {
+func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().Validate(); err != nil {
 		return err
-	}
-	if s.AccessIp != nil && !util.ValidIp(s.AccessIp) {
-		return errors.New("Invalid access ip format")
 	}
 	return nil
 }
@@ -92,15 +124,35 @@ func (key *AppInstKey) Validate() error {
 	return nil
 }
 
-func (s *AppInst) Validate() error {
+func (s *AppInst) Validate(fields map[string]struct{}) error {
 	if err := s.GetKey().Validate(); err != nil {
 		return err
 	}
-	if s.Liveness == AppInst_UNKNOWN {
+	if HasField(fields, AppInstFieldLiveness) && s.Liveness == AppInst_UNKNOWN {
 		return errors.New("Unknown liveness specified")
 	}
-	if !util.ValidIp(s.Ip) {
-		return errors.New("Invalid IP specified")
-	}
 	return nil
+}
+
+func MakeFieldMap(fields []string) map[string]struct{} {
+	fmap := make(map[string]struct{})
+	if fields == nil {
+		return fmap
+	}
+	for _, set := range fields {
+		for {
+			fmap[set] = struct{}{}
+			idx := strings.LastIndex(set, ".")
+			if idx == -1 {
+				break
+			}
+			set = set[:idx]
+		}
+	}
+	return fmap
+}
+
+func HasField(fmap map[string]struct{}, field string) bool {
+	_, ok := fmap[field]
+	return ok
 }

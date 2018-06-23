@@ -63,6 +63,8 @@ func main() {
 	// Cloudlet, Operator, AppInst data should come from controller
 	// via notify API, but may be pre-populated here programmatically
 	// for testing.
+
+	/* removing this as we will be migrating to more data driven tests
 	cloudletAPI := edgeproto.NewCloudletApiClient(conn)
 	operatorAPI := edgeproto.NewOperatorApiClient(conn)
 
@@ -80,6 +82,7 @@ func main() {
 			log.Printf("client API error, %v", err)
 		}
 	}()
+	*/
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, os.Kill)

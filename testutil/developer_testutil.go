@@ -25,21 +25,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowDeveloper struct {
-	data map[string]edgeproto.Developer
+	Data map[string]edgeproto.Developer
 	grpc.ServerStream
 }
 
 func (x *ShowDeveloper) Init() {
-	x.data = make(map[string]edgeproto.Developer)
+	x.Data = make(map[string]edgeproto.Developer)
 }
 
 func (x *ShowDeveloper) Send(m *edgeproto.Developer) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperClient, err error) {
-	x.data = make(map[string]edgeproto.Developer)
+	x.Data = make(map[string]edgeproto.Developer)
 	if err != nil {
 		return
 	}
@@ -51,17 +51,17 @@ func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperCl
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Developer %s", obj.Key.GetKeyString())
 	if found {
 		assert.Equal(t, *obj, check, "Developer are equal")
@@ -69,7 +69,7 @@ func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
 }
 
 func (x *ShowDeveloper) AssertNotFound(t *testing.T, obj *edgeproto.Developer) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
 }
 
@@ -144,16 +144,24 @@ func (x *DeveloperCommonApi) ShowDeveloper(ctx context.Context, filter *edgeprot
 	}
 }
 
-func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+func NewInternalDeveloperApi(api edgeproto.DeveloperApiServer) *DeveloperCommonApi {
 	apiWrap := DeveloperCommonApi{}
 	apiWrap.internal_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientDeveloperApi(api edgeproto.DeveloperApiClient) *DeveloperCommonApi {
+	apiWrap := DeveloperCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+	basicDeveloperCudTest(t, NewInternalDeveloperApi(api), testData)
 }
 
 func ClientDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
-	apiWrap := DeveloperCommonApi{}
-	apiWrap.client_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	basicDeveloperCudTest(t, NewClientDeveloperApi(api), testData)
 }
 
 func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
@@ -182,7 +190,7 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
 
 	// test delete
 	_, err = api.DeleteDeveloper(ctx, &testData[0])
@@ -190,7 +198,7 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	show.Init()
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateDeveloper(ctx, &testData[0])
@@ -219,4 +227,9 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show Developer")
 	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.Email = testData[0].Email
+	_, err = api.UpdateDeveloper(ctx, &updater)
+	assert.Nil(t, err, "Update back Developer")
 }

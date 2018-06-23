@@ -17,25 +17,25 @@ func TestAppApi(t *testing.T) {
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	devApi := InitDeveloperApi(&dummy)
-	api := InitAppApi(&dummy, devApi)
-	devApi.WaitInitDone()
-	api.WaitInitDone()
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
 
 	// cannot create apps without developer
 	ctx := context.TODO()
 	for _, obj := range testutil.AppData {
-		_, err := api.CreateApp(ctx, &obj)
+		_, err := appApi.CreateApp(ctx, &obj)
 		assert.NotNil(t, err, "Create app without developer")
 	}
 
 	// create developers
 	for _, obj := range testutil.DevData {
-		_, err := devApi.CreateDeveloper(ctx, &obj)
+		_, err := developerApi.CreateDeveloper(ctx, &obj)
 		assert.Nil(t, err, "Create developer")
 	}
 
-	testutil.InternalAppCudTest(t, api, testutil.AppData)
+	testutil.InternalAppCudTest(t, &appApi, testutil.AppData)
 
 	dummy.Stop()
 }

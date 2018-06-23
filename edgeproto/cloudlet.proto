@@ -27,8 +27,8 @@ message Cloudlet {
   repeated string fields = 1;
   // Unique identifier key
   CloudletKey key = 2 [(gogoproto.nullable) = false];
-  // IP to use to connect to and control cloudlet site
-  bytes access_ip = 4;
+  // URI to use to connect to and control cloudlet site
+  string access_uri = 4 [(protogen.test_update) = true];
   // Location of the cloudlet site (lat, long?)
   distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
   // Certs for accessing cloudlet site
@@ -63,4 +63,23 @@ service CloudletApi {
       body: "*"
     };
   }
+}
+
+enum CloudletState {
+  Unknown = 0;
+  ConfiguringOpenstack = 1;
+  ConfiguringKubernetes = 2;
+  Ready = 3;
+}
+
+// CloudletInfo is the information CRM passes up to the controller
+// about the Cloudlets it is managing.
+message CloudletInfo {
+  // Unique identifier key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // State of cloudlet
+  CloudletState state = 2;
+  // TODO: Not entirely sure how resources will be specified.
+  // This is a placeholder for now.
+  uint64 resources = 3;
 }

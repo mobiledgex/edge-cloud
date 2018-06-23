@@ -19,16 +19,19 @@ import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
+import io.grpc.StatusRuntimeException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import android.location.Location;
-
 import android.util.Log;
+
 
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
+    public static final String TAG = "EngineCallTest";
+    public static final long GRPC_TIMEOUT_MS = 100;
 
     FusedLocationProviderClient fusedLocationClient;
 
@@ -129,34 +132,35 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine();
 
         MexLocation mexLoc = new MexLocation(me);
-        Location location = null;
+        Location location;
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
         Location loc = createLocation("registerClientTest", -122.149349, 37.459609);
 
         try {
-            // Directly create request for testing:
-            // Passed in Location (which is a callback interface)
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, 10000);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            response = me.registerClient(request, 10000);
+            response = me.registerClient(request, GRPC_TIMEOUT_MS);
             assert(response != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("registerClientTest Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("registerClientTest: Execution Failed!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("registerClientTest: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("registerClientTest Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("registerClientTest: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context,false);
         }
 
         // Temporary.
-        System.out.println("registerClientTest response: " + response.toString());
+        Log.i(TAG, "registerClientTest response: " + response.toString());
         assertEquals(response.getVer(), 0);
         assertEquals(response.getToken(), ""); // FIXME: We DO expect a token
         assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
@@ -168,36 +172,34 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine();
 
         MexLocation mexLoc = new MexLocation(me);
-        Location location = null;
-        Future<AppClient.Match_Engine_Status> responseFuture = null;
+        Location location;
+        Future<AppClient.Match_Engine_Status> responseFuture;
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
         Location loc = createLocation("RegisterClientFutureTest", -122.149349, 37.459609);
 
         try {
-            // Directly create request for testing:
-            // Passed in Location (which is a callback interface)
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, 10000);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            responseFuture = me.registerClientFuture(request, 10000);
+            responseFuture = me.registerClientFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assert(response != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("registerClientFutureTest Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("registerClientFutureTest: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("registerClientFutureTest Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("registerClientFutureTest: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context,false);
         }
 
         // Temporary.
-        System.out.println("registerClientFutureTest() response: " + response.toString());
+        Log.i(TAG, "registerClientFutureTest() response: " + response.toString());
         assertEquals(response.getVer(), 0);
         assertEquals(response.getToken(), ""); // FIXME: We DO expect a token
         assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
@@ -205,7 +207,6 @@ public class EngineCallTest {
 
     @Test
     public void findCloudletTest() {
-        // Context of the app under test.
         Context context = InstrumentationRegistry.getTargetContext();
         FindCloudletResponse cloudletResponse = null;
         MatchingEngine me = new MatchingEngine();
@@ -217,17 +218,20 @@ public class EngineCallTest {
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
-            Location location = mexLoc.getBlocking(context, 10000);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
-            cloudletResponse = me.findCloudlet(request, 10000);
+            cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
 
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("FindCloudlet Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("FindCloudlet: Execution Failed!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("FindCloudlet: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("FindCloudlet Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("FindCloudlet: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -242,9 +246,8 @@ public class EngineCallTest {
 
     @Test
     public void findCloudletFutureTest() {
-        // Context of the app under test.
         Context context = InstrumentationRegistry.getTargetContext();
-        Future<FindCloudletResponse> response = null;
+        Future<FindCloudletResponse> response;
         FindCloudletResponse result = null;
         MatchingEngine me = new MatchingEngine();
         MexLocation mexLoc = new MexLocation(me);
@@ -260,11 +263,11 @@ public class EngineCallTest {
             response = me.findCloudletFuture(request, 10000);
             result = response.get();
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("FindCloudletFuture Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("FindCloudletFuture: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("FindCloudletFuture Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("FindCloudletFuture: Execution Interrupted!", true);
         }
 
         // Temporary.
@@ -273,7 +276,6 @@ public class EngineCallTest {
 
     @Test
     public void verifyLocationTest() {
-        // Context of the app under test.
         Context context = InstrumentationRegistry.getTargetContext();
 
         MatchingEngine me = new MatchingEngine();
@@ -284,19 +286,22 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             Location mockLoc = createLocation("verifyLocationTest", -122.149349, 37.459609);
             setMockLocation(context, mockLoc);
-            Location location = mexLoc.getBlocking(context, 10000);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
 
-            response = me.verifyLocation(request, 10000);
+            response = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(response != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("VerifyLocation Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("VerifyLocation: Execution Failed!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("VerifyLocation: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("VerifyLocation Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("VerifyLocation: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context, false);
         }
@@ -322,18 +327,18 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             Location mockLoc = createLocation("verifyLocationFutureTest", -122.149349, 37.459609);
             setMockLocation(context, mockLoc);
-            Location location = mexLoc.getBlocking(context, 10000);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
-            locFuture = me.verifyLocationFuture(request, 10000);
+            locFuture = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
             response = locFuture.get();
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("verifyLocationFutureTest Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("verifyLocationFutureTest: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("verifyLocationFutureTest Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("verifyLocationFutureTest: Execution Interrupted!", true);
         }
 
         // Temporary.
@@ -362,19 +367,19 @@ public class EngineCallTest {
         AppClient.Match_Engine_Loc_Verify verifyLocationResult = null;
         try {
             setMockLocation(context, mockLoc); // North Pole.
-            Location location = mexLoc.getBlocking(context, 10000);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
 
-            verifyLocationResult = me.verifyLocation(request, 10000);
+            verifyLocationResult = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(verifyLocationResult != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("verifyMockedLocationTest_NorthPole Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("verifyMockedLocationTest_NorthPole: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("verifyMockedLocationTest_NorthPole Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("verifyMockedLocationTest_NorthPole: Execution Interrupted!", true);
         }
 
         // Temporary.
@@ -391,34 +396,35 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine();
 
         MexLocation mexLoc = new MexLocation(me);
-        Location location = null;
+        Location location;
         AppClient.Match_Engine_Loc response = null;
 
         enableMockLocation(context,true);
         Location loc = createLocation("getLocationTest", -122.149349, 37.459609);
 
         try {
-            // Directly create request for testing:
-            // Passed in Location (which is a callback interface)
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, 10000);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            response = me.getLocation(request, 10000);
+            response = me.getLocation(request, GRPC_TIMEOUT_MS);
             assert(response != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("VerifyLocation Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("VerifyLocation: Execution Failed!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("VerifyLocation: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("VerifyLocation Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("VerifyLocation: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context,false);
         }
 
         // Temporary.
-        System.out.println("getLocation() response: " + response.toString());
+        Log.i(TAG, "getLocation() response: " + response.toString());
         assertEquals(response.getVer(), 0);
         assertEquals(response.getToken(), ""); // FIXME: We DO expect a token
 
@@ -438,8 +444,8 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine();
 
         MexLocation mexLoc = new MexLocation(me);
-        Location location = null;
-        Future<AppClient.Match_Engine_Loc> responseFuture = null;
+        Location location;
+        Future<AppClient.Match_Engine_Loc> responseFuture;
         AppClient.Match_Engine_Loc response = null;
 
         enableMockLocation(context,true);
@@ -449,25 +455,25 @@ public class EngineCallTest {
             // Directly create request for testing:
             // Passed in Location (which is a callback interface)
             setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, 10000);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            responseFuture = me.getLocationFuture(request, 10000);
+            responseFuture = me.getLocationFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assert(response != null);
         } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("getLocationFutureTest Execution Failed!", true);
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("getLocationFutureTest: Execution Failed!", true);
         } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("getLocationFutureTest Execution Interrupted!", true);
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("getLocationFutureTest: Execution Interrupted!", true);
         } finally {
             enableMockLocation(context,false);
         }
 
         // Temporary.
-        System.out.println("getLocationFutureTest() response: " + response.toString());
+        Log.i(TAG, "getLocationFutureTest() response: " + response.toString());
         assertEquals(response.getVer(), 0);
         assertEquals(response.getToken(), ""); // FIXME: We DO expect a token
 
@@ -480,78 +486,4 @@ public class EngineCallTest {
         assertEquals((int) response.getNetworkLocation().getLat(), (int) loc.getLatitude());
         assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
     }
-
-    /**
-     * This is an extremely simple and basic end to end test of blocking versus Future using
-     * VerifyLocation.
-     */
-    @Test
-    public void basicLatencyTest() {
-        Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
-
-        MexLocation mexLoc = new MexLocation(me);
-        Location location;
-        AppClient.Match_Engine_Loc_Verify response1 = null;
-
-        enableMockLocation(context,true);
-        Location loc = createLocation("getLocationTest", -122.149349, 37.459609);
-
-        long start;
-        long elapsed1[] = new long[20];
-        long elapsed2[] = new long[20];
-        try {
-            setMockLocation(context, loc);
-            location = mexLoc.getBlocking(context, 10000);
-            assertFalse(location == null);
-
-            long sum1 = 0, sum2 = 0;
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            for (int i = 0; i < elapsed1.length; i++){
-                start = System.currentTimeMillis();
-                response1 = me.verifyLocation(request, 10000);
-                elapsed1[i] = System.currentTimeMillis() - start;
-            }
-
-            for (int i = 0; i < elapsed1.length; i++) {
-                Log.i("LatencyTest", i + " VerifyLocation elapsed time: Elapsed1: " + elapsed1[i]);
-                sum1 += elapsed1[i];
-            }
-            Log.i("LatencyTest", "Average1: " + sum1/elapsed1.length);
-            assert(response1 != null);
-
-            // Future
-            request = createMockMatchingEngineRequest(location);
-            AppClient.Match_Engine_Loc_Verify response2 = null;
-            try {
-                for (int i = 0; i < elapsed2.length; i++) {
-                    start = System.currentTimeMillis();
-                    Future<AppClient.Match_Engine_Loc_Verify> locFuture = me.verifyLocationFuture(request, 10000);
-                    // Do something busy()
-                    response2 = locFuture.get();
-                    elapsed2[i] = System.currentTimeMillis() - start;
-                }
-                for (int i = 0; i < elapsed2.length; i++) {
-                    Log.i("LatencyTest", i + " VerifyLocationFuture elapsed time: Elapsed2: " + elapsed2[i]);
-                    sum2 += elapsed2[i];
-                }
-                Log.i("LatencyTest", "Average2: " + sum2/elapsed2.length);
-                assert(response2 != null);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw e;
-            }
-
-
-        } catch (ExecutionException ee) {
-            ee.printStackTrace();
-            assertFalse("getLocationFutureTest Execution Failed!", true);
-        } catch (InterruptedException ie) {
-            ie.printStackTrace();
-            assertFalse("getLocationFutureTest Execution Interrupted!", true);
-        } finally {
-            enableMockLocation(context,false);
-        }
-    }
-
 }

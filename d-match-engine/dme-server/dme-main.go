@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
+	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -19,6 +18,7 @@ import (
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
+var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -26,13 +26,8 @@ type server struct{}
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
 
-	var mreq *dme.Match_Engine_Reply
-	var ipaddr net.IP
-
-	mreq = new(dme.Match_Engine_Reply)
-	find_cloudlet(req, mreq)
-	ipaddr = mreq.ServiceIp
-	fmt.Printf("FindCloudlet: Found Service IP %s\n", ipaddr.String())
+	mreq := new(dme.Match_Engine_Reply)
+	findCloudlet(req, mreq)
 	return mreq, nil
 }
 
@@ -85,13 +80,19 @@ func (s *server) AddUserToGroup(ctx context.Context,
 func main() {
 	flag.Parse()
 
-	setup_match_engine()
+	setupMatchEngine()
 
-	notifyHandler := &NotifyHandler{}
-	notifyClient := notify.NewDMEClient(strings.Split(*notifyAddrs, ","), notifyHandler)
-	go notifyClient.Run()
-	defer notifyClient.Stop()
-	util.InfoLog("notify client to", "addrs", *notifyAddrs)
+	if *standalone {
+		appInsts := dmetest.GenerateAppInsts()
+		for _, inst := range appInsts {
+			addApp(inst)
+		}
+	} else {
+		notifyHandler := &NotifyHandler{}
+		notifyClient := initNotifyClient(*notifyAddrs, notifyHandler)
+		go notifyClient.Run()
+		defer notifyClient.Stop()
+	}
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
@@ -99,6 +100,12 @@ func main() {
 	}
 	s := grpc.NewServer()
 	dme.RegisterMatch_Engine_ApiServer(s, &server{})
+
+	if *standalone {
+		saServer := standaloneServer{}
+		edgeproto.RegisterAppInstApiServer(s, &saServer)
+	}
+
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {

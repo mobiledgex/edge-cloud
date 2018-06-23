@@ -7,8 +7,10 @@ import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
+
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 
 public class GetLocation implements Callable {
     public static final String TAG = "GetLocation";
@@ -35,7 +37,7 @@ public class GetLocation implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Loc call() throws MissingRequestException {
+    public AppClient.Match_Engine_Loc call() throws MissingRequestException, StatusRuntimeException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: GetLocation does not have a request object to make location verification call!");
         }
@@ -49,9 +51,6 @@ public class GetLocation implements Callable {
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .getLocation(mRequest);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
         } finally {
             if (channel != null) {
                 channel.shutdown();

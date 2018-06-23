@@ -68,41 +68,20 @@ func main() {
 			"error", err)
 	}
 
-	developerApi := InitDeveloperApi(objStore)
-	if developerApi == nil {
-		util.FatalLog("Failed to initialize developer API")
-	}
-	appApi := InitAppApi(objStore, developerApi)
-	if appApi == nil {
-		util.FatalLog("Failed to initialize app API")
-	}
-	operatorApi := InitOperatorApi(objStore)
-	if operatorApi == nil {
-		util.FatalLog("Failed to initialize operator API")
-	}
-	cloudletApi := InitCloudletApi(objStore, operatorApi)
-	if cloudletApi == nil {
-		util.FatalLog("Failed to initialize cloudlet API")
-	}
-	appInstApi := InitAppInstApi(objStore, appApi, cloudletApi)
-	if appInstApi == nil {
-		util.FatalLog("Failed to initialize app inst API")
-	}
-	developerApi.WaitInitDone()
-	appApi.WaitInitDone()
-	operatorApi.WaitInitDone()
-	cloudletApi.WaitInitDone()
-	appInstApi.WaitInitDone()
+	sync := InitSync(objStore)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
 
-	notifyHandler := NewControllerNotifier(appInstApi, cloudletApi)
+	notifyHandler := NewControllerNotifier(&appInstApi, &cloudletApi)
 	notify.ServerMgrStart(*notifyAddr, notifyHandler)
 
 	server := grpc.NewServer()
-	edgeproto.RegisterDeveloperApiServer(server, developerApi)
-	edgeproto.RegisterAppApiServer(server, appApi)
-	edgeproto.RegisterOperatorApiServer(server, operatorApi)
-	edgeproto.RegisterCloudletApiServer(server, cloudletApi)
-	edgeproto.RegisterAppInstApiServer(server, appInstApi)
+	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
+	edgeproto.RegisterAppApiServer(server, &appApi)
+	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
+	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
+	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
@@ -142,4 +121,12 @@ func main() {
 	// wait until process in killed/interrupted
 	sig := <-sigChan
 	fmt.Println(sig)
+}
+
+func InitApis(sync *Sync) {
+	InitDeveloperApi(sync)
+	InitAppApi(sync)
+	InitOperatorApi(sync)
+	InitCloudletApi(sync)
+	InitAppInstApi(sync)
 }

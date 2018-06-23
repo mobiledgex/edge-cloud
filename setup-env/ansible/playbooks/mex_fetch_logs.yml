@@ -1,0 +1,76 @@
+- name: get etcd logs
+  gather_facts: no
+  user: root
+  hosts: etcds
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: fetch etcd logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.etcdlocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.etcdlocal.name }}.log"
+      flat: yes
+    with_items:
+       -  "{{ etcds }}"
+
+
+- name: get controller logs
+  gather_facts: no
+  user: root
+  hosts: controllers
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: fetch controller logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.controllerlocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.controllerlocal.name }}.log"
+      flat: yes
+    with_items:
+       -  "{{ controllers }}"
+
+- name: get crm logs
+  gather_facts: no
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: fetch crm logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.crmlocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.crmlocal.name }}.log"
+      flat: yes
+    with_items:
+       -  "{{ crms }}"
+
+- name: get dme logs
+  gather_facts: no
+  user: root
+  hosts: dmes
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: fetch dme logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.dmelocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.dmelocal.name }}.log"
+      flat: yes
+    with_items:
+       -  "{{ dmes }}"

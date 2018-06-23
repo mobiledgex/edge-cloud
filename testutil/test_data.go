@@ -100,28 +100,28 @@ var CloudletData = []edgeproto.Cloudlet{
 			OperatorKey: OperatorData[0].Key,
 			Name:        "San Jose Site",
 		},
-		AccessIp: []byte{10, 100, 0, 1},
+		AccessUri: "10.100.0.1",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
 			OperatorKey: OperatorData[0].Key,
 			Name:        "New York Site",
 		},
-		AccessIp: []byte{254, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+		AccessUri: "ff.f8::1",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
 			OperatorKey: OperatorData[1].Key,
 			Name:        "San Francisco Site",
 		},
-		AccessIp: []byte{172, 24, 0, 1},
+		AccessUri: "172.24.0.1",
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
 			OperatorKey: OperatorData[2].Key,
 			Name:        "Hawaii Site",
 		},
-		AccessIp: []byte{172, 30, 0, 1},
+		AccessUri: "hi76.verizon.com",
 	},
 }
 var AppInstData = []edgeproto.AppInst{
@@ -131,9 +131,10 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{10, 100, 10, 1},
-		Port:     8089,
+		CloudletLoc: CloudletData[0].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Uri:         "10.100.10.1",
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -141,9 +142,10 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          2,
 		},
-		Liveness: edgeproto.AppInst_DYNAMIC,
-		Ip:       []byte{10, 100, 10, 2},
-		Port:     8089,
+		CloudletLoc: CloudletData[0].Location,
+		Liveness:    edgeproto.AppInst_DYNAMIC,
+		Uri:         "10.100.10.2",
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -151,9 +153,10 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[1].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{172, 24, 1, 1},
-		Port:     1443,
+		CloudletLoc: CloudletData[1].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Uri:         "pokemon.ny.mex.io",
+		AppPath:     AppData[0].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -161,9 +164,10 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[1].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{172, 24, 1, 1},
-		Port:     2443,
+		CloudletLoc: CloudletData[1].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Uri:         "pokemon.ny.mex.io",
+		AppPath:     AppData[1].AppPath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -171,8 +175,9 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[2].Key,
 			Id:          1,
 		},
-		Liveness: edgeproto.AppInst_STATIC,
-		Ip:       []byte{192, 168, 1, 1},
-		Port:     54321,
+		CloudletLoc: CloudletData[2].Location,
+		Liveness:    edgeproto.AppInst_STATIC,
+		Uri:         "harrypotter.sf.mex.io",
+		AppPath:     AppData[2].AppPath,
 	},
 }

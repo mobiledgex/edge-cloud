@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -10,7 +11,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
@@ -79,6 +82,8 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 5, len(dmeNotify.AppInsts), "num appinsts")
 	assert.Equal(t, 4, len(crmNotify.Cloudlets), "num cloudlets")
 
+	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
+
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly
@@ -98,4 +103,93 @@ func TestDataGen(t *testing.T) {
 		out.WriteString("\n")
 	}
 	out.Close()
+}
+
+func TestEdgeCloudBug26(t *testing.T) {
+	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
+
+	os.Args = append(os.Args, "-localEtcd")
+
+	conn, mainDone, err := startMain(t)
+	if err != nil {
+		close(sigChan)
+		return
+	}
+	defer conn.Close()
+
+	devApi := edgeproto.NewDeveloperApiClient(conn)
+	appApi := edgeproto.NewAppApiClient(conn)
+	operApi := edgeproto.NewOperatorApiClient(conn)
+	cloudletApi := edgeproto.NewCloudletApiClient(conn)
+	appInstApi := edgeproto.NewAppInstApiClient(conn)
+
+	yamlData := `
+operators:
+- key:
+    name: TMUS
+cloudlets:
+- key:
+    operatorkey:
+      name: TMUS
+    name: cloud2
+developers:
+- key:
+    name: AcmeAppCo
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: 1.0
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: 1.0
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: cloud2
+    id: 99
+  liveness: 1
+  port: 8080
+  ip: [10,100,10,4]
+`
+	data := edgeproto.ApplicationData{}
+	err = yaml.Unmarshal([]byte(yamlData), &data)
+	require.Nil(t, err, "unmarshal data")
+
+	ctx := context.TODO()
+	_, err = devApi.CreateDeveloper(ctx, &data.Developers[0])
+	assert.Nil(t, err, "create dev")
+	_, err = appApi.CreateApp(ctx, &data.Applications[0])
+	assert.Nil(t, err, "create app")
+	_, err = operApi.CreateOperator(ctx, &data.Operators[0])
+	assert.Nil(t, err, "create operator")
+	_, err = cloudletApi.CreateCloudlet(ctx, &data.Cloudlets[0])
+	assert.Nil(t, err, "create cloudlet")
+
+	show := testutil.ShowApp{}
+	show.Init()
+	filterNone := edgeproto.App{}
+	stream, err := appApi.ShowApp(ctx, &filterNone)
+	show.ReadStream(stream, err)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, 1, len(show.Data), "show app count")
+
+	_, err = appInstApi.CreateAppInst(ctx, &data.AppInstances[0])
+	assert.Nil(t, err, "create app inst")
+
+	show.Init()
+	stream, err = appApi.ShowApp(ctx, &filterNone)
+	show.ReadStream(stream, err)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, 1, len(show.Data), "show app count after creating app inst")
+
+	// closing the signal channel triggers main to exit
+	close(sigChan)
+	// wait until main is done so it can clean up properly
+	<-mainDone
 }

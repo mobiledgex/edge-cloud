@@ -27,21 +27,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowAppInst struct {
-	data map[string]edgeproto.AppInst
+	Data map[string]edgeproto.AppInst
 	grpc.ServerStream
 }
 
 func (x *ShowAppInst) Init() {
-	x.data = make(map[string]edgeproto.AppInst)
+	x.Data = make(map[string]edgeproto.AppInst)
 }
 
 func (x *ShowAppInst) Send(m *edgeproto.AppInst) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowAppInst) ReadStream(stream edgeproto.AppInstApi_ShowAppInstClient, err error) {
-	x.data = make(map[string]edgeproto.AppInst)
+	x.Data = make(map[string]edgeproto.AppInst)
 	if err != nil {
 		return
 	}
@@ -53,17 +53,17 @@ func (x *ShowAppInst) ReadStream(stream edgeproto.AppInstApi_ShowAppInstClient, 
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowAppInst) CheckFound(obj *edgeproto.AppInst) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
 	if found {
 		assert.Equal(t, *obj, check, "AppInst are equal")
@@ -71,7 +71,7 @@ func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
 }
 
 func (x *ShowAppInst) AssertNotFound(t *testing.T, obj *edgeproto.AppInst) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find AppInst %s", obj.Key.GetKeyString())
 }
 
@@ -146,16 +146,24 @@ func (x *AppInstCommonApi) ShowAppInst(ctx context.Context, filter *edgeproto.Ap
 	}
 }
 
-func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+func NewInternalAppInstApi(api edgeproto.AppInstApiServer) *AppInstCommonApi {
 	apiWrap := AppInstCommonApi{}
 	apiWrap.internal_api = api
-	basicAppInstCudTest(t, &apiWrap, testData)
+	return &apiWrap
+}
+
+func NewClientAppInstApi(api edgeproto.AppInstApiClient) *AppInstCommonApi {
+	apiWrap := AppInstCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}
+
+func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+	basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
 }
 
 func ClientAppInstCudTest(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
-	apiWrap := AppInstCommonApi{}
-	apiWrap.client_api = api
-	basicAppInstCudTest(t, &apiWrap, testData)
+	basicAppInstCudTest(t, NewClientAppInstApi(api), testData)
 }
 
 func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
@@ -184,7 +192,7 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
 
 	// test delete
 	_, err = api.DeleteAppInst(ctx, &testData[0])
@@ -192,7 +200,7 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	show.Init()
 	err = api.ShowAppInst(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateAppInst(ctx, &testData[0])
@@ -206,4 +214,24 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	_, err = api.CreateAppInst(ctx, &bad)
 	assert.NotNil(t, err, "Create AppInst with no key info")
 
+	// test update
+	updater := edgeproto.AppInst{}
+	updater.Key = testData[0].Key
+	updater.Uri = "update just this"
+	updater.Fields = make([]string, 0)
+	updater.Fields = append(updater.Fields, edgeproto.AppInstFieldUri)
+	_, err = api.UpdateAppInst(ctx, &updater)
+	assert.Nil(t, err, "Update AppInst %s", testData[0].Key.GetKeyString())
+
+	show.Init()
+	updater = testData[0]
+	updater.Uri = "update just this"
+	err = api.ShowAppInst(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show AppInst")
+	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.Uri = testData[0].Uri
+	_, err = api.UpdateAppInst(ctx, &updater)
+	assert.Nil(t, err, "Update back AppInst")
 }
