@@ -31,7 +31,6 @@ func (s *server) SendToGroup(ctx context.Context, req *dme.DlgMessage) (*dme.Dlg
 	return mreq, nil
 }
 
-
 func main() {
 	flag.Parse()
 
