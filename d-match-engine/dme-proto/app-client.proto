@@ -53,11 +53,12 @@ message Match_Engine_Reply {
   // location of the cloudlet?
   Loc cloudlet_location = 5;
   // Status return
-  enum MrStatus {
-    MrSUCCESS = 0;
-    MrFAIL = 1;
-  }
-  MrStatus Status = 6;
+  // enum MrStatus {
+  //  MrSUCCESS = 0;
+  //  MrFAIL = 1;
+  // }
+  // MrStatus Status = 6;
+  bool Status = 6;
   // Token
   string Token = 7;
 }

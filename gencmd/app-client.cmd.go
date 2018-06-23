@@ -145,7 +145,7 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
-	s = append(s, distributed_match_engine.Match_Engine_Reply_MrStatus_name[int32(in.Status)])
+	s = append(s, strconv.FormatBool(in.Status))
 	s = append(s, in.Token)
 	return s
 }
