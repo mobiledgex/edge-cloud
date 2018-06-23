@@ -19,6 +19,7 @@ var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
+var debug = flag.Bool("d", false, "Debug mode for printing on screen")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -83,9 +84,13 @@ func main() {
 	setupMatchEngine()
 
 	if *standalone {
+		fmt.Printf("Running in Standalone Mode with test instances\n");
 		appInsts := dmetest.GenerateAppInsts()
 		for _, inst := range appInsts {
 			addApp(inst)
+		}
+		if *debug {
+			listAppinstTbl()
 		}
 	} else {
 		notifyHandler := &NotifyHandler{}

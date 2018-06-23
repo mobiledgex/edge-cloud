@@ -3,6 +3,8 @@ package main
 import (
 	"math"
 	"sync"
+	"fmt"
+	"net"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -243,6 +245,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			distance = d
 			found = c
 			mreply.Uri = c.uri
+			mreply.ServiceIp = c.ip
 			*mreply.CloudletLocation = c.location
 		}
 	}
@@ -252,7 +255,36 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			"long", found.location.Long,
 			"distance", distance,
 			"uri", found.uri)
+		if *debug {
+			var ipaddr net.IP
+			ipaddr = c.ip
+			fmt.Printf("%s/%s: Found loc = %f/%f at distance %f with IP %s\n",
+				key.appKey.Name, key.carrierName,
+				found.location.Lat, found.location.Long, distance,
+				ipaddr.String())
+		}
 		mreply.Status = true
+	}
+	tbl.RUnlock()
+}
+
+func listAppinstTbl() {
+	var app *carrierApp
+	var inst *carrierAppInst
+	var tbl *carrierApps
+
+	tbl = carrierAppTbl
+	tbl.RLock()
+	for a := range tbl.apps {
+		app = tbl.apps[a]
+		fmt.Printf(">> app = %s/%s info for carrier %s\n", app.key.appKey.Name,
+			app.key.appKey.Version, app.key.carrierName);
+		for c := range app.insts {
+			inst = app.insts[c]
+			fmt.Printf("app = %s/%s info for carrier = %s, Loc = %f/%f\n",
+				app.key.appKey.Name, app.key.appKey.Version,
+				app.key.carrierName, inst.location.Lat, inst.location.Long)
+		}
 	}
 	tbl.RUnlock()
 }
