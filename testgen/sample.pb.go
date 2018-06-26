@@ -26,6 +26,8 @@ import grpc "google.golang.org/grpc"
 
 import binary "encoding/binary"
 
+import "errors"
+import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -1408,6 +1410,86 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 func (m *TestGen_InnerMessage) CopyInFields(src *TestGen_InnerMessage) {
 	m.Url = src.Url
 	m.Id = src.Id
+}
+
+var OuterEnumStrings = []string{
+	"OUTER0",
+	"OUTER1",
+	"OUTER2",
+	"OUTER3",
+}
+
+const (
+	OuterEnumOUTER0 uint64 = 1 << 0
+	OuterEnumOUTER1 uint64 = 1 << 1
+	OuterEnumOUTER2 uint64 = 1 << 2
+	OuterEnumOUTER3 uint64 = 1 << 3
+)
+
+func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := OuterEnum_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = OuterEnum_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = OuterEnum(val)
+	return nil
+}
+
+func (e OuterEnum) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var InnerEnumStrings = []string{
+	"INNER0",
+	"INNER1",
+	"INNER2",
+	"INNER3",
+}
+
+const (
+	InnerEnumINNER0 uint64 = 1 << 0
+	InnerEnumINNER1 uint64 = 1 << 1
+	InnerEnumINNER2 uint64 = 1 << 2
+	InnerEnumINNER3 uint64 = 1 << 3
+)
+
+func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := TestGen_InnerEnum_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = TestGen_InnerEnum_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = TestGen_InnerEnum(val)
+	return nil
+}
+
+func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *NestedMessage) Size() (n int) {

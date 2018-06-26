@@ -10,8 +10,8 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type EtcdClient struct {
@@ -75,7 +75,7 @@ func (e *EtcdClient) Create(key, val string) (int64, error) {
 	if !resp.Succeeded {
 		return 0, objstore.ErrObjStoreKeyExists
 	}
-	util.DebugLog(util.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
@@ -101,7 +101,7 @@ func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 	if !resp.Succeeded {
 		return 0, objstore.ErrObjStoreKeyNotFound
 	}
-	util.DebugLog(util.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
@@ -118,7 +118,7 @@ func (e *EtcdClient) Delete(key string) (int64, error) {
 	if resp.Deleted == 0 {
 		return 0, objstore.ErrObjStoreKeyNotFound
 	}
-	util.DebugLog(util.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
@@ -136,7 +136,7 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 		return nil, 0, objstore.ErrObjStoreKeyNotFound
 	}
 	obj := resp.Kvs[0]
-	util.DebugLog(util.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
+	log.DebugLog(log.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
 	return obj.Value, obj.Version, nil
 }
 
@@ -152,7 +152,7 @@ func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 		return err
 	}
 	for _, obj := range resp.Kvs {
-		util.DebugLog(util.DebugLevelEtcd, "list data", "key", string(obj.Key), "val", string(obj.Value), "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
+		log.DebugLog(log.DebugLevelEtcd, "list data", "key", string(obj.Key), "val", string(obj.Value), "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
 		err = cb(obj.Key, obj.Value, resp.Header.Revision)
 		if err != nil {
 			break
@@ -213,7 +213,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Key = key
 				data.Value = val
 				data.Rev = rev
-				util.DebugLog(util.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
+				log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
 				cb(&data)
 				watchRev = rev
 				return nil
@@ -247,7 +247,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Value = event.Kv.Value
 				data.Rev = resp.Header.Revision
 				watchRev = resp.Header.Revision
-				util.DebugLog(util.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
+				log.DebugLog(log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
 				cb(&data)
 			}
 		}

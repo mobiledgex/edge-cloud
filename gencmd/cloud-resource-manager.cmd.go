@@ -28,11 +28,27 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudResourceManagerCmd edgeproto.CloudResourceManagerClient
+var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
+var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
 var CloudResourceIn edgeproto.CloudResource
 var CloudResourceFlagSet = pflag.NewFlagSet("CloudResource", pflag.ExitOnError)
 var CloudResourceInCategory string
-var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
-var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
+var CloudResourceCategoryStrings = []string{
+	"AllCloudResources",
+	"Kubernetes",
+	"k8s",
+	"Mesos",
+	"AWS",
+	"GCP",
+	"Azure",
+	"DigitalOcean",
+	"PacketNet",
+	"OpenStack",
+	"Docker",
+	"EKS",
+	"AKS",
+	"GKS",
+}
 
 func CloudResourceSlicer(in *edgeproto.CloudResource) []string {
 	s := make([]string, 0, 6)
@@ -441,9 +457,17 @@ var DeleteApplicationCmd = &cobra.Command{
 	},
 }
 
+var CloudResourceManagerCmds = []*cobra.Command{
+	ListCloudResourceCmd,
+	AddCloudResourceCmd,
+	DeleteCloudResourceCmd,
+	DeployApplicationCmd,
+	DeleteApplicationCmd,
+}
+
 func init() {
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.Name, "name", "", "Name")
-	CloudResourceFlagSet.StringVar(&CloudResourceInCategory, "category", "", "CloudResourceInCategory")
+	CloudResourceFlagSet.StringVar(&CloudResourceInCategory, "category", "", "one of [AllCloudResources Kubernetes k8s Mesos AWS GCP Azure DigitalOcean PacketNet OpenStack Docker EKS AKS GKS]")
 	CloudResourceIn.CloudletKey = &edgeproto.CloudletKey{}
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.CloudletKey.OperatorKey.Name, "cloudletkey-operatorkey-name", "", "CloudletKey.OperatorKey.Name")
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.CloudletKey.Name, "cloudletkey-name", "", "CloudletKey.Name")
@@ -484,33 +508,33 @@ func init() {
 func parseCloudResourceEnums() error {
 	if CloudResourceInCategory != "" {
 		switch CloudResourceInCategory {
-		case "allcloudresources":
+		case "AllCloudResources":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(0)
-		case "kubernetes":
+		case "Kubernetes":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(200)
 		case "k8s":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(200)
-		case "mesos":
+		case "Mesos":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(201)
-		case "aws":
+		case "AWS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(202)
-		case "gcp":
+		case "GCP":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(203)
-		case "azure":
+		case "Azure":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(204)
-		case "digitalocean":
+		case "DigitalOcean":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(205)
-		case "packetnet":
+		case "PacketNet":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(206)
-		case "openstack":
+		case "OpenStack":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(300)
-		case "docker":
+		case "Docker":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(301)
-		case "eks":
+		case "EKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(400)
-		case "aks":
+		case "AKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(402)
-		case "gks":
+		case "GKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(403)
 		default:
 			return errors.New("Invalid value for CloudResourceInCategory")

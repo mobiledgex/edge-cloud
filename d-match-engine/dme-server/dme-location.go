@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify) {
@@ -31,14 +31,14 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	}
 
 	distance = 10000
-	util.DebugLog(util.DebugLevelDmeReq, ">>>Verify Location",
+	log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
 		"appName", key.appKey.Name,
 		"carrier", key.carrierName,
 		"lat", mreq.GpsLocation.Lat,
 		"long", mreq.GpsLocation.Long)
 	for _, c := range app.insts {
 		d = distance_between(*mreq.GpsLocation, c.location)
-		util.DebugLog(util.DebugLevelDmeReq, "verify location at",
+		log.DebugLog(log.DebugLevelDmereq, "verify location at",
 			"lat", c.location.Lat,
 			"long", c.location.Long,
 			"distance", distance,
@@ -58,7 +58,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 		} else {
 			mreply.GpsLocationStatus = 4
 		}
-		util.DebugLog(util.DebugLevelDmeReq, "verified location at",
+		log.DebugLog(log.DebugLevelDmereq, "verified location at",
 			"lat", found.location.Lat,
 			"long", found.location.Long,
 			"distance", distance,

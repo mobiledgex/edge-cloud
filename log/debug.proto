@@ -1,0 +1,28 @@
+// Debug API proto
+
+syntax = "proto3";
+package log;
+
+enum DebugLevel {
+  etcd = 0;
+  api = 1;
+  notify = 2;
+  dmedb = 3;
+  dmereq = 4;
+}
+
+message DebugLevels {
+  // comma separated list of debug level names
+  repeated DebugLevel levels = 1;
+}
+
+message DebugResult {
+  string status = 1;
+  uint32 code = 2;
+}
+
+service DebugApi {
+  rpc EnableDebugLevels(DebugLevels) returns (DebugResult) {}
+  rpc DisableDebugLevels(DebugLevels) returns (DebugResult) {}
+  rpc ShowDebugLevels(DebugLevels) returns (DebugLevels) {}
+}

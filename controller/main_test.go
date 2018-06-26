@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -39,7 +39,7 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 }
 
 func TestController(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 
 	os.Args = append(os.Args, "-localEtcd")
 
@@ -106,7 +106,7 @@ func TestDataGen(t *testing.T) {
 }
 
 func TestEdgeCloudBug26(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 
 	os.Args = append(os.Args, "-localEtcd")
 
