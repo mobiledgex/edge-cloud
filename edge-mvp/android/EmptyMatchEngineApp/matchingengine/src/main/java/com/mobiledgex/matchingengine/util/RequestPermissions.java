@@ -31,6 +31,9 @@ public class RequestPermissions {
             Manifest.permission.READ_PHONE_STATE, // Get Phone number
     };
 
+
+    public static boolean permissionsDeniedShown = false;
+
     public List<String> getNeededPermissions(Activity activity) {
         List<String> permissionsNeeded = new ArrayList<>();
 
@@ -54,18 +57,11 @@ public class RequestPermissions {
             permissionArray = permissions; // Nothing was granted. Ask for all.
         }
 
-        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_PHONE_STATE) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_COARSE_LOCATION) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(activity,Manifest.permission.ACCESS_FINE_LOCATION)) {
-
-            new ConfirmationDialog().show(activity.getSupportFragmentManager(), "dialog");
-        } else {
-            ActivityCompat.requestPermissions(activity, permissionArray, REQUEST_MULTIPLE_PERMISSION);
-        }
+        ActivityCompat.requestPermissions(activity, permissionArray, REQUEST_MULTIPLE_PERMISSION);
     }
 
     /**
-     * Keeps asking for permissions until granted.
+     * Keeps asking for permissions until granted or user checks box to not asked again.
      * @param activity
      * @param requestCode
      * @param permissions
@@ -73,18 +69,27 @@ public class RequestPermissions {
      */
     public void onRequestPermissionsResult(AppCompatActivity activity, int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+
         int numGranted = 0;
+        boolean showWarning = false;
         for (int i = 0; i < grantResults.length; i++) {
             if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                 numGranted++;
             }
         }
+        showWarning = (numGranted != grantResults.length);
 
         if (requestCode == REQUEST_MULTIPLE_PERMISSION) {
-            if (numGranted != grantResults.length && (grantResults.length > 0)) {
-                ErrorDialog.newInstance(
-                        activity.getString(R.string.request_permission))
-                        .show(activity.getSupportFragmentManager(), "dialog");
+            for (int i = 0; i < grantResults.length; i++) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(activity, permissions[i])) {
+                    new ConfirmationDialog().show(activity.getSupportFragmentManager(), "dialog");
+                } else if (!permissionsDeniedShown && showWarning) {
+                    // Rejected, or user asks to not ask again. This may still be critical for the
+                    // application, so show once.
+                    String msg = activity.getResources().getString(R.string.request_permission);
+                    ErrorDialog.newInstance(msg).show(activity.getSupportFragmentManager(), "errorDialog");
+                }
+                return;
             }
         }
     }
@@ -104,18 +109,15 @@ public class RequestPermissions {
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            parent.requestPermissions(permissions,
-                                    REQUEST_MULTIPLE_PERMISSION);
+                            requestPermissions(permissions, REQUEST_MULTIPLE_PERMISSION);
+                            dialog.dismiss();
                         }
                     })
                     .setNegativeButton(android.R.string.cancel,
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
-                                    Activity activity = parent.getActivity();
-                                    if (activity != null) {
-                                        activity.finish();
-                                    }
+                                    dialog.dismiss();
                                 }
                             })
                     .create();
@@ -146,7 +148,8 @@ public class RequestPermissions {
                     .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            activity.finish();
+                            permissionsDeniedShown = true;
+                            dialogInterface.dismiss();
                         }
                     })
                     .create();
