@@ -28,8 +28,13 @@ var (
 	outputDir    = flag.String("outputdir", "", "option directory to store output and logs, TS suffix will be replaced with timestamp")
 	useTimestamp = flag.Bool("timestamp", false, "append current timestamp to outputdir")
 	compareYaml  = flag.String("compareyaml", "", "comma separated list of yamls to compare")
-	procs        processData
+
+	procs processData
 )
+
+type yamlReplacementVariables struct {
+	Vars []map[string]string
+}
 
 type returnCodeWithText struct {
 	success bool
@@ -60,23 +65,26 @@ type processData struct {
 	Crms        []crmProcess        `yaml:"crms"`
 }
 
-var actionChoices = map[string]bool{
-	"start":     true,
-	"stop":      true,
-	"status":    true,
-	"show":      true,
-	"update":    true,
-	"delete":    true,
-	"create":    true,
-	"deploy":    true,
-	"cleanup":   true,
-	"fetchlogs": true,
+//this is possible actions and optional parameters
+var actionChoices = map[string]string{
+	"start":     "procname",
+	"stop":      "procname",
+	"status":    "procname",
+	"show":      "procname",
+	"update":    "procname",
+	"delete":    "procname",
+	"create":    "procname",
+	"deploy":    "",
+	"cleanup":   "",
+	"fetchlogs": "",
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
 //These are the only allowed exceptions to the strict yaml unmarshalling
 var yamlExceptions = map[string]map[string]bool{
-	"setup": {},
+	"setup": {
+		"vars": true,
+	},
 	"data": {
 		"ip_str": true, // ansible workaround
 	},
@@ -131,9 +139,8 @@ func isYamlOk(e error, yamltype string) bool {
 				allowedException = true
 			}
 		}
-		if allowedException {
-			log.Printf("notice: unmarshal: %v ignored\n", err1)
-		} else if strings.Contains(err1, "yaml: unmarshal errors") {
+
+		if allowedException || strings.Contains(err1, "yaml: unmarshal errors") {
 			// ignore this summary error
 		} else {
 			//all other errors are unexpected and mean something is wrong in the yaml
@@ -178,21 +185,30 @@ func connectDme(p *process.DmeLocal, c chan returnCodeWithText) {
 	}
 }
 
-func waitForProcesses() bool {
+func waitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan returnCodeWithText)
 	var numProcs = 0 //len(procs.Controllers) + len(procs.Crms) + len(procs.Dmes)
 	for _, ctrl := range procs.Controllers {
+		if processName != "" && processName != ctrl.Name {
+			continue
+		}
 		numProcs += 1
 		ctrlp := ctrl.ControllerLocal
 		go connectController(&ctrlp, c)
 	}
 	for _, dme := range procs.Dmes {
+		if processName != "" && processName != dme.Name {
+			continue
+		}
 		numProcs += 1
 		dmep := dme.DmeLocal
 		go connectDme(&dmep, c)
 	}
 	for _, crm := range procs.Crms {
+		if processName != "" && processName != crm.Name {
+			continue
+		}
 		numProcs += 1
 		crmp := crm.CrmLocal
 		go connectCrm(&crmp, c)
@@ -206,6 +222,35 @@ func waitForProcesses() bool {
 		}
 	}
 	return allpass
+}
+
+//to identify running processes, we need to know where they are running
+//and some unique arguments to look for for pgrep. Returns info about
+// the hostname, process executable and arguments
+func findProcess(processName string) (string, string, string) {
+	for _, etcd := range procs.Etcds {
+		if etcd.Name == processName {
+			return etcd.Hostname, "etcd", "etcd .*-name " + etcd.Name
+		}
+	}
+	for _, ctrl := range procs.Controllers {
+		if ctrl.Name == processName {
+			return ctrl.Hostname, "controller", "-apiAddr " + ctrl.ApiAddr
+		}
+	}
+	for _, crm := range procs.Crms {
+		if crm.Name == processName {
+
+			return crm.Hostname, "crmserver", "-apiAddr " + crm.ApiAddr
+		}
+	}
+	for _, dme := range procs.Dmes {
+		if dme.Name == processName {
+			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
+		}
+	}
+
+	return "", "", ""
 }
 
 func getExternalApiAddress(internalApiAddr string, externalHost string) string {
@@ -266,7 +311,22 @@ func printToFile(fname string, out string, truncate bool) {
 	}
 }
 
-func runShowCommands() {
+//default is to connect to the first controller, unless we specified otherwise
+func getController(ctrlname string) *controllerProcess {
+	if ctrlname == "" {
+		return &procs.Controllers[0]
+	}
+	for _, ctrl := range procs.Controllers {
+		if ctrl.Name == ctrlname {
+			return &ctrl
+		}
+	}
+	log.Fatalf("Error: could not find specified controller: %v\n", ctrlname)
+	return nil //unreachable
+}
+
+func runShowCommands(ctrlname string) bool {
+	errFound := false
 	var showCmds = []string{
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
@@ -274,11 +334,12 @@ func runShowCommands() {
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",
 	}
+	ctrl := getController(ctrlname)
 
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
-		cmd := exec.Command("edgectl", "--addr", procs.Controllers[0].ApiAddr, "controller", cmdstr)
+		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr)
 		log.Printf("generating output for %s\n", label)
 		out, _ := cmd.CombinedOutput()
 		truncate := false
@@ -286,14 +347,19 @@ func runShowCommands() {
 		if i == 0 {
 			truncate = true
 		}
+		//edgectl returns exitcode 0 even if it cannot connect, so look for the error
+		if strings.Contains(string(out), cmdstr+" failed") {
+			log.Printf("Found failure in show output\n")
+			errFound = true
+		}
 		printToFile("show-commands.yml", label+"\n"+string(out)+"\n", truncate)
 	}
+	return !errFound
 }
 
-func runApis(mode string) bool {
+func runApis(mode string, ctrlname string) bool {
 	log.Printf("Applying data via APIs\n")
-
-	ctrl := procs.Controllers[0]
+	ctrl := getController(ctrlname)
 	log.Printf("Connecting to controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
 	ctrlapi, err := ctrl.ConnectAPI(apiConnectTimeout)
 
@@ -378,7 +444,21 @@ func getLogFile(procname string) string {
 }
 
 func readSetupFile(setupfile string) {
-	err := util.ReadYamlFile(setupfile, &procs, "")
+	//the setup file has a vars section with replacement variables.  ingest the file once
+	//to get these variables, and then ingest again to parse the setup data with the variables
+	var replacementVars yamlReplacementVariables
+	var varlist []string
+	varstring := ""
+	util.ReadYamlFile(setupfile, &replacementVars, "", false)
+	for _, repl := range replacementVars.Vars {
+		for varname, value := range repl {
+			varlist = append(varlist, varname+"="+value)
+		}
+	}
+	if len(varlist) > 0 {
+		varstring = strings.Join(varlist, ",")
+	}
+	err := util.ReadYamlFile(setupfile, &procs, varstring, true)
 	if err != nil {
 		if !isYamlOk(err, "setup") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
@@ -386,7 +466,7 @@ func readSetupFile(setupfile string) {
 	}
 }
 func readDataFile(datafile string) {
-	err := util.ReadYamlFile(datafile, &data, "")
+	err := util.ReadYamlFile(datafile, &data, "", true)
 	if err != nil {
 		if !isYamlOk(err, "data") {
 			log.Fatal("One or more fatal unmarshal errors, exiting")
@@ -394,28 +474,48 @@ func readDataFile(datafile string) {
 	}
 }
 
-func stopProcesses() {
+func stopProcesses(processName string) bool {
+	maxWait := time.Second * 15
+	c := make(chan string)
+
+	//if a process name is specified, we stop just that one.  The name here identifies the
+	//specific instance of the application, e.g. 'ctrl1'
+	if processName != "" {
+		hostName, processExeName, processArgs := findProcess(processName)
+		log.Printf("Found host %v processexe %v processargs %v\n", hostName, processExeName, processArgs)
+		if hostName == "" {
+			log.Printf("Error: unable to find process name %v in setup\n", processName)
+			return false
+		}
+		if hostName == "localhost" || hostName == "127.0.0.1" {
+			//passing zero wait time to kill forcefully
+			go util.KillProcessesByName(processExeName, maxWait, processArgs, c)
+			log.Printf("kill result: %v\n", <-c)
+		}
+		return true
+	}
 	for _, p := range procs.Etcds {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	processNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
+	processExeNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
 	//anything not gracefully exited in maxwait seconds is forcefully killed
-	maxWait := time.Second * 15
-	c := make(chan string)
 
-	for _, p := range processNames {
+	for _, p := range processExeNames {
 		log.Println("killing processes " + p)
-		go util.KillProcessesByName(p, maxWait, c)
+		go util.KillProcessesByName(p, maxWait, "", c)
 	}
-	for i := 0; i < len(processNames); i++ {
+	for i := 0; i < len(processExeNames); i++ {
 		log.Printf("kill result: %v\n", <-c)
 	}
+	return true
 }
 
-func runPlaybook(playbook string, evars []string) bool {
-	invFile, found := createAnsibleInventoryFile()
-	copySetupFileToAnsible()
+func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
+	invFile, found := createAnsibleInventoryFile(procNamefilter)
+	if !copySetupFileToAnsible() {
+		return false
+	}
 
 	if !found {
 		log.Println("No remote servers found, local environment only")
@@ -440,29 +540,34 @@ func runPlaybook(playbook string, evars []string) bool {
 	return true
 }
 
-func copySetupFileToAnsible() {
+func copySetupFileToAnsible() bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	if ansHome == "" {
 		log.Fatal("Need to set ANSIBLE_DIR environment variable for deployment")
 	}
 	dstFile := ansHome + "/playbooks/setup.yml"
 
-	log.Printf("copying %s to %s\n", *setupFile, dstFile)
-	// Read all content of src to data
-	data, err := ioutil.ReadFile(*setupFile)
+	//rather than just copy the file, we unmarshal it because we have done variable replace
+	data, err := yaml.Marshal(procs)
 	if err != nil {
-		log.Fatal("Error reading source process file for copy")
+		log.Printf("Error in marshal of setupfile for ansible %v\n", err)
+		return false
 	}
+
+	log.Printf("writing setup data to %s\n", dstFile)
+
 	// Write data to dst
 	err = ioutil.WriteFile(dstFile, data, 0644)
 	if err != nil {
-		log.Fatal("Error reading destination process file for copy")
+		log.Println("Error writing setup file")
+		return false
 	}
+	return true
 }
 
-func createAnsibleInventoryFile() (string, bool) {
+func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ansHome := os.Getenv("ANSIBLE_DIR")
-	log.Printf("Using ANSIBLE_DIR:[%s]", ansHome)
+	log.Printf("Creating inventory file in ANSIBLE_DIR:%s using procname filter: %s\n", ansHome, procNameFilter)
 
 	foundServer := false
 	if ansHome == "" {
@@ -483,6 +588,9 @@ func createAnsibleInventoryFile() (string, bool) {
 	dmeRemoteServers := make(map[string]string)
 
 	for _, p := range procs.Etcds {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
 		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
 			allRemoteServers[p.Hostname] = p.Name
 			etcdRemoteServers[p.Hostname] = p.Name
@@ -490,6 +598,9 @@ func createAnsibleInventoryFile() (string, bool) {
 		}
 	}
 	for _, p := range procs.Controllers {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
 		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
 			allRemoteServers[p.Hostname] = p.Name
 			ctrlRemoteServers[p.Hostname] = p.Name
@@ -497,6 +608,9 @@ func createAnsibleInventoryFile() (string, bool) {
 		}
 	}
 	for _, p := range procs.Crms {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
 		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
 			allRemoteServers[p.Hostname] = p.Name
 			crmRemoteServers[p.Hostname] = p.Name
@@ -504,6 +618,9 @@ func createAnsibleInventoryFile() (string, bool) {
 		}
 	}
 	for _, p := range procs.Dmes {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
 		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
 			allRemoteServers[p.Hostname] = p.Name
 			dmeRemoteServers[p.Hostname] = p.Name
@@ -516,25 +633,33 @@ func createAnsibleInventoryFile() (string, bool) {
 	for s := range allRemoteServers {
 		fmt.Fprintln(invfile, s)
 	}
-	fmt.Fprintln(invfile, "")
-	fmt.Fprintln(invfile, "[etcds]")
-	for s := range etcdRemoteServers {
-		fmt.Fprintln(invfile, s)
+	if len(etcdRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[etcds]")
+		for s := range etcdRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
 	}
-	fmt.Fprintln(invfile, "")
-	fmt.Fprintln(invfile, "[controllers]")
-	for s := range ctrlRemoteServers {
-		fmt.Fprintln(invfile, s)
+	if len(ctrlRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[controllers]")
+		for s := range ctrlRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
 	}
-	fmt.Fprintln(invfile, "")
-	fmt.Fprintln(invfile, "[crms]")
-	for s := range crmRemoteServers {
-		fmt.Fprintln(invfile, s)
+	if len(crmRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[crms]")
+		for s := range crmRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
 	}
-	fmt.Fprintln(invfile, "")
-	fmt.Fprintln(invfile, "[dmes]")
-	for s := range dmeRemoteServers {
-		fmt.Fprintln(invfile, s)
+	if len(dmeRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[dmes]")
+		for s := range dmeRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
 	}
 	fmt.Fprintln(invfile, "")
 	return invfile.Name(), foundServer
@@ -543,37 +668,53 @@ func createAnsibleInventoryFile() (string, bool) {
 func deployProcesses() bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_deploy.yml"
-	return runPlaybook(playbook, []string{})
+	return runPlaybook(playbook, []string{}, "")
 }
 
-func startRemoteProcesses() bool {
+func startRemoteProcesses(processName string) bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_start.yml"
 
-	return runPlaybook(playbook, []string{})
+	return runPlaybook(playbook, []string{}, processName)
 }
 
-func stopRemoteProcesses() bool {
+func stopRemoteProcesses(processName string) bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
+
+	if processName != "" {
+		hostName, processExeName, processArgs := findProcess(processName)
+
+		if hostName == "localHost" || hostName == "127.0.0.1" {
+			log.Printf("process %v is not remote\n", processName)
+			return true
+		}
+		vars := []string{"processbin=" + processExeName, "processargs=\"" + processArgs + "\""}
+		playbook := ansHome + "/playbooks/mex_stop_matching_process.yml"
+		return runPlaybook(playbook, vars, processName)
+
+	}
 	playbook := ansHome + "/playbooks/mex_stop.yml"
-	return runPlaybook(playbook, []string{})
+	return runPlaybook(playbook, []string{}, "")
 }
 
 func cleanupRemoteProcesses() bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_cleanup.yml"
-	return runPlaybook(playbook, []string{})
+	return runPlaybook(playbook, []string{}, "")
 }
 
 func fetchRemoteLogs() bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_fetch_logs.yml"
-	return runPlaybook(playbook, []string{"local_log_path=" + *outputDir})
+	return runPlaybook(playbook, []string{"local_log_path=" + *outputDir}, "")
 }
 
-func startProcesses() bool {
+func startProcesses(processName string) bool {
 	log.Printf("*** Starting Local Processes")
 	for _, etcd := range procs.Etcds {
+		if processName != "" && processName != etcd.Name {
+			continue
+		}
 		if etcd.Hostname == "localhost" || etcd.Hostname == "127.0.0.1" {
 			log.Printf("Starting Etcd %+v", etcd)
 			etcd.ResetData()
@@ -586,6 +727,9 @@ func startProcesses() bool {
 		}
 	}
 	for _, ctrl := range procs.Controllers {
+		if processName != "" && processName != ctrl.Name {
+			continue
+		}
 		if ctrl.Hostname == "localhost" || ctrl.Hostname == "127.0.0.1" {
 			log.Printf("Starting Controller %+v\n", ctrl)
 			logfile := getLogFile(ctrl.Name)
@@ -597,6 +741,9 @@ func startProcesses() bool {
 		}
 	}
 	for _, crm := range procs.Crms {
+		if processName != "" && processName != crm.Name {
+			continue
+		}
 		if crm.Hostname == "localhost" || crm.Hostname == "127.0.0.1" {
 			log.Printf("Starting CRM %+v\n", crm)
 			logfile := getLogFile(crm.Name)
@@ -608,6 +755,9 @@ func startProcesses() bool {
 		}
 	}
 	for _, dme := range procs.Dmes {
+		if processName != "" && processName != dme.Name {
+			continue
+		}
 		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name)
@@ -621,6 +771,17 @@ func startProcesses() bool {
 	return true
 }
 
+//some actions have sub arguments associated after equal sign, e.g.--actions stop=ctrl1
+func getActionParam(a string) (string, string) {
+	argslice := strings.Split(a, "=")
+	action := argslice[0]
+	actionParam := ""
+	if len(argslice) > 1 {
+		actionParam = argslice[1]
+	}
+	return action, actionParam
+}
+
 func validateArgs() {
 	flag.Parse()
 	_, validDeployment := deploymentChoices[*deployment]
@@ -629,8 +790,10 @@ func validateArgs() {
 	if *actions != "" {
 		actionSlice = strings.Split(*actions, ",")
 	}
-	for _, action := range actionSlice {
-		_, validAction := actionChoices[action]
+	for _, a := range actionSlice {
+		action, actionParam := getActionParam(a)
+
+		optionalParam, validAction := actionChoices[action]
 		if !validAction {
 			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
 			errFound = true
@@ -639,6 +802,10 @@ func validateArgs() {
 			errFound = true
 		} else if action == "fetchlogs" && *outputDir == "" {
 			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
+			errFound = true
+		}
+		if optionalParam == "" && actionParam != "" {
+			fmt.Printf("ERROR: action %v does not take a parameter\n", action)
 			errFound = true
 		}
 	}
@@ -694,8 +861,10 @@ func main() {
 		readSetupFile(*setupFile)
 	}
 
-	for _, action := range actionSlice {
-		util.PrintStartBanner(action)
+	for _, a := range actionSlice {
+		action, actionParam := getActionParam(a)
+
+		util.PrintStartBanner(a)
 		switch action {
 		case "deploy":
 			if !deployProcesses() {
@@ -703,35 +872,34 @@ func main() {
 			}
 		case "start":
 			startFailed := false
-			if !startProcesses() {
+			if !startProcesses(actionParam) {
 				startFailed = true
 				errorsFound += 1
 			} else {
-				if !startRemoteProcesses() {
+				if !startRemoteProcesses(actionParam) {
 					startFailed = true
 					errorsFound += 1
 				}
 			}
 			if startFailed {
-				stopProcesses()
-				stopRemoteProcesses()
+				stopProcesses(actionParam)
+				stopRemoteProcesses(actionParam)
 				errorsFound += 1
 				break
 
 			}
 			updateApiAddrs()
-			if !waitForProcesses() {
+			if !waitForProcesses(actionParam) {
 				errorsFound += 1
 			}
-
 		case "status":
 			updateApiAddrs()
-			if !waitForProcesses() {
+			if !waitForProcesses(actionParam) {
 				errorsFound += 1
 			}
 		case "stop":
-			stopProcesses()
-			if !stopRemoteProcesses() {
+			stopProcesses(actionParam)
+			if !stopRemoteProcesses(actionParam) {
 				errorsFound += 1
 			}
 		case "create":
@@ -740,13 +908,15 @@ func main() {
 			fallthrough
 		case "delete":
 			updateApiAddrs()
-			if !runApis(action) {
+			if !runApis(action, actionParam) {
 				log.Printf("Unable to run apis for %s. Check connectivity to controller API\n", action)
 				errorsFound += 1
 			}
 		case "show":
 			updateApiAddrs()
-			runShowCommands()
+			if !runShowCommands(actionParam) {
+				errorsFound += 1
+			}
 		case "cleanup":
 			if !cleanupRemoteProcesses() {
 				errorsFound += 1

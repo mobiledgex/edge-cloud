@@ -46,4 +46,3 @@ setup-mex -setupfile three_vm/setup.yml -action start -datafile three_vm/data.ym
 setup-mex -setupfile three_vm/setup.yml -action create -datafile three_vm/data.yml
 setup-mex -setupfile three_vm/setup.yml -action update -datafile three_vm/data.yml
 setup-mex -setupfile three_vm/setup.yml -action stop,fetchlogs,cleanup -outputdir /tmp/setupmex
-setup-mex  -actions deploy,start,create,show,stop,fetchlogs,cleanup --setupfile  setup-env/setups/gcp_2vm/setup.yml -outputdir /tmp/setupenv -timestamp -datafile setup-env/setups/gcp_2vm/data.yml
