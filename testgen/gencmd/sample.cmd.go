@@ -47,6 +47,19 @@ var TestGenIn testgen.TestGen
 var TestGenFlagSet = pflag.NewFlagSet("TestGen", pflag.ExitOnError)
 var TestGenInOuterEn string
 var TestGenInInnerEn string
+var OuterEnumStrings = []string{
+	"OUTER0",
+	"OUTER1",
+	"OUTER2",
+	"OUTER3",
+}
+
+var InnerEnumStrings = []string{
+	"INNER0",
+	"INNER1",
+	"INNER2",
+	"INNER3",
+}
 
 func NestedMessageSlicer(in *testgen.NestedMessage) []string {
 	s := make([]string, 0, 1)
@@ -434,6 +447,10 @@ var RequestCmd = &cobra.Command{
 	},
 }
 
+var TestApiCmds = []*cobra.Command{
+	RequestCmd,
+}
+
 func init() {
 	TestGenFlagSet.StringVar(&TestGenIn.Name, "name", "", "Name")
 	TestGenFlagSet.Float64Var(&TestGenIn.Db, "db", 0, "Db")
@@ -449,8 +466,8 @@ func init() {
 	TestGenFlagSet.Int32Var(&TestGenIn.Sf32, "sf32", 0, "Sf32")
 	TestGenFlagSet.Int64Var(&TestGenIn.Sf64, "sf64", 0, "Sf64")
 	TestGenFlagSet.BoolVar(&TestGenIn.Bb, "bb", false, "Bb")
-	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "TestGenInOuterEn")
-	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "TestGenInInnerEn")
+	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "one of [OUTER0 OUTER1 OUTER2 OUTER3]")
+	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "one of [INNER0 INNER1 INNER2 INNER3]")
 	TestGenIn.InnerMsg = &testgen.TestGen_InnerMessage{}
 	TestGenFlagSet.StringVar(&TestGenIn.InnerMsg.Url, "innermsg-url", "", "InnerMsg.Url")
 	TestGenFlagSet.Int64Var(&TestGenIn.InnerMsg.Id, "innermsg-id", 0, "InnerMsg.Id")
@@ -784,13 +801,13 @@ func TestGenSetFields() {
 func parseTestGenEnums() error {
 	if TestGenInOuterEn != "" {
 		switch TestGenInOuterEn {
-		case "outer0":
+		case "OUTER0":
 			TestGenIn.OuterEn = testgen.OuterEnum(0)
-		case "outer1":
+		case "OUTER1":
 			TestGenIn.OuterEn = testgen.OuterEnum(1)
-		case "outer2":
+		case "OUTER2":
 			TestGenIn.OuterEn = testgen.OuterEnum(2)
-		case "outer3":
+		case "OUTER3":
 			TestGenIn.OuterEn = testgen.OuterEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInOuterEn")
@@ -798,13 +815,13 @@ func parseTestGenEnums() error {
 	}
 	if TestGenInInnerEn != "" {
 		switch TestGenInInnerEn {
-		case "inner0":
+		case "INNER0":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(0)
-		case "inner1":
+		case "INNER1":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(1)
-		case "inner2":
+		case "INNER2":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(2)
-		case "inner3":
+		case "INNER3":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInInnerEn")

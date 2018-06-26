@@ -46,6 +46,37 @@ var Match_Engine_ApiCmd distributed_match_engine.Match_Engine_ApiClient
 var Match_Engine_RequestIn distributed_match_engine.Match_Engine_Request
 var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag.ExitOnError)
 var Match_Engine_RequestInIdType string
+var IDTypeStrings = []string{
+	"IMEI",
+	"MSISDN",
+	"IPADDR",
+}
+
+var Tower_StatusStrings = []string{
+	"UNKNOWN",
+	"CONNECTED_TO_SPECIFIED_TOWER",
+	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
+}
+
+var GPS_Location_StatusStrings = []string{
+	"LOC_UNKNOWN",
+	"LOC_WITHIN_2KM",
+	"LOC_WITHIN_10KM",
+	"LOC_WITHIN_100KM",
+	"LOC_MISMATCH",
+	"LOC_OTHER_COUNTRY",
+}
+
+var Loc_StatusStrings = []string{
+	"LOC_UNKNOWN",
+	"LOC_FOUND",
+	"LOC_DENIED",
+}
+
+var ME_StatusStrings = []string{
+	"ME_SUCCESS",
+	"ME_FAIL",
+}
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
 	s := make([]string, 0, 14)
@@ -446,9 +477,16 @@ var RegisterClientCmd = &cobra.Command{
 	},
 }
 
+var Match_Engine_ApiCmds = []*cobra.Command{
+	FindCloudletCmd,
+	VerifyLocationCmd,
+	GetLocationCmd,
+	RegisterClientCmd,
+}
+
 func init() {
 	Match_Engine_RequestFlagSet.Uint32Var(&Match_Engine_RequestIn.Ver, "ver", 0, "Ver")
-	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "Match_Engine_RequestInIdType")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "one of [IMEI MSISDN IPADDR]")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Id, "id", "", "Id")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CarrierName, "carriername", "", "CarrierName")
@@ -480,11 +518,11 @@ func init() {
 func parseMatch_Engine_RequestEnums() error {
 	if Match_Engine_RequestInIdType != "" {
 		switch Match_Engine_RequestInIdType {
-		case "imei":
+		case "IMEI":
 			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(0)
-		case "msisdn":
+		case "MSISDN":
 			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(1)
-		case "ipaddr":
+		case "IPADDR":
 			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(2)
 		default:
 			return errors.New("Invalid value for Match_Engine_RequestInIdType")

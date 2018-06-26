@@ -10,6 +10,9 @@ import math "math"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "errors"
+import "strconv"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -659,6 +662,66 @@ func (m *EdgeCloudApplication) CopyInFields(src *EdgeCloudApplication) {
 			}
 		}
 	}
+}
+
+var CloudResourceCategoryStrings = []string{
+	"AllCloudResources",
+	"Kubernetes",
+	"k8s",
+	"Mesos",
+	"AWS",
+	"GCP",
+	"Azure",
+	"DigitalOcean",
+	"PacketNet",
+	"OpenStack",
+	"Docker",
+	"EKS",
+	"AKS",
+	"GKS",
+}
+
+const (
+	CloudResourceCategoryAllCloudResources uint64 = 1 << 0
+	CloudResourceCategoryKubernetes        uint64 = 1 << 1
+	CloudResourceCategoryK8S               uint64 = 1 << 2
+	CloudResourceCategoryMesos             uint64 = 1 << 3
+	CloudResourceCategoryAWS               uint64 = 1 << 4
+	CloudResourceCategoryGCP               uint64 = 1 << 5
+	CloudResourceCategoryAzure             uint64 = 1 << 6
+	CloudResourceCategoryDigitalOcean      uint64 = 1 << 7
+	CloudResourceCategoryPacketNet         uint64 = 1 << 8
+	CloudResourceCategoryOpenStack         uint64 = 1 << 9
+	CloudResourceCategoryDocker            uint64 = 1 << 10
+	CloudResourceCategoryEKS               uint64 = 1 << 11
+	CloudResourceCategoryAKS               uint64 = 1 << 12
+	CloudResourceCategoryGKS               uint64 = 1 << 13
+)
+
+func (e *CloudResourceCategory) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := CloudResourceCategory_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = CloudResourceCategory_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudResourceCategory(val)
+	return nil
+}
+
+func (e CloudResourceCategory) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *CloudResource) Size() (n int) {

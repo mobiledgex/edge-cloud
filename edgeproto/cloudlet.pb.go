@@ -21,6 +21,9 @@ import grpc "google.golang.org/grpc"
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -481,7 +484,7 @@ func (m *CloudletKey) CopyInFields(src *CloudletKey) {
 func (m *CloudletKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal CloudletKey key string", "obj", m)
+		log.FatalLog("Failed to marshal CloudletKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -489,7 +492,7 @@ func (m *CloudletKey) GetKeyString() string {
 func CloudletKeyStringParse(str string, key *CloudletKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal CloudletKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal CloudletKey key string", "str", str)
 	}
 }
 
@@ -692,7 +695,7 @@ func (s *CloudletStore) LoadAll(cb CloudletCb) error {
 		var obj Cloudlet
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
-			util.WarnLog("Failed to parse Cloudlet data", "val", string(val))
+			log.WarnLog("Failed to parse Cloudlet data", "val", string(val))
 			return nil
 		}
 		err = cb(&obj)
@@ -712,7 +715,7 @@ func (s *CloudletStore) LoadOne(key string) (*Cloudlet, int64, error) {
 	var obj Cloudlet
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse Cloudlet data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Cloudlet data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -766,7 +769,7 @@ func (c *CloudletCache) Update(in *Cloudlet, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[*in.GetKey()] = in
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -776,7 +779,7 @@ func (c *CloudletCache) Update(in *Cloudlet, rev int64) {
 func (c *CloudletCache) Delete(in *Cloudlet, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -784,14 +787,14 @@ func (c *CloudletCache) Delete(in *Cloudlet, rev int64) {
 }
 
 func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show Cloudlet", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -812,7 +815,7 @@ func (c *CloudletCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Cloudlet{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		util.WarnLog("Failed to parse Cloudlet data", "val", string(val))
+		log.WarnLog("Failed to parse Cloudlet data", "val", string(val))
 		return
 	}
 	c.Update(&obj, rev)
@@ -865,6 +868,46 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
 
 func (m *CloudletInfo) GetKey() *CloudletKey {
 	return &m.Key
+}
+
+var CloudletStateStrings = []string{
+	"Unknown",
+	"ConfiguringOpenstack",
+	"ConfiguringKubernetes",
+	"Ready",
+}
+
+const (
+	CloudletStateUnknown               uint64 = 1 << 0
+	CloudletStateConfiguringOpenstack  uint64 = 1 << 1
+	CloudletStateConfiguringKubernetes uint64 = 1 << 2
+	CloudletStateReady                 uint64 = 1 << 3
+)
+
+func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := CloudletState_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = CloudletState_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudletState(val)
+	return nil
+}
+
+func (e CloudletState) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *CloudletKey) Size() (n int) {

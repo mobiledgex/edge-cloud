@@ -6,12 +6,12 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAddRemove(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelDmeReq)
+	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 

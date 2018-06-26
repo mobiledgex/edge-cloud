@@ -7,7 +7,7 @@ import (
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 	"google.golang.org/grpc"
 )
 
@@ -15,7 +15,7 @@ func grpcGateway(addr string) (http.Handler, error) {
 	ctx := context.Background()
 	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure())
 	if err != nil {
-		util.FatalLog("Failed to start REST gateway", "error", err)
+		log.FatalLog("Failed to start REST gateway", "error", err)
 	}
 
 	jsonpb := &gateway.JSONPb{

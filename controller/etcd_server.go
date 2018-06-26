@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Configuration for starting the etcd service to be used as the backing store
@@ -58,7 +58,7 @@ func StartLocalEtcdServer() (*EtcdServer, error) {
 		ClientUrls: "http://127.0.0.1:52380",
 		LogFile:    logfile,
 	}
-	util.InfoLog("Starting local etcd", "clientUrls", config.ClientUrls)
+	log.InfoLog("Starting local etcd", "clientUrls", config.ClientUrls)
 	server := EtcdServer{}
 	err := server.Start(&config)
 	if err != nil {
@@ -116,6 +116,6 @@ func (e *EtcdServer) Stop() {
 	}
 	err := e.cmd.Wait()
 	if err != nil {
-		util.InfoLog("Wait for etcd process failed", "pid", e.cmd.Process.Pid, "err", err)
+		log.InfoLog("Wait for etcd process failed", "pid", e.cmd.Process.Pid, "err", err)
 	}
 }

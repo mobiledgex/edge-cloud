@@ -25,6 +25,8 @@ import math "math"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "errors"
+import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -873,6 +875,200 @@ func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
 	m.Status = src.Status
 	m.ErrorCode = src.ErrorCode
 	m.Token = src.Token
+}
+
+var IDTypeStrings = []string{
+	"IMEI",
+	"MSISDN",
+	"IPADDR",
+}
+
+const (
+	IDTypeIMEI   uint64 = 1 << 0
+	IDTypeMSISDN uint64 = 1 << 1
+	IDTypeIPADDR uint64 = 1 << 2
+)
+
+func (e *Match_Engine_Request_IDType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := Match_Engine_Request_IDType_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = Match_Engine_Request_IDType_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Match_Engine_Request_IDType(val)
+	return nil
+}
+
+func (e Match_Engine_Request_IDType) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var Tower_StatusStrings = []string{
+	"UNKNOWN",
+	"CONNECTED_TO_SPECIFIED_TOWER",
+	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
+}
+
+const (
+	Tower_StatusUNKNOWN                          uint64 = 1 << 0
+	Tower_StatusCONNECTED_TO_SPECIFIED_TOWER     uint64 = 1 << 1
+	Tower_StatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
+)
+
+func (e *Match_Engine_Loc_Verify_Tower_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := Match_Engine_Loc_Verify_Tower_Status_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = Match_Engine_Loc_Verify_Tower_Status_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Match_Engine_Loc_Verify_Tower_Status(val)
+	return nil
+}
+
+func (e Match_Engine_Loc_Verify_Tower_Status) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var GPS_Location_StatusStrings = []string{
+	"LOC_UNKNOWN",
+	"LOC_WITHIN_2KM",
+	"LOC_WITHIN_10KM",
+	"LOC_WITHIN_100KM",
+	"LOC_MISMATCH",
+	"LOC_OTHER_COUNTRY",
+}
+
+const (
+	GPS_Location_StatusLOC_UNKNOWN       uint64 = 1 << 0
+	GPS_Location_StatusLOC_WITHIN_2KM    uint64 = 1 << 1
+	GPS_Location_StatusLOC_WITHIN_10KM   uint64 = 1 << 2
+	GPS_Location_StatusLOC_WITHIN_100KM  uint64 = 1 << 3
+	GPS_Location_StatusLOC_MISMATCH      uint64 = 1 << 4
+	GPS_Location_StatusLOC_OTHER_COUNTRY uint64 = 1 << 5
+)
+
+func (e *Match_Engine_Loc_Verify_GPS_Location_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := Match_Engine_Loc_Verify_GPS_Location_Status_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = Match_Engine_Loc_Verify_GPS_Location_Status_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Match_Engine_Loc_Verify_GPS_Location_Status(val)
+	return nil
+}
+
+func (e Match_Engine_Loc_Verify_GPS_Location_Status) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var Loc_StatusStrings = []string{
+	"LOC_UNKNOWN",
+	"LOC_FOUND",
+	"LOC_DENIED",
+}
+
+const (
+	Loc_StatusLOC_UNKNOWN uint64 = 1 << 0
+	Loc_StatusLOC_FOUND   uint64 = 1 << 1
+	Loc_StatusLOC_DENIED  uint64 = 1 << 2
+)
+
+func (e *Match_Engine_Loc_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := Match_Engine_Loc_Loc_Status_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = Match_Engine_Loc_Loc_Status_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Match_Engine_Loc_Loc_Status(val)
+	return nil
+}
+
+func (e Match_Engine_Loc_Loc_Status) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var ME_StatusStrings = []string{
+	"ME_SUCCESS",
+	"ME_FAIL",
+}
+
+const (
+	ME_StatusME_SUCCESS uint64 = 1 << 0
+	ME_StatusME_FAIL    uint64 = 1 << 1
+)
+
+func (e *Match_Engine_Status_ME_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := Match_Engine_Status_ME_Status_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = Match_Engine_Status_ME_Status_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Match_Engine_Status_ME_Status(val)
+	return nil
+}
+
+func (e Match_Engine_Status_ME_Status) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *Match_Engine_Request) Size() (n int) {

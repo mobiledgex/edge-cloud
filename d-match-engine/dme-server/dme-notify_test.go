@@ -6,12 +6,12 @@ import (
 
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func TestNotify(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelNotify)
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 

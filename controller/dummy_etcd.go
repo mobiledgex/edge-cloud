@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -50,7 +51,7 @@ func (e *dummyEtcd) Create(key, val string) (int64, error) {
 	e.db[key] = val
 	e.vers[key] = 1
 	e.rev++
-	util.DebugLog(util.DebugLevelEtcd, "Created", "key", key, "val", val, "rev", e.rev)
+	log.DebugLog(log.DebugLevelEtcd, "Created", "key", key, "val", val, "rev", e.rev)
 	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
@@ -73,7 +74,7 @@ func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
 	e.db[key] = val
 	e.vers[key] = ver + 1
 	e.rev++
-	util.DebugLog(util.DebugLevelEtcd, "Updated", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
+	log.DebugLog(log.DebugLevelEtcd, "Updated", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
 	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
 	return e.rev, nil
 }
@@ -86,7 +87,7 @@ func (e *dummyEtcd) Delete(key string) (int64, error) {
 	}
 	delete(e.db, key)
 	e.rev++
-	util.DebugLog(util.DebugLevelEtcd, "Delete", "key", key, "rev", e.rev)
+	log.DebugLog(log.DebugLevelEtcd, "Delete", "key", key, "rev", e.rev)
 	e.triggerWatcher(objstore.SyncDelete, key, "", e.rev)
 	return e.rev, nil
 }
@@ -103,7 +104,7 @@ func (e *dummyEtcd) Get(key string) ([]byte, int64, error) {
 	}
 	ver := e.vers[key]
 
-	util.DebugLog(util.DebugLevelEtcd, "Got", "key", key, "val", val, "ver", ver, "rev", e.rev)
+	log.DebugLog(log.DebugLevelEtcd, "Got", "key", key, "val", val, "ver", ver, "rev", e.rev)
 	return ([]byte)(val), ver, nil
 }
 
@@ -117,7 +118,7 @@ func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
 		if !strings.HasPrefix(k, key) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelEtcd, "List", "key", k, "val", v, "rev", e.rev)
+		log.DebugLog(log.DebugLevelEtcd, "List", "key", k, "val", v, "rev", e.rev)
 		err := cb([]byte(k), []byte(v), e.rev)
 		if err != nil {
 			break
@@ -140,7 +141,7 @@ func (e *dummyEtcd) Sync(ctx context.Context, prefix string, cb objstore.SyncCb)
 	cb(&data)
 	for key, val := range e.db {
 		if strings.HasPrefix(key, prefix) {
-			util.DebugLog(util.DebugLevelEtcd, "sync list data", "key", key, "val", val, "rev", e.rev)
+			log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", key, "val", val, "rev", e.rev)
 			data.Action = objstore.SyncList
 			data.Key = []byte(key)
 			data.Value = []byte(val)
@@ -171,7 +172,7 @@ func (e *dummyEtcd) triggerWatcher(action objstore.SyncCbAction, key, val string
 				Value:  []byte(val),
 				Rev:    rev,
 			}
-			util.DebugLog(util.DebugLevelEtcd, "watch data", "key", key, "val", val, "rev", rev)
+			log.DebugLog(log.DebugLevelEtcd, "watch data", "key", key, "val", val, "rev", rev)
 			watch.cb(&data)
 		}
 	}

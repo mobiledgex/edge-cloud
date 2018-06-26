@@ -19,6 +19,7 @@ import grpc "google.golang.org/grpc"
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
 
 import io "io"
 
@@ -395,7 +396,7 @@ func (m *DeveloperKey) CopyInFields(src *DeveloperKey) {
 func (m *DeveloperKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal DeveloperKey key string", "obj", m)
+		log.FatalLog("Failed to marshal DeveloperKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -403,7 +404,7 @@ func (m *DeveloperKey) GetKeyString() string {
 func DeveloperKeyStringParse(str string, key *DeveloperKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal DeveloperKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal DeveloperKey key string", "str", str)
 	}
 }
 
@@ -563,7 +564,7 @@ func (s *DeveloperStore) LoadAll(cb DeveloperCb) error {
 		var obj Developer
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
-			util.WarnLog("Failed to parse Developer data", "val", string(val))
+			log.WarnLog("Failed to parse Developer data", "val", string(val))
 			return nil
 		}
 		err = cb(&obj)
@@ -583,7 +584,7 @@ func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
 	var obj Developer
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse Developer data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Developer data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -637,7 +638,7 @@ func (c *DeveloperCache) Update(in *Developer, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[*in.GetKey()] = in
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -647,7 +648,7 @@ func (c *DeveloperCache) Update(in *Developer, rev int64) {
 func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -655,14 +656,14 @@ func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 }
 
 func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show Developer", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show Developer", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show Developer", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show Developer", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -683,7 +684,7 @@ func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Developer{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		util.WarnLog("Failed to parse Developer data", "val", string(val))
+		log.WarnLog("Failed to parse Developer data", "val", string(val))
 		return
 	}
 	c.Update(&obj, rev)

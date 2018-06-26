@@ -307,6 +307,13 @@ var ShowAppCmd = &cobra.Command{
 	},
 }
 
+var AppApiCmds = []*cobra.Command{
+	CreateAppCmd,
+	DeleteAppCmd,
+	UpdateAppCmd,
+	ShowAppCmd,
+}
+
 func init() {
 	AppFlagSet.StringVar(&AppIn.Key.DeveloperKey.Name, "key-developerkey-name", "", "Key.DeveloperKey.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")

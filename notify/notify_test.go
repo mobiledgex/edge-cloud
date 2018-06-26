@@ -6,13 +6,13 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNotify(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelNotify)
 
 	// override retry time
 	NotifyRetryTime = 10 * time.Millisecond
@@ -165,7 +165,7 @@ func TestNotify(t *testing.T) {
 func checkServerConnections(t *testing.T, expected int) {
 	serverMgr.mux.Lock()
 	for addr, server := range serverMgr.table {
-		util.DebugLog(util.DebugLevelNotify, "server connections", "client", addr, "stats", server.stats)
+		log.DebugLog(log.DebugLevelNotify, "server connections", "client", addr, "stats", server.stats)
 	}
 	assert.Equal(t, expected, len(serverMgr.table), "num server connections")
 	serverMgr.mux.Unlock()
