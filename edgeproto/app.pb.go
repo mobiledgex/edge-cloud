@@ -53,6 +53,7 @@ import grpc "google.golang.org/grpc"
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
 
 import io "io"
 
@@ -443,7 +444,7 @@ func (m *AppKey) CopyInFields(src *AppKey) {
 func (m *AppKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal AppKey key string", "obj", m)
+		log.FatalLog("Failed to marshal AppKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -451,7 +452,7 @@ func (m *AppKey) GetKeyString() string {
 func AppKeyStringParse(str string, key *AppKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal AppKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal AppKey key string", "str", str)
 	}
 }
 
@@ -599,7 +600,7 @@ func (s *AppStore) LoadAll(cb AppCb) error {
 		var obj App
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
-			util.WarnLog("Failed to parse App data", "val", string(val))
+			log.WarnLog("Failed to parse App data", "val", string(val))
 			return nil
 		}
 		err = cb(&obj)
@@ -619,7 +620,7 @@ func (s *AppStore) LoadOne(key string) (*App, int64, error) {
 	var obj App
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse App data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse App data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -673,7 +674,7 @@ func (c *AppCache) Update(in *App, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[*in.GetKey()] = in
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -683,7 +684,7 @@ func (c *AppCache) Update(in *App, rev int64) {
 func (c *AppCache) Delete(in *App, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -691,14 +692,14 @@ func (c *AppCache) Delete(in *App, rev int64) {
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show App", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show App", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show App", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show App", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -719,7 +720,7 @@ func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := App{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		util.WarnLog("Failed to parse App data", "val", string(val))
+		log.WarnLog("Failed to parse App data", "val", string(val))
 		return
 	}
 	c.Update(&obj, rev)

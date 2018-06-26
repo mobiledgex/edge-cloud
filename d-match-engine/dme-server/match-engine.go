@@ -6,8 +6,8 @@ import (
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 // AppInst by carrier
@@ -108,7 +108,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		app.insts = make(map[edgeproto.CloudletKey]*carrierAppInst)
 		app.key = key
 		tbl.apps[key] = app
-		util.DebugLog(util.DebugLevelDmeDb, "Adding app",
+		log.DebugLog(log.DebugLevelDmedb, "Adding app",
 			"appName", key.appKey.Name,
 			"appVersion", key.appKey.Version,
 			"carrier", key.carrierName)
@@ -121,7 +121,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		// update existing carrier app inst
 		c.uri = appInst.Uri
 		c.location = appInst.CloudletLoc
-		util.DebugLog(util.DebugLevelDmeDb, "Updating app inst",
+		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.key.appKey.Name,
 			"appVersion", app.key.appKey.Version,
 			"carrier", key.carrierName,
@@ -135,7 +135,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.ip = appInst.Ip
 		cNew.location = appInst.CloudletLoc
 		app.insts[cNew.cloudletKey] = cNew
-		util.DebugLog(util.DebugLevelDmeDb, "Adding app inst",
+		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.key.appKey.Name,
 			"appVersion", app.key.appKey.Version,
 			"carrier", cNew.carrierName,
@@ -160,7 +160,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 		app.Lock()
 		if c, found := app.insts[appInst.Key.CloudletKey]; found {
 			delete(app.insts, appInst.Key.CloudletKey)
-			util.DebugLog(util.DebugLevelDmeDb, "Removing app inst",
+			log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
 				"appName", app.key.appKey.Name,
 				"appVersion", app.key.appKey.Version,
 				"carrier", c.carrierName,
@@ -169,7 +169,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 		}
 		if len(app.insts) == 0 {
 			delete(tbl.apps, key)
-			util.DebugLog(util.DebugLevelDmeDb, "Removing app",
+			log.DebugLog(log.DebugLevelDmedb, "Removing app",
 				"appName", app.key.appKey.Name,
 				"appVersion", app.key.appKey.Version,
 				"carrier", app.key.carrierName)
@@ -228,12 +228,12 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	}
 
 	distance = 10000
-	util.DebugLog(util.DebugLevelDmeReq, ">>>Find Cloudlet",
+	log.DebugLog(log.DebugLevelDmereq, ">>>Find Cloudlet",
 		"appName", key.appKey.Name,
 		"carrier", key.carrierName)
 	for _, c = range app.insts {
 		d = distance_between(*mreq.GpsLocation, c.location)
-		util.DebugLog(util.DebugLevelDmeReq, "found cloudlet at",
+		log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
 			"lat", c.location.Lat,
 			"long", c.location.Long,
 			"distance", distance,
@@ -246,7 +246,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		}
 	}
 	if found != nil {
-		util.DebugLog(util.DebugLevelDmeReq, "best cloudlet at",
+		log.DebugLog(log.DebugLevelDmereq, "best cloudlet at",
 			"lat", found.location.Lat,
 			"long", found.location.Long,
 			"distance", distance,

@@ -20,6 +20,7 @@ type EnumArg struct {
 	inVar     string
 	msgName   string
 	hierField string
+	repeated  bool
 }
 
 type GenCmd struct {
@@ -127,6 +128,10 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	}
 	g.generateInputVars()
 
+	for _, en := range file.Enums() {
+		g.generateEnumValSlice(en)
+	}
+
 	// Generate slicer functions for writing output
 	for _, desc := range file.Messages() {
 		if desc.File() != file.FileDescriptorProto {
@@ -220,6 +225,19 @@ func (g *GenCmd) generateInputVars() {
 	}
 }
 
+func (g *GenCmd) generateEnumValSlice(desc *generator.EnumDescriptor) {
+	// this code is a duplicate of code in protoc-gen-gomex to
+	// remove any dependency of gencmd on the protoc-gen-gomex,
+	// in case we want to open source gencmd as its own project.
+	en := desc.EnumDescriptorProto
+	g.P("var ", en.Name, "Strings = []string{")
+	for _, val := range en.Value {
+		g.P("\"", val.Name, "\",")
+	}
+	g.P("}")
+	g.P()
+}
+
 func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
 	if gensupport.WasVisited(desc, visited) {
 		return
@@ -235,12 +253,14 @@ func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, p
 			g.generateEnumVars(flatType, subDesc, append(parents, name), append(visited, desc))
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			inVar := flatType + "In" + strings.Join(append(parents, name), "")
+			repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 			g.P("var ", inVar, " string")
 			enumArg := EnumArg{
 				field:     field,
 				inVar:     inVar,
 				msgName:   flatType,
 				hierField: strings.Join(append(parents, name), "."),
+				repeated:  repeated,
 			}
 			enumList, found := g.enumArgs[flatType]
 			if !found {
@@ -258,9 +278,10 @@ type fieldArgs struct {
 	Type     string
 	DefValue string
 	Arg      string
+	Usage    string
 }
 
-var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, "{{.Field}}")
+var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, {{.Usage}})
 `
 
 func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor) {
@@ -295,6 +316,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			Arg:      argName(append(parents, name)),
 			Type:     "String",
 			DefValue: "\"\"",
+			Usage:    "\"" + hierField + "\"",
 		}
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -339,6 +361,17 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			fargs.Field = msgName + "In" + strings.Join(append(parents, name), "")
 			fargs.Ref = "&" + fargs.Field
+			enumDesc := g.GetEnumDesc(field.GetTypeName())
+			en := enumDesc.EnumDescriptorProto
+			strs := make([]string, 0, len(en.Value))
+			for _, val := range en.Value {
+				strs = append(strs, *val.Name)
+			}
+			text := "one of"
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				text = "comma-separated list of"
+			}
+			fargs.Usage = fmt.Sprintf("\"%s %v\"", text, strs)
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
 			fargs.Type = "Bool"
 			fargs.DefValue = "false"
@@ -401,14 +434,29 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 		}
 		typeName := g.FQTypeName(en)
 		g.P("if ", enumArg.inVar, " != \"\" {")
-		g.P("switch ", enumArg.inVar, " {")
-		for _, val := range en.Value {
-			g.P("case \"", strings.ToLower(*val.Name), "\":")
-			g.P(enumArg.msgName, "In.", enumArg.hierField, " = ", typeName, "(", val.Number, ")")
+		enumVar := enumArg.msgName + "In." + enumArg.hierField
+		if enumArg.repeated {
+			g.P("for _, str := range strings.Split(", enumArg.inVar, ", \",\") {")
+			g.P("switch str {")
+			for _, val := range en.Value {
+				g.P("case \"", *val.Name, "\":")
+
+				g.P(enumVar, " = append(", enumVar, ", ", typeName, "(", val.Number, "))")
+			}
+			g.P("default:")
+			g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
+			g.P("}")
+			g.P("}")
+		} else {
+			g.P("switch ", enumArg.inVar, " {")
+			for _, val := range en.Value {
+				g.P("case \"", *val.Name, "\":")
+				g.P(enumVar, " = ", typeName, "(", val.Number, ")")
+			}
+			g.P("default:")
+			g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
+			g.P("}")
 		}
-		g.P("default:")
-		g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
-		g.P("}")
 		g.P("}")
 		g.importErrors = true
 	}
@@ -540,10 +588,23 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 }
 
 func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
-	if len(service.Method) > 0 {
-		for _, method := range service.Method {
-			g.generateMethodCmd(file, service, method)
+	if len(service.Method) == 0 {
+		return
+	}
+	count := 0
+	for _, method := range service.Method {
+		if g.generateMethodCmd(file, service, method) {
+			count++
 		}
+	}
+	if count > 0 {
+		g.P()
+		g.P("var ", service.Name, "Cmds = []*cobra.Command{")
+		for _, method := range service.Method {
+			g.P(method.Name, "Cmd,")
+		}
+		g.P("}")
+		g.P()
 	}
 }
 
@@ -647,11 +708,11 @@ var {{.Method}}Cmd = &cobra.Command{
 }
 `
 
-func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
+func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) bool {
 	in := g.GetDesc(method.GetInputType())
 	if in == nil || clientStreaming(method) || hasOneof(in) {
 		// not supported yet
-		return
+		return false
 	}
 
 	g.importCobra = true
@@ -680,8 +741,9 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	err := g.tmpl.Execute(g, cmd)
 	if err != nil {
 		g.Fail("Failed to execute cmdTemplate for ", *method.Name, ": ", err.Error(), "\n")
-		return
+		return false
 	}
+	return true
 }
 
 func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto) {
@@ -766,10 +828,6 @@ func supportedField(field *descriptor.FieldDescriptorProto) bool {
 	if field.OneofIndex != nil {
 		// not supported yet
 		return false
-	}
-	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-		// not supported yet
-		//return false
 	}
 	return true
 }

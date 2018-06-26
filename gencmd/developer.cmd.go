@@ -271,6 +271,13 @@ var ShowDeveloperCmd = &cobra.Command{
 	},
 }
 
+var DeveloperApiCmds = []*cobra.Command{
+	CreateDeveloperCmd,
+	DeleteDeveloperCmd,
+	UpdateDeveloperCmd,
+	ShowDeveloperCmd,
+}
+
 func init() {
 	DeveloperFlagSet.StringVar(&DeveloperIn.Key.Name, "key-name", "", "Key.Name")
 	DeveloperFlagSet.StringVar(&DeveloperIn.Username, "username", "", "Username")

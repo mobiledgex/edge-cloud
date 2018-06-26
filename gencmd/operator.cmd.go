@@ -277,6 +277,13 @@ var ShowOperatorCmd = &cobra.Command{
 	},
 }
 
+var OperatorApiCmds = []*cobra.Command{
+	CreateOperatorCmd,
+	DeleteOperatorCmd,
+	UpdateOperatorCmd,
+	ShowOperatorCmd,
+}
+
 func init() {
 	OperatorFlagSet.StringVar(&OperatorIn.Key.Name, "key-name", "", "Key.Name")
 	CreateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)

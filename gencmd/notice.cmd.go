@@ -19,6 +19,19 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var NotifyApiCmd edgeproto.NotifyApiClient
+var NoticeActionStrings = []string{
+	"NONE",
+	"UPDATE",
+	"DELETE",
+	"VERSION",
+	"SENDALL_END",
+}
+
+var NoticeRequestorStrings = []string{
+	"NoticeRequestorNone",
+	"NoticeRequestorDME",
+	"NoticeRequestorCRM",
+}
 
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
 	s := make([]string, 0, 4)

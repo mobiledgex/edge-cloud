@@ -35,6 +35,12 @@ var _ = math.Inf
 var CloudletApiCmd edgeproto.CloudletApiClient
 var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
+var CloudletStateStrings = []string{
+	"Unknown",
+	"ConfiguringOpenstack",
+	"ConfiguringKubernetes",
+	"Ready",
+}
 
 func CloudletKeySlicer(in *edgeproto.CloudletKey) []string {
 	s := make([]string, 0, 2)
@@ -309,6 +315,13 @@ var ShowCloudletCmd = &cobra.Command{
 			output.Flush()
 		}
 	},
+}
+
+var CloudletApiCmds = []*cobra.Command{
+	CreateCloudletCmd,
+	DeleteCloudletCmd,
+	UpdateCloudletCmd,
+	ShowCloudletCmd,
 }
 
 func init() {
