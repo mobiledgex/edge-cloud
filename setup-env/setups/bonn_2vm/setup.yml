@@ -1,9 +1,9 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- vm1_internal_ip: 10.10.0.12
-- vm2_internal_ip: 10.10.0.13
-- vm1_external_ip: 35.230.32.241
-- vm2_external_ip: 35.230.48.195
+- vm1_internal_ip: 10.1.1.8
+- vm2_internal_ip: 10.1.1.4
+- vm1_external_ip: 37.50.143.110
+- vm2_external_ip: 37.50.143.100
 
 etcds:
 - etcdlocal:
@@ -39,26 +39,13 @@ controllers:
     notifyaddr: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm1_external_ip}}"
 
-- controllerlocal:
-    name: ctrl2
-    etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
-    apiaddr: "0.0.0.0:55001"
-    httpaddr: "0.0.0.0:36001"
-    notifyaddr: "{{vm2_internal_ip}}:37001"
-  hostname: "{{vm2_external_ip}}"
-
+## Second GCP VM
 
 dmes:
 - dmelocal:
     name: dme1
     apiaddr: "0.0.0.0:50051"
-    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
-  hostname: "{{vm1_external_ip}}"
-
-- dmelocal:
-    name: dme2
-    apiaddr: "0.0.0.0:50051"
-    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm2_external_ip}}"
 
   
@@ -66,5 +53,5 @@ crms:
 - crmlocal:
     name: crm1
     apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm2_external_ip}}"

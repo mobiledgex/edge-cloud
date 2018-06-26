@@ -1,0 +1,13 @@
+##
+## To replace the variable {{setupdir}}, execute the script
+## with -vars setupdir=/some/directory
+##
+description: stops a controller, checks sync worked
+
+tests:
+
+- name: stop controller
+  setupfile:  "{{setupdir}}/setup.yml"
+  actions: [stop=ctrl1]
+
+

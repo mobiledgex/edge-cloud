@@ -28,5 +28,15 @@ tests:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{setupdir}}/data.yml"
 
+- name: show provisioning from second controller
+  datafile: "{{setupdir}}/data.yml"
+  setupfile:  "{{setupdir}}/setup.yml"
+  actions: [show=ctrl2]
+
+- name: compare results of ctrl2 show provisioning
+  setupfile: "{{setupdir}}/setup.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{setupdir}}/data.yml"
 
 

@@ -17,7 +17,7 @@ cloudlets:
     operatorkey:
       name: TMUS
     name: tmocloud1
-  accessip: [10, 100, 10, 4]
+  accessuri: cloud1.tmo
   location:
     lat: 99.99
     long: 123.456
@@ -25,7 +25,7 @@ cloudlets:
     operatorkey:
       name: TMUS
     name: tmocloud2
-  accessip: [10, 100, 10, 5]
+  accessuri: cloud2.tmo
   location:
     lat: 67.89
     long: 11.223
@@ -54,6 +54,6 @@ appinstances:
     lat: 99.99
     long: 123.456
   ip: [10, 100, 10, 4]
-  port: 443
   liveness: 1
+  apppath: /usr/bin/someapp
 

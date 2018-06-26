@@ -25,15 +25,27 @@ type processinfo struct {
 }
 
 //get list of pids for a process name
-func getPidsByName(processName string) []processinfo {
+func getPidsByName(processName string, processArgs string) []processinfo {
 	//pidlist is a set of pids and alive bool
 	var processes []processinfo
-	out, perr := exec.Command("sh", "-c", "pgrep -x "+processName).Output()
+	var pgrepCommand string
+	if processArgs == "" {
+		//look for any instance of this process name
+		pgrepCommand = "pgrep -x " + processName
+	} else {
+		//look for a process running with particular arguments
+		pgrepCommand = "pgrep -f \"" + processName + " .*" + processArgs + "\""
+	}
+	log.Printf("Running pgrep %v\n", pgrepCommand)
+	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()
 	if perr != nil {
 		return processes
 	}
 
 	for _, pid := range strings.Split(string(out), "\n") {
+		if pid == "" {
+			continue
+		}
 		p, err := strconv.Atoi(pid)
 		if err != nil {
 			fmt.Printf("Error in finding pid from process: %v -- %v", processName, err)
@@ -47,8 +59,8 @@ func getPidsByName(processName string) []processinfo {
 
 //first tries to kill process with SIGINT, then waits up to maxwait time
 //for it to die.  After that point it kills with SIGKILL
-func KillProcessesByName(processName string, maxwait time.Duration, c chan string) {
-	processes := getPidsByName(processName)
+func KillProcessesByName(processName string, maxwait time.Duration, processArgs string, c chan string) {
+	processes := getPidsByName(processName, processArgs)
 	waitInterval := 100 * time.Millisecond
 
 	for _, p := range processes {
@@ -61,10 +73,11 @@ func KillProcessesByName(processName string, maxwait time.Duration, c chan strin
 	}
 	for {
 		//loop up to maxwait until either all the processes are gone or
-		//we run out of waiting time
-		time.Sleep(waitInterval)
-		maxwait -= waitInterval
-
+		//we run out of waiting time. Passing maxwait of zero duration means kill
+		//forcefully no matter what, which we want in some disruptive tests
+		if maxwait <= 0 {
+			break
+		}
 		//loop thru all the processes and see if any are still alive
 		foundOneAlive := false
 		for i, pinfo := range processes {
@@ -92,9 +105,10 @@ func KillProcessesByName(processName string, maxwait time.Duration, c chan strin
 			c <- "gracefully shut down " + processName
 			return
 		}
-		if maxwait <= 0 {
-			break
-		}
+
+		time.Sleep(waitInterval)
+		maxwait -= waitInterval
+
 	}
 	for _, pinfo := range processes {
 		if pinfo.alive {
@@ -137,14 +151,13 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 	return outputDir
 }
 
-func ReadYamlFile(filename string, iface interface{}, varlist string) error {
+func ReadYamlFile(filename string, iface interface{}, varlist string, validateReplacedVars bool) error {
 	if strings.HasPrefix(filename, "~") {
 		filename = strings.Replace(filename, "~", os.Getenv("HOME"), 1)
 	}
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
-
 	}
 	if varlist != "" {
 		//replace variables denoted as {{variablename}}
@@ -157,11 +170,13 @@ func ReadYamlFile(filename string, iface interface{}, varlist string) error {
 		}
 		yamlFile = []byte(yamlstr)
 	}
-	//make sure there are no unreplaced variables left and inform the user if so
-	re := regexp.MustCompile("{{(\\S+)}}")
-	matches := re.FindAllStringSubmatch(string(yamlFile), 1)
-	if len(matches) > 0 {
-		return errors.New(fmt.Sprintf("Unreplaced variables in yaml: %v", matches))
+	if validateReplacedVars {
+		//make sure there are no unreplaced variables left and inform the user if so
+		re := regexp.MustCompile("{{(\\S+)}}")
+		matches := re.FindAllStringSubmatch(string(yamlFile), 1)
+		if len(matches) > 0 {
+			return errors.New(fmt.Sprintf("Unreplaced variables in yaml: %v", matches))
+		}
 	}
 
 	err = yaml.UnmarshalStrict(yamlFile, iface)
@@ -183,12 +198,12 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars s
 	var y1 edgeproto.ApplicationData
 	var y2 edgeproto.ApplicationData
 
-	err1 := ReadYamlFile(firstYamlFile, &y1, replaceVars)
+	err1 := ReadYamlFile(firstYamlFile, &y1, replaceVars, true)
 	if err1 != nil {
 		log.Printf("error reading yaml file: %s\n", firstYamlFile)
 		return false
 	}
-	err2 := ReadYamlFile(secondYamlFile, &y2, replaceVars)
+	err2 := ReadYamlFile(secondYamlFile, &y2, replaceVars, true)
 	if err2 != nil {
 		log.Printf("error reading yaml file: %s\n", secondYamlFile)
 		return false
