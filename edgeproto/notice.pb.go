@@ -13,6 +13,9 @@ import _ "github.com/gogo/protobuf/gogoproto"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "errors"
+import "strconv"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -604,6 +607,86 @@ func (m *NoticeRequest) CopyInFields(src *NoticeRequest) {
 	m.Version = src.Version
 	m.Requestor = src.Requestor
 	m.Revision = src.Revision
+}
+
+var NoticeActionStrings = []string{
+	"NONE",
+	"UPDATE",
+	"DELETE",
+	"VERSION",
+	"SENDALL_END",
+}
+
+const (
+	NoticeActionNONE        uint64 = 1 << 0
+	NoticeActionUPDATE      uint64 = 1 << 1
+	NoticeActionDELETE      uint64 = 1 << 2
+	NoticeActionVERSION     uint64 = 1 << 3
+	NoticeActionSENDALL_END uint64 = 1 << 4
+)
+
+func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := NoticeAction_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = NoticeAction_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NoticeAction(val)
+	return nil
+}
+
+func (e NoticeAction) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var NoticeRequestorStrings = []string{
+	"NoticeRequestorNone",
+	"NoticeRequestorDME",
+	"NoticeRequestorCRM",
+}
+
+const (
+	NoticeRequestorNoticeRequestorNone uint64 = 1 << 0
+	NoticeRequestorNoticeRequestorDME  uint64 = 1 << 1
+	NoticeRequestorNoticeRequestorCRM  uint64 = 1 << 2
+)
+
+func (e *NoticeRequestor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := NoticeRequestor_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = NoticeRequestor_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NoticeRequestor(val)
+	return nil
+}
+
+func (e NoticeRequestor) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *NoticeReply) Size() (n int) {

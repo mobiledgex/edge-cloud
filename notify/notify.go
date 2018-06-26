@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -124,15 +125,15 @@ func ServerMgrStart(addr string, handler ServerHandler) {
 
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		util.FatalLog("ServerMgr listen failed", "err", err)
+		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
 	serverMgr.serv = grpc.NewServer(grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
 	edgeproto.RegisterNotifyApiServer(serverMgr.serv, &serverMgr)
-	util.DebugLog(util.DebugLevelNotify, "ServerMgr listening", "addr", addr)
+	log.DebugLog(log.DebugLevelNotify, "ServerMgr listening", "addr", addr)
 	go func() {
 		err = serverMgr.serv.Serve(lis)
 		if err != nil {
-			util.FatalLog("ServerMgr serve failed", "err", err)
+			log.FatalLog("ServerMgr serve failed", "err", err)
 		}
 	}()
 }
@@ -258,9 +259,9 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 		if err != nil {
 			st, ok := status.FromError(err)
 			if err == context.Canceled || (ok && st.Code() == codes.Canceled) {
-				util.DebugLog(util.DebugLevelNotify, "Notify server connection closed", "client", s.peerAddr, "err", err)
+				log.DebugLog(log.DebugLevelNotify, "Notify server connection closed", "client", s.peerAddr, "err", err)
 			} else {
-				util.InfoLog("Notify server connection failed", "client", s.peerAddr, "err", err)
+				log.InfoLog("Notify server connection failed", "client", s.peerAddr, "err", err)
 			}
 		}
 
@@ -274,7 +275,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 		return err
 	}
 	if req.Action != edgeproto.NoticeAction_VERSION {
-		util.DebugLog(util.DebugLevelNotify, "Notify server bad action", "expected", edgeproto.NoticeAction_VERSION, "got", notice.Action)
+		log.DebugLog(log.DebugLevelNotify, "Notify server bad action", "expected", edgeproto.NoticeAction_VERSION, "got", notice.Action)
 		return errors.New("Notify server expected action version")
 	}
 	if req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorDME && req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
@@ -295,7 +296,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 	if err != nil {
 		return err
 	}
-	util.DebugLog(util.DebugLevelNotify, "Notify server connected", "client", s.peerAddr, "version", s.version, "supported-version", NotifyVersion)
+	log.DebugLog(log.DebugLevelNotify, "Notify server connected", "client", s.peerAddr, "version", s.version, "supported-version", NotifyVersion)
 
 	// process any updates from client
 	go s.Receive(stream)
@@ -327,7 +328,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 			break
 		}
 		if sendAll {
-			util.DebugLog(util.DebugLevelNotify, "Send all", "client", s.peerAddr)
+			log.DebugLog(log.DebugLevelNotify, "Send all", "client", s.peerAddr)
 			s.handler.GetAllAppInstKeys(appInsts)
 			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
 				s.handler.GetAllCloudletKeys(cloudlets)
@@ -343,7 +344,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 				notice.Action = edgeproto.NoticeAction_DELETE
 				appInst.Key = key
 			}
-			util.DebugLog(util.DebugLevelNotify, "Send app inst", "client", s.peerAddr, "action", notice.Action, "key", appInst.Key.GetKeyString())
+			log.DebugLog(log.DebugLevelNotify, "Send app inst", "client", s.peerAddr, "action", notice.Action, "key", appInst.Key.GetKeyString())
 			err = stream.Send(&notice)
 			if err != nil {
 				break
@@ -360,7 +361,7 @@ func (s *Server) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer) err
 				notice.Action = edgeproto.NoticeAction_DELETE
 				cloudlet.Key = key
 			}
-			util.DebugLog(util.DebugLevelNotify, "Send cloudlet", "client", s.peerAddr, "action", notice.Action, "key", cloudlet.Key.GetKeyString())
+			log.DebugLog(log.DebugLevelNotify, "Send cloudlet", "client", s.peerAddr, "action", notice.Action, "key", cloudlet.Key.GetKeyString())
 			err = stream.Send(&notice)
 			if err != nil {
 				break
@@ -390,7 +391,7 @@ func (s *Server) Receive(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			break
 		}
 		if err != nil {
-			util.DebugLog(util.DebugLevelNotify, "Server receive", "err", err)
+			log.DebugLog(log.DebugLevelNotify, "Server receive", "err", err)
 			continue
 		}
 		// process data from client
@@ -488,7 +489,7 @@ func (s *Client) Run() {
 
 	for !s.done {
 		if commErr != nil {
-			util.DebugLog(util.DebugLevelNotify, "Notify client communication err", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "error", commErr)
+			log.DebugLog(log.DebugLevelNotify, "Notify client communication err", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "error", commErr)
 			cleanup()
 		}
 		if s.stream == nil {
@@ -512,7 +513,7 @@ func (s *Client) Run() {
 			stream, err = api.StreamNotice(ctx)
 			s.cancel = cancel
 			if err != nil {
-				util.DebugLog(util.DebugLevelNotify, "Notify client get client", "addr", s.addrs[addrIdx], "error", err)
+				log.DebugLog(log.DebugLevelNotify, "Notify client get client", "addr", s.addrs[addrIdx], "error", err)
 				cleanup()
 				time.Sleep(NotifyRetryTime)
 				continue
@@ -537,7 +538,7 @@ func (s *Client) Run() {
 			} else {
 				s.version = request.Version
 			}
-			util.DebugLog(util.DebugLevelNotify, "Notify client connected", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "version", s.version, "supported-version", NotifyVersion, "tries", tries)
+			log.DebugLog(log.DebugLevelNotify, "Notify client connected", "addr", s.addrs[addrIdx], "local", s.GetLocalAddr(), "version", s.version, "supported-version", NotifyVersion, "tries", tries)
 			tries = 0
 			s.mux.Lock()
 			s.stream = stream
@@ -580,7 +581,7 @@ func (s *Client) Run() {
 			}
 		}
 	}
-	util.DebugLog(util.DebugLevelNotify, "Notify client cancelled", "local", s.GetLocalAddr())
+	log.DebugLog(log.DebugLevelNotify, "Notify client cancelled", "local", s.GetLocalAddr())
 	if s.stream != nil {
 		cleanup()
 	}

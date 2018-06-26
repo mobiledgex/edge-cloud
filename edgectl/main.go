@@ -7,8 +7,8 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -53,7 +53,7 @@ func connect(cmd *cobra.Command, args []string) {
 	var err error
 	conn, err = grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		util.FatalLog("Connect to server failed", "addr", addr, "err", err)
+		log.FatalLog("Connect to server failed", "addr", addr, "err", err)
 	}
 	gencmd.DeveloperApiCmd = edgeproto.NewDeveloperApiClient(conn)
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
@@ -62,6 +62,7 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
 	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
+	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
 }
 
 func close(cmd *cobra.Command, args []string) {
@@ -78,39 +79,18 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 	cmdsup.AddOutputFormatFlag(rootCmd.PersistentFlags())
 
-	controllerCmd.AddCommand(gencmd.CreateDeveloperCmd)
-	controllerCmd.AddCommand(gencmd.UpdateDeveloperCmd)
-	controllerCmd.AddCommand(gencmd.DeleteDeveloperCmd)
-	controllerCmd.AddCommand(gencmd.ShowDeveloperCmd)
+	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppApiCmds...)
+	controllerCmd.AddCommand(gencmd.OperatorApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
+	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
 
-	controllerCmd.AddCommand(gencmd.CreateAppCmd)
-	controllerCmd.AddCommand(gencmd.UpdateAppCmd)
-	controllerCmd.AddCommand(gencmd.DeleteAppCmd)
-	controllerCmd.AddCommand(gencmd.ShowAppCmd)
+	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
+	dmeCmd.AddCommand(gencmd.DebugApiCmds...)
 
-	controllerCmd.AddCommand(gencmd.CreateOperatorCmd)
-	controllerCmd.AddCommand(gencmd.UpdateOperatorCmd)
-	controllerCmd.AddCommand(gencmd.DeleteOperatorCmd)
-	controllerCmd.AddCommand(gencmd.ShowOperatorCmd)
-
-	controllerCmd.AddCommand(gencmd.CreateCloudletCmd)
-	controllerCmd.AddCommand(gencmd.UpdateCloudletCmd)
-	controllerCmd.AddCommand(gencmd.DeleteCloudletCmd)
-	controllerCmd.AddCommand(gencmd.ShowCloudletCmd)
-
-	controllerCmd.AddCommand(gencmd.CreateAppInstCmd)
-	controllerCmd.AddCommand(gencmd.UpdateAppInstCmd)
-	controllerCmd.AddCommand(gencmd.DeleteAppInstCmd)
-	controllerCmd.AddCommand(gencmd.ShowAppInstCmd)
-
-	dmeCmd.AddCommand(gencmd.FindCloudletCmd)
-	dmeCmd.AddCommand(gencmd.VerifyLocationCmd)
-
-	crmCmd.AddCommand(gencmd.ListCloudResourceCmd)
-	crmCmd.AddCommand(gencmd.AddCloudResourceCmd)
-	crmCmd.AddCommand(gencmd.DeleteCloudResourceCmd)
-	crmCmd.AddCommand(gencmd.DeployApplicationCmd)
-	crmCmd.AddCommand(gencmd.DeleteApplicationCmd)
+	crmCmd.AddCommand(gencmd.CloudResourceManagerCmds...)
+	crmCmd.AddCommand(gencmd.DebugApiCmds...)
 
 	rootCmd.Execute()
 }

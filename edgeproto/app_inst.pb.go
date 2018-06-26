@@ -23,6 +23,9 @@ import binary "encoding/binary"
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -544,7 +547,7 @@ func (m *AppInstKey) CopyInFields(src *AppInstKey) {
 func (m *AppInstKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal AppInstKey key string", "obj", m)
+		log.FatalLog("Failed to marshal AppInstKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -552,7 +555,7 @@ func (m *AppInstKey) GetKeyString() string {
 func AppInstKeyStringParse(str string, key *AppInstKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal AppInstKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal AppInstKey key string", "str", str)
 	}
 }
 
@@ -815,7 +818,7 @@ func (s *AppInstStore) LoadAll(cb AppInstCb) error {
 		var obj AppInst
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
-			util.WarnLog("Failed to parse AppInst data", "val", string(val))
+			log.WarnLog("Failed to parse AppInst data", "val", string(val))
 			return nil
 		}
 		err = cb(&obj)
@@ -835,7 +838,7 @@ func (s *AppInstStore) LoadOne(key string) (*AppInst, int64, error) {
 	var obj AppInst
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse AppInst data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInst data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -889,7 +892,7 @@ func (c *AppInstCache) Update(in *AppInst, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[*in.GetKey()] = in
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -899,7 +902,7 @@ func (c *AppInstCache) Update(in *AppInst, rev int64) {
 func (c *AppInstCache) Delete(in *AppInst, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, *in.GetKey())
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(in.GetKey())
@@ -907,14 +910,14 @@ func (c *AppInstCache) Delete(in *AppInst, rev int64) {
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show AppInst", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show AppInst", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -935,7 +938,7 @@ func (c *AppInstCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := AppInst{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		util.WarnLog("Failed to parse AppInst data", "val", string(val))
+		log.WarnLog("Failed to parse AppInst data", "val", string(val))
 		return
 	}
 	c.Update(&obj, rev)
@@ -995,6 +998,44 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
 
 func (m *AppInstInfo) GetKey() *AppInstKey {
 	return &m.Key
+}
+
+var LivenessStrings = []string{
+	"UNKNOWN",
+	"STATIC",
+	"DYNAMIC",
+}
+
+const (
+	LivenessUNKNOWN uint64 = 1 << 0
+	LivenessSTATIC  uint64 = 1 << 1
+	LivenessDYNAMIC uint64 = 1 << 2
+)
+
+func (e *AppInst_Liveness) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := AppInst_Liveness_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = AppInst_Liveness_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = AppInst_Liveness(val)
+	return nil
+}
+
+func (e AppInst_Liveness) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *AppInstKey) Size() (n int) {

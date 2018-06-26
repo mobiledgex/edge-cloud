@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Should only be one of these instantiated in main
@@ -63,7 +63,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.AppPath != new.AppPath {
-		util.DebugLog(util.DebugLevelApi, "updating app path")
+		log.DebugLog(log.DebugLevelApi, "updating app path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
 			if inst.Key.AppKey.Matches(&new.Key) {

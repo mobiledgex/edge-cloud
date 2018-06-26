@@ -10,6 +10,7 @@ build:
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	make -C ./protoc-gen-cmd
+	make -C ./log
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine

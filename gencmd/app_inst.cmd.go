@@ -37,6 +37,11 @@ var AppInstApiCmd edgeproto.AppInstApiClient
 var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstInLiveness string
+var LivenessStrings = []string{
+	"UNKNOWN",
+	"STATIC",
+	"DYNAMIC",
+}
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s := make([]string, 0, 3)
@@ -375,6 +380,13 @@ var ShowAppInstCmd = &cobra.Command{
 	},
 }
 
+var AppInstApiCmds = []*cobra.Command{
+	CreateAppInstCmd,
+	DeleteAppInstCmd,
+	UpdateAppInstCmd,
+	ShowAppInstCmd,
+}
+
 func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
@@ -384,7 +396,7 @@ func init() {
 	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
 	AppInstFlagSet.BytesHexVar(&AppInstIn.Ip, "ip", nil, "Ip")
-	AppInstFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "AppInstInLiveness")
+	AppInstFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [UNKNOWN STATIC DYNAMIC]")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	UpdateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -454,11 +466,11 @@ func AppInstSetFields() {
 func parseAppInstEnums() error {
 	if AppInstInLiveness != "" {
 		switch AppInstInLiveness {
-		case "unknown":
+		case "UNKNOWN":
 			AppInstIn.Liveness = edgeproto.AppInst_Liveness(0)
-		case "static":
+		case "STATIC":
 			AppInstIn.Liveness = edgeproto.AppInst_Liveness(1)
-		case "dynamic":
+		case "DYNAMIC":
 			AppInstIn.Liveness = edgeproto.AppInst_Liveness(2)
 		default:
 			return errors.New("Invalid value for AppInstInLiveness")
