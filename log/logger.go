@@ -64,7 +64,7 @@ func SetDebugLevelEnum(val DebugLevel) {
 }
 
 func ClearDebugLevelEnum(val DebugLevel) {
-	SetDebugLevel(enumToBit(val))
+	ClearDebugLevel(enumToBit(val))
 }
 
 func SetDebugLevels(vals []DebugLevel) {
