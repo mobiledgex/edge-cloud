@@ -52,7 +52,7 @@ func readTestFile() {
 	if *vars != "" {
 		varstr += "," + *vars
 	}
-	err := util.ReadYamlFile(*testFile, &testsToRun, varstr)
+	err := util.ReadYamlFile(*testFile, &testsToRun, varstr, false)
 	if err != nil {
 		log.Printf("Error in reading test file: %v - err: %v\n", *testFile, err)
 		if strings.Contains(string(err.Error()), "Unreplaced variables") {

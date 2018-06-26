@@ -1,5 +1,5 @@
 - name: startup etcds
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: etcds
 
@@ -16,7 +16,7 @@
        -  "{{ etcds }}"
 
 - name: startup controllers
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: controllers
 
@@ -38,7 +38,7 @@
        -  "{{ controllers }}"
 
 - name: startup dmes
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: dmes
 
@@ -62,7 +62,7 @@
 
 
 - name: startup crms
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: crms
 

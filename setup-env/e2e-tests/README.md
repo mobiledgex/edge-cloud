@@ -15,4 +15,6 @@ Variables in -vars are used to substitute entries like {{setupdir}} in the testf
  
 Examples:
 e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_show.yml -outputdir /tmp/test_out -vars setupdir=setup-env/setups/local_simplex
+e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_show_2ctrls.yml -outputdir /tmp/test_out -vars setupdir=setup-env/setups/local_multi
 e2e-tests -testfile setup-env/e2e-tests/testfiles/delete_add.yml -outputdir /tmp/test_out -vars setupdir=setup-env/setups/local_simplex
+e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_ctrl_restart.yml -outputdir /tmp/test_out -vars=setupdir=setup-env/setups/local_multi 
