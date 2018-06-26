@@ -1,0 +1,20 @@
+##
+## To replace the variable {{setupdir}}, execute the script
+## with -vars setupdir=/some/directory
+##
+description: stops and restarts all services 
+
+tests:
+- name: stop services
+  setupfile: "{{setupdir}}/setup.yml" 
+  actions: [stop]
+
+- name: start services 
+  setupfile: "{{setupdir}}/setup.yml"
+  actions: [start]
+
+- name: verify services are running
+  setupfile: "{{setupdir}}/setup.yml"
+  actions: [status]
+
+
