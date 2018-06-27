@@ -1,0 +1,61 @@
+##
+## 
+##
+description: Deploys and starts a system, adds and delete appinstances and verifies findlocation results each time
+
+tests:
+- name: stop and cleanup system
+  actions: [stop,cleanup]
+
+- name: deploy and start services 
+  actions: [deploy,start]
+
+- name: verify services are running
+  actions: [status]
+
+- name: Add and show provisioning without appinst
+  appfile: "{{datadir}}/appdata_no_appinst.yml"
+  actions: [create,show]
+
+- name: find cloudlet, expect nothing
+  merfile: "{{datadir}}/mer.yml"
+  actions: [findcloudlet]
+
+- name: create appinst1 
+  appfile: "{{datadir}}/appinst1.yml"
+  actions: [create]
+
+- name: find cloudlet, expect to see cloudlet1
+  merfile: "{{datadir}}/mer.yml"
+  actions: [findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: create appinst2
+  appfile: "{{datadir}}/appinst2.yml"
+  actions: [create]
+
+- name: find cloudlet, expect to see cloudlet2
+  merfile: "{{datadir}}/mer.yml"
+  actions: [findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
+- name: delete appinst2
+  appfile: "{{datadir}}/appinst2.yml"
+  actions: [delete]
+
+- name: find cloudlet, expect to see cloudlet1
+  merfile: "{{datadir}}/mer.yml"
+  actions: [findcloudlet]
+  compareyaml: 
+    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: stop and cleanup system
+  actions: [stop,cleanup]

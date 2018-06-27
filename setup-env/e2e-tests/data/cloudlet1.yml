@@ -1,0 +1,10 @@
+cloudlets:
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud1
+  accessuri: cloud1.tmo
+  location:
+    lat: -50
+    long: -50
+

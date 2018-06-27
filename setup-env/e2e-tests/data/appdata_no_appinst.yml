@@ -1,0 +1,40 @@
+operators:
+- key:
+    name: ATT
+- key:
+    name: DMUUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud1
+  accessuri: cloud1.tmo
+  location:
+    lat: -50
+    long: -50
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud2
+  accessuri: cloud2.tmo
+  location:
+    lat: 50
+    long: 50
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: "1.0"
+  apppath: /usr/bin/someapp
+

@@ -1,0 +1,15 @@
+ver: 0
+uri: http://tmocloud2/apps/someApplication
+serviceip: []
+serviceport: 0
+cloudletlocation:
+  lat: 50
+  long: 50
+  horizontalaccuracy: 0
+  verticalaccuracy: 0
+  altitude: 0
+  course: 0
+  speed: 0
+  timestamp: null
+status: true
+token: ""
