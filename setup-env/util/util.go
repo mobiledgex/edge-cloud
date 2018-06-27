@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,6 +18,14 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+	"google.golang.org/grpc"
+)
+
+type yamlFileType int
+
+const (
+	YamlAppdata yamlFileType = 0
+	YamlOther   yamlFileType = 1
 )
 
 type processinfo struct {
@@ -123,7 +132,11 @@ func KillProcessesByName(processName string, maxwait time.Duration, processArgs 
 }
 
 func PrintStartBanner(label string) {
-	log.Printf("\n\n************ Begin: %s ************\n\n ", label)
+	log.Printf("\n\n   *** %s\n", label)
+}
+
+func PrintStepBanner(label string) {
+	log.Printf("\n\n      --- %s\n", label)
 }
 
 //creates an output directory with an optional timestamp.  Server log files, output from APIs, and
@@ -190,27 +203,41 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
-func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars string) bool {
+func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType string) bool {
 
-	PrintStartBanner("compareYamlFiles")
+	PrintStepBanner("running compareYamlFiles")
 
-	log.Printf("Comparing %v to %v\n", firstYamlFile, secondYamlFile)
-	var y1 edgeproto.ApplicationData
-	var y2 edgeproto.ApplicationData
+	log.Printf("Comparing yamls: %v  %v\n", firstYamlFile, secondYamlFile)
 
-	err1 := ReadYamlFile(firstYamlFile, &y1, replaceVars, true)
+	var err1 error
+	var err2 error
+	var y1 interface{}
+	var y2 interface{}
+
+	if fileType == "appdata" {
+		//for appdata, use the ApplicationData type so we can sort it
+		var a1 edgeproto.ApplicationData
+		var a2 edgeproto.ApplicationData
+
+		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+		a1.Sort()
+		a2.Sort()
+		y1 = a1
+		y2 = a2
+
+	} else {
+		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
+	}
 	if err1 != nil {
-		log.Printf("error reading yaml file: %s\n", firstYamlFile)
+		log.Printf("Error in reading yaml file %v\n", firstYamlFile)
 		return false
 	}
-	err2 := ReadYamlFile(secondYamlFile, &y2, replaceVars, true)
 	if err2 != nil {
-		log.Printf("error reading yaml file: %s\n", secondYamlFile)
+		log.Printf("Error in reading yaml file %v\n", secondYamlFile)
 		return false
 	}
-
-	y1.Sort()
-	y2.Sort()
 
 	if !cmp.Equal(y1, y2) {
 		log.Println("Comparison fail")
@@ -219,4 +246,89 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars s
 	}
 	log.Println("Comparison success")
 	return true
+}
+
+func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	opAPI := edgeproto.NewOperatorApiClient(conn)
+	var err error = nil
+	for _, o := range appdata.Operators {
+		log.Printf("API %v for operator: %v", mode, o.Key.Name)
+		switch mode {
+		case "create":
+			_, err = opAPI.CreateOperator(ctx, &o)
+		case "update":
+			_, err = opAPI.UpdateOperator(ctx, &o)
+		case "delete":
+			_, err = opAPI.DeleteOperator(ctx, &o)
+		}
+	}
+	return err
+}
+
+func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	devApi := edgeproto.NewDeveloperApiClient(conn)
+	for _, d := range appdata.Developers {
+		log.Printf("API %v for developer: %v", mode, d.Key.Name)
+		switch mode {
+		case "create":
+			_, err = devApi.CreateDeveloper(ctx, &d)
+		case "update":
+			_, err = devApi.UpdateDeveloper(ctx, &d)
+		case "delete":
+			_, err = devApi.DeleteDeveloper(ctx, &d)
+		}
+	}
+	return err
+}
+
+func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	clAPI := edgeproto.NewCloudletApiClient(conn)
+	for _, c := range appdata.Cloudlets {
+		log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
+		switch mode {
+		case "create":
+			_, err = clAPI.CreateCloudlet(ctx, &c)
+		case "update":
+			_, err = clAPI.UpdateCloudlet(ctx, &c)
+		case "delete":
+			_, err = clAPI.DeleteCloudlet(ctx, &c)
+		}
+	}
+	return err
+}
+
+func RunAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	appAPI := edgeproto.NewAppApiClient(conn)
+	for _, a := range appdata.Applications {
+		log.Printf("API %v for app: %v", mode, a.Key.Name)
+		switch mode {
+		case "create":
+			_, err = appAPI.CreateApp(ctx, &a)
+		case "update":
+			_, err = appAPI.UpdateApp(ctx, &a)
+		case "delete":
+			_, err = appAPI.DeleteApp(ctx, &a)
+		}
+	}
+	return err
+}
+
+func RunAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	appinAPI := edgeproto.NewAppInstApiClient(conn)
+	for _, a := range appdata.AppInstances {
+		log.Printf("API %v for appinstance: %v", mode, a.Key.AppKey.Name)
+		switch mode {
+		case "create":
+			_, err = appinAPI.CreateAppInst(ctx, &a)
+		case "update":
+			_, err = appinAPI.UpdateAppInst(ctx, &a)
+		case "delete":
+			_, err = appinAPI.DeleteAppInst(ctx, &a)
+		}
+	}
+	return err
 }

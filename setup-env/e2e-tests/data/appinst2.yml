@@ -1,0 +1,17 @@
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud2
+    id: 123
+  ip: [10,10,10,2]
+  uri: http://tmocloud2/apps/someApplication
+  liveness: 1
+  apppath: /usr/bin/someapp
+
