@@ -1,60 +1,55 @@
 ##
-## To replace the variable {{setupdir}}, execute the script
-## with -vars setupdir=/some/directory
+## To replace the variable {{datadir}}, execute the script
+## with -vars datadir=/some/directory
 ##
 description: Deploys and starts a system, adds provisioning and compares to expected value
 
 tests:
 - name: stop and cleanup system
-  setupfile: "{{setupdir}}/setup.yml" 
   actions: [stop,cleanup]
 
 - name: deploy and start services 
-  setupfile: "{{setupdir}}/setup.yml"
   actions: [deploy,start]
 
 - name: verify services are running
-  setupfile: "{{setupdir}}/setup.yml"
   actions: [status]
 
 - name: Add and show provisioning
-  datafile: "{{setupdir}}/data.yml"
-  setupfile:  "{{setupdir}}/setup.yml"
+  appfile: "{{datadir}}/appdata.yml"
   actions: [create,show]
 
 - name: compare results of show provisioning
-  setupfile: "{{setupdir}}/setup.yml"
   compareyaml: 
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{setupdir}}/data.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
 
 - name: show provisioning from second controller
-  datafile: "{{setupdir}}/data.yml"
-  setupfile:  "{{setupdir}}/setup.yml"
+  appfile: "{{datadir}}/appdata.yml"
   actions: [show=ctrl2]
 
 - name: compare results of ctrl2 show provisioning
-  setupfile: "{{setupdir}}/setup.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{setupdir}}/data.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
 
 - name: stop ctrl1
-  setupfile: "{{setupdir}}/setup.yml"
   actions: [stop=ctrl1]
 
 - name: start ctrl1 
-  setupfile: "{{setupdir}}/setup.yml"
   actions: [start=ctrl1]
 
 - name: show provisioning from ctrl1
-  datafile: "{{setupdir}}/data.yml"
-  setupfile:  "{{setupdir}}/setup.yml"
+  appfile: "{{datadir}}/appdata.yml"
   actions: [show=ctrl1]
 
 - name: compare results of ctrl1 show provisioning
-  setupfile: "{{setupdir}}/setup.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{setupdir}}/data.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
+
+- name: stop and cleanup system
+  actions: [stop,cleanup]
 
