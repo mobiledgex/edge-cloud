@@ -19,16 +19,16 @@ cloudlets:
     name: tmocloud1
   accessuri: cloud1.tmo
   location:
-    lat: 99.99
-    long: 123.456
+    lat: -50
+    long: -50
 - key:
     operatorkey:
       name: TMUS
     name: tmocloud2
   accessuri: cloud2.tmo
   location:
-    lat: 67.89
-    long: 11.223
+    lat: 50
+    long: 50
 
 apps:
 - key:
@@ -36,24 +36,5 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: "1.0"
-  apppath: /usr/bin/someapp
-
-appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someApplication
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud1
-    id: 123
-  cloudletloc:
-    lat: 99.99
-    long: 123.456
-  ip: [10, 100, 10, 4]
-  liveness: 1
   apppath: /usr/bin/someapp
 

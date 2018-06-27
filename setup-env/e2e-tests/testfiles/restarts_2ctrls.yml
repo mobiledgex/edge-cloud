@@ -22,11 +22,27 @@ tests:
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
 
-- name: stop ctrl1
-  actions: [stop=ctrl1]
+- name: show provisioning from ctrl2 and compare
+  actions: [show=ctrl2]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
 
-- name: start ctrl1 
-  actions: [start=ctrl1]
+- name: stop both controllers
+  actions: [stop=ctrl1,stop=ctrl2]
+
+- name: stop and start etcd1
+  actions: [stop=etcd1,start=etcd1]
+
+- name: stop and start etcd2
+  actions: [stop=etcd2,start=etcd2]
+
+- name: stop and start etcd3
+  actions: [stop=etcd3,start=etcd3]
+
+- name: start both controllers
+  actions: [start=ctrl1,start=ctrl2]
 
 - name: verify services are running
   actions: [status]
@@ -36,6 +52,23 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
+
+- name: stop ctrl2 
+  actions: [stop=ctrl2]
+
+- name: delete provisioning
+  actions: [delete]
+  appfile: "{{datadir}}/appdata.yml"
+
+- name: start ctrl2
+  actions: [start=ctrl2]
+  
+- name: show ctrl2 provisioning, verify it is empty
+  actions: [show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
 - name: stop services and cleanup

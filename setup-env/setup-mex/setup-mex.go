@@ -13,23 +13,25 @@ import (
 	"strings"
 	"time"
 
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"google.golang.org/grpc"
+
 	yaml "gopkg.in/yaml.v2"
 )
 
 var (
-	commandName  = "setup-mex"
-	actions      = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
-	deployment   = flag.String("deployment", "process", deploymentList)
-	dataFile     = flag.String("datafile", "", "optional yml data file")
-	setupFile    = flag.String("setupfile", "", "mandatory yml topology file")
-	outputDir    = flag.String("outputdir", "", "option directory to store output and logs, TS suffix will be replaced with timestamp")
-	useTimestamp = flag.Bool("timestamp", false, "append current timestamp to outputdir")
-	compareYaml  = flag.String("compareyaml", "", "comma separated list of yamls to compare")
-
-	procs processData
+	commandName = "setup-mex"
+	actions     = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
+	deployment  = flag.String("deployment", "process", deploymentList)
+	appFile     = flag.String("appfile", "", "optional controller application data file")
+	setupFile   = flag.String("setupfile", "", "mandatory yml topology file")
+	outputDir   = flag.String("outputdir", "", "option directory to store output and logs")
+	compareYaml = flag.String("compareyaml", "", "comma separated list of yamls to compare")
+	merFile     = flag.String("merfile", "", "match engine request input file")
+	procs       processData
 )
 
 type yamlReplacementVariables struct {
@@ -67,16 +69,17 @@ type processData struct {
 
 //this is possible actions and optional parameters
 var actionChoices = map[string]string{
-	"start":     "procname",
-	"stop":      "procname",
-	"status":    "procname",
-	"show":      "procname",
-	"update":    "procname",
-	"delete":    "procname",
-	"create":    "procname",
-	"deploy":    "",
-	"cleanup":   "",
-	"fetchlogs": "",
+	"start":        "procname",
+	"stop":         "procname",
+	"status":       "procname",
+	"show":         "procname",
+	"update":       "procname",
+	"delete":       "procname",
+	"create":       "procname",
+	"deploy":       "",
+	"cleanup":      "",
+	"fetchlogs":    "",
+	"findcloudlet": "procname",
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -91,6 +94,8 @@ var yamlExceptions = map[string]map[string]bool{
 }
 
 var data edgeproto.ApplicationData
+
+var matchEngineRequest dmeproto.Match_Engine_Request
 
 var apiConnectTimeout = 5 * time.Second
 
@@ -325,6 +330,19 @@ func getController(ctrlname string) *controllerProcess {
 	return nil //unreachable
 }
 
+func getDme(dmename string) *dmeProcess {
+	if dmename == "" {
+		return &procs.Dmes[0]
+	}
+	for _, dme := range procs.Dmes {
+		if dme.Name == dmename {
+			return &dme
+		}
+	}
+	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
+	return nil //unreachable
+}
+
 func runShowCommands(ctrlname string) bool {
 	errFound := false
 	var showCmds = []string{
@@ -369,69 +387,54 @@ func runApis(mode string, ctrlname string) bool {
 	} else {
 		log.Printf("Connected to controller %v success", ctrl.Name)
 		ctx, cancel := context.WithTimeout(context.Background(), apiConnectTimeout)
-		opAPI := edgeproto.NewOperatorApiClient(ctrlapi)
-		for _, o := range data.Operators {
-			log.Printf("API %v for operator: %v", mode, o.Key.Name)
-			switch mode {
-			case "create":
-				_, err = opAPI.CreateOperator(ctx, &o)
-			case "update":
-				_, err = opAPI.UpdateOperator(ctx, &o)
-			case "delete":
-				_, err = opAPI.DeleteOperator(ctx, &o)
-			}
+
+		if mode == "delete" {
+			//run in reverse order to delete child keys
+			util.RunAppinstApi(ctrlapi, ctx, &data, mode)
+			util.RunAppApi(ctrlapi, ctx, &data, mode)
+			util.RunCloudletApi(ctrlapi, ctx, &data, mode)
+			util.RunDeveloperApi(ctrlapi, ctx, &data, mode)
+			util.RunOperatorApi(ctrlapi, ctx, &data, mode)
+		} else {
+			util.RunOperatorApi(ctrlapi, ctx, &data, mode)
+			util.RunDeveloperApi(ctrlapi, ctx, &data, mode)
+			util.RunCloudletApi(ctrlapi, ctx, &data, mode)
+			util.RunAppApi(ctrlapi, ctx, &data, mode)
+			util.RunAppinstApi(ctrlapi, ctx, &data, mode)
 		}
-		devApi := edgeproto.NewDeveloperApiClient(ctrlapi)
-		for _, d := range data.Developers {
-			log.Printf("API %v for developer: %v", mode, d.Key.Name)
-			switch mode {
-			case "create":
-				_, err = devApi.CreateDeveloper(ctx, &d)
-			case "update":
-				_, err = devApi.UpdateDeveloper(ctx, &d)
-			case "delete":
-				_, err = devApi.DeleteDeveloper(ctx, &d)
-			}
-		}
-		clAPI := edgeproto.NewCloudletApiClient(ctrlapi)
-		for _, c := range data.Cloudlets {
-			log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
-			switch mode {
-			case "create":
-				_, err = clAPI.CreateCloudlet(ctx, &c)
-			case "update":
-				_, err = clAPI.UpdateCloudlet(ctx, &c)
-			case "delete":
-				_, err = clAPI.DeleteCloudlet(ctx, &c)
-			}
-		}
-		appAPI := edgeproto.NewAppApiClient(ctrlapi)
-		for _, a := range data.Applications {
-			log.Printf("API %v for app: %v", mode, a.Key.Name)
-			switch mode {
-			case "create":
-				_, err = appAPI.CreateApp(ctx, &a)
-			case "update":
-				_, err = appAPI.UpdateApp(ctx, &a)
-			case "delete":
-				_, err = appAPI.DeleteApp(ctx, &a)
-			}
-		}
-		appinAPI := edgeproto.NewAppInstApiClient(ctrlapi)
-		for _, a := range data.AppInstances {
-			log.Printf("API %v for appinstance: %v", mode, a.Key.AppKey.Name)
-			switch mode {
-			case "create":
-				_, err = appinAPI.CreateAppInst(ctx, &a)
-			case "update":
-				_, err = appinAPI.UpdateAppInst(ctx, &a)
-			case "delete":
-				_, err = appinAPI.DeleteAppInst(ctx, &a)
-			}
-		}
+
 		cancel()
 	}
 	ctrlapi.Close()
+	return true
+}
+
+func findCloudlet(procname string) bool {
+	dme := getDme(procname)
+	conn, err := grpc.Dial(dme.ApiAddr, grpc.WithInsecure())
+
+	if err != nil {
+		log.Printf("Error: unable to connect to dme addr %v\n", dme.ApiAddr)
+		return false
+	}
+	defer conn.Close()
+	client := dmeproto.NewMatch_Engine_ApiClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+
+	defer cancel()
+
+	mreply, err := client.FindCloudlet(ctx, &matchEngineRequest)
+	if err != nil {
+		log.Fatalf("could not greet: %v", err)
+	}
+	out, err := yaml.Marshal(mreply)
+	if err != nil {
+		fmt.Printf("Error: Unable to marshal findCloudlet reply: %v\n", err)
+		return false
+	}
+
+	printToFile("find-cloudlet.yml", string(out), true)
 	return true
 }
 
@@ -465,7 +468,7 @@ func readSetupFile(setupfile string) {
 		}
 	}
 }
-func readDataFile(datafile string) {
+func readAppDataFile(datafile string) {
 	err := util.ReadYamlFile(datafile, &data, "", true)
 	if err != nil {
 		if !isYamlOk(err, "data") {
@@ -473,8 +476,17 @@ func readDataFile(datafile string) {
 		}
 	}
 }
+func readMerFile(merfile string) {
+	err := util.ReadYamlFile(merfile, &matchEngineRequest, "", true)
+	if err != nil {
+		if !isYamlOk(err, "mer") {
+			log.Fatal("One or more fatal unmarshal errors, exiting")
+		}
+	}
+}
 
 func stopProcesses(processName string) bool {
+	util.PrintStepBanner("stopping processes " + processName)
 	maxWait := time.Second * 15
 	c := make(chan string)
 
@@ -710,7 +722,7 @@ func fetchRemoteLogs() bool {
 }
 
 func startProcesses(processName string) bool {
-	log.Printf("*** Starting Local Processes")
+	util.PrintStepBanner("starting local processes")
 	for _, etcd := range procs.Etcds {
 		if processName != "" && processName != etcd.Name {
 			continue
@@ -797,11 +809,14 @@ func validateArgs() {
 		if !validAction {
 			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
 			errFound = true
-		} else if (action == "update" || action == "create") && *dataFile == "" {
-			fmt.Printf("ERROR: if action=update or create, -datafile must be specified\n")
+		} else if (action == "update" || action == "create") && *appFile == "" {
+			fmt.Printf("ERROR: if action=update or create, -appfile must be specified\n")
 			errFound = true
 		} else if action == "fetchlogs" && *outputDir == "" {
 			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
+			errFound = true
+		} else if action == "findcloudlet" && *merFile == "" {
+			fmt.Printf("ERROR: cannot use action=findcloudlet option without -mer\n")
 			errFound = true
 		}
 		if optionalParam == "" && actionParam != "" {
@@ -814,9 +829,15 @@ func validateArgs() {
 		fmt.Printf("ERROR: -deployment must be one of: %v\n", deploymentList)
 		errFound = true
 	}
-	if *dataFile != "" {
-		if _, err := os.Stat(*dataFile); err != nil {
-			fmt.Printf("ERROR: file " + *dataFile + " does not exist\n")
+	if *appFile != "" {
+		if _, err := os.Stat(*appFile); err != nil {
+			fmt.Printf("ERROR: file " + *appFile + " does not exist\n")
+			errFound = true
+		}
+	}
+	if *merFile != "" {
+		if _, err := os.Stat(*merFile); err != nil {
+			fmt.Printf("ERROR: file " + *merFile + " does not exist\n")
 			errFound = true
 		}
 	}
@@ -829,15 +850,11 @@ func validateArgs() {
 			errFound = true
 		}
 	}
-	if *useTimestamp && *outputDir == "" {
-		fmt.Printf("ERROR: cannot use -timestamp option without -outputdir\n")
-		errFound = true
-	}
 
 	if *compareYaml != "" {
 		yarray := strings.Split(*compareYaml, ",")
-		if len(yarray) != 2 {
-			fmt.Printf("ERROR: compareyaml must be a string with 2 yaml files separated by comma\n")
+		if len(yarray) != 3 {
+			fmt.Printf("ERROR: compareyaml must be a string with 2 yaml files and a filetype separated by comma\n")
 			errFound = true
 		}
 	}
@@ -852,19 +869,22 @@ func main() {
 
 	errorsFound := 0
 	if *outputDir != "" {
-		*outputDir = util.CreateOutputDir(*useTimestamp, *outputDir, commandName+".log")
+		*outputDir = util.CreateOutputDir(false, *outputDir, commandName+".log")
 	}
-	if *dataFile != "" {
-		readDataFile(*dataFile)
+	if *appFile != "" {
+		readAppDataFile(*appFile)
 	}
 	if *setupFile != "" {
 		readSetupFile(*setupFile)
+	}
+	if *merFile != "" {
+		readMerFile(*merFile)
 	}
 
 	for _, a := range actionSlice {
 		action, actionParam := getActionParam(a)
 
-		util.PrintStartBanner(a)
+		util.PrintStepBanner("running action: " + a)
 		switch action {
 		case "deploy":
 			if !deployProcesses() {
@@ -925,22 +945,26 @@ func main() {
 			if !fetchRemoteLogs() {
 				errorsFound += 1
 			}
+		case "findcloudlet":
+			if !findCloudlet(actionParam) {
+				errorsFound += 1
+			}
 		default:
 			log.Fatal("unexpected action: " + action)
 		}
 	}
 	if *compareYaml != "" {
 		//separate the arg into two files and then replace variables
-		firstYamlFile := strings.Split(*compareYaml, ",")[0]
-		secondYamlFile := strings.Split(*compareYaml, ",")[1]
+		//	yamlType := strings.Split(*compareYaml, ",")[0]
+		s := strings.Split(*compareYaml, ",")
+		firstYamlFile := s[0]
+		secondYamlFile := s[1]
+		fileType := s[2]
 
-		replaceVars := "outputdir=" + *outputDir
-		replaceVars += ",datafile=" + *dataFile
-		replaceVars += ",setupfile=" + *setupFile
-
-		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, replaceVars) {
+		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, fileType) {
 			errorsFound += 1
 		}
+
 	}
 	if *outputDir != "" {
 		fmt.Printf("\nNum Errors found: %d, Results in: %s\n", errorsFound, *outputDir)

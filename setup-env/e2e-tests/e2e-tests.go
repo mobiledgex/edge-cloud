@@ -14,18 +14,20 @@ var (
 	commandName = "e2e-tests"
 	testFile    = flag.String("testfile", "", "input file with tests")
 	outputDir   = flag.String("outputdir", "", "output directory, timestamp will be appended")
+	setupFile   = flag.String("setupfile", "", "network config setup file")
+	dataDir     = flag.String("datadir", "", "directory where app data files exist")
 	stopOnFail  = flag.Bool("stop", false, "stop on failures")
-	vars        = flag.String("vars", "", "optional vars, separated by comma, e.g. setupdir=setups/test2.yml")
 )
 
 type e2e_test struct {
 	Name        string
-	Datafile    string
-	Setupfile   string
+	Appfile     string
+	Merfile     string
 	Actions     []string
 	Compareyaml struct {
-		Yaml1 string
-		Yaml2 string
+		Yaml1    string
+		Yaml2    string
+		Filetype string
 	}
 }
 
@@ -35,8 +37,10 @@ type e2e_tests struct {
 }
 
 var testsToRun e2e_tests
+var e2eHome string
 
 func validateArgs() {
+
 	flag.Parse()
 	if *testFile == "" {
 		log.Fatal("Argument -testfile <file> is required")
@@ -44,41 +48,49 @@ func validateArgs() {
 	if *outputDir == "" {
 		log.Fatal("Argument -outputdir <dir> is required")
 	}
+	if *setupFile == "" {
+		log.Fatal("Argument -setupfile <file> is required")
+	}
+	if *dataDir == "" {
+		log.Fatal("Argument -datadir <dir> is required")
+	}
+
 }
 
-func readTestFile() {
+func readTestFile() bool {
 	//outputdir is always appended as a variable
 	varstr := "outputdir=" + *outputDir
-	if *vars != "" {
-		varstr += "," + *vars
-	}
+	varstr += ",datadir=" + *dataDir
+
 	err := util.ReadYamlFile(*testFile, &testsToRun, varstr, false)
 	if err != nil {
-		log.Printf("Error in reading test file: %v - err: %v\n", *testFile, err)
+		log.Printf("*** Error in reading test file: %v - err: %v\n", *testFile, err)
 		if strings.Contains(string(err.Error()), "Unreplaced variables") {
 			log.Printf("\n** re-run with -vars varname=value\n")
 		}
 	}
+	return true
 }
 
 func runTests() {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
+
 	for _, t := range testsToRun.Tests {
-		util.PrintStartBanner(t.Name)
-		cmdstr := fmt.Sprintf("setup-mex -outputdir %s ", *outputDir)
+		util.PrintStartBanner("Starting test: " + t.Name)
+		cmdstr := fmt.Sprintf("setup-mex -outputdir %s -setupfile %s ", *outputDir, *setupFile)
 		if len(t.Actions) > 0 {
 			cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
 		}
-		if t.Setupfile != "" {
-			cmdstr += fmt.Sprintf("-setupfile %s ", t.Setupfile)
+		if t.Appfile != "" {
+			cmdstr += fmt.Sprintf("-appfile %s ", t.Appfile)
 		}
-		if t.Datafile != "" {
-			cmdstr += fmt.Sprintf("-datafile %s ", t.Datafile)
+		if t.Merfile != "" {
+			cmdstr += fmt.Sprintf("-merfile %s ", t.Merfile)
 		}
 		if t.Compareyaml.Yaml1 != "" {
-			cmdstr += fmt.Sprintf("-compareyaml %s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2)
+			cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
 		}
 
 		fmt.Printf("executing: %s\n", cmdstr)
@@ -86,10 +98,10 @@ func runTests() {
 		out, err := cmd.CombinedOutput()
 		fmt.Println(string(out))
 		if err == nil {
-			log.Printf("-- PASS: %v\n", t.Name)
+			log.Printf("\n        *** PASS: %v\n", t.Name)
 			numPassed += 1
 		} else {
-			log.Printf("-- FAIL: %v -- %v\n", t.Name, err)
+			log.Printf("\n        *** FAIL: %v -- %v\n", t.Name, err)
 			numFailed += 1
 			if *stopOnFail {
 				log.Printf("*** STOPPING ON FAILURE due to --stop option\n")
@@ -98,7 +110,7 @@ func runTests() {
 		}
 		numTestsRun++
 	}
-	log.Printf("\n\n*** Summary: Tests Run: %d Passed: %d Failed: %d\n", numTestsRun, numPassed, numFailed)
+	log.Printf("\n\n*** Summary of testfile %s Tests Run: %d Passed: %d Failed: %d -- Logs in %s\n", *testFile, numTestsRun, numPassed, numFailed, *outputDir)
 
 }
 
