@@ -26,6 +26,10 @@ public class GetLocation implements Callable {
     public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
+        } else if (!mMatchingEngine.isMexLocationAllowed()) {
+            Log.d(TAG, "Mex Location is disabled.");
+            mRequest = null;
+            return false;
         }
         mRequest = request;
 

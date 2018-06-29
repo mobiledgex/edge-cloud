@@ -23,9 +23,13 @@ public class FindCloudlet implements Callable {
         mMatchingEngine = matchingEngine;
     }
 
-    public void setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
+        } else if (!mMatchingEngine.isMexLocationAllowed()) {
+            Log.d(TAG, "Mex Location is disabled.");
+            mRequest = null;
+            return false;
         }
         mRequest = request;
 
@@ -33,6 +37,7 @@ public class FindCloudlet implements Callable {
             throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
         }
         mTimeoutInMilliseconds = timeoutInMilliseconds;
+        return true;
     }
 
     @Override
