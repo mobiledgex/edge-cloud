@@ -73,16 +73,20 @@ public class FindCloudlet implements Callable {
                         reply.getCloudletLocation().getTimestamp().getSeconds(),
                         reply.getCloudletLocation().getTimestamp().getNanos());
                 cloudletResponse = new FindCloudletResponse(reply.getVer(),
-                        reply.getToken(),
+                        reply.getUri(),
                         serviceIp,
                         reply.getServicePort(),
-                        loc);
+                        loc,
+                        reply.getStatus(),
+                        reply.getToken());
             } else {
                 cloudletResponse = new FindCloudletResponse(reply.getVer(),
-                        reply.getToken(),
+                        reply.getUri(),
                         serviceIp,
                         reply.getServicePort(),
-                        null);
+                        null,
+                        reply.getStatus(),
+                        reply.getToken());
             }
 
         }
