@@ -3,8 +3,8 @@ uri: http://tmocloud1/apps/someApplication
 serviceip: []
 serviceport: 0
 cloudletlocation:
-  lat: -50
-  long: -50
+  lat: 31
+  long: -91
   horizontalaccuracy: 0
   verticalaccuracy: 0
   altitude: 0

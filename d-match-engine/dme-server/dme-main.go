@@ -1,16 +1,19 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"net"
+	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -19,6 +22,7 @@ var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
+var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -36,7 +40,18 @@ func (s *server) VerifyLocation(ctx context.Context,
 
 	var mreq *dme.Match_Engine_Loc_Verify
 	mreq = new(dme.Match_Engine_Loc_Verify)
-	VerifyClientLoc(req, mreq)
+	//retrieve the peer to obtain IP address
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("unable to get peer IP info")
+	}
+	//peer address is ip:port
+	ss := strings.Split(p.Addr.String(), ":")
+	if len(ss) != 2 {
+		return nil, errors.New("unable to parse peer address " + p.Addr.String())
+	}
+	peerIp := ss[0]
+	VerifyClientLoc(req, mreq, peerIp, *locVerUrl)
 	return mreq, nil
 }
 

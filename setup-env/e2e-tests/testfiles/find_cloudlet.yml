@@ -4,18 +4,14 @@
 description: Deploys and starts a system, adds and delete appinstances and verifies findlocation results each time
 
 tests:
-- name: stop and cleanup system
-  actions: [stop,cleanup]
-
-- name: deploy and start services 
-  actions: [deploy,start]
-
-- name: verify services are running
-  actions: [status]
 
 - name: Add and show provisioning without appinst
   appfile: "{{datadir}}/appdata_no_appinst.yml"
   actions: [create,show]
+  compareyaml:
+    yaml1: "{{datadir}}/appdata_no_appinst.yml"
+    yaml2: "{{outputdir}}/show-commands.yml"
+    filetype: appdata
 
 - name: find cloudlet, expect nothing
   merfile: "{{datadir}}/mer.yml"
@@ -29,7 +25,7 @@ tests:
   merfile: "{{datadir}}/mer.yml"
   actions: [findcloudlet]
   compareyaml:
-    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
 
@@ -41,7 +37,7 @@ tests:
   merfile: "{{datadir}}/mer.yml"
   actions: [findcloudlet]
   compareyaml:
-    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
 
@@ -53,9 +49,21 @@ tests:
   merfile: "{{datadir}}/mer.yml"
   actions: [findcloudlet]
   compareyaml: 
-    yaml1: "{{outputdir}}/find-cloudlet.yml"
+    yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
 
-- name: stop and cleanup system
-  actions: [stop,cleanup]
+- name: delete appinst1
+  actions: [delete]
+  appfile: "{{datadir}}/appinst1.yml"
+
+- name: delete rest of provisioning
+  actions: [delete]
+  appfile: "{{datadir}}/appdata_no_appinst.yml"
+
+- name: verify provisioning is empty
+  actions: [show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
