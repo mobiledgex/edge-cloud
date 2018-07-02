@@ -31,7 +31,6 @@ public class RequestPermissions {
             Manifest.permission.READ_PHONE_STATE, // Get Phone number
     };
 
-
     public static boolean permissionsDeniedShown = false;
 
     public List<String> getNeededPermissions(Activity activity) {
