@@ -28,7 +28,7 @@ import static org.junit.Assert.assertFalse;
 @RunWith(AndroidJUnit4.class)
 public class LimitsTest {
     public static final String TAG = "LimitsTest";
-    public static final long GRPC_TIMEOUT_MS = 4000;
+    public static final long GRPC_TIMEOUT_MS = 10000;
 
     FusedLocationProviderClient fusedLocationClient;
 
@@ -131,6 +131,7 @@ public class LimitsTest {
     public void basicLatencyTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -206,6 +207,7 @@ public class LimitsTest {
     public void threadpoolTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(Executors.newFixedThreadPool(100));
+        me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;

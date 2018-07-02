@@ -1,8 +1,10 @@
 package com.mobiledgex.emptymatchengineapp;
 
 import android.app.Activity;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -13,12 +15,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import android.content.Intent;
+
 // Matching Engine API:
 import com.mobiledgex.matchingengine.FindCloudletResponse;
 import com.mobiledgex.matchingengine.MatchingEngine;
 import com.mobiledgex.matchingengine.util.RequestPermissions;
-
-import java.util.concurrent.ExecutionException;
 
 import distributed_match_engine.AppClient;
 import io.grpc.StatusRuntimeException;
@@ -33,10 +35,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
-import java.util.concurrent.Future;
 
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "MainActivity";
     private MatchingEngine mMatchingEngine;
     private String someText = null;
@@ -63,8 +63,20 @@ public class MainActivity extends AppCompatActivity {
         mLocationRequest = new LocationRequest();
 
         mMatchingEngine = new MatchingEngine();
-        mDoLocationUpdates = true;
 
+        // Restore mex location preference, defaulting to false:
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean mexLocationAllowed = prefs.getBoolean(getResources()
+                .getString(R.string.preference_mex_location_verification),
+                false);
+        MatchingEngine.setMexLocationAllowed(mexLocationAllowed);
+
+        // Watch allowed preference:
+        prefs.registerOnSharedPreferenceChangeListener(this);
+
+
+        // Client side FusedLocation updates.
+        mDoLocationUpdates = true;
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -94,6 +106,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Toolbar myToolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(myToolbar);
+
+        // Open dialog for MEX if this is the first time the app is created:
+        boolean firstTimeUse = prefs.getBoolean(getResources().getString(R.string.perference_first_time_use), true);
+        if (firstTimeUse) {
+            new EnhancedLocationDialog().show(this.getSupportFragmentManager(), "dialog");
+            String firstTimeUseKey = getResources().getString(R.string.perference_first_time_use);
+            // Disable first time use.
+            prefs.edit()
+                    .putBoolean(firstTimeUseKey, false)
+                    .apply();
+        }
+
     }
 
     @Override
@@ -112,6 +138,11 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
+            // Open "Settings" UI
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+
             return true;
         }
 
@@ -131,6 +162,20 @@ public class MainActivity extends AppCompatActivity {
     public void onPause() {
         super.onPause();
         stopLocationUpdates();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.putBoolean(MatchingEngine.MEX_LOCATION_PERMISSION, MatchingEngine.isMexLocationAllowed());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle restoreInstanceState) {
+        super.onRestoreInstanceState(restoreInstanceState);
+        if (restoreInstanceState != null) {
+            MatchingEngine.setMexLocationAllowed(restoreInstanceState.getBoolean(MatchingEngine.MEX_LOCATION_PERMISSION));
+        }
     }
 
     /**
@@ -166,6 +211,18 @@ public class MainActivity extends AppCompatActivity {
         mRpUtil.onRequestPermissionsResult(this, requestCode, permissions, grantResults);
     }
 
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        final String prefKeyAllowMEX = getResources().getString(R.string.preference_mex_location_verification);
+
+        if (key.equals(prefKeyAllowMEX)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            boolean mexLocationAllowed = prefs.getBoolean(prefKeyAllowMEX, false);
+            MatchingEngine.setMexLocationAllowed(mexLocationAllowed);
+        }
+    }
+
     public void doEnhancedLocationVerification() throws SecurityException {
         final Activity ctx = this;
 
@@ -185,33 +242,46 @@ public class MainActivity extends AppCompatActivity {
                     // Location found. Create a request:
 
                     try {
+                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+                        boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
+
                         AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(
                                 ctx,
                                 location);
+                        if (req != null) {
+                            // Location Verification (Blocking, or use verifyLocationFuture):
+                            AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
+                            someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
+                                    ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
 
-                        // Location Verification (Blocking, or use verifyLocationFuture):
-                        AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
-                        someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
-                                ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
-
-                        // Find the closest cloudlet for your application to use.
-                        // (Blocking call, or use findCloudletFuture):
-                        FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
-                        // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
-                        String serverip = null;
-                        if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
-                            serverip = closestCloudlet.server[0] + ", ";
-                            for (int i = 1; i < closestCloudlet.server.length - 1; i++) {
-                                serverip += closestCloudlet.server[i] + ", ";
+                            // Find the closest cloudlet for your application to use.
+                            // (Blocking call, or use findCloudletFuture):
+                            FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
+                            // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
+                            String serverip = null;
+                            if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
+                                serverip = closestCloudlet.server[0] + ", ";
+                                for (int i = 1; i < closestCloudlet.server.length - 1; i++) {
+                                    serverip += closestCloudlet.server[i] + ", ";
+                                }
+                                serverip += closestCloudlet.server[closestCloudlet.server.length - 1];
                             }
-                            serverip += closestCloudlet.server[closestCloudlet.server.length - 1];
-                        }
-                        someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
+                            someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
 
-                        TextView tv = findViewById(R.id.mex_verified_location_content);
-                        tv.setText(someText);
+                            TextView tv = findViewById(R.id.mex_verified_location_content);
+                            tv.setText(someText);
+                        } else {
+                            someText = "Cannot create request object.";
+                            if (!mexAllowed) {
+                                someText += " Reason: Enhanced location is disabled.";
+                            }
+                            TextView tv = findViewById(R.id.mex_verified_location_content);
+                            tv.setText(someText);
+                        }
                     } catch (StatusRuntimeException sre) {
                         sre.printStackTrace();
+                    } catch (IllegalArgumentException iae) {
+                        iae.printStackTrace();
                     }
                 } else {
                     Log.w(TAG, "getLastLocation:exception", task.getException());

@@ -23,6 +23,8 @@ import io.grpc.StatusRuntimeException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import android.location.Location;
 import android.util.Log;
@@ -130,6 +132,7 @@ public class EngineCallTest {
     public void registerClientTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -170,6 +173,7 @@ public class EngineCallTest {
     public void registerClientFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -206,10 +210,68 @@ public class EngineCallTest {
     }
 
     @Test
+    public void mexDisabledTest() {
+        Context context = InstrumentationRegistry.getTargetContext();
+        MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(false);
+        MexLocation mexLoc = new MexLocation(me);
+
+        Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
+        boolean allRun = false;
+
+        try {
+            enableMockLocation(context, true);
+            setMockLocation(context, loc);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+
+            try {
+                FindCloudletResponse cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
+            } catch (MissingRequestException mre) {
+                // This is expected, request is missing.
+                Log.i(TAG, "Expected exception for findCloudlet. Mex Disabled.");
+            }
+            try {
+                AppClient.Match_Engine_Loc locResponse = me.getLocation(request, GRPC_TIMEOUT_MS);
+            } catch (MissingRequestException mre) {
+                // This is expected, request is missing.
+                Log.i(TAG, "Expected exception for getLocation. Mex Disabled.");
+            }
+            try {
+                AppClient.Match_Engine_Loc_Verify  locVerifyResponse = me.verifyLocation(request, GRPC_TIMEOUT_MS);
+            } catch (MissingRequestException mre) {
+                // This is expected, request is missing.
+                Log.i(TAG, "Expected exception for verifyLocation. Mex Disabled.");
+            }
+            try {
+                AppClient.Match_Engine_Status registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
+            } catch (MissingRequestException mre) {
+                // This is expected, request is missing.
+                Log.i(TAG, "Expected exception for registerClient. Mex Disabled.");
+            }
+            allRun = true;
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("FindCloudlet: Execution Failed!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("FindCloudlet: Execution Failed!", true);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("FindCloudlet: Execution Interrupted!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
+
+        assertTrue("All requests must run with failures.", allRun);
+    }
+
+    @Test
     public void findCloudletTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         FindCloudletResponse cloudletResponse = null;
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
@@ -250,6 +312,7 @@ public class EngineCallTest {
         Future<FindCloudletResponse> response;
         FindCloudletResponse result = null;
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
@@ -279,6 +342,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
 
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
 
@@ -318,6 +382,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
 
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
 
@@ -362,6 +427,7 @@ public class EngineCallTest {
 
 
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
         AppClient.Match_Engine_Loc_Verify verifyLocationResult = null;
@@ -394,7 +460,7 @@ public class EngineCallTest {
     public void getLocationTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine();
-
+        me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         Location location;
         AppClient.Match_Engine_Loc response = null;
@@ -442,6 +508,7 @@ public class EngineCallTest {
     public void getLocationFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
