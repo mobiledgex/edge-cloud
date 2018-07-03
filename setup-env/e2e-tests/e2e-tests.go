@@ -1,5 +1,7 @@
 package main
 
+// executes end-to-end MEX tests by calling test-mex multiple times as directed by the input test file.
+
 import (
 	"flag"
 	"fmt"
@@ -22,8 +24,7 @@ var (
 
 type e2e_test struct {
 	Name        string
-	Appfile     string
-	Merfile     string
+	Apifile     string
 	Actions     []string
 	Compareyaml struct {
 		Yaml1    string
@@ -42,7 +43,9 @@ var e2eHome string
 
 func validateArgs() {
 
+	//re-init the flags so we don't get a bunch of test flags in the usage
 	flag.Parse()
+
 	if *testFile == "" {
 		log.Fatal("Argument -testfile <file> is required")
 	}
@@ -80,15 +83,12 @@ func runTests() {
 
 	for _, t := range testsToRun.Tests {
 		util.PrintStartBanner("Starting test: " + t.Name)
-		cmdstr := fmt.Sprintf("setup-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
+		cmdstr := fmt.Sprintf("test-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
 		if len(t.Actions) > 0 {
 			cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
 		}
-		if t.Appfile != "" {
-			cmdstr += fmt.Sprintf("-appfile %s ", t.Appfile)
-		}
-		if t.Merfile != "" {
-			cmdstr += fmt.Sprintf("-merfile %s ", t.Merfile)
+		if t.Apifile != "" {
+			cmdstr += fmt.Sprintf("-apifile %s ", t.Apifile)
 		}
 		if t.Compareyaml.Yaml1 != "" {
 			cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
