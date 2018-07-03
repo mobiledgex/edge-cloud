@@ -73,8 +73,9 @@ func main() {
 	sync.Start()
 	defer sync.Done()
 
-	notifyHandler := NewControllerNotifier(&appInstApi, &cloudletApi)
-	notify.ServerMgrStart(*notifyAddr, notifyHandler)
+	notifyHandler := NewNotifyHandler()
+	notify.ServerMgrOne.Start(*notifyAddr, notifyHandler)
+	defer notify.ServerMgrOne.Stop()
 
 	server := grpc.NewServer()
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)

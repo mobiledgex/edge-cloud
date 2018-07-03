@@ -181,3 +181,34 @@ var AppInstData = []edgeproto.AppInst{
 		AppPath:     AppData[2].AppPath,
 	},
 }
+var AppInstInfoData = []edgeproto.AppInstInfo{
+	edgeproto.AppInstInfo{
+		Key: AppInstData[0].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[1].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[2].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[3].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[4].Key,
+	},
+}
+var CloudletInfoData = []edgeproto.CloudletInfo{
+	edgeproto.CloudletInfo{
+		Key: CloudletData[0].Key,
+	},
+	edgeproto.CloudletInfo{
+		Key: CloudletData[1].Key,
+	},
+	edgeproto.CloudletInfo{
+		Key: CloudletData[2].Key,
+	},
+	edgeproto.CloudletInfo{
+		Key: CloudletData[3].Key,
+	},
+}

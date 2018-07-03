@@ -10,162 +10,71 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-type DummyServerHandler struct {
-	AppInsts      map[edgeproto.AppInstKey]edgeproto.AppInst
-	AppInstsInfo  map[edgeproto.AppInstKey]edgeproto.AppInstInfo
-	Cloudlets     map[edgeproto.CloudletKey]edgeproto.Cloudlet
-	CloudletsInfo map[edgeproto.CloudletKey]edgeproto.CloudletInfo
+type DummyHandler struct {
+	DefaultHandler
+	AppInstCache      edgeproto.AppInstCache
+	CloudletCache     edgeproto.CloudletCache
+	AppInstInfoCache  edgeproto.AppInstInfoCache
+	CloudletInfoCache edgeproto.CloudletInfoCache
 }
 
-func NewDummyServerHandler() *DummyServerHandler {
-	handler := &DummyServerHandler{}
-	handler.AppInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
-	handler.AppInstsInfo = make(map[edgeproto.AppInstKey]edgeproto.AppInstInfo)
-	handler.Cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
-	handler.CloudletsInfo = make(map[edgeproto.CloudletKey]edgeproto.CloudletInfo)
-	return handler
+func NewDummyHandler() *DummyHandler {
+	h := &DummyHandler{}
+	edgeproto.InitAppInstCache(&h.AppInstCache)
+	edgeproto.InitCloudletCache(&h.CloudletCache)
+	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
+	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
+	h.DefaultHandler.SendAppInst = &h.AppInstCache
+	h.DefaultHandler.RecvAppInst = &h.AppInstCache
+	h.DefaultHandler.SendCloudlet = &h.CloudletCache
+	h.DefaultHandler.RecvCloudlet = &h.CloudletCache
+	h.DefaultHandler.SendAppInstInfo = &h.AppInstInfoCache
+	h.DefaultHandler.RecvAppInstInfo = &h.AppInstInfoCache
+	h.DefaultHandler.SendCloudletInfo = &h.CloudletInfoCache
+	h.DefaultHandler.RecvCloudletInfo = &h.CloudletInfoCache
+	return h
 }
 
-func (s *DummyServerHandler) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{}) {
-	for key, _ := range s.AppInsts {
-		keys[key] = struct{}{}
-	}
+func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
+	s.AppInstCache.SetNotifyCb(mgr.UpdateAppInst)
+	s.CloudletCache.SetNotifyCb(mgr.UpdateCloudlet)
 }
 
-func (s *DummyServerHandler) GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool {
-	obj, found := s.AppInsts[*key]
-	if found {
-		*buf = obj
-	}
-	return found
+func (s *DummyHandler) SetClientCb(cl *Client) {
+	s.AppInstInfoCache.SetNotifyCb(cl.UpdateAppInstInfo)
+	s.CloudletInfoCache.SetNotifyCb(cl.UpdateCloudletInfo)
 }
 
-func (s *DummyServerHandler) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{}) {
-	for key, _ := range s.Cloudlets {
-		keys[key] = struct{}{}
-	}
-}
-
-func (s *DummyServerHandler) GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
-	obj, found := s.Cloudlets[*key]
-	if found {
-		*buf = obj
-	}
-	return found
-}
-
-func (s *DummyServerHandler) HandleNotice(notice *edgeproto.NoticeRequest) {
-	a := notice.GetAppInstInfo()
-	if a != nil {
-		s.AppInstsInfo[a.Key] = *a
-	}
-	c := notice.GetCloudletInfo()
-	if c != nil {
-		s.CloudletsInfo[c.Key] = *c
-	}
-}
-
-func (s *DummyServerHandler) CreateAppInst(in *edgeproto.AppInst) {
-	s.AppInsts[in.Key] = *in
-	UpdateAppInst(&in.Key)
-}
-
-func (s *DummyServerHandler) DeleteAppInst(in *edgeproto.AppInst) {
-	delete(s.AppInsts, in.Key)
-	UpdateAppInst(&in.Key)
-}
-
-func (s *DummyServerHandler) CreateCloudlet(in *edgeproto.Cloudlet) {
-	s.Cloudlets[in.Key] = *in
-	UpdateCloudlet(&in.Key)
-}
-
-func (s *DummyServerHandler) DeleteCloudlet(in *edgeproto.Cloudlet) {
-	delete(s.Cloudlets, in.Key)
-	UpdateCloudlet(&in.Key)
-}
-
-func (s *DummyServerHandler) WaitForAppInstInfo(count int) {
+func (s *DummyHandler) WaitForAppInstInfo(count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.AppInstsInfo) == count {
+		if len(s.AppInstInfoCache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func (s *DummyServerHandler) WaitForCloudletInfo(count int) {
+func (s *DummyHandler) WaitForCloudletInfo(count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.CloudletsInfo) == count {
+		if len(s.CloudletInfoCache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-type DummyClientHandler struct {
-	AppInsts           map[edgeproto.AppInstKey]edgeproto.AppInst
-	Cloudlets          map[edgeproto.CloudletKey]edgeproto.Cloudlet
-	NumAppInstUpdates  int
-	NumCloudletUpdates int
-	NumUpdates         int
-}
-
-func NewDummyClientHandler() *DummyClientHandler {
-	handler := &DummyClientHandler{}
-	handler.AppInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
-	handler.Cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
-	return handler
-}
-
-func (s *DummyClientHandler) HandleSendAllDone(maps *AllMaps) {
-	for key, _ := range s.AppInsts {
-		if _, ok := maps.AppInsts[key]; !ok {
-			delete(s.AppInsts, key)
-		}
-	}
-	for key, _ := range s.Cloudlets {
-		if _, ok := maps.Cloudlets[key]; !ok {
-			delete(s.Cloudlets, key)
-		}
-	}
-}
-
-func (s *DummyClientHandler) HandleNotice(notice *edgeproto.NoticeReply) error {
-	appInst := notice.GetAppInst()
-	if appInst != nil {
-		if notice.Action == edgeproto.NoticeAction_UPDATE {
-			s.AppInsts[appInst.Key] = *appInst
-		} else if notice.Action == edgeproto.NoticeAction_DELETE {
-			delete(s.AppInsts, appInst.Key)
-		}
-		s.NumAppInstUpdates++
-	}
-	cloudlet := notice.GetCloudlet()
-	if cloudlet != nil {
-		if notice.Action == edgeproto.NoticeAction_UPDATE {
-			s.Cloudlets[cloudlet.Key] = *cloudlet
-		} else if notice.Action == edgeproto.NoticeAction_DELETE {
-			delete(s.Cloudlets, cloudlet.Key)
-		}
-		s.NumCloudletUpdates++
-	}
-	s.NumUpdates++
-	return nil
-}
-
-func (s *DummyClientHandler) WaitForAppInsts(count int) {
+func (s *DummyHandler) WaitForAppInsts(count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.AppInsts) == count {
+		if len(s.AppInstCache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func (s *DummyClientHandler) WaitForCloudlets(count int) {
+func (s *DummyHandler) WaitForCloudlets(count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.Cloudlets) == count {
+		if len(s.CloudletCache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -181,11 +90,11 @@ func (s *Client) WaitForConnect(connect uint64) {
 	}
 }
 
-func WaitServerCount(count int) {
+func (mgr *ServerMgr) WaitServerCount(count int) {
 	for i := 0; i < 10; i++ {
-		serverMgr.mux.Lock()
-		cnt := len(serverMgr.table)
-		serverMgr.mux.Unlock()
+		mgr.mux.Lock()
+		cnt := len(mgr.table)
+		mgr.mux.Unlock()
 		if cnt == count {
 			break
 		}

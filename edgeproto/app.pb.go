@@ -636,6 +636,12 @@ type AppCache struct {
 	UpdatedCb func(old *App, new *App)
 }
 
+func NewAppCache() *AppCache {
+	cache := AppCache{}
+	InitAppCache(&cache)
+	return &cache
+}
+
 func InitAppCache(cache *AppCache) {
 	cache.Objs = make(map[AppKey]*App)
 }
@@ -668,26 +674,39 @@ func (c *AppCache) GetAllKeys(keys map[AppKey]struct{}) {
 func (c *AppCache) Update(in *App, rev int64) {
 	c.Mux.Lock()
 	if c.UpdatedCb != nil {
-		old := c.Objs[*in.GetKey()]
+		old := c.Objs[in.Key]
 		new := &App{}
 		*new = *in
 		defer c.UpdatedCb(old, new)
 	}
-	c.Objs[*in.GetKey()] = in
+	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
 	}
 }
 
 func (c *AppCache) Delete(in *App, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
+	}
+}
+
+func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			delete(c.Objs, key)
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+		}
 	}
 }
 
@@ -715,7 +734,6 @@ func (c *AppCache) SetNotifyCb(fn func(obj *AppKey)) {
 func (c *AppCache) SetUpdatedCb(fn func(old *App, new *App)) {
 	c.UpdatedCb = fn
 }
-
 func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := App{}
 	err := json.Unmarshal(val, &obj)
@@ -734,7 +752,7 @@ func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
 func (c *AppCache) SyncDelete(key []byte, rev int64) {
 	obj := App{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	AppKeyStringParse(keystr, obj.GetKey())
+	AppKeyStringParse(keystr, &obj.Key)
 	c.Delete(&obj, rev)
 }
 

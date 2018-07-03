@@ -31,7 +31,7 @@ func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *AppApi) GetApp(key *edgeproto.AppKey, buf *edgeproto.App) bool {
+func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
