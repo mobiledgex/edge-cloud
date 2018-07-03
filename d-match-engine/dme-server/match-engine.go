@@ -187,7 +187,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	key.appKey.Name = mreq.AppName
 	key.appKey.Version = mreq.AppVers
 
-	mreply.Status = false
+	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 	tbl.RLock()
 	app, ok := tbl.apps[key]
@@ -220,7 +220,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			"long", found.location.Long,
 			"distance", distance,
 			"uri", found.uri)
-		mreply.Status = true
+		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
 	}
 	tbl.RUnlock()
 }

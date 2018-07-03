@@ -23,7 +23,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[2].Uri,
 			CloudletLocation: &Cloudlets[2].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{
@@ -38,7 +38,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{
@@ -51,7 +51,7 @@ var FindCloudletData = []FindCloudletRR{
 			AppVers:     "1.1",
 		},
 		Reply: dme.Match_Engine_Reply{
-			Status: false,
+			Status: 2,
 		},
 	},
 	FindCloudletRR{
@@ -67,7 +67,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[2].Uri,
 			CloudletLocation: &Cloudlets[2].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{
@@ -83,7 +83,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{
@@ -99,7 +99,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{
@@ -115,7 +115,7 @@ var FindCloudletData = []FindCloudletRR{
 		Reply: dme.Match_Engine_Reply{
 			Uri:              Cloudlets[3].Uri,
 			CloudletLocation: &Cloudlets[3].Location,
-			Status:           true,
+			Status:           1,
 		},
 	},
 }
