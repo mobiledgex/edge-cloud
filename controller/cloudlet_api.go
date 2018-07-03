@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
@@ -33,6 +34,17 @@ func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) b
 	return s.cache.Get(key, buf)
 }
 
+func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, _ := range s.cache.Objs {
+		if key.OperatorKey.Matches(in) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	if !operatorApi.HasOperator(&in.Key.OperatorKey) {
 		return &edgeproto.Result{}, errors.New("Specified cloudlet operator not found")
@@ -45,7 +57,25 @@ func (s *CloudletApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 }
 
 func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.sync.syncWait)
+	dynInsts := make(map[edgeproto.AppInstKey]struct{})
+	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
+		// disallow delete if static instances are present
+		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Application Instance")
+	}
+	res, err := s.store.Delete(in, s.sync.syncWait)
+	if len(dynInsts) > 0 {
+		// delete dynamic instances
+		for key, _ := range dynInsts {
+			appInst := edgeproto.AppInst{Key: key}
+			_, derr := appInstApi.DeleteAppInst(ctx, &appInst)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic app inst",
+					"err", derr)
+			}
+		}
+	}
+	return res, err
 }
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {

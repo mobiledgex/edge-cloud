@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -34,6 +35,9 @@ func (s *DeveloperApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Develo
 }
 
 func (s *DeveloperApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	if appApi.UsesDeveloper(&in.Key) {
+		return &edgeproto.Result{}, errors.New("Developer in use by Application")
+	}
 	return s.store.Delete(in, s.sync.syncWait)
 }
 

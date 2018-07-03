@@ -35,6 +35,17 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
 }
 
+func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, _ := range s.cache.Objs {
+		if key.DeveloperKey.Matches(in) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if !developerApi.HasDeveloper(&in.Key.DeveloperKey) {
 		return &edgeproto.Result{}, errors.New("Specified developer not found")
@@ -47,7 +58,25 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 }
 
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.sync.syncWait)
+	dynInsts := make(map[edgeproto.AppInstKey]struct{})
+	if appInstApi.UsesApp(&in.Key, dynInsts) {
+		// disallow delete if static instances are present
+		return &edgeproto.Result{}, errors.New("Application in use by static Applicatin Instance")
+	}
+	res, err := s.store.Delete(in, s.sync.syncWait)
+	if len(dynInsts) > 0 {
+		// delete dynamic instances
+		for key, _ := range dynInsts {
+			appInst := edgeproto.AppInst{Key: key}
+			_, derr := appInstApi.DeleteAppInst(ctx, &appInst)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic app inst",
+					"err", derr)
+			}
+		}
+	}
+	return res, err
 }
 
 func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -34,6 +35,9 @@ func (s *OperatorApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator
 }
 
 func (s *OperatorApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	if cloudletApi.UsesOperator(&in.Key) {
+		return &edgeproto.Result{}, errors.New("Operator in use by Cloudlet")
+	}
 	return s.store.Delete(in, s.sync.syncWait)
 }
 
