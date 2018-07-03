@@ -594,6 +594,12 @@ type OperatorCache struct {
 	UpdatedCb func(old *Operator, new *Operator)
 }
 
+func NewOperatorCache() *OperatorCache {
+	cache := OperatorCache{}
+	InitOperatorCache(&cache)
+	return &cache
+}
+
 func InitOperatorCache(cache *OperatorCache) {
 	cache.Objs = make(map[OperatorKey]*Operator)
 }
@@ -626,26 +632,39 @@ func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
 func (c *OperatorCache) Update(in *Operator, rev int64) {
 	c.Mux.Lock()
 	if c.UpdatedCb != nil {
-		old := c.Objs[*in.GetKey()]
+		old := c.Objs[in.Key]
 		new := &Operator{}
 		*new = *in
 		defer c.UpdatedCb(old, new)
 	}
-	c.Objs[*in.GetKey()] = in
+	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
 	}
 }
 
 func (c *OperatorCache) Delete(in *Operator, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
+	}
+}
+
+func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			delete(c.Objs, key)
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+		}
 	}
 }
 
@@ -673,7 +692,6 @@ func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey)) {
 func (c *OperatorCache) SetUpdatedCb(fn func(old *Operator, new *Operator)) {
 	c.UpdatedCb = fn
 }
-
 func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Operator{}
 	err := json.Unmarshal(val, &obj)
@@ -692,7 +710,7 @@ func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
 func (c *OperatorCache) SyncDelete(key []byte, rev int64) {
 	obj := Operator{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	OperatorKeyStringParse(keystr, obj.GetKey())
+	OperatorKeyStringParse(keystr, &obj.Key)
 	c.Delete(&obj, rev)
 }
 

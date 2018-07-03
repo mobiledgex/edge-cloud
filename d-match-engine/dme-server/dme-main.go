@@ -80,9 +80,8 @@ func main() {
 			addApp(inst)
 		}
 	} else {
-		notifyHandler := &NotifyHandler{}
-		notifyClient := initNotifyClient(*notifyAddrs, notifyHandler)
-		go notifyClient.Run()
+		notifyClient := initNotifyClient(*notifyAddrs)
+		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
 

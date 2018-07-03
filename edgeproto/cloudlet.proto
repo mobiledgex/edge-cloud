@@ -79,7 +79,11 @@ message CloudletInfo {
   CloudletKey key = 1 [(gogoproto.nullable) = false];
   // State of cloudlet
   CloudletState state = 2;
+  // Id of client assigned by server
+  uint64 notify_id = 3;
   // TODO: Not entirely sure how resources will be specified.
   // This is a placeholder for now.
-  uint64 resources = 3;
+  uint64 resources = 4;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
 }

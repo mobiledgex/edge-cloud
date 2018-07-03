@@ -26,6 +26,7 @@ type mex struct {
 	msgs          map[string]*descriptor.DescriptorProto
 	cudTemplate   *template.Template
 	enumTemplate  *template.Template
+	cacheTemplate *template.Template
 	importUtil    bool
 	importStrings bool
 	importErrors  bool
@@ -42,6 +43,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.msgs = make(map[string]*descriptor.DescriptorProto)
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
+	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
 	m.support.Init(nil)
 }
 
@@ -444,23 +446,37 @@ func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
 	}
 	return &obj, rev, nil
 }
+`
 
-{{if (.GenCache)}}
+type cacheTemplateArgs struct {
+	Name        string
+	KeyType     string
+	CudCache    bool
+	NotifyCache bool
+}
+
+var cacheTemplateIn = `
 // {{.Name}}Cache caches {{.Name}} objects in memory in a hash table
 // and keeps them in sync with the database.
 type {{.Name}}Cache struct {
-	Objs map[{{.Name}}Key]*{{.Name}}
+	Objs map[{{.KeyType}}]*{{.Name}}
 	Mux util.Mutex
-	List map[{{.Name}}Key]struct{}
-	NotifyCb func(obj *{{.Name}}Key)
+	List map[{{.KeyType}}]struct{}
+	NotifyCb func(obj *{{.KeyType}})
 	UpdatedCb func(old *{{.Name}}, new *{{.Name}})
 }
 
-func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
-	cache.Objs = make(map[{{.Name}}Key]*{{.Name}})
+func New{{.Name}}Cache() *{{.Name}}Cache {
+	cache := {{.Name}}Cache{}
+	Init{{.Name}}Cache(&cache)
+	return &cache
 }
 
-func (c *{{.Name}}Cache) Get(key *{{.Name}}Key, valbuf *{{.Name}}) bool {
+func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
+	cache.Objs = make(map[{{.KeyType}}]*{{.Name}})
+}
+
+func (c *{{.Name}}Cache) Get(key *{{.KeyType}}, valbuf *{{.Name}}) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	inst, found := c.Objs[*key]
@@ -470,14 +486,14 @@ func (c *{{.Name}}Cache) Get(key *{{.Name}}Key, valbuf *{{.Name}}) bool {
 	return found
 }
 
-func (c *{{.Name}}Cache) HasKey(key *{{.Name}}Key) bool {
+func (c *{{.Name}}Cache) HasKey(key *{{.KeyType}}) bool {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	_, found := c.Objs[*key]
 	return found
 }
 
-func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.Name}}Key]struct{}) {
+func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.KeyType}}]struct{}) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
@@ -488,37 +504,68 @@ func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.Name}}Key]struct{}) {
 func (c *{{.Name}}Cache) Update(in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
 	if c.UpdatedCb != nil {
-		old := c.Objs[*in.GetKey()]
+		old := c.Objs[in.Key]
 		new := &{{.Name}}{}
 		*new = *in
 		defer c.UpdatedCb(old, new)
 	}
-	c.Objs[*in.GetKey()] = in
+	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
 	}
 }
 
 func (c *{{.Name}}Cache) Delete(in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
 	}
 }
+
+func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			delete(c.Objs, key)
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+		}
+	}
+}
+
+{{- if .NotifyCache}}
+func (c *{{.Name}}Cache) Flush(notifyId uint64) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, val := range c.Objs {
+		if val.NotifyId != notifyId {
+			continue
+		}
+		delete(c.Objs, key)
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key)
+		}
+	}
+}
+{{- end}}
 
 func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+{{- if .CudCache}}
 		if !obj.Matches(filter) {
 			continue
 		}
+{{- end}}
 		log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "obj", obj)
 		err := cb(obj)
 		if err != nil {
@@ -528,7 +575,7 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	return nil
 }
 
-func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.Name}}Key)) {
+func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}})) {
 	c.NotifyCb = fn
 }
 
@@ -536,6 +583,7 @@ func (c *{{.Name}}Cache) SetUpdatedCb(fn func(old *{{.Name}}, new *{{.Name}})) {
 	c.UpdatedCb = fn
 }
 
+{{- if .CudCache}}
 func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
 	obj := {{.Name}}{}
 	err := json.Unmarshal(val, &obj)
@@ -554,16 +602,16 @@ func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
 func (c *{{.Name}}Cache) SyncDelete(key []byte, rev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	{{.Name}}KeyStringParse(keystr, obj.GetKey())
+	{{.Name}}KeyStringParse(keystr, &obj.Key)
 	c.Delete(&obj, rev)
 }
 
 func (c *{{.Name}}Cache) SyncListStart() {
-	c.List = make(map[{{.Name}}Key]struct{})
+	c.List = make(map[{{.KeyType}}]struct{})
 }
 
 func (c *{{.Name}}Cache) SyncListEnd() {
-	deleted := make(map[{{.Name}}Key]struct{})
+	deleted := make(map[{{.KeyType}}]struct{})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, found := c.List[key]; !found {
@@ -625,9 +673,21 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			CudName:   *message.Name + "Cud",
 			KeyName:   *message.Name + "Key",
 			HasFields: HasGrpcFields(message),
-			GenCache:  GetGenerateCache(message),
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
+	}
+	if GetGenerateCache(message) {
+		keyField := GetMessageKey(message)
+		if keyField == nil {
+			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
+		}
+		args := cacheTemplateArgs{
+			Name:        *message.Name,
+			KeyType:     m.support.GoType(m.gen, keyField),
+			CudCache:    GetGenerateCud(message),
+			NotifyCache: GetNotifyCache(message),
+		}
+		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
 	}
 	if GetObjKey(message) {
@@ -699,6 +759,10 @@ func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 
 func GetGenerateCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
+}
+
+func GetNotifyCache(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_NotifyCache, false)
 }
 
 func GetObjKey(message *descriptor.DescriptorProto) bool {
