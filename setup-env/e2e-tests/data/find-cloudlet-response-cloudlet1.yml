@@ -11,5 +11,5 @@ cloudletlocation:
   course: 0
   speed: 0
   timestamp: null
-status: true
+status: FIND_FOUND
 token: ""
