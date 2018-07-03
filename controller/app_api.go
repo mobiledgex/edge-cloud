@@ -61,7 +61,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesApp(&in.Key, dynInsts) {
 		// disallow delete if static instances are present
-		return &edgeproto.Result{}, errors.New("Application in use by static Applicatin Instance")
+		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}
 	res, err := s.store.Delete(in, s.sync.syncWait)
 	if len(dynInsts) > 0 {
