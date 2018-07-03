@@ -84,6 +84,45 @@ func TestController(t *testing.T) {
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
 
+	// test that delete checks disallow deletes of dependent objects
+	ctx := context.TODO()
+	_, err = devApi.DeleteDeveloper(ctx, &testutil.DevData[0])
+	assert.NotNil(t, err)
+	_, err = operApi.DeleteOperator(ctx, &testutil.OperatorData[0])
+	assert.NotNil(t, err)
+	_, err = cloudletApi.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	assert.NotNil(t, err)
+	_, err = appApi.DeleteApp(ctx, &testutil.AppData[0])
+	assert.NotNil(t, err)
+	// test that delete works after removing dependencies
+	for _, inst := range testutil.AppInstData {
+		if inst.Liveness == edgeproto.AppInst_DYNAMIC {
+			// skip dynamic, they are not counted as dependencies
+			continue
+		}
+		_, err = appInstApi.DeleteAppInst(ctx, &inst)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.AppData {
+		_, err = appApi.DeleteApp(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.CloudletData {
+		_, err = cloudletApi.DeleteCloudlet(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.DevData {
+		_, err = devApi.DeleteDeveloper(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.OperatorData {
+		_, err = operApi.DeleteOperator(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	// make sure dynamic app insts were deleted along with Apps
+	dmeNotify.WaitForAppInsts(0)
+	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+
 	// closing the signal channel triggers main to exit
 	close(sigChan)
 	// wait until main is done so it can clean up properly
