@@ -86,17 +86,21 @@ service AppInstApi {
 message AppInstInfo {
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
+  // Id of client assigned by server
+  uint64 notify_id = 3;
   // TODO: When max load is reached on k8s cluster, tell controller.
   // At this point k8s cluster has already scaled AppInst to max instances.
   // The only recourse is to instantiate another k8s cluster on another
   // cloudlet, or perhaps expand the k8s cluster on this cloudlet.
   // This is a placeholder, not sure how this will work.
-  uint64 load = 3;
+  uint64 load = 4;
   // TODO: Used resources (for billing)
   // These are also placeholders. What is supplied here
   // depends on what Openstack/Kubernetes/Agents can measure.
-  uint64 cpu = 4;
-  uint64 max_disk = 5;
-  uint64 network_in = 6;
-  uint64 network_out = 7;
+  uint64 cpu = 5;
+  uint64 max_disk = 6;
+  uint64 network_in = 7;
+  uint64 network_out = 8;
+  option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
 }

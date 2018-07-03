@@ -20,7 +20,7 @@ func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
-	cloudletApi.cache.SetNotifyCb(notify.UpdateCloudlet)
+	cloudletApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateCloudlet)
 	cloudletApi.cache.SetUpdatedCb(cloudletApi.UpdatedCb)
 	sync.RegisterCache(edgeproto.CloudletKeyTypeString(), &cloudletApi.cache)
 }
@@ -29,7 +29,7 @@ func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]struct{}) {
 	s.cache.GetAllKeys(keys)
 }
 
-func (s *CloudletApi) GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
+func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
 	return s.cache.Get(key, buf)
 }
 

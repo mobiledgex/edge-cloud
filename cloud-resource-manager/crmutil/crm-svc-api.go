@@ -90,7 +90,7 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 
 	server.CloudResourceData.CloudResources = append(server.CloudResourceData.CloudResources, cr)
 	cloudlet := edgeproto.Cloudlet{}
-	found := server.ControllerData.GetCloudlet(cr.CloudletKey, &cloudlet)
+	found := server.ControllerData.CloudletCache.Get(cr.CloudletKey, &cloudlet)
 	if !found {
 		// controller has no such cloudlet, should fail
 	}
@@ -126,7 +126,7 @@ func (server *CloudResourceManagerServer) DeployApplication(ctx context.Context,
 	}
 
 	appInst := edgeproto.AppInst{}
-	found := server.ControllerData.GetAppInst(app.Apps[0].AppInstKey, &appInst)
+	found := server.ControllerData.AppInstCache.Get(app.Apps[0].AppInstKey, &appInst)
 	if !found {
 		// controller has no such app inst, should fail
 	}
