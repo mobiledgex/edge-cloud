@@ -38,10 +38,8 @@ func TestAddRemove(t *testing.T) {
 	for ii, rr := range dmetest.FindCloudletData {
 		reply := dme.Match_Engine_Reply{}
 		findCloudlet(&rr.Req, &reply)
-		if !rr.Reply.Status {
-			assert.False(t, reply.Status, "findCloudletData[%d]", ii)
-		} else {
-			assert.True(t, reply.Status, "findCloudletData[%d]", ii)
+		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
+		if reply.Status == dme.Match_Engine_Reply_FIND_FOUND {
 			assert.Equal(t, rr.Reply.Uri, reply.Uri,
 				"findCloudletData[%d]", ii)
 		}
