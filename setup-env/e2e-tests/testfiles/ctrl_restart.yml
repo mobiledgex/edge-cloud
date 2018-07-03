@@ -1,18 +1,8 @@
 ##
-## To replace the variable {{datadir}}, execute the script
-## with -vars datadir=/some/directory
 ##
-description: Deploys and starts a system, adds provisioning and compares to expected value
+description: adds provisioning, stops and starts ctrl and compares to expected value
 
 tests:
-- name: stop and cleanup system
-  actions: [stop,cleanup]
-
-- name: deploy and start services 
-  actions: [deploy,start]
-
-- name: verify services are running
-  actions: [status]
 
 - name: Add and show provisioning
   appfile: "{{datadir}}/appdata.yml"
@@ -41,7 +31,6 @@ tests:
   actions: [start=ctrl1]
 
 - name: show provisioning from ctrl1
-  appfile: "{{datadir}}/appdata.yml"
   actions: [show=ctrl1]
 
 - name: compare results of ctrl1 show provisioning
@@ -49,7 +38,11 @@ tests:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
-
-- name: stop and cleanup system
-  actions: [stop,cleanup]
-
+  
+- name: delete and show provisioning, verify it is empty
+  actions: [delete,show]
+  appfile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

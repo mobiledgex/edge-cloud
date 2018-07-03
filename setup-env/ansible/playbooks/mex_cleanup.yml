@@ -75,6 +75,26 @@
        name: "{{ crm_remote_bin }}"
        state: absent
 
+- name: cleanup locsims
+  gather_facts: no
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove locsim binary
+    file:
+       name: "{{ locsim_remote_bin }}"
+       state: absent
+
+  - name: remove locsim data file
+    file:
+       name: "{{ locsim_remote_data_file }}"
+       state: absent
+
 - name: cleanup logs
   gather_facts: no
   user: root

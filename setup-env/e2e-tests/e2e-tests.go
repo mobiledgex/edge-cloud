@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -79,7 +80,7 @@ func runTests() {
 
 	for _, t := range testsToRun.Tests {
 		util.PrintStartBanner("Starting test: " + t.Name)
-		cmdstr := fmt.Sprintf("setup-mex -outputdir %s -setupfile %s ", *outputDir, *setupFile)
+		cmdstr := fmt.Sprintf("setup-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
 		if len(t.Actions) > 0 {
 			cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
 		}
@@ -112,6 +113,7 @@ func runTests() {
 	}
 	log.Printf("\n\n*** Summary of testfile %s Tests Run: %d Passed: %d Failed: %d -- Logs in %s\n", *testFile, numTestsRun, numPassed, numFailed, *outputDir)
 
+	os.Exit(numFailed)
 }
 
 func main() {

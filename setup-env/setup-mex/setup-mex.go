@@ -31,6 +31,7 @@ var (
 	outputDir   = flag.String("outputdir", "", "option directory to store output and logs")
 	compareYaml = flag.String("compareyaml", "", "comma separated list of yamls to compare")
 	merFile     = flag.String("merfile", "", "match engine request input file")
+	dataDir     = flag.String("datadir", "", "optional path of data files")
 	procs       processData
 )
 
@@ -59,8 +60,13 @@ type crmProcess struct {
 	process.CrmLocal
 	Hostname string
 }
+type locSimProcess struct {
+	process.LocApiSimLocal
+	Hostname string
+}
 
 type processData struct {
+	Locsims     []locSimProcess     `yaml:"locsims"`
 	Etcds       []etcdProcess       `yaml:"etcds"`
 	Controllers []controllerProcess `yaml:"controllers"`
 	Dmes        []dmeProcess        `yaml:"dmes"`
@@ -69,17 +75,18 @@ type processData struct {
 
 //this is possible actions and optional parameters
 var actionChoices = map[string]string{
-	"start":        "procname",
-	"stop":         "procname",
-	"status":       "procname",
-	"show":         "procname",
-	"update":       "procname",
-	"delete":       "procname",
-	"create":       "procname",
-	"deploy":       "",
-	"cleanup":      "",
-	"fetchlogs":    "",
-	"findcloudlet": "procname",
+	"start":          "procname",
+	"stop":           "procname",
+	"status":         "procname",
+	"show":           "procname",
+	"update":         "procname",
+	"delete":         "procname",
+	"create":         "procname",
+	"deploy":         "",
+	"cleanup":        "",
+	"fetchlogs":      "",
+	"findcloudlet":   "procname",
+	"verifylocation": "procname",
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -235,7 +242,7 @@ func waitForProcesses(processName string) bool {
 func findProcess(processName string) (string, string, string) {
 	for _, etcd := range procs.Etcds {
 		if etcd.Name == processName {
-			return etcd.Hostname, "etcd", "etcd .*-name " + etcd.Name
+			return etcd.Hostname, "etcd", "-name " + etcd.Name
 		}
 	}
 	for _, ctrl := range procs.Controllers {
@@ -252,6 +259,11 @@ func findProcess(processName string) (string, string, string) {
 	for _, dme := range procs.Dmes {
 		if dme.Name == processName {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
+		}
+	}
+	for _, loc := range procs.Locsims {
+		if loc.Name == processName {
+			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
 		}
 	}
 
@@ -409,7 +421,7 @@ func runApis(mode string, ctrlname string) bool {
 	return true
 }
 
-func findCloudlet(procname string) bool {
+func runDmeApi(api string, procname string) bool {
 	dme := getDme(procname)
 	conn, err := grpc.Dial(dme.ApiAddr, grpc.WithInsecure())
 
@@ -424,17 +436,30 @@ func findCloudlet(procname string) bool {
 
 	defer cancel()
 
-	mreply, err := client.FindCloudlet(ctx, &matchEngineRequest)
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+	//generic struct so we can do the marshal in one place even though return types are different
+	var dmereply interface{}
+	var dmeerror error
+
+	switch api {
+	case "findcloudlet":
+		dmereply, dmeerror = client.FindCloudlet(ctx, &matchEngineRequest)
+	case "verifylocation":
+		dmereply, dmeerror = client.VerifyLocation(ctx, &matchEngineRequest)
+	default:
+		log.Printf("Unsupported dme api %s\n", api)
+		return false
 	}
-	out, err := yaml.Marshal(mreply)
-	if err != nil {
-		fmt.Printf("Error: Unable to marshal findCloudlet reply: %v\n", err)
+	if dmeerror != nil {
+		log.Printf("Error in find api %s -- %v\n", api, dmeerror)
+		return false
+	}
+	out, ymlerror := yaml.Marshal(dmereply)
+	if ymlerror != nil {
+		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)
 		return false
 	}
 
-	printToFile("find-cloudlet.yml", string(out), true)
+	printToFile(api+".yml", string(out), true)
 	return true
 }
 
@@ -452,6 +477,10 @@ func readSetupFile(setupfile string) {
 	var replacementVars yamlReplacementVariables
 	var varlist []string
 	varstring := ""
+
+	if *dataDir != "" {
+		varlist = append(varlist, "datadir="+*dataDir)
+	}
 	util.ReadYamlFile(setupfile, &replacementVars, "", false)
 	for _, repl := range replacementVars.Vars {
 		for varname, value := range repl {
@@ -510,7 +539,7 @@ func stopProcesses(processName string) bool {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	processExeNames := [4]string{"etcd", "controller", "dme-server", "crmserver"}
+	processExeNames := [5]string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim"}
 	//anything not gracefully exited in maxwait seconds is forcefully killed
 
 	for _, p := range processExeNames {
@@ -525,7 +554,9 @@ func stopProcesses(processName string) bool {
 
 func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
 	invFile, found := createAnsibleInventoryFile(procNamefilter)
-	if !copySetupFileToAnsible() {
+	ansHome := os.Getenv("ANSIBLE_DIR")
+
+	if !stageYamlFile("setup.yml", ansHome+"/playbooks", procs) {
 		return false
 	}
 
@@ -552,15 +583,12 @@ func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
 	return true
 }
 
-func copySetupFileToAnsible() bool {
-	ansHome := os.Getenv("ANSIBLE_DIR")
-	if ansHome == "" {
-		log.Fatal("Need to set ANSIBLE_DIR environment variable for deployment")
-	}
-	dstFile := ansHome + "/playbooks/setup.yml"
+func stageYamlFile(filename string, directory string, contents interface{}) bool {
+
+	dstFile := directory + "/" + filename
 
 	//rather than just copy the file, we unmarshal it because we have done variable replace
-	data, err := yaml.Marshal(procs)
+	data, err := yaml.Marshal(contents)
 	if err != nil {
 		log.Printf("Error in marshal of setupfile for ansible %v\n", err)
 		return false
@@ -571,10 +599,21 @@ func copySetupFileToAnsible() bool {
 	// Write data to dst
 	err = ioutil.WriteFile(dstFile, data, 0644)
 	if err != nil {
-		log.Println("Error writing setup file")
+		log.Printf("Error writing file: %v\n", err)
 		return false
 	}
 	return true
+}
+
+func stageLocDbFile(srcFile string, destDir string) {
+	var locdb interface{}
+	yerr := util.ReadYamlFile(srcFile, &locdb, "", false)
+	if yerr != nil {
+		log.Fatalf("Error reading location file %s -- %v\n", srcFile, yerr)
+	}
+	if !stageYamlFile("locsim.yml", destDir, locdb) {
+		log.Fatalf("Error staging location db file %s to %s\n", srcFile, destDir)
+	}
 }
 
 func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
@@ -598,6 +637,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ctrlRemoteServers := make(map[string]string)
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
+	locApiSimulators := make(map[string]string)
 
 	for _, p := range procs.Etcds {
 		if procNameFilter != "" && procNameFilter != p.Name {
@@ -639,6 +679,20 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
+	for _, p := range procs.Locsims {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+			allRemoteServers[p.Hostname] = p.Name
+			locApiSimulators[p.Hostname] = p.Name
+			foundServer = true
+
+			if p.Locfile != "" {
+				stageLocDbFile(p.Locfile, ansHome+"/playbooks")
+			}
+		}
+	}
 
 	//create ansible inventory
 	fmt.Fprintln(invfile, "[mexservers]")
@@ -670,6 +724,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[dmes]")
 		for s := range dmeRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(locApiSimulators) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[locsims]")
+		for s := range locApiSimulators {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -745,7 +806,7 @@ func startProcesses(processName string) bool {
 		if ctrl.Hostname == "localhost" || ctrl.Hostname == "127.0.0.1" {
 			log.Printf("Starting Controller %+v\n", ctrl)
 			logfile := getLogFile(ctrl.Name)
-			err := ctrl.Start(logfile)
+			err := ctrl.Start(logfile, process.WithDebug("etcd,api,notify"))
 			if err != nil {
 				log.Printf("Error on controller startup: %v", err)
 				return false
@@ -773,11 +834,29 @@ func startProcesses(processName string) bool {
 		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name)
-			err := dme.Start(logfile)
+			err := dme.Start(logfile, process.WithDebug("dmelocapi,dmedb,dmereq"))
 			if err != nil {
 				log.Printf("Error on DME startup: %v", err)
 				return false
 			}
+		}
+	}
+	for _, loc := range procs.Locsims {
+		if processName != "" && processName != loc.Name {
+			continue
+		}
+		if loc.Hostname == "localhost" || loc.Hostname == "127.0.0.1" {
+			log.Printf("Starting LocSim %+v\n", loc)
+			if loc.Locfile != "" {
+				stageLocDbFile(loc.Locfile, "/var/tmp")
+			}
+			logfile := getLogFile(loc.Name)
+			err := loc.Start(logfile)
+			if err != nil {
+				log.Printf("Error on LocSim startup: %v", err)
+				return false
+			}
+
 		}
 	}
 	return true
@@ -809,14 +888,14 @@ func validateArgs() {
 		if !validAction {
 			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
 			errFound = true
-		} else if (action == "update" || action == "create") && *appFile == "" {
-			fmt.Printf("ERROR: if action=update or create, -appfile must be specified\n")
+		} else if (action == "update" || action == "create" || action == "delete") && *appFile == "" {
+			fmt.Printf("ERROR: if action=update, create or delete -appfile must be specified\n")
 			errFound = true
 		} else if action == "fetchlogs" && *outputDir == "" {
 			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
 			errFound = true
-		} else if action == "findcloudlet" && *merFile == "" {
-			fmt.Printf("ERROR: cannot use action=findcloudlet option without -mer\n")
+		} else if (action == "findcloudlet" || action == "verifylocation") && *merFile == "" {
+			fmt.Printf("ERROR: cannot use action=findcloudlet or action=verifylocation option without -mer\n")
 			errFound = true
 		}
 		if optionalParam == "" && actionParam != "" {
@@ -946,7 +1025,10 @@ func main() {
 				errorsFound += 1
 			}
 		case "findcloudlet":
-			if !findCloudlet(actionParam) {
+			fallthrough
+		case "verifylocation":
+			updateApiAddrs()
+			if !runDmeApi(action, actionParam) {
 				errorsFound += 1
 			}
 		default:

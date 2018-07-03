@@ -1,26 +1,17 @@
 ##
 ##
-description: Deploys and starts a system, adds provisioning and compares to expected value.  Then restarts everything and compares again
+description: Adds provisioning and compares to expected value.  Then restarts everything and compares again
 
 tests:
-- name: stop and cleanup system
-  actions: [stop,cleanup]
 
-- name: deploy and start services 
-  actions: [deploy,start]
-
-- name: verify services are running
-  actions: [status]
-
-- name: Add and show provisioning
+- name: Add and show provisioning and verify it is there
   appfile: "{{datadir}}/appdata.yml"
   actions: [create,show]
-
-- name: compare results of show provisioning
-  compareyaml: 
+  compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
+
 
 - name: stop ctrl1
   actions: [stop=ctrl1]
@@ -33,10 +24,17 @@ tests:
 
 - name: show provisioning again and compare results 
   actions: [show]
+  appfile: "{{datadir}}/appdata.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
 
-- name: stop services and cleanup
-  actions: [stop,cleanup]
+  
+- name: delete provisioning, verify it is empty
+  actions: [delete,show]
+  appfile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
