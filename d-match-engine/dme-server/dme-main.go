@@ -4,13 +4,13 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"net"
 	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
@@ -21,8 +21,11 @@ import (
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
+
+var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
+var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -51,7 +54,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 		return nil, errors.New("unable to parse peer address " + p.Addr.String())
 	}
 	peerIp := ss[0]
-	VerifyClientLoc(req, mreq, peerIp, *locVerUrl)
+	VerifyClientLoc(req, mreq, *carrier, peerIp, *locVerUrl)
 	return mreq, nil
 }
 
@@ -84,6 +87,7 @@ func (s *server) RegisterClient(ctx context.Context,
 
 func main() {
 	flag.Parse()
+	log.SetDebugLevelStrs(*debugLevels)
 
 	setupMatchEngine()
 
@@ -101,7 +105,7 @@ func main() {
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 	s := grpc.NewServer()
 	dme.RegisterMatch_Engine_ApiServer(s, &server{})
@@ -114,6 +118,6 @@ func main() {
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		log.FatalLog("Failed to server", "err", err)
 	}
 }

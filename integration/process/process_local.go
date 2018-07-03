@@ -118,10 +118,11 @@ type DmeLocal struct {
 	ApiAddr     string
 	NotifyAddrs string
 	LocVerUrl   string
+	Carrier     string
 	cmd         *exec.Cmd
 }
 
-func (p *DmeLocal) Start(logfile string) error {
+func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -130,6 +131,16 @@ func (p *DmeLocal) Start(logfile string) error {
 	if p.LocVerUrl != "" {
 		args = append(args, "--locverurl")
 		args = append(args, p.LocVerUrl)
+	}
+	if p.Carrier != "" {
+		args = append(args, "--carrier")
+		args = append(args, p.Carrier)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
 	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)

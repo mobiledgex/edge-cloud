@@ -77,13 +77,13 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 	ymlout, err := yaml.Marshal(locations)
 	if err != nil {
 		log.Printf("Error in yaml marshal of location db: %v\n", err)
+		http.Error(w, err.Error(), 500)
 	} else {
 		ofile, err := os.OpenFile(*locdbfile, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
 		defer ofile.Close()
 		if err != nil {
 			log.Fatalf("unable to write to file: %s, err: %v\n", *locdbfile, err)
 		}
-		defer ofile.Close()
 		fmt.Fprintf(ofile, string(ymlout))
 	}
 
@@ -117,7 +117,7 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	} else {
 		reqLoc := dme.Loc{Altitude: req.Altitude, Lat: req.Lat, Long: req.Long}
 		log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
-		d := dmecommon.Distance_between(reqLoc, foundLoc)
+		d := dmecommon.DistanceBetween(reqLoc, foundLoc)
 		log.Printf("calculated distance: %v km\n", int(d))
 		if d <= 2 {
 			resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_WITHIN_2KM)

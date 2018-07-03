@@ -11,7 +11,7 @@ func torads(deg float64) float64 {
 }
 
 // Use the ‘haversine’ formula to calculate the great-circle distance between two points
-func Distance_between(loc1, loc2 dme.Loc) float64 {
+func DistanceBetween(loc1, loc2 dme.Loc) float64 {
 	radiusofearth := 6371
 	var diff_lat, diff_long float64
 	var a, c, dist float64

@@ -9,7 +9,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify, peerIp string, locVerUrl string) {
+func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify, carrier string, peerIp string, locVerUrl string) {
 	var key carrierAppKey
 	var found *carrierAppInst
 	var app *carrierApp
@@ -32,11 +32,11 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 		return
 	}
 
-	// if the dme was started with a location verify API URL, use that.  At some point in future,
-	// this will be the only supported way to verify the location
-	if locVerUrl != "" {
-		mreply.GpsLocationStatus = locapi.CallLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, peerIp)
-	} else {
+	//handling for each carrier may be different.  As of now there is only standalone and TDG
+	switch carrier {
+	case "TDG":
+		mreply.GpsLocationStatus = locapi.CallTDGLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, peerIp)
+	default:
 		distance = 10000
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
 			"appName", key.appKey.Name,
@@ -44,7 +44,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 			"lat", mreq.GpsLocation.Lat,
 			"long", mreq.GpsLocation.Long)
 		for _, c := range app.insts {
-			d = dmecommon.Distance_between(*mreq.GpsLocation, c.location)
+			d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
 			log.DebugLog(log.DebugLevelDmereq, "verify location at",
 				"lat", c.location.Lat,
 				"long", c.location.Long,

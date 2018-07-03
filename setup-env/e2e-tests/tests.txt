@@ -3,6 +3,6 @@ deploy_start.yml
 ctrl_restart.yml
 add_show.yml
 find_cloudlet.yml
-restarts_2ctrls.yml
 verify_loc.yml
+fetchlogs.yml
 stop_cleanup.yml

@@ -21,7 +21,7 @@ func TestVerifyLoc(t *testing.T) {
 	// test verify location
 	for ii, rr := range dmetest.VerifyLocData {
 		reply := dme.Match_Engine_Loc_Verify{}
-		VerifyClientLoc(&rr.Req, &reply, "", "")
+		VerifyClientLoc(&rr.Req, &reply, "standalone", "", "")
 		assert.Equal(t, rr.Reply.GpsLocationStatus, reply.GpsLocationStatus,
 			"VerifyLocData[%d]", ii)
 	}

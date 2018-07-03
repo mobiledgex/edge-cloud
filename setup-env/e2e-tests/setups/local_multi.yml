@@ -54,6 +54,7 @@ dmes:
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     locverurl: "http://127.0.0.1:8888"
+    carrier: TDG
   hostname: "127.0.0.1"
 
 - dmelocal:
@@ -61,6 +62,7 @@ dmes:
     apiaddr: "0.0.0.0:50052"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     locverurl: "http://127.0.0.1:8888"
+    carrier: TDG
   hostname: "127.0.0.1"
 
   

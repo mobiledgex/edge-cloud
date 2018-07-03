@@ -242,7 +242,7 @@ func waitForProcesses(processName string) bool {
 func findProcess(processName string) (string, string, string) {
 	for _, etcd := range procs.Etcds {
 		if etcd.Name == processName {
-			return etcd.Hostname, "etcd", "etcd .*-name " + etcd.Name
+			return etcd.Hostname, "etcd", "-name " + etcd.Name
 		}
 	}
 	for _, ctrl := range procs.Controllers {
@@ -806,7 +806,7 @@ func startProcesses(processName string) bool {
 		if ctrl.Hostname == "localhost" || ctrl.Hostname == "127.0.0.1" {
 			log.Printf("Starting Controller %+v\n", ctrl)
 			logfile := getLogFile(ctrl.Name)
-			err := ctrl.Start(logfile)
+			err := ctrl.Start(logfile, process.WithDebug("etcd,api,notify"))
 			if err != nil {
 				log.Printf("Error on controller startup: %v", err)
 				return false
@@ -834,7 +834,7 @@ func startProcesses(processName string) bool {
 		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name)
-			err := dme.Start(logfile)
+			err := dme.Start(logfile, process.WithDebug("dmelocapi,dmedb,dmereq"))
 			if err != nil {
 				log.Printf("Error on DME startup: %v", err)
 				return false

@@ -202,7 +202,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		"appName", key.appKey.Name,
 		"carrier", key.carrierName)
 	for _, c = range app.insts {
-		d = dmecommon.Distance_between(*mreq.GpsLocation, c.location)
+		d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
 		log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
 			"lat", c.location.Lat,
 			"long", c.location.Long,

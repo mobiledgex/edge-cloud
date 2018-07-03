@@ -61,12 +61,15 @@ dmes:
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
     locverurl: "http://{{vm1_internal_ip}}:8888"
+    carrier: TDG
   hostname: "{{vm1_external_ip}}"
 
 - dmelocal:
     name: dme2
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    locverurl: "http://{{vm1_internal_ip}}:8888"
+    carrier: TDG
   hostname: "{{vm2_external_ip}}"
 
   

@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/mobiledgex/edge-cloud/log"
+
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
@@ -22,7 +24,8 @@ type LocationRequestMessage struct {
 	Ipaddress string  `json:"ipaddr" yaml:"ipaddr"`
 }
 
-func CallLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr string) dme.Match_Engine_Loc_Verify_GPS_Location_Status {
+//REST API client for the TDG implementation of Location verification API
+func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr string) dme.Match_Engine_Loc_Verify_GPS_Location_Status {
 
 	var lrm LocationRequestMessage
 	lrm.Lat = lat
@@ -33,17 +36,16 @@ func CallLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr string) d
 	resp, err := http.Post(locVerUrl+"/verifyLocation", "application/json", body)
 
 	if err != nil {
-		fmt.Printf("Error in POST to loc service%v\n", err)
+		log.WarnLog("Error in POST to loc service error: %v\n", err)
 		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 	}
 	defer resp.Body.Close()
-	fmt.Printf("response Status: %v\n", resp.StatusCode)
 	respBytes, err1 := ioutil.ReadAll(resp.Body)
 
-	fmt.Printf("response Status: %v Body: %v\n", resp.StatusCode, string(respBytes))
+	log.DebugLog(log.DebugLevelDmelocapi, "Received response", "statusCode:", resp.StatusCode)
 
 	if err1 != nil {
-		fmt.Printf("Error read response body%v\n", err1)
+		log.WarnLog("Error read response body:", err1)
 		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 	}
 	var lrmResp LocationResponseMessage
@@ -53,7 +55,7 @@ func CallLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr string) d
 		fmt.Printf("Error unmarshall response%v\n", err)
 		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 	}
-	fmt.Printf("returning %v lrmresp: %v\n", dme.Match_Engine_Loc_Verify_GPS_Location_Status(lrmResp.LocationResult), lrmResp)
 
+	log.DebugLog(log.DebugLevelDmelocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
 	return dme.Match_Engine_Loc_Verify_GPS_Location_Status(lrmResp.LocationResult)
 }
