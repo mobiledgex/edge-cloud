@@ -9,6 +9,7 @@ enum DebugLevel {
   notify = 2;
   dmedb = 3;
   dmereq = 4;
+  locapi = 5;
 }
 
 message DebugLevels {

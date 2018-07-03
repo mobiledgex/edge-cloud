@@ -42,7 +42,7 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr strin
 	defer resp.Body.Close()
 	respBytes, err1 := ioutil.ReadAll(resp.Body)
 
-	log.DebugLog(log.DebugLevelDmelocapi, "Received response", "statusCode:", resp.StatusCode)
+	log.DebugLog(log.DebugLevelLocapi, "Received response", "statusCode:", resp.StatusCode)
 
 	if err1 != nil {
 		log.WarnLog("Error read response body:", err1)
@@ -56,6 +56,6 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr strin
 		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 	}
 
-	log.DebugLog(log.DebugLevelDmelocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
+	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
 	return dme.Match_Engine_Loc_Verify_GPS_Location_Status(lrmResp.LocationResult)
 }
