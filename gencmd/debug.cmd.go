@@ -46,6 +46,7 @@ var DebugLevelStrings = []string{
 	"notify",
 	"dmedb",
 	"dmereq",
+	"locapi",
 }
 
 func DebugLevelsSlicer(in *log.DebugLevels) []string {
@@ -237,7 +238,7 @@ var DebugApiCmds = []*cobra.Command{
 }
 
 func init() {
-	DebugLevelsFlagSet.StringVar(&DebugLevelsInLevels, "levels", "", "comma-separated list of [etcd api notify dmedb dmereq]")
+	DebugLevelsFlagSet.StringVar(&DebugLevelsInLevels, "levels", "", "comma-separated list of [etcd api notify dmedb dmereq locapi]")
 	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
 	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
 	ShowDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
@@ -257,6 +258,8 @@ func parseDebugLevelsEnums() error {
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(3))
 			case "dmereq":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(4))
+			case "locapi":
+				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(5))
 			default:
 				return errors.New("Invalid value for DebugLevelsInLevels")
 			}
