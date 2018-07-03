@@ -26,6 +26,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
+
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
