@@ -72,3 +72,20 @@
     when: item.hostname == inventory_hostname 
     with_items:
        -  "{{ crms }}"
+
+
+- name: stop locsims
+  gather_facts: no
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: stop locsim process
+    shell: "pkill -9 loc-api-sim||true"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ locsims }}"

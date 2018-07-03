@@ -41,7 +41,7 @@ type ControllerProcess interface {
 }
 
 type DmeProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }

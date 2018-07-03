@@ -1,0 +1,7 @@
+##
+##
+description: stops everything and cleans up 
+
+tests:
+- name: stop services and cleanup
+  actions: [stop,cleanup]

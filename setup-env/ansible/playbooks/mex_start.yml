@@ -32,7 +32,7 @@
     failed_when: ctrl_stat.stat.exists == False
        
   - name: start up controller process
-    shell: "nohup {{ controller_remote_bin }} --etcdUrls {{ item.controllerlocal.etcdaddrs }} --apiAddr {{ item.controllerlocal.apiaddr }} --notifyAddr {{ item.controllerlocal.notifyaddr }} --httpAddr {{ item.controllerlocal.httpaddr }} > {{ remote_log_path }}/{{ item.controllerlocal.name }}.log 2>&1 &"
+    shell: "nohup {{ controller_remote_bin }} --etcdUrls {{ item.controllerlocal.etcdaddrs }} --apiAddr {{ item.controllerlocal.apiaddr }} --notifyAddr {{ item.controllerlocal.notifyaddr }} --httpAddr {{ item.controllerlocal.httpaddr }} -d etcd,api,notify > {{ remote_log_path }}/{{ item.controllerlocal.name }}.log 2>&1 &"
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ controllers }}"
@@ -54,11 +54,13 @@
     register: dme_stat
     failed_when: dme_stat.stat.exists == False
 
+
   - name: start up dme-server process
-    shell: "nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
+    shell: "nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" -carrier {{ item.dmelocal.carrier }} -d dmelocapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
     when: item.hostname == inventory_hostname 
     with_items:
        -  "{{ dmes }}"
+   
 
 
 - name: startup crms
@@ -84,3 +86,25 @@
     with_items:
        -  "{{ crms }}"
 
+- name: startup location api simulators
+  gather_facts: no
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: check locsim binary exists
+    stat:
+      path: "{{ locsim_remote_bin }}"
+    register: loc_stat
+    failed_when: loc_stat.stat.exists == False
+
+  - name: start up locsim process
+    shell: "nohup {{ locsim_remote_bin }} --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }} > {{ remote_log_path }}/{{ item.locapisimlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ locsims }}"
