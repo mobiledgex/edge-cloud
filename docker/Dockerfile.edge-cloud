@@ -1,0 +1,37 @@
+#
+# docker build -t mobiledgex/edge-cloud -f Dockerfile.edge-cloud .
+# docker run -it --rm mobiledgex/edge-cloud 
+#   entry point here is bash. Inside docker ls /go/bin, you will
+#   see protoc-gen-gomex
+# This is just a starting point. It let's you compile Go code here.
+# Once service is coded, entry point will point to service.
+# Also, please see Dockderfile.protoc. That one will let you 
+# create the protocol buffer stubs from proto files.
+# All the tools will be inside the docker.
+#
+
+FROM mobiledgex/build AS build
+
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
+ENV GOPATH=/go
+ENV PATH="/go/bin:${PATH}"
+COPY . .
+RUN go get github.com/grpc-ecosystem/grpc-gateway; exit 0
+RUN make tools
+RUN make clean
+ENV CGO_ENABLED=0
+RUN make
+
+FROM alpine:latest
+
+COPY --from=build /go/bin/controller /usr/local/bin
+COPY --from=build /go/bin/crmctl /usr/local/bin
+COPY --from=build /go/bin/crmserver /usr/local/bin
+COPY --from=build /go/bin/dme-server /usr/local/bin
+COPY --from=build /go/bin/edgectl /usr/local/bin
+
+ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh
+
+ENTRYPOINT [ "edge-cloud-entrypoint.sh" ]
+CMD []
