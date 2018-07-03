@@ -28,11 +28,11 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudResourceManagerCmd edgeproto.CloudResourceManagerClient
-var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
-var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
 var CloudResourceIn edgeproto.CloudResource
 var CloudResourceFlagSet = pflag.NewFlagSet("CloudResource", pflag.ExitOnError)
 var CloudResourceInCategory string
+var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
+var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
 var CloudResourceCategoryStrings = []string{
 	"AllCloudResources",
 	"Kubernetes",
