@@ -41,8 +41,8 @@ gcp_2vm -- 2 VM deployment in google cloud
 Logs for each process are created in the current directory.
 
 Examples:
-setup-mex -setupfile three_vm/setup.yml -action deploy
-setup-mex -setupfile three_vm/setup.yml -action start -datafile three_vm/data.yml
-setup-mex -setupfile three_vm/setup.yml -action create -datafile three_vm/data.yml
-setup-mex -setupfile three_vm/setup.yml -action update -datafile three_vm/data.yml
-setup-mex -setupfile three_vm/setup.yml -action stop,fetchlogs,cleanup -outputdir /tmp/setupmex
+setup-mex -setupfile three_vm/setup.yml -actions deploy
+setup-mex -setupfile three_vm/setup.yml -actions start -datafile three_vm/data.yml
+setup-mex -setupfile three_vm/setup.yml -actions create -datafile three_vm/data.yml
+setup-mex -setupfile three_vm/setup.yml -actions update -datafile three_vm/data.yml
+setup-mex -setupfile three_vm/setup.yml -actions stop,fetchlogs,cleanup -outputdir /tmp/setupmex

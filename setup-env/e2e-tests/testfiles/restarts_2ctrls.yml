@@ -1,16 +1,6 @@
-##
-##
 description: Deploys and starts a system, adds provisioning and compares to expected value.  Then restarts everything and compares again
 
 tests:
-- name: stop and cleanup system
-  actions: [stop,cleanup]
-
-- name: deploy and start services 
-  actions: [deploy,start]
-
-- name: verify services are running
-  actions: [status]
 
 - name: Add and show provisioning
   appfile: "{{datadir}}/appdata.yml"
@@ -64,12 +54,9 @@ tests:
 - name: start ctrl2
   actions: [start=ctrl2]
   
-- name: show ctrl2 provisioning, verify it is empty
-  actions: [show]
+- name: show ctrl1 provisioning, verify it is empty
+  actions: [show=ctrl1]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
-
-- name: stop services and cleanup
-  actions: [stop,cleanup]

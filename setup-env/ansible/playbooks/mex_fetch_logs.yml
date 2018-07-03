@@ -14,6 +14,7 @@
       src:  "{{ remote_log_path }}/{{ item.etcdlocal.name }}.log"
       dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.etcdlocal.name }}.log"
       flat: yes
+    when: item.hostname == inventory_hostname
     with_items:
        -  "{{ etcds }}"
 
@@ -34,6 +35,7 @@
       src:  "{{ remote_log_path }}/{{ item.controllerlocal.name }}.log"
       dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.controllerlocal.name }}.log"
       flat: yes
+    when: item.hostname == inventory_hostname
     with_items:
        -  "{{ controllers }}"
 
@@ -53,6 +55,7 @@
       src:  "{{ remote_log_path }}/{{ item.crmlocal.name }}.log"
       dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.crmlocal.name }}.log"
       flat: yes
+    when: item.hostname == inventory_hostname
     with_items:
        -  "{{ crms }}"
 
@@ -72,5 +75,26 @@
       src:  "{{ remote_log_path }}/{{ item.dmelocal.name }}.log"
       dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.dmelocal.name }}.log"
       flat: yes
+    when: item.hostname == inventory_hostname
     with_items:
        -  "{{ dmes }}"
+
+
+- name: get locsim logs
+  gather_facts: no
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: fetch locsim logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.locapisimlocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.locapisimlocal.name }}.log"
+      flat: yes
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ locsims }}"

@@ -5,6 +5,13 @@ vars:
 - vm1_external_ip: 35.230.32.241
 - vm2_external_ip: 35.230.48.195
 
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: "{{datadir}}/locsim.yml"
+  hostname: "{{vm1_external_ip}}"
+
 etcds:
 - etcdlocal:
     name: etcd1
@@ -53,12 +60,16 @@ dmes:
     name: dme1
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    locverurl: "http://{{vm1_internal_ip}}:8888"
+    carrier: TDG
   hostname: "{{vm1_external_ip}}"
 
 - dmelocal:
     name: dme2
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    locverurl: "http://{{vm1_internal_ip}}:8888"
+    carrier: TDG
   hostname: "{{vm2_external_ip}}"
 
   

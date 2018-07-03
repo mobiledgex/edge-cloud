@@ -5,6 +5,6 @@ cloudlets:
     name: tmocloud1
   accessuri: cloud1.tmo
   location:
-    lat: -50
-    long: -50
+    lat: 31 
+    long: -91
 

@@ -9,10 +9,10 @@ fi
 
 echo "using setupfile $SETUPFILE"
 
-for test in `ls testfiles`;
+for test in `cat tests.txt`;
 do
    fname=`echo $test |cut -d "." -f 1`
    out=$OUTDIR/$fname
    echo "Running test $test against setup $SETUPFILE, output in $out"
-   e2e-tests -testfile testfiles/$test -outputdir $out -setupfile $SETUPFILE -datadir data |egrep "\*\*" 
+   e2e-tests -testfile testfiles/$test -outputdir $out -setupfile $SETUPFILE -datadir data |grep -e Summary -e PASS -e FAIL 
 done

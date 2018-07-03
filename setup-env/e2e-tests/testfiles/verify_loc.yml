@@ -1,0 +1,34 @@
+##
+description: executes matching engine request for verify location using jims location and then with central dallas. Verify results
+
+tests:
+
+- name: Add and show provisioning
+  appfile: "{{datadir}}/appdata.yml"
+  actions: [create,show]
+
+- name: verifylocation expecting to see results within 2km
+  merfile: "{{datadir}}/mer_jims_loc.yml"
+  actions: [verifylocation]
+  compareyaml:
+    yaml1: "{{outputdir}}/verifylocation.yml"
+    yaml2: "{{datadir}}/location_within_2km.yml"
+    filetype: verifylocation
+
+- name: verifylocation expecting to see results within 100km
+  merfile: "{{datadir}}/mer_dallas_loc.yml"
+  actions: [verifylocation]
+  compareyaml:
+    yaml1: "{{outputdir}}/verifylocation.yml"
+    yaml2: "{{datadir}}/location_within_100km.yml"
+    filetype: verifylocation
+
+  
+- name: delete and show ctrl provisioning, verify it is empty
+  appfile: "{{datadir}}/appdata.yml"
+  actions: [delete,show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
