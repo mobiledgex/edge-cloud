@@ -7,7 +7,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 // AppInst by carrier
@@ -150,7 +149,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func pruneApps(allMaps *notify.AllMaps) {
+func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 	var carrierKey carrierAppKey
 
@@ -161,7 +160,7 @@ func pruneApps(allMaps *notify.AllMaps) {
 		for _, inst := range app.insts {
 			key.AppKey = app.key.appKey
 			key.CloudletKey = inst.cloudletKey
-			if _, found := allMaps.AppInsts[key]; !found {
+			if _, found := appInsts[key]; !found {
 				delete(app.insts, key.CloudletKey)
 			}
 		}

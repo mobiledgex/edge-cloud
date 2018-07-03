@@ -52,13 +52,13 @@ func TestController(t *testing.T) {
 
 	// test notify clients
 	notifyAddrs := []string{*notifyAddr}
-	crmNotify := notify.NewDummyClientHandler()
+	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
-	go crmClient.Run()
+	go crmClient.Start()
 	defer crmClient.Stop()
-	dmeNotify := notify.NewDummyClientHandler()
+	dmeNotify := notify.NewDummyHandler()
 	dmeClient := notify.NewDMEClient(notifyAddrs, dmeNotify)
-	go dmeClient.Run()
+	go dmeClient.Start()
 	defer dmeClient.Stop()
 
 	devApi := edgeproto.NewDeveloperApiClient(conn)
@@ -79,8 +79,8 @@ func TestController(t *testing.T) {
 	dmeNotify.WaitForAppInsts(5)
 	crmNotify.WaitForCloudlets(4)
 
-	assert.Equal(t, 5, len(dmeNotify.AppInsts), "num appinsts")
-	assert.Equal(t, 4, len(crmNotify.Cloudlets), "num cloudlets")
+	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	assert.Equal(t, 4, len(crmNotify.CloudletCache.Objs), "num cloudlets")
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
 
