@@ -318,16 +318,6 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 	return outputDir
 }
 
-/*func printYaml(i interface{}) {
-	out, err := yaml.Marshal(i)
-	if err != nil {
-		log.Fatalf("Error encoding yaml for %+v: %v", i, err)
-	}
-	s := string(out[:])
-	log.Printf("YAML: %s %s\n", s, out)
-}
-*/
-
 func ReadYamlFile(filename string, iface interface{}, varlist string, validateReplacedVars bool) error {
 	if strings.HasPrefix(filename, "~") {
 		filename = strings.Replace(filename, "~", os.Getenv("HOME"), 1)

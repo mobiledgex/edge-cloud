@@ -1,5 +1,5 @@
   
-Runs e2e tests by running setup-mex multiple times based on a config file and accumlating the output
+Runs e2e tests by running test-mex multiple times based on a config file and accumlating the output
 
 Usage of e2e-tests:
  -outputdir string
@@ -8,13 +8,19 @@ Usage of e2e-tests:
         stop on failures
   -testfile string
         input file with tests
-  -vars string
-        optional vars with key=value, separated by comma, e.g. -vars setupdir=setups/test2.yml,var2=somevalue
+  -outputdir string
+        directory to store the results and logs
+  -setupfile string
+        file used to define the network setup
+  -datadir string
+        directory with data files such as those used for APIs
 
-Variables in -vars are used to substitute entries like {{setupdir}} in the testfile.  This is to make the tests reuseable across setups.
  
 Examples:
-e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_show.yml -outputdir /tmp/test_out  setupdir setup-env/setups/local_simplex
-e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_show_2ctrls.yml -outputdir /tmp/test_out  setupdir setup-env/setups/local_multi
-e2e-tests -testfile setup-env/e2e-tests/testfiles/delete_add.yml -outputdir /tmp/test_out -setupdir setup-env/setups/local_simplex
-e2e-tests -testfile setup-env/e2e-tests/testfiles/deploy_add_ctrl_restart.yml -outputdir /tmp/test_out -setupdir setup-env/setups/local_multi 
+e2e-tests -testfile testfiles/deploy_start.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/ctrl_restart.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/add_show.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/find_cloudlet.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/verify_loc.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/fetchlogs.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
+e2e-tests -testfile testfiles/stop_cleanup.yml -outputdir /tmp/test_results -setupfile setups/local_multi.yml -datadir data
