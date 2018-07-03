@@ -50,8 +50,13 @@ message Match_Engine_Reply {
   uint32 service_port = 4;
   // location of the cloudlet?
   Loc cloudlet_location = 5;
+  enum Find_Status {
+    FIND_UNKNOWN = 0;
+    FIND_FOUND = 1;
+    FIND_NOTFOUND = 2;
+  }
   // Status return
-  bool Status = 6;
+  Find_Status Status = 6;
   // Token
   string Token = 7;
 }
