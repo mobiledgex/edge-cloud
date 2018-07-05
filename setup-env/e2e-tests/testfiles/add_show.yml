@@ -5,8 +5,8 @@ description: Adds provisioning and compares to expected value.  Then restarts ev
 tests:
 
 - name: Add and show provisioning and verify it is there
-  appfile: "{{datadir}}/appdata.yml"
-  actions: [create,show]
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
@@ -23,8 +23,8 @@ tests:
   actions: [status]
 
 - name: show provisioning again and compare results 
-  actions: [show]
-  appfile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
@@ -32,8 +32,8 @@ tests:
 
   
 - name: delete provisioning, verify it is empty
-  actions: [delete,show]
-  appfile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
