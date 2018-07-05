@@ -1,12 +1,12 @@
-##
+#
 ##
 description: adds provisioning, stops and starts ctrl and compares to expected value
 
 tests:
 
 - name: Add and show provisioning
-  appfile: "{{datadir}}/appdata.yml"
-  actions: [create,show]
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
 
 - name: compare results of show provisioning
   compareyaml: 
@@ -15,8 +15,8 @@ tests:
     filetype: appdata
 
 - name: show provisioning from second controller
-  appfile: "{{datadir}}/appdata.yml"
-  actions: [show=ctrl2]
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-show=ctrl2]
 
 - name: compare results of ctrl2 show provisioning
   compareyaml:
@@ -31,7 +31,7 @@ tests:
   actions: [start=ctrl1]
 
 - name: show provisioning from ctrl1
-  actions: [show=ctrl1]
+  actions: [ctrlapi-show=ctrl1]
 
 - name: compare results of ctrl1 show provisioning
   compareyaml:
@@ -40,8 +40,8 @@ tests:
     filetype: appdata
   
 - name: delete and show provisioning, verify it is empty
-  actions: [delete,show]
-  appfile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
