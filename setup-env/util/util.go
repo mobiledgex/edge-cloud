@@ -139,12 +139,12 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 }
 
 func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
-	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
-	api, err := (*p).ConnectAPI(10 * time.Second)
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- ReturnCodeWithText{false, "Failed to connect to " + (*p).Name}
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
 	} else {
-		c <- ReturnCodeWithText{true, "OK connect to " + (*p).Name}
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
 		api.Close()
 	}
 }
@@ -177,23 +177,23 @@ func GetDme(dmename string) *DmeProcess {
 }
 
 func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
-	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
-	api, err := (*p).ConnectAPI(10 * time.Second)
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- ReturnCodeWithText{false, "Failed to connect to " + (*p).Name}
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
 	} else {
-		c <- ReturnCodeWithText{true, "OK connect to " + (*p).Name}
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
 		api.Close()
 	}
 }
 
 func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
-	log.Printf("attempt to connect to process %v at %v\n", (*p).Name, (*p).ApiAddr)
-	api, err := (*p).ConnectAPI(10 * time.Second)
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
-		c <- ReturnCodeWithText{false, "Failed to connect to " + (*p).Name}
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
 	} else {
-		c <- ReturnCodeWithText{true, "OK connect to " + (*p).Name}
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
 		api.Close()
 	}
 }
@@ -287,7 +287,6 @@ func PrintToFile(fname string, outputDir string, out string, truncate bool) {
 		if err != nil {
 			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
 		}
-		defer ofile.Close()
 		log.Printf("writing file: %s\n%s\n", fname, out)
 		fmt.Fprintf(ofile, out)
 	}

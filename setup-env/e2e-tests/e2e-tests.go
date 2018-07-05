@@ -78,7 +78,10 @@ func validateArgs() {
 	if *dataDir == "" {
 		fmt.Println("Argument -datadir <dir> is required")
 		errorFound = true
-
+	} else if strings.Contains(*dataDir, "$GOPATH") && os.Getenv("GOPATH") == "" {
+		//note $GOPATH is not evaluated until setup-mex is called
+		fmt.Println("Argument -datadir <dir> is required, or set GOPATH properly to use default data dir")
+		errorFound = true
 	}
 	if errorFound {
 		printUsage()
