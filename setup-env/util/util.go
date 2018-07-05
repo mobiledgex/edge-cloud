@@ -1,7 +1,6 @@
 package util
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -17,9 +16,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
-	"google.golang.org/grpc"
 )
+
+var Procs ProcessData
 
 type yamlFileType int
 
@@ -28,15 +29,86 @@ const (
 	YamlOther   yamlFileType = 1
 )
 
-type processinfo struct {
+type YamlReplacementVariables struct {
+	Vars []map[string]string
+}
+
+type ProcessInfo struct {
 	pid   int
 	alive bool
 }
 
+type ReturnCodeWithText struct {
+	Success bool
+	Text    string
+}
+
+type EtcdProcess struct {
+	process.EtcdLocal
+	Hostname string
+}
+type ControllerProcess struct {
+	process.ControllerLocal
+	Hostname string
+}
+type DmeProcess struct {
+	process.DmeLocal
+	Hostname string
+}
+type CrmProcess struct {
+	process.CrmLocal
+	Hostname string
+}
+type LocSimProcess struct {
+	process.LocApiSimLocal
+	Hostname string
+}
+
+type ProcessData struct {
+	Locsims     []LocSimProcess     `yaml:"locsims"`
+	Etcds       []EtcdProcess       `yaml:"etcds"`
+	Controllers []ControllerProcess `yaml:"controllers"`
+	Dmes        []DmeProcess        `yaml:"dmes"`
+	Crms        []CrmProcess        `yaml:"crms"`
+}
+
+//these are strings which may be present in the yaml but not in the corresponding data structures.
+//These are the only allowed exceptions to the strict yaml unmarshalling
+var yamlExceptions = map[string]map[string]bool{
+	"setup": {
+		"vars": true,
+	},
+	"appdata": {
+		"ip_str": true, // ansible workaround
+	},
+}
+
+func IsYamlOk(e error, yamltype string) bool {
+	rc := true
+	errstr := e.Error()
+	for _, err1 := range strings.Split(errstr, "\n") {
+		allowedException := false
+		for ye := range yamlExceptions[yamltype] {
+			if strings.Contains(err1, ye) {
+				allowedException = true
+			}
+		}
+
+		if allowedException || strings.Contains(err1, "yaml: unmarshal errors") {
+			// ignore this summary error
+		} else {
+			//all other errors are unexpected and mean something is wrong in the yaml
+			log.Printf("Fatal Unmarshal Error: %v\n", err1)
+			rc = false
+		}
+	}
+	return rc
+}
+
 //get list of pids for a process name
-func getPidsByName(processName string, processArgs string) []processinfo {
+func getPidsByName(processName string, processArgs string) []ProcessInfo {
 	//pidlist is a set of pids and alive bool
-	var processes []processinfo
+	var processes []ProcessInfo
 	var pgrepCommand string
 	if processArgs == "" {
 		//look for any instance of this process name
@@ -59,11 +131,71 @@ func getPidsByName(processName string, processArgs string) []processinfo {
 		if err != nil {
 			fmt.Printf("Error in finding pid from process: %v -- %v", processName, err)
 		} else {
-			pinfo := processinfo{pid: p, alive: true}
+			pinfo := ProcessInfo{pid: p, alive: true}
 			processes = append(processes, pinfo)
 		}
 	}
 	return processes
+}
+
+func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
+}
+
+//default is to connect to the first controller, unless we specified otherwise
+func GetController(ctrlname string) *ControllerProcess {
+	if ctrlname == "" {
+		return &Procs.Controllers[0]
+	}
+	for _, ctrl := range Procs.Controllers {
+		if ctrl.Name == ctrlname {
+			return &ctrl
+		}
+	}
+	log.Fatalf("Error: could not find specified controller: %v\n", ctrlname)
+	return nil //unreachable
+}
+
+func GetDme(dmename string) *DmeProcess {
+	if dmename == "" {
+		return &Procs.Dmes[0]
+	}
+	for _, dme := range Procs.Dmes {
+		if dme.Name == dmename {
+			return &dme
+		}
+	}
+	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
+	return nil //unreachable
+}
+
+func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
+}
+
+func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
 }
 
 //first tries to kill process with SIGINT, then waits up to maxwait time
@@ -137,6 +269,27 @@ func PrintStartBanner(label string) {
 
 func PrintStepBanner(label string) {
 	log.Printf("\n\n      --- %s\n", label)
+}
+
+//for specific output that we want to put in a separate file.  If no
+//output dir, just  print to the stdout
+func PrintToFile(fname string, outputDir string, out string, truncate bool) {
+	if outputDir == "" {
+		fmt.Print(out)
+	} else {
+		outfile := outputDir + "/" + fname
+		mode := os.O_APPEND
+		if truncate {
+			mode = os.O_TRUNC
+		}
+		ofile, err := os.OpenFile(outfile, mode|os.O_CREATE|os.O_WRONLY, 0666)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
+		}
+		log.Printf("writing file: %s\n%s\n", fname, out)
+		fmt.Fprintf(ofile, out)
+	}
 }
 
 //creates an output directory with an optional timestamp.  Server log files, output from APIs, and
@@ -246,89 +399,4 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	}
 	log.Println("Comparison success")
 	return true
-}
-
-func RunOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	opAPI := edgeproto.NewOperatorApiClient(conn)
-	var err error = nil
-	for _, o := range appdata.Operators {
-		log.Printf("API %v for operator: %v", mode, o.Key.Name)
-		switch mode {
-		case "create":
-			_, err = opAPI.CreateOperator(ctx, &o)
-		case "update":
-			_, err = opAPI.UpdateOperator(ctx, &o)
-		case "delete":
-			_, err = opAPI.DeleteOperator(ctx, &o)
-		}
-	}
-	return err
-}
-
-func RunDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	devApi := edgeproto.NewDeveloperApiClient(conn)
-	for _, d := range appdata.Developers {
-		log.Printf("API %v for developer: %v", mode, d.Key.Name)
-		switch mode {
-		case "create":
-			_, err = devApi.CreateDeveloper(ctx, &d)
-		case "update":
-			_, err = devApi.UpdateDeveloper(ctx, &d)
-		case "delete":
-			_, err = devApi.DeleteDeveloper(ctx, &d)
-		}
-	}
-	return err
-}
-
-func RunCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	clAPI := edgeproto.NewCloudletApiClient(conn)
-	for _, c := range appdata.Cloudlets {
-		log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
-		switch mode {
-		case "create":
-			_, err = clAPI.CreateCloudlet(ctx, &c)
-		case "update":
-			_, err = clAPI.UpdateCloudlet(ctx, &c)
-		case "delete":
-			_, err = clAPI.DeleteCloudlet(ctx, &c)
-		}
-	}
-	return err
-}
-
-func RunAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	appAPI := edgeproto.NewAppApiClient(conn)
-	for _, a := range appdata.Applications {
-		log.Printf("API %v for app: %v", mode, a.Key.Name)
-		switch mode {
-		case "create":
-			_, err = appAPI.CreateApp(ctx, &a)
-		case "update":
-			_, err = appAPI.UpdateApp(ctx, &a)
-		case "delete":
-			_, err = appAPI.DeleteApp(ctx, &a)
-		}
-	}
-	return err
-}
-
-func RunAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	var err error = nil
-	appinAPI := edgeproto.NewAppInstApiClient(conn)
-	for _, a := range appdata.AppInstances {
-		log.Printf("API %v for appinstance: %v", mode, a.Key.AppKey.Name)
-		switch mode {
-		case "create":
-			_, err = appinAPI.CreateAppInst(ctx, &a)
-		case "update":
-			_, err = appinAPI.UpdateAppInst(ctx, &a)
-		case "delete":
-			_, err = appinAPI.DeleteAppInst(ctx, &a)
-		}
-	}
-	return err
 }

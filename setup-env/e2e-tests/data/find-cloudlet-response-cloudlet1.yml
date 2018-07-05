@@ -1,15 +1,5 @@
-ver: 0
-uri: http://tmocloud1/apps/someApplication 
-serviceip: []
-serviceport: 0
+uri: http://tmocloud1/apps/someApplication
 cloudletlocation:
   lat: 31
   long: -91
-  horizontalaccuracy: 0
-  verticalaccuracy: 0
-  altitude: 0
-  course: 0
-  speed: 0
-  timestamp: null
 status: FIND_FOUND
-token: ""
