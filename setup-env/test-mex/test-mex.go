@@ -1,7 +1,7 @@
 package main
 
 /* runs a single test case which consists of one or more actions.  Each action will call either a
-controller or DME api, or a setup-mex function to deploy, start, or stop a process */
+   controller or DME api, or a setup-mex function to deploy, start, or stop a process */
 
 import (
 	"flag"
@@ -16,6 +16,11 @@ import (
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
+func init() {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	actions = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
+}
+
 var deploymentChoices = map[string]bool{"process": true,
 	"container": true}
 var deploymentList = fmt.Sprintf("%v", reflect.ValueOf(deploymentChoices).MapKeys())
@@ -25,15 +30,29 @@ var actionList = fmt.Sprintf("%v", reflect.ValueOf(actionChoices).MapKeys())
 
 var (
 	commandName = "test-mex"
-	actions     = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
-	deployment  = flag.String("deployment", "process", deploymentList)
-	apiFile     = flag.String("apifile", "", "optional input yaml file for APIs")
-	apiName     = flag.String("apiname", "", "name of controller or DME API")
-	setupFile   = flag.String("setupfile", "", "mandatory yml topology file")
-	outputDir   = flag.String("outputdir", "", "option directory to store output and logs")
-	compareYaml = flag.String("compareyaml", "", "comma separated list of yamls to compare")
-	dataDir     = flag.String("datadir", "", "optional path of data files")
+	actions     *string
+	deployment  *string
+	apiFile     *string
+	apiName     *string
+	setupFile   *string
+	outputDir   *string
+	compareYaml *string
+	dataDir     *string
 )
+
+//re-init the flags because otherwise we inherit a bunch of flags from the testing
+//package which get inserted into the usage.
+func init() {
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	actions = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
+	deployment = flag.String("deployment", "process", deploymentList)
+	apiFile = flag.String("apifile", "", "optional input yaml file for APIs")
+	apiName = flag.String("apiname", "", "name of controller or DME API")
+	setupFile = flag.String("setupfile", "", "mandatory yml topology file")
+	outputDir = flag.String("outputdir", "", "option directory to store output and logs")
+	compareYaml = flag.String("compareyaml", "", "comma separated list of yamls to compare")
+	dataDir = flag.String("datadir", "", "optional path of data files")
+}
 
 //this is possible actions and optional parameters
 var actionChoices = map[string]string{
