@@ -31,6 +31,10 @@ func (s *server) SendToGroup(ctx context.Context, req *dme.DlgMessage) (*dme.Dlg
 	return mreq, nil
 }
 
+// The Group is created as an AppInst from the Controller
+// The AddUser call comes from Client to DME and somehow needs to be communicated
+// to this guy
+
 func main() {
 	flag.Parse()
 
