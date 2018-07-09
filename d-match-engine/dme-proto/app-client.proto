@@ -8,12 +8,12 @@ import "loc.proto";
 message Match_Engine_Request {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
-  enum IDType {
+  enum IDTypes {
 	  IMEI = 0;
 	  MSISDN = 1;
 	  IPADDR = 2;
   }
-  IDType IdType = 2;
+  IDTypes IdType = 2;
   // Actual ID
   string Id = 3;
   // App/OS generated ID

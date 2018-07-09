@@ -54,7 +54,7 @@ var DynamicLocGroupAddIn distributed_match_engine.DynamicLocGroupAdd
 var DynamicLocGroupAddFlagSet = pflag.NewFlagSet("DynamicLocGroupAdd", pflag.ExitOnError)
 var DynamicLocGroupAddInIdType string
 var DynamicLocGroupAddInCommType string
-var IDTypeStrings = []string{
+var IDTypesStrings = []string{
 	"IMEI",
 	"MSISDN",
 	"IPADDR",
@@ -106,7 +106,7 @@ var DlgCommTypeStrings = []string{
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
 	s := make([]string, 0, 15)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.Match_Engine_Request_IDType_name[int32(in.IdType)])
+	s = append(s, distributed_match_engine.Match_Engine_Request_IDTypes_name[int32(in.IdType)])
 	s = append(s, in.Id)
 	s = append(s, in.Uuid)
 	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
@@ -681,11 +681,11 @@ func parseMatch_Engine_RequestEnums() error {
 	if Match_Engine_RequestInIdType != "" {
 		switch Match_Engine_RequestInIdType {
 		case "IMEI":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(0)
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(0)
 		case "MSISDN":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(1)
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(1)
 		case "IPADDR":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDType(2)
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(2)
 		default:
 			return errors.New("Invalid value for Match_Engine_RequestInIdType")
 		}
