@@ -100,7 +100,7 @@ publishing {
         maven(MavenPublication) {
             // AAR of each library
             version android.defaultConfig.versionName
-            groupId "com.mobiledgex.matchingengine"
+            groupId "com.mobiledgex"
             artifactId "${project.name}"
             //artifact "${project.buildDir}/outputs/aar/${project.name}-debug.aar"
             artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
