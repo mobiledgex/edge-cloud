@@ -10,6 +10,9 @@ import math "math"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "errors"
+import "strconv"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -259,6 +262,44 @@ func (m *DlgReply) CopyInFields(src *DlgReply) {
 	m.Ver = src.Ver
 	m.AckId = src.AckId
 	m.GroupCookie = src.GroupCookie
+}
+
+var DlgAckStrings = []string{
+	"DlgAckEachMessage",
+	"DlgAsyEveryNMessage",
+	"DlgNoAck",
+}
+
+const (
+	DlgAckDlgAckEachMessage   uint64 = 1 << 0
+	DlgAckDlgAsyEveryNMessage uint64 = 1 << 1
+	DlgAckDlgNoAck            uint64 = 1 << 2
+)
+
+func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := DlgMessage_DlgAck_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = DlgMessage_DlgAck_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = DlgMessage_DlgAck(val)
+	return nil
+}
+
+func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *DlgMessage) Size() (n int) {

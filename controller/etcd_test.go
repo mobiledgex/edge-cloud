@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -103,7 +103,7 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 }
 
 func TestEtcdDummy(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd)
+	log.SetDebugLevel(log.DebugLevelEtcd)
 	dummy := dummyEtcd{}
 	dummy.Start()
 	testCalls(t, &dummy)
@@ -111,7 +111,7 @@ func TestEtcdDummy(t *testing.T) {
 }
 
 func TestEtcdReal(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd)
+	log.SetDebugLevel(log.DebugLevelEtcd)
 	etcd, err := StartLocalEtcdServer()
 	assert.Nil(t, err, "Etcd start")
 	if err != nil {
@@ -165,7 +165,7 @@ func (s *SyncCheck) Stop() {
 func (s *SyncCheck) Cb(data *objstore.SyncCbData) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	util.InfoLog("sync check cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
+	log.InfoLog("sync check cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
 	switch data.Action {
 	case objstore.SyncUpdate:
 		s.kv[string(data.Key)] = string(data.Value)
@@ -196,7 +196,7 @@ func (s *SyncCheck) WaitRev(rev int64) {
 		}
 		time.Sleep(20 * time.Millisecond)
 	}
-	util.InfoLog("Wait rev timed out", "rev", rev)
+	log.InfoLog("Wait rev timed out", "rev", rev)
 }
 
 func (s *SyncCheck) Expect(t *testing.T, key, val string, rev int64) {
@@ -221,8 +221,8 @@ func (s *SyncCheck) ExpectNil(t *testing.T, key string, rev int64) {
 func (s *SyncCheck) Dump() {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	util.InfoLog("sync check rev", "rev", s.rev)
+	log.InfoLog("sync check rev", "rev", s.rev)
 	for key, val := range s.kv {
-		util.InfoLog("sync check kv", "key", key, "val", val)
+		log.InfoLog("sync check kv", "key", key, "val", val)
 	}
 }

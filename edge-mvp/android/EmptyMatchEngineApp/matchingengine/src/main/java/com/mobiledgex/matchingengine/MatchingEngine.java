@@ -20,6 +20,7 @@ import distributed_match_engine.LocOuterClass.Loc;
 import io.grpc.StatusRuntimeException;
 
 import android.content.pm.PackageInfo;
+import android.util.Log;
 
 
 // TODO: GRPC (which needs http/2).
@@ -39,6 +40,18 @@ public class MatchingEngine {
         threadpool = executorService;
     }
 
+    // Application state Bundle Key.
+    public static final String MEX_LOCATION_PERMISSION = "MEX_LOCATION_PERMISSION";
+    private static boolean mMexLocationAllowed = false;
+
+    public static boolean isMexLocationAllowed() {
+        return mMexLocationAllowed;
+    }
+
+    public static void setMexLocationAllowed(boolean allowMexLocation) {
+        mMexLocationAllowed = allowMexLocation;
+    }
+
     public Future submit(Callable task) {
         return threadpool.submit(task);
     }
@@ -50,6 +63,11 @@ public class MatchingEngine {
     public Match_Engine_Request createRequest(Context context, android.location.Location loc) throws SecurityException {
         if (context == null) {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
+        }
+
+        if (!mMexLocationAllowed) {
+            Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
+            return null;
         }
 
         // Operator

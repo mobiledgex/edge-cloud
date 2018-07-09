@@ -56,6 +56,30 @@
        dest: "{{ remote_bin_path }}"
        mode: 0755
 
+
+- name: deploy binary to remote locsims
+  gather_facts: yes
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy locsim binary
+    copy:
+       src: "{{ locsim_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+  - name: copy locsim data file if it exists
+    copy:
+       src: "{{locsim_data_file}}"
+       dest: "{{ locsim_remote_data_dir }}"
+       mode: 0755
+    ignore_errors: yes
+
+
 - name: install etcd to remote etcd nodes
   gather_facts: no
   user: root

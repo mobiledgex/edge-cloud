@@ -10,7 +10,7 @@
 
 package objstore
 
-import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
 
 var (
 	myRegion uint32 = 0
@@ -22,7 +22,7 @@ func InitRegion(region uint32) {
 
 func GetRegion() uint32 {
 	if myRegion == 0 {
-		util.FatalLog("Region not initialized")
+		log.FatalLog("Region not initialized")
 	}
 	return myRegion
 }

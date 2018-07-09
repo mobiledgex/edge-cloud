@@ -393,7 +393,16 @@ func getStructInfo(st reflect.Type) (*structInfo, error) {
 		}
 
 		if field.Type.Kind() == reflect.Array || field.Type.Kind() == reflect.Slice {
-			if field.Type.Elem().Kind() == reflect.Uint8 && strings.HasSuffix(field.Name, "Ip") {
+			if field.Type.Elem().Kind() == reflect.Uint8 ||
+				field.Type.Elem().Kind() == reflect.Uint ||
+				field.Type.Elem().Kind() == reflect.Uint16 ||
+				field.Type.Elem().Kind() == reflect.Uint32 ||
+				field.Type.Elem().Kind() == reflect.Uint64 ||
+				field.Type.Elem().Kind() == reflect.Int ||
+				field.Type.Elem().Kind() == reflect.Int8 ||
+				field.Type.Elem().Kind() == reflect.Int16 ||
+				field.Type.Elem().Kind() == reflect.Int32 ||
+				field.Type.Elem().Kind() == reflect.Int64 {
 				info.Flow = true
 			}
 		}

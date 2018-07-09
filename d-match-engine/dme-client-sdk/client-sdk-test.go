@@ -22,7 +22,7 @@ func FindCloudlets(client dme.Match_Engine_ApiClient) {
 			log.Fatalf("could not greet: %v", err)
 		}
 		ipaddr = mreply.ServiceIp
-		fmt.Printf("Found Status %t Loc = %f/%f with Uri/IP %s/%s\n",
+		fmt.Printf("Found Status %d Loc = %f/%f with Uri/IP %s/%s\n",
 			mreply.Status,
 			mreply.CloudletLocation.Lat, mreply.CloudletLocation.Long,
 			mreply.Uri, ipaddr.String())

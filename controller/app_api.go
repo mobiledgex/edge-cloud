@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // Should only be one of these instantiated in main
@@ -31,8 +31,19 @@ func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
 }
 
-func (s *AppApi) GetApp(key *edgeproto.AppKey, buf *edgeproto.App) bool {
+func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 	return s.cache.Get(key, buf)
+}
+
+func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for key, _ := range s.cache.Objs {
+		if key.DeveloperKey.Matches(in) {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
@@ -47,7 +58,25 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 }
 
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.sync.syncWait)
+	dynInsts := make(map[edgeproto.AppInstKey]struct{})
+	if appInstApi.UsesApp(&in.Key, dynInsts) {
+		// disallow delete if static instances are present
+		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
+	}
+	res, err := s.store.Delete(in, s.sync.syncWait)
+	if len(dynInsts) > 0 {
+		// delete dynamic instances
+		for key, _ := range dynInsts {
+			appInst := edgeproto.AppInst{Key: key}
+			_, derr := appInstApi.DeleteAppInst(ctx, &appInst)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic app inst",
+					"err", derr)
+			}
+		}
+	}
+	return res, err
 }
 
 func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {
@@ -63,7 +92,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.AppPath != new.AppPath {
-		util.DebugLog(util.DebugLevelApi, "updating app path")
+		log.DebugLog(log.DebugLevelApi, "updating app path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
 			if inst.Key.AppKey.Matches(&new.Key) {

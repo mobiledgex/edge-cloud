@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -52,7 +53,7 @@ func (s *Sync) Start() {
 		prefix := fmt.Sprintf("%d/", objstore.GetRegion())
 		err := s.store.Sync(ctx, prefix, s.syncCb)
 		if err != nil {
-			util.WarnLog("sync failed", "err", err)
+			log.WarnLog("sync failed", "err", err)
 		}
 		s.syncDone = true
 		s.cond.Broadcast()
@@ -78,12 +79,12 @@ func (s *Sync) Done() {
 func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
 	_, typ, _, err := objstore.DbKeyPrefixParse(string(key))
 	if err != nil {
-		util.WarnLog("Failed to parse db key", "key", key, "err", err)
+		log.WarnLog("Failed to parse db key", "key", key, "err", err)
 		return nil, false
 	}
 	cache, found := s.caches[typ]
 	if !found {
-		util.DebugLog(util.DebugLevelApi, "No cache for type", "typ", typ)
+		log.DebugLog(log.DebugLevelApi, "No cache for type", "typ", typ)
 	}
 	return cache, found
 }
@@ -93,7 +94,7 @@ func (s *Sync) GetCache(key []byte) (ObjCache, bool) {
 // data, otherwise there could be race conditions against the sync data
 // coming from etcd.
 func (s *Sync) syncCb(data *objstore.SyncCbData) {
-	util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
+	log.DebugLog(log.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[data.Action], "key", string(data.Key), "value", string(data.Value), "rev", data.Rev)
 
 	s.mux.Lock()
 	switch data.Action {
@@ -131,7 +132,7 @@ func (s *Sync) syncCb(data *objstore.SyncCbData) {
 func (s *Sync) syncWait(rev int64) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "syncWait", "cur-rev", s.rev, "wait-rev", rev)
+	log.DebugLog(log.DebugLevelApi, "syncWait", "cur-rev", s.rev, "wait-rev", rev)
 	for s.rev < rev && !s.syncDone {
 		s.cond.Wait()
 	}

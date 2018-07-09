@@ -1,5 +1,5 @@
 - name: reset and stop etcds
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: etcds
 
@@ -23,7 +23,7 @@
        -  "{{ etcds }}"
 
 - name: stop controllers
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: controllers
 
@@ -41,7 +41,7 @@
 
 
 - name: stop dmes
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: dmes
 
@@ -58,7 +58,7 @@
        -  "{{ dmes }}"
        
 - name: stop crms
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: crms
 
@@ -67,9 +67,25 @@
   - "{{ setupfile }}"
 
   tasks:
-
   - name: stop crmserver process
     shell: "pkill -9 crmserver||true"
     when: item.hostname == inventory_hostname 
     with_items:
        -  "{{ crms }}"
+
+
+- name: stop locsims
+  gather_facts: no
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: stop locsim process
+    shell: "pkill -9 loc-api-sim||true"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ locsims }}"

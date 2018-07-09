@@ -4,14 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCloudletApi(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelApi)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
 
 	dummy := dummyEtcd{}

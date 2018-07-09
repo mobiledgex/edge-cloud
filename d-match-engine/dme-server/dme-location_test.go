@@ -5,12 +5,12 @@ import (
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestVerifyLoc(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelDmeReq)
+	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -21,7 +21,7 @@ func TestVerifyLoc(t *testing.T) {
 	// test verify location
 	for ii, rr := range dmetest.VerifyLocData {
 		reply := dme.Match_Engine_Loc_Verify{}
-		VerifyClientLoc(&rr.Req, &reply)
+		VerifyClientLoc(&rr.Req, &reply, "standalone", "", "")
 		assert.Equal(t, rr.Reply.GpsLocationStatus, reply.GpsLocationStatus,
 			"VerifyLocData[%d]", ii)
 	}

@@ -1,15 +1,14 @@
 package main
 
 import (
-	"math"
 	"sync"
 	"fmt"
 	"net"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
 // AppInst by carrier
@@ -53,36 +52,6 @@ func setupMatchEngine() {
 	carrierAppTbl.apps = make(map[carrierAppKey]*carrierApp)
 }
 
-func torads(deg float64) float64 {
-	return deg * math.Pi / 180
-}
-
-// Use the ‘haversine’ formula to calculate the great-circle distance between two points
-func distance_between(loc1, loc2 dme.Loc) float64 {
-	radiusofearth := 6371
-	var diff_lat, diff_long float64
-	var a, c, dist float64
-	var lat1, long1, lat2, long2 float64
-
-	lat1 = loc1.Lat
-	long1 = loc1.Long
-	lat2 = loc2.Lat
-	long2 = loc2.Long
-
-	diff_lat = torads(lat2 - lat1)
-	diff_long = torads(long2 - long1)
-
-	rad_lat1 := torads(lat1)
-	rad_lat2 := torads(lat2)
-
-	a = math.Sin(diff_lat/2)*math.Sin(diff_lat/2) + math.Sin(diff_long/2)*
-		math.Sin(diff_long/2)*math.Cos(rad_lat1)*math.Cos(rad_lat2)
-	c = 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	dist = c * float64(radiusofearth)
-
-	return dist
-}
-
 // TODO: Have protoc auto-generate Equal functions.
 func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) bool {
 	return key1.GetKeyString() == key2.GetKeyString()
@@ -110,7 +79,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		app.insts = make(map[edgeproto.CloudletKey]*carrierAppInst)
 		app.key = key
 		tbl.apps[key] = app
-		util.DebugLog(util.DebugLevelDmeDb, "Adding app",
+		log.DebugLog(log.DebugLevelDmedb, "Adding app",
 			"appName", key.appKey.Name,
 			"appVersion", key.appKey.Version,
 			"carrier", key.carrierName)
@@ -123,7 +92,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		// update existing carrier app inst
 		c.uri = appInst.Uri
 		c.location = appInst.CloudletLoc
-		util.DebugLog(util.DebugLevelDmeDb, "Updating app inst",
+		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.key.appKey.Name,
 			"appVersion", app.key.appKey.Version,
 			"carrier", key.carrierName,
@@ -137,7 +106,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.ip = appInst.Ip
 		cNew.location = appInst.CloudletLoc
 		app.insts[cNew.cloudletKey] = cNew
-		util.DebugLog(util.DebugLevelDmeDb, "Adding app inst",
+		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.key.appKey.Name,
 			"appVersion", app.key.appKey.Version,
 			"carrier", cNew.carrierName,
@@ -162,7 +131,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 		app.Lock()
 		if c, found := app.insts[appInst.Key.CloudletKey]; found {
 			delete(app.insts, appInst.Key.CloudletKey)
-			util.DebugLog(util.DebugLevelDmeDb, "Removing app inst",
+			log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
 				"appName", app.key.appKey.Name,
 				"appVersion", app.key.appKey.Version,
 				"carrier", c.carrierName,
@@ -171,7 +140,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 		}
 		if len(app.insts) == 0 {
 			delete(tbl.apps, key)
-			util.DebugLog(util.DebugLevelDmeDb, "Removing app",
+			log.DebugLog(log.DebugLevelDmedb, "Removing app",
 				"appName", app.key.appKey.Name,
 				"appVersion", app.key.appKey.Version,
 				"carrier", app.key.carrierName)
@@ -182,7 +151,7 @@ func removeApp(appInst *edgeproto.AppInst) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func pruneApps(allMaps *notify.AllMaps) {
+func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 	var carrierKey carrierAppKey
 
@@ -193,7 +162,7 @@ func pruneApps(allMaps *notify.AllMaps) {
 		for _, inst := range app.insts {
 			key.AppKey = app.key.appKey
 			key.CloudletKey = inst.cloudletKey
-			if _, found := allMaps.AppInsts[key]; !found {
+			if _, found := appInsts[key]; !found {
 				delete(app.insts, key.CloudletKey)
 			}
 		}
@@ -220,7 +189,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	key.appKey.Name = mreq.AppName
 	key.appKey.Version = mreq.AppVers
 
-	mreply.Status = false
+	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
 	tbl.RLock()
@@ -231,12 +200,12 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	}
 
 	distance = 10000
-	util.DebugLog(util.DebugLevelDmeReq, ">>>Find Cloudlet",
+	log.DebugLog(log.DebugLevelDmereq, ">>>Find Cloudlet",
 		"appName", key.appKey.Name,
 		"carrier", key.carrierName)
 	for _, c = range app.insts {
-		d = distance_between(*mreq.GpsLocation, c.location)
-		util.DebugLog(util.DebugLevelDmeReq, "found cloudlet at",
+		d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
+		log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
 			"lat", c.location.Lat,
 			"long", c.location.Long,
 			"distance", distance,
@@ -250,7 +219,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		}
 	}
 	if found != nil {
-		util.DebugLog(util.DebugLevelDmeReq, "best cloudlet at",
+		log.DebugLog(log.DebugLevelDmereq, "best cloudlet at",
 			"lat", found.location.Lat,
 			"long", found.location.Long,
 			"distance", distance,
@@ -263,7 +232,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 				found.location.Lat, found.location.Long, distance,
 				ipaddr.String())
 		}
-		mreply.Status = true
+		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
 	}
 	tbl.RUnlock()
 }

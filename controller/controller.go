@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 )
 
@@ -27,7 +27,7 @@ var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client lis
 var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
-var debugLevels = flag.String("d", "", "comma separated list of debug levels")
+var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 
 func GetRootDir() string {
 	return *rootDir
@@ -40,31 +40,31 @@ var mainStarted chan struct{}
 
 func main() {
 	flag.Parse()
-	util.SetDebugLevelStrs(*debugLevels)
+	log.SetDebugLevelStrs(*debugLevels)
 
-	util.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr)
+	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr)
 	objstore.InitRegion(uint32(*region))
 
 	if *localEtcd {
 		etcdServer, err := StartLocalEtcdServer()
 		if err != nil {
-			util.FatalLog("No clientIP and clientPort specified, starting local etcd server failed: %s", err)
+			log.FatalLog("No clientIP and clientPort specified, starting local etcd server failed: %s", err)
 		}
 		etcdUrls = &etcdServer.Config.ClientUrls
 		defer etcdServer.Stop()
 	}
 	objStore, err := GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
-		util.FatalLog("Failed to initialize Object Store")
+		log.FatalLog("Failed to initialize Object Store")
 	}
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
-		util.FatalLog("Failed to connect to etcd servers")
+		log.FatalLog("Failed to connect to etcd servers")
 	}
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
-		util.FatalLog("Failed to listen on address", "address", *apiAddr,
+		log.FatalLog("Failed to listen on address", "address", *apiAddr,
 			"error", err)
 	}
 
@@ -73,8 +73,9 @@ func main() {
 	sync.Start()
 	defer sync.Done()
 
-	notifyHandler := NewControllerNotifier(&appInstApi, &cloudletApi)
-	notify.ServerMgrStart(*notifyAddr, notifyHandler)
+	notifyHandler := NewNotifyHandler()
+	notify.ServerMgrOne.Start(*notifyAddr, notifyHandler)
+	defer notify.ServerMgrOne.Stop()
 
 	server := grpc.NewServer()
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
@@ -82,11 +83,12 @@ func main() {
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
+	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
 		// Serve will block until interrupted and Stop is called
 		if err := server.Serve(lis); err != nil {
-			util.FatalLog("Failed to serve", "error", err)
+			log.FatalLog("Failed to serve", "error", err)
 		}
 	}()
 	defer server.Stop()
@@ -95,7 +97,7 @@ func main() {
 	mux := http.NewServeMux()
 	gw, err := grpcGateway(*apiAddr)
 	if err != nil {
-		util.FatalLog("Failed to create grpc gateway", "error", err)
+		log.FatalLog("Failed to create grpc gateway", "error", err)
 	}
 	mux.Handle("/", gw)
 	httpServer := &http.Server{
@@ -105,7 +107,7 @@ func main() {
 	go func() {
 		// Serve REST gateway
 		if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
-			util.FatalLog("Failed to serve HTTP", "error", err)
+			log.FatalLog("Failed to serve HTTP", "error", err)
 		}
 	}()
 	defer httpServer.Shutdown(context.Background())
@@ -116,7 +118,7 @@ func main() {
 	if mainStarted != nil {
 		close(mainStarted)
 	}
-	util.InfoLog("Ready")
+	log.InfoLog("Ready")
 
 	// wait until process in killed/interrupted
 	sig := <-sigChan

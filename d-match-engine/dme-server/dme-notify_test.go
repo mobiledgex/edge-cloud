@@ -6,12 +6,12 @@ import (
 
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func TestNotify(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelNotify)
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -19,17 +19,18 @@ func TestNotify(t *testing.T) {
 	addr := "127.0.0.1:60001"
 
 	// dummy server side
-	serverHandler := notify.NewDummyServerHandler()
-	notify.ServerMgrStart(addr, serverHandler)
+	serverHandler := notify.NewDummyHandler()
+	serverMgr := notify.ServerMgr{}
+	serverHandler.SetServerCb(&serverMgr)
+	serverMgr.Start(addr, serverHandler)
 
 	// client (dme) side
-	clientHandler := &NotifyHandler{}
-	client := initNotifyClient(addr, clientHandler)
-	go client.Run()
+	client := initNotifyClient(addr)
+	client.Start()
 
 	// create data on server side
 	for _, appInst := range appInsts {
-		serverHandler.CreateAppInst(appInst)
+		serverHandler.AppInstCache.Update(appInst, 0)
 	}
 	// wait for the last appInst data to show up locally
 	last := len(appInsts) - 1
@@ -39,13 +40,13 @@ func TestNotify(t *testing.T) {
 
 	// remove one appinst
 	remaining := appInsts[:last]
-	serverHandler.DeleteAppInst(appInsts[last])
+	serverHandler.AppInstCache.Delete(appInsts[last], 0)
 	// wait for it to be gone locally
 	waitForNoAppInst(appInsts[last])
 	// check new data
 	checkAllData(t, remaining)
 	// add it back
-	serverHandler.CreateAppInst(appInsts[last])
+	serverHandler.AppInstCache.Update(appInsts[last], 0)
 	// wait for it to be present again
 	waitForAppInst(appInsts[last])
 	checkAllData(t, appInsts)
@@ -54,12 +55,12 @@ func TestNotify(t *testing.T) {
 	// This checks that client deletes locally data
 	// that was deleted while the connection was down.
 	client.Stop()
-	serverHandler.DeleteAppInst(appInsts[last])
-	go client.Run()
+	serverHandler.AppInstCache.Delete(appInsts[last], 0)
+	client.Start()
 	waitForNoAppInst(appInsts[last])
 	checkAllData(t, remaining)
 
-	notify.ServerMgrDone()
+	serverMgr.Stop()
 	client.Stop()
 }
 

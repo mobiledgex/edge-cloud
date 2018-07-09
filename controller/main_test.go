@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -39,7 +39,7 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 }
 
 func TestController(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 
 	os.Args = append(os.Args, "-localEtcd")
 
@@ -52,13 +52,13 @@ func TestController(t *testing.T) {
 
 	// test notify clients
 	notifyAddrs := []string{*notifyAddr}
-	crmNotify := notify.NewDummyClientHandler()
+	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
-	go crmClient.Run()
+	go crmClient.Start()
 	defer crmClient.Stop()
-	dmeNotify := notify.NewDummyClientHandler()
+	dmeNotify := notify.NewDummyHandler()
 	dmeClient := notify.NewDMEClient(notifyAddrs, dmeNotify)
-	go dmeClient.Run()
+	go dmeClient.Start()
 	defer dmeClient.Stop()
 
 	devApi := edgeproto.NewDeveloperApiClient(conn)
@@ -79,10 +79,49 @@ func TestController(t *testing.T) {
 	dmeNotify.WaitForAppInsts(5)
 	crmNotify.WaitForCloudlets(4)
 
-	assert.Equal(t, 5, len(dmeNotify.AppInsts), "num appinsts")
-	assert.Equal(t, 4, len(crmNotify.Cloudlets), "num cloudlets")
+	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	assert.Equal(t, 4, len(crmNotify.CloudletCache.Objs), "num cloudlets")
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
+
+	// test that delete checks disallow deletes of dependent objects
+	ctx := context.TODO()
+	_, err = devApi.DeleteDeveloper(ctx, &testutil.DevData[0])
+	assert.NotNil(t, err)
+	_, err = operApi.DeleteOperator(ctx, &testutil.OperatorData[0])
+	assert.NotNil(t, err)
+	_, err = cloudletApi.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	assert.NotNil(t, err)
+	_, err = appApi.DeleteApp(ctx, &testutil.AppData[0])
+	assert.NotNil(t, err)
+	// test that delete works after removing dependencies
+	for _, inst := range testutil.AppInstData {
+		if inst.Liveness == edgeproto.AppInst_DYNAMIC {
+			// skip dynamic, they are not counted as dependencies
+			continue
+		}
+		_, err = appInstApi.DeleteAppInst(ctx, &inst)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.AppData {
+		_, err = appApi.DeleteApp(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.CloudletData {
+		_, err = cloudletApi.DeleteCloudlet(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.DevData {
+		_, err = devApi.DeleteDeveloper(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	for _, obj := range testutil.OperatorData {
+		_, err = operApi.DeleteOperator(ctx, &obj)
+		assert.Nil(t, err)
+	}
+	// make sure dynamic app insts were deleted along with Apps
+	dmeNotify.WaitForAppInsts(0)
+	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
@@ -106,7 +145,7 @@ func TestDataGen(t *testing.T) {
 }
 
 func TestEdgeCloudBug26(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 
 	os.Args = append(os.Args, "-localEtcd")
 

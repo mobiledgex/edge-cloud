@@ -1,0 +1,5 @@
+uri: http://tmocloud2/apps/someApplication
+cloudletlocation:
+  lat: 35
+  long: -95
+status: FIND_FOUND

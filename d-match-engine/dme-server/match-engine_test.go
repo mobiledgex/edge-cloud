@@ -6,12 +6,12 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAddRemove(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelDmeReq)
+	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 
@@ -38,10 +38,8 @@ func TestAddRemove(t *testing.T) {
 	for ii, rr := range dmetest.FindCloudletData {
 		reply := dme.Match_Engine_Reply{}
 		findCloudlet(&rr.Req, &reply)
-		if !rr.Reply.Status {
-			assert.False(t, reply.Status, "findCloudletData[%d]", ii)
-		} else {
-			assert.True(t, reply.Status, "findCloudletData[%d]", ii)
+		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
+		if reply.Status == dme.Match_Engine_Reply_FIND_FOUND {
 			assert.Equal(t, rr.Reply.Uri, reply.Uri,
 				"findCloudletData[%d]", ii)
 		}

@@ -30,6 +30,11 @@ var DynamicLocGroupApiCmd distributed_match_engine.DynamicLocGroupApiClient
 var DlgMessageIn distributed_match_engine.DlgMessage
 var DlgMessageFlagSet = pflag.NewFlagSet("DlgMessage", pflag.ExitOnError)
 var DlgMessageInAckType string
+var DlgAckStrings = []string{
+	"DlgAckEachMessage",
+	"DlgAsyEveryNMessage",
+	"DlgNoAck",
+}
 
 func DlgMessageSlicer(in *distributed_match_engine.DlgMessage) []string {
 	s := make([]string, 0, 6)
@@ -120,12 +125,16 @@ var SendToGroupCmd = &cobra.Command{
 	},
 }
 
+var DynamicLocGroupApiCmds = []*cobra.Command{
+	SendToGroupCmd,
+}
+
 func init() {
 	DlgMessageFlagSet.Uint32Var(&DlgMessageIn.Ver, "ver", 0, "Ver")
 	DlgMessageFlagSet.Uint64Var(&DlgMessageIn.LgId, "lgid", 0, "LgId")
 	DlgMessageFlagSet.StringVar(&DlgMessageIn.GroupCookie, "groupcookie", "", "GroupCookie")
 	DlgMessageFlagSet.Uint64Var(&DlgMessageIn.MessageId, "messageid", 0, "MessageId")
-	DlgMessageFlagSet.StringVar(&DlgMessageInAckType, "acktype", "", "DlgMessageInAckType")
+	DlgMessageFlagSet.StringVar(&DlgMessageInAckType, "acktype", "", "one of [DlgAckEachMessage DlgAsyEveryNMessage DlgNoAck]")
 	DlgMessageFlagSet.StringVar(&DlgMessageIn.Message, "message", "", "Message")
 	SendToGroupCmd.Flags().AddFlagSet(DlgMessageFlagSet)
 }
@@ -133,11 +142,11 @@ func init() {
 func parseDlgMessageEnums() error {
 	if DlgMessageInAckType != "" {
 		switch DlgMessageInAckType {
-		case "dlgackeachmessage":
+		case "DlgAckEachMessage":
 			DlgMessageIn.AckType = distributed_match_engine.DlgMessage_DlgAck(0)
-		case "dlgasyeverynmessage":
+		case "DlgAsyEveryNMessage":
 			DlgMessageIn.AckType = distributed_match_engine.DlgMessage_DlgAck(1)
-		case "dlgnoack":
+		case "DlgNoAck":
 			DlgMessageIn.AckType = distributed_match_engine.DlgMessage_DlgAck(2)
 		default:
 			return errors.New("Invalid value for DlgMessageInAckType")

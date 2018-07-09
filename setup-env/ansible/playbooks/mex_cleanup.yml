@@ -1,5 +1,5 @@
 - name: cleanup etcds
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: etcds
 
@@ -28,7 +28,7 @@
        state: absent
 
 - name: cleanup controllers
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: controllers
 
@@ -45,7 +45,7 @@
 
 
 - name: cleanup dmes
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: dmes
 
@@ -61,7 +61,7 @@
 
 
 - name: cleanup crms
-  gather_facts: yes
+  gather_facts: no
   user: root
   hosts: crms
 
@@ -73,6 +73,26 @@
   - name: remove crm binary
     file:
        name: "{{ crm_remote_bin }}"
+       state: absent
+
+- name: cleanup locsims
+  gather_facts: no
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove locsim binary
+    file:
+       name: "{{ locsim_remote_bin }}"
+       state: absent
+
+  - name: remove locsim data file
+    file:
+       name: "{{ locsim_remote_data_file }}"
        state: absent
 
 - name: cleanup logs

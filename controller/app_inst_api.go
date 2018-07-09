@@ -23,7 +23,7 @@ func InitAppInstApi(sync *Sync) {
 	appInstApi.sync = sync
 	appInstApi.store = edgeproto.NewAppInstStore(sync.store)
 	edgeproto.InitAppInstCache(&appInstApi.cache)
-	appInstApi.cache.SetNotifyCb(notify.UpdateAppInst)
+	appInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateAppInst)
 	sync.RegisterCache(edgeproto.AppInstKeyTypeString(), &appInstApi.cache)
 }
 
@@ -31,21 +31,53 @@ func (s *AppInstApi) GetAllKeys(keys map[edgeproto.AppInstKey]struct{}) {
 	s.cache.GetAllKeys(keys)
 }
 
-func (s *AppInstApi) GetAppInst(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool {
+func (s *AppInstApi) Get(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool {
 	return s.cache.Get(key, val)
+}
+
+func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	static := false
+	for key, val := range s.cache.Objs {
+		if key.CloudletKey.Matches(in) {
+			if val.Liveness == edgeproto.AppInst_STATIC {
+				static = true
+			} else if val.Liveness == edgeproto.AppInst_DYNAMIC {
+				dynInsts[key] = struct{}{}
+			}
+		}
+	}
+	return static
+}
+
+func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	static := false
+	for key, val := range s.cache.Objs {
+		if key.AppKey.Matches(in) {
+			if val.Liveness == edgeproto.AppInst_STATIC {
+				static = true
+			} else if val.Liveness == edgeproto.AppInst_DYNAMIC {
+				dynInsts[key] = struct{}{}
+			}
+		}
+	}
+	return static
 }
 
 func (s *AppInstApi) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	// cache app path in app inst
 	var app edgeproto.App
-	if !appApi.GetApp(&in.Key.AppKey, &app) {
+	if !appApi.Get(&in.Key.AppKey, &app) {
 		return &edgeproto.Result{}, errors.New("Specified app not found")
 	} else {
 		in.AppPath = app.AppPath
 	}
 	// cache location of cloudlet in app inst
 	var cloudlet edgeproto.Cloudlet
-	if !cloudletApi.GetCloudlet(&in.Key.CloudletKey, &cloudlet) {
+	if !cloudletApi.Get(&in.Key.CloudletKey, &cloudlet) {
 		return &edgeproto.Result{}, errors.New("Specified cloudlet not found")
 	} else {
 		in.CloudletLoc = cloudlet.Location

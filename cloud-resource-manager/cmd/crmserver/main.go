@@ -38,7 +38,7 @@ func main() {
 
 	notifyHandler := NewNotifyHandler(controllerData)
 	notifyClient := notify.NewCRMClient(strings.Split(*notifyAddrs, ","), notifyHandler)
-	go notifyClient.Run()
+	notifyClient.Start()
 	defer notifyClient.Stop()
 
 	q.Q("registered CRM API server")

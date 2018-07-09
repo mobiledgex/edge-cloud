@@ -10,6 +10,7 @@ build:
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	make -C ./protoc-gen-cmd
+	make -C ./log
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine
@@ -19,6 +20,9 @@ build:
 build-linux:
 	${LINUX_XCOMPILE_ENV} go build ./...
 	make -C d-match-engine linux
+
+build-docker:
+	docker build -t mobiledgex/edge-cloud -f docker/Dockerfile.edge-cloud .
 
 install:
 	go install ./...
@@ -31,3 +35,6 @@ tools:
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogofast
 	go install ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+clean:
+	go clean ./...

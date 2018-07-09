@@ -117,14 +117,30 @@ type DmeLocal struct {
 	Name        string
 	ApiAddr     string
 	NotifyAddrs string
+	LocVerUrl   string
+	Carrier     string
 	cmd         *exec.Cmd
 }
 
-func (p *DmeLocal) Start(logfile string) error {
+func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
+	}
+	if p.LocVerUrl != "" {
+		args = append(args, "--locverurl")
+		args = append(args, p.LocVerUrl)
+	}
+	if p.Carrier != "" {
+		args = append(args, "--carrier")
+		args = append(args, p.Carrier)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
 	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)
@@ -198,6 +214,25 @@ func StopLocal(cmd *exec.Cmd) {
 	if cmd != nil {
 		cmd.Process.Kill()
 	}
+}
+
+//Location API simulator
+type LocApiSimLocal struct {
+	Name    string
+	Port    int
+	Locfile string
+	cmd     *exec.Cmd
+}
+
+func (p *LocApiSimLocal) Start(logfile string) error {
+	args := []string{"-port", fmt.Sprintf("%d", p.Port), "-file", p.Locfile}
+	var err error
+	p.cmd, err = StartLocal(p.Name, "loc-api-sim", args, logfile)
+	return err
+}
+
+func (p *LocApiSimLocal) Stop() {
+	StopLocal(p.cmd)
 }
 
 type ColorWriter struct {

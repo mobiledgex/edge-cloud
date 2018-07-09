@@ -1,0 +1,69 @@
+##
+## 
+##
+description: Deploys and starts a system, adds and delete appinstances and verifies findlocation results each time
+
+tests:
+
+- name: Add and show provisioning without appinst
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{datadir}}/appdata_no_appinst.yml"
+    yaml2: "{{outputdir}}/show-commands.yml"
+    filetype: appdata
+
+- name: find cloudlet, expect nothing
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmeapi-findcloudlet]
+
+- name: create appinst1 
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-create]
+
+- name: find cloudlet, expect to see cloudlet1
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: create appinst2
+  apifile: "{{datadir}}/appinst2.yml"
+  actions: [ctrlapi-create]
+
+- name: find cloudlet, expect to see cloudlet2
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
+- name: delete appinst2
+  apifile: "{{datadir}}/appinst2.yml"
+  actions: [ctrlapi-delete]
+
+- name: find cloudlet, expect to see cloudlet1
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml: 
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: delete appinst1
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appinst1.yml"
+
+- name: delete rest of provisioning
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+
+- name: verify provisioning is empty
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

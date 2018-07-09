@@ -16,39 +16,192 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 )
 
-type processinfo struct {
+var Procs ProcessData
+
+type yamlFileType int
+
+const (
+	YamlAppdata yamlFileType = 0
+	YamlOther   yamlFileType = 1
+)
+
+type YamlReplacementVariables struct {
+	Vars []map[string]string
+}
+
+type ProcessInfo struct {
 	pid   int
 	alive bool
 }
 
+type ReturnCodeWithText struct {
+	Success bool
+	Text    string
+}
+
+type EtcdProcess struct {
+	process.EtcdLocal
+	Hostname string
+}
+type ControllerProcess struct {
+	process.ControllerLocal
+	Hostname string
+}
+type DmeProcess struct {
+	process.DmeLocal
+	Hostname string
+}
+type CrmProcess struct {
+	process.CrmLocal
+	Hostname string
+}
+type LocSimProcess struct {
+	process.LocApiSimLocal
+	Hostname string
+}
+
+type ProcessData struct {
+	Locsims     []LocSimProcess     `yaml:"locsims"`
+	Etcds       []EtcdProcess       `yaml:"etcds"`
+	Controllers []ControllerProcess `yaml:"controllers"`
+	Dmes        []DmeProcess        `yaml:"dmes"`
+	Crms        []CrmProcess        `yaml:"crms"`
+}
+
+//these are strings which may be present in the yaml but not in the corresponding data structures.
+//These are the only allowed exceptions to the strict yaml unmarshalling
+var yamlExceptions = map[string]map[string]bool{
+	"setup": {
+		"vars": true,
+	},
+	"appdata": {
+		"ip_str": true, // ansible workaround
+	},
+}
+
+func IsYamlOk(e error, yamltype string) bool {
+	rc := true
+	errstr := e.Error()
+	for _, err1 := range strings.Split(errstr, "\n") {
+		allowedException := false
+		for ye := range yamlExceptions[yamltype] {
+			if strings.Contains(err1, ye) {
+				allowedException = true
+			}
+		}
+
+		if allowedException || strings.Contains(err1, "yaml: unmarshal errors") {
+			// ignore this summary error
+		} else {
+			//all other errors are unexpected and mean something is wrong in the yaml
+			log.Printf("Fatal Unmarshal Error: %v\n", err1)
+			rc = false
+		}
+	}
+	return rc
+}
+
 //get list of pids for a process name
-func getPidsByName(processName string) []processinfo {
+func getPidsByName(processName string, processArgs string) []ProcessInfo {
 	//pidlist is a set of pids and alive bool
-	var processes []processinfo
-	out, perr := exec.Command("sh", "-c", "pgrep -x "+processName).Output()
+	var processes []ProcessInfo
+	var pgrepCommand string
+	if processArgs == "" {
+		//look for any instance of this process name
+		pgrepCommand = "pgrep -x " + processName
+	} else {
+		//look for a process running with particular arguments
+		pgrepCommand = "pgrep -f \"" + processName + " .*" + processArgs + "\""
+	}
+	log.Printf("Running pgrep %v\n", pgrepCommand)
+	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()
 	if perr != nil {
 		return processes
 	}
 
 	for _, pid := range strings.Split(string(out), "\n") {
+		if pid == "" {
+			continue
+		}
 		p, err := strconv.Atoi(pid)
 		if err != nil {
 			fmt.Printf("Error in finding pid from process: %v -- %v", processName, err)
 		} else {
-			pinfo := processinfo{pid: p, alive: true}
+			pinfo := ProcessInfo{pid: p, alive: true}
 			processes = append(processes, pinfo)
 		}
 	}
 	return processes
 }
 
+func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
+}
+
+//default is to connect to the first controller, unless we specified otherwise
+func GetController(ctrlname string) *ControllerProcess {
+	if ctrlname == "" {
+		return &Procs.Controllers[0]
+	}
+	for _, ctrl := range Procs.Controllers {
+		if ctrl.Name == ctrlname {
+			return &ctrl
+		}
+	}
+	log.Fatalf("Error: could not find specified controller: %v\n", ctrlname)
+	return nil //unreachable
+}
+
+func GetDme(dmename string) *DmeProcess {
+	if dmename == "" {
+		return &Procs.Dmes[0]
+	}
+	for _, dme := range Procs.Dmes {
+		if dme.Name == dmename {
+			return &dme
+		}
+	}
+	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
+	return nil //unreachable
+}
+
+func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
+}
+
+func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
+	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	api, err := p.ConnectAPI(10 * time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+	} else {
+		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		api.Close()
+	}
+}
+
 //first tries to kill process with SIGINT, then waits up to maxwait time
 //for it to die.  After that point it kills with SIGKILL
-func KillProcessesByName(processName string, maxwait time.Duration, c chan string) {
-	processes := getPidsByName(processName)
+func KillProcessesByName(processName string, maxwait time.Duration, processArgs string, c chan string) {
+	processes := getPidsByName(processName, processArgs)
 	waitInterval := 100 * time.Millisecond
 
 	for _, p := range processes {
@@ -61,10 +214,11 @@ func KillProcessesByName(processName string, maxwait time.Duration, c chan strin
 	}
 	for {
 		//loop up to maxwait until either all the processes are gone or
-		//we run out of waiting time
-		time.Sleep(waitInterval)
-		maxwait -= waitInterval
-
+		//we run out of waiting time. Passing maxwait of zero duration means kill
+		//forcefully no matter what, which we want in some disruptive tests
+		if maxwait <= 0 {
+			break
+		}
 		//loop thru all the processes and see if any are still alive
 		foundOneAlive := false
 		for i, pinfo := range processes {
@@ -92,9 +246,10 @@ func KillProcessesByName(processName string, maxwait time.Duration, c chan strin
 			c <- "gracefully shut down " + processName
 			return
 		}
-		if maxwait <= 0 {
-			break
-		}
+
+		time.Sleep(waitInterval)
+		maxwait -= waitInterval
+
 	}
 	for _, pinfo := range processes {
 		if pinfo.alive {
@@ -109,7 +264,32 @@ func KillProcessesByName(processName string, maxwait time.Duration, c chan strin
 }
 
 func PrintStartBanner(label string) {
-	log.Printf("\n\n************ Begin: %s ************\n\n ", label)
+	log.Printf("\n\n   *** %s\n", label)
+}
+
+func PrintStepBanner(label string) {
+	log.Printf("\n\n      --- %s\n", label)
+}
+
+//for specific output that we want to put in a separate file.  If no
+//output dir, just  print to the stdout
+func PrintToFile(fname string, outputDir string, out string, truncate bool) {
+	if outputDir == "" {
+		fmt.Print(out)
+	} else {
+		outfile := outputDir + "/" + fname
+		mode := os.O_APPEND
+		if truncate {
+			mode = os.O_TRUNC
+		}
+		ofile, err := os.OpenFile(outfile, mode|os.O_CREATE|os.O_WRONLY, 0666)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to append output file: %s, err: %v\n", outfile, err)
+		}
+		log.Printf("writing file: %s\n%s\n", fname, out)
+		fmt.Fprintf(ofile, out)
+	}
 }
 
 //creates an output directory with an optional timestamp.  Server log files, output from APIs, and
@@ -137,14 +317,13 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 	return outputDir
 }
 
-func ReadYamlFile(filename string, iface interface{}, varlist string) error {
+func ReadYamlFile(filename string, iface interface{}, varlist string, validateReplacedVars bool) error {
 	if strings.HasPrefix(filename, "~") {
 		filename = strings.Replace(filename, "~", os.Getenv("HOME"), 1)
 	}
 	yamlFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
-
 	}
 	if varlist != "" {
 		//replace variables denoted as {{variablename}}
@@ -157,11 +336,13 @@ func ReadYamlFile(filename string, iface interface{}, varlist string) error {
 		}
 		yamlFile = []byte(yamlstr)
 	}
-	//make sure there are no unreplaced variables left and inform the user if so
-	re := regexp.MustCompile("{{(\\S+)}}")
-	matches := re.FindAllStringSubmatch(string(yamlFile), 1)
-	if len(matches) > 0 {
-		return errors.New(fmt.Sprintf("Unreplaced variables in yaml: %v", matches))
+	if validateReplacedVars {
+		//make sure there are no unreplaced variables left and inform the user if so
+		re := regexp.MustCompile("{{(\\S+)}}")
+		matches := re.FindAllStringSubmatch(string(yamlFile), 1)
+		if len(matches) > 0 {
+			return errors.New(fmt.Sprintf("Unreplaced variables in yaml: %v", matches))
+		}
 	}
 
 	err = yaml.UnmarshalStrict(yamlFile, iface)
@@ -175,27 +356,41 @@ func ReadYamlFile(filename string, iface interface{}, varlist string) error {
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
-func CompareYamlFiles(firstYamlFile string, secondYamlFile string, replaceVars string) bool {
+func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType string) bool {
 
-	PrintStartBanner("compareYamlFiles")
+	PrintStepBanner("running compareYamlFiles")
 
-	log.Printf("Comparing %v to %v\n", firstYamlFile, secondYamlFile)
-	var y1 edgeproto.ApplicationData
-	var y2 edgeproto.ApplicationData
+	log.Printf("Comparing yamls: %v  %v\n", firstYamlFile, secondYamlFile)
 
-	err1 := ReadYamlFile(firstYamlFile, &y1, replaceVars)
+	var err1 error
+	var err2 error
+	var y1 interface{}
+	var y2 interface{}
+
+	if fileType == "appdata" {
+		//for appdata, use the ApplicationData type so we can sort it
+		var a1 edgeproto.ApplicationData
+		var a2 edgeproto.ApplicationData
+
+		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+		a1.Sort()
+		a2.Sort()
+		y1 = a1
+		y2 = a2
+
+	} else {
+		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
+	}
 	if err1 != nil {
-		log.Printf("error reading yaml file: %s\n", firstYamlFile)
+		log.Printf("Error in reading yaml file %v\n", firstYamlFile)
 		return false
 	}
-	err2 := ReadYamlFile(secondYamlFile, &y2, replaceVars)
 	if err2 != nil {
-		log.Printf("error reading yaml file: %s\n", secondYamlFile)
+		log.Printf("Error in reading yaml file %v\n", secondYamlFile)
 		return false
 	}
-
-	y1.Sort()
-	y2.Sort()
 
 	if !cmp.Equal(y1, y2) {
 		log.Println("Comparison fail")

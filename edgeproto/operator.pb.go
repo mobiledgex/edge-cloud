@@ -19,6 +19,7 @@ import grpc "google.golang.org/grpc"
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
 
 import io "io"
 
@@ -425,7 +426,7 @@ func (m *OperatorKey) CopyInFields(src *OperatorKey) {
 func (m *OperatorKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal OperatorKey key string", "obj", m)
+		log.FatalLog("Failed to marshal OperatorKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -433,7 +434,7 @@ func (m *OperatorKey) GetKeyString() string {
 func OperatorKeyStringParse(str string, key *OperatorKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal OperatorKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal OperatorKey key string", "str", str)
 	}
 }
 
@@ -557,7 +558,7 @@ func (s *OperatorStore) LoadAll(cb OperatorCb) error {
 		var obj Operator
 		err := json.Unmarshal(val, &obj)
 		if err != nil {
-			util.WarnLog("Failed to parse Operator data", "val", string(val))
+			log.WarnLog("Failed to parse Operator data", "val", string(val))
 			return nil
 		}
 		err = cb(&obj)
@@ -577,7 +578,7 @@ func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
 	var obj Operator
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse Operator data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Operator data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
@@ -591,6 +592,12 @@ type OperatorCache struct {
 	List      map[OperatorKey]struct{}
 	NotifyCb  func(obj *OperatorKey)
 	UpdatedCb func(old *Operator, new *Operator)
+}
+
+func NewOperatorCache() *OperatorCache {
+	cache := OperatorCache{}
+	InitOperatorCache(&cache)
+	return &cache
 }
 
 func InitOperatorCache(cache *OperatorCache) {
@@ -625,38 +632,51 @@ func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
 func (c *OperatorCache) Update(in *Operator, rev int64) {
 	c.Mux.Lock()
 	if c.UpdatedCb != nil {
-		old := c.Objs[*in.GetKey()]
+		old := c.Objs[in.Key]
 		new := &Operator{}
 		*new = *in
 		defer c.UpdatedCb(old, new)
 	}
-	c.Objs[*in.GetKey()] = in
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
 	}
 }
 
 func (c *OperatorCache) Delete(in *Operator, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(in.GetKey())
+		c.NotifyCb(&in.Key)
+	}
+}
+
+func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			delete(c.Objs, key)
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+		}
 	}
 }
 
 func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show Operator", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show Operator", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 		if !obj.Matches(filter) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show Operator", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show Operator", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -672,12 +692,11 @@ func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey)) {
 func (c *OperatorCache) SetUpdatedCb(fn func(old *Operator, new *Operator)) {
 	c.UpdatedCb = fn
 }
-
 func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Operator{}
 	err := json.Unmarshal(val, &obj)
 	if err != nil {
-		util.WarnLog("Failed to parse Operator data", "val", string(val))
+		log.WarnLog("Failed to parse Operator data", "val", string(val))
 		return
 	}
 	c.Update(&obj, rev)
@@ -691,7 +710,7 @@ func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
 func (c *OperatorCache) SyncDelete(key []byte, rev int64) {
 	obj := Operator{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	OperatorKeyStringParse(keystr, obj.GetKey())
+	OperatorKeyStringParse(keystr, &obj.Key)
 	c.Delete(&obj, rev)
 }
 
