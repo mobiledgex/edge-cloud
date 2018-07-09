@@ -77,7 +77,7 @@ public class FindCloudlet implements Callable {
                         serviceIp,
                         reply.getServicePort(),
                         loc,
-                        reply.getStatus(),
+                        FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
                         reply.getToken());
             } else {
                 cloudletResponse = new FindCloudletResponse(reply.getVer(),
@@ -85,7 +85,7 @@ public class FindCloudlet implements Callable {
                         serviceIp,
                         reply.getServicePort(),
                         null,
-                        reply.getStatus(),
+                        FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
                         reply.getToken());
             }
 
