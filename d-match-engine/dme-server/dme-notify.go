@@ -8,8 +8,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
-var cloudletID = 5000
-
 // Implement notify.RecvAppInstHandler
 type AppInstHandler struct {
 }
