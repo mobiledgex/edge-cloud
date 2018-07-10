@@ -12,7 +12,7 @@ import (
 
 func TestLocations(client dme.Match_Engine_ApiClient) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
-	fmt.Println(">>>>>>>Finding Right Cloudlets<<<<<<<<<")
+	fmt.Println(">>>>>>>Finding Right Locations<<<<<<<<<")
 	for _, m := range dmetest.VerifyLocData {
 		mreply, err := client.VerifyLocation(ctx, &m.Req)
 		if err != nil {
