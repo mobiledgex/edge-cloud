@@ -2,6 +2,7 @@ package main
 
 import (
 	"sync"
+	"net"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -189,6 +190,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 
 	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
+
 	tbl.RLock()
 	app, ok := tbl.apps[key]
 	if !ok {
@@ -211,16 +213,48 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			distance = d
 			found = c
 			mreply.Uri = c.uri
+			mreply.ServiceIp = c.ip
 			*mreply.CloudletLocation = c.location
 		}
 	}
 	if found != nil {
-		log.DebugLog(log.DebugLevelDmereq, "best cloudlet at",
+		var ipaddr net.IP
+		ipaddr = c.ip
+		log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
+			"app", key.appKey.Name,
+			"carrier", key.carrierName,
 			"lat", found.location.Lat,
 			"long", found.location.Long,
 			"distance", distance,
-			"uri", found.uri)
+			"uri", found.uri,
+			"IP", ipaddr.String())
 		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
+	}
+	tbl.RUnlock()
+}
+
+func listAppinstTbl() {
+	var app *carrierApp
+	var inst *carrierAppInst
+	var tbl *carrierApps
+
+	tbl = carrierAppTbl
+	tbl.RLock()
+	for a := range tbl.apps {
+		app = tbl.apps[a]
+		log.DebugLog(log.DebugLevelDmedb, "app",
+			"Name", app.key.appKey.Name,
+			"Ver", app.key.appKey.Version,
+			"Carrier", app.key.carrierName)
+		for c := range app.insts {
+			inst = app.insts[c]
+			log.DebugLog(log.DebugLevelDmedb, "app",
+				"Name", app.key.appKey.Name,
+				"Ver", app.key.appKey.Version,
+				"Carrier", app.key.carrierName,
+				"Lat", inst.location.Lat,
+				"Long", inst.location.Long)
+		}
 	}
 	tbl.RUnlock()
 }

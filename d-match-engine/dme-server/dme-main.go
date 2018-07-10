@@ -26,7 +26,6 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
-
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
@@ -85,6 +84,16 @@ func (s *server) RegisterClient(ctx context.Context,
 	return mstatus, nil
 }
 
+func (s *server) AddUserToGroup(ctx context.Context,
+	req *dme.DynamicLocGroupAdd) (*dme.Match_Engine_Status, error) {
+
+	var mreq *dme.Match_Engine_Status
+	mreq = new(dme.Match_Engine_Status)
+	mreq.Status = 0
+
+	return mreq, nil
+}
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -92,10 +101,12 @@ func main() {
 	setupMatchEngine()
 
 	if *standalone {
+		fmt.Printf("Running in Standalone Mode with test instances\n");
 		appInsts := dmetest.GenerateAppInsts()
 		for _, inst := range appInsts {
 			addApp(inst)
 		}
+		listAppinstTbl()
 	} else {
 		notifyClient := initNotifyClient(*notifyAddrs)
 		notifyClient.Start()
