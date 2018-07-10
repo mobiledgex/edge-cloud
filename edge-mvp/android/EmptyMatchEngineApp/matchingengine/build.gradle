@@ -68,7 +68,11 @@ protobuf {
     }
 }
 
+
+
 dependencies {
+    def grpcVersion='1.13.1'
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'com.android.support:appcompat-v7:27.1.1'
@@ -80,14 +84,14 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     // You need to build grpc-java to obtain these libraries below.
-    implementation 'io.grpc:grpc-okhttp:1.12.0' // CURRENT_GRPC_VERSION
-    implementation 'io.grpc:grpc-protobuf-lite:1.12.0' // CURRENT_GRPC_VERSION
-    implementation 'io.grpc:grpc-stub:1.12.0' // CURRENT_GRPC_VERSION
+    implementation "io.grpc:grpc-okhttp:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf-lite:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
     protobuf 'com.google.protobuf:protobuf-java:3.0.2' // FIXME: Timestamp, for lite version: old lib: https://github.com/google/protobuf/issues/1889
     implementation 'javax.annotation:javax.annotation-api:1.2'
 
     // For Google Location Services.
-    implementation 'com.google.android.gms:play-services-location:11.0.0'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
 }
 
 publishing {
