@@ -1,0 +1,18 @@
+testfiles:
+  - filename: stop_cleanup.yml
+  - filename: deploy_start.yml
+  - filename: find_cloudlet.yml
+    loops: 3
+  - filename: verify_loc.yml
+    loops: 5 
+  - filename: ctrl_restart.yml
+    loops: 3
+  - filename: find_cloudlet.yml
+    loops: 3
+  - filename: restarts_2ctrls.yml
+    loops: 3
+  - filename: verify_loc.yml
+    loops: 5
+  - filename: stop_cleanup.yml
+
+

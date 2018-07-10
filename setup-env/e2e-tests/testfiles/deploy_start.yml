@@ -1,6 +1,6 @@
 ##
 ##
-description: Deploys and starts a system, adds provisioning. Does not stop or cleanup
+description: Deploys and starts a system. Does not stop or cleanup
 
 tests:
 

@@ -7,7 +7,7 @@ tests:
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-create,ctrlapi-show]
 
-- name: verifylocation expecting to see results within 2km
+- name: verifylocation expected within 2km
   apifile: "{{datadir}}/mer_jims_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
@@ -15,7 +15,7 @@ tests:
     yaml2: "{{datadir}}/location_within_2km.yml"
     filetype: verifylocation
 
-- name: verifylocation expecting to see results within 100km
+- name: verifylocation expected within 100km
   apifile: "{{datadir}}/mer_dallas_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
@@ -24,7 +24,7 @@ tests:
     filetype: verifylocation
 
   
-- name: delete and show ctrl provisioning, verify it is empty
+- name: delete provisioning, verify it is empty
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-delete,ctrlapi-show]
   compareyaml:

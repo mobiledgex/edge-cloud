@@ -3,11 +3,13 @@ package main
 // executes end-to-end MEX tests by calling test-mex multiple times as directed by the input test file.
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -16,10 +18,12 @@ import (
 var (
 	commandName = "e2e-tests"
 	testFile    *string
+	testGroup   *string
 	outputDir   *string
 	setupFile   *string
 	dataDir     *string
 	stopOnFail  *bool
+	verbose     *bool
 )
 
 //re-init the flags because otherwise we inherit a bunch of flags from the testing
@@ -27,11 +31,33 @@ var (
 func init() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	testFile = flag.String("testfile", "", "input file with tests")
+	testGroup = flag.String("testgroup", "", "input file with multiple test files")
 	outputDir = flag.String("outputdir", "/tmp/e2e_test_out", "output directory, timestamp will be appended")
 	setupFile = flag.String("setupfile", "", "network config setup file")
 	dataDir = flag.String("datadir", "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data", "directory where app data files exist")
 	stopOnFail = flag.Bool("stop", false, "stop on failures")
+	verbose = flag.Bool("verbose", false, "prints full output screen")
+
 }
+
+// an individual test
+// name of an individual test file and how many times to run it
+type e2e_test_file struct {
+	Filename string `yaml:"filename"`
+	Loops    int    `yaml:"loops"`
+}
+
+type e2e_test_files struct {
+	Testfiles []e2e_test_file `yaml:"testfiles"`
+}
+
+// group of test files, each of which may have multiple tests
+type e2e_test_group struct {
+	Name      string
+	Testfiles []e2e_test_file `yaml:"testfiles"`
+}
+
+// a list of tests
 
 type e2e_test struct {
 	Name        string
@@ -63,9 +89,12 @@ func validateArgs() {
 	flag.Parse()
 
 	errorFound := false
-	if *testFile == "" {
-		fmt.Println("Argument -testfile <file> is required")
+
+	if *testFile == "" && *testGroup == "" {
+		fmt.Println("Argument -testfile <file> or -testgroup <file> is required")
 		errorFound = true
+	} else if *testFile != "" && *testGroup != "" {
+		fmt.Println("Only one of -testfile <file> or -testgroup <file> is allowed")
 	}
 	if *outputDir == "" {
 		fmt.Println("Argument -outputdir <dir> is required")
@@ -90,28 +119,32 @@ func validateArgs() {
 
 }
 
-func readTestFile() bool {
+func readYamlFile(fileName string, tests interface{}) bool {
 	//outputdir is always appended as a variable
 	varstr := "outputdir=" + *outputDir
 	varstr += ",datadir=" + *dataDir
 
-	err := util.ReadYamlFile(*testFile, &testsToRun, varstr, false)
+	err := util.ReadYamlFile(fileName, tests, varstr, true)
 	if err != nil {
-		log.Printf("*** Error in reading test file: %v - err: %v\n", *testFile, err)
-		if strings.Contains(string(err.Error()), "Unreplaced variables") {
-			log.Printf("\n** re-run with -vars varname=value\n")
-		}
+		log.Fatalf("*** Error in reading test file: %v - err: %v\n", *testFile, err)
 	}
 	return true
 }
 
-func runTests() {
+func runTests(fileName string) (int, int, int) {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
 
+	basename := path.Base(fileName)
+
+	var testsToRun e2e_tests
+	if !readYamlFile(fileName, &testsToRun) {
+		return 0, 0, 0
+	}
+
 	for _, t := range testsToRun.Tests {
-		util.PrintStartBanner("Starting test: " + t.Name)
+		fmt.Printf("%-25s %-50s ", basename, t.Name)
 		cmdstr := fmt.Sprintf("test-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
 		if len(t.Actions) > 0 {
 			cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
@@ -123,31 +156,88 @@ func runTests() {
 			cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
 		}
 
-		fmt.Printf("executing: %s\n", cmdstr)
+		//		log.Printf("executing: %s\n", cmdstr)
 		cmd := exec.Command("sh", "-c", cmdstr)
-		out, err := cmd.CombinedOutput()
-		fmt.Println(string(out))
+
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+		if *verbose {
+			fmt.Println(out.String())
+		}
 		if err == nil {
-			log.Printf("\n        *** PASS: %v\n", t.Name)
+			fmt.Println("PASS")
 			numPassed += 1
 		} else {
-			log.Printf("\n        *** FAIL: %v -- %v\n", t.Name, err)
+			fmt.Printf("FAIL: %s\n", stderr.String())
 			numFailed += 1
 			if *stopOnFail {
-				log.Printf("*** STOPPING ON FAILURE due to --stop option\n")
+				fmt.Printf("*** STOPPING ON FAILURE due to --stop option\n")
 				break
 			}
 		}
+
 		numTestsRun++
 	}
-	log.Printf("\n\n*** Summary of testfile %s Tests Run: %d Passed: %d Failed: %d -- Logs in %s\n", *testFile, numTestsRun, numPassed, numFailed, *outputDir)
+	if *verbose {
+		fmt.Printf("\n\n*** Summary of testfile %s Tests Run: %d Passed: %d Failed: %d -- Logs in %s\n", fileName, numTestsRun, numPassed, numFailed, *outputDir)
+	}
+	return numTestsRun, numPassed, numFailed
+}
 
-	os.Exit(numFailed)
+func runTestGroup(fileName string) {
+	var testGroup e2e_test_group
+	if !readYamlFile(fileName, &testGroup) {
+		log.Fatalf("unable to read test group file %s\n", fileName)
+	}
+	totalRun := 0
+	totalPassed := 0
+	totalFailed := 0
+	//look in same dir for the included test files
+	dir := path.Dir(fileName)
+
+	var failedTcs = make(map[string]int)
+	for _, tg := range testGroup.Testfiles {
+		for i := 0; i <= tg.Loops; i++ {
+			//		fmt.Printf("Running testfile %s\n", tg.Filename)
+			run, pass, fail := runTests(dir + "/" + tg.Filename)
+			totalRun += run
+			totalPassed += pass
+			totalFailed += fail
+
+			if fail > 0 {
+				_, ok := failedTcs[tg.Filename]
+				if !ok {
+					failedTcs[tg.Filename] = 0
+				}
+				failedTcs[tg.Filename] += fail
+			}
+		}
+	}
+	fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
+	if totalFailed > 0 {
+		fmt.Printf("Failed Tests: ")
+		for t, f := range failedTcs {
+			fmt.Printf("  %s: failures %d\n", t, f)
+		}
+		fmt.Printf("Logs in %s\n", *outputDir)
+	}
+
 }
 
 func main() {
 	validateArgs()
 	*outputDir = util.CreateOutputDir(true, *outputDir, commandName+".log")
-	readTestFile()
-	runTests()
+
+	fmt.Printf("\n%-25s %-50s Result\n", "Testfile", "Test")
+	fmt.Printf("-------------------------------------------------------------------------------------\n")
+	if *testFile != "" {
+		runTests(*testFile)
+	}
+	if *testGroup != "" {
+		runTestGroup(*testGroup)
+	}
+
 }
