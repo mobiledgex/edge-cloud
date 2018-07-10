@@ -22,7 +22,6 @@ var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
-var debug = flag.Bool("dd", false, "Debug mode for printing on screen")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
@@ -107,9 +106,7 @@ func main() {
 		for _, inst := range appInsts {
 			addApp(inst)
 		}
-		if *debug {
-			listAppinstTbl()
-		}
+		listAppinstTbl()
 	} else {
 		notifyClient := initNotifyClient(*notifyAddrs)
 		notifyClient.Start()

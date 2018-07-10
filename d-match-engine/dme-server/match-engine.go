@@ -2,7 +2,6 @@ package main
 
 import (
 	"sync"
-	"fmt"
 	"net"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
@@ -219,19 +218,16 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		}
 	}
 	if found != nil {
-		log.DebugLog(log.DebugLevelDmereq, "best cloudlet at",
+		var ipaddr net.IP
+		ipaddr = c.ip
+		log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
+			"app", key.appKey.Name,
+			"carrier", key.carrierName,
 			"lat", found.location.Lat,
 			"long", found.location.Long,
 			"distance", distance,
-			"uri", found.uri)
-		if *debug {
-			var ipaddr net.IP
-			ipaddr = c.ip
-			fmt.Printf("%s/%s: Found loc = %f/%f at distance %f with IP %s\n",
-				key.appKey.Name, key.carrierName,
-				found.location.Lat, found.location.Long, distance,
-				ipaddr.String())
-		}
+			"uri", found.uri,
+			"IP", ipaddr.String())
 		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
 	}
 	tbl.RUnlock()
@@ -246,13 +242,18 @@ func listAppinstTbl() {
 	tbl.RLock()
 	for a := range tbl.apps {
 		app = tbl.apps[a]
-		fmt.Printf(">> app = %s/%s info for carrier %s\n", app.key.appKey.Name,
-			app.key.appKey.Version, app.key.carrierName);
+		log.DebugLog(log.DebugLevelDmedb, "app",
+			"Name", app.key.appKey.Name,
+			"Ver", app.key.appKey.Version,
+			"Carrier", app.key.carrierName)
 		for c := range app.insts {
 			inst = app.insts[c]
-			fmt.Printf("app = %s/%s info for carrier = %s, Loc = %f/%f\n",
-				app.key.appKey.Name, app.key.appKey.Version,
-				app.key.carrierName, inst.location.Lat, inst.location.Long)
+			log.DebugLog(log.DebugLevelDmedb, "app",
+				"Name", app.key.appKey.Name,
+				"Ver", app.key.appKey.Version,
+				"Carrier", app.key.carrierName,
+				"Lat", inst.location.Lat,
+				"Long", inst.location.Long)
 		}
 	}
 	tbl.RUnlock()
