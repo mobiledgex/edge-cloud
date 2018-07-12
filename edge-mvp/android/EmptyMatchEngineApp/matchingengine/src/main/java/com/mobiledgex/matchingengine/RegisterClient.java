@@ -68,6 +68,7 @@ public class RegisterClient implements Callable {
             Log.d(TAG, "Version of Match_Engine_Status: " + ver);
         }
 
+        mMatchingEngine.setMatchEngineStatus(reply);
         return reply;
     }
 }

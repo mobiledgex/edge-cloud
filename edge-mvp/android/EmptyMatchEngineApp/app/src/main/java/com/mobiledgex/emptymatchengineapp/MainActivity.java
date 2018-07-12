@@ -35,6 +35,8 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.util.UUID;
+
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "MainActivity";
@@ -118,6 +120,17 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             prefs.edit()
                     .putBoolean(firstTimeUseKey, false)
                     .apply();
+        }
+
+        // Set, or create create an App generated UUID for use in MatchingEngine, if there isn't one:
+        String uuidKey = getResources().getString(R.string.perference_mex_user_uuid);
+        String currentUUID = prefs.getString(uuidKey, "");
+        if (currentUUID.isEmpty()) {
+            prefs.edit()
+                    .putString(uuidKey, mMatchingEngine.createUUID().toString())
+                    .apply();
+        } else {
+            mMatchingEngine.setUUID(UUID.fromString(currentUUID));
         }
 
     }
@@ -217,8 +230,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         final String prefKeyAllowMEX = getResources().getString(R.string.preference_mex_location_verification);
 
         if (key.equals(prefKeyAllowMEX)) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-            boolean mexLocationAllowed = prefs.getBoolean(prefKeyAllowMEX, false);
+            boolean mexLocationAllowed = sharedPreferences.getBoolean(prefKeyAllowMEX, false);
             MatchingEngine.setMexLocationAllowed(mexLocationAllowed);
         }
     }
@@ -259,14 +271,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
                             // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
                             String serverip = null;
-                            if (closestCloudlet.server != null && closestCloudlet.server.length > 0) {
-                                serverip = closestCloudlet.server[0] + ", ";
-                                for (int i = 1; i < closestCloudlet.server.length - 1; i++) {
-                                    serverip += closestCloudlet.server[i] + ", ";
+                            if (closestCloudlet.service_ip != null && closestCloudlet.service_ip.length > 0) {
+                                serverip = closestCloudlet.service_ip[0] + ", ";
+                                for (int i = 1; i < closestCloudlet.service_ip.length - 1; i++) {
+                                    serverip += closestCloudlet.service_ip[i] + ", ";
                                 }
-                                serverip += closestCloudlet.server[closestCloudlet.server.length - 1];
+                                serverip += closestCloudlet.service_ip[closestCloudlet.service_ip.length - 1];
                             }
-                            someText += "[Cloudlet Server: [" + serverip + "], Port: " + closestCloudlet.port + "]";
+                            someText += "[Cloudlet Server: URI: [" + closestCloudlet.uri + "], Serverip: [" + serverip + "], Port: " + closestCloudlet.port + "]";
 
                             TextView tv = findViewById(R.id.mex_verified_location_content);
                             tv.setText(someText);
