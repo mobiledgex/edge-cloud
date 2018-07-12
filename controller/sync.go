@@ -26,6 +26,7 @@ type ObjCache interface {
 	SyncDelete(key []byte, rev int64)
 	SyncListStart()
 	SyncListEnd()
+	GetTypeString() string
 }
 
 func InitSync(store objstore.ObjStore) *Sync {
@@ -37,8 +38,8 @@ func InitSync(store objstore.ObjStore) *Sync {
 	return &sync
 }
 
-func (s *Sync) RegisterCache(key string, cache ObjCache) {
-	s.caches[key] = cache
+func (s *Sync) RegisterCache(cache ObjCache) {
+	s.caches[cache.GetTypeString()] = cache
 }
 
 // Watch on all key changes in a single thread.

@@ -29,6 +29,9 @@ type ObjStore interface {
 	// Get retrieves a single object with the given key string.
 	// Get returns the data, a version (not revision) number, and any error.
 	Get(key string) ([]byte, int64, error)
+	// Put the key-value pair, regardless of whether it already exists or
+	// not.
+	Put(key, val string) (int64, error)
 	// List retrives all objects that have the given key string prefix.
 	List(key string, cb ListCb) error
 	// Sync is a blocking call used to keep in sync with the database.
@@ -70,10 +73,6 @@ type ObjKey interface {
 	// Validate checks that the key object fields do not contain
 	// invalid or missing data.
 	Validate() error
-	// TypeString returns a string representing the object type
-	// that is used as a prefix when creating the key used to store
-	// the object in the database.
-	TypeString() string
 }
 
 type SyncCbAction int32
@@ -107,12 +106,12 @@ type SyncCbData struct {
 	Rev int64
 }
 
-func DbKeyString(key ObjKey) string {
-	return fmt.Sprintf("%s/%s", DbKeyPrefixString(key), key.GetKeyString())
+func DbKeyString(typ string, key ObjKey) string {
+	return fmt.Sprintf("%s/%s", DbKeyPrefixString(typ), key.GetKeyString())
 }
 
-func DbKeyPrefixString(key ObjKey) string {
-	return fmt.Sprintf("%d/%s", GetRegion(), key.TypeString())
+func DbKeyPrefixString(typ string) string {
+	return fmt.Sprintf("%d/%s", GetRegion(), typ)
 }
 
 func DbKeyPrefixRemove(key string) string {

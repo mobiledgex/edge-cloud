@@ -34,6 +34,7 @@ type tmplArgs struct {
 	KeyName     string
 	UpdateField string
 	UpdateValue string
+	ShowOnly    bool
 }
 
 var tmpl = `
@@ -123,6 +124,7 @@ type {{.Name}}CommonApi struct {
 	client_api {{.Pkg}}.{{.Name}}ApiClient
 }
 
+{{- if not .ShowOnly}}
 func (x *{{.Name}}CommonApi) Create{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
 	if x.internal_api != nil {
 		return x.internal_api.Create{{.Name}}(ctx, in)
@@ -146,6 +148,7 @@ func (x *{{.Name}}CommonApi) Delete{{.Name}}(ctx context.Context, in *{{.Pkg}}.{
 		return x.client_api.Delete{{.Name}}(ctx, in)
 	}
 }
+{{- end}}
 
 func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}.{{.Name}}, showData *Show{{.Name}}) error {
 	if x.internal_api != nil {
@@ -169,6 +172,7 @@ func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi 
 	return &apiWrap
 }
 
+{{- if not .ShowOnly}}
 func Internal{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
 	basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
 }
@@ -248,17 +252,19 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	assert.Nil(t, err, "Update back {{.Name}}")
 {{- end}}
 }
+{{- end}}
 
 `
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
-	hasGenerateCud := false
+	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			hasGenerateCud = true
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			hasGenerateCudTest = true
 		}
 	}
-	if !hasGenerateCud {
+	if !hasGenerateCudTest {
 		return
 	}
 	t.PrintImport("", "google.golang.org/grpc")
@@ -271,27 +277,31 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
-	hasGenerateCud := false
+	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			hasGenerateCud = true
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			hasGenerateCudTest = true
+			break
 		}
 	}
-	if !hasGenerateCud {
+	if !hasGenerateCudTest {
 		return
 	}
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			t.generateTestCud(msg.DescriptorProto)
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			t.generateCudTest(msg.DescriptorProto)
 		}
 	}
 }
 
-func (t *TestCud) generateTestCud(message *descriptor.DescriptorProto) {
+func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 	args := tmplArgs{
-		Pkg:     edgeproto,
-		Name:    *message.Name,
-		KeyName: *message.Name + "Key",
+		Pkg:      edgeproto,
+		Name:     *message.Name,
+		KeyName:  *message.Name + "Key",
+		ShowOnly: GetGenerateShowTest(message),
 	}
 	for _, field := range message.Field {
 		if GetTestUpdate(field) {
@@ -310,8 +320,12 @@ func (t *TestCud) generateTestCud(message *descriptor.DescriptorProto) {
 	t.cudTmpl.Execute(t, args)
 }
 
-func GetGenerateCud(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
+func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTest, false)
+}
+
+func GetGenerateShowTest(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateShowTest, false)
 }
 
 func GetTestUpdate(field *descriptor.FieldDescriptorProto) bool {

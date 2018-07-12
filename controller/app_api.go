@@ -23,7 +23,7 @@ func InitAppApi(sync *Sync) {
 	appApi.sync = sync
 	appApi.store = edgeproto.NewAppStore(sync.store)
 	edgeproto.InitAppCache(&appApi.cache)
-	sync.RegisterCache(edgeproto.AppKeyTypeString(), &appApi.cache)
+	sync.RegisterCache(&appApi.cache)
 	appApi.cache.SetUpdatedCb(appApi.UpdatedCb)
 }
 

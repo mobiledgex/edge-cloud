@@ -24,7 +24,7 @@ func InitAppInstApi(sync *Sync) {
 	appInstApi.store = edgeproto.NewAppInstStore(sync.store)
 	edgeproto.InitAppInstCache(&appInstApi.cache)
 	appInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateAppInst)
-	sync.RegisterCache(edgeproto.AppInstKeyTypeString(), &appInstApi.cache)
+	sync.RegisterCache(&appInstApi.cache)
 }
 
 func (s *AppInstApi) GetAllKeys(keys map[edgeproto.AppInstKey]struct{}) {
@@ -33,6 +33,10 @@ func (s *AppInstApi) GetAllKeys(keys map[edgeproto.AppInstKey]struct{}) {
 
 func (s *AppInstApi) Get(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool {
 	return s.cache.Get(key, val)
+}
+
+func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
+	return s.cache.HasKey(key)
 }
 
 func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
@@ -100,7 +104,10 @@ func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (
 }
 
 func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.sync.syncWait)
+	resp, err := s.store.Delete(in, s.sync.syncWait)
+	// also delete associated info
+	appInstInfoApi.Del(&in.Key, s.sync.syncWait)
+	return resp, err
 }
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {

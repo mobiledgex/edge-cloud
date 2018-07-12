@@ -140,6 +140,21 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 	return obj.Value, obj.Version, nil
 }
 
+func (e *EtcdClient) Put(key, val string) (int64, error) {
+	if e.client == nil {
+		return 0, objstore.ErrObjStoreNotInitialized
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	resp, err := e.client.Put(ctx, key, val)
+	cancel()
+	if err != nil {
+		return 0, err
+	}
+	log.DebugLog(log.DebugLevelEtcd, "put data", "key", key, "val", val, "rev",
+		resp.Header.Revision)
+	return resp.Header.Revision, nil
+}
+
 // Get records that have the given key prefix
 func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 	if e.client == nil {

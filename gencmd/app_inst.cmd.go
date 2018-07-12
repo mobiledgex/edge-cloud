@@ -34,9 +34,15 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var AppInstApiCmd edgeproto.AppInstApiClient
+var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
+var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
 var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstInLiveness string
+var AppInstInfoIn edgeproto.AppInstInfo
+var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
+var AppInstMetricsIn edgeproto.AppInstMetrics
+var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
 var LivenessStrings = []string{
 	"UNKNOWN",
 	"STATIC",
@@ -127,7 +133,11 @@ func AppInstHeaderSlicer() []string {
 }
 
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
+	}
+	s = append(s, in.Fields[0])
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
@@ -144,7 +154,8 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 }
 
 func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
+	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
@@ -157,6 +168,18 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "MaxDisk")
 	s = append(s, "NetworkIn")
 	s = append(s, "NetworkOut")
+	return s
+}
+
+func AppInstMetricsSlicer(in *edgeproto.AppInstMetrics) []string {
+	s := make([]string, 0, 1)
+	s = append(s, strconv.FormatUint(uint64(in.Something), 10))
+	return s
+}
+
+func AppInstMetricsHeaderSlicer() []string {
+	s := make([]string, 0, 1)
+	s = append(s, "Something")
 	return s
 }
 
@@ -389,6 +412,140 @@ var AppInstApiCmds = []*cobra.Command{
 	ShowAppInstCmd,
 }
 
+var ShowAppInstInfoCmd = &cobra.Command{
+	Use: "ShowAppInstInfo",
+	Run: func(cmd *cobra.Command, args []string) {
+		if AppInstInfoApiCmd == nil {
+			fmt.Println("AppInstInfoApi client not initialized")
+			return
+		}
+		var err error
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
+		if err != nil {
+			fmt.Println("ShowAppInstInfo failed: ", err)
+			return
+		}
+		objs := make([]*edgeproto.AppInstInfo, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				fmt.Println("ShowAppInstInfo recv failed: ", err)
+				break
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
+			for _, obj := range objs {
+				fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
+			}
+			output.Flush()
+		}
+	},
+}
+
+var AppInstInfoApiCmds = []*cobra.Command{
+	ShowAppInstInfoCmd,
+}
+
+var ShowAppInstMetricsCmd = &cobra.Command{
+	Use: "ShowAppInstMetrics",
+	Run: func(cmd *cobra.Command, args []string) {
+		if AppInstMetricsApiCmd == nil {
+			fmt.Println("AppInstMetricsApi client not initialized")
+			return
+		}
+		var err error
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, &AppInstMetricsIn)
+		if err != nil {
+			fmt.Println("ShowAppInstMetrics failed: ", err)
+			return
+		}
+		objs := make([]*edgeproto.AppInstMetrics, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				fmt.Println("ShowAppInstMetrics recv failed: ", err)
+				break
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
+			for _, obj := range objs {
+				fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
+			}
+			output.Flush()
+		}
+	},
+}
+
+var AppInstMetricsApiCmds = []*cobra.Command{
+	ShowAppInstMetricsCmd,
+}
+
 func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
@@ -399,10 +556,25 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
 	AppInstFlagSet.BytesHexVar(&AppInstIn.Ip, "ip", nil, "Ip")
 	AppInstFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [UNKNOWN STATIC DYNAMIC]")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
+	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Load, "load", 0, "Load")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Cpu, "cpu", 0, "Cpu")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.MaxDisk, "maxdisk", 0, "MaxDisk")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.NetworkIn, "networkin", 0, "NetworkIn")
+	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.NetworkOut, "networkout", 0, "NetworkOut")
+	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	UpdateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	ShowAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
+	ShowAppInstInfoCmd.Flags().AddFlagSet(AppInstInfoFlagSet)
+	ShowAppInstMetricsCmd.Flags().AddFlagSet(AppInstMetricsFlagSet)
 }
 
 func AppInstSetFields() {
@@ -463,6 +635,45 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("apppath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "7")
+	}
+}
+func AppInstInfoSetFields() {
+	AppInstInfoIn.Fields = make([]string, 0)
+	if AppInstInfoFlagSet.Lookup("key-appkey-developerkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.1.2")
+	}
+	if AppInstInfoFlagSet.Lookup("key-appkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.2")
+	}
+	if AppInstInfoFlagSet.Lookup("key-appkey-version").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.3")
+	}
+	if AppInstInfoFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.1.1")
+	}
+	if AppInstInfoFlagSet.Lookup("key-cloudletkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.2")
+	}
+	if AppInstInfoFlagSet.Lookup("key-id").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.3")
+	}
+	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
+	}
+	if AppInstInfoFlagSet.Lookup("load").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
+	}
+	if AppInstInfoFlagSet.Lookup("cpu").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "5")
+	}
+	if AppInstInfoFlagSet.Lookup("maxdisk").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "6")
+	}
+	if AppInstInfoFlagSet.Lookup("networkin").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7")
+	}
+	if AppInstInfoFlagSet.Lookup("networkout").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "8")
 	}
 }
 func parseAppInstEnums() error {

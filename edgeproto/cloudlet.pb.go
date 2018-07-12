@@ -40,6 +40,7 @@ const (
 	CloudletState_ConfiguringOpenstack  CloudletState = 1
 	CloudletState_ConfiguringKubernetes CloudletState = 2
 	CloudletState_Ready                 CloudletState = 3
+	CloudletState_Offline               CloudletState = 4
 )
 
 var CloudletState_name = map[int32]string{
@@ -47,12 +48,14 @@ var CloudletState_name = map[int32]string{
 	1: "ConfiguringOpenstack",
 	2: "ConfiguringKubernetes",
 	3: "Ready",
+	4: "Offline",
 }
 var CloudletState_value = map[string]int32{
 	"Unknown":               0,
 	"ConfiguringOpenstack":  1,
 	"ConfiguringKubernetes": 2,
 	"Ready":                 3,
+	"Offline":               4,
 }
 
 func (x CloudletState) String() string {
@@ -89,18 +92,19 @@ func (m *Cloudlet) String() string            { return proto.CompactTextString(m
 func (*Cloudlet) ProtoMessage()               {}
 func (*Cloudlet) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
 
-// CloudletInfo is the information CRM passes up to the controller
-// about the Cloudlets it is managing.
+// CloudletInfo is the static information CRM passes up to the controller
+// about the Cloudlets it is managing. It is put into etcd or equivalent.
 type CloudletInfo struct {
+	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
-	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
+	Key CloudletKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// State of cloudlet
-	State CloudletState `protobuf:"varint,2,opt,name=state,proto3,enum=edgeproto.CloudletState" json:"state,omitempty"`
+	State CloudletState `protobuf:"varint,3,opt,name=state,proto3,enum=edgeproto.CloudletState" json:"state,omitempty"`
 	// Id of client assigned by server
-	NotifyId uint64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	NotifyId int64 `protobuf:"varint,4,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
 	// TODO: Not entirely sure how resources will be specified.
 	// This is a placeholder for now.
-	Resources uint64 `protobuf:"varint,4,opt,name=resources,proto3" json:"resources,omitempty"`
+	Resources uint64 `protobuf:"varint,5,opt,name=resources,proto3" json:"resources,omitempty"`
 }
 
 func (m *CloudletInfo) Reset()                    { *m = CloudletInfo{} }
@@ -108,10 +112,24 @@ func (m *CloudletInfo) String() string            { return proto.CompactTextStri
 func (*CloudletInfo) ProtoMessage()               {}
 func (*CloudletInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
 
+// CloudletMetrics are metrics produced by the CRM to pass up to
+// an analytics or storage node (not the controller). These are not
+// stored in etcd, but probably logged as time series to disk (TBD)
+type CloudletMetrics struct {
+	// what goes here?
+	Foo uint64 `protobuf:"varint,5,opt,name=foo,proto3" json:"foo,omitempty"`
+}
+
+func (m *CloudletMetrics) Reset()                    { *m = CloudletMetrics{} }
+func (m *CloudletMetrics) String() string            { return proto.CompactTextString(m) }
+func (*CloudletMetrics) ProtoMessage()               {}
+func (*CloudletMetrics) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{3} }
+
 func init() {
 	proto.RegisterType((*CloudletKey)(nil), "edgeproto.CloudletKey")
 	proto.RegisterType((*Cloudlet)(nil), "edgeproto.Cloudlet")
 	proto.RegisterType((*CloudletInfo)(nil), "edgeproto.CloudletInfo")
+	proto.RegisterType((*CloudletMetrics)(nil), "edgeproto.CloudletMetrics")
 	proto.RegisterEnum("edgeproto.CloudletState", CloudletState_name, CloudletState_value)
 }
 func (this *CloudletKey) GoString() string {
@@ -333,6 +351,188 @@ var _CloudletApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "cloudlet.proto",
 }
 
+// Client API for CloudletInfoApi service
+
+type CloudletInfoApiClient interface {
+	ShowCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (CloudletInfoApi_ShowCloudletInfoClient, error)
+}
+
+type cloudletInfoApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewCloudletInfoApiClient(cc *grpc.ClientConn) CloudletInfoApiClient {
+	return &cloudletInfoApiClient{cc}
+}
+
+func (c *cloudletInfoApiClient) ShowCloudletInfo(ctx context.Context, in *CloudletInfo, opts ...grpc.CallOption) (CloudletInfoApi_ShowCloudletInfoClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_CloudletInfoApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletInfoApi/ShowCloudletInfo", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cloudletInfoApiShowCloudletInfoClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CloudletInfoApi_ShowCloudletInfoClient interface {
+	Recv() (*CloudletInfo, error)
+	grpc.ClientStream
+}
+
+type cloudletInfoApiShowCloudletInfoClient struct {
+	grpc.ClientStream
+}
+
+func (x *cloudletInfoApiShowCloudletInfoClient) Recv() (*CloudletInfo, error) {
+	m := new(CloudletInfo)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for CloudletInfoApi service
+
+type CloudletInfoApiServer interface {
+	ShowCloudletInfo(*CloudletInfo, CloudletInfoApi_ShowCloudletInfoServer) error
+}
+
+func RegisterCloudletInfoApiServer(s *grpc.Server, srv CloudletInfoApiServer) {
+	s.RegisterService(&_CloudletInfoApi_serviceDesc, srv)
+}
+
+func _CloudletInfoApi_ShowCloudletInfo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CloudletInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CloudletInfoApiServer).ShowCloudletInfo(m, &cloudletInfoApiShowCloudletInfoServer{stream})
+}
+
+type CloudletInfoApi_ShowCloudletInfoServer interface {
+	Send(*CloudletInfo) error
+	grpc.ServerStream
+}
+
+type cloudletInfoApiShowCloudletInfoServer struct {
+	grpc.ServerStream
+}
+
+func (x *cloudletInfoApiShowCloudletInfoServer) Send(m *CloudletInfo) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _CloudletInfoApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.CloudletInfoApi",
+	HandlerType: (*CloudletInfoApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowCloudletInfo",
+			Handler:       _CloudletInfoApi_ShowCloudletInfo_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "cloudlet.proto",
+}
+
+// Client API for CloudletMetricsApi service
+
+type CloudletMetricsApiClient interface {
+	ShowCloudletMetrics(ctx context.Context, in *CloudletMetrics, opts ...grpc.CallOption) (CloudletMetricsApi_ShowCloudletMetricsClient, error)
+}
+
+type cloudletMetricsApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewCloudletMetricsApiClient(cc *grpc.ClientConn) CloudletMetricsApiClient {
+	return &cloudletMetricsApiClient{cc}
+}
+
+func (c *cloudletMetricsApiClient) ShowCloudletMetrics(ctx context.Context, in *CloudletMetrics, opts ...grpc.CallOption) (CloudletMetricsApi_ShowCloudletMetricsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_CloudletMetricsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.CloudletMetricsApi/ShowCloudletMetrics", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &cloudletMetricsApiShowCloudletMetricsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type CloudletMetricsApi_ShowCloudletMetricsClient interface {
+	Recv() (*CloudletMetrics, error)
+	grpc.ClientStream
+}
+
+type cloudletMetricsApiShowCloudletMetricsClient struct {
+	grpc.ClientStream
+}
+
+func (x *cloudletMetricsApiShowCloudletMetricsClient) Recv() (*CloudletMetrics, error) {
+	m := new(CloudletMetrics)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for CloudletMetricsApi service
+
+type CloudletMetricsApiServer interface {
+	ShowCloudletMetrics(*CloudletMetrics, CloudletMetricsApi_ShowCloudletMetricsServer) error
+}
+
+func RegisterCloudletMetricsApiServer(s *grpc.Server, srv CloudletMetricsApiServer) {
+	s.RegisterService(&_CloudletMetricsApi_serviceDesc, srv)
+}
+
+func _CloudletMetricsApi_ShowCloudletMetrics_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(CloudletMetrics)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(CloudletMetricsApiServer).ShowCloudletMetrics(m, &cloudletMetricsApiShowCloudletMetricsServer{stream})
+}
+
+type CloudletMetricsApi_ShowCloudletMetricsServer interface {
+	Send(*CloudletMetrics) error
+	grpc.ServerStream
+}
+
+type cloudletMetricsApiShowCloudletMetricsServer struct {
+	grpc.ServerStream
+}
+
+func (x *cloudletMetricsApiShowCloudletMetricsServer) Send(m *CloudletMetrics) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _CloudletMetricsApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.CloudletMetricsApi",
+	HandlerType: (*CloudletMetricsApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowCloudletMetrics",
+			Handler:       _CloudletMetricsApi_ShowCloudletMetrics_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "cloudlet.proto",
+}
+
 func (m *CloudletKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -435,7 +635,22 @@ func (m *CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	dAtA[i] = 0xa
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
 	n4, err := m.Key.MarshalTo(dAtA[i:])
@@ -444,19 +659,42 @@ func (m *CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
 	}
 	i += n4
 	if m.State != 0 {
-		dAtA[i] = 0x10
+		dAtA[i] = 0x18
 		i++
 		i = encodeVarintCloudlet(dAtA, i, uint64(m.State))
 	}
 	if m.NotifyId != 0 {
-		dAtA[i] = 0x18
+		dAtA[i] = 0x20
 		i++
 		i = encodeVarintCloudlet(dAtA, i, uint64(m.NotifyId))
 	}
 	if m.Resources != 0 {
-		dAtA[i] = 0x20
+		dAtA[i] = 0x28
 		i++
 		i = encodeVarintCloudlet(dAtA, i, uint64(m.Resources))
+	}
+	return i, nil
+}
+
+func (m *CloudletMetrics) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CloudletMetrics) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Foo != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.Foo))
 	}
 	return i, nil
 }
@@ -629,7 +867,7 @@ func (s *CloudletStore) Create(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("Cloudlet", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
@@ -650,7 +888,7 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("Cloudlet", m.GetKey())
 	var vers int64 = 0
 	curBytes, vers, err := s.objstore.Get(key)
 	if err != nil {
@@ -678,13 +916,33 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *CloudletStore) Delete(m *Cloudlet, wait func(int64)) (*Result, error) {
-	err := m.GetKey().Validate()
+func (s *CloudletStore) Put(m *Cloudlet, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	key := objstore.DbKeyString("Cloudlet", m.GetKey())
+	var val []byte
+	curBytes, _, err := s.objstore.Get(key)
+	if err == nil {
+		var cur Cloudlet
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.objstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -694,24 +952,20 @@ func (s *CloudletStore) Delete(m *Cloudlet, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-type CloudletCb func(m *Cloudlet) error
-
-func (s *CloudletStore) LoadAll(cb CloudletCb) error {
-	loadkey := objstore.DbKeyPrefixString(&CloudletKey{})
-	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
-		var obj Cloudlet
-		err := json.Unmarshal(val, &obj)
-		if err != nil {
-			log.WarnLog("Failed to parse Cloudlet data", "val", string(val))
-			return nil
-		}
-		err = cb(&obj)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
+func (s *CloudletStore) Delete(m *Cloudlet, wait func(int64)) (*Result, error) {
+	err := m.GetKey().Validate()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("Cloudlet", m.GetKey())
+	rev, err := s.objstore.Delete(key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
 }
 
 func (s *CloudletStore) LoadOne(key string) (*Cloudlet, int64, error) {
@@ -746,6 +1000,10 @@ func NewCloudletCache() *CloudletCache {
 
 func InitCloudletCache(cache *CloudletCache) {
 	cache.Objs = make(map[CloudletKey]*Cloudlet)
+}
+
+func (c *CloudletCache) GetTypeString() string {
+	return "Cloudlet"
 }
 
 func (c *CloudletCache) Get(key *CloudletKey, valbuf *Cloudlet) bool {
@@ -879,17 +1137,206 @@ func (c *CloudletCache) SyncListEnd() {
 		}
 	}
 }
-
 func (m *Cloudlet) GetKey() *CloudletKey {
 	return &m.Key
 }
 
+func (m *CloudletInfo) Matches(filter *CloudletInfo) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.Matches(&filter.Key) {
+		return false
+	}
+	if filter.State != 0 && filter.State != m.State {
+		return false
+	}
+	if filter.NotifyId != 0 && filter.NotifyId != m.NotifyId {
+		return false
+	}
+	if filter.Resources != 0 && filter.Resources != m.Resources {
+		return false
+	}
+	return true
+}
+
+const CloudletInfoFieldKey = "2"
+const CloudletInfoFieldKeyOperatorKey = "2.1"
+const CloudletInfoFieldKeyOperatorKeyName = "2.1.1"
+const CloudletInfoFieldKeyName = "2.2"
+const CloudletInfoFieldState = "3"
+const CloudletInfoFieldNotifyId = "4"
+const CloudletInfoFieldResources = "5"
+
+var CloudletInfoAllFields = []string{
+	CloudletInfoFieldKeyOperatorKeyName,
+	CloudletInfoFieldKeyName,
+	CloudletInfoFieldState,
+	CloudletInfoFieldNotifyId,
+	CloudletInfoFieldResources,
+}
+
+var CloudletInfoAllFieldsMap = map[string]struct{}{
+	CloudletInfoFieldKeyOperatorKeyName: struct{}{},
+	CloudletInfoFieldKeyName:            struct{}{},
+	CloudletInfoFieldState:              struct{}{},
+	CloudletInfoFieldNotifyId:           struct{}{},
+	CloudletInfoFieldResources:          struct{}{},
+}
+
 func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
-	m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
-	m.Key.Name = src.Key.Name
-	m.State = src.State
-	m.NotifyId = src.NotifyId
-	m.Resources = src.Resources
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if _, set := fmap["2.1.1"]; set {
+				m.Key.OperatorKey.Name = src.Key.OperatorKey.Name
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			m.Key.Name = src.Key.Name
+		}
+	}
+	if _, set := fmap["3"]; set {
+		m.State = src.State
+	}
+	if _, set := fmap["4"]; set {
+		m.NotifyId = src.NotifyId
+	}
+	if _, set := fmap["5"]; set {
+		m.Resources = src.Resources
+	}
+}
+
+func (s *CloudletInfo) HasFields() bool {
+	return true
+}
+
+type CloudletInfoStore struct {
+	objstore objstore.ObjStore
+}
+
+func NewCloudletInfoStore(objstore objstore.ObjStore) CloudletInfoStore {
+	return CloudletInfoStore{objstore: objstore}
+}
+
+func (s *CloudletInfoStore) Create(m *CloudletInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(CloudletInfoAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.objstore.Create(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *CloudletInfoStore) Update(m *CloudletInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, err := s.objstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur CloudletInfo
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.objstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
+	var val []byte
+	curBytes, _, err := s.objstore.Get(key)
+	if err == nil {
+		var cur CloudletInfo
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.objstore.Put(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *CloudletInfoStore) Delete(m *CloudletInfo, wait func(int64)) (*Result, error) {
+	err := m.GetKey().Validate()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
+	rev, err := s.objstore.Delete(key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *CloudletInfoStore) LoadOne(key string) (*CloudletInfo, int64, error) {
+	val, rev, err := s.objstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj CloudletInfo
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse CloudletInfo data", "val", string(val))
+		return nil, 0, err
+	}
+	return &obj, rev, nil
 }
 
 // CloudletInfoCache caches CloudletInfo objects in memory in a hash table
@@ -910,6 +1357,10 @@ func NewCloudletInfoCache() *CloudletInfoCache {
 
 func InitCloudletInfoCache(cache *CloudletInfoCache) {
 	cache.Objs = make(map[CloudletKey]*CloudletInfo)
+}
+
+func (c *CloudletInfoCache) GetTypeString() string {
+	return "CloudletInfo"
 }
 
 func (c *CloudletInfoCache) Get(key *CloudletKey, valbuf *CloudletInfo) bool {
@@ -975,7 +1426,7 @@ func (c *CloudletInfoCache) Prune(validKeys map[CloudletKey]struct{}) {
 		}
 	}
 }
-func (c *CloudletInfoCache) Flush(notifyId uint64) {
+func (c *CloudletInfoCache) Flush(notifyId int64) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, val := range c.Objs {
@@ -994,6 +1445,9 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
+		if !obj.Matches(filter) {
+			continue
+		}
 		log.DebugLog(log.DebugLevelApi, "Show CloudletInfo", "obj", obj)
 		err := cb(obj)
 		if err != nil {
@@ -1010,9 +1464,55 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(obj *CloudletKey)) {
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(old *CloudletInfo, new *CloudletInfo)) {
 	c.UpdatedCb = fn
 }
+func (c *CloudletInfoCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := CloudletInfo{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse CloudletInfo data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
 
+func (c *CloudletInfoCache) SyncDelete(key []byte, rev int64) {
+	obj := CloudletInfo{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	CloudletKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *CloudletInfoCache) SyncListStart() {
+	c.List = make(map[CloudletKey]struct{})
+}
+
+func (c *CloudletInfoCache) SyncListEnd() {
+	deleted := make(map[CloudletKey]struct{})
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, found := c.List[key]; !found {
+			delete(c.Objs, key)
+			deleted[key] = struct{}{}
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range deleted {
+			c.NotifyCb(&key)
+		}
+	}
+}
 func (m *CloudletInfo) GetKey() *CloudletKey {
 	return &m.Key
+}
+
+func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) {
+	m.Foo = src.Foo
 }
 
 var CloudletStateStrings = []string{
@@ -1020,6 +1520,7 @@ var CloudletStateStrings = []string{
 	"ConfiguringOpenstack",
 	"ConfiguringKubernetes",
 	"Ready",
+	"Offline",
 }
 
 const (
@@ -1027,6 +1528,7 @@ const (
 	CloudletStateConfiguringOpenstack  uint64 = 1 << 1
 	CloudletStateConfiguringKubernetes uint64 = 1 << 2
 	CloudletStateReady                 uint64 = 1 << 3
+	CloudletStateOffline               uint64 = 1 << 4
 )
 
 func (e *CloudletState) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -1090,6 +1592,12 @@ func (m *Cloudlet) Size() (n int) {
 func (m *CloudletInfo) Size() (n int) {
 	var l int
 	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovCloudlet(uint64(l))
+		}
+	}
 	l = m.Key.Size()
 	n += 1 + l + sovCloudlet(uint64(l))
 	if m.State != 0 {
@@ -1100,6 +1608,15 @@ func (m *CloudletInfo) Size() (n int) {
 	}
 	if m.Resources != 0 {
 		n += 1 + sovCloudlet(uint64(m.Resources))
+	}
+	return n
+}
+
+func (m *CloudletMetrics) Size() (n int) {
+	var l int
+	_ = l
+	if m.Foo != 0 {
+		n += 1 + sovCloudlet(uint64(m.Foo))
 	}
 	return n
 }
@@ -1425,6 +1942,35 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
 			}
 			var msglen int
@@ -1453,7 +1999,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 2:
+		case 3:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
 			}
@@ -1472,7 +2018,7 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-		case 3:
+		case 4:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
 			}
@@ -1486,12 +2032,12 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NotifyId |= (uint64(b) & 0x7F) << shift
+				m.NotifyId |= (int64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 4:
+		case 5:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Resources", wireType)
 			}
@@ -1506,6 +2052,75 @@ func (m *CloudletInfo) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.Resources |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CloudletMetrics) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CloudletMetrics: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CloudletMetrics: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Foo", wireType)
+			}
+			m.Foo = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Foo |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1639,50 +2254,57 @@ var (
 func init() { proto.RegisterFile("cloudlet.proto", fileDescriptorCloudlet) }
 
 var fileDescriptorCloudlet = []byte{
-	// 714 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x4d, 0x6b, 0x1b, 0x47,
-	0x18, 0xc7, 0x3d, 0x92, 0xec, 0x4a, 0x23, 0x55, 0x95, 0xb7, 0xae, 0x59, 0xab, 0xae, 0x2c, 0xd4,
-	0x8b, 0x30, 0xd5, 0x6e, 0x71, 0x2f, 0x45, 0x17, 0x63, 0xab, 0xd0, 0x1a, 0x1b, 0x0c, 0xeb, 0xda,
-	0xa7, 0x82, 0x58, 0xcd, 0x3e, 0x5a, 0x0d, 0xde, 0x9d, 0x59, 0x66, 0x67, 0xab, 0x28, 0xa7, 0x90,
-	0x53, 0xc8, 0x29, 0x90, 0x2f, 0x90, 0x8f, 0x90, 0x97, 0x2f, 0xe1, 0x63, 0x20, 0xf7, 0x90, 0x98,
-	0x1c, 0x72, 0x09, 0x04, 0xec, 0x43, 0x8e, 0x61, 0x67, 0x57, 0x2f, 0x8e, 0x45, 0x62, 0xf0, 0x45,
-	0x3c, 0xaf, 0xbf, 0x67, 0x9e, 0xbf, 0x9e, 0xc5, 0x65, 0xe2, 0xf1, 0xc8, 0xf1, 0x40, 0x1a, 0x81,
-	0xe0, 0x92, 0x6b, 0x05, 0x70, 0x5c, 0x50, 0x66, 0x75, 0xdd, 0xe5, 0xdc, 0xf5, 0xc0, 0xb4, 0x03,
-	0x6a, 0xda, 0x8c, 0x71, 0x69, 0x4b, 0xca, 0x59, 0x98, 0x14, 0x56, 0xff, 0x74, 0xa9, 0x1c, 0x44,
-	0x3d, 0x83, 0x70, 0xdf, 0xf4, 0x79, 0x8f, 0x7a, 0x71, 0xe3, 0x1d, 0x33, 0xfe, 0x6d, 0x29, 0xa6,
-	0xa9, 0xea, 0x5c, 0x60, 0x13, 0x23, 0xed, 0xfc, 0xfb, 0x66, 0x9d, 0xa4, 0xe5, 0x02, 0x6b, 0x11,
-	0x7f, 0xec, 0xce, 0x18, 0x29, 0xa8, 0xcc, 0x03, 0x10, 0xb6, 0xe4, 0x22, 0xf5, 0x4b, 0x02, 0xc2,
-	0xc8, 0x4b, 0x37, 0xa9, 0x76, 0xbe, 0x39, 0xc6, 0x69, 0xf9, 0xb6, 0x24, 0x83, 0x16, 0x30, 0x97,
-	0x32, 0x30, 0x1d, 0x1f, 0x5a, 0xaa, 0xd5, 0xf4, 0x38, 0x49, 0x21, 0xad, 0x19, 0x88, 0xcb, 0x5d,
-	0x9e, 0x3c, 0xa1, 0x17, 0xf5, 0x95, 0x97, 0x54, 0xc7, 0x56, 0x52, 0xde, 0x08, 0x70, 0xb1, 0x93,
-	0xea, 0xb9, 0x0f, 0x23, 0x6d, 0x1b, 0x97, 0xc6, 0x4f, 0xec, 0x9e, 0xc2, 0x48, 0x47, 0x75, 0xd4,
-	0x2c, 0x6e, 0xad, 0x1a, 0x13, 0x8d, 0x8d, 0xc3, 0x34, 0xbd, 0x0f, 0xa3, 0xdd, 0xdc, 0xd9, 0xeb,
-	0x8d, 0x05, 0xab, 0xc8, 0xa7, 0x21, 0x4d, 0xc3, 0x39, 0x66, 0xfb, 0xa0, 0x67, 0xea, 0xa8, 0x59,
-	0xb0, 0x94, 0xdd, 0x2e, 0xbd, 0xbf, 0xd0, 0xd1, 0xa7, 0x0b, 0x1d, 0x3d, 0x7d, 0xb2, 0x81, 0x1a,
-	0xcf, 0x32, 0x38, 0x3f, 0x1e, 0xa9, 0xad, 0xe2, 0xa5, 0x3e, 0x05, 0xcf, 0x09, 0x75, 0x54, 0xcf,
-	0x36, 0x0b, 0x56, 0xea, 0x69, 0x06, 0xce, 0xc6, 0xe3, 0x33, 0xd7, 0xc6, 0xcf, 0x3c, 0x36, 0x1d,
-	0x1f, 0x17, 0x6a, 0xbf, 0x62, 0x6c, 0x13, 0x02, 0x61, 0xd8, 0x8d, 0x04, 0xd5, 0x73, 0xf1, 0xf0,
-	0xdd, 0xdc, 0x83, 0x4b, 0x1d, 0x59, 0x85, 0x24, 0x7e, 0x2c, 0xa8, 0xb6, 0x8d, 0xf3, 0x1e, 0x27,
-	0xea, 0x26, 0xf4, 0x45, 0x45, 0xfe, 0xc5, 0x70, 0x68, 0x28, 0x05, 0xed, 0x45, 0x12, 0x9c, 0xae,
-	0xd2, 0xb6, 0x9b, 0x68, 0x6b, 0x1c, 0x70, 0x92, 0x0e, 0x98, 0x34, 0xb5, 0x87, 0xf1, 0x22, 0x1f,
-	0x2f, 0x74, 0x74, 0xef, 0x52, 0x47, 0x0f, 0x9f, 0xaf, 0xb9, 0x07, 0x69, 0xc6, 0xf8, 0x87, 0x0b,
-	0x7a, 0x97, 0x33, 0x69, 0x7b, 0x3b, 0x84, 0x44, 0xc2, 0x26, 0xa3, 0xdf, 0x26, 0xb9, 0x13, 0x10,
-	0x92, 0x92, 0x79, 0x99, 0x0e, 0x8f, 0x44, 0x08, 0x53, 0xff, 0x28, 0x00, 0x70, 0xa6, 0xee, 0xbf,
-	0xd4, 0x87, 0x50, 0xda, 0x7e, 0xd0, 0x78, 0x81, 0x70, 0x69, 0xbc, 0xf9, 0x1e, 0xeb, 0xf3, 0xb1,
-	0x3e, 0xe8, 0xa6, 0xfa, 0x18, 0x78, 0x31, 0x94, 0xb6, 0x4c, 0xfe, 0x97, 0xf2, 0x96, 0x3e, 0xa7,
-	0xe3, 0x28, 0xce, 0x5b, 0x49, 0x99, 0xf6, 0x33, 0x2e, 0x30, 0x2e, 0x69, 0x7f, 0xd4, 0xa5, 0x8e,
-	0x9e, 0xad, 0xa3, 0x66, 0xce, 0xca, 0x27, 0x81, 0x3d, 0x47, 0x5b, 0xc7, 0x05, 0x01, 0x21, 0x8f,
-	0x04, 0x81, 0x50, 0x69, 0x9d, 0xb3, 0xa6, 0x81, 0x76, 0x3e, 0x16, 0xe7, 0xd1, 0xa5, 0x8e, 0x36,
-	0xff, 0xc3, 0xdf, 0x5f, 0x81, 0x6b, 0x45, 0xfc, 0xdd, 0x31, 0x3b, 0x65, 0x7c, 0xc8, 0x2a, 0x0b,
-	0x9a, 0x8e, 0x57, 0x3a, 0x9c, 0xf5, 0xa9, 0x1b, 0x09, 0xca, 0xdc, 0xc3, 0x00, 0x58, 0x28, 0x6d,
-	0x72, 0x5a, 0x41, 0xda, 0x1a, 0xfe, 0x69, 0x26, 0xb3, 0x1f, 0xf5, 0x40, 0x30, 0x90, 0x10, 0x56,
-	0x32, 0x5a, 0x01, 0x2f, 0x5a, 0x60, 0x3b, 0xa3, 0x4a, 0x76, 0xeb, 0x43, 0x66, 0x7a, 0xba, 0x3b,
-	0x01, 0xd5, 0x4e, 0x70, 0xb9, 0x23, 0xc0, 0x96, 0x30, 0x39, 0xae, 0x1f, 0xe7, 0x6c, 0x59, 0x5d,
-	0x9e, 0x09, 0x5a, 0xea, 0xeb, 0x6b, 0xac, 0xdf, 0x7f, 0xf5, 0xee, 0x71, 0x66, 0xb5, 0xb1, 0x6c,
-	0x12, 0x05, 0x30, 0x1d, 0xf8, 0x1f, 0xbc, 0xf8, 0xaa, 0xdb, 0x68, 0x33, 0xe6, 0xfe, 0x05, 0x1e,
-	0xdc, 0x8a, 0xeb, 0x28, 0xc0, 0x35, 0xee, 0x71, 0xe0, 0xdc, 0xee, 0xbd, 0x91, 0x02, 0x7c, 0xc9,
-	0x2d, 0x1d, 0x0d, 0xf8, 0xf0, 0xeb, 0xd4, 0x79, 0xc1, 0x46, 0x55, 0x71, 0x57, 0x1a, 0x3f, 0x98,
-	0xe1, 0x80, 0x0f, 0xaf, 0x50, 0x7f, 0x47, 0xbb, 0x95, 0xb3, 0xb7, 0xb5, 0x85, 0xb3, 0xf3, 0x1a,
-	0x7a, 0x79, 0x5e, 0x43, 0x6f, 0xce, 0x6b, 0xa8, 0xb7, 0xa4, 0xfa, 0xff, 0xf8, 0x1c, 0x00, 0x00,
-	0xff, 0xff, 0xde, 0x10, 0xd1, 0x6e, 0x92, 0x05, 0x00, 0x00,
+	// 830 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x41, 0x6f, 0xe3, 0x44,
+	0x14, 0xee, 0x24, 0xe9, 0xd2, 0x4c, 0x43, 0xd6, 0x4c, 0xdb, 0x5d, 0xd7, 0xbb, 0xdb, 0x8d, 0xbc,
+	0x97, 0x6a, 0x45, 0x6c, 0x54, 0x2e, 0xa8, 0x97, 0xd5, 0x36, 0x48, 0xb0, 0xea, 0xa2, 0x4a, 0xee,
+	0x86, 0x6b, 0xe4, 0x8c, 0x9f, 0xdd, 0x51, 0xed, 0x19, 0x33, 0x1e, 0xab, 0x1b, 0xb8, 0x20, 0x2e,
+	0x20, 0x4e, 0x48, 0x5c, 0x38, 0xee, 0x4f, 0x40, 0x48, 0xfc, 0x87, 0x1e, 0x91, 0x38, 0x70, 0x43,
+	0x50, 0x71, 0xd8, 0x23, 0x52, 0x73, 0xe0, 0x88, 0x3c, 0x76, 0x12, 0x17, 0x42, 0x41, 0xc0, 0xa5,
+	0x7a, 0xef, 0x7d, 0xef, 0x7d, 0xdf, 0x9b, 0xaf, 0xcf, 0xc1, 0x5d, 0x1a, 0x8b, 0x3c, 0x88, 0x41,
+	0x39, 0xa9, 0x14, 0x4a, 0x90, 0x36, 0x04, 0x11, 0xe8, 0xd0, 0xba, 0x1b, 0x09, 0x11, 0xc5, 0xe0,
+	0xfa, 0x29, 0x73, 0x7d, 0xce, 0x85, 0xf2, 0x15, 0x13, 0x3c, 0x2b, 0x1b, 0xad, 0xb7, 0x22, 0xa6,
+	0x4e, 0xf2, 0xb1, 0x43, 0x45, 0xe2, 0x26, 0x62, 0xcc, 0xe2, 0x62, 0xf0, 0xb9, 0x5b, 0xfc, 0xed,
+	0x6b, 0x4e, 0x57, 0xf7, 0x45, 0xc0, 0xe7, 0x41, 0x35, 0xf9, 0xce, 0x3f, 0x9b, 0xa4, 0xfd, 0x08,
+	0x78, 0x9f, 0x26, 0xb3, 0xb4, 0x16, 0x54, 0x44, 0x5d, 0x91, 0x82, 0xf4, 0x95, 0x90, 0x55, 0xde,
+	0x91, 0x90, 0xe5, 0x71, 0xf5, 0x12, 0x6b, 0xf0, 0xb7, 0x32, 0x41, 0x3f, 0xf1, 0x15, 0x3d, 0xe9,
+	0x03, 0x8f, 0x18, 0x07, 0x37, 0x48, 0xa0, 0xaf, 0x47, 0xdd, 0x58, 0xd0, 0x8a, 0xa4, 0x5f, 0x23,
+	0x89, 0x44, 0x24, 0xca, 0x15, 0xc6, 0x79, 0xa8, 0xb3, 0xb2, 0xbb, 0x88, 0xca, 0x76, 0x3b, 0xc5,
+	0xeb, 0x83, 0xca, 0xcf, 0x43, 0x98, 0x90, 0x47, 0xb8, 0x33, 0x5b, 0x71, 0x74, 0x0a, 0x13, 0x13,
+	0xf5, 0xd0, 0xee, 0xfa, 0xde, 0x2d, 0x67, 0xee, 0xb1, 0x73, 0x54, 0xc1, 0x87, 0x30, 0x39, 0x68,
+	0x9d, 0xff, 0x78, 0x7f, 0xc5, 0x5b, 0x17, 0x8b, 0x12, 0x21, 0xb8, 0xc5, 0xfd, 0x04, 0xcc, 0x46,
+	0x0f, 0xed, 0xb6, 0x3d, 0x1d, 0xef, 0x77, 0x5e, 0x5e, 0x9a, 0xe8, 0xb7, 0x4b, 0x13, 0x7d, 0xfd,
+	0xe2, 0x3e, 0xb2, 0xbf, 0x6d, 0xe0, 0xb5, 0x99, 0x24, 0xb9, 0x85, 0x6f, 0x84, 0x0c, 0xe2, 0x20,
+	0x33, 0x51, 0xaf, 0xb9, 0xdb, 0xf6, 0xaa, 0x8c, 0x38, 0xb8, 0x59, 0xc8, 0x37, 0xfe, 0x24, 0x5f,
+	0x5b, 0xb6, 0x92, 0x2f, 0x1a, 0xc9, 0x03, 0x8c, 0x7d, 0x4a, 0x21, 0xcb, 0x46, 0xb9, 0x64, 0x66,
+	0xab, 0x10, 0x3f, 0x68, 0x7d, 0x36, 0x35, 0x91, 0xd7, 0x2e, 0xeb, 0x43, 0xc9, 0xc8, 0x23, 0xbc,
+	0x16, 0x0b, 0xaa, 0x6f, 0xc2, 0x5c, 0xd5, 0xcc, 0xf7, 0x9c, 0x80, 0x65, 0x4a, 0xb2, 0x71, 0xae,
+	0x20, 0x18, 0x69, 0x6f, 0x47, 0xa5, 0xb7, 0xce, 0x53, 0x41, 0x2b, 0x81, 0xf9, 0xd0, 0xfe, 0x47,
+	0xc5, 0x43, 0x7e, 0xbd, 0x34, 0xd1, 0xc7, 0x53, 0x13, 0x7d, 0x35, 0x35, 0xd1, 0xe7, 0xdf, 0x6c,
+	0x47, 0x4f, 0x2b, 0xd4, 0x79, 0x57, 0x48, 0xf6, 0xa1, 0xe0, 0xca, 0x8f, 0x1f, 0x53, 0x9a, 0x4b,
+	0x9f, 0x4e, 0x5e, 0x9f, 0x63, 0xef, 0x83, 0x54, 0x8c, 0x2e, 0x43, 0x06, 0x22, 0x97, 0x19, 0x2c,
+	0xf2, 0xe3, 0x14, 0x20, 0x58, 0xa4, 0xcf, 0x58, 0x02, 0x99, 0xf2, 0x93, 0xd4, 0xfe, 0x01, 0xe1,
+	0xce, 0xec, 0xf5, 0x4f, 0x78, 0x28, 0xfe, 0x37, 0xef, 0x1c, 0xbc, 0x9a, 0x29, 0x5f, 0x81, 0xd9,
+	0xec, 0xa1, 0xdd, 0xee, 0x9e, 0xb9, 0x64, 0xe2, 0xb8, 0xc0, 0xbd, 0xb2, 0x8d, 0xdc, 0xc1, 0x6d,
+	0x2e, 0x14, 0x0b, 0x27, 0x23, 0x16, 0x68, 0xab, 0x9b, 0xde, 0x5a, 0x59, 0x78, 0x12, 0x90, 0xbb,
+	0xb8, 0x2d, 0x21, 0x13, 0xb9, 0xa4, 0x90, 0x69, 0x93, 0x5b, 0xde, 0xa2, 0xb0, 0xbf, 0x59, 0x37,
+	0xf0, 0x8b, 0xa9, 0x89, 0x5e, 0x4c, 0x4d, 0x64, 0x3f, 0xc0, 0x37, 0x67, 0x42, 0xef, 0x81, 0x92,
+	0x8c, 0x66, 0xc4, 0xc0, 0xcd, 0x50, 0x88, 0x8a, 0xa0, 0x08, 0x1f, 0x32, 0xfc, 0xea, 0x95, 0x6d,
+	0xc8, 0x3a, 0x7e, 0x65, 0xc8, 0x4f, 0xb9, 0x38, 0xe3, 0xc6, 0x0a, 0x31, 0xf1, 0xe6, 0x40, 0xf0,
+	0x90, 0x45, 0xb9, 0x64, 0x3c, 0x3a, 0x4a, 0x81, 0x67, 0xca, 0xa7, 0xa7, 0x06, 0x22, 0xdb, 0x78,
+	0xab, 0x86, 0x1c, 0xe6, 0x63, 0x90, 0x1c, 0x14, 0x64, 0x46, 0x83, 0xb4, 0xf1, 0xaa, 0x07, 0x7e,
+	0x30, 0x31, 0x9a, 0x05, 0xd9, 0x51, 0x18, 0xc6, 0x8c, 0x83, 0xd1, 0xda, 0x7b, 0xd9, 0x58, 0x7c,
+	0x14, 0x8f, 0x53, 0x46, 0x86, 0xb8, 0x3b, 0x90, 0xe0, 0x2b, 0x98, 0x9f, 0xed, 0xc6, 0x12, 0x8f,
+	0xac, 0xd7, 0x6a, 0x45, 0x4f, 0x7f, 0xd7, 0xf6, 0x9d, 0x4f, 0xbe, 0xff, 0xe5, 0xcb, 0xc6, 0x96,
+	0x6d, 0xb8, 0x54, 0x13, 0xb8, 0xb3, 0xdf, 0xae, 0x7d, 0xf4, 0x90, 0x3c, 0xc3, 0xdd, 0xb7, 0x21,
+	0x86, 0x7f, 0x41, 0x6b, 0x69, 0xda, 0x4d, 0xfb, 0xa6, 0x1b, 0x68, 0x82, 0x92, 0xb6, 0x64, 0x1d,
+	0xe2, 0xee, 0x30, 0x0d, 0xfe, 0xdb, 0xb2, 0xb9, 0x26, 0xb8, 0xb2, 0xec, 0x10, 0x77, 0x8e, 0x4f,
+	0xc4, 0xd9, 0xf5, 0xa4, 0xcb, 0x8a, 0xf6, 0xb6, 0xa6, 0xdd, 0xb0, 0xbb, 0x6e, 0x76, 0x22, 0xce,
+	0xea, 0xa4, 0x6f, 0xa0, 0xbd, 0xe7, 0x8b, 0x7f, 0x7d, 0x71, 0xd3, 0x85, 0xdb, 0x80, 0x8d, 0xba,
+	0x92, 0x3e, 0xf5, 0xdb, 0x4b, 0x88, 0x0b, 0xc0, 0xfa, 0x2b, 0xc0, 0xbe, 0xa7, 0x55, 0x6f, 0xdb,
+	0xe4, 0xaa, 0x2a, 0xe3, 0xa1, 0x28, 0x95, 0x3f, 0x45, 0x98, 0xfc, 0xe1, 0xea, 0x0a, 0xf5, 0x0f,
+	0xf0, 0x46, 0x5d, 0x7d, 0x76, 0x8f, 0xd6, 0x12, 0x9d, 0x0a, 0xb3, 0xae, 0xc1, 0xec, 0x9e, 0x5e,
+	0xc3, 0xb2, 0xb7, 0xae, 0xae, 0x91, 0x94, 0xb0, 0xde, 0xe4, 0xc0, 0x38, 0xff, 0x79, 0x67, 0xe5,
+	0xfc, 0x62, 0x07, 0x7d, 0x77, 0xb1, 0x83, 0x7e, 0xba, 0xd8, 0x41, 0xe3, 0x1b, 0x9a, 0xec, 0xcd,
+	0xdf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x5c, 0xc5, 0xf2, 0xeb, 0x06, 0x00, 0x00,
 }

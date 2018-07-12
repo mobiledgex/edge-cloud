@@ -116,6 +116,7 @@ func TestNotify(t *testing.T) {
 	assert.Equal(t, uint64(13), clientDME.stats.AppInstRecv, "app inst updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	assert.Equal(t, uint64(2), stats.AppInstsSent)
+	fmt.Printf("stats for %s: %v\n", clientDME.GetLocalAddr(), stats)
 
 	// Now test cloudlets. Use the same receiver, but register it
 	// as a cloudlet mananger. CRM should have 2 connects since

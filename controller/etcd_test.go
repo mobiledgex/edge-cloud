@@ -98,6 +98,20 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 	assert.Equal(t, 3, count, "List count")
 	assert.Equal(t, 3, len(syncCheck.kv), "sync count")
 
+	// test put
+	pkey := "1/foo/adslfk"
+	pval := "put value"
+	rev, err = objStore.Put(pkey, pval)
+	expectNewRev(t, &expRev, rev)
+	assert.Nil(t, err, "Put key %s", pkey)
+	syncCheck.Expect(t, pkey, pval, expRev)
+	val, vers, err = objStore.Get(pkey)
+	assert.Nil(t, err, "Get key %s", pkey)
+	assert.Equal(t, pval, string(val), "Get key %s value", pkey)
+	rev, err = objStore.Put(pkey, pval)
+	expectNewRev(t, &expRev, rev)
+	assert.Nil(t, err, "Put key %s again", pkey)
+
 	// debug sync
 	syncCheck.Dump()
 }

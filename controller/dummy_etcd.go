@@ -79,6 +79,24 @@ func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
 	return e.rev, nil
 }
 
+func (e *dummyEtcd) Put(key, val string) (int64, error) {
+	e.mux.Lock()
+	defer e.mux.Unlock()
+	if e.db == nil {
+		return 0, objstore.ErrObjStoreNotInitialized
+	}
+	ver, ok := e.vers[key]
+	if !ok {
+		ver = 0
+	}
+	e.db[key] = val
+	e.vers[key] = ver + 1
+	e.rev++
+	log.DebugLog(log.DebugLevelEtcd, "Put", "key", key, "val", val, "ver", ver+1, "rev", e.rev)
+	e.triggerWatcher(objstore.SyncUpdate, key, val, e.rev)
+	return e.rev, nil
+}
+
 func (e *dummyEtcd) Delete(key string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
@@ -86,6 +104,7 @@ func (e *dummyEtcd) Delete(key string) (int64, error) {
 		return 0, objstore.ErrObjStoreNotInitialized
 	}
 	delete(e.db, key)
+	delete(e.vers, key)
 	e.rev++
 	log.DebugLog(log.DebugLevelEtcd, "Delete", "key", key, "rev", e.rev)
 	e.triggerWatcher(objstore.SyncDelete, key, "", e.rev)
