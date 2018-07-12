@@ -61,7 +61,7 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		return false
 	}
 	if dmeerror != nil {
-		log.Printf("Error in find api %s -- %v\n", api, dmeerror)
+		log.Printf("Error in dme api %s -- %v\n", api, dmeerror)
 		return false
 	}
 	out, ymlerror := yaml.Marshal(dmereply)
