@@ -68,8 +68,11 @@ func runOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 		case "delete":
 			_, err = opAPI.DeleteOperator(ctx, &o)
 		}
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
@@ -85,8 +88,11 @@ func runDeveloperApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepr
 		case "delete":
 			_, err = devApi.DeleteDeveloper(ctx, &d)
 		}
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
@@ -102,8 +108,11 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 		case "delete":
 			_, err = clAPI.DeleteCloudlet(ctx, &c)
 		}
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
@@ -119,8 +128,11 @@ func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.Ap
 		case "delete":
 			_, err = appAPI.DeleteApp(ctx, &a)
 		}
+		if err != nil {
+			return err
+		}
 	}
-	return err
+	return nil
 }
 
 func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
@@ -136,13 +148,18 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 		case "delete":
 			_, err = appinAPI.DeleteAppInst(ctx, &a)
 		}
+		if err != nil {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
 	log.Printf("Applying data via APIs\n")
 	apiConnectTimeout := 5 * time.Second
+	apiTimeout := 120 * time.Second
 
 	ctrl := util.GetController(ctrlname)
 
@@ -168,24 +185,65 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		return false
 	} else {
 		log.Printf("Connected to controller %v success", ctrl.Name)
-		ctx, cancel := context.WithTimeout(context.Background(), apiConnectTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), apiTimeout)
 
+		var err error
 		switch api {
 		case "delete":
 			//run in reverse order to delete child keys
-			runAppinstApi(ctrlapi, ctx, &appData, api)
-			runAppApi(ctrlapi, ctx, &appData, api)
-			runCloudletApi(ctrlapi, ctx, &appData, api)
-			runDeveloperApi(ctrlapi, ctx, &appData, api)
-			runOperatorApi(ctrlapi, ctx, &appData, api)
+			err = runAppinstApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in appinst API %v\n", err)
+				rc = false
+			}
+			err = runAppApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in app API %v\n", err)
+				rc = false
+			}
+			err = runCloudletApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cloudlet API %v\n", err)
+				rc = false
+			}
+			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in developer API %v\n", err)
+				rc = false
+			}
+			err = runOperatorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in operator API %v\n", err)
+				rc = false
+			}
 		case "create":
 			fallthrough
 		case "update":
-			runOperatorApi(ctrlapi, ctx, &appData, api)
-			runDeveloperApi(ctrlapi, ctx, &appData, api)
-			runCloudletApi(ctrlapi, ctx, &appData, api)
-			runAppApi(ctrlapi, ctx, &appData, api)
-			runAppinstApi(ctrlapi, ctx, &appData, api)
+			err = runOperatorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in operator API %v\n", err)
+				rc = false
+			}
+			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in developer API %v\n", err)
+				rc = false
+			}
+			err = runCloudletApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cloudlet API %v\n", err)
+				rc = false
+			}
+			err = runAppApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in app API %v\n", err)
+				rc = false
+			}
+			err = runAppinstApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in appinst API %v\n", err)
+				rc = false
+			}
 		default:
 			log.Printf("Error: unsupported controller API %s\n", api)
 			rc = false

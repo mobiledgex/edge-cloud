@@ -1,0 +1,2922 @@
+
+operators:
+- key:
+    name: OP1
+cloudlets:
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-1
+  accessuri: http://cloudlet-1
+  location:
+    lat: 0
+    long: -175
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-2
+  accessuri: http://cloudlet-2
+  location:
+    lat: 0
+    long: -174
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-3
+  accessuri: http://cloudlet-3
+  location:
+    lat: 0
+    long: -173
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-4
+  accessuri: http://cloudlet-4
+  location:
+    lat: 0
+    long: -172
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-5
+  accessuri: http://cloudlet-5
+  location:
+    lat: 0
+    long: -171
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-6
+  accessuri: http://cloudlet-6
+  location:
+    lat: 0
+    long: -170
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-7
+  accessuri: http://cloudlet-7
+  location:
+    lat: 0
+    long: -169
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-8
+  accessuri: http://cloudlet-8
+  location:
+    lat: 0
+    long: -168
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-9
+  accessuri: http://cloudlet-9
+  location:
+    lat: 0
+    long: -167
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-10
+  accessuri: http://cloudlet-10
+  location:
+    lat: 0
+    long: -166
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-11
+  accessuri: http://cloudlet-11
+  location:
+    lat: 0
+    long: -165
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-12
+  accessuri: http://cloudlet-12
+  location:
+    lat: 0
+    long: -164
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-13
+  accessuri: http://cloudlet-13
+  location:
+    lat: 0
+    long: -163
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-14
+  accessuri: http://cloudlet-14
+  location:
+    lat: 0
+    long: -162
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-15
+  accessuri: http://cloudlet-15
+  location:
+    lat: 0
+    long: -161
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-16
+  accessuri: http://cloudlet-16
+  location:
+    lat: 0
+    long: -160
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-17
+  accessuri: http://cloudlet-17
+  location:
+    lat: 0
+    long: -159
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-18
+  accessuri: http://cloudlet-18
+  location:
+    lat: 0
+    long: -158
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-19
+  accessuri: http://cloudlet-19
+  location:
+    lat: 0
+    long: -157
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-20
+  accessuri: http://cloudlet-20
+  location:
+    lat: 0
+    long: -156
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-21
+  accessuri: http://cloudlet-21
+  location:
+    lat: 0
+    long: -155
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-22
+  accessuri: http://cloudlet-22
+  location:
+    lat: 0
+    long: -154
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-23
+  accessuri: http://cloudlet-23
+  location:
+    lat: 0
+    long: -153
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-24
+  accessuri: http://cloudlet-24
+  location:
+    lat: 0
+    long: -152
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-25
+  accessuri: http://cloudlet-25
+  location:
+    lat: 0
+    long: -151
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-26
+  accessuri: http://cloudlet-26
+  location:
+    lat: 0
+    long: -150
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-27
+  accessuri: http://cloudlet-27
+  location:
+    lat: 0
+    long: -149
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-28
+  accessuri: http://cloudlet-28
+  location:
+    lat: 0
+    long: -148
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-29
+  accessuri: http://cloudlet-29
+  location:
+    lat: 0
+    long: -147
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-30
+  accessuri: http://cloudlet-30
+  location:
+    lat: 0
+    long: -146
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-31
+  accessuri: http://cloudlet-31
+  location:
+    lat: 0
+    long: -145
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-32
+  accessuri: http://cloudlet-32
+  location:
+    lat: 0
+    long: -144
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-33
+  accessuri: http://cloudlet-33
+  location:
+    lat: 0
+    long: -143
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-34
+  accessuri: http://cloudlet-34
+  location:
+    lat: 0
+    long: -142
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-35
+  accessuri: http://cloudlet-35
+  location:
+    lat: 0
+    long: -141
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-36
+  accessuri: http://cloudlet-36
+  location:
+    lat: 0
+    long: -140
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-37
+  accessuri: http://cloudlet-37
+  location:
+    lat: 0
+    long: -139
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-38
+  accessuri: http://cloudlet-38
+  location:
+    lat: 0
+    long: -138
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-39
+  accessuri: http://cloudlet-39
+  location:
+    lat: 0
+    long: -137
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-40
+  accessuri: http://cloudlet-40
+  location:
+    lat: 0
+    long: -136
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-41
+  accessuri: http://cloudlet-41
+  location:
+    lat: 0
+    long: -135
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-42
+  accessuri: http://cloudlet-42
+  location:
+    lat: 0
+    long: -134
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-43
+  accessuri: http://cloudlet-43
+  location:
+    lat: 0
+    long: -133
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-44
+  accessuri: http://cloudlet-44
+  location:
+    lat: 0
+    long: -132
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-45
+  accessuri: http://cloudlet-45
+  location:
+    lat: 0
+    long: -131
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-46
+  accessuri: http://cloudlet-46
+  location:
+    lat: 0
+    long: -130
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-47
+  accessuri: http://cloudlet-47
+  location:
+    lat: 0
+    long: -129
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-48
+  accessuri: http://cloudlet-48
+  location:
+    lat: 0
+    long: -128
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-49
+  accessuri: http://cloudlet-49
+  location:
+    lat: 0
+    long: -127
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-50
+  accessuri: http://cloudlet-50
+  location:
+    lat: 0
+    long: -126
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-51
+  accessuri: http://cloudlet-51
+  location:
+    lat: 0
+    long: -125
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-52
+  accessuri: http://cloudlet-52
+  location:
+    lat: 0
+    long: -124
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-53
+  accessuri: http://cloudlet-53
+  location:
+    lat: 0
+    long: -123
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-54
+  accessuri: http://cloudlet-54
+  location:
+    lat: 0
+    long: -122
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-55
+  accessuri: http://cloudlet-55
+  location:
+    lat: 0
+    long: -121
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-56
+  accessuri: http://cloudlet-56
+  location:
+    lat: 0
+    long: -120
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-57
+  accessuri: http://cloudlet-57
+  location:
+    lat: 0
+    long: -119
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-58
+  accessuri: http://cloudlet-58
+  location:
+    lat: 0
+    long: -118
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-59
+  accessuri: http://cloudlet-59
+  location:
+    lat: 0
+    long: -117
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-60
+  accessuri: http://cloudlet-60
+  location:
+    lat: 0
+    long: -116
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-61
+  accessuri: http://cloudlet-61
+  location:
+    lat: 0
+    long: -115
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-62
+  accessuri: http://cloudlet-62
+  location:
+    lat: 0
+    long: -114
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-63
+  accessuri: http://cloudlet-63
+  location:
+    lat: 0
+    long: -113
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-64
+  accessuri: http://cloudlet-64
+  location:
+    lat: 0
+    long: -112
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-65
+  accessuri: http://cloudlet-65
+  location:
+    lat: 0
+    long: -111
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-66
+  accessuri: http://cloudlet-66
+  location:
+    lat: 0
+    long: -110
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-67
+  accessuri: http://cloudlet-67
+  location:
+    lat: 0
+    long: -109
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-68
+  accessuri: http://cloudlet-68
+  location:
+    lat: 0
+    long: -108
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-69
+  accessuri: http://cloudlet-69
+  location:
+    lat: 0
+    long: -107
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-70
+  accessuri: http://cloudlet-70
+  location:
+    lat: 0
+    long: -106
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-71
+  accessuri: http://cloudlet-71
+  location:
+    lat: 0
+    long: -105
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-72
+  accessuri: http://cloudlet-72
+  location:
+    lat: 0
+    long: -104
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-73
+  accessuri: http://cloudlet-73
+  location:
+    lat: 0
+    long: -103
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-74
+  accessuri: http://cloudlet-74
+  location:
+    lat: 0
+    long: -102
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-75
+  accessuri: http://cloudlet-75
+  location:
+    lat: 0
+    long: -101
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-76
+  accessuri: http://cloudlet-76
+  location:
+    lat: 0
+    long: -100
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-77
+  accessuri: http://cloudlet-77
+  location:
+    lat: 0
+    long: -99
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-78
+  accessuri: http://cloudlet-78
+  location:
+    lat: 0
+    long: -98
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-79
+  accessuri: http://cloudlet-79
+  location:
+    lat: 0
+    long: -97
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-80
+  accessuri: http://cloudlet-80
+  location:
+    lat: 0
+    long: -96
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-81
+  accessuri: http://cloudlet-81
+  location:
+    lat: 0
+    long: -95
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-82
+  accessuri: http://cloudlet-82
+  location:
+    lat: 0
+    long: -94
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-83
+  accessuri: http://cloudlet-83
+  location:
+    lat: 0
+    long: -93
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-84
+  accessuri: http://cloudlet-84
+  location:
+    lat: 0
+    long: -92
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-85
+  accessuri: http://cloudlet-85
+  location:
+    lat: 0
+    long: -91
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-86
+  accessuri: http://cloudlet-86
+  location:
+    lat: 0
+    long: -90
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-87
+  accessuri: http://cloudlet-87
+  location:
+    lat: 0
+    long: -89
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-88
+  accessuri: http://cloudlet-88
+  location:
+    lat: 0
+    long: -88
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-89
+  accessuri: http://cloudlet-89
+  location:
+    lat: 0
+    long: -87
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-90
+  accessuri: http://cloudlet-90
+  location:
+    lat: 0
+    long: -86
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-91
+  accessuri: http://cloudlet-91
+  location:
+    lat: 0
+    long: -85
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-92
+  accessuri: http://cloudlet-92
+  location:
+    lat: 0
+    long: -84
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-93
+  accessuri: http://cloudlet-93
+  location:
+    lat: 0
+    long: -83
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-94
+  accessuri: http://cloudlet-94
+  location:
+    lat: 0
+    long: -82
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-95
+  accessuri: http://cloudlet-95
+  location:
+    lat: 0
+    long: -81
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-96
+  accessuri: http://cloudlet-96
+  location:
+    lat: 0
+    long: -80
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-97
+  accessuri: http://cloudlet-97
+  location:
+    lat: 0
+    long: -79
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-98
+  accessuri: http://cloudlet-98
+  location:
+    lat: 0
+    long: -78
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-99
+  accessuri: http://cloudlet-99
+  location:
+    lat: 0
+    long: -77
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-100
+  accessuri: http://cloudlet-100
+  location:
+    lat: 0
+    long: -76
+
+
+developers:
+- key:
+    name: Dev1
+  username: Dev1-user
+  passhash: 123456789012345670
+  address: 1234 Dev1 street
+  email: Dev1@gmail.com
+
+
+apps:
+- key:
+    developerkey:
+       name: Dev1
+    name: App1
+    version: "1.0"
+  apppath: /usr/bin/App1
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+    id: 1
+  cloudletloc:
+    lat: 0
+    long: -175
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+    id: 2
+  cloudletloc:
+    lat: 0
+    long: -174
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+    id: 3
+  cloudletloc:
+    lat: 0
+    long: -173
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+    id: 4
+  cloudletloc:
+    lat: 0
+    long: -172
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+    id: 5
+  cloudletloc:
+    lat: 0
+    long: -171
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+    id: 6
+  cloudletloc:
+    lat: 0
+    long: -170
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+    id: 7
+  cloudletloc:
+    lat: 0
+    long: -169
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+    id: 8
+  cloudletloc:
+    lat: 0
+    long: -168
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+    id: 9
+  cloudletloc:
+    lat: 0
+    long: -167
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+    id: 10
+  cloudletloc:
+    lat: 0
+    long: -166
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+    id: 11
+  cloudletloc:
+    lat: 0
+    long: -165
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+    id: 12
+  cloudletloc:
+    lat: 0
+    long: -164
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+    id: 13
+  cloudletloc:
+    lat: 0
+    long: -163
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+    id: 14
+  cloudletloc:
+    lat: 0
+    long: -162
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+    id: 15
+  cloudletloc:
+    lat: 0
+    long: -161
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+    id: 16
+  cloudletloc:
+    lat: 0
+    long: -160
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+    id: 17
+  cloudletloc:
+    lat: 0
+    long: -159
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+    id: 18
+  cloudletloc:
+    lat: 0
+    long: -158
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+    id: 19
+  cloudletloc:
+    lat: 0
+    long: -157
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+    id: 20
+  cloudletloc:
+    lat: 0
+    long: -156
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+    id: 21
+  cloudletloc:
+    lat: 0
+    long: -155
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+    id: 22
+  cloudletloc:
+    lat: 0
+    long: -154
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+    id: 23
+  cloudletloc:
+    lat: 0
+    long: -153
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+    id: 24
+  cloudletloc:
+    lat: 0
+    long: -152
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+    id: 25
+  cloudletloc:
+    lat: 0
+    long: -151
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+    id: 26
+  cloudletloc:
+    lat: 0
+    long: -150
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+    id: 27
+  cloudletloc:
+    lat: 0
+    long: -149
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+    id: 28
+  cloudletloc:
+    lat: 0
+    long: -148
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+    id: 29
+  cloudletloc:
+    lat: 0
+    long: -147
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+    id: 30
+  cloudletloc:
+    lat: 0
+    long: -146
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+    id: 31
+  cloudletloc:
+    lat: 0
+    long: -145
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+    id: 32
+  cloudletloc:
+    lat: 0
+    long: -144
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+    id: 33
+  cloudletloc:
+    lat: 0
+    long: -143
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+    id: 34
+  cloudletloc:
+    lat: 0
+    long: -142
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+    id: 35
+  cloudletloc:
+    lat: 0
+    long: -141
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+    id: 36
+  cloudletloc:
+    lat: 0
+    long: -140
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+    id: 37
+  cloudletloc:
+    lat: 0
+    long: -139
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+    id: 38
+  cloudletloc:
+    lat: 0
+    long: -138
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+    id: 39
+  cloudletloc:
+    lat: 0
+    long: -137
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+    id: 40
+  cloudletloc:
+    lat: 0
+    long: -136
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+    id: 41
+  cloudletloc:
+    lat: 0
+    long: -135
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+    id: 42
+  cloudletloc:
+    lat: 0
+    long: -134
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+    id: 43
+  cloudletloc:
+    lat: 0
+    long: -133
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+    id: 44
+  cloudletloc:
+    lat: 0
+    long: -132
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+    id: 45
+  cloudletloc:
+    lat: 0
+    long: -131
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+    id: 46
+  cloudletloc:
+    lat: 0
+    long: -130
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+    id: 47
+  cloudletloc:
+    lat: 0
+    long: -129
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+    id: 48
+  cloudletloc:
+    lat: 0
+    long: -128
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+    id: 49
+  cloudletloc:
+    lat: 0
+    long: -127
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+    id: 50
+  cloudletloc:
+    lat: 0
+    long: -126
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+    id: 51
+  cloudletloc:
+    lat: 0
+    long: -125
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+    id: 52
+  cloudletloc:
+    lat: 0
+    long: -124
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+    id: 53
+  cloudletloc:
+    lat: 0
+    long: -123
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+    id: 54
+  cloudletloc:
+    lat: 0
+    long: -122
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+    id: 55
+  cloudletloc:
+    lat: 0
+    long: -121
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+    id: 56
+  cloudletloc:
+    lat: 0
+    long: -120
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+    id: 57
+  cloudletloc:
+    lat: 0
+    long: -119
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+    id: 58
+  cloudletloc:
+    lat: 0
+    long: -118
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+    id: 59
+  cloudletloc:
+    lat: 0
+    long: -117
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+    id: 60
+  cloudletloc:
+    lat: 0
+    long: -116
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+    id: 61
+  cloudletloc:
+    lat: 0
+    long: -115
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+    id: 62
+  cloudletloc:
+    lat: 0
+    long: -114
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+    id: 63
+  cloudletloc:
+    lat: 0
+    long: -113
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+    id: 64
+  cloudletloc:
+    lat: 0
+    long: -112
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+    id: 65
+  cloudletloc:
+    lat: 0
+    long: -111
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+    id: 66
+  cloudletloc:
+    lat: 0
+    long: -110
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+    id: 67
+  cloudletloc:
+    lat: 0
+    long: -109
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+    id: 68
+  cloudletloc:
+    lat: 0
+    long: -108
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+    id: 69
+  cloudletloc:
+    lat: 0
+    long: -107
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+    id: 70
+  cloudletloc:
+    lat: 0
+    long: -106
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+    id: 71
+  cloudletloc:
+    lat: 0
+    long: -105
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+    id: 72
+  cloudletloc:
+    lat: 0
+    long: -104
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+    id: 73
+  cloudletloc:
+    lat: 0
+    long: -103
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+    id: 74
+  cloudletloc:
+    lat: 0
+    long: -102
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+    id: 75
+  cloudletloc:
+    lat: 0
+    long: -101
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+    id: 76
+  cloudletloc:
+    lat: 0
+    long: -100
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+    id: 77
+  cloudletloc:
+    lat: 0
+    long: -99
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+    id: 78
+  cloudletloc:
+    lat: 0
+    long: -98
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+    id: 79
+  cloudletloc:
+    lat: 0
+    long: -97
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+    id: 80
+  cloudletloc:
+    lat: 0
+    long: -96
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+    id: 81
+  cloudletloc:
+    lat: 0
+    long: -95
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+    id: 82
+  cloudletloc:
+    lat: 0
+    long: -94
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+    id: 83
+  cloudletloc:
+    lat: 0
+    long: -93
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+    id: 84
+  cloudletloc:
+    lat: 0
+    long: -92
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+    id: 85
+  cloudletloc:
+    lat: 0
+    long: -91
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+    id: 86
+  cloudletloc:
+    lat: 0
+    long: -90
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+    id: 87
+  cloudletloc:
+    lat: 0
+    long: -89
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+    id: 88
+  cloudletloc:
+    lat: 0
+    long: -88
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+    id: 89
+  cloudletloc:
+    lat: 0
+    long: -87
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+    id: 90
+  cloudletloc:
+    lat: 0
+    long: -86
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+    id: 91
+  cloudletloc:
+    lat: 0
+    long: -85
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+    id: 92
+  cloudletloc:
+    lat: 0
+    long: -84
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+    id: 93
+  cloudletloc:
+    lat: 0
+    long: -83
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+    id: 94
+  cloudletloc:
+    lat: 0
+    long: -82
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+    id: 95
+  cloudletloc:
+    lat: 0
+    long: -81
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+    id: 96
+  cloudletloc:
+    lat: 0
+    long: -80
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+    id: 97
+  cloudletloc:
+    lat: 0
+    long: -79
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+    id: 98
+  cloudletloc:
+    lat: 0
+    long: -78
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+    id: 99
+  cloudletloc:
+    lat: 0
+    long: -77
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: App1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+    id: 100
+  cloudletloc:
+    lat: 0
+    long: -76
+  uri: /apps/App1
+  liveness: 1
+  apppath: /usr/bin/App1
+
