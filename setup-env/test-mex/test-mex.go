@@ -156,6 +156,7 @@ func validateArgs() {
 func main() {
 	validateArgs()
 
+	errors := []string{}
 	errorsFound := 0
 	if *outputDir != "" {
 		*outputDir = util.CreateOutputDir(false, *outputDir, commandName+".log")
@@ -174,58 +175,78 @@ func main() {
 		case "deploy":
 			if !setupmex.DeployProcesses() {
 				errorsFound += 1
+				errors = append(errors, "deploy failed")
 			}
 		case "start":
 			startFailed := false
 			if !setupmex.StartProcesses(actionParam, *outputDir) {
 				startFailed = true
 				errorsFound += 1
+				errors = append(errors, "start failed")
+
 			} else {
 				if !setupmex.StartRemoteProcesses(actionParam) {
 					startFailed = true
 					errorsFound += 1
+					errors = append(errors, "start remote failed")
+
 				}
 			}
 			if startFailed {
 				setupmex.StopProcesses(actionParam)
 				setupmex.StopRemoteProcesses(actionParam)
 				errorsFound += 1
+				errors = append(errors, "stop failed")
 				break
 
 			}
 			setupmex.UpdateApiAddrs()
 			if !setupmex.WaitForProcesses(actionParam) {
 				errorsFound += 1
+				errors = append(errors, "wait for process failed")
+
 			}
 		case "status":
 			setupmex.UpdateApiAddrs()
 			if !setupmex.WaitForProcesses(actionParam) {
 				errorsFound += 1
+				errors = append(errors, "wait for process failed")
+
 			}
 		case "stop":
 			setupmex.StopProcesses(actionParam)
 			if !setupmex.StopRemoteProcesses(actionParam) {
 				errorsFound += 1
+				errors = append(errors, "stop failed")
+
 			}
 		case "ctrlapi":
 			setupmex.UpdateApiAddrs()
 			if !apis.RunControllerAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-				log.Printf("Unable to run api for %s. Check connectivity to controller API\n", action)
+				log.Printf("Unable to run api for %s\n", action)
 				errorsFound += 1
+				errors = append(errors, "controller api failed")
+
 			}
 		case "dmeapi":
 			setupmex.UpdateApiAddrs()
 			if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-				log.Printf("Unable to run api for %s. Check connectivity to DME API\n", action)
+				log.Printf("Unable to run api for %s\n", action)
 				errorsFound += 1
+				errors = append(errors, "dme api failed")
+
 			}
 		case "cleanup":
 			if !setupmex.CleanupRemoteProcesses() {
 				errorsFound += 1
+				errors = append(errors, "cleanup failed")
+
 			}
 		case "fetchlogs":
 			if !setupmex.FetchRemoteLogs(*outputDir) {
 				errorsFound += 1
+				errors = append(errors, "fetch failed")
+
 			}
 		default:
 			log.Fatal("unexpected action: " + action)
@@ -241,11 +262,18 @@ func main() {
 
 		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, fileType) {
 			errorsFound += 1
+			errors = append(errors, "compare yaml failed")
+
 		}
 
 	}
 	if *outputDir != "" {
 		fmt.Printf("\nNum Errors found: %d, Results in: %s\n", errorsFound, *outputDir)
-		os.Exit(errorsFound)
+		if errorsFound > 0 {
+			errstring := strings.Join(errors, ",")
+			fmt.Fprint(os.Stderr, errstring)
+			os.Exit(errorsFound)
+		}
+		os.Exit(0)
 	}
 }

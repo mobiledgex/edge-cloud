@@ -1,4 +1,5 @@
 uri: http://tmocloud1/apps/someApplication
+serviceip: [10, 10, 10, 1]
 cloudletlocation:
   lat: 31
   long: -91

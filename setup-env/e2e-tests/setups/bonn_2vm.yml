@@ -5,6 +5,14 @@ vars:
 - vm1_external_ip: 37.50.143.110
 - vm2_external_ip: 37.50.143.100
 
+
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: "{{datadir}}/locsim.yml"
+  hostname: "{{vm1_external_ip}}"
+
 etcds:
 - etcdlocal:
     name: etcd1
@@ -45,6 +53,7 @@ dmes:
 - dmelocal:
     name: dme1
     apiaddr: "0.0.0.0:50051"
+    locverurl: "http://{{vm1_internal_ip}}:8888"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm2_external_ip}}"
 

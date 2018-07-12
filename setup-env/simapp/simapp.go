@@ -31,7 +31,7 @@ func printUsage() {
 
 func startApp() {
 
-	path := fmt.Sprintf("./simapp -name %s -port %d -action run", *appname, *port)
+	path := fmt.Sprintf("simapp -name %s -port %d -action run", *appname, *port)
 	fmt.Println("starting: " + path)
 	cmd := exec.Command("sh", "-c", path)
 	err := cmd.Start()
@@ -41,7 +41,6 @@ func startApp() {
 		log.Println("App started successfully")
 		log.Printf("Test using: curl http://127.0.0.1:%d%s%s", *port, "/apps/", *appname)
 	}
-
 }
 
 func run() {

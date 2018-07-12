@@ -28,7 +28,8 @@ tests:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
-
+  loops: 2
+ 
 - name: create appinst2
   apifile: "{{datadir}}/appinst2.yml"
   actions: [ctrlapi-create]
@@ -52,6 +53,7 @@ tests:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
+  loops: 2
 
 - name: delete appinst1
   actions: [ctrlapi-delete]
