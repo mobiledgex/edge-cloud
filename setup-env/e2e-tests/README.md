@@ -24,8 +24,8 @@ e2e-tests -testfile testfiles/stop_cleanup.yml -setupfile setups/local_multi.yml
 
 ## test group files
 # regression test
-e2e-tests -testgroup testfiles/regression_group.yml -setupfile setups/local_multi.yml 
+e2e-tests -testfile testfiles/regression_group.yml -setupfile setups/local_multi.yml 
 # remote deploy and leave things set up
-e2e-tests -testgroup testfiles/deploy_group.yml -setupfile setups/local_multi.yml
-e2e-tests -testgroup testfiles/deploy_group.yml -setupfile setups/bonn_2vm.yml
+e2e-tests -testfile testfiles/deploy_group.yml -setupfile setups/local_multi.yml
+e2e-tests -testfile testfiles/deploy_group.yml -setupfile setups/bonn_2vm.yml
 

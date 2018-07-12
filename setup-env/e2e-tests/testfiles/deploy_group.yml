@@ -1,5 +1,4 @@
-testfiles:
-  - filename: stop_cleanup.yml
-  - filename: deploy_start.yml
-  - filename: create.yml
-
+tests:
+  - includefile: stop_cleanup.yml
+  - includefile: deploy_start.yml
+  - includefile: create.yml

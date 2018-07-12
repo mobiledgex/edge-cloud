@@ -18,12 +18,12 @@ import (
 var (
 	commandName = "e2e-tests"
 	testFile    *string
-	testGroup   *string
 	outputDir   *string
 	setupFile   *string
 	dataDir     *string
 	stopOnFail  *bool
 	verbose     *bool
+	failedTests = make(map[string]int)
 )
 
 //re-init the flags because otherwise we inherit a bunch of flags from the testing
@@ -31,7 +31,6 @@ var (
 func init() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	testFile = flag.String("testfile", "", "input file with tests")
-	testGroup = flag.String("testgroup", "", "input file with multiple test files")
 	outputDir = flag.String("outputdir", "/tmp/e2e_test_out", "output directory, timestamp will be appended")
 	setupFile = flag.String("setupfile", "", "network config setup file")
 	dataDir = flag.String("datadir", "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data", "directory where app data files exist")
@@ -40,33 +39,18 @@ func init() {
 
 }
 
-// an individual test
-// name of an individual test file and how many times to run it
-type e2e_test_file struct {
-	Filename string `yaml:"filename"`
-	Loops    int    `yaml:"loops"`
-}
-
-type e2e_test_files struct {
-	Testfiles []e2e_test_file `yaml:"testfiles"`
-}
-
-// group of test files, each of which may have multiple tests
-type e2e_test_group struct {
-	Name      string
-	Testfiles []e2e_test_file `yaml:"testfiles"`
-}
-
-// a list of tests
-
+// a list of tests, which may include another file which has tests.  Looping can
+//be done at either test level or the included file level.
 type e2e_test struct {
-	Name        string
-	Apifile     string
-	Actions     []string
+	Name        string   `yaml:"name"`
+	IncludeFile string   `yaml:"includefile"`
+	Loops       int      `yaml:"loops"`
+	Apifile     string   `yaml:"apifile"`
+	Actions     []string `yaml:"actions"`
 	Compareyaml struct {
-		Yaml1    string
-		Yaml2    string
-		Filetype string
+		Yaml1    string `yaml:"yaml1"`
+		Yaml2    string `yaml:"yaml2"`
+		Filetype string ` yaml:"filetype"`
 	}
 }
 
@@ -90,11 +74,9 @@ func validateArgs() {
 
 	errorFound := false
 
-	if *testFile == "" && *testGroup == "" {
-		fmt.Println("Argument -testfile <file> or -testgroup <file> is required")
+	if *testFile == "" {
+		fmt.Println("Argument -testfile <file> is required")
 		errorFound = true
-	} else if *testFile != "" && *testGroup != "" {
-		fmt.Println("Only one of -testfile <file> or -testgroup <file> is allowed")
 	}
 	if *outputDir == "" {
 		fmt.Println("Argument -outputdir <dir> is required")
@@ -131,99 +113,98 @@ func readYamlFile(fileName string, tests interface{}) bool {
 	return true
 }
 
-func runTests(fileName string) (int, int, int) {
+func runTests(dirName string, fileName string, depth int) (int, int, int) {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
 
-	basename := path.Base(fileName)
-
+	indentstr := ""
+	for i := 0; i < depth; i++ {
+		indentstr = indentstr + " - "
+	}
 	var testsToRun e2e_tests
-	if !readYamlFile(fileName, &testsToRun) {
+	if !readYamlFile(dirName+"/"+fileName, &testsToRun) {
 		return 0, 0, 0
 	}
 
+	//if no loop count specified, run once
+
 	for _, t := range testsToRun.Tests {
-		fmt.Printf("%-25s %-50s ", basename, t.Name)
-		cmdstr := fmt.Sprintf("test-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
-		if len(t.Actions) > 0 {
-			cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
+		loopCount := 1
+		loopStr := ""
+		if t.Loops > loopCount {
+			loopCount = t.Loops
 		}
-		if t.Apifile != "" {
-			cmdstr += fmt.Sprintf("-apifile %s ", t.Apifile)
-		}
-		if t.Compareyaml.Yaml1 != "" {
-			cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
-		}
-
-		//		log.Printf("executing: %s\n", cmdstr)
-		cmd := exec.Command("sh", "-c", cmdstr)
-
-		var out bytes.Buffer
-		var stderr bytes.Buffer
-		cmd.Stdout = &out
-		cmd.Stderr = &stderr
-		err := cmd.Run()
-		if *verbose {
-			fmt.Println(out.String())
-		}
-		if err == nil {
-			fmt.Println("PASS")
-			numPassed += 1
-		} else {
-			fmt.Printf("FAIL: %s\n", stderr.String())
-			numFailed += 1
-			if *stopOnFail {
-				fmt.Printf("*** STOPPING ON FAILURE due to --stop option\n")
-				break
+		for i := 1; i <= loopCount; i++ {
+			if i > 1 {
+				loopStr = fmt.Sprintf("(loop %d)", i)
 			}
-		}
+			namestr := t.Name
+			if namestr == "" && t.IncludeFile != "" {
+				namestr = "include: " + t.IncludeFile
+			}
+			fmt.Printf("%-30s %-50s ", indentstr+fileName, namestr+loopStr)
+			if t.IncludeFile != "" {
+				if len(t.Actions) > 0 || t.Compareyaml.Yaml1 != "" {
+					log.Fatalf("Test %s cannot have both included files and actions or yaml compares\n", t.Name)
+				}
+				if depth >= 10 {
+					//avoid an infinite recusive loop in which a testfile contains itself
+					log.Fatalf("excessive include depth %d, possible loop: %s", depth, fileName)
+				}
+				fmt.Println()
+				nr, np, nf := runTests(dirName, t.IncludeFile, depth+1)
+				numTestsRun += nr
+				numPassed += np
+				numFailed += nf
+				continue
+			}
 
-		numTestsRun++
+			cmdstr := fmt.Sprintf("test-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
+			if len(t.Actions) > 0 {
+				cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
+			}
+			if t.Apifile != "" {
+				cmdstr += fmt.Sprintf("-apifile %s ", t.Apifile)
+			}
+			if t.Compareyaml.Yaml1 != "" {
+				cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
+			}
+
+			cmd := exec.Command("sh", "-c", cmdstr)
+
+			var out bytes.Buffer
+			var stderr bytes.Buffer
+			cmd.Stdout = &out
+			cmd.Stderr = &stderr
+			err := cmd.Run()
+			if *verbose {
+				fmt.Println(out.String())
+			}
+			if err == nil {
+				fmt.Println("PASS")
+				numPassed += 1
+			} else {
+				fmt.Printf("FAIL: %s\n", stderr.String())
+				numFailed += 1
+				_, ok := failedTests[fileName+":"+t.Name]
+				if !ok {
+					failedTests[fileName+":"+t.Name] = 0
+				}
+				failedTests[fileName+":"+t.Name] += 1
+
+				if *stopOnFail {
+					fmt.Printf("*** STOPPING ON FAILURE due to --stop option\n")
+					break
+				}
+			}
+			numTestsRun++
+		}
 	}
 	if *verbose {
 		fmt.Printf("\n\n*** Summary of testfile %s Tests Run: %d Passed: %d Failed: %d -- Logs in %s\n", fileName, numTestsRun, numPassed, numFailed, *outputDir)
 	}
 	return numTestsRun, numPassed, numFailed
-}
-
-func runTestGroup(fileName string) {
-	var testGroup e2e_test_group
-	if !readYamlFile(fileName, &testGroup) {
-		log.Fatalf("unable to read test group file %s\n", fileName)
-	}
-	totalRun := 0
-	totalPassed := 0
-	totalFailed := 0
-	//look in same dir for the included test files
-	dir := path.Dir(fileName)
-
-	var failedTcs = make(map[string]int)
-	for _, tg := range testGroup.Testfiles {
-		for i := 0; i <= tg.Loops; i++ {
-			//		fmt.Printf("Running testfile %s\n", tg.Filename)
-			run, pass, fail := runTests(dir + "/" + tg.Filename)
-			totalRun += run
-			totalPassed += pass
-			totalFailed += fail
-
-			if fail > 0 {
-				_, ok := failedTcs[tg.Filename]
-				if !ok {
-					failedTcs[tg.Filename] = 0
-				}
-				failedTcs[tg.Filename] += fail
-			}
-		}
-	}
-	fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
-	if totalFailed > 0 {
-		fmt.Printf("Failed Tests: ")
-		for t, f := range failedTcs {
-			fmt.Printf("  %s: failures %d\n", t, f)
-		}
-		fmt.Printf("Logs in %s\n", *outputDir)
-	}
 
 }
 
@@ -231,13 +212,20 @@ func main() {
 	validateArgs()
 	*outputDir = util.CreateOutputDir(true, *outputDir, commandName+".log")
 
-	fmt.Printf("\n%-25s %-50s Result\n", "Testfile", "Test")
-	fmt.Printf("-------------------------------------------------------------------------------------\n")
+	fmt.Printf("\n%-30s %-50s Result\n", "Testfile", "Test")
+	fmt.Printf("-------------------------------------------------------------------------------------------\n")
 	if *testFile != "" {
-		runTests(*testFile)
-	}
-	if *testGroup != "" {
-		runTestGroup(*testGroup)
+		dirName := path.Dir(*testFile)
+		fileName := path.Base(*testFile)
+		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, 0)
+		fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
+		if totalFailed > 0 {
+			fmt.Printf("Failed Tests: ")
+			for t, f := range failedTests {
+				fmt.Printf("  %s: failures %d\n", t, f)
+			}
+			fmt.Printf("Logs in %s\n", *outputDir)
+		}
 	}
 
 }
