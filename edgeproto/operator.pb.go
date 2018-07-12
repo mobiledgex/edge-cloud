@@ -473,11 +473,11 @@ func (s *Operator) HasFields() bool {
 }
 
 type OperatorStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewOperatorStore(objstore objstore.ObjStore) OperatorStore {
-	return OperatorStore{objstore: objstore}
+func NewOperatorStore(kvstore objstore.KVStore) OperatorStore {
+	return OperatorStore{kvstore: kvstore}
 }
 
 func (s *OperatorStore) Create(m *Operator, wait func(int64)) (*Result, error) {
@@ -490,7 +490,7 @@ func (s *OperatorStore) Create(m *Operator, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -508,7 +508,7 @@ func (s *OperatorStore) Update(m *Operator, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Operator", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -524,7 +524,7 @@ func (s *OperatorStore) Update(m *Operator, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -542,7 +542,7 @@ func (s *OperatorStore) Put(m *Operator, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Operator", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Operator
 		err = json.Unmarshal(curBytes, &cur)
@@ -560,7 +560,7 @@ func (s *OperatorStore) Put(m *Operator, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -576,7 +576,7 @@ func (s *OperatorStore) Delete(m *Operator, wait func(int64)) (*Result, error) {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Operator", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -587,7 +587,7 @@ func (s *OperatorStore) Delete(m *Operator, wait func(int64)) (*Result, error) {
 }
 
 func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

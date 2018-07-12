@@ -855,11 +855,11 @@ func (s *Cloudlet) HasFields() bool {
 }
 
 type CloudletStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewCloudletStore(objstore objstore.ObjStore) CloudletStore {
-	return CloudletStore{objstore: objstore}
+func NewCloudletStore(kvstore objstore.KVStore) CloudletStore {
+	return CloudletStore{kvstore: kvstore}
 }
 
 func (s *CloudletStore) Create(m *Cloudlet, wait func(int64)) (*Result, error) {
@@ -872,7 +872,7 @@ func (s *CloudletStore) Create(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -890,7 +890,7 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Cloudlet", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -906,7 +906,7 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -924,7 +924,7 @@ func (s *CloudletStore) Put(m *Cloudlet, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Cloudlet", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Cloudlet
 		err = json.Unmarshal(curBytes, &cur)
@@ -942,7 +942,7 @@ func (s *CloudletStore) Put(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -958,7 +958,7 @@ func (s *CloudletStore) Delete(m *Cloudlet, wait func(int64)) (*Result, error) {
 		return nil, err
 	}
 	key := objstore.DbKeyString("Cloudlet", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -969,7 +969,7 @@ func (s *CloudletStore) Delete(m *Cloudlet, wait func(int64)) (*Result, error) {
 }
 
 func (s *CloudletStore) LoadOne(key string) (*Cloudlet, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1212,11 +1212,11 @@ func (s *CloudletInfo) HasFields() bool {
 }
 
 type CloudletInfoStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewCloudletInfoStore(objstore objstore.ObjStore) CloudletInfoStore {
-	return CloudletInfoStore{objstore: objstore}
+func NewCloudletInfoStore(kvstore objstore.KVStore) CloudletInfoStore {
+	return CloudletInfoStore{kvstore: kvstore}
 }
 
 func (s *CloudletInfoStore) Create(m *CloudletInfo, wait func(int64)) (*Result, error) {
@@ -1229,7 +1229,7 @@ func (s *CloudletInfoStore) Create(m *CloudletInfo, wait func(int64)) (*Result, 
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1247,7 +1247,7 @@ func (s *CloudletInfoStore) Update(m *CloudletInfo, wait func(int64)) (*Result, 
 	}
 	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1263,7 +1263,7 @@ func (s *CloudletInfoStore) Update(m *CloudletInfo, wait func(int64)) (*Result, 
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1281,7 +1281,7 @@ func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64)) (*Result, err
 	}
 	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur CloudletInfo
 		err = json.Unmarshal(curBytes, &cur)
@@ -1299,7 +1299,7 @@ func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64)) (*Result, err
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1315,7 +1315,7 @@ func (s *CloudletInfoStore) Delete(m *CloudletInfo, wait func(int64)) (*Result, 
 		return nil, err
 	}
 	key := objstore.DbKeyString("CloudletInfo", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1326,7 +1326,7 @@ func (s *CloudletInfoStore) Delete(m *CloudletInfo, wait func(int64)) (*Result, 
 }
 
 func (s *CloudletInfoStore) LoadOne(key string) (*CloudletInfo, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

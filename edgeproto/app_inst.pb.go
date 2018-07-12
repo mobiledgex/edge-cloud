@@ -978,11 +978,11 @@ func (s *AppInst) HasFields() bool {
 }
 
 type AppInstStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewAppInstStore(objstore objstore.ObjStore) AppInstStore {
-	return AppInstStore{objstore: objstore}
+func NewAppInstStore(kvstore objstore.KVStore) AppInstStore {
+	return AppInstStore{kvstore: kvstore}
 }
 
 func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
@@ -995,7 +995,7 @@ func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1013,7 +1013,7 @@ func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("AppInst", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1029,7 +1029,7 @@ func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1047,7 +1047,7 @@ func (s *AppInstStore) Put(m *AppInst, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("AppInst", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur AppInst
 		err = json.Unmarshal(curBytes, &cur)
@@ -1065,7 +1065,7 @@ func (s *AppInstStore) Put(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1081,7 +1081,7 @@ func (s *AppInstStore) Delete(m *AppInst, wait func(int64)) (*Result, error) {
 		return nil, err
 	}
 	key := objstore.DbKeyString("AppInst", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1092,7 +1092,7 @@ func (s *AppInstStore) Delete(m *AppInst, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppInstStore) LoadOne(key string) (*AppInst, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -1395,11 +1395,11 @@ func (s *AppInstInfo) HasFields() bool {
 }
 
 type AppInstInfoStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewAppInstInfoStore(objstore objstore.ObjStore) AppInstInfoStore {
-	return AppInstInfoStore{objstore: objstore}
+func NewAppInstInfoStore(kvstore objstore.KVStore) AppInstInfoStore {
+	return AppInstInfoStore{kvstore: kvstore}
 }
 
 func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, error) {
@@ -1412,7 +1412,7 @@ func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1430,7 +1430,7 @@ func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, er
 	}
 	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1446,7 +1446,7 @@ func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, er
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -1464,7 +1464,7 @@ func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64)) (*Result, error
 	}
 	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur AppInstInfo
 		err = json.Unmarshal(curBytes, &cur)
@@ -1482,7 +1482,7 @@ func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64)) (*Result, error
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -1498,7 +1498,7 @@ func (s *AppInstInfoStore) Delete(m *AppInstInfo, wait func(int64)) (*Result, er
 		return nil, err
 	}
 	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -1509,7 +1509,7 @@ func (s *AppInstInfoStore) Delete(m *AppInstInfo, wait func(int64)) (*Result, er
 }
 
 func (s *AppInstInfoStore) LoadOne(key string) (*AppInstInfo, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

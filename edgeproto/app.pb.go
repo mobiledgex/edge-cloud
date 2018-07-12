@@ -517,11 +517,11 @@ func (s *App) HasFields() bool {
 }
 
 type AppStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewAppStore(objstore objstore.ObjStore) AppStore {
-	return AppStore{objstore: objstore}
+func NewAppStore(kvstore objstore.KVStore) AppStore {
+	return AppStore{kvstore: kvstore}
 }
 
 func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
@@ -534,7 +534,7 @@ func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -552,7 +552,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +568,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -586,7 +586,7 @@ func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur App
 		err = json.Unmarshal(curBytes, &cur)
@@ -604,7 +604,7 @@ func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -620,7 +620,7 @@ func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
 		return nil, err
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +631,7 @@ func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppStore) LoadOne(key string) (*App, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

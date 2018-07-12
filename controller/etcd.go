@@ -61,7 +61,7 @@ func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
 // create fails if key already exists
 func (e *EtcdClient) Create(key, val string) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
@@ -73,7 +73,7 @@ func (e *EtcdClient) Create(key, val string) (int64, error) {
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrObjStoreKeyExists
+		return 0, objstore.ErrKVStoreKeyExists
 	}
 	log.DebugLog(log.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -82,7 +82,7 @@ func (e *EtcdClient) Create(key, val string) (int64, error) {
 // update fails if key does not exist
 func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
@@ -99,7 +99,7 @@ func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrObjStoreKeyNotFound
+		return 0, objstore.ErrKVStoreKeyNotFound
 	}
 	log.DebugLog(log.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -107,7 +107,7 @@ func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 
 func (e *EtcdClient) Delete(key string) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	resp, err := e.client.Delete(ctx, key)
@@ -116,7 +116,7 @@ func (e *EtcdClient) Delete(key string) (int64, error) {
 		return 0, err
 	}
 	if resp.Deleted == 0 {
-		return 0, objstore.ErrObjStoreKeyNotFound
+		return 0, objstore.ErrKVStoreKeyNotFound
 	}
 	log.DebugLog(log.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
@@ -124,7 +124,7 @@ func (e *EtcdClient) Delete(key string) (int64, error) {
 
 func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 	if e.client == nil {
-		return nil, 0, objstore.ErrObjStoreNotInitialized
+		return nil, 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key)
@@ -133,7 +133,7 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 		return nil, 0, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, 0, objstore.ErrObjStoreKeyNotFound
+		return nil, 0, objstore.ErrKVStoreKeyNotFound
 	}
 	obj := resp.Kvs[0]
 	log.DebugLog(log.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
@@ -142,7 +142,7 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
 
 func (e *EtcdClient) Put(key, val string) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	resp, err := e.client.Put(ctx, key, val)
@@ -158,7 +158,7 @@ func (e *EtcdClient) Put(key, val string) (int64, error) {
 // Get records that have the given key prefix
 func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 	if e.client == nil {
-		return objstore.ErrObjStoreNotInitialized
+		return objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())

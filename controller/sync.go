@@ -11,7 +11,7 @@ import (
 )
 
 type Sync struct {
-	store      objstore.ObjStore
+	store      objstore.KVStore
 	rev        int64
 	mux        util.Mutex
 	cond       sync.Cond
@@ -29,7 +29,7 @@ type ObjCache interface {
 	GetTypeString() string
 }
 
-func InitSync(store objstore.ObjStore) *Sync {
+func InitSync(store objstore.KVStore) *Sync {
 	sync := Sync{}
 	sync.store = store
 	sync.initWait = true

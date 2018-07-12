@@ -353,11 +353,11 @@ func (s *{{.Name}}) HasFields() bool {
 }
 
 type {{.Name}}Store struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func New{{.Name}}Store(objstore objstore.ObjStore) {{.Name}}Store {
-	return {{.Name}}Store{objstore: objstore}
+func New{{.Name}}Store(kvstore objstore.KVStore) {{.Name}}Store {
+	return {{.Name}}Store{kvstore: kvstore}
 }
 
 func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error) {
@@ -370,7 +370,7 @@ func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error)
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil { return nil, err }
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -389,7 +389,7 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var vers int64 = 0
 {{- if (.HasFields)}}
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil { return nil, err }
 	var cur {{.Name}}
 	err = json.Unmarshal(curBytes, &cur)
@@ -402,7 +402,7 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	val, err := json.Marshal(m)
 {{- end}}
 	if err != nil { return nil, err }
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -421,7 +421,7 @@ func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64)) (*Result, error) {
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var val []byte
 {{- if (.HasFields)}}
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur {{.Name}}
 		err = json.Unmarshal(curBytes, &cur)
@@ -438,7 +438,7 @@ func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64)) (*Result, error) {
 	val, err = json.Marshal(m)
 {{- end}}
 	if err != nil { return nil, err }
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -450,7 +450,7 @@ func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error)
 	err := m.GetKey().Validate()
 	if err != nil { return nil, err }
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -459,7 +459,7 @@ func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error)
 }
 
 func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

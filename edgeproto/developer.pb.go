@@ -479,11 +479,11 @@ func (s *Developer) HasFields() bool {
 }
 
 type DeveloperStore struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func NewDeveloperStore(objstore objstore.ObjStore) DeveloperStore {
-	return DeveloperStore{objstore: objstore}
+func NewDeveloperStore(kvstore objstore.KVStore) DeveloperStore {
+	return DeveloperStore{kvstore: kvstore}
 }
 
 func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error) {
@@ -496,7 +496,7 @@ func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -514,7 +514,7 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +530,7 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
 	if err != nil {
 		return nil, err
 	}
@@ -548,7 +548,7 @@ func (s *DeveloperStore) Put(m *Developer, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.objstore.Get(key)
+	curBytes, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Developer
 		err = json.Unmarshal(curBytes, &cur)
@@ -566,7 +566,7 @@ func (s *DeveloperStore) Put(m *Developer, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +582,7 @@ func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error)
 		return nil, err
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -593,7 +593,7 @@ func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error)
 }
 
 func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}

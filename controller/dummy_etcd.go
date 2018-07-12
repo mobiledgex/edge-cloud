@@ -42,11 +42,11 @@ func (e *dummyEtcd) Create(key, val string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	_, ok := e.db[key]
 	if ok {
-		return 0, objstore.ErrObjStoreKeyExists
+		return 0, objstore.ErrKVStoreKeyExists
 	}
 	e.db[key] = val
 	e.vers[key] = 1
@@ -60,11 +60,11 @@ func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	_, ok := e.db[key]
 	if !ok {
-		return 0, objstore.ErrObjStoreKeyNotFound
+		return 0, objstore.ErrKVStoreKeyNotFound
 	}
 	ver := e.vers[key]
 	if version != objstore.ObjStoreUpdateVersionAny && ver != version {
@@ -83,7 +83,7 @@ func (e *dummyEtcd) Put(key, val string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ver, ok := e.vers[key]
 	if !ok {
@@ -101,7 +101,7 @@ func (e *dummyEtcd) Delete(key string) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	delete(e.db, key)
 	delete(e.vers, key)
@@ -115,11 +115,11 @@ func (e *dummyEtcd) Get(key string) ([]byte, int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return nil, 0, objstore.ErrObjStoreNotInitialized
+		return nil, 0, objstore.ErrKVStoreNotInitialized
 	}
 	val, ok := e.db[key]
 	if !ok {
-		return nil, 0, objstore.ErrObjStoreKeyNotFound
+		return nil, 0, objstore.ErrKVStoreKeyNotFound
 	}
 	ver := e.vers[key]
 
@@ -131,7 +131,7 @@ func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
-		return objstore.ErrObjStoreNotInitialized
+		return objstore.ErrKVStoreNotInitialized
 	}
 	for k, v := range e.db {
 		if !strings.HasPrefix(k, key) {

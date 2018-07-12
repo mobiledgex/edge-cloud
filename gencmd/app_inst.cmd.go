@@ -36,13 +36,13 @@ var _ = math.Inf
 var AppInstApiCmd edgeproto.AppInstApiClient
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
 var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
+var AppInstMetricsIn edgeproto.AppInstMetrics
+var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
 var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstInLiveness string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
-var AppInstMetricsIn edgeproto.AppInstMetrics
-var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
 var LivenessStrings = []string{
 	"UNKNOWN",
 	"STATIC",
