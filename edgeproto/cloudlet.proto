@@ -34,6 +34,7 @@ message Cloudlet {
   // Certs for accessing cloudlet site
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
 }
@@ -41,25 +42,25 @@ message Cloudlet {
 service CloudletApi {
   rpc CreateCloudlet(Cloudlet) returns (Result) {
     option (google.api.http) = {
-      post: "/create/developer"
+      post: "/create/cloudlet"
       body: "*"
     };
   }
   rpc DeleteCloudlet(Cloudlet) returns (Result) {
     option (google.api.http) = {
-      post: "/delete/developer"
+      post: "/delete/cloudet"
       body: "*"
     };
   }
   rpc UpdateCloudlet(Cloudlet) returns (Result) {
     option (google.api.http) = {
-      post: "/update/developer"
+      post: "/update/cloudlet"
       body: "*"
     };
   }
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
     option (google.api.http) = {
-      post: "/show/developer"
+      post: "/show/cloudlet"
       body: "*"
     };
   }
@@ -70,20 +71,51 @@ enum CloudletState {
   ConfiguringOpenstack = 1;
   ConfiguringKubernetes = 2;
   Ready = 3;
+  Offline = 4;
 }
 
-// CloudletInfo is the information CRM passes up to the controller
-// about the Cloudlets it is managing.
+// CloudletInfo is the static information CRM passes up to the controller
+// about the Cloudlets it is managing. It is put into etcd or equivalent.
 message CloudletInfo {
+  repeated string fields = 1;
   // Unique identifier key
-  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
   // State of cloudlet
-  CloudletState state = 2;
+  CloudletState state = 3;
   // Id of client assigned by server
-  uint64 notify_id = 3;
+  int64 notify_id = 4;
   // TODO: Not entirely sure how resources will be specified.
   // This is a placeholder for now.
-  uint64 resources = 4;
+  uint64 resources = 5;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
+}
+
+service CloudletInfoApi {
+  rpc ShowCloudletInfo(CloudletInfo) returns (stream CloudletInfo) {
+    option (google.api.http) = {
+      post: "/show/cloudletinfo"
+      body: "*"
+    };
+  }
+}
+
+// CloudletMetrics are metrics produced by the CRM to pass up to
+// an analytics or storage node (not the controller). These are not
+// stored in etcd, but probably logged as time series to disk (TBD)
+message CloudletMetrics {
+  // what goes here?
+  uint64 foo = 5;
+}
+
+service CloudletMetricsApi {
+  rpc ShowCloudletMetrics(CloudletMetrics) returns (stream CloudletMetrics) {
+    option (google.api.http) = {
+      post: "/show/cloudletmetrics"
+      body: "*"
+    };
+  }
 }

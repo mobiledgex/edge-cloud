@@ -20,12 +20,14 @@ It has these top-level messages:
 	AppInstKey
 	AppInst
 	AppInstInfo
+	AppInstMetrics
 	CloudResource
 	EdgeCloudApp
 	EdgeCloudApplication
 	CloudletKey
 	Cloudlet
 	CloudletInfo
+	CloudletMetrics
 	DeveloperKey
 	Developer
 	NoticeReply

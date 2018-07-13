@@ -20,12 +20,14 @@ It has these top-level messages:
 	AppInstKey
 	AppInst
 	AppInstInfo
+	AppInstMetrics
 	CloudResource
 	EdgeCloudApp
 	EdgeCloudApplication
 	CloudletKey
 	Cloudlet
 	CloudletInfo
+	CloudletMetrics
 	DeveloperKey
 	Developer
 	NoticeReply
@@ -189,7 +191,6 @@ func NewClientAppApi(api edgeproto.AppApiClient) *AppCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-
 func InternalAppCudTest(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
 	basicAppCudTest(t, NewInternalAppApi(api), testData)
 }

@@ -155,7 +155,6 @@ func NewClientDeveloperApi(api edgeproto.DeveloperApiClient) *DeveloperCommonApi
 	apiWrap.client_api = api
 	return &apiWrap
 }
-
 func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
 	basicDeveloperCudTest(t, NewInternalDeveloperApi(api), testData)
 }

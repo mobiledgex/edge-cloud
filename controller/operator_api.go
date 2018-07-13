@@ -19,7 +19,7 @@ func InitOperatorApi(sync *Sync) {
 	operatorApi.sync = sync
 	operatorApi.store = edgeproto.NewOperatorStore(sync.store)
 	edgeproto.InitOperatorCache(&operatorApi.cache)
-	sync.RegisterCache(edgeproto.OperatorKeyTypeString(), &operatorApi.cache)
+	sync.RegisterCache(&operatorApi.cache)
 }
 
 func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {

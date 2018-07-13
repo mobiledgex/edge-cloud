@@ -23,7 +23,7 @@ func InitCloudletApi(sync *Sync) {
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
 	cloudletApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateCloudlet)
 	cloudletApi.cache.SetUpdatedCb(cloudletApi.UpdatedCb)
-	sync.RegisterCache(edgeproto.CloudletKeyTypeString(), &cloudletApi.cache)
+	sync.RegisterCache(&cloudletApi.cache)
 }
 
 func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]struct{}) {
@@ -32,6 +32,10 @@ func (s *CloudletApi) GetAllKeys(keys map[edgeproto.CloudletKey]struct{}) {
 
 func (s *CloudletApi) Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
 	return s.cache.Get(key, buf)
+}
+
+func (s *CloudletApi) HasKey(key *edgeproto.CloudletKey) bool {
+	return s.cache.HasKey(key)
 }
 
 func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
@@ -63,6 +67,9 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Application Instance")
 	}
 	res, err := s.store.Delete(in, s.sync.syncWait)
+	// also delete associated info
+	cloudletInfoApi.Del(&in.Key, s.sync.syncWait)
+	// also delete dynamic instances
 	if len(dynInsts) > 0 {
 		// delete dynamic instances
 		for key, _ := range dynInsts {

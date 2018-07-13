@@ -11,7 +11,7 @@ import (
 )
 
 type Sync struct {
-	store      objstore.ObjStore
+	store      objstore.KVStore
 	rev        int64
 	mux        util.Mutex
 	cond       sync.Cond
@@ -26,9 +26,10 @@ type ObjCache interface {
 	SyncDelete(key []byte, rev int64)
 	SyncListStart()
 	SyncListEnd()
+	GetTypeString() string
 }
 
-func InitSync(store objstore.ObjStore) *Sync {
+func InitSync(store objstore.KVStore) *Sync {
 	sync := Sync{}
 	sync.store = store
 	sync.initWait = true
@@ -37,8 +38,8 @@ func InitSync(store objstore.ObjStore) *Sync {
 	return &sync
 }
 
-func (s *Sync) RegisterCache(key string, cache ObjCache) {
-	s.caches[key] = cache
+func (s *Sync) RegisterCache(cache ObjCache) {
+	s.caches[cache.GetTypeString()] = cache
 }
 
 // Watch on all key changes in a single thread.

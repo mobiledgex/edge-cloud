@@ -335,11 +335,12 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 }
 
 type cudTemplateArgs struct {
-	Name      string
-	KeyName   string
-	CudName   string
-	HasFields bool
-	GenCache  bool
+	Name        string
+	KeyType     string
+	CudName     string
+	HasFields   bool
+	GenCache    bool
+	NotifyCache bool
 }
 
 var cudTemplateIn = `
@@ -352,20 +353,24 @@ func (s *{{.Name}}) HasFields() bool {
 }
 
 type {{.Name}}Store struct {
-	objstore objstore.ObjStore
+	kvstore objstore.KVStore
 }
 
-func New{{.Name}}Store(objstore objstore.ObjStore) {{.Name}}Store {
-	return {{.Name}}Store{objstore: objstore}
+func New{{.Name}}Store(kvstore objstore.KVStore) {{.Name}}Store {
+	return {{.Name}}Store{kvstore: kvstore}
 }
 
 func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error) {
+{{- if (.HasFields)}}
 	err := m.Validate({{.Name}}AllFieldsMap)
+{{- else}}
+	err := m.Validate(nil)
+{{- end}}
 	if err != nil { return nil, err }
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil { return nil, err }
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -374,13 +379,17 @@ func (s *{{.Name}}Store) Create(m *{{.Name}}, wait func(int64)) (*Result, error)
 }
 
 func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error) {
+{{- if (.HasFields)}}
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
+{{- else}}
+	err := m.Validate(nil)
+{{- end}}
 	if err != nil { return nil, err }
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var vers int64 = 0
 {{- if (.HasFields)}}
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, err := s.kvstore.Get(key)
 	if err != nil { return nil, err }
 	var cur {{.Name}}
 	err = json.Unmarshal(curBytes, &cur)
@@ -393,7 +402,43 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	val, err := json.Marshal(m)
 {{- end}}
 	if err != nil { return nil, err }
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil { return nil, err }
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64)) (*Result, error) {
+{{- if (.HasFields)}}
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+{{- else}}
+	err := m.Validate(nil)
+{{- end}}
+	if err != nil { return nil, err }
+	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
+	var val []byte
+{{- if (.HasFields)}}
+	curBytes, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur {{.Name}}
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil { return nil, err }
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+{{- else}}
+	val, err = json.Marshal(m)
+{{- end}}
+	if err != nil { return nil, err }
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -404,8 +449,8 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil { return nil, err }
-	key := objstore.DbKeyString(m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
 	if err != nil { return nil, err }
 	if wait != nil {
 		wait(rev)
@@ -413,28 +458,8 @@ func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-type {{.Name}}Cb func(m *{{.Name}}) error
-
-func (s *{{.Name}}Store) LoadAll(cb {{.Name}}Cb) error {
-	loadkey := objstore.DbKeyPrefixString(&{{.Name}}Key{})
-	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
-		var obj {{.Name}}
-		err := json.Unmarshal(val, &obj)
-		if err != nil {
-			log.WarnLog("Failed to parse {{.Name}} data", "val", string(val))
-			return nil
-		}
-		err = cb(&obj)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
-}
-
 func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -474,6 +499,10 @@ func New{{.Name}}Cache() *{{.Name}}Cache {
 
 func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
 	cache.Objs = make(map[{{.KeyType}}]*{{.Name}})
+}
+
+func (c *{{.Name}}Cache) GetTypeString() string {
+	return "{{.Name}}"
 }
 
 func (c *{{.Name}}Cache) Get(key *{{.KeyType}}, valbuf *{{.Name}}) bool {
@@ -541,7 +570,7 @@ func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
 }
 
 {{- if .NotifyCache}}
-func (c *{{.Name}}Cache) Flush(notifyId uint64) {
+func (c *{{.Name}}Cache) Flush(notifyId int64) {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for key, val := range c.Objs {
@@ -602,7 +631,7 @@ func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
 func (c *{{.Name}}Cache) SyncDelete(key []byte, rev int64) {
 	obj := {{.Name}}{}
 	keystr := objstore.DbKeyPrefixRemove(string(key))
-	{{.Name}}KeyStringParse(keystr, &obj.Key)
+	{{.KeyType}}StringParse(keystr, &obj.Key)
 	c.Delete(&obj, rev)
 }
 
@@ -628,7 +657,6 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 	}
 }
 {{- end}}
-
 `
 
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
@@ -665,13 +693,14 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.P("")
 
 	if GetGenerateCud(message) {
-		if GetMessageKey(message) == nil {
+		keyField := GetMessageKey(message)
+		if keyField == nil {
 			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
 		args := cudTemplateArgs{
 			Name:      *message.Name,
 			CudName:   *message.Name + "Cud",
-			KeyName:   *message.Name + "Key",
+			KeyType:   m.support.GoType(m.gen, keyField),
 			HasFields: HasGrpcFields(message),
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
