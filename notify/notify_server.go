@@ -47,15 +47,15 @@ type SendCloudletHandler interface {
 }
 
 type RecvAppInstInfoHandler interface {
-	Update(in *edgeproto.AppInstInfo, rev int64)
-	Delete(in *edgeproto.AppInstInfo, rev int64)
-	Flush(notifyId uint64)
+	Update(in *edgeproto.AppInstInfo, notifyId int64)
+	Delete(in *edgeproto.AppInstInfo, notifyId int64)
+	Flush(notifyId int64)
 }
 
 type RecvCloudletInfoHandler interface {
-	Update(in *edgeproto.CloudletInfo, rev int64)
-	Delete(in *edgeproto.CloudletInfo, rev int64)
-	Flush(notifyId uint64)
+	Update(in *edgeproto.CloudletInfo, notifyId int64)
+	Delete(in *edgeproto.CloudletInfo, notifyId int64)
+	Flush(notifyId int64)
 }
 
 type ServerHandler interface {
@@ -87,7 +87,7 @@ type Server struct {
 	handler   ServerHandler
 	stats     ServerStats
 	version   uint32
-	notifyId  uint64
+	notifyId  int64
 	requestor edgeproto.NoticeRequestor
 	running   chan struct{}
 }
@@ -97,7 +97,7 @@ type ServerMgr struct {
 	table    map[string]*Server
 	mux      util.Mutex
 	handler  ServerHandler
-	notifyId uint64
+	notifyId int64
 	serv     *grpc.Server
 }
 
@@ -453,18 +453,18 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		if recvAppInstInfo != nil && appInstInfo != nil {
 			appInstInfo.NotifyId = s.notifyId
 			if req.Action == edgeproto.NoticeAction_UPDATE {
-				recvAppInstInfo.Update(appInstInfo, 0)
+				recvAppInstInfo.Update(appInstInfo, s.notifyId)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
-				recvAppInstInfo.Delete(appInstInfo, 0)
+				recvAppInstInfo.Delete(appInstInfo, s.notifyId)
 			}
 		}
 		cloudletInfo := req.GetCloudletInfo()
 		if recvCloudletInfo != nil && cloudletInfo != nil {
 			cloudletInfo.NotifyId = s.notifyId
 			if req.Action == edgeproto.NoticeAction_UPDATE {
-				recvCloudletInfo.Update(cloudletInfo, 0)
+				recvCloudletInfo.Update(cloudletInfo, s.notifyId)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
-				recvCloudletInfo.Delete(cloudletInfo, 0)
+				recvCloudletInfo.Delete(cloudletInfo, s.notifyId)
 			}
 		}
 	}

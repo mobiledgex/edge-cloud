@@ -157,7 +157,6 @@ func NewClientAppInstApi(api edgeproto.AppInstApiClient) *AppInstCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-
 func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
 	basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
 }
@@ -234,4 +233,114 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	updater.Uri = testData[0].Uri
 	_, err = api.UpdateAppInst(ctx, &updater)
 	assert.Nil(t, err, "Update back AppInst")
+}
+
+// Auto-generated code: DO NOT EDIT
+
+type ShowAppInstInfo struct {
+	Data map[string]edgeproto.AppInstInfo
+	grpc.ServerStream
+}
+
+func (x *ShowAppInstInfo) Init() {
+	x.Data = make(map[string]edgeproto.AppInstInfo)
+}
+
+func (x *ShowAppInstInfo) Send(m *edgeproto.AppInstInfo) error {
+	x.Data[m.Key.GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowAppInstInfo) ReadStream(stream edgeproto.AppInstInfoApi_ShowAppInstInfoClient, err error) {
+	x.Data = make(map[string]edgeproto.AppInstInfo)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.Key.GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowAppInstInfo) CheckFound(obj *edgeproto.AppInstInfo) bool {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	return found
+}
+
+func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) {
+	check, found := x.Data[obj.Key.GetKeyString()]
+	assert.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
+	if found {
+		assert.Equal(t, *obj, check, "AppInstInfo are equal")
+	}
+}
+
+func (x *ShowAppInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.AppInstInfo) {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	assert.False(t, found, "do not find AppInstInfo %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundAppInstInfo(t *testing.T, api edgeproto.AppInstInfoApiClient, obj *edgeproto.AppInstInfo, count int, retry time.Duration) {
+	show := ShowAppInstInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowAppInstInfo(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundAppInstInfo(t *testing.T, api edgeproto.AppInstInfoApiClient, obj *edgeproto.AppInstInfo, count int, retry time.Duration) {
+	show := ShowAppInstInfo{}
+	filterNone := edgeproto.AppInstInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowAppInstInfo(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type AppInstInfoCommonApi struct {
+	internal_api edgeproto.AppInstInfoApiServer
+	client_api   edgeproto.AppInstInfoApiClient
+}
+
+func (x *AppInstInfoCommonApi) ShowAppInstInfo(ctx context.Context, filter *edgeproto.AppInstInfo, showData *ShowAppInstInfo) error {
+	if x.internal_api != nil {
+		return x.internal_api.ShowAppInstInfo(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowAppInstInfo(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalAppInstInfoApi(api edgeproto.AppInstInfoApiServer) *AppInstInfoCommonApi {
+	apiWrap := AppInstInfoCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientAppInstInfoApi(api edgeproto.AppInstInfoApiClient) *AppInstInfoCommonApi {
+	apiWrap := AppInstInfoCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
 }

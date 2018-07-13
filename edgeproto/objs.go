@@ -36,23 +36,6 @@ func (a *ApplicationData) Sort() {
 	})
 }
 
-// TypeString functions
-
-func DeveloperKeyTypeString() string         { return "developer" }
-func (key *DeveloperKey) TypeString() string { return DeveloperKeyTypeString() }
-
-func OperatorKeyTypeString() string         { return "operator" }
-func (key *OperatorKey) TypeString() string { return OperatorKeyTypeString() }
-
-func AppKeyTypeString() string         { return "app" }
-func (key *AppKey) TypeString() string { return AppKeyTypeString() }
-
-func CloudletKeyTypeString() string         { return "cloudlet" }
-func (key *CloudletKey) TypeString() string { return CloudletKeyTypeString() }
-
-func AppInstKeyTypeString() string         { return "appinst" }
-func (key *AppInstKey) TypeString() string { return AppInstKeyTypeString() }
-
 // Validate functions to validate user input
 
 func (key *DeveloperKey) Validate() error {
@@ -111,6 +94,10 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *CloudletInfo) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func (key *AppInstKey) Validate() error {
 	if err := key.AppKey.Validate(); err != nil {
 		return err
@@ -131,6 +118,10 @@ func (s *AppInst) Validate(fields map[string]struct{}) error {
 	if HasField(fields, AppInstFieldLiveness) && s.Liveness == AppInst_UNKNOWN {
 		return errors.New("Unknown liveness specified")
 	}
+	return nil
+}
+
+func (s *AppInstInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 

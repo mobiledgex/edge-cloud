@@ -83,6 +83,8 @@ func main() {
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
+	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
+	edgeproto.RegisterAppInstInfoApiServer(server, &appInstInfoApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -131,4 +133,6 @@ func InitApis(sync *Sync) {
 	InitOperatorApi(sync)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
+	InitCloudletInfoApi(sync)
+	InitAppInstInfoApi(sync)
 }

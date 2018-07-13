@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -54,10 +55,12 @@ func TestController(t *testing.T) {
 	notifyAddrs := []string{*notifyAddr}
 	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
+	crmNotify.SetClientCb(crmClient)
 	go crmClient.Start()
 	defer crmClient.Stop()
 	dmeNotify := notify.NewDummyHandler()
 	dmeClient := notify.NewDMEClient(notifyAddrs, dmeNotify)
+	dmeNotify.SetClientCb(dmeClient)
 	go dmeClient.Start()
 	defer dmeClient.Stop()
 
@@ -66,6 +69,8 @@ func TestController(t *testing.T) {
 	operApi := edgeproto.NewOperatorApiClient(conn)
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
+	appInstInfoClient := edgeproto.NewAppInstInfoApiClient(conn)
+	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
@@ -83,6 +88,29 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 4, len(crmNotify.CloudletCache.Objs), "num cloudlets")
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
+
+	// test info to persistent db
+	for ii := range testutil.AppInstInfoData {
+		dmeNotify.AppInstInfoCache.Update(&testutil.AppInstInfoData[ii], 0)
+	}
+	for ii := range testutil.CloudletInfoData {
+		crmNotify.CloudletInfoCache.Update(&testutil.CloudletInfoData[ii], 0)
+	}
+
+	WaitForAppInstInfo(len(testutil.AppInstInfoData))
+	WaitForCloudletInfo(len(testutil.CloudletInfoData))
+	assert.Equal(t, len(testutil.AppInstInfoData), len(appInstInfoApi.cache.Objs))
+	assert.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
+	assert.Equal(t, len(dmeNotify.AppInstInfoCache.Objs), len(appInstInfoApi.cache.Objs))
+	assert.Equal(t, len(crmNotify.CloudletInfoCache.Objs), len(cloudletInfoApi.cache.Objs))
+
+	// test show api for info structs
+	// XXX These checks won't work until we move notifyId out of struct
+	// and into meta data in cache (TODO)
+	if false {
+		CheckAppInstInfo(t, appInstInfoClient, testutil.AppInstInfoData)
+		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
+	}
 
 	// test that delete checks disallow deletes of dependent objects
 	ctx := context.TODO()
@@ -122,6 +150,9 @@ func TestController(t *testing.T) {
 	// make sure dynamic app insts were deleted along with Apps
 	dmeNotify.WaitForAppInsts(0)
 	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	// deleting appinsts/cloudlets should also delete associated info
+	assert.Equal(t, 0, len(appInstInfoApi.cache.Objs))
+	assert.Equal(t, 0, len(cloudletInfoApi.cache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
@@ -231,4 +262,52 @@ appinstances:
 	close(sigChan)
 	// wait until main is done so it can clean up properly
 	<-mainDone
+}
+
+func WaitForAppInstInfo(count int) {
+	for i := 0; i < 10; i++ {
+		if len(appInstInfoApi.cache.Objs) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func WaitForCloudletInfo(count int) {
+	for i := 0; i < 10; i++ {
+		if len(cloudletInfoApi.cache.Objs) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, data []edgeproto.CloudletInfo) {
+	api := testutil.NewClientCloudletInfoApi(client)
+	ctx := context.TODO()
+
+	show := testutil.ShowCloudletInfo{}
+	show.Init()
+	filterNone := edgeproto.CloudletInfo{}
+	err := api.ShowCloudletInfo(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show cloudlet info")
+	for _, obj := range data {
+		show.AssertFound(t, &obj)
+	}
+	assert.Equal(t, len(data), len(show.Data), "show count")
+}
+
+func CheckAppInstInfo(t *testing.T, client edgeproto.AppInstInfoApiClient, data []edgeproto.AppInstInfo) {
+	api := testutil.NewClientAppInstInfoApi(client)
+	ctx := context.TODO()
+
+	show := testutil.ShowAppInstInfo{}
+	show.Init()
+	filterNone := edgeproto.AppInstInfo{}
+	err := api.ShowAppInstInfo(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show appinst info")
+	for _, obj := range data {
+		show.AssertFound(t, &obj)
+	}
+	assert.Equal(t, len(data), len(show.Data), "show count")
 }

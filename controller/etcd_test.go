@@ -19,7 +19,7 @@ func expectNewRev(t *testing.T, expRev *int64, checkRev int64) {
 	assert.Equal(t, *expRev, checkRev, "revision")
 }
 
-func testCalls(t *testing.T, objStore objstore.ObjStore) {
+func testCalls(t *testing.T, objStore objstore.KVStore) {
 	count := 0
 	m := make(map[string]string)
 	key1 := "1/1/2222222"
@@ -43,7 +43,7 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 		syncCheck.Expect(t, key, val, expRev)
 	}
 	_, err := objStore.Create(key1, val1)
-	assert.Equal(t, objstore.ErrObjStoreKeyExists, err, "Create object that already exists")
+	assert.Equal(t, objstore.ErrKVStoreKeyExists, err, "Create object that already exists")
 
 	// test get and list
 	val, vers, err := objStore.Get(key1)
@@ -51,7 +51,7 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 	assert.Equal(t, val1, string(val), "Get key %s value", key1)
 	assert.EqualValues(t, 1, vers, "version for key %s", key1)
 	val, vers, err = objStore.Get("No such key")
-	assert.Equal(t, objstore.ErrObjStoreKeyNotFound, err, "Get non-existent key")
+	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Get non-existent key")
 
 	count = 0
 	err = objStore.List("", func(key, val []byte, rev int64) error {
@@ -81,7 +81,7 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 	assert.EqualValues(t, 3, vers, "version for key %s", key1)
 
 	rev, err = objStore.Update("no-such-key", "", 0)
-	assert.Equal(t, objstore.ErrObjStoreKeyNotFound, err, "Update non-existent key")
+	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Update non-existent key")
 
 	// test delete
 	rev, err = objStore.Delete(key1)
@@ -89,7 +89,7 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 	assert.Nil(t, err, "Delete key %s", key1)
 	syncCheck.ExpectNil(t, key1, expRev)
 	val, _, err = objStore.Get(key1)
-	assert.Equal(t, objstore.ErrObjStoreKeyNotFound, err, "Get deleted key")
+	assert.Equal(t, objstore.ErrKVStoreKeyNotFound, err, "Get deleted key")
 	count = 0
 	err = objStore.List("", func(key, val []byte, rev int64) error {
 		count++
@@ -97,6 +97,20 @@ func testCalls(t *testing.T, objStore objstore.ObjStore) {
 	})
 	assert.Equal(t, 3, count, "List count")
 	assert.Equal(t, 3, len(syncCheck.kv), "sync count")
+
+	// test put
+	pkey := "1/foo/adslfk"
+	pval := "put value"
+	rev, err = objStore.Put(pkey, pval)
+	expectNewRev(t, &expRev, rev)
+	assert.Nil(t, err, "Put key %s", pkey)
+	syncCheck.Expect(t, pkey, pval, expRev)
+	val, vers, err = objStore.Get(pkey)
+	assert.Nil(t, err, "Get key %s", pkey)
+	assert.Equal(t, pval, string(val), "Get key %s value", pkey)
+	rev, err = objStore.Put(pkey, pval)
+	expectNewRev(t, &expRev, rev)
+	assert.Nil(t, err, "Put key %s again", pkey)
 
 	// debug sync
 	syncCheck.Dump()
@@ -145,7 +159,7 @@ type SyncCheck struct {
 	rev        int64
 }
 
-func NewSyncCheck(t *testing.T, objstore objstore.ObjStore) *SyncCheck {
+func NewSyncCheck(t *testing.T, objstore objstore.KVStore) *SyncCheck {
 	sy := SyncCheck{}
 	sy.kv = make(map[string]string)
 
