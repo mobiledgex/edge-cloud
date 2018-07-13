@@ -85,6 +85,8 @@ func main() {
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
+	controllerCmd.AddCommand(gencmd.AppInstInfoApiCmds...)
+	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)

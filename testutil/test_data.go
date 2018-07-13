@@ -184,18 +184,23 @@ var AppInstData = []edgeproto.AppInst{
 var AppInstInfoData = []edgeproto.AppInstInfo{
 	edgeproto.AppInstInfo{
 		Key: AppInstData[0].Key,
+		Cpu: 1,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[1].Key,
+		Cpu: 2,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[2].Key,
+		Cpu: 3,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[3].Key,
+		Cpu: 4,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[4].Key,
+		Cpu: 5,
 	},
 }
 var CloudletInfoData = []edgeproto.CloudletInfo{

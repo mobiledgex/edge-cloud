@@ -157,7 +157,6 @@ func NewClientCloudletApi(api edgeproto.CloudletApiClient) *CloudletCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-
 func InternalCloudletCudTest(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
 	basicCloudletCudTest(t, NewInternalCloudletApi(api), testData)
 }
@@ -234,4 +233,114 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	updater.AccessUri = testData[0].AccessUri
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update back Cloudlet")
+}
+
+// Auto-generated code: DO NOT EDIT
+
+type ShowCloudletInfo struct {
+	Data map[string]edgeproto.CloudletInfo
+	grpc.ServerStream
+}
+
+func (x *ShowCloudletInfo) Init() {
+	x.Data = make(map[string]edgeproto.CloudletInfo)
+}
+
+func (x *ShowCloudletInfo) Send(m *edgeproto.CloudletInfo) error {
+	x.Data[m.Key.GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowCloudletInfo) ReadStream(stream edgeproto.CloudletInfoApi_ShowCloudletInfoClient, err error) {
+	x.Data = make(map[string]edgeproto.CloudletInfo)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.Key.GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowCloudletInfo) CheckFound(obj *edgeproto.CloudletInfo) bool {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	return found
+}
+
+func (x *ShowCloudletInfo) AssertFound(t *testing.T, obj *edgeproto.CloudletInfo) {
+	check, found := x.Data[obj.Key.GetKeyString()]
+	assert.True(t, found, "find CloudletInfo %s", obj.Key.GetKeyString())
+	if found {
+		assert.Equal(t, *obj, check, "CloudletInfo are equal")
+	}
+}
+
+func (x *ShowCloudletInfo) AssertNotFound(t *testing.T, obj *edgeproto.CloudletInfo) {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	assert.False(t, found, "do not find CloudletInfo %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundCloudletInfo(t *testing.T, api edgeproto.CloudletInfoApiClient, obj *edgeproto.CloudletInfo, count int, retry time.Duration) {
+	show := ShowCloudletInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowCloudletInfo(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundCloudletInfo(t *testing.T, api edgeproto.CloudletInfoApiClient, obj *edgeproto.CloudletInfo, count int, retry time.Duration) {
+	show := ShowCloudletInfo{}
+	filterNone := edgeproto.CloudletInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowCloudletInfo(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type CloudletInfoCommonApi struct {
+	internal_api edgeproto.CloudletInfoApiServer
+	client_api   edgeproto.CloudletInfoApiClient
+}
+
+func (x *CloudletInfoCommonApi) ShowCloudletInfo(ctx context.Context, filter *edgeproto.CloudletInfo, showData *ShowCloudletInfo) error {
+	if x.internal_api != nil {
+		return x.internal_api.ShowCloudletInfo(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowCloudletInfo(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalCloudletInfoApi(api edgeproto.CloudletInfoApiServer) *CloudletInfoCommonApi {
+	apiWrap := CloudletInfoCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientCloudletInfoApi(api edgeproto.CloudletInfoApiClient) *CloudletInfoCommonApi {
+	apiWrap := CloudletInfoCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
 }

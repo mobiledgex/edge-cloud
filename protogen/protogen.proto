@@ -20,6 +20,8 @@ extend google.protobuf.MessageOptions {
   bool obj_key = 51007;
   bool generate_cache = 51008;
   bool notify_cache = 51010;
+  bool generate_cud_test = 51011;
+  bool generate_show_test = 51012;
 }
 
 extend google.protobuf.FieldOptions {

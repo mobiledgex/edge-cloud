@@ -19,7 +19,7 @@ func InitDeveloperApi(sync *Sync) {
 	developerApi.sync = sync
 	developerApi.store = edgeproto.NewDeveloperStore(sync.store)
 	edgeproto.InitDeveloperCache(&developerApi.cache)
-	sync.RegisterCache(edgeproto.DeveloperKeyTypeString(), &developerApi.cache)
+	sync.RegisterCache(&developerApi.cache)
 }
 
 func (s *DeveloperApi) HasDeveloper(key *edgeproto.DeveloperKey) bool {

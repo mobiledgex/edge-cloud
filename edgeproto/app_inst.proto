@@ -47,6 +47,7 @@ message AppInst {
   string app_path = 7;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protocmd.noconfig) = "CloudletLoc,AppPath";
 }
@@ -81,13 +82,14 @@ service AppInstApi {
   }
 }
 
-// AppInstInfo contains data collected by the CRM to be sent
-// to the connected controller.
+// AppInstInfo contains static data collected by the CRM to be sent
+// to the connected controller. It is put into etcd or equivalent.
 message AppInstInfo {
+  repeated string fields = 1;
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server
-  uint64 notify_id = 3;
+  int64 notify_id = 3;
   // TODO: When max load is reached on k8s cluster, tell controller.
   // At this point k8s cluster has already scaled AppInst to max instances.
   // The only recourse is to instantiate another k8s cluster on another
@@ -101,6 +103,38 @@ message AppInstInfo {
   uint64 max_disk = 6;
   uint64 network_in = 7;
   uint64 network_out = 8;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
+}
+
+service AppInstInfoApi {
+  rpc ShowAppInstInfo(AppInstInfo) returns (stream AppInstInfo) {
+    option (google.api.http) = {
+      post: "/show/appinstinfo"
+      body: "*"
+    };
+  }
+}
+
+// AppInstMetrics are metrics produced by the DME to pass up to
+// an analytics or storage node (not the controller). These are not
+// stored in etcd, but probably logged as time series to disk (TBD)
+message AppInstMetrics {
+  // what goes here?
+  // Note that metrics for grpc calls can be done by a prometheus
+  // interceptor in grpc, so adding call metrics here may be
+  // redundant unless they're needed for billing.
+  uint64 something = 5;
+}
+
+service AppInstMetricsApi {
+  rpc ShowAppInstMetrics(AppInstMetrics) returns (stream AppInstMetrics) {
+    option (google.api.http) = {
+      post: "/show/appinstmetrics"
+      body: "*"
+    };
+  }
 }

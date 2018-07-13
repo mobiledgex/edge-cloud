@@ -155,7 +155,6 @@ func NewClientOperatorApi(api edgeproto.OperatorApiClient) *OperatorCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-
 func InternalOperatorCudTest(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
 	basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
 }
