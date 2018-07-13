@@ -11,41 +11,41 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
-public class VerifyLocation implements Callable {
-    public static final String TAG = "VerifyLocationTask";
+public class AddUserToGroup implements Callable {
+    public static final String TAG = "AddUserToGroup";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest; // Singleton.
+    private AppClient.DynamicLocGroupAdd mRequest; // Singleton.
     private long mTimeoutInMilliseconds = -1;
 
-    VerifyLocation(MatchingEngine matchingEngine) {
+    public AddUserToGroup(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(AppClient.DynamicLocGroupAdd request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
-            Log.d(TAG, "Mex Location is disabled.");
+            Log.d(TAG, "Mex MatchEngine is disabled.");
             mRequest = null;
             return false;
         }
         mRequest = request;
 
         if (timeoutInMilliseconds <= 0) {
-            throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
+            throw new IllegalArgumentException(TAG + "timeout must be positive.");
         }
         mTimeoutInMilliseconds = timeoutInMilliseconds;
         return true;
     }
 
     @Override
-    public AppClient.Match_Engine_Loc_Verify call() throws MissingRequestException, StatusRuntimeException {
+    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException {
         if (mRequest == null) {
-            throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
+            throw new MissingRequestException("Usage error: AddUserToGroup does not have a request object to use MatchEngine!");
         }
 
-        AppClient.Match_Engine_Loc_Verify reply;
+        AppClient.Match_Engine_Status reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
@@ -53,21 +53,14 @@ public class VerifyLocation implements Callable {
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .verifyLocation(mRequest);
+                    .addUserToGroup(mRequest);
         } finally {
             if (channel != null) {
                 channel.shutdown();
             }
         }
-        mRequest = null;
-        // FIXME: Reply TBD.
-        int ver = -1;
-        if (reply != null) {
-            ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Loc_Verify: " + ver);
-        }
 
-        mMatchingEngine.setMatchEngineLocationVerify(reply);
+        mMatchingEngine.setMatchEngineStatus(reply);
         return reply;
     }
 }

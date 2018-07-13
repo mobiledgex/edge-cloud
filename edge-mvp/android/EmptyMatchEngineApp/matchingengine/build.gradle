@@ -2,6 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'maven-publish'
 
+def grpcVersion='1.13.1'
+
 android {
     compileSdkVersion 27
 
@@ -52,7 +54,7 @@ protobuf {
             artifact = "com.google.protobuf:protoc-gen-javalite:3.0.0"
         }
         grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.12.0' // CURRENT_GRPC_VERSION
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
         }
     }
     generateProtoTasks {
@@ -71,8 +73,6 @@ protobuf {
 
 
 dependencies {
-    def grpcVersion='1.13.1'
-
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     implementation 'com.android.support:appcompat-v7:27.1.1'

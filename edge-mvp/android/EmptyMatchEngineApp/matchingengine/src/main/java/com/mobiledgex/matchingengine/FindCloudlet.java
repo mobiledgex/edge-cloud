@@ -78,7 +78,7 @@ public class FindCloudlet implements Callable {
                         reply.getServicePort(),
                         loc,
                         FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
-                        reply.getToken());
+                        reply.getCommCookie());
             } else {
                 cloudletResponse = new FindCloudletResponse(reply.getVer(),
                         reply.getUri(),
@@ -86,10 +86,13 @@ public class FindCloudlet implements Callable {
                         reply.getServicePort(),
                         null,
                         FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
-                        reply.getToken());
+                        reply.getCommCookie());
             }
 
         }
+        // Let MatchingEngine know of the latest cookie.
+        mMatchingEngine.setCommCookie(reply.getCommCookie());
+        mMatchingEngine.setFindCloudletResponse(reply);
         return cloudletResponse;
     }
 }

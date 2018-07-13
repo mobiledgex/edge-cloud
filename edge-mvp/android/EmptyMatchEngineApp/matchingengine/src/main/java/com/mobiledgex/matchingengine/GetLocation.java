@@ -68,6 +68,7 @@ public class GetLocation implements Callable {
             Log.d(TAG, "Version of Match_Engine_Loc: " + ver);
         }
 
+        mMatchingEngine.setMatchEngineLocation(reply);
         return reply;
     }
 }

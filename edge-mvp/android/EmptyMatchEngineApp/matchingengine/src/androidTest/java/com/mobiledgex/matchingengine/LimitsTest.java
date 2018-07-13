@@ -105,7 +105,7 @@ public class LimitsTest {
 
         request = AppClient.Match_Engine_Request.newBuilder()
                 .setVer(5)
-                .setIdType(AppClient.Match_Engine_Request.IDType.MSISDN)
+                .setIdType(AppClient.Match_Engine_Request.IDTypes.MSISDN)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName("TMUS") // Mobile Network Carrier
@@ -117,7 +117,7 @@ public class LimitsTest {
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
-                .setToken("") // None.
+                .setCommCookie("") // None.
                 .build();
 
         return request;
