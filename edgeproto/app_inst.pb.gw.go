@@ -140,14 +140,14 @@ func RegisterAppInstApiHandlerFromEndpoint(ctx context.Context, mux *runtime.Ser
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -161,8 +161,8 @@ func RegisterAppInstApiHandler(ctx context.Context, mux *runtime.ServeMux, conn 
 	return RegisterAppInstApiHandlerClient(ctx, mux, NewAppInstApiClient(conn))
 }
 
-// RegisterAppInstApiHandler registers the http handlers for service AppInstApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "AppInstApiClient".
+// RegisterAppInstApiHandlerClient registers the http handlers for service AppInstApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "AppInstApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "AppInstApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AppInstApiClient" to call the correct interceptors.
@@ -317,14 +317,14 @@ func RegisterAppInstInfoApiHandlerFromEndpoint(ctx context.Context, mux *runtime
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -338,8 +338,8 @@ func RegisterAppInstInfoApiHandler(ctx context.Context, mux *runtime.ServeMux, c
 	return RegisterAppInstInfoApiHandlerClient(ctx, mux, NewAppInstInfoApiClient(conn))
 }
 
-// RegisterAppInstInfoApiHandler registers the http handlers for service AppInstInfoApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "AppInstInfoApiClient".
+// RegisterAppInstInfoApiHandlerClient registers the http handlers for service AppInstInfoApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "AppInstInfoApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "AppInstInfoApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AppInstInfoApiClient" to call the correct interceptors.
@@ -395,14 +395,14 @@ func RegisterAppInstMetricsApiHandlerFromEndpoint(ctx context.Context, mux *runt
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -416,8 +416,8 @@ func RegisterAppInstMetricsApiHandler(ctx context.Context, mux *runtime.ServeMux
 	return RegisterAppInstMetricsApiHandlerClient(ctx, mux, NewAppInstMetricsApiClient(conn))
 }
 
-// RegisterAppInstMetricsApiHandler registers the http handlers for service AppInstMetricsApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "AppInstMetricsApiClient".
+// RegisterAppInstMetricsApiHandlerClient registers the http handlers for service AppInstMetricsApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "AppInstMetricsApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "AppInstMetricsApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AppInstMetricsApiClient" to call the correct interceptors.
