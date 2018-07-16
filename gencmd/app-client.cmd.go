@@ -47,13 +47,13 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var Match_Engine_ApiCmd distributed_match_engine.Match_Engine_ApiClient
-var Match_Engine_RequestIn distributed_match_engine.Match_Engine_Request
-var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag.ExitOnError)
-var Match_Engine_RequestInIdType string
 var DynamicLocGroupAddIn distributed_match_engine.DynamicLocGroupAdd
 var DynamicLocGroupAddFlagSet = pflag.NewFlagSet("DynamicLocGroupAdd", pflag.ExitOnError)
 var DynamicLocGroupAddInIdType string
 var DynamicLocGroupAddInCommType string
+var Match_Engine_RequestIn distributed_match_engine.Match_Engine_Request
+var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag.ExitOnError)
+var Match_Engine_RequestInIdType string
 var IDTypesStrings = []string{
 	"IMEI",
 	"MSISDN",
@@ -104,7 +104,7 @@ var DlgCommTypeStrings = []string{
 }
 
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 16)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Request_IDTypes_name[int32(in.IdType)])
 	s = append(s, in.Id)
@@ -140,11 +140,12 @@ func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Reques
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
 	s = append(s, in.CommCookie)
+	s = append(s, in.VerifyLocToken)
 	return s
 }
 
 func Match_Engine_RequestHeaderSlicer() []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 16)
 	s = append(s, "Ver")
 	s = append(s, "IdType")
 	s = append(s, "Id")
@@ -167,6 +168,7 @@ func Match_Engine_RequestHeaderSlicer() []string {
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
 	s = append(s, "CommCookie")
+	s = append(s, "VerifyLocToken")
 	return s
 }
 
@@ -289,7 +291,7 @@ func Match_Engine_StatusSlicer(in *distributed_match_engine.Match_Engine_Status)
 	s = append(s, strconv.FormatUint(uint64(in.ErrorCode), 10))
 	s = append(s, in.CommCookie)
 	s = append(s, in.GroupCookie)
-	s = append(s, in.UserData)
+	s = append(s, in.TokenServerURI)
 	return s
 }
 
@@ -300,7 +302,7 @@ func Match_Engine_StatusHeaderSlicer() []string {
 	s = append(s, "ErrorCode")
 	s = append(s, "CommCookie")
 	s = append(s, "GroupCookie")
-	s = append(s, "UserData")
+	s = append(s, "TokenServerURI")
 	return s
 }
 
@@ -648,6 +650,7 @@ func init() {
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppName, "appname", "", "AppName")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.AppVers, "appvers", "", "AppVers")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.CommCookie, "commcookie", "", "CommCookie")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.VerifyLocToken, "verifyloctoken", "", "VerifyLocToken")
 	DynamicLocGroupAddFlagSet.Uint32Var(&DynamicLocGroupAddIn.Ver, "ver", 0, "Ver")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInIdType, "idtype", "", "one of [IMEI MSISDN IPADDR]")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.Id, "id", "", "Id")
@@ -677,22 +680,6 @@ func init() {
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddFlagSet)
 }
 
-func parseMatch_Engine_RequestEnums() error {
-	if Match_Engine_RequestInIdType != "" {
-		switch Match_Engine_RequestInIdType {
-		case "IMEI":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(0)
-		case "MSISDN":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(1)
-		case "IPADDR":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(2)
-		default:
-			return errors.New("Invalid value for Match_Engine_RequestInIdType")
-		}
-	}
-	return nil
-}
-
 func parseDynamicLocGroupAddEnums() error {
 	if DynamicLocGroupAddInIdType != "" {
 		switch DynamicLocGroupAddInIdType {
@@ -714,6 +701,22 @@ func parseDynamicLocGroupAddEnums() error {
 			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(1)
 		default:
 			return errors.New("Invalid value for DynamicLocGroupAddInCommType")
+		}
+	}
+	return nil
+}
+
+func parseMatch_Engine_RequestEnums() error {
+	if Match_Engine_RequestInIdType != "" {
+		switch Match_Engine_RequestInIdType {
+		case "IMEI":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(0)
+		case "MSISDN":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(1)
+		case "IPADDR":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(2)
+		default:
+			return errors.New("Invalid value for Match_Engine_RequestInIdType")
 		}
 	}
 	return nil

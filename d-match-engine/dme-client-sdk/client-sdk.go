@@ -10,7 +10,6 @@ import (
 )
 
 const (
-	//port = "192.168.1.27:50051"
 	address = "localhost:50051"
 	version = 1
 )

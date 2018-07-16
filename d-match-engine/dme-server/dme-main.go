@@ -20,7 +20,7 @@ import (
 // Command line options
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
-var apiAddr = flag.String("apiAddr", "0.0.0.0:50051", "API listener address")
+var apiAddr = flag.String("apiAddr", "localhost:50051", "API listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
@@ -29,8 +29,34 @@ var carrier = flag.String("carrier", "standalone", "carrier name for API connect
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
+func verifyCookie(ctx context.Context, commCookie string) (int, error, string) {
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return -1, errors.New("unable to get peer IP info"), ""
+	}
+	//peer address is ip:port
+	ss := strings.Split(p.Addr.String(), ":")
+	if len(ss) != 2 {
+		return -1, errors.New("unable to parse peer address " + p.Addr.String()), ""
+	}
+	peerIp := ss[0]
+
+	// This will be encrypted on our public key and will need to be decrypted
+	// For now just verify the clear txt IP
+	fmt.Printf("CommCookie is %s\n", commCookie);
+	if commCookie != peerIp {
+		return -1, errors.New("unable to verify CommCookie"), ""
+	}
+	return 0, nil, peerIp
+}
+
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
+	
+	ok, err, _ := verifyCookie(ctx, req.CommCookie)
+	if ok != 0 {
+		return nil, err
+	}
 
 	mreq := new(dme.Match_Engine_Reply)
 	findCloudlet(req, mreq)
@@ -42,17 +68,12 @@ func (s *server) VerifyLocation(ctx context.Context,
 
 	var mreq *dme.Match_Engine_Loc_Verify
 	mreq = new(dme.Match_Engine_Loc_Verify)
-	//retrieve the peer to obtain IP address
-	p, ok := peer.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("unable to get peer IP info")
+
+	ok, err, peerIp := verifyCookie(ctx, req.CommCookie)
+	if ok != 0 {
+		return nil, err
 	}
-	//peer address is ip:port
-	ss := strings.Split(p.Addr.String(), ":")
-	if len(ss) != 2 {
-		return nil, errors.New("unable to parse peer address " + p.Addr.String())
-	}
-	peerIp := ss[0]
+
 	VerifyClientLoc(req, mreq, *carrier, peerIp, *locVerUrl)
 	return mreq, nil
 }
@@ -62,9 +83,15 @@ func (s *server) GetLocation(ctx context.Context,
 
 	var mloc *dme.Match_Engine_Loc
 	mloc = new(dme.Match_Engine_Loc)
+
+	ok, err, _ := verifyCookie(ctx, req.CommCookie)
+	if ok != 0 {
+		return nil, err
+	}
+
 	//Todo: Implement the function to actually get the location
 	GetClientLoc(req, mloc)
-	if mloc.Status == 1 {
+	if mloc.Status == dme.Match_Engine_Loc_LOC_FOUND {
 		fmt.Printf("GetLocation: Found Location\n")
 	} else {
 		fmt.Printf("GetLocation: Location NOT Found\n")
@@ -76,10 +103,29 @@ func (s *server) GetLocation(ctx context.Context,
 func (s *server) RegisterClient(ctx context.Context,
 	req *dme.Match_Engine_Request) (*dme.Match_Engine_Status, error) {
 
-	//Todo: Implement the Reqister client/token Function
 	var mstatus *dme.Match_Engine_Status
 	mstatus = new(dme.Match_Engine_Status)
-	mstatus.Status = 0
+	mstatus.TokenServerURI = *locVerUrl
+
+	// Set the src IP as the session cookie for now so we can verify the client later
+	// without needing to call into the operator backend and also have some context
+	// when subsequent call comes. Todo: this part will get enhanced as we go along. For
+	// now teach the sdk to store the cookie and send it in each subsequent calls
+	p, ok := peer.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("unable to get peer IP info")
+	}
+	//peer address is ip:port
+	ss := strings.Split(p.Addr.String(), ":")
+	if len(ss) != 2 {
+		return nil, errors.New("unable to parse peer address " + p.Addr.String())
+	}
+	peerIp := ss[0]
+
+	// For now, just send the unencrypoted cookie back
+	// Fix me to return a cookie encryoted on DME public key
+	mstatus.CommCookie = peerIp
+	mstatus.Status = dme.Match_Engine_Status_ME_SUCCESS
 
 	return mstatus, nil
 }

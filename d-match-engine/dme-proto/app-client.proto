@@ -38,8 +38,10 @@ message Match_Engine_Request {
   string AppName = 13;
   // App Version
   string AppVers = 14;
-  // DME Session Cookie
+  // DME Session Cookie; Not used for Register
   string CommCookie = 15;
+  // Token used by token Server to verify location
+  string VerifyLocToken = 16;
 }
 
 message Match_Engine_Reply {
@@ -116,10 +118,10 @@ message Match_Engine_Status {
   uint32 ErrorCode = 3;
   // DME Session Cookie
   string CommCookie = 4;
-    // Group Cookie for Secure Group Communication
+    // Group Cookie for Secure Group Communication returned during AddUserToGroup
   string GroupCookie = 5;
-  // Not used
-  string UserData = 6;
+  // URL for Toekn Server
+  string TokenServerURI = 6;
 }
 
 message DynamicLocGroupAdd {
