@@ -38,8 +38,10 @@ message Match_Engine_Request {
   string AppName = 13;
   // App Version
   string AppVers = 14;
-  // DME Session Cookie
-  string CommCookie = 15;
+  // DME Session Cookie; Not used for Register
+  string SessionCookie = 15;
+  // Token used by token Server to verify location
+  string VerifyLocToken = 16;
 }
 
 message Match_Engine_Reply {
@@ -59,7 +61,7 @@ message Match_Engine_Reply {
   }
   // Status return
   Find_Status Status = 6;
-  string CommCookie = 7;
+  string SessionCookie = 7;
 }
 
 message Match_Engine_Loc_Verify {
@@ -81,7 +83,7 @@ message Match_Engine_Loc_Verify {
   }
   GPS_Location_Status gps_location_status = 3;
   // DME Session Cookie
-  string CommCookie = 4;
+  string SessionCookie = 4;
 }
 
 message Match_Engine_Loc {
@@ -101,7 +103,7 @@ message Match_Engine_Loc {
   // The GPS location of the user 
   Loc NetworkLocation = 5;
   // DME Session Cookie
-  string CommCookie = 6;
+  string SessionCookie = 6;
 }
 
 message Match_Engine_Status {
@@ -115,11 +117,11 @@ message Match_Engine_Status {
   // Error Code based on Failure
   uint32 ErrorCode = 3;
   // DME Session Cookie
-  string CommCookie = 4;
-    // Group Cookie for Secure Group Communication
+  string SessionCookie = 4;
+    // Group Cookie for Secure Group Communication returned during AddUserToGroup
   string GroupCookie = 5;
-  // Not used
-  string UserData = 6;
+  // URL for Toekn Server
+  string TokenServerURI = 6;
 }
 
 message DynamicLocGroupAdd {
@@ -146,7 +148,7 @@ message DynamicLocGroupAdd {
   // Dynamic Location Group Id
   uint64 LgId = 9;
   // DME Session Cookie
-  string CommCookie = 10;
+  string SessionCookie = 10;
   // Use Secure communication or Open with the group
   enum DlgCommType {
     DlgSecure = 0;
