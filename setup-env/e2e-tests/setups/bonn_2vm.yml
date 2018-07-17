@@ -4,13 +4,21 @@ vars:
 - vm2_internal_ip: 10.1.1.4
 - vm1_external_ip: 37.50.143.110
 - vm2_external_ip: 37.50.143.100
-
+- locverurl: "http://10.1.1.8:8888/verifyLocation"
+- toksrvurl: "http://37.50.143.110:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
 locsims:
 - locapisimlocal:
     name: locsim1
     port: 8888
     locfile: "{{datadir}}/locsim.yml"
+  hostname: "{{vm1_external_ip}}"
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+    url: "http://{{vm1_external_ip}}:9999"
   hostname: "{{vm1_external_ip}}"
 
 etcds:
@@ -47,14 +55,31 @@ controllers:
     notifyaddr: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm1_external_ip}}"
 
-## Second GCP VM
+- controllerlocal:
+    name: ctrl2
+    etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
+    apiaddr: "0.0.0.0:55001"
+    httpaddr: "0.0.0.0:36001"
+    notifyaddr: "{{vm2_internal_ip}}:37001"
+  hostname: "{{vm2_external_ip}}"
 
 dmes:
 - dmelocal:
     name: dme1
     apiaddr: "0.0.0.0:50051"
-    locverurl: "http://{{vm1_internal_ip}}:8888"
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
+    carrier: TDG
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+  hostname: "{{vm1_external_ip}}"
+
+- dmelocal:
+    name: dme2
+    apiaddr: "0.0.0.0:50051"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
+    carrier: TDG
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
   hostname: "{{vm2_external_ip}}"
 
   

@@ -95,6 +95,22 @@
        name: "{{ locsim_remote_data_file }}"
        state: absent
 
+- name: cleanup toksims
+  gather_facts: no
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove toksim binary
+    file:
+       name: "{{ toksim_remote_bin }}"
+       state: absent
+
+
 - name: cleanup logs
   gather_facts: no
   user: root

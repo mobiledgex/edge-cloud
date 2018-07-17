@@ -13,6 +13,8 @@ tests:
     yaml2: "{{outputdir}}/show-commands.yml"
     filetype: appdata
 
+- includefile: register.yml
+
 - name: find cloudlet, expect nothing
   apifile: "{{datadir}}/mer.yml"
   actions: [dmeapi-findcloudlet]

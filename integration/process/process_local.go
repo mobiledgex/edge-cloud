@@ -118,6 +118,7 @@ type DmeLocal struct {
 	ApiAddr     string
 	NotifyAddrs string
 	LocVerUrl   string
+	TokSrvUrl   string
 	Carrier     string
 	cmd         *exec.Cmd
 }
@@ -131,6 +132,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.LocVerUrl != "" {
 		args = append(args, "--locverurl")
 		args = append(args, p.LocVerUrl)
+	}
+	if p.TokSrvUrl != "" {
+		args = append(args, "--toksrvurl")
+		args = append(args, p.TokSrvUrl)
 	}
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
@@ -232,6 +237,24 @@ func (p *LocApiSimLocal) Start(logfile string) error {
 }
 
 func (p *LocApiSimLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
+//Token service simulator
+type TokSrvSimLocal struct {
+	Name string
+	Port int
+	cmd  *exec.Cmd
+}
+
+func (p *TokSrvSimLocal) Start(logfile string) error {
+	args := []string{"-port", fmt.Sprintf("%d", p.Port)}
+	var err error
+	p.cmd, err = StartLocal(p.Name, "tok-srv-sim", args, logfile)
+	return err
+}
+
+func (p *TokSrvSimLocal) Stop() {
 	StopLocal(p.cmd)
 }
 

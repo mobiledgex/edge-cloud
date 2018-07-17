@@ -56,7 +56,7 @@
 
 
   - name: start up dme-server process
-    shell: "nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" -carrier {{ item.dmelocal.carrier }} -d dmelocapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
+    shell: "nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} -d dmelocapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
     when: item.hostname == inventory_hostname 
     with_items:
        -  "{{ dmes }}"
@@ -108,3 +108,27 @@
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ locsims }}"
+
+- name: startup token server simulators
+  gather_facts: no
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: check toksim binary exists
+    stat:
+      path: "{{ toksim_remote_bin }}"
+    register: tok_stat
+    failed_when: tok_stat.stat.exists == False
+
+  - name: start up toksim process
+    shell: "nohup {{ toksim_remote_bin }} --port {{ item.toksrvsimlocal.port }} > {{ remote_log_path }}/{{ item.toksrvsimlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ toksims }}"
+

@@ -2,7 +2,7 @@
 vars:
 - vm1_internal_ip: 10.10.0.12
 - vm2_internal_ip: 10.10.0.13
-- vm1_external_ip: 35.230.32.241
+- vm1_external_ip: 35.227.168.79 
 - vm2_external_ip: 35.230.48.195
 
 locsims:
