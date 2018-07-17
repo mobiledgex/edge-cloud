@@ -31,7 +31,7 @@ public class FindCloudletResponse {
         }
     }
     public Find_Status status;
-    public String token = "";
+    public String sessionCookie;
 
     FindCloudletResponse(long version, String uri, byte[] service_ip, int port, GPSLocation loc, Find_Status status, String token) {
         this.version = version;
@@ -40,6 +40,6 @@ public class FindCloudletResponse {
         this.port = port;
         this.loc = loc;
         this.status = status;
-        this.token = token;
+        this.sessionCookie = token;
     }
 }

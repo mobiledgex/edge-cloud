@@ -1,9 +1,11 @@
 package com.mobiledgex.matchingengine;
 
 import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.protobuf.ByteString;
 import com.mobiledgex.matchingengine.util.MexLocation;
@@ -14,6 +16,8 @@ import org.junit.runner.RunWith;
 
 import android.os.Build;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -22,6 +26,7 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
+import static android.content.Context.WIFI_SERVICE;
 import static distributed_match_engine.AppClient.DynamicLocGroupAdd.IDType.IPADDR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +34,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.location.Location;
+import android.text.format.Formatter;
 import android.util.Log;
 
 
@@ -101,7 +107,16 @@ public class EngineCallTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(Location location) {
+    // Every call needs registration to be called first.
+    public void registerClient(MatchingEngine me, Location location) {
+            AppClient.Match_Engine_Status registerResponse;
+            AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
+            registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
+            assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
+                    registerResponse.getSessionCookie(), me.getSessionCookie());
+    }
+
+    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -124,13 +139,13 @@ public class EngineCallTest {
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
-                .setCommCookie("") // None.
+                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
                 .build();
 
         return request;
     }
 
-    public AppClient.DynamicLocGroupAdd createDynamicLocationGroupAdd(Location location) {
+    public AppClient.DynamicLocGroupAdd createDynamicLocationGroupAdd(long groupLocationId, Location location) {
         // Directly create request for testing Dynamic Location Groups:
         LocOuterClass.Loc aLoc = LocOuterClass.Loc.newBuilder()
                 .setLat(location.getLatitude())
@@ -138,7 +153,6 @@ public class EngineCallTest {
                 .build();
 
         UUID uuid = UUID.randomUUID();
-        long groupLocationId = 1001;
         AppClient.DynamicLocGroupAdd groupAdd = AppClient.DynamicLocGroupAdd.newBuilder()
                 .setVer(0)
                 .setIdType(IPADDR)
@@ -149,7 +163,7 @@ public class EngineCallTest {
                 .setTower(0)
                 .setGpsLocation(aLoc)
                 .setLgId(groupLocationId)
-                .setCommCookie("12345")
+                .setSessionCookie("12345")
                 .setCommType(AppClient.DynamicLocGroupAdd.DlgCommType.DlgSecure)
                 .setUserData("UserData").build();
 
@@ -174,7 +188,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             response = me.registerClient(request, GRPC_TIMEOUT_MS);
             assert(response != null);
         } catch (ExecutionException ee) {
@@ -190,10 +204,11 @@ public class EngineCallTest {
             enableMockLocation(context,false);
         }
 
+
+        assertEquals("Sessions must be equal.", response.getSessionCookie(), me.getSessionCookie());
         // Temporary.
         Log.i(TAG, "registerClientTest response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), ""); // FIXME: We DO expect a token
         assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
     }
 
@@ -216,7 +231,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             responseFuture = me.registerClientFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assert(response != null);
@@ -230,10 +245,10 @@ public class EngineCallTest {
             enableMockLocation(context,false);
         }
 
+        assertEquals("Sessions must be equal.", response.getSessionCookie(), me.getSessionCookie());
         // Temporary.
         Log.i(TAG, "registerClientFutureTest() response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), ""); // FIXME: We DO expect a token
         assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
     }
 
@@ -251,7 +266,8 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             try {
                 FindCloudletResponse cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
@@ -297,6 +313,7 @@ public class EngineCallTest {
     @Test
     public void findCloudletTest() {
         Context context = InstrumentationRegistry.getTargetContext();
+        AppClient.Match_Engine_Status registerResponse;
         FindCloudletResponse cloudletResponse = null;
         MatchingEngine me = new MatchingEngine();
         me.setMexLocationAllowed(true);
@@ -309,7 +326,9 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
 
@@ -329,6 +348,7 @@ public class EngineCallTest {
         if (cloudletResponse != null) {
             // Temporary.
             assertEquals(cloudletResponse.service_ip, cloudletResponse.service_ip);
+            assertEquals("Sessions must match.", cloudletResponse.sessionCookie, "");
         } else {
             assertFalse("No findCloudlet response!", false);
         }
@@ -349,7 +369,9 @@ public class EngineCallTest {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, 10000);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             response = me.findCloudletFuture(request, 10000);
             result = response.get();
@@ -359,10 +381,14 @@ public class EngineCallTest {
         } catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
             assertFalse("FindCloudletFuture: Execution Interrupted!", true);
+        } finally {
+            enableMockLocation(context,false);
         }
 
         // Temporary.
         assertEquals(result.service_ip, result.service_ip);
+        assertEquals("SessionCookies must match.", result.sessionCookie, "");
+
     }
 
     @Test
@@ -380,8 +406,8 @@ public class EngineCallTest {
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             response = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(response != null);
@@ -398,9 +424,10 @@ public class EngineCallTest {
             enableMockLocation(context, false);
         }
 
+
         // Temporary.
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), "");
+        assertEquals("SessionCookies must match.", response.getSessionCookie(), "");
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN);
         assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH);
     }
@@ -422,7 +449,8 @@ public class EngineCallTest {
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             locFuture = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
             response = locFuture.get();
@@ -432,11 +460,14 @@ public class EngineCallTest {
         } catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
             assertFalse("verifyLocationFutureTest: Execution Interrupted!", true);
+        } finally {
+            enableMockLocation(context,false);
         }
+
 
         // Temporary.
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), "");
+        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN);
         assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH);
     }
@@ -464,7 +495,8 @@ public class EngineCallTest {
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             verifyLocationResult = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(verifyLocationResult != null);
@@ -474,6 +506,8 @@ public class EngineCallTest {
         } catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
             assertFalse("verifyMockedLocationTest_NorthPole: Execution Interrupted!", true);
+        } finally {
+            enableMockLocation(context,false);
         }
 
         // Temporary.
@@ -481,7 +515,7 @@ public class EngineCallTest {
         assertEquals(verifyLocationResult.getTowerStatusValue(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN_VALUE);
         assertEquals(verifyLocationResult.getGpsLocationStatusValue(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH_VALUE); // Based on test data.
 
-        enableMockLocation(context,false);
+        assertEquals("SessionCookies must match", verifyLocationResult.getSessionCookie(), "");
     }
 
     @Test
@@ -491,6 +525,7 @@ public class EngineCallTest {
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         Location location;
+        AppClient.Match_Engine_Status registerResponse;
         AppClient.Match_Engine_Loc response = null;
 
         enableMockLocation(context,true);
@@ -501,7 +536,9 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+
             response = me.getLocation(request, GRPC_TIMEOUT_MS);
             assert(response != null);
         } catch (ExecutionException ee) {
@@ -520,8 +557,6 @@ public class EngineCallTest {
         // Temporary.
         Log.i(TAG, "getLocation() response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), ""); // FIXME: We DO expect a token
-
 
         assertEquals(response.getCarrierName(), "TMUS");
         assertEquals(response.getStatus(), AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND);
@@ -530,6 +565,10 @@ public class EngineCallTest {
         // FIXME: Server is currently a pure echo of client location.
         assertEquals((int) response.getNetworkLocation().getLat(), (int) loc.getLatitude());
         assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
+
+        // Expected Invalid:
+        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
+
     }
 
     @Test
@@ -540,6 +579,7 @@ public class EngineCallTest {
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
+        AppClient.Match_Engine_Status registerResponse;
         Future<AppClient.Match_Engine_Loc> responseFuture;
         AppClient.Match_Engine_Loc response = null;
 
@@ -553,7 +593,9 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+
             responseFuture = me.getLocationFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assert(response != null);
@@ -570,9 +612,6 @@ public class EngineCallTest {
         // Temporary.
         Log.i(TAG, "getLocationFutureTest() response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getCommCookie(), ""); // FIXME: We DO expect a token
-
-
         assertEquals(response.getCarrierName(), "TMUS");
         assertEquals(response.getStatus(), AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND);
 
@@ -580,6 +619,8 @@ public class EngineCallTest {
         // FIXME: Server is currently a pure echo of client location.
         assertEquals((int) response.getNetworkLocation().getLat(), (int) loc.getLatitude());
         assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
+
+        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
     }
 
     @Test
@@ -600,12 +641,13 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(location);
+            // FIXME: Need groupId source.
+            long groupId = 1001L;
+            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(groupId, location);
 
             response = me.addUserToGroup(dynamicLocGroupAdd, GRPC_TIMEOUT_MS);
             assertTrue("DynamicLocation Group Add should return: ME_SUCCESS", response.getStatus() == AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
             assertTrue("Group cookie result.", response.getGroupCookie().equals("")); // FIXME: This GroupCookie should have a value.
-            assertTrue("Comm cookie result.", response.getGroupCookie().equals("")); // FIXME: This CommCookie should have a value.
 
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
@@ -619,6 +661,8 @@ public class EngineCallTest {
         } finally {
             enableMockLocation(context,false);
         }
+
+        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
     }
 
     @Test
@@ -639,14 +683,14 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(location);
+            // FIXME: Need groupId source.
+            long groupId = 1001L;
+            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(groupId, location);
 
             Future<AppClient.Match_Engine_Status> responseFuture = me.addUserToGroupFuture(dynamicLocGroupAdd, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assertTrue("DynamicLocation Group Add should return: ME_SUCCESS", response.getStatus() == AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
             assertTrue("Group cookie result.", response.getGroupCookie().equals("")); // FIXME: This GroupCookie should have a value.
-            assertTrue("Comm cookie result.", response.getGroupCookie().equals("")); // FIXME: This CommCookie should have a value.
-
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("dynamicLocationGroupAddTest: Execution Failed!", true);
@@ -659,5 +703,8 @@ public class EngineCallTest {
         } finally {
             enableMockLocation(context,false);
         }
+
+        // Temporary.
+        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
     }
 }

@@ -3,7 +3,6 @@ package com.mobiledgex.matchingengine;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.support.annotation.NonNull;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
@@ -30,7 +29,7 @@ import android.util.Log;
 public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
     private String host = "192.168.28.162"; // FIXME: Your available external server IP until the real server is up.
-    //private String host = "192.168.1.91"; // FIXME: Your available external server IP until the real server is up.
+    //private String host = "localhost"; // FIXME: Your available external server IP until the real server is up.
     private int port = 50051;
 
     // A threadpool for all the MatchEngine API callable interfaces:
@@ -39,7 +38,7 @@ public class MatchingEngine {
     // State info for engine
     private AppClient.Match_Engine_Status mStatus;
     private UUID mUUID;
-    private String mCommCookie;
+    private String mSessionCookie;
     private AppClient.Match_Engine_Reply mMatchEngineFindCloudletReply; // FindCloudlet.
     private AppClient.Match_Engine_Status mMatchEngineStatus;
     private AppClient.Match_Engine_Loc mMatchEngineLocation;
@@ -82,8 +81,11 @@ public class MatchingEngine {
         return mUUID;
     }
 
-    void setCommCookie(String mCommCookie) {
-        this.mCommCookie = mCommCookie;
+    void setSessionCookie(String sessionCookie) {
+        this.mSessionCookie = sessionCookie;
+    }
+    String getSessionCookie() {
+        return this.mSessionCookie;
     }
 
     void setMatchEngineStatus(AppClient.Match_Engine_Status status) {
@@ -188,7 +190,7 @@ public class MatchingEngine {
                 .setDevName(packageLabel) // From signing certificate?
                 .setAppName(appName)
                 .setAppVers(versionName) // Or versionName, which is visual name?
-                .setCommCookie(mCommCookie == null ? "" : mCommCookie) // "" if null/unknown.
+                .setSessionCookie(mSessionCookie == null ? "" : mSessionCookie) // "" if null/unknown.
                 .build();
 
 
@@ -243,7 +245,7 @@ public class MatchingEngine {
                 .setTower(cid)
                 .setGpsLocation(aLoc)
                 .setLgId(groupLocationId)
-                .setCommCookie(mCommCookie)
+                .setSessionCookie(mSessionCookie)
                 .setCommType(type)
                 .setUserData(userData)
                 .build();
