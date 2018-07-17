@@ -13,10 +13,21 @@ import (
 
 func FindCloudlets(client dme.Match_Engine_ApiClient) {
 	var ipaddr net.IP
+	var req *dme.Match_Engine_Request
 
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
+	// Register the client first
+	req = new(dme.Match_Engine_Request)
+	req.IdType = dme.Match_Engine_Request_IPADDR
+	// Should fill out the Id along with carrier and apps details but OK to skip for now
+	mstatus, err := client.RegisterClient(ctx, req)
+	if err != nil {
+		log.Fatalf("could not register: %v", err)
+	}
+	
 	fmt.Println(">>>>>>>Finding Right Cloudlets<<<<<<<<<")
 	for _, m := range dmetest.FindCloudletData {
+		m.Req.SessionCookie = mstatus.SessionCookie
 		mreply, err := client.FindCloudlet(ctx, &m.Req)
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)
