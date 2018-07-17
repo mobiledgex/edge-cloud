@@ -1,8 +1,18 @@
+vars:
+  - locverurl: "http://127.0.0.1:8888/verifyLocation" 
+  - toksrvurl: "http://127.0.0.1:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc" 
+
 locsims:
 - locapisimlocal:
     name: locsim1
     port: 8888
     locfile: "{{datadir}}/locsim.yml"
+  hostname: "127.0.0.1"
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
   hostname: "127.0.0.1"
 
 etcds:
@@ -53,7 +63,8 @@ dmes:
     name: dme1
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "http://127.0.0.1:8888"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
     carrier: TDG
   hostname: "127.0.0.1"
 
@@ -61,7 +72,8 @@ dmes:
     name: dme2
     apiaddr: "0.0.0.0:50052"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "http://127.0.0.1:8888"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
     carrier: TDG
   hostname: "127.0.0.1"
 

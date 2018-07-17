@@ -12,8 +12,8 @@ import (
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmelocapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
+	locutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
@@ -37,7 +37,7 @@ func printUsage() {
 
 func showIndex(w http.ResponseWriter, r *http.Request) {
 	log.Println("doing showIndex")
-	rc := "/verifyLocation -- verifies the location of an IP vs lat and long\n"
+	rc := "/verifyLocation -- verifies the location of an token vs lat and long\n"
 	rc += "/updateLocation -- adds or replaces and IP->location entry\n"
 	rc += "/showLocations -- shows current locations\n"
 	w.Write([]byte(rc))
@@ -72,6 +72,7 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "improperly formatted request", 400)
 		return
 	}
+
 	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
 
 	ymlout, err := yaml.Marshal(locations)
@@ -106,27 +107,29 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	if req.Ipaddress == "" || req.Lat == 0 || req.Long == 0 {
+	if req.Token == "" || req.Lat == 0 || req.Long == 0 {
 		log.Println("missing field in request")
 		http.Error(w, err.Error(), 400)
 	}
 
-	err, foundLoc := findLocForIp(req.Ipaddress)
-	if err != nil {
-		resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_UNKNOWN)
+	ip, valid, err := locutil.DecodeToken(req.Token)
+	if !valid {
+		http.Error(w, "Token is not valid or expired", 401)
+		return
+	} else if err != nil {
+		//likely a badly formatted token
+		http.Error(w, err.Error(), 400)
+		return
 	} else {
-		reqLoc := dme.Loc{Altitude: req.Altitude, Lat: req.Lat, Long: req.Long}
-		log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
-		d := dmecommon.DistanceBetween(reqLoc, foundLoc)
-		log.Printf("calculated distance: %v km\n", int(d))
-		if d <= 2 {
-			resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_WITHIN_2KM)
-		} else if d <= 10 {
-			resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_WITHIN_10KM)
-		} else if d <= 100 {
-			resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_WITHIN_100KM)
+		err, foundLoc := findLocForIp(ip)
+		if err != nil {
+			resp.LocationResult = dmecommon.LocationUnknown
 		} else {
-			resp.LocationResult = int32(dmeproto.Match_Engine_Loc_Verify_LOC_MISMATCH)
+			reqLoc := dme.Loc{Lat: req.Lat, Long: req.Long}
+			log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
+			d := dmecommon.DistanceBetween(reqLoc, foundLoc)
+			resp.LocationResult = dmecommon.GetLocationResultForDistance(d)
+			log.Printf("calculated distance: %v km\n result: %d", int(d), resp.LocationResult)
 		}
 	}
 

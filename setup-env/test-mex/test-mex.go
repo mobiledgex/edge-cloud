@@ -125,7 +125,7 @@ func validateArgs() {
 	}
 	if *apiFile != "" {
 		if _, err := os.Stat(*apiFile); err != nil {
-			fmt.Printf("ERROR: file " + *apiFile + " does not exist\n")
+			fmt.Fprint(os.Stderr, "ERROR: file "+*apiFile+" does not exist\n")
 			errFound = true
 		}
 	}
@@ -135,7 +135,7 @@ func validateArgs() {
 		errFound = true
 	} else {
 		if _, err := os.Stat(*setupFile); err != nil {
-			fmt.Printf("ERROR: file " + *setupFile + " does not exist\n")
+			fmt.Fprint(os.Stderr, "ERROR: file "+*setupFile+" does not exist\n")
 			errFound = true
 		}
 	}
@@ -143,12 +143,11 @@ func validateArgs() {
 	if *compareYaml != "" {
 		yarray := strings.Split(*compareYaml, ",")
 		if len(yarray) != 3 {
-			fmt.Printf("ERROR: compareyaml must be a string with 2 yaml files and a filetype separated by comma\n")
+			fmt.Fprint(os.Stderr, "ERROR: compareyaml must be a string with 2 yaml files and a filetype separated by comma\n")
 			errFound = true
 		}
 	}
 	if errFound {
-		printUsage()
 		os.Exit(1)
 	}
 }
@@ -246,7 +245,6 @@ func main() {
 			if !setupmex.FetchRemoteLogs(*outputDir) {
 				errorsFound += 1
 				errors = append(errors, "fetch failed")
-
 			}
 		default:
 			log.Fatal("unexpected action: " + action)

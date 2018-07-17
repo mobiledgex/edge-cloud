@@ -9,53 +9,81 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/log"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
+	"github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
 type LocationResponseMessage struct {
-	LocationResult int32 `json:"locresult"`
+	LocationResult uint32 `json:"locresult"`
+	Error          string `json:"error"`
 }
 
-//format of the HTTP request body
+//format of the HTTP request body.  Token is used for validation of location, but
+//IP address is still present to allow locations to be updated for the simulator
 type LocationRequestMessage struct {
-	Lat       float64 `json:"lat" yaml:"lat"`
-	Long      float64 `json:"long" yaml:"long"`
-	Altitude  float64 `json:"altitude" yaml:"altitude"`
-	Ipaddress string  `json:"ipaddr" yaml:"ipaddr"`
+	Lat       float64       `json:"latitude" yaml:"lat"`
+	Long      float64       `json:"longitude" yaml:"long"`
+	Token     util.TDGToken `json:"token" yaml:"token"`
+	Ipaddress string        `json:"ipaddr" yaml:"ipaddr"`
 }
 
 //REST API client for the TDG implementation of Location verification API
-func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, ipaddr string) dme.Match_Engine_Loc_Verify_GPS_Location_Status {
+func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string) dmecommon.LocationResult {
 
 	var lrm LocationRequestMessage
 	lrm.Lat = lat
 	lrm.Long = long
-	lrm.Ipaddress = ipaddr
+	lrm.Token = util.TDGToken(token)
+
 	b, _ := json.Marshal(lrm)
 	body := bytes.NewBufferString(string(b))
-	resp, err := http.Post(locVerUrl+"/verifyLocation", "application/json", body)
+	resp, err := http.Post(locVerUrl, "application/json", body)
 
 	if err != nil {
-		log.WarnLog("Error in POST to loc service error: %v\n", err)
-		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
+		log.WarnLog("Error in POST to TDG Loc service error", err)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 	defer resp.Body.Close()
-	respBytes, err1 := ioutil.ReadAll(resp.Body)
 
 	log.DebugLog(log.DebugLevelLocapi, "Received response", "statusCode:", resp.StatusCode)
 
-	if err1 != nil {
-		log.WarnLog("Error read response body:", err1)
-		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
+	switch resp.StatusCode {
+	case http.StatusOK:
+		log.DebugLog(log.DebugLevelLocapi, "200OK received")
+
+	//treat 401 or 403 as a token issue.  Handling with TDG to be confirmed
+	case http.StatusForbidden:
+		fallthrough
+	case http.StatusUnauthorized:
+		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_INVALID_TOKEN", "received code", resp.StatusCode)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_INVALID_TOKEN}
+	default:
+		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_OTHER", "received code", resp.StatusCode)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+	}
+
+	respBytes, resperr := ioutil.ReadAll(resp.Body)
+	if resperr != nil {
+		log.WarnLog("Error read response body:", resperr)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 	var lrmResp LocationResponseMessage
 
 	err = json.Unmarshal(respBytes, &lrmResp)
 	if err != nil {
 		fmt.Printf("Error unmarshall response%v\n", err)
-		return dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 
 	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
-	return dme.Match_Engine_Loc_Verify_GPS_Location_Status(lrmResp.LocationResult)
+	if lrmResp.Error != "" {
+		log.WarnLog("Error received in token response", lrmResp.Error)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+	}
+
+	rc := dmecommon.GetDistanceAndStatusForLocationResult(lrmResp.LocationResult)
+	log.DebugLog(log.DebugLevelLocapi, "Returning result", "Location Result", rc)
+
+	return rc
 }
