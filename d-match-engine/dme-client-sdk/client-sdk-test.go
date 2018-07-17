@@ -27,7 +27,7 @@ func FindCloudlets(client dme.Match_Engine_ApiClient) {
 	
 	fmt.Println(">>>>>>>Finding Right Cloudlets<<<<<<<<<")
 	for _, m := range dmetest.FindCloudletData {
-		m.Req.CommCookie = mstatus.CommCookie
+		m.Req.SessionCookie = mstatus.SessionCookie
 		mreply, err := client.FindCloudlet(ctx, &m.Req)
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)

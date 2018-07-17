@@ -29,7 +29,7 @@ var carrier = flag.String("carrier", "standalone", "carrier name for API connect
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
-func verifyCookie(ctx context.Context, commCookie string) (int, error, string) {
+func verifyCookie(ctx context.Context, sessionCookie string) (int, error, string) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return -1, errors.New("unable to get peer IP info"), ""
@@ -43,9 +43,9 @@ func verifyCookie(ctx context.Context, commCookie string) (int, error, string) {
 
 	// This will be encrypted on our public key and will need to be decrypted
 	// For now just verify the clear txt IP
-	fmt.Printf("CommCookie is %s\n", commCookie);
-	if commCookie != peerIp {
-		return -1, errors.New("unable to verify CommCookie"), ""
+	fmt.Printf("SessionCookie is %s\n", sessionCookie);
+	if sessionCookie != peerIp {
+		return -1, errors.New("unable to verify SessionCookie"), ""
 	}
 	return 0, nil, peerIp
 }
@@ -53,7 +53,7 @@ func verifyCookie(ctx context.Context, commCookie string) (int, error, string) {
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
 	
-	ok, err, _ := verifyCookie(ctx, req.CommCookie)
+	ok, err, _ := verifyCookie(ctx, req.SessionCookie)
 	if ok != 0 {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 	var mreq *dme.Match_Engine_Loc_Verify
 	mreq = new(dme.Match_Engine_Loc_Verify)
 
-	ok, err, peerIp := verifyCookie(ctx, req.CommCookie)
+	ok, err, peerIp := verifyCookie(ctx, req.SessionCookie)
 	if ok != 0 {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func (s *server) GetLocation(ctx context.Context,
 	var mloc *dme.Match_Engine_Loc
 	mloc = new(dme.Match_Engine_Loc)
 
-	ok, err, _ := verifyCookie(ctx, req.CommCookie)
+	ok, err, _ := verifyCookie(ctx, req.SessionCookie)
 	if ok != 0 {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	// For now, just send the unencrypoted cookie back
 	// Fix me to return a cookie encryoted on DME public key
-	mstatus.CommCookie = peerIp
+	mstatus.SessionCookie = peerIp
 	mstatus.Status = dme.Match_Engine_Status_ME_SUCCESS
 
 	return mstatus, nil

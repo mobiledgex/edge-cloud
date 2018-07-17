@@ -25,7 +25,7 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 	
 	fmt.Println(">>>>>>>Finding Right Locations<<<<<<<<<")
 	for _, m := range dmetest.VerifyLocData {
-		m.Req.CommCookie = mstatus.CommCookie
+		m.Req.SessionCookie = mstatus.SessionCookie
 		mreply, err := client.VerifyLocation(ctx, &m.Req)
 		if err != nil {
 			log.Fatalf("could not greet: %v", err)
