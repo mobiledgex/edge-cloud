@@ -1,0 +1,6 @@
+match-engine-request:
+  carriername: TMUS
+  devname: AcmeAppCo
+  appname: someApplication
+  appvers: "1.0"
+

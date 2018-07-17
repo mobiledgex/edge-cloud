@@ -63,9 +63,14 @@ type LocSimProcess struct {
 	process.LocApiSimLocal
 	Hostname string
 }
+type TokSimProcess struct {
+	process.TokSrvSimLocal
+	Hostname string
+}
 
 type ProcessData struct {
 	Locsims     []LocSimProcess     `yaml:"locsims"`
+	Toksims     []TokSimProcess     `yaml:"toksims"`
 	Etcds       []EtcdProcess       `yaml:"etcds"`
 	Controllers []ControllerProcess `yaml:"controllers"`
 	Dmes        []DmeProcess        `yaml:"dmes"`

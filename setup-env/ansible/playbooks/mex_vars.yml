@@ -10,7 +10,7 @@
   - crm_bin: "{{ local_binpath }}/crmserver" 
   - dme_bin: "{{ local_binpath }}/dme-server"
   - locsim_bin: "{{ local_binpath }}/loc-api-sim"
-
+  - toksim_bin: "{{ local_binpath }}/tok-srv-sim"
   - remote_bin_path: /usr/local/bin
   - controller_remote_bin: "{{ remote_bin_path }}/controller"
   - crm_remote_bin: "{{ remote_bin_path }}/crmserver"  
@@ -19,6 +19,7 @@
   - locsim_data_file: locsim.yml
   - locsim_remote_data_dir: /var/tmp
   - locsim_remote_data_file: "{{ locsim_remote_data_dir }}/{{ locsim_data_file }}"
+  - toksim_remote_bin: "{{ remote_bin_path }}/tok-srv-sim"
   - remote_log_path: /var/log/mex
   - setupfile: setup.yml
   - etcd_url: https://github.com/coreos/etcd/releases/download

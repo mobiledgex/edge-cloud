@@ -1,5 +1,5 @@
 ##
-description: executes matching engine request for verify location using jims location and then with central dallas. Verify results
+description: executes matching engine request for verify location using jims location and then with central dallas and then Australia. Verify results
 
 tests:
 
@@ -22,6 +22,24 @@ tests:
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"
     yaml2: "{{datadir}}/location_within_100km.yml"
+    filetype: verifylocation
+  loops: 3
+
+- name: verifylocation expected out of range
+  apifile: "{{datadir}}/mer_australia_loc.yml"
+  actions: [dmeapi-verifylocation]
+  compareyaml:
+    yaml1: "{{outputdir}}/verifylocation.yml"
+    yaml2: "{{datadir}}/location_mismatch.yml"
+    filetype: verifylocation
+  loops: 3
+
+- name: verifylocation with expired token
+  apifile: "{{datadir}}/mer_expired_token.yml"
+  actions: [dmeapi-verifylocation]
+  compareyaml:
+    yaml1: "{{outputdir}}/verifylocation.yml"
+    yaml2: "{{datadir}}/location_token_expired.yml"
     filetype: verifylocation
   loops: 3
 

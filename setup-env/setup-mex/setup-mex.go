@@ -83,9 +83,9 @@ func findProcess(processName string) (string, string, string) {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
 		}
 	}
-	for _, loc := range util.Procs.Locsims {
-		if loc.Name == processName {
-			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
+	for _, tok := range util.Procs.Locsims {
+		if tok.Name == processName {
+			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
 		}
 	}
 
@@ -138,6 +138,7 @@ func ReadSetupFile(setupfile string, dataDir string) {
 		varlist = append(varlist, "datadir="+dataDir)
 	}
 	util.ReadYamlFile(setupfile, &replacementVars, "", false)
+
 	for _, repl := range replacementVars.Vars {
 		for varname, value := range repl {
 			varlist = append(varlist, varname+"="+value)
@@ -149,8 +150,14 @@ func ReadSetupFile(setupfile string, dataDir string) {
 	err := util.ReadYamlFile(setupfile, &util.Procs, varstring, true)
 	if err != nil {
 		if !util.IsYamlOk(err, "setup") {
-			log.Fatal("One or more fatal unmarshal errors, exiting")
+			fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s, exiting", setupfile)
 		}
+	}
+	//equals sign is not well handled in yaml so it is url encoded and changed after loading
+	//for some reason, this only happens when the yaml is read as ProcessData and not
+	//as a generic interface.  TODO: further study on this.
+	for i, _ := range util.Procs.Dmes {
+		util.Procs.Dmes[i].TokSrvUrl = strings.Replace(util.Procs.Dmes[i].TokSrvUrl, "%3D", "=", -1)
 	}
 }
 
@@ -179,7 +186,7 @@ func StopProcesses(processName string) bool {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	processExeNames := [5]string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim"}
+	processExeNames := [6]string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim"}
 	//anything not gracefully exited in maxwait seconds is forcefully killed
 
 	for _, p := range processExeNames {
@@ -217,7 +224,7 @@ func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
 	log.Printf("Ansible Output:\n%v\n", string(output))
 
 	if err != nil {
-		log.Fatalf("Ansible playbook failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Ansible playbook failed: %v", err)
 		return false
 	}
 	return true
@@ -249,10 +256,10 @@ func stageLocDbFile(srcFile string, destDir string) {
 	var locdb interface{}
 	yerr := util.ReadYamlFile(srcFile, &locdb, "", false)
 	if yerr != nil {
-		log.Fatalf("Error reading location file %s -- %v\n", srcFile, yerr)
+		fmt.Fprintf(os.Stderr, "Error reading location file %s -- %v\n", srcFile, yerr)
 	}
 	if !stageYamlFile("locsim.yml", destDir, locdb) {
-		log.Fatalf("Error staging location db file %s to %s\n", srcFile, destDir)
+		fmt.Fprintf(os.Stderr, "Error staging location db file %s to %s\n", srcFile, destDir)
 	}
 }
 
@@ -262,13 +269,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 
 	foundServer := false
 	if ansHome == "" {
-		log.Fatal("Need to set ANSIBLE_DIR environment variable for deployment")
+		fmt.Fprint(os.Stderr, "Need to set ANSIBLE_DIR environment variable for deployment")
 	}
 
 	invfile, err := os.Create(ansHome + "/mex_inventory")
 	log.Printf("Creating inventory file: %v", invfile.Name())
 	if err != nil {
-		log.Fatal("Cannot create file", err)
+		fmt.Fprint(os.Stderr, "Cannot create file", err)
 	}
 	defer invfile.Close()
 
@@ -278,6 +285,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
+	tokSrvSimulators := make(map[string]string)
 
 	for _, p := range util.Procs.Etcds {
 		if procNameFilter != "" && procNameFilter != p.Name {
@@ -333,6 +341,16 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			}
 		}
 	}
+	for _, p := range util.Procs.Toksims {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+			allRemoteServers[p.Hostname] = p.Name
+			tokSrvSimulators[p.Hostname] = p.Name
+			foundServer = true
+		}
+	}
 
 	//create ansible inventory
 	fmt.Fprintln(invfile, "[mexservers]")
@@ -371,6 +389,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[locsims]")
 		for s := range locApiSimulators {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(tokSrvSimulators) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[toksims]")
+		for s := range tokSrvSimulators {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -500,6 +525,20 @@ func StartProcesses(processName string, outputDir string) bool {
 				return false
 			}
 
+		}
+	}
+	for _, tok := range util.Procs.Toksims {
+		if processName != "" && processName != tok.Name {
+			continue
+		}
+		if tok.Hostname == "localhost" || tok.Hostname == "127.0.0.1" {
+			log.Printf("Starting TokSim %+v\n", tok)
+			logfile := getLogFile(tok.Name, outputDir)
+			err := tok.Start(logfile)
+			if err != nil {
+				log.Printf("Error on TokSim startup: %v", err)
+				return false
+			}
 		}
 	}
 	return true

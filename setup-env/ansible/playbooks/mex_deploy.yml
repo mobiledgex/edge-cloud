@@ -79,6 +79,21 @@
        mode: 0755
     ignore_errors: yes
 
+- name: deploy binary to remote toksims
+  gather_facts: yes
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy toksim binary
+    copy:
+       src: "{{ toksim_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
 
 - name: install etcd to remote etcd nodes
   gather_facts: no
