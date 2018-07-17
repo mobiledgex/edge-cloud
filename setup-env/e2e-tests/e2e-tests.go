@@ -124,6 +124,7 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 	}
 	var testsToRun e2e_tests
 	if !readYamlFile(dirName+"/"+fileName, &testsToRun) {
+		log.Printf("\n** unable to read yaml file %s\n", fileName)
 		return 0, 0, 0
 	}
 
@@ -157,6 +158,9 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 				numTestsRun += nr
 				numPassed += np
 				numFailed += nf
+				if *stopOnFail && nf > 0 {
+					return numTestsRun, numPassed, numFailed
+				}
 				continue
 			}
 
@@ -170,7 +174,6 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 			if t.Compareyaml.Yaml1 != "" {
 				cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
 			}
-
 			cmd := exec.Command("sh", "-c", cmdstr)
 
 			var out bytes.Buffer
@@ -195,7 +198,7 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 
 				if *stopOnFail {
 					fmt.Printf("*** STOPPING ON FAILURE due to --stop option\n")
-					break
+					return numTestsRun, numPassed, numFailed
 				}
 			}
 			numTestsRun++

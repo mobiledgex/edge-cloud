@@ -22,20 +22,22 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	key.appKey.Name = mreq.AppName
 	key.appKey.Version = mreq.AppVers
 
-	mreply.GpsLocationStatus = 0
+	mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 
 	tbl.RLock()
 	app, ok := tbl.apps[key]
 	if !ok {
 		tbl.RUnlock()
-		fmt.Printf("Couldn't find the key\n")
+		fmt.Printf("Couldn't find the key %v\n", key)
 		return
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and GDDT
 	switch carrier {
 	case "GDDT":
-		mreply.GpsLocationStatus = locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, peerIp)
+		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken)
+		mreply.GpsLocationStatus = result.MatchEngineLocStatus
+		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
 		distance = 10000
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
@@ -55,23 +57,22 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 				found = c
 			}
 		}
-		if found != nil {
-			if distance < 2 {
-				mreply.GpsLocationStatus = 1
-			} else if distance < 10 {
-				mreply.GpsLocationStatus = 2
-			} else if distance < 100 {
-				mreply.GpsLocationStatus = 3
-			} else {
-				mreply.GpsLocationStatus = 4
-			}
-			log.DebugLog(log.DebugLevelDmereq, "verified location at",
-				"lat", found.location.Lat,
-				"long", found.location.Long,
-				"distance", distance,
-				"status", mreply.GpsLocationStatus,
-				"uri", found.uri)
-		}
+		//here we want the verified range of the distance based on the distance rules
+		//e.g. if the actual distance is 50KM we may return a range to say within 100KM
+		locresult := dmecommon.GetLocationResultForDistance(distance)
+		locval := dmecommon.GetDistanceAndStatusForLocationResult(locresult)
+
+		mreply.GpsLocationStatus = locval.MatchEngineLocStatus
+		mreply.GPS_Location_Accuracy_KM = locval.DistanceRange
+
+		log.DebugLog(log.DebugLevelDmereq, "verified location at",
+			"lat", found.location.Lat,
+			"long", found.location.Long,
+			"actual distance", distance,
+			"distance range", mreply.GPS_Location_Accuracy_KM,
+			"status", mreply.GpsLocationStatus,
+			"uri", found.uri)
+
 	}
 
 	tbl.RUnlock()

@@ -98,3 +98,24 @@
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ locsims }}"
+
+
+- name: get toksim logs
+  gather_facts: no
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: fetch toksim logs
+    fetch:
+      src:  "{{ remote_log_path }}/{{ item.toksrvsimlocal.name }}.log"
+      dest: "{{ local_log_path }}/{{ inventory_hostname}}.{{ item.toksrvsimlocal.name }}.log"
+      flat: yes
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ toksims }}"
+

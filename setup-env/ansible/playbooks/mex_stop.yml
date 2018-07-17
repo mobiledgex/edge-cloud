@@ -89,3 +89,19 @@
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ locsims }}"
+
+- name: stop toksims
+  gather_facts: no
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: stop toksim process
+    shell: "pkill -9 tok-srv-sim||true"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ toksims }}"

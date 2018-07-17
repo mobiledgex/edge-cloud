@@ -4,15 +4,16 @@ syntax = "proto3";
 package distributed_match_engine;
 
 import "loc.proto";
+  enum IDTypes {
+    ID_UNDEFINED = 0;
+	  IMEI = 1;
+	  MSISDN = 2;
+	  IPADDR = 3;
+  }
 
 message Match_Engine_Request {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
-  enum IDTypes {
-	  IMEI = 0;
-	  MSISDN = 1;
-	  IPADDR = 2;
-  }
   IDTypes IdType = 2;
   // Actual ID
   string Id = 3;
@@ -40,7 +41,7 @@ message Match_Engine_Request {
   string AppVers = 14;
   // DME Session Cookie; Not used for Register
   string SessionCookie = 15;
-  // Token used by token Server to verify location
+  // token used for location verification
   string VerifyLocToken = 16;
 }
 
@@ -68,22 +69,23 @@ message Match_Engine_Loc_Verify {
   uint32 ver = 1;
   // Status of the reply
   enum Tower_Status {
-    UNKNOWN = 0;
+    TOWER_UNKNOWN = 0;
     CONNECTED_TO_SPECIFIED_TOWER = 1;
     NOT_CONNECTED_TO_SPECIFIED_TOWER = 2;
   }
   Tower_Status tower_status = 2;
   enum GPS_Location_Status {
     LOC_UNKNOWN = 0;
-    LOC_WITHIN_2KM = 1;
-    LOC_WITHIN_10KM = 2;
-    LOC_WITHIN_100KM = 3;
-    LOC_MISMATCH = 4;
-    LOC_OTHER_COUNTRY = 5;
+    LOC_VERIFIED = 1;
+    LOC_MISMATCH = 2;
+    LOC_ERROR_INVALID_TOKEN = 3;
+    LOC_ERROR_OTHER = 4;
   }
   GPS_Location_Status gps_location_status = 3;
-  // DME Session Cookie
-  string SessionCookie = 4;
+  // location accuracy, the location is verified to 
+  // be within this number of kilometers.  Negative value
+  // means no verification was done 
+  double GPS_Location_Accuracy_KM = 4;
 }
 
 message Match_Engine_Loc {
@@ -110,29 +112,25 @@ message Match_Engine_Status {
   uint32 ver = 1;
   // Status of the reply
   enum ME_Status {
-    ME_SUCCESS = 0;
-    ME_FAIL = 1;
+    ME_UNDEFINED = 0;
+    ME_SUCCESS = 1;
+    ME_FAIL = 2;
   }
   ME_Status Status = 2;
   // Error Code based on Failure
   uint32 ErrorCode = 3;
   // DME Session Cookie
   string SessionCookie = 4;
-    // Group Cookie for Secure Group Communication returned during AddUserToGroup
+    // Group Cookie for Secure Group Communication
   string GroupCookie = 5;
-  // URL for Toekn Server
+  // URI for Token Server
   string TokenServerURI = 6;
 }
 
 message DynamicLocGroupAdd {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
-  enum IDType {
-	  IMEI = 0;
-	  MSISDN = 1;
-	  IPADDR = 2;
-  }
-  IDType IdType = 2;
+  IDTypes IdType = 2;
   // Actual ID
   string Id = 3;
   // App/OS generated ID
@@ -151,8 +149,9 @@ message DynamicLocGroupAdd {
   string SessionCookie = 10;
   // Use Secure communication or Open with the group
   enum DlgCommType {
-    DlgSecure = 0;
-    DlgOpen = 1;
+    DlgUndefined = 0;
+    DlgSecure = 1;
+    DlgOpen = 2;
   }
   DlgCommType CommType = 11;
   // Unused

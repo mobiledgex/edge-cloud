@@ -24,6 +24,8 @@ var apiAddr = flag.String("apiAddr", "localhost:50051", "API listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
+var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
+
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
 // server is used to implement helloworld.GreeterServer.
@@ -43,7 +45,7 @@ func verifyCookie(ctx context.Context, sessionCookie string) (int, error, string
 
 	// This will be encrypted on our public key and will need to be decrypted
 	// For now just verify the clear txt IP
-	fmt.Printf("SessionCookie is %s\n", sessionCookie);
+	fmt.Printf("SessionCookie is %s\n", sessionCookie)
 	if sessionCookie != peerIp {
 		return -1, errors.New("unable to verify SessionCookie"), ""
 	}
@@ -52,7 +54,7 @@ func verifyCookie(ctx context.Context, sessionCookie string) (int, error, string
 
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
-	
+
 	ok, err, _ := verifyCookie(ctx, req.SessionCookie)
 	if ok != 0 {
 		return nil, err
@@ -89,7 +91,6 @@ func (s *server) GetLocation(ctx context.Context,
 		return nil, err
 	}
 
-	//Todo: Implement the function to actually get the location
 	GetClientLoc(req, mloc)
 	if mloc.Status == dme.Match_Engine_Loc_LOC_FOUND {
 		fmt.Printf("GetLocation: Found Location\n")
@@ -105,7 +106,8 @@ func (s *server) RegisterClient(ctx context.Context,
 
 	var mstatus *dme.Match_Engine_Status
 	mstatus = new(dme.Match_Engine_Status)
-	mstatus.TokenServerURI = *locVerUrl
+
+	mstatus.TokenServerURI = *tokSrvUrl
 
 	// Set the src IP as the session cookie for now so we can verify the client later
 	// without needing to call into the operator backend and also have some context
@@ -135,7 +137,7 @@ func (s *server) AddUserToGroup(ctx context.Context,
 
 	var mreq *dme.Match_Engine_Status
 	mreq = new(dme.Match_Engine_Status)
-	mreq.Status = 0
+	mreq.Status = dme.Match_Engine_Status_ME_SUCCESS
 
 	return mreq, nil
 }
@@ -147,7 +149,7 @@ func main() {
 	setupMatchEngine()
 
 	if *standalone {
-		fmt.Printf("Running in Standalone Mode with test instances\n");
+		fmt.Printf("Running in Standalone Mode with test instances\n")
 		appInsts := dmetest.GenerateAppInsts()
 		for _, inst := range appInsts {
 			addApp(inst)
