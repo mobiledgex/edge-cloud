@@ -83,12 +83,16 @@ func findProcess(processName string) (string, string, string) {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
 		}
 	}
-	for _, tok := range util.Procs.Locsims {
+	for _, tok := range util.Procs.Toksims {
 		if tok.Name == processName {
 			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
 		}
 	}
-
+	for _, loc := range util.Procs.Locsims {
+		if loc.Name == processName {
+			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
+		}
+	}
 	return "", "", ""
 }
 
