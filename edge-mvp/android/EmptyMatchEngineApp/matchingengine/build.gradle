@@ -97,6 +97,18 @@ dependencies {
 publishing {
     // Publish to local repository
     repositories {
+        maven {
+            //name "plugin-repository"
+            url "http://localhost:8081/nexus/"
+            credentials {
+                username "admin"
+                password "admin123"
+            }
+            authentication {
+                basic(BasicAuthentication)
+                digest(DigestAuthentication)
+            }
+        }
         mavenLocal()
     }
 
