@@ -31,8 +31,7 @@ public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
     private final String mInitalDMEContactHost = "tdg.dme.mobiledgex.net";
     private String mCurrentNetworkOperatorName = "";
-    private String host = "tdg.dme.mobiledgex.net"; // FIXME: Your available external server IP until the real server is up.
-    //private String host = "localhost"; // FIXME: Your available external server IP until the real server is up.
+    private String host = "tdg.dme.mobiledgex.net"; // FIXME: Need CarrierName from actual SIM card to generate.
     private int port = 50051;
 
     // A threadpool for all the MatchEngine API callable interfaces:
@@ -42,6 +41,8 @@ public class MatchingEngine {
     private AppClient.Match_Engine_Status mStatus;
     private UUID mUUID;
     private String mSessionCookie;
+    private String mTokenServerURI;
+    private String mTokenServerToken;
     private AppClient.Match_Engine_Reply mMatchEngineFindCloudletReply; // FindCloudlet.
     private AppClient.Match_Engine_Status mMatchEngineStatus;
     private AppClient.Match_Engine_Loc mMatchEngineLocation;
@@ -116,7 +117,7 @@ public class MatchingEngine {
 
     private void updateDmeHostAddress(String networkOperatorName) {
         setCurrentNetworkOperatorName(networkOperatorName);
-         this.host = getCurrentNetworkOperatorName() + ".dme.mobiledgex.net";
+        this.host = getCurrentNetworkOperatorName() + ".dme.mobiledgex.net";
     }
 
     /**
@@ -134,7 +135,7 @@ public class MatchingEngine {
         }
 
         if (loc == null) {
-            throw new IllegalStateException("Location parameter is required.");
+            throw new IllegalArgumentException("Location parameter is required.");
         }
 
         if (mUUID == null) {
@@ -145,7 +146,7 @@ public class MatchingEngine {
         TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
         String networkOperatorName = telManager.getNetworkOperatorName();
         // READ_PHONE_STATE or
-        Match_Engine_Request.IDTypes id_types = Match_Engine_Request.IDTypes.IPADDR;
+        AppClient.IDTypes id_types = AppClient.IDTypes.IPADDR;
         String id = telManager.getLine1Number(); // NOT IMEI, if this throws a SecurityException, application must handle it.
         String mnc = telManager.getNetworkOperator();
         String mcc = telManager.getNetworkCountryIso();
@@ -204,10 +205,12 @@ public class MatchingEngine {
                 .setAppName(appName)
                 .setAppVers(versionName) // Or versionName, which is visual name?
                 .setSessionCookie(mSessionCookie == null ? "" : mSessionCookie) // "" if null/unknown.
+                .setVerifyLocToken(mTokenServerToken == null ? "" : mTokenServerToken)
                 .build();
 
 
-        // also update MatchEngine:
+        // also update MatchingEngine state.
+        // FIXME: NetworkManager callback.
         updateDmeHostAddress(networkOperatorName);
         return request;
     }
@@ -254,7 +257,7 @@ public class MatchingEngine {
 
         AppClient.DynamicLocGroupAdd groupAddRequest = AppClient.DynamicLocGroupAdd.newBuilder()
                 .setVer(0)
-                .setIdType(AppClient.DynamicLocGroupAdd.IDType.IPADDR)
+                .setIdType(AppClient.IDTypes.IPADDR)
                 .setCarrierID(0)
                 .setCarrierName(networkOperatorName == null ? "" : networkOperatorName)
                 .setTower(cid)
@@ -341,7 +344,7 @@ public class MatchingEngine {
      * @throws StatusRuntimeException
      */
     public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException {
+            throws StatusRuntimeException, IOException {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return verifyLocation.call();
@@ -419,4 +422,19 @@ public class MatchingEngine {
         this.port = port;
     }
 
+    void setTokenServerURI(String tokenFollowURI) {
+        mTokenServerURI = tokenFollowURI;
+    }
+
+    String getTokenServerURI() {
+        return mTokenServerURI;
+    }
+
+    void setTokenServerToken(String token) {
+        mTokenServerToken = token;
+    }
+
+    String getTokenServerToken() {
+        return mTokenServerToken;
+    }
 }

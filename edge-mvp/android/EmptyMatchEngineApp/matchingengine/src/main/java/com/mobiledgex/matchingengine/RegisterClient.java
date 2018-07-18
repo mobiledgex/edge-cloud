@@ -61,6 +61,11 @@ public class RegisterClient implements Callable {
         return url.queryParameter("followURL");
     }
 
+    private String getToken(String uri) {
+        HttpUrl url = HttpUrl.parse(uri);
+        return url.queryParameter("dt-id");
+    }
+
     /**
      *
      * @return
@@ -73,32 +78,6 @@ public class RegisterClient implements Callable {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
-
-        // Contact DME (that's GRPC server?):
-        /*
-        Response response;
-        OkHttpClient client = new OkHttpClient(); // From GPRC http client.
-        Request httpRequest = new Request.Builder()
-                //.url(createDmeUri())
-                .url("")
-                .build();
-
-        // Not autoclosable:
-        response = client.newCall(httpRequest).execute();
-        if (!response.isRedirect()) {
-            throw new IOException("Expected a Redirect Response from DME: " + response);
-        }
-        Headers responseHeaders = response.headers();
-        String sessionCookie = responseHeaders.get(SESSION_COOKIE_KEY);
-        String followURI = responseHeaders.get(TOKEN_SERVER_URI_KEY);
-        String redirectTo = getRedirectUri(followURI);
-
-        if (sessionCookie == null || redirectTo == null) {
-            throw new IllegalStateException("Unexpected server behavior.");
-        }
-*/
-        // Follow URL is verify, which the client is supposed to do, not here.
-
 
         AppClient.Match_Engine_Status reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
@@ -122,10 +101,11 @@ public class RegisterClient implements Callable {
             Log.d(TAG, "Version of Match_Engine_Status: " + ver);
         }
 
-        // Future requests must use a valid session cookie.
-        //mMatchingEngine.setSessionCookie(sessionCookie);
         mMatchingEngine.setSessionCookie(reply.getSessionCookie());
         mMatchingEngine.setMatchEngineStatus(reply);
+
+        mMatchingEngine.setTokenServerURI(reply.getTokenServerURI());
+
         return reply;
     }
 }

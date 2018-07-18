@@ -1,11 +1,9 @@
 package com.mobiledgex.matchingengine;
 
 import android.content.Context;
-import android.net.wifi.WifiManager;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
-import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.protobuf.ByteString;
 import com.mobiledgex.matchingengine.util.MexLocation;
@@ -17,8 +15,6 @@ import org.junit.runner.RunWith;
 import android.os.Build;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -27,22 +23,19 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
-import static android.content.Context.WIFI_SERVICE;
-import static distributed_match_engine.AppClient.DynamicLocGroupAdd.IDType.IPADDR;
+import static distributed_match_engine.AppClient.IDTypes.IPADDR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import android.location.Location;
-import android.text.format.Formatter;
 import android.util.Log;
 
 
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
     public static final String TAG = "EngineCallTest";
-    public static final long GRPC_TIMEOUT_MS = 10000;
+    public static final long GRPC_TIMEOUT_MS = 1000;
 
     FusedLocationProviderClient fusedLocationClient;
 
@@ -108,7 +101,7 @@ public class EngineCallTest {
         fusedLocationClient.flushLocations();
     }
 
-    // Every call needs registration to be called first.
+    // Every call needs registration to be called first at some point.
     public void registerClient(MatchingEngine me, Location location) {
             AppClient.Match_Engine_Status registerResponse;
             AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
@@ -134,7 +127,7 @@ public class EngineCallTest {
 
         request = AppClient.Match_Engine_Request.newBuilder()
                 .setVer(5)
-                .setIdType(AppClient.Match_Engine_Request.IDTypes.MSISDN)
+                .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName("TMUS") // Mobile Network Carrier
@@ -147,6 +140,7 @@ public class EngineCallTest {
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
                 .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
+                .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
                 .build();
 
         return request;
@@ -219,7 +213,7 @@ public class EngineCallTest {
         // Temporary.
         Log.i(TAG, "registerClientTest response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
+        assertEquals(response.getStatus(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
     }
 
     @Test
@@ -259,7 +253,7 @@ public class EngineCallTest {
         // Temporary.
         Log.i(TAG, "registerClientFutureTest() response: " + response.toString());
         assertEquals(response.getVer(), 0);
-        assertEquals(response.getErrorCode(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS_VALUE);
+        assertEquals(response.getStatus(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
     }
 
     @Test
@@ -296,6 +290,8 @@ public class EngineCallTest {
             } catch (MissingRequestException mre) {
                 // This is expected, request is missing.
                 Log.i(TAG, "Expected exception for verifyLocation. Mex Disabled.");
+            } catch (IOException ioe) {
+                Log.i(TAG, "Expected exception for verifyLocation. " + Log.getStackTraceString(ioe));
             }
             try {
                 AppClient.Match_Engine_Status registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
@@ -422,7 +418,10 @@ public class EngineCallTest {
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
 
             response = me.verifyLocation(request, GRPC_TIMEOUT_MS);
-            assert(response != null);
+            assert (response != null);
+        } catch (IOException ioe) {
+            Log.i(TAG, Log.getStackTraceString(ioe));
+            assertFalse("VerifyLocation: Execution Failed!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("VerifyLocation: Execution Failed!", true);
@@ -439,9 +438,8 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(response.getVer(), 0);
-        assertEquals("SessionCookies must match.", response.getSessionCookie(), "");
-        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH);
+        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
     }
 
     @Test
@@ -479,9 +477,8 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(response.getVer(), 0);
-        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
-        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH);
+        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
     }
 
 
@@ -512,6 +509,9 @@ public class EngineCallTest {
 
             verifyLocationResult = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(verifyLocationResult != null);
+        } catch (IOException ioe) {
+            Log.i(TAG, Log.getStackTraceString(ioe));
+            assertFalse("verifyMockedLocationTest_NorthPole: Network Error. Execution Failed!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("verifyMockedLocationTest_NorthPole: Execution Failed!", true);
@@ -524,10 +524,9 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals(verifyLocationResult.getVer(), 0);
-        assertEquals(verifyLocationResult.getTowerStatusValue(), AppClient.Match_Engine_Loc_Verify.Tower_Status.UNKNOWN_VALUE);
-        assertEquals(verifyLocationResult.getGpsLocationStatusValue(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_MISMATCH_VALUE); // Based on test data.
+        assertEquals(verifyLocationResult.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
+        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN); // Based on test data.
 
-        assertEquals("SessionCookies must match", verifyLocationResult.getSessionCookie(), "");
     }
 
     @Test

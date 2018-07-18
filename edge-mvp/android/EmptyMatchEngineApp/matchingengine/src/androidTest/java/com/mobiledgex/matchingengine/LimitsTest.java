@@ -24,6 +24,7 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -107,7 +108,7 @@ public class LimitsTest {
 
         request = AppClient.Match_Engine_Request.newBuilder()
                 .setVer(5)
-                .setIdType(AppClient.Match_Engine_Request.IDTypes.MSISDN)
+                .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName("TMUS") // Mobile Network Carrier
@@ -126,12 +127,18 @@ public class LimitsTest {
     }
 
     // Every call needs registration to be called first.
-    public void registerClient(MatchingEngine me, Location location) throws IOException {
+    public void registerClient(MatchingEngine me, Location location) {
         AppClient.Match_Engine_Status registerResponse;
         AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
-        registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
-        assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
-                registerResponse.getSessionCookie(), me.getSessionCookie());
+        try {
+            registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
+            assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
+                    registerResponse.getSessionCookie(), me.getSessionCookie());
+        } catch (IOException ioe) {
+            Log.i(TAG, Log.getStackTraceString(ioe));
+            assertTrue("IOException registering client", false);
+        }
+
     }
 
     /**
@@ -197,7 +204,6 @@ public class LimitsTest {
                 throw e;
             }
 
-
         } catch (IOException ioe) {
             Log.i(TAG, Log.getStackTraceString(ioe));
             assertFalse("basicLatencyTest: Execution Failed!", true);
@@ -236,6 +242,7 @@ public class LimitsTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
+            // TODO: Need responseFutures.length number of requests if doing separate clients.
             registerClient(me, location);
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[10000];
@@ -250,9 +257,6 @@ public class LimitsTest {
                 assert (locv != null);
                 Log.i(TAG, "Locv: " + locv.getVer());
             }
-        } catch (IOException ioe) {
-            Log.i(TAG, Log.getStackTraceString(ioe));
-            assertFalse("threadpoolTest: Execution Failed!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("threadpoolTest: Execution Failed!", true);
