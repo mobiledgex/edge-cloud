@@ -88,4 +88,5 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
   hostname: "{{vm2_external_ip}}"

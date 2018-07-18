@@ -1,0 +1,69 @@
+// A ClusterInst defines a cluster on a particular Cloudlet
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "result.proto";
+import "flavor.proto";
+import "cluster.proto";
+import "cloudlet.proto";
+import "common.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message ClusterInstKey {
+  // cluster key
+  ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
+  // cloudlet it's on
+  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message ClusterInst {
+  repeated string fields = 1;
+  // Unique key
+  ClusterInstKey key = 2 [(gogoproto.nullable) = false];
+  // flavor (cached from cluster)
+  FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // number of nodes in the cluster (cached from Cluster)
+  int32 nodes = 4 [(protogen.backend) = true];
+  // Future: policy options on where this cluster can be created.
+  // type of instance
+  Liveness liveness = 9 [(protogen.backend) = true];
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "Flavor,Nodes,Liveness";
+}
+
+service ClusterInstApi {
+  rpc CreateClusterInst(ClusterInst) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/clusterinst"
+      body: "*"
+    };
+  }
+  rpc DeleteClusterInst(ClusterInst) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/clusterinst"
+      body: "*"
+    };
+  }
+  rpc UpdateClusterInst(ClusterInst) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/clusterinst"
+      body: "*"
+    };
+  }
+  rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
+    option (google.api.http) = {
+      post: "/show/clusterinst"
+      body: "*"
+    };
+  }
+}

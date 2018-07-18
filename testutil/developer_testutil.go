@@ -63,7 +63,7 @@ func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Developer %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "Developer are equal")
 	}
 }

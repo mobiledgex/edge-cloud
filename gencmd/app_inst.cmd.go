@@ -38,16 +38,15 @@ var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
 var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
 var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
+var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
 var AppInstInLiveness string
+var AppInstInImageType string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
+var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
 var AppInstMetricsIn edgeproto.AppInstMetrics
 var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
-var LivenessStrings = []string{
-	"UNKNOWN",
-	"STATIC",
-	"DYNAMIC",
-}
+var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s := make([]string, 0, 3)
@@ -72,7 +71,7 @@ func AppInstKeyHeaderSlicer() []string {
 }
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 12)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -96,20 +95,21 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	_CloudletLoc_TimestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
 	s = append(s, _CloudletLoc_TimestampTime.String())
 	s = append(s, in.Uri)
-	s = append(s, "")
-	for i, b := range in.Ip {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
-		if i < 3 {
-			s[len(s)-1] += "."
-		}
-	}
-	s = append(s, edgeproto.AppInst_Liveness_name[int32(in.Liveness)])
-	s = append(s, in.AppPath)
+	s = append(s, in.ClusterInstKey.ClusterKey.Name)
+	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	s = append(s, in.ClusterInstKey.CloudletKey.Name)
+	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
+	s = append(s, in.ImagePath)
+	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
+	s = append(s, in.MappedPorts)
+	s = append(s, in.MappedPath)
+	s = append(s, in.ConfigMap)
+	s = append(s, in.Flavor.Name)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 12)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -126,14 +126,21 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CloudletLoc-Speed")
 	s = append(s, "CloudletLoc-Timestamp")
 	s = append(s, "Uri")
-	s = append(s, "Ip")
+	s = append(s, "ClusterInstKey-ClusterKey-Name")
+	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
+	s = append(s, "ClusterInstKey-CloudletKey-Name")
 	s = append(s, "Liveness")
-	s = append(s, "AppPath")
+	s = append(s, "ImagePath")
+	s = append(s, "ImageType")
+	s = append(s, "MappedPorts")
+	s = append(s, "MappedPath")
+	s = append(s, "ConfigMap")
+	s = append(s, "Flavor-Name")
 	return s
 }
 
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 3)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -145,16 +152,11 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Load), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Cpu), 10))
-	s = append(s, strconv.FormatUint(uint64(in.MaxDisk), 10))
-	s = append(s, strconv.FormatUint(uint64(in.NetworkIn), 10))
-	s = append(s, strconv.FormatUint(uint64(in.NetworkOut), 10))
 	return s
 }
 
 func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 3)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -163,11 +165,6 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Key-Id")
 	s = append(s, "NotifyId")
-	s = append(s, "Load")
-	s = append(s, "Cpu")
-	s = append(s, "MaxDisk")
-	s = append(s, "NetworkIn")
-	s = append(s, "NetworkOut")
 	return s
 }
 
@@ -553,9 +550,27 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
-	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
-	AppInstFlagSet.BytesHexVar(&AppInstIn.Ip, "ip", nil, "Ip")
-	AppInstFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [UNKNOWN STATIC DYNAMIC]")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Lat, "cloudletloc-lat", 0, "CloudletLoc.Lat")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Long, "cloudletloc-long", 0, "CloudletLoc.Long")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.HorizontalAccuracy, "cloudletloc-horizontalaccuracy", 0, "CloudletLoc.HorizontalAccuracy")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.VerticalAccuracy, "cloudletloc-verticalaccuracy", 0, "CloudletLoc.VerticalAccuracy")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Altitude, "cloudletloc-altitude", 0, "CloudletLoc.Altitude")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Course, "cloudletloc-course", 0, "CloudletLoc.Course")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Speed, "cloudletloc-speed", 0, "CloudletLoc.Speed")
+	AppInstIn.CloudletLoc.Timestamp = &google_protobuf.Timestamp{}
+	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
+	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
+	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
+	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ImagePath, "imagepath", "", "ImagePath")
+	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPorts, "mappedports", "", "MappedPorts")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ConfigMap, "configmap", "", "ConfigMap")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -563,11 +578,6 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Load, "load", 0, "Load")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Cpu, "cpu", 0, "Cpu")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.MaxDisk, "maxdisk", 0, "MaxDisk")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.NetworkIn, "networkin", 0, "NetworkIn")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.NetworkOut, "networkout", 0, "NetworkOut")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -575,6 +585,21 @@ func init() {
 	ShowAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	ShowAppInstInfoCmd.Flags().AddFlagSet(AppInstInfoFlagSet)
 	ShowAppInstMetricsCmd.Flags().AddFlagSet(AppInstMetricsFlagSet)
+}
+
+func AppInstApiAllowNoConfig() {
+	CreateAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
+	DeleteAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
+	UpdateAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
+	ShowAppInstCmd.Flags().AddFlagSet(AppInstNoConfigFlagSet)
+}
+
+func AppInstInfoApiAllowNoConfig() {
+	ShowAppInstInfoCmd.Flags().AddFlagSet(AppInstInfoNoConfigFlagSet)
+}
+
+func AppInstMetricsApiAllowNoConfig() {
+	ShowAppInstMetricsCmd.Flags().AddFlagSet(AppInstMetricsNoConfigFlagSet)
 }
 
 func AppInstSetFields() {
@@ -627,16 +652,38 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
-	if AppInstFlagSet.Lookup("ip").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "8")
+	if AppInstFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "5.1.1")
+	}
+	if AppInstFlagSet.Lookup("clusterinstkey-cloudletkey-operatorkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.1.1")
+	}
+	if AppInstFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.2")
 	}
 	if AppInstFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
 	}
-	if AppInstFlagSet.Lookup("apppath").Changed {
+	if AppInstFlagSet.Lookup("imagepath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "7")
 	}
+	if AppInstFlagSet.Lookup("imagetype").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "8")
+	}
+	if AppInstFlagSet.Lookup("mappedports").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "9")
+	}
+	if AppInstFlagSet.Lookup("mappedpath").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "10")
+	}
+	if AppInstFlagSet.Lookup("configmap").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "11")
+	}
+	if AppInstFlagSet.Lookup("flavor-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
+	}
 }
+
 func AppInstInfoSetFields() {
 	AppInstInfoIn.Fields = make([]string, 0)
 	if AppInstInfoFlagSet.Lookup("key-appkey-developerkey-name").Changed {
@@ -660,33 +707,31 @@ func AppInstInfoSetFields() {
 	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
 	}
-	if AppInstInfoFlagSet.Lookup("load").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
-	}
-	if AppInstInfoFlagSet.Lookup("cpu").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "5")
-	}
-	if AppInstInfoFlagSet.Lookup("maxdisk").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "6")
-	}
-	if AppInstInfoFlagSet.Lookup("networkin").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "7")
-	}
-	if AppInstInfoFlagSet.Lookup("networkout").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "8")
-	}
 }
+
 func parseAppInstEnums() error {
 	if AppInstInLiveness != "" {
 		switch AppInstInLiveness {
-		case "UNKNOWN":
-			AppInstIn.Liveness = edgeproto.AppInst_Liveness(0)
-		case "STATIC":
-			AppInstIn.Liveness = edgeproto.AppInst_Liveness(1)
-		case "DYNAMIC":
-			AppInstIn.Liveness = edgeproto.AppInst_Liveness(2)
+		case "LivenessUnknown":
+			AppInstIn.Liveness = edgeproto.Liveness(0)
+		case "LivenessStatic":
+			AppInstIn.Liveness = edgeproto.Liveness(1)
+		case "LivenessDynamic":
+			AppInstIn.Liveness = edgeproto.Liveness(2)
 		default:
 			return errors.New("Invalid value for AppInstInLiveness")
+		}
+	}
+	if AppInstInImageType != "" {
+		switch AppInstInImageType {
+		case "ImageTypeUnknown":
+			AppInstIn.ImageType = edgeproto.ImageType(0)
+		case "ImageTypeDocker":
+			AppInstIn.ImageType = edgeproto.ImageType(1)
+		case "ImageTypeQCOW":
+			AppInstIn.ImageType = edgeproto.ImageType(2)
+		default:
+			return errors.New("Invalid value for AppInstInImageType")
 		}
 	}
 	return nil

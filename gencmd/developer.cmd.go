@@ -31,6 +31,7 @@ var _ = math.Inf
 var DeveloperApiCmd edgeproto.DeveloperApiClient
 var DeveloperIn edgeproto.Developer
 var DeveloperFlagSet = pflag.NewFlagSet("Developer", pflag.ExitOnError)
+var DeveloperNoConfigFlagSet = pflag.NewFlagSet("DeveloperNoConfig", pflag.ExitOnError)
 
 func DeveloperKeySlicer(in *edgeproto.DeveloperKey) []string {
 	s := make([]string, 0, 1)
@@ -288,6 +289,13 @@ func init() {
 	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
+}
+
+func DeveloperApiAllowNoConfig() {
+	CreateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
 }
 
 func DeveloperSetFields() {

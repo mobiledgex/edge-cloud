@@ -1,0 +1,63 @@
+// A Flavor defines the resources assigned to a Kubernetes cluster.
+// Note that these are NOT openstack VM flavors, although some parts
+// of it may translate to openstack flavors.
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "result.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message FlavorKey {
+  string name = 1;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message Flavor {
+  repeated string fields = 1;
+  // Unique key
+  FlavorKey key = 2 [(gogoproto.nullable) = false];
+  // RAM in MB
+  int64 ram = 3;
+  // VCPU cores
+  int64 vcpus = 4;
+  // amount of disk in GB
+  int64 disk = 5;
+
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+}
+
+service FlavorApi {
+  rpc CreateFlavor(Flavor) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/flavor"
+      body: "*"
+    };
+  }
+  rpc DeleteFlavor(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/delete/flavor"
+      body: "*"
+    };
+  }
+  rpc UpdateFlavor(Flavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/update/flavor"
+      body: "*"
+    };
+  }
+  rpc ShowFlavor(Flavor) returns (stream Flavor) {
+      option (google.api.http) = {
+      post: "/show/flavor"
+      body: "*"
+    };
+  }
+}

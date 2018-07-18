@@ -39,6 +39,7 @@ var _ = math.Inf
 var DebugApiCmd log.DebugApiClient
 var DebugLevelsIn log.DebugLevels
 var DebugLevelsFlagSet = pflag.NewFlagSet("DebugLevels", pflag.ExitOnError)
+var DebugLevelsNoConfigFlagSet = pflag.NewFlagSet("DebugLevelsNoConfig", pflag.ExitOnError)
 var DebugLevelsInLevels string
 var DebugLevelStrings = []string{
 	"etcd",
@@ -242,6 +243,12 @@ func init() {
 	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
 	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
 	ShowDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
+}
+
+func DebugApiAllowNoConfig() {
+	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
+	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
+	ShowDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsNoConfigFlagSet)
 }
 
 func parseDebugLevelsEnums() error {

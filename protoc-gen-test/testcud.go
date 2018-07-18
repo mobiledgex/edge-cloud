@@ -77,7 +77,7 @@ func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "{{.Name}} are equal")
 	}
 }

@@ -161,16 +161,28 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			noconfig[str] = struct{}{}
 		}
 		visited := make([]*generator.Descriptor, 0)
-		g.generateVarFlags(msgName, make([]string, 0), desc, noconfig, visited)
+		parentNoConfig := false
+		g.generateVarFlags(msgName, make([]string, 0), desc, noconfig, visited, parentNoConfig)
 	}
 	// Add per input struct flag sets to the commands.
+	initNoConfig := false
 	if len(file.FileDescriptorProto.Service) > 0 {
 		for _, service := range file.FileDescriptorProto.Service {
-			g.addCmdFlags(service)
+			g.addCmdFlags(service, initNoConfig)
 		}
 	}
 	g.P("}")
 	g.P()
+
+	initNoConfig = true
+	if len(file.FileDescriptorProto.Service) > 0 {
+		for _, service := range file.FileDescriptorProto.Service {
+			g.P("func ", service.Name, "AllowNoConfig() {")
+			g.addCmdFlags(service, initNoConfig)
+			g.P("}")
+			g.P()
+		}
+	}
 
 	for _, desc := range file.Messages() {
 		msgName := *desc.DescriptorProto.Name
@@ -187,6 +199,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		visited := make([]*generator.Descriptor, 0)
 		g.generateSetFields(msgName, parents, nums, desc, visited)
 		g.P("}")
+		g.P()
 	}
 
 	// Because we cannot define a enum arg flag for enums,
@@ -221,6 +234,7 @@ func (g *GenCmd) generateInputVars() {
 		g.importPflag = true
 		g.P("var ", flatType, "In ", g.FQTypeName(desc))
 		g.P("var ", flatType, "FlagSet = pflag.NewFlagSet(\"", flatType, "\", pflag.ExitOnError)")
+		g.P("var ", flatType, "NoConfigFlagSet = pflag.NewFlagSet(\"", flatType, "NoConfig\", pflag.ExitOnError)")
 		g.generateEnumVars(flatType, desc, make([]string, 0), make([]*generator.Descriptor, 0))
 	}
 }
@@ -284,7 +298,7 @@ type fieldArgs struct {
 var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, {{.Usage}})
 `
 
-func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor) {
+func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor, parentNoConfig bool) {
 	if gensupport.WasVisited(desc, visited) {
 		// Break recursion. Googleapis HttpRule
 		// includes itself, so is a recursive
@@ -306,9 +320,6 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			continue
 		}
 		hierField := strings.Join(append(parents, name), ".")
-		if _, found := noconfig[hierField]; found {
-			continue
-		}
 		fargs := &fieldArgs{
 			MsgName:  msgName,
 			Ref:      "&" + msgName + "In" + "." + hierField + idx,
@@ -317,6 +328,9 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			Type:     "String",
 			DefValue: "\"\"",
 			Usage:    "\"" + hierField + "\"",
+		}
+		if _, found := noconfig[hierField]; found || parentNoConfig {
+			fargs.MsgName = msgName + "NoConfig"
 		}
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -332,7 +346,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				subType := g.FQTypeName(subDesc)
 				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
 			}
-			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc))
+			subNoConfig := false
+			if _, found := noconfig[hierField]; found || parentNoConfig {
+				subNoConfig = true
+			}
+			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc), subNoConfig)
 			continue
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
 			fallthrough
@@ -746,7 +764,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	return true
 }
 
-func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto) {
+func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto, initNoConfig bool) {
 	if len(service.Method) == 0 {
 		return
 	}
@@ -757,7 +775,13 @@ func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto) {
 			// not supported yet
 			continue
 		}
-		g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType, "FlagSet)")
+		if initNoConfig {
+			g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType,
+				"NoConfigFlagSet)")
+		} else {
+			g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType,
+				"FlagSet)")
+		}
 	}
 }
 

@@ -69,6 +69,9 @@ func TestController(t *testing.T) {
 	operApi := edgeproto.NewOperatorApiClient(conn)
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
+	flavorApi := edgeproto.NewFlavorApiClient(conn)
+	clusterApi := edgeproto.NewClusterApiClient(conn)
+	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
 	appInstInfoClient := edgeproto.NewAppInstInfoApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 
@@ -76,16 +79,19 @@ func TestController(t *testing.T) {
 	dmeClient.WaitForConnect(1)
 
 	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
+	testutil.ClientFlavorCudTest(t, flavorApi, testutil.FlavorData)
+	testutil.ClientClusterCudTest(t, clusterApi, testutil.ClusterData)
 	testutil.ClientAppCudTest(t, appApi, testutil.AppData)
 	testutil.ClientOperatorCudTest(t, operApi, testutil.OperatorData)
 	testutil.ClientCloudletCudTest(t, cloudletApi, testutil.CloudletData)
+	testutil.ClientClusterInstCudTest(t, clusterInstApi, testutil.ClusterInstData)
 	testutil.ClientAppInstCudTest(t, appInstApi, testutil.AppInstData)
 
 	dmeNotify.WaitForAppInsts(5)
-	crmNotify.WaitForCloudlets(4)
+	crmNotify.WaitForFlavors(3)
 
 	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	assert.Equal(t, 4, len(crmNotify.CloudletCache.Objs), "num cloudlets")
+	assert.Equal(t, 3, len(crmNotify.FlavorCache.Objs), "num flavors")
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
 
@@ -124,10 +130,6 @@ func TestController(t *testing.T) {
 	assert.NotNil(t, err)
 	// test that delete works after removing dependencies
 	for _, inst := range testutil.AppInstData {
-		if inst.Liveness == edgeproto.AppInst_DYNAMIC {
-			// skip dynamic, they are not counted as dependencies
-			continue
-		}
 		_, err = appInstApi.DeleteAppInst(ctx, &inst)
 		assert.Nil(t, err)
 	}
@@ -192,6 +194,7 @@ func TestEdgeCloudBug26(t *testing.T) {
 	operApi := edgeproto.NewOperatorApiClient(conn)
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
+	flavorApi := edgeproto.NewFlavorApiClient(conn)
 
 	yamlData := `
 operators:
@@ -202,6 +205,12 @@ cloudlets:
     operatorkey:
       name: TMUS
     name: cloud2
+flavors:
+- key:
+    name: x1.small
+  ram: 1024
+  vcpus: 1
+  disk: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -211,6 +220,9 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: 1.0
+  flavor:
+    name: x1.small
+  imagetype: ImageTypeDocker
 appinstances:
 - key:
     appkey:
@@ -234,6 +246,8 @@ appinstances:
 	ctx := context.TODO()
 	_, err = devApi.CreateDeveloper(ctx, &data.Developers[0])
 	assert.Nil(t, err, "create dev")
+	_, err = flavorApi.CreateFlavor(ctx, &data.Flavors[0])
+	assert.Nil(t, err, "create flavor")
 	_, err = appApi.CreateApp(ctx, &data.Applications[0])
 	assert.Nil(t, err, "create app")
 	_, err = operApi.CreateOperator(ctx, &data.Operators[0])
