@@ -23,6 +23,7 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 @RunWith(AndroidJUnit4.class)
@@ -94,7 +95,7 @@ public class LimitsTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(Location location) {
+    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -117,10 +118,19 @@ public class LimitsTest {
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
-                .setCommCookie("") // None.
+                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie()) // None.
                 .build();
 
         return request;
+    }
+
+    // Every call needs registration to be called first.
+    public void registerClient(MatchingEngine me, Location location) {
+        AppClient.Match_Engine_Status registerResponse;
+        AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
+        registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
+        assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
+                registerResponse.getSessionCookie(), me.getSessionCookie());
     }
 
     /**
@@ -149,7 +159,8 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum1 = 0, sum2 = 0;
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             for (int i = 0; i < elapsed1.length; i++){
                 start = System.currentTimeMillis();
                 response1 = me.verifyLocation(request, GRPC_TIMEOUT_MS);
@@ -164,7 +175,7 @@ public class LimitsTest {
             assert(response1 != null);
 
             // Future
-            request = createMockMatchingEngineRequest(location);
+            request = createMockMatchingEngineRequest(me, location);
             AppClient.Match_Engine_Loc_Verify response2 = null;
             try {
                 for (int i = 0; i < elapsed2.length; i++) {
@@ -201,7 +212,8 @@ public class LimitsTest {
     }
 
     /**
-     * Basic threading test using a thread pool to talk to dme-server.
+     * Basic threading test using a thread pool to talk to dme-server. 2 calls are made per iteration,
+     * as async futures: RegisterClient, then VerifyLocation.
      */
     @Test
     public void threadpoolTest() {
@@ -220,7 +232,8 @@ public class LimitsTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[10000];
 
             for (int i = 0; i < responseFutures.length; i++) {
