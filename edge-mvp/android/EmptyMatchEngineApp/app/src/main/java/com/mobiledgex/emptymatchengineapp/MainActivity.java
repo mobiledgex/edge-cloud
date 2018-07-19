@@ -3,6 +3,7 @@ package com.mobiledgex.emptymatchengineapp;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -35,6 +36,7 @@ import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
+import java.io.IOException;
 import java.util.UUID;
 
 
@@ -235,6 +237,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         }
     }
 
+
+
     public void doEnhancedLocationVerification() throws SecurityException {
         final Activity ctx = this;
 
@@ -244,63 +248,84 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             return;
         }
 
-        // Run in the background and post to the UI thread. Here, it is simply attached to a button
-        // on the current UI Thread.
+        // Run in the background and post text results to the UI thread.
         mFusedLocationClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
             @Override
             public void onComplete(Task<Location> task) {
                 if (task.isSuccessful() && task.getResult() != null) {
-                    Location location = task.getResult();
-                    // Location found. Create a request:
-
-                    try {
-                        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-                        boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
-
-                        AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(
-                                ctx,
-                                location);
-                        if (req != null) {
-                            // Location Verification (Blocking, or use verifyLocationFuture):
-                            AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
-                            someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
-                                    ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() + "]\n";
-
-                            // Find the closest cloudlet for your application to use.
-                            // (Blocking call, or use findCloudletFuture):
-                            FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
-                            // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
-                            String serverip = null;
-                            if (closestCloudlet.service_ip != null && closestCloudlet.service_ip.length > 0) {
-                                serverip = closestCloudlet.service_ip[0] + ", ";
-                                for (int i = 1; i < closestCloudlet.service_ip.length - 1; i++) {
-                                    serverip += closestCloudlet.service_ip[i] + ", ";
-                                }
-                                serverip += closestCloudlet.service_ip[closestCloudlet.service_ip.length - 1];
-                            }
-                            someText += "[Cloudlet Server: URI: [" + closestCloudlet.uri + "], Serverip: [" + serverip + "], Port: " + closestCloudlet.port + "]";
-
-                            TextView tv = findViewById(R.id.mex_verified_location_content);
-                            tv.setText(someText);
-                        } else {
-                            someText = "Cannot create request object.";
-                            if (!mexAllowed) {
-                                someText += " Reason: Enhanced location is disabled.";
-                            }
-                            TextView tv = findViewById(R.id.mex_verified_location_content);
-                            tv.setText(someText);
-                        }
-                    } catch (StatusRuntimeException sre) {
-                        sre.printStackTrace();
-                    } catch (IllegalArgumentException iae) {
-                        iae.printStackTrace();
-                    }
+                    doEnhancedLocationUpdateInBackground(task, ctx);
                 } else {
                     Log.w(TAG, "getLastLocation:exception", task.getException());
                     someText = "Last location not found, or has never been used. Location cannot be verified using 'getLastLocation()'. " +
                             "Use the requestLocationUpdates() instead if applicable for location verification.";
                     TextView tv = findViewById(R.id.mex_verified_location_content);
                     tv.setText(someText);
+                }
+            }
+        });
+    }
+
+    private void doEnhancedLocationUpdateInBackground(final Task<Location> aTask, final Activity ctx) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                Location location = aTask.getResult();
+                // Location found. Create a request:
+
+                try {
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+                    boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
+
+                    AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(ctx, location);
+
+                    AppClient.Match_Engine_Status registerStatus = mMatchingEngine.registerClient(req, 10000);
+                    if (registerStatus.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS) {
+                        someText = "Registration Failed. Error: " + registerStatus.getStatus();
+                        TextView tv = findViewById(R.id.mex_verified_location_content);
+                        tv.setText(someText);
+                        return;
+                    }
+
+                    req = mMatchingEngine.createRequest(ctx, location);
+                    if (req != null) {
+                        // Location Verification (Blocking, or use verifyLocationFuture):
+                        AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
+                        someText = "[Location Verified: Tower: " + verifiedLocation.getTowerStatus() +
+                                ", GPS LocationStatus: " + verifiedLocation.getGpsLocationStatus() +
+                                ", Location Accuracy: " + verifiedLocation.getGPSLocationAccuracyKM() + " ]\n";
+
+                        // Find the closest cloudlet for your application to use. (Blocking call, or use findCloudletFuture):
+                        FindCloudletResponse closestCloudlet = mMatchingEngine.findCloudlet(req, 10000);
+                        // FIXME: It's not possible to get a complete http(s) URI on just a service IP + port!
+                        String serverip = null;
+                        if (closestCloudlet.service_ip != null && closestCloudlet.service_ip.length > 0) {
+                            serverip = closestCloudlet.service_ip[0] + ", ";
+                            for (int i = 1; i < closestCloudlet.service_ip.length - 1; i++) {
+                                serverip += closestCloudlet.service_ip[i] + ", ";
+                            }
+                            serverip += closestCloudlet.service_ip[closestCloudlet.service_ip.length - 1];
+                        }
+                        someText += "[Cloudlet Server: URI: [" + closestCloudlet.uri + "], Serverip: [" + serverip + "], Port: " + closestCloudlet.port + "]";
+                    } else {
+                        someText = "Cannot create request object.";
+                        if (!mexAllowed) {
+                            someText += " Reason: Enhanced location is disabled.";
+                        }
+                    }
+                    // Background thread. Post update to the UI thread:
+                    ctx.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            TextView tv = findViewById(R.id.mex_verified_location_content);
+                            tv.setText(someText);
+                        }
+                    });
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                } catch (StatusRuntimeException sre) {
+                    sre.printStackTrace();
+                } catch (IllegalArgumentException iae) {
+                    iae.printStackTrace();
                 }
             }
         });

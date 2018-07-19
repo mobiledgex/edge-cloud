@@ -2,6 +2,13 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import com.squareup.okhttp.Headers;
+import com.squareup.okhttp.HttpUrl;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+
+import java.io.IOException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +20,8 @@ import io.grpc.StatusRuntimeException;
 
 public class RegisterClient implements Callable {
     public static final String TAG = "RegisterClient";
+    public static final String SESSION_COOKIE_KEY = "session_cookie";
+    public static final String TOKEN_SERVER_URI_KEY = "token_server_u_r_i";
 
     private MatchingEngine mMatchingEngine;
     private AppClient.Match_Engine_Request mRequest;
@@ -40,8 +49,32 @@ public class RegisterClient implements Callable {
         return true;
     }
 
+    private String createDmeUri() {
+        return "http://"
+                + mMatchingEngine.getHost()
+                + ":"
+                + mMatchingEngine.getPort();
+    }
+
+    private String getRedirectUri(String uri) {
+        HttpUrl url = HttpUrl.parse(uri);
+        return url.queryParameter("followURL");
+    }
+
+    private String getToken(String uri) {
+        HttpUrl url = HttpUrl.parse(uri);
+        return url.queryParameter("dt-id");
+    }
+
+    /**
+     *
+     * @return
+     * @throws MissingRequestException
+     * @throws StatusRuntimeException
+     */
     @Override
-    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException {
+    public AppClient.Match_Engine_Status call() throws MissingRequestException,
+            StatusRuntimeException, IOException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
@@ -68,7 +101,11 @@ public class RegisterClient implements Callable {
             Log.d(TAG, "Version of Match_Engine_Status: " + ver);
         }
 
+        mMatchingEngine.setSessionCookie(reply.getSessionCookie());
         mMatchingEngine.setMatchEngineStatus(reply);
+
+        mMatchingEngine.setTokenServerURI(reply.getTokenServerURI());
+
         return reply;
     }
 }
