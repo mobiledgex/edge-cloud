@@ -4,7 +4,9 @@ package apis
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -20,7 +22,8 @@ func readAppDataFile(file string) {
 	err := util.ReadYamlFile(file, &appData, "", true)
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
-			log.Fatal("One or more fatal unmarshal errors, exiting")
+			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)
+			os.Exit(1)
 		}
 	}
 }
@@ -29,6 +32,7 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	errFound := false
 	var showCmds = []string{
 		"flavors: ShowFlavor",
+		"clusters: ShowCluster",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
 		"cloudlets: ShowCloudlet",
@@ -314,6 +318,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
+				rc = false
+			}
+			err = runClusterApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cluster API %v\n", err)
 				rc = false
 			}
 			err = runAppApi(ctrlapi, ctx, &appData, api)

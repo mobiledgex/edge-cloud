@@ -1,6 +1,7 @@
 tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
+  - includefile: default_cluster_test.yml
   - includefile: register.yml
   - includefile: find_cloudlet.yml
     loops: 3

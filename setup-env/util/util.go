@@ -389,11 +389,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
 	}
 	if err1 != nil {
-		log.Printf("Error in reading yaml file %v\n", firstYamlFile)
+		log.Printf("Error in reading yaml file %v -- %v\n", firstYamlFile, err1)
 		return false
 	}
 	if err2 != nil {
-		log.Printf("Error in reading yaml file %v\n", secondYamlFile)
+		log.Printf("Error in reading yaml file %v -- %v\n", secondYamlFile, err2)
 		return false
 	}
 

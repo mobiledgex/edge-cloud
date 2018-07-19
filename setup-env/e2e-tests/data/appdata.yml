@@ -1,17 +1,3 @@
-operators:
-- key:
-    name: ATT
-- key:
-    name: TMUS
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-
 flavors:
 - key:
     name: x1.tiny
@@ -28,6 +14,27 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
+
+clusters:
+- key:
+    name: SmallCluster
+  flavor:
+    name: x1.small
+  nodes: 3
+
+operators:
+- key:
+    name: ATT
+- key:
+    name: TMUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
 
 cloudlets:
 - key:
@@ -53,9 +60,13 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
   flavor:
     name: x1.small
+  cluster:
+    name: SmallCluster
 
 appinstances:
 - key:
@@ -72,9 +83,20 @@ appinstances:
   cloudletloc:
     lat: 31
     long: -91
-  uri: /apps/someApplication
-  liveness: 1
+  uri: someApplication.tmocloud1.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
 - key:
     appkey:
       developerkey:
@@ -89,7 +111,18 @@ appinstances:
   cloudletloc:
     lat: 35
     long: -95
-  uri: /apps/someApplication
-  liveness: 1
+  uri: someApplication.tmocloud2.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
 

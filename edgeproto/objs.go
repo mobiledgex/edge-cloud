@@ -37,6 +37,19 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.Operators[:], func(i, j int) bool {
 		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
 	})
+	sort.Slice(a.Clusters[:], func(i, j int) bool {
+		return a.Clusters[i].Key.GetKeyString() < a.Clusters[j].Key.GetKeyString()
+	})
+	sort.Slice(a.ClusterInsts[:], func(i, j int) bool {
+		return a.ClusterInsts[i].Key.GetKeyString() < a.ClusterInsts[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Flavors[:], func(i, j int) bool {
+		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Operators[:], func(i, j int) bool {
+		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
+	})
+
 }
 
 // Validate functions to validate user input
