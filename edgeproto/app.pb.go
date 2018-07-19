@@ -695,6 +695,45 @@ var AppAllFieldsMap = map[string]struct{}{
 	AppFieldClusterName:         struct{}{},
 }
 
+func (m *App) DiffFields(o *App, fields map[string]struct{}) {
+	if m.Key.DeveloperKey.Name != o.Key.DeveloperKey.Name {
+		fields[AppFieldKeyDeveloperKeyName] = struct{}{}
+		fields[AppFieldKeyDeveloperKey] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.Key.Name != o.Key.Name {
+		fields[AppFieldKeyName] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.Key.Version != o.Key.Version {
+		fields[AppFieldKeyVersion] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.ImagePath != o.ImagePath {
+		fields[AppFieldImagePath] = struct{}{}
+	}
+	if m.ImageType != o.ImageType {
+		fields[AppFieldImageType] = struct{}{}
+	}
+	if m.AccessLayer != o.AccessLayer {
+		fields[AppFieldAccessLayer] = struct{}{}
+	}
+	if m.AccessPorts != o.AccessPorts {
+		fields[AppFieldAccessPorts] = struct{}{}
+	}
+	if m.ConfigMap != o.ConfigMap {
+		fields[AppFieldConfigMap] = struct{}{}
+	}
+	if m.Flavor.Name != o.Flavor.Name {
+		fields[AppFieldFlavorName] = struct{}{}
+		fields[AppFieldFlavor] = struct{}{}
+	}
+	if m.Cluster.Name != o.Cluster.Name {
+		fields[AppFieldClusterName] = struct{}{}
+		fields[AppFieldCluster] = struct{}{}
+	}
+}
+
 func (m *App) CopyInFields(src *App) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -955,6 +994,12 @@ func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *AppCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {

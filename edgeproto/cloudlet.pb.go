@@ -841,6 +841,59 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldLocationTimestampNanos:     struct{}{},
 }
 
+func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
+	if m.Key.OperatorKey.Name != o.Key.OperatorKey.Name {
+		fields[CloudletFieldKeyOperatorKeyName] = struct{}{}
+		fields[CloudletFieldKeyOperatorKey] = struct{}{}
+		fields[CloudletFieldKey] = struct{}{}
+	}
+	if m.Key.Name != o.Key.Name {
+		fields[CloudletFieldKeyName] = struct{}{}
+		fields[CloudletFieldKey] = struct{}{}
+	}
+	if m.AccessUri != o.AccessUri {
+		fields[CloudletFieldAccessUri] = struct{}{}
+	}
+	if m.Location.Lat != o.Location.Lat {
+		fields[CloudletFieldLocationLat] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Long != o.Location.Long {
+		fields[CloudletFieldLocationLong] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.HorizontalAccuracy != o.Location.HorizontalAccuracy {
+		fields[CloudletFieldLocationHorizontalAccuracy] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.VerticalAccuracy != o.Location.VerticalAccuracy {
+		fields[CloudletFieldLocationVerticalAccuracy] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Altitude != o.Location.Altitude {
+		fields[CloudletFieldLocationAltitude] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Course != o.Location.Course {
+		fields[CloudletFieldLocationCourse] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Speed != o.Location.Speed {
+		fields[CloudletFieldLocationSpeed] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Timestamp.Seconds != o.Location.Timestamp.Seconds {
+		fields[CloudletFieldLocationTimestampSeconds] = struct{}{}
+		fields[CloudletFieldLocationTimestamp] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+	if m.Location.Timestamp.Nanos != o.Location.Timestamp.Nanos {
+		fields[CloudletFieldLocationTimestampNanos] = struct{}{}
+		fields[CloudletFieldLocationTimestamp] = struct{}{}
+		fields[CloudletFieldLocation] = struct{}{}
+	}
+}
+
 func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -1110,6 +1163,12 @@ func (c *CloudletCache) Prune(validKeys map[CloudletKey]struct{}) {
 	}
 }
 
+func (c *CloudletCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
 func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Cloudlet", "count", len(c.Objs))
 	c.Mux.Lock()
@@ -1259,6 +1318,33 @@ var CloudletInfoAllFieldsMap = map[string]struct{}{
 	CloudletInfoFieldOsMaxRam:           struct{}{},
 	CloudletInfoFieldOsMaxVcores:        struct{}{},
 	CloudletInfoFieldOsMaxVolGb:         struct{}{},
+}
+
+func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
+	if m.Key.OperatorKey.Name != o.Key.OperatorKey.Name {
+		fields[CloudletInfoFieldKeyOperatorKeyName] = struct{}{}
+		fields[CloudletInfoFieldKeyOperatorKey] = struct{}{}
+		fields[CloudletInfoFieldKey] = struct{}{}
+	}
+	if m.Key.Name != o.Key.Name {
+		fields[CloudletInfoFieldKeyName] = struct{}{}
+		fields[CloudletInfoFieldKey] = struct{}{}
+	}
+	if m.State != o.State {
+		fields[CloudletInfoFieldState] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[CloudletInfoFieldNotifyId] = struct{}{}
+	}
+	if m.OsMaxRam != o.OsMaxRam {
+		fields[CloudletInfoFieldOsMaxRam] = struct{}{}
+	}
+	if m.OsMaxVcores != o.OsMaxVcores {
+		fields[CloudletInfoFieldOsMaxVcores] = struct{}{}
+	}
+	if m.OsMaxVolGb != o.OsMaxVolGb {
+		fields[CloudletInfoFieldOsMaxVolGb] = struct{}{}
+	}
 }
 
 func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
@@ -1508,6 +1594,12 @@ func (c *CloudletInfoCache) Prune(validKeys map[CloudletKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *CloudletInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 func (c *CloudletInfoCache) Flush(notifyId int64) {
 	c.Mux.Lock()
