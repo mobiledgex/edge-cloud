@@ -1,0 +1,105 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+operators:
+- key:
+    name: ATT
+- key:
+    name: TMUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud1
+  accessuri: cloud1.tmo
+  location:
+    lat: 31
+    long: -91
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud2
+  accessuri: cloud2.tmo
+  location:
+    lat: 35
+    long: -95
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  flavor:
+    name: x1.small
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud1
+    id: 123
+  cloudletloc:
+    lat: 31
+    long: -91
+  uri: someApplication.tmocloud1.mobiledgex.net
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud2
+    id: 123
+  cloudletloc:
+    lat: 35
+    long: -95
+  uri: someApplication.tmocloud2.mobiledgex.net
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
+
