@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -23,6 +24,8 @@ import distributed_match_engine.AppClient;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
+import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 @RunWith(AndroidJUnit4.class)
@@ -94,7 +97,7 @@ public class LimitsTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(Location location) {
+    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -105,7 +108,7 @@ public class LimitsTest {
 
         request = AppClient.Match_Engine_Request.newBuilder()
                 .setVer(5)
-                .setIdType(AppClient.Match_Engine_Request.IDTypes.MSISDN)
+                .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName("TMUS") // Mobile Network Carrier
@@ -117,10 +120,25 @@ public class LimitsTest {
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
-                .setCommCookie("") // None.
+                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie()) // None.
                 .build();
 
         return request;
+    }
+
+    // Every call needs registration to be called first.
+    public void registerClient(MatchingEngine me, Location location) {
+        AppClient.Match_Engine_Status registerResponse;
+        AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
+        try {
+            registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
+            assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
+                    registerResponse.getSessionCookie(), me.getSessionCookie());
+        } catch (IOException ioe) {
+            Log.i(TAG, Log.getStackTraceString(ioe));
+            assertTrue("IOException registering client", false);
+        }
+
     }
 
     /**
@@ -149,8 +167,9 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum1 = 0, sum2 = 0;
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
-            for (int i = 0; i < elapsed1.length; i++){
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            for (int i = 0; i < elapsed1.length; i++) {
                 start = System.currentTimeMillis();
                 response1 = me.verifyLocation(request, GRPC_TIMEOUT_MS);
                 elapsed1[i] = System.currentTimeMillis() - start;
@@ -160,11 +179,11 @@ public class LimitsTest {
                 Log.i("basicLatencyTest", i + " VerifyLocation elapsed time: Elapsed1: " + elapsed1[i]);
                 sum1 += elapsed1[i];
             }
-            Log.i("basicLatencyTest", "Average1: " + sum1/elapsed1.length);
-            assert(response1 != null);
+            Log.i("basicLatencyTest", "Average1: " + sum1 / elapsed1.length);
+            assert (response1 != null);
 
             // Future
-            request = createMockMatchingEngineRequest(location);
+            request = createMockMatchingEngineRequest(me, location);
             AppClient.Match_Engine_Loc_Verify response2 = null;
             try {
                 for (int i = 0; i < elapsed2.length; i++) {
@@ -178,14 +197,16 @@ public class LimitsTest {
                     Log.i("basicLatencyTest", i + " VerifyLocationFuture elapsed time: Elapsed2: " + elapsed2[i]);
                     sum2 += elapsed2[i];
                 }
-                Log.i("basicLatencyTest", "Average2: " + sum2/elapsed2.length);
-                assert(response2 != null);
+                Log.i("basicLatencyTest", "Average2: " + sum2 / elapsed2.length);
+                assert (response2 != null);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
             }
 
-
+        } catch (IOException ioe) {
+            Log.i(TAG, Log.getStackTraceString(ioe));
+            assertFalse("basicLatencyTest: Execution Failed!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("basicLatencyTest: Execution Failed!", true);
@@ -201,7 +222,8 @@ public class LimitsTest {
     }
 
     /**
-     * Basic threading test using a thread pool to talk to dme-server.
+     * Basic threading test using a thread pool to talk to dme-server. 2 calls are made per iteration,
+     * as async futures: RegisterClient, then VerifyLocation.
      */
     @Test
     public void threadpoolTest() {
@@ -220,12 +242,14 @@ public class LimitsTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(location);
+            // TODO: Need responseFutures.length number of requests if doing separate clients.
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[10000];
 
             for (int i = 0; i < responseFutures.length; i++) {
                 responseFutures[i] = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
-                assert(responseFutures[i] != null);
+                assert (responseFutures[i] != null);
             }
 
             for (int i = 0; i < responseFutures.length; i++) {
