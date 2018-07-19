@@ -49,12 +49,15 @@ var _ = math.Inf
 var Match_Engine_ApiCmd distributed_match_engine.Match_Engine_ApiClient
 var Match_Engine_RequestIn distributed_match_engine.Match_Engine_Request
 var Match_Engine_RequestFlagSet = pflag.NewFlagSet("Match_Engine_Request", pflag.ExitOnError)
+var Match_Engine_RequestNoConfigFlagSet = pflag.NewFlagSet("Match_Engine_RequestNoConfig", pflag.ExitOnError)
 var Match_Engine_RequestInIdType string
 var DynamicLocGroupAddIn distributed_match_engine.DynamicLocGroupAdd
 var DynamicLocGroupAddFlagSet = pflag.NewFlagSet("DynamicLocGroupAdd", pflag.ExitOnError)
+var DynamicLocGroupAddNoConfigFlagSet = pflag.NewFlagSet("DynamicLocGroupAddNoConfig", pflag.ExitOnError)
 var DynamicLocGroupAddInIdType string
 var DynamicLocGroupAddInCommType string
 var IDTypesStrings = []string{
+	"ID_UNDEFINED",
 	"IMEI",
 	"MSISDN",
 	"IPADDR",
@@ -67,18 +70,17 @@ var Find_StatusStrings = []string{
 }
 
 var Tower_StatusStrings = []string{
-	"UNKNOWN",
+	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
 
 var GPS_Location_StatusStrings = []string{
 	"LOC_UNKNOWN",
-	"LOC_WITHIN_2KM",
-	"LOC_WITHIN_10KM",
-	"LOC_WITHIN_100KM",
+	"LOC_VERIFIED",
 	"LOC_MISMATCH",
-	"LOC_OTHER_COUNTRY",
+	"LOC_ERROR_INVALID_TOKEN",
+	"LOC_ERROR_OTHER",
 }
 
 var Loc_StatusStrings = []string{
@@ -88,17 +90,13 @@ var Loc_StatusStrings = []string{
 }
 
 var ME_StatusStrings = []string{
+	"ME_UNDEFINED",
 	"ME_SUCCESS",
 	"ME_FAIL",
 }
 
-var IDTypeStrings = []string{
-	"IMEI",
-	"MSISDN",
-	"IPADDR",
-}
-
 var DlgCommTypeStrings = []string{
+	"DlgUndefined",
 	"DlgSecure",
 	"DlgOpen",
 }
@@ -106,7 +104,7 @@ var DlgCommTypeStrings = []string{
 func Match_Engine_RequestSlicer(in *distributed_match_engine.Match_Engine_Request) []string {
 	s := make([]string, 0, 16)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.Match_Engine_Request_IDTypes_name[int32(in.IdType)])
+	s = append(s, distributed_match_engine.IDTypes_name[int32(in.IdType)])
 	s = append(s, in.Id)
 	s = append(s, in.Uuid)
 	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
@@ -228,7 +226,7 @@ func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status_name[int32(in.TowerStatus)])
 	s = append(s, distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
-	s = append(s, in.SessionCookie)
+	s = append(s, strconv.FormatFloat(float64(in.GPS_Location_Accuracy_KM), 'e', -1, 32))
 	return s
 }
 
@@ -237,7 +235,7 @@ func Match_Engine_Loc_VerifyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "TowerStatus")
 	s = append(s, "GpsLocationStatus")
-	s = append(s, "SessionCookie")
+	s = append(s, "GPS_Location_Accuracy_KM")
 	return s
 }
 
@@ -309,7 +307,7 @@ func Match_Engine_StatusHeaderSlicer() []string {
 func DynamicLocGroupAddSlicer(in *distributed_match_engine.DynamicLocGroupAdd) []string {
 	s := make([]string, 0, 12)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.DynamicLocGroupAdd_IDType_name[int32(in.IdType)])
+	s = append(s, distributed_match_engine.IDTypes_name[int32(in.IdType)])
 	s = append(s, in.Id)
 	s = append(s, in.Uuid)
 	s = append(s, strconv.FormatUint(uint64(in.CarrierID), 10))
@@ -626,7 +624,7 @@ var Match_Engine_ApiCmds = []*cobra.Command{
 
 func init() {
 	Match_Engine_RequestFlagSet.Uint32Var(&Match_Engine_RequestIn.Ver, "ver", 0, "Ver")
-	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "one of [IMEI MSISDN IPADDR]")
+	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestInIdType, "idtype", "", "one of [ID_UNDEFINED IMEI MSISDN IPADDR]")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Id, "id", "", "Id")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.Uuid, "uuid", "", "Uuid")
 	Match_Engine_RequestFlagSet.Uint64Var(&Match_Engine_RequestIn.CarrierID, "carrierid", 0, "CarrierID")
@@ -652,7 +650,7 @@ func init() {
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	Match_Engine_RequestFlagSet.StringVar(&Match_Engine_RequestIn.VerifyLocToken, "verifyloctoken", "", "VerifyLocToken")
 	DynamicLocGroupAddFlagSet.Uint32Var(&DynamicLocGroupAddIn.Ver, "ver", 0, "Ver")
-	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInIdType, "idtype", "", "one of [IMEI MSISDN IPADDR]")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInIdType, "idtype", "", "one of [ID_UNDEFINED IMEI MSISDN IPADDR]")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.Id, "id", "", "Id")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.Uuid, "uuid", "", "Uuid")
 	DynamicLocGroupAddFlagSet.Uint64Var(&DynamicLocGroupAddIn.CarrierID, "carrierid", 0, "CarrierID")
@@ -671,7 +669,7 @@ func init() {
 	DynamicLocGroupAddFlagSet.Int32Var(&DynamicLocGroupAddIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
 	DynamicLocGroupAddFlagSet.Uint64Var(&DynamicLocGroupAddIn.LgId, "lgid", 0, "LgId")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.SessionCookie, "sessioncookie", "", "SessionCookie")
-	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInCommType, "commtype", "", "one of [DlgSecure DlgOpen]")
+	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddInCommType, "commtype", "", "one of [DlgUndefined DlgSecure DlgOpen]")
 	DynamicLocGroupAddFlagSet.StringVar(&DynamicLocGroupAddIn.UserData, "userdata", "", "UserData")
 	FindCloudletCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
@@ -680,43 +678,57 @@ func init() {
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddFlagSet)
 }
 
+func Match_Engine_ApiAllowNoConfig() {
+	FindCloudletCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
+	VerifyLocationCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
+	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
+	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
+	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddNoConfigFlagSet)
+}
+
+func parseMatch_Engine_RequestEnums() error {
+	if Match_Engine_RequestInIdType != "" {
+		switch Match_Engine_RequestInIdType {
+		case "ID_UNDEFINED":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(0)
+		case "IMEI":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(1)
+		case "MSISDN":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(2)
+		case "IPADDR":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(3)
+		default:
+			return errors.New("Invalid value for Match_Engine_RequestInIdType")
+		}
+	}
+	return nil
+}
+
 func parseDynamicLocGroupAddEnums() error {
 	if DynamicLocGroupAddInIdType != "" {
 		switch DynamicLocGroupAddInIdType {
+		case "ID_UNDEFINED":
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.IDTypes(0)
 		case "IMEI":
-			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(0)
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.IDTypes(1)
 		case "MSISDN":
-			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(1)
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.IDTypes(2)
 		case "IPADDR":
-			DynamicLocGroupAddIn.IdType = distributed_match_engine.DynamicLocGroupAdd_IDType(2)
+			DynamicLocGroupAddIn.IdType = distributed_match_engine.IDTypes(3)
 		default:
 			return errors.New("Invalid value for DynamicLocGroupAddInIdType")
 		}
 	}
 	if DynamicLocGroupAddInCommType != "" {
 		switch DynamicLocGroupAddInCommType {
-		case "DlgSecure":
+		case "DlgUndefined":
 			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(0)
-		case "DlgOpen":
+		case "DlgSecure":
 			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(1)
+		case "DlgOpen":
+			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(2)
 		default:
 			return errors.New("Invalid value for DynamicLocGroupAddInCommType")
-		}
-	}
-	return nil
-}
-
-func parseMatch_Engine_RequestEnums() error {
-	if Match_Engine_RequestInIdType != "" {
-		switch Match_Engine_RequestInIdType {
-		case "IMEI":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(0)
-		case "MSISDN":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(1)
-		case "IPADDR":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.Match_Engine_Request_IDTypes(2)
-		default:
-			return errors.New("Invalid value for Match_Engine_RequestInIdType")
 		}
 	}
 	return nil

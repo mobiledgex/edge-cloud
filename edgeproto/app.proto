@@ -6,7 +6,10 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "developer.proto";
+import "flavor.proto";
+import "cluster.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 // key that uniquely identifies an application
@@ -25,21 +28,50 @@ message AppKey {
   option (gogoproto.gostring) = true;
 }
 
+// ImageType specifies the image type
+enum ImageType {
+    ImageTypeUnknown = 0;
+    ImageTypeDocker= 1;
+    ImageTypeQCOW = 2;
+}
+
+// AccessLayer defines what layers must be exposed
+enum AccessLayer {
+  AccessLayerUnknown = 0;
+  AccessLayerL4 = 1;
+  AccessLayerL7 = 2;
+  AccessLayerL4L7 = 3;
+}
+
 // Applications are created and uploaded by developers
 // Only registered applications can access location and cloudlet services
 message App {
   repeated string fields = 1;
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
-  // Path to the application binary on shared storage
-  string app_path = 4;
-  // app cert?
+  // Path to the application container or VM on shared storage
+  string image_path = 4 [(protogen.backend) = true];
+  // Image type
+  ImageType image_type = 5;
+  // Access layer(s)
+  AccessLayer access_layer = 6;
+  // For Layer4 access, the ports the app listens on.
+  string access_ports = 7;
+  // initial config passed to image (docker only)?
+  // is this a string format of the file or a pointer to the
+  // file stored elsewhere?
+  string config_map = 8;
+  // resource requirements
+  FlavorKey flavor = 9 [(gogoproto.nullable) = false];
+  // Cluster on which the app can be instantiated.
+  // If not specified during create, a cluster will be automatically created.
+  ClusterKey cluster = 10 [(gogoproto.nullable) = false];
   // manifest - which cloudlets can this run on?
-  // which countries this can run on
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "ImagePath";
 }
 
 service AppApi {

@@ -34,14 +34,14 @@ var NoticeRequestorStrings = []string{
 }
 
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
 func NoticeReplyHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, "Action")
 	s = append(s, "Version")
 	return s
@@ -66,4 +66,7 @@ func NoticeRequestHeaderSlicer() []string {
 }
 
 func init() {
+}
+
+func NotifyApiAllowNoConfig() {
 }

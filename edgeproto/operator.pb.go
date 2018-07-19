@@ -404,12 +404,35 @@ func (m *OperatorCode) Matches(filter *OperatorCode) bool {
 	return true
 }
 
+func (m *OperatorCode) MatchesIgnoreBackend(filter *OperatorCode) bool {
+	if filter == nil {
+		return true
+	}
+	if filter.MNC != "" && filter.MNC != m.MNC {
+		return false
+	}
+	if filter.MCC != "" && filter.MCC != m.MCC {
+		return false
+	}
+	return true
+}
+
 func (m *OperatorCode) CopyInFields(src *OperatorCode) {
 	m.MNC = src.MNC
 	m.MCC = src.MCC
 }
 
 func (m *OperatorKey) Matches(filter *OperatorKey) bool {
+	if filter == nil {
+		return true
+	}
+	if filter.Name != "" && filter.Name != m.Name {
+		return false
+	}
+	return true
+}
+
+func (m *OperatorKey) MatchesIgnoreBackend(filter *OperatorKey) bool {
 	if filter == nil {
 		return true
 	}
@@ -443,6 +466,16 @@ func (m *Operator) Matches(filter *Operator) bool {
 		return true
 	}
 	if !m.Key.Matches(&filter.Key) {
+		return false
+	}
+	return true
+}
+
+func (m *Operator) MatchesIgnoreBackend(filter *Operator) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
 		return false
 	}
 	return true

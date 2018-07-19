@@ -7,6 +7,8 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "app_inst.proto";
 import "cloudlet.proto";
+import "flavor.proto";
+import "clusterinst.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 enum NoticeAction {
@@ -32,6 +34,8 @@ message NoticeReply {
   oneof data {
     AppInst appInst = 4;
     Cloudlet cloudlet = 5;
+    Flavor flavor = 6;
+    ClusterInst clusterInst = 7;
   }
 }
 

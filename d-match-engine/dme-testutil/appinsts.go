@@ -59,7 +59,7 @@ var Cloudlets = []Cloudlet{
 		CarrierName: "GDDT",
 		Name:        "Buckhorn",
 		Uri:         "10.1.10.1",
-		Ip: []byte{10, 1, 10, 1},
+		Ip:          []byte{10, 1, 10, 1},
 		Location:    dme.Loc{Lat: 50.7374, Long: 7.0982},
 	},
 	Cloudlet{
@@ -68,7 +68,7 @@ var Cloudlets = []Cloudlet{
 		CarrierName: "GDDT",
 		Name:        "Sunnydale",
 		Uri:         "11.1.11.1",
-		Ip: []byte{11, 1, 11, 1},
+		Ip:          []byte{11, 1, 11, 1},
 		Location:    dme.Loc{Lat: 52.7374, Long: 13.4050},
 	},
 	Cloudlet{
@@ -77,7 +77,7 @@ var Cloudlets = []Cloudlet{
 		CarrierName: "GDDT",
 		Name:        "Beacon",
 		Uri:         "12.1.12.1",
-		Ip: []byte{12, 1, 12, 1},
+		Ip:          []byte{12, 1, 12, 1},
 		Location:    dme.Loc{Lat: 48.1351, Long: 11.5820},
 	},
 	Cloudlet{
@@ -86,7 +86,7 @@ var Cloudlets = []Cloudlet{
 		CarrierName: "DMUUS",
 		Name:        "San Francisco",
 		Uri:         "13.1.13.1",
-		Ip: []byte{13, 1, 13, 1},
+		Ip:          []byte{13, 1, 13, 1},
 		Location:    dme.Loc{Lat: 47.6062, Long: 122.3321},
 	},
 }
@@ -100,7 +100,6 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst.Key.CloudletKey.Name = c.Name
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
-	inst.Ip = c.Ip
 	return &inst
 }
 

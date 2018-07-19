@@ -65,7 +65,7 @@ func (x *ShowCloudlet) CheckFound(obj *edgeproto.Cloudlet) bool {
 func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Cloudlet %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "Cloudlet are equal")
 	}
 }
@@ -276,7 +276,7 @@ func (x *ShowCloudletInfo) CheckFound(obj *edgeproto.CloudletInfo) bool {
 func (x *ShowCloudletInfo) AssertFound(t *testing.T, obj *edgeproto.CloudletInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find CloudletInfo %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "CloudletInfo are equal")
 	}
 }

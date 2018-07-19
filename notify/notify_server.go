@@ -39,11 +39,24 @@ const NotifyVersion uint32 = 1
 type SendAppInstHandler interface {
 	GetAllKeys(keys map[edgeproto.AppInstKey]struct{})
 	Get(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool
+	GetAppInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{},
+		appInsts map[edgeproto.AppInstKey]struct{})
 }
 
 type SendCloudletHandler interface {
 	GetAllKeys(keys map[edgeproto.CloudletKey]struct{})
 	Get(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool
+}
+
+type SendFlavorHandler interface {
+	GetAllKeys(keys map[edgeproto.FlavorKey]struct{})
+	Get(key *edgeproto.FlavorKey, buf *edgeproto.Flavor) bool
+}
+
+type SendClusterInstHandler interface {
+	Get(key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterInst) bool
+	GetClusterInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{},
+		clusterInsts map[edgeproto.ClusterInstKey]struct{})
 }
 
 type RecvAppInstInfoHandler interface {
@@ -61,16 +74,20 @@ type RecvCloudletInfoHandler interface {
 type ServerHandler interface {
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
+	SendFlavorHandler() SendFlavorHandler
+	SendClusterInstHandler() SendClusterInstHandler
 	RecvAppInstInfoHandler() RecvAppInstInfoHandler
 	RecvCloudletInfoHandler() RecvCloudletInfoHandler
 }
 
 type ServerStats struct {
-	AppInstsSent    uint64
-	CloudletsSent   uint64
-	NegotiateErrors uint64
-	RecvErrors      uint64
-	SendErrors      uint64
+	AppInstsSent     uint64
+	CloudletsSent    uint64
+	FlavorsSent      uint64
+	ClusterInstsSent uint64
+	NegotiateErrors  uint64
+	RecvErrors       uint64
+	SendErrors       uint64
 }
 
 // Server is on the upstream side and sends data to downstream clients.
@@ -78,18 +95,24 @@ type ServerStats struct {
 // required by the client. After that it will send objects only when
 // they are changed.
 type Server struct {
-	peerAddr  string
-	appInsts  map[edgeproto.AppInstKey]struct{}
-	cloudlets map[edgeproto.CloudletKey]struct{}
-	mux       util.Mutex
-	signal    chan bool
-	done      bool
-	handler   ServerHandler
-	stats     ServerStats
-	version   uint32
-	notifyId  int64
-	requestor edgeproto.NoticeRequestor
-	running   chan struct{}
+	peerAddr     string
+	appInsts     map[edgeproto.AppInstKey]struct{}
+	cloudlets    map[edgeproto.CloudletKey]struct{}
+	flavors      map[edgeproto.FlavorKey]struct{}
+	clusterInsts map[edgeproto.ClusterInstKey]struct{}
+	mux          util.Mutex
+	signal       chan bool
+	done         bool
+	handler      ServerHandler
+	stats        ServerStats
+	version      uint32
+	notifyId     int64
+	requestor    edgeproto.NoticeRequestor
+	running      chan struct{}
+	// tracked cloudlets are the set of keys received from the client
+	// for requestor type CRM. We only send data related to these
+	// cloudlet key(s)
+	trackedCloudlets map[edgeproto.CloudletKey]struct{}
 }
 
 // ServerMgr maintains all the Server threads for clients connected to us.
@@ -154,9 +177,12 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server.peerAddr = peerAddr
 	server.appInsts = make(map[edgeproto.AppInstKey]struct{})
 	server.cloudlets = make(map[edgeproto.CloudletKey]struct{})
+	server.flavors = make(map[edgeproto.FlavorKey]struct{})
+	server.clusterInsts = make(map[edgeproto.ClusterInstKey]struct{})
 	server.signal = make(chan bool, 1)
 	server.handler = mgr.handler
 	server.running = make(chan struct{})
+	server.trackedCloudlets = make(map[edgeproto.CloudletKey]struct{})
 
 	// do initial version exchange
 	err := server.negotiate(stream)
@@ -239,6 +265,28 @@ func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	}
 }
 
+func (mgr *ServerMgr) UpdateFlavor(key *edgeproto.FlavorKey) {
+	mgr.mux.Lock()
+	defer mgr.mux.Unlock()
+	for _, server := range mgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+			continue
+		}
+		server.UpdateFlavor(key)
+	}
+}
+
+func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey) {
+	mgr.mux.Lock()
+	defer mgr.mux.Unlock()
+	for _, server := range mgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+			continue
+		}
+		server.UpdateClusterInst(key)
+	}
+}
+
 func (s *Server) wakeup() {
 	// This puts true in the channel unless it is full,
 	// then the default (noop) case is performed.
@@ -254,6 +302,12 @@ func (s *Server) wakeup() {
 func (s *Server) UpdateAppInst(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
+		if _, found := s.trackedCloudlets[key.CloudletKey]; !found {
+			// not tracked by this client
+			return
+		}
+	}
 	s.appInsts[*key] = struct{}{}
 	s.wakeup()
 }
@@ -261,7 +315,29 @@ func (s *Server) UpdateAppInst(key *edgeproto.AppInstKey) {
 func (s *Server) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
+	if _, found := s.trackedCloudlets[*key]; !found {
+		// not tracked by this client
+		return
+	}
 	s.cloudlets[*key] = struct{}{}
+	s.wakeup()
+}
+
+func (s *Server) UpdateFlavor(key *edgeproto.FlavorKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.flavors[*key] = struct{}{}
+	s.wakeup()
+}
+
+func (s *Server) UpdateClusterInst(key *edgeproto.ClusterInstKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	if _, found := s.trackedCloudlets[key.CloudletKey]; !found {
+		// not tracked by this client
+		return
+	}
+	s.clusterInsts[*key] = struct{}{}
 	s.wakeup()
 }
 
@@ -311,14 +387,22 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	var notice edgeproto.NoticeReply
 	var noticeAppInst edgeproto.NoticeReply_AppInst
 	var noticeCloudlet edgeproto.NoticeReply_Cloudlet
+	var noticeFlavor edgeproto.NoticeReply_Flavor
+	var noticeClusterInst edgeproto.NoticeReply_ClusterInst
 	var appInst edgeproto.AppInst
 	var cloudlet edgeproto.Cloudlet
+	var flavor edgeproto.Flavor
+	var clusterInst edgeproto.ClusterInst
 
 	noticeAppInst.AppInst = &appInst
 	noticeCloudlet.Cloudlet = &cloudlet
+	noticeFlavor.Flavor = &flavor
+	noticeClusterInst.ClusterInst = &clusterInst
 	sendAll := true
 	sendAppInst := s.handler.SendAppInstHandler()
 	sendCloudlet := s.handler.SendCloudletHandler()
+	sendFlavor := s.handler.SendFlavorHandler()
+	sendClusterInst := s.handler.SendClusterInstHandler()
 	// trigger initial sendAll
 	s.wakeup()
 
@@ -335,31 +419,98 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			s.done = true
 		}
 		s.mux.Lock()
-		if len(s.appInsts) == 0 && len(s.cloudlets) == 0 && !s.done &&
+		if len(s.appInsts) == 0 && len(s.cloudlets) == 0 &&
+			len(s.flavors) == 0 && len(s.clusterInsts) == 0 &&
+			!s.done &&
 			!sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
 		}
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
+		flavors := s.flavors
+		clusterInsts := s.clusterInsts
 		s.appInsts = make(map[edgeproto.AppInstKey]struct{})
 		s.cloudlets = make(map[edgeproto.CloudletKey]struct{})
+		s.flavors = make(map[edgeproto.FlavorKey]struct{})
+		s.clusterInsts = make(map[edgeproto.ClusterInstKey]struct{})
 		s.mux.Unlock()
 		if s.done {
 			break
 		}
 		if sendAll {
 			log.DebugLog(log.DebugLevelNotify, "Send all",
-				"client", s.peerAddr)
-			if sendAppInst != nil {
-				sendAppInst.GetAllKeys(appInsts)
-			}
-			if sendCloudlet != nil {
-				if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
-					sendCloudlet.GetAllKeys(cloudlets)
+				"client", s.peerAddr,
+				"requestor", s.requestor)
+			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
+				if sendFlavor != nil {
+					sendFlavor.GetAllKeys(flavors)
+				}
+				// Cloudlet, AppInsts, CloudletInsts sends are
+				// triggered when registering a new CloudletInfo
+				// on receive, so there is no need to send all here.
+			} else {
+				if sendAppInst != nil {
+					sendAppInst.GetAllKeys(appInsts)
+					log.DebugLog(log.DebugLevelNotify, "all app insts", "count", len(appInsts))
 				}
 			}
 		}
+
+		if sendFlavor != nil {
+			// send flavors
+			notice.Data = &noticeFlavor
+			for key, _ := range flavors {
+				found := sendFlavor.Get(&key, &flavor)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					flavor.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send flavor",
+					"client", s.peerAddr,
+					"action", notice.Action,
+					"key", flavor.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.FlavorsSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
+		}
+
+		if sendClusterInst != nil {
+			// send clusterInsts
+			notice.Data = &noticeClusterInst
+			for key, _ := range clusterInsts {
+				found := sendClusterInst.Get(&key, &clusterInst)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					clusterInst.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send cluster inst",
+					"client", s.peerAddr,
+					"action", notice.Action,
+					"key", clusterInst.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.ClusterInstsSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
+		}
+
 		if sendAppInst != nil {
 			// send appInsts
 			notice.Data = &noticeAppInst
@@ -426,6 +577,8 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		}
 		appInsts = nil
 		cloudlets = nil
+		flavors = nil
+		clusterInsts = nil
 	}
 }
 
@@ -463,8 +616,10 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			cloudletInfo.NotifyId = s.notifyId
 			if req.Action == edgeproto.NoticeAction_UPDATE {
 				recvCloudletInfo.Update(cloudletInfo, s.notifyId)
+				s.updateTrackedCloudlets(&cloudletInfo.Key, register)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
 				recvCloudletInfo.Delete(cloudletInfo, s.notifyId)
+				s.updateTrackedCloudlets(&cloudletInfo.Key, unregister)
 			}
 		}
 	}
@@ -486,5 +641,53 @@ func (s *Server) logDisconnect(err error) {
 	} else {
 		log.InfoLog("Notify server connection failed",
 			"client", s.peerAddr, "err", err)
+	}
+}
+
+type registerAction int
+
+const (
+	register registerAction = iota
+	unregister
+)
+
+func (s *Server) updateTrackedCloudlets(key *edgeproto.CloudletKey, action registerAction) {
+	s.mux.Lock()
+	if action == register {
+		s.trackedCloudlets[*key] = struct{}{}
+	} else {
+		delete(s.trackedCloudlets, *key)
+	}
+	s.mux.Unlock()
+
+	cloudlets := make(map[edgeproto.CloudletKey]struct{})
+	cloudlets[*key] = struct{}{}
+	appInsts := make(map[edgeproto.AppInstKey]struct{})
+	clusterInsts := make(map[edgeproto.ClusterInstKey]struct{})
+
+	sendAppInst := s.handler.SendAppInstHandler()
+	if sendAppInst != nil {
+		sendAppInst.GetAppInstsForCloudlets(cloudlets, appInsts)
+	}
+	sendClusterInst := s.handler.SendClusterInstHandler()
+	if sendClusterInst != nil {
+		sendClusterInst.GetClusterInstsForCloudlets(cloudlets, clusterInsts)
+	}
+
+	if action == register {
+		// trigger sends of all objects related to cloudlet
+		s.UpdateCloudlet(key)
+		for k, _ := range clusterInsts {
+			s.UpdateClusterInst(&k)
+		}
+		for k, _ := range appInsts {
+			s.UpdateAppInst(&k)
+		}
+	} else {
+		// TODO:
+		// trigger deletes for objects no longer tracked
+		// This helps clean up unnecessary objects, but is really
+		// only needed for intermediate cache nodes between
+		// the controller and multiple CRMs.
 	}
 }

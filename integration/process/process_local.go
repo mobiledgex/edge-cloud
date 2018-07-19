@@ -166,15 +166,27 @@ type CrmLocal struct {
 	Name        string
 	ApiAddr     string
 	NotifyAddrs string
+	CloudletKey string
 	cmd         *exec.Cmd
 }
 
-func (p *CrmLocal) Start(logfile string) error {
+func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
 	}
+	if p.CloudletKey != "" {
+		args = append(args, "--cloudletKey")
+		args = append(args, p.CloudletKey)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+
 	var err error
 	p.cmd, err = StartLocal(p.Name, "crmserver", args, logfile)
 	return err

@@ -9,7 +9,11 @@ It is generated from these files:
 	app_inst.proto
 	cloud-resource-manager.proto
 	cloudlet.proto
+	cluster.proto
+	clusterinst.proto
+	common.proto
 	developer.proto
+	flavor.proto
 	notice.proto
 	operator.proto
 	result.proto
@@ -28,8 +32,14 @@ It has these top-level messages:
 	Cloudlet
 	CloudletInfo
 	CloudletMetrics
+	ClusterKey
+	Cluster
+	ClusterInstKey
+	ClusterInst
 	DeveloperKey
 	Developer
+	FlavorKey
+	Flavor
 	NoticeReply
 	NoticeRequest
 	OperatorCode
@@ -51,6 +61,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -99,7 +110,7 @@ func (x *ShowApp) CheckFound(obj *edgeproto.App) bool {
 func (x *ShowApp) AssertFound(t *testing.T, obj *edgeproto.App) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find App %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "App are equal")
 	}
 }

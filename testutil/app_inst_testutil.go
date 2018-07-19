@@ -65,7 +65,7 @@ func (x *ShowAppInst) CheckFound(obj *edgeproto.AppInst) bool {
 func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "AppInst are equal")
 	}
 }
@@ -213,26 +213,6 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	_, err = api.CreateAppInst(ctx, &bad)
 	assert.NotNil(t, err, "Create AppInst with no key info")
 
-	// test update
-	updater := edgeproto.AppInst{}
-	updater.Key = testData[0].Key
-	updater.Uri = "update just this"
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppInstFieldUri)
-	_, err = api.UpdateAppInst(ctx, &updater)
-	assert.Nil(t, err, "Update AppInst %s", testData[0].Key.GetKeyString())
-
-	show.Init()
-	updater = testData[0]
-	updater.Uri = "update just this"
-	err = api.ShowAppInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show AppInst")
-	show.AssertFound(t, &updater)
-
-	// revert change
-	updater.Uri = testData[0].Uri
-	_, err = api.UpdateAppInst(ctx, &updater)
-	assert.Nil(t, err, "Update back AppInst")
 }
 
 // Auto-generated code: DO NOT EDIT
@@ -276,7 +256,7 @@ func (x *ShowAppInstInfo) CheckFound(obj *edgeproto.AppInstInfo) bool {
 func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.MatchesIgnoreBackend(obj) {
 		assert.Equal(t, *obj, check, "AppInstInfo are equal")
 	}
 }

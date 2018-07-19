@@ -58,8 +58,13 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.DeveloperApiCmd = edgeproto.NewDeveloperApiClient(conn)
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
 	gencmd.OperatorApiCmd = edgeproto.NewOperatorApiClient(conn)
+	gencmd.FlavorApiCmd = edgeproto.NewFlavorApiClient(conn)
+	gencmd.ClusterApiCmd = edgeproto.NewClusterApiClient(conn)
+	gencmd.ClusterInstApiCmd = edgeproto.NewClusterInstApiClient(conn)
 	gencmd.CloudletApiCmd = edgeproto.NewCloudletApiClient(conn)
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
+	gencmd.CloudletInfoApiCmd = edgeproto.NewCloudletInfoApiClient(conn)
+	gencmd.AppInstInfoApiCmd = edgeproto.NewAppInstInfoApiClient(conn)
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
 	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
@@ -71,6 +76,12 @@ func close(cmd *cobra.Command, args []string) {
 
 func main() {
 	cobra.EnableCommandSorting = false
+	// unfortunately can't mix normal flags and pflags, so no way to
+	// control which pflags are enabled on the command line.
+	// So use a file instead.
+	if _, err := os.Stat("allownoconfig"); err == nil {
+		allowNoConfig()
+	}
 
 	rootCmd.AddCommand(controllerCmd)
 	rootCmd.AddCommand(dmeCmd)
@@ -82,6 +93,9 @@ func main() {
 	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
 	controllerCmd.AddCommand(gencmd.OperatorApiCmds...)
+	controllerCmd.AddCommand(gencmd.FlavorApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
@@ -95,4 +109,9 @@ func main() {
 	crmCmd.AddCommand(gencmd.DebugApiCmds...)
 
 	rootCmd.Execute()
+}
+
+func allowNoConfig() {
+	gencmd.ClusterInstApiAllowNoConfig()
+	gencmd.AppInstApiAllowNoConfig()
 }
