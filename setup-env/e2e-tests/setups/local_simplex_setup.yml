@@ -42,10 +42,10 @@ dmes:
   hostname: "127.0.0.1"
 
 
-  
 crms:
 - crmlocal:
     name: crm1
     apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+    notifyaddrs: "127.0.0.1:37001"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud1"}'
   hostname: "127.0.0.1"

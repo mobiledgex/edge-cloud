@@ -389,6 +389,16 @@ func (m *DeveloperKey) Matches(filter *DeveloperKey) bool {
 	return true
 }
 
+func (m *DeveloperKey) MatchesIgnoreBackend(filter *DeveloperKey) bool {
+	if filter == nil {
+		return true
+	}
+	if filter.Name != "" && filter.Name != m.Name {
+		return false
+	}
+	return true
+}
+
 func (m *DeveloperKey) CopyInFields(src *DeveloperKey) {
 	m.Name = src.Name
 }
@@ -413,6 +423,28 @@ func (m *Developer) Matches(filter *Developer) bool {
 		return true
 	}
 	if !m.Key.Matches(&filter.Key) {
+		return false
+	}
+	if filter.Username != "" && filter.Username != m.Username {
+		return false
+	}
+	if filter.Passhash != "" && filter.Passhash != m.Passhash {
+		return false
+	}
+	if filter.Address != "" && filter.Address != m.Address {
+		return false
+	}
+	if filter.Email != "" && filter.Email != m.Email {
+		return false
+	}
+	return true
+}
+
+func (m *Developer) MatchesIgnoreBackend(filter *Developer) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
 		return false
 	}
 	if filter.Username != "" && filter.Username != m.Username {

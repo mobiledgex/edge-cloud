@@ -42,6 +42,7 @@ type Client struct {
 type ClientRecvAllMaps struct {
 	AppInsts  map[edgeproto.AppInstKey]struct{}
 	Cloudlets map[edgeproto.CloudletKey]struct{}
+	Flavors   map[edgeproto.FlavorKey]struct{}
 }
 
 type SendAppInstInfoHandler interface {
@@ -66,11 +67,25 @@ type RecvCloudletHandler interface {
 	Prune(keys map[edgeproto.CloudletKey]struct{})
 }
 
+type RecvFlavorHandler interface {
+	Update(in *edgeproto.Flavor, rev int64)
+	Delete(in *edgeproto.Flavor, rev int64)
+	Prune(keys map[edgeproto.FlavorKey]struct{})
+}
+
+type RecvClusterInstHandler interface {
+	Update(in *edgeproto.ClusterInst, rev int64)
+	Delete(in *edgeproto.ClusterInst, rev int64)
+	Prune(keys map[edgeproto.ClusterInstKey]struct{})
+}
+
 type ClientHandler interface {
 	SendAppInstInfoHandler() SendAppInstInfoHandler
 	SendCloudletInfoHandler() SendCloudletInfoHandler
 	RecvAppInstHandler() RecvAppInstHandler
 	RecvCloudletHandler() RecvCloudletHandler
+	RecvFlavorHandler() RecvFlavorHandler
+	RecvClusterInstHandler() RecvClusterInstHandler
 }
 
 type ClientStats struct {
@@ -83,6 +98,8 @@ type ClientStats struct {
 	CloudletInfosSent uint64
 	AppInstRecv       uint64
 	CloudletRecv      uint64
+	FlavorRecv        uint64
+	ClusterInstRecv   uint64
 	Recv              uint64
 }
 
@@ -102,6 +119,8 @@ func newClient(addrs []string, handler ClientHandler, requestor edgeproto.Notice
 	s.handler = handler
 	s.requestor = requestor
 	s.signal = make(chan bool, 1)
+	s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
+	s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
 	return &s
 }
 
@@ -246,8 +265,11 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	allMaps := &ClientRecvAllMaps{}
 	allMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
 	allMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
+	allMaps.Flavors = make(map[edgeproto.FlavorKey]struct{})
 	recvAppInst := s.handler.RecvAppInstHandler()
 	recvCloudlet := s.handler.RecvCloudletHandler()
+	recvFlavor := s.handler.RecvFlavorHandler()
+	recvClusterInst := s.handler.RecvClusterInstHandler()
 	for !s.done {
 		reply, err := stream.Recv()
 		if s.done {
@@ -265,6 +287,10 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			if cloudlet != nil {
 				allMaps.Cloudlets[cloudlet.Key] = struct{}{}
 			}
+			flavor := reply.GetFlavor()
+			if flavor != nil {
+				allMaps.Flavors[flavor.Key] = struct{}{}
+			}
 		}
 		if reply.Action == edgeproto.NoticeAction_SENDALL_END {
 			if recvAppInst != nil {
@@ -272,6 +298,9 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			}
 			if recvCloudlet != nil {
 				recvCloudlet.Prune(allMaps.Cloudlets)
+			}
+			if recvFlavor != nil {
+				recvFlavor.Prune(allMaps.Flavors)
 			}
 			allMaps = nil
 			continue
@@ -283,6 +312,38 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 				"action", reply.Action)
 			s.stats.RecvErrors++
 			continue
+		}
+		flavor := reply.GetFlavor()
+		if recvFlavor != nil && flavor != nil {
+			if reply.Action == edgeproto.NoticeAction_UPDATE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client flavor update",
+					"key", flavor.Key.GetKeyString())
+				recvFlavor.Update(flavor, 0)
+			} else if reply.Action == edgeproto.NoticeAction_DELETE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client flavor delete",
+					"key", flavor.Key.GetKeyString())
+				recvFlavor.Delete(flavor, 0)
+			}
+			s.stats.FlavorRecv++
+			s.stats.Recv++
+		}
+		clusterInst := reply.GetClusterInst()
+		if recvClusterInst != nil && clusterInst != nil {
+			if reply.Action == edgeproto.NoticeAction_UPDATE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client cluster inst update",
+					"key", clusterInst.Key.GetKeyString())
+				recvClusterInst.Update(clusterInst, 0)
+			} else if reply.Action == edgeproto.NoticeAction_DELETE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client cluster inst delete",
+					"key", clusterInst.Key.GetKeyString())
+				recvClusterInst.Delete(clusterInst, 0)
+			}
+			s.stats.ClusterInstRecv++
+			s.stats.Recv++
 		}
 		appInst := reply.GetAppInst()
 		if recvAppInst != nil && appInst != nil {

@@ -492,7 +492,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if crm.Hostname == "localhost" || crm.Hostname == "127.0.0.1" {
 			log.Printf("Starting CRM %+v\n", crm)
 			logfile := getLogFile(crm.Name, outputDir)
-			err := crm.Start(logfile)
+			err := crm.Start(logfile, process.WithDebug("api,notify"))
 			if err != nil {
 				log.Printf("Error on CRM startup: %v", err)
 				return false

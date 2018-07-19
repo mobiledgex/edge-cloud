@@ -1,8 +1,8 @@
 package main
 
 import (
-	"sync"
 	"net"
+	"sync"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -102,7 +102,6 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.cloudletKey = appInst.Key.CloudletKey
 		cNew.carrierName = key.carrierName
 		cNew.uri = appInst.Uri
-		cNew.ip = appInst.Ip
 		cNew.location = appInst.CloudletLoc
 		app.insts[cNew.cloudletKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",

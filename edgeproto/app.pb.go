@@ -9,7 +9,11 @@
 		app_inst.proto
 		cloud-resource-manager.proto
 		cloudlet.proto
+		cluster.proto
+		clusterinst.proto
+		common.proto
 		developer.proto
+		flavor.proto
 		notice.proto
 		operator.proto
 		result.proto
@@ -28,8 +32,14 @@
 		Cloudlet
 		CloudletInfo
 		CloudletMetrics
+		ClusterKey
+		Cluster
+		ClusterInstKey
+		ClusterInst
 		DeveloperKey
 		Developer
+		FlavorKey
+		Flavor
 		NoticeReply
 		NoticeRequest
 		OperatorCode
@@ -44,6 +54,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import strings "strings"
@@ -56,6 +67,8 @@ import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
 
 import io "io"
 
@@ -69,6 +82,59 @@ var _ = math.Inf
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
+
+// ImageType specifies the image type
+type ImageType int32
+
+const (
+	ImageType_ImageTypeUnknown ImageType = 0
+	ImageType_ImageTypeDocker  ImageType = 1
+	ImageType_ImageTypeQCOW    ImageType = 2
+)
+
+var ImageType_name = map[int32]string{
+	0: "ImageTypeUnknown",
+	1: "ImageTypeDocker",
+	2: "ImageTypeQCOW",
+}
+var ImageType_value = map[string]int32{
+	"ImageTypeUnknown": 0,
+	"ImageTypeDocker":  1,
+	"ImageTypeQCOW":    2,
+}
+
+func (x ImageType) String() string {
+	return proto.EnumName(ImageType_name, int32(x))
+}
+func (ImageType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
+
+// AccessLayer defines what layers must be exposed
+type AccessLayer int32
+
+const (
+	AccessLayer_AccessLayerUnknown AccessLayer = 0
+	AccessLayer_AccessLayerL4      AccessLayer = 1
+	AccessLayer_AccessLayerL7      AccessLayer = 2
+	AccessLayer_AccessLayerL4L7    AccessLayer = 3
+)
+
+var AccessLayer_name = map[int32]string{
+	0: "AccessLayerUnknown",
+	1: "AccessLayerL4",
+	2: "AccessLayerL7",
+	3: "AccessLayerL4L7",
+}
+var AccessLayer_value = map[string]int32{
+	"AccessLayerUnknown": 0,
+	"AccessLayerL4":      1,
+	"AccessLayerL7":      2,
+	"AccessLayerL4L7":    3,
+}
+
+func (x AccessLayer) String() string {
+	return proto.EnumName(AccessLayer_name, int32(x))
+}
+func (AccessLayer) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
 // key that uniquely identifies an application
 // It is important that embedded structs are not referenced by a
@@ -94,8 +160,23 @@ type App struct {
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Path to the application binary on shared storage
-	AppPath string `protobuf:"bytes,4,opt,name=app_path,json=appPath,proto3" json:"app_path,omitempty"`
+	// Path to the application container or VM on shared storage
+	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	// Image type
+	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	// Access layer(s)
+	AccessLayer AccessLayer `protobuf:"varint,6,opt,name=access_layer,json=accessLayer,proto3,enum=edgeproto.AccessLayer" json:"access_layer,omitempty"`
+	// For Layer4 access, the ports the app listens on.
+	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
+	// initial config passed to image (docker only)?
+	// is this a string format of the file or a pointer to the
+	// file stored elsewhere?
+	ConfigMap string `protobuf:"bytes,8,opt,name=config_map,json=configMap,proto3" json:"config_map,omitempty"`
+	// resource requirements
+	Flavor FlavorKey `protobuf:"bytes,9,opt,name=flavor" json:"flavor"`
+	// Cluster on which the app can be instantiated.
+	// If not specified during create, a cluster will be automatically created.
+	Cluster ClusterKey `protobuf:"bytes,10,opt,name=cluster" json:"cluster"`
 }
 
 func (m *App) Reset()                    { *m = App{} }
@@ -106,6 +187,8 @@ func (*App) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 func init() {
 	proto.RegisterType((*AppKey)(nil), "edgeproto.AppKey")
 	proto.RegisterType((*App)(nil), "edgeproto.App")
+	proto.RegisterEnum("edgeproto.ImageType", ImageType_name, ImageType_value)
+	proto.RegisterEnum("edgeproto.AccessLayer", AccessLayer_name, AccessLayer_value)
 }
 func (this *AppKey) GoString() string {
 	if this == nil {
@@ -403,12 +486,50 @@ func (m *App) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n2
-	if len(m.AppPath) > 0 {
+	if len(m.ImagePath) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.AppPath)))
-		i += copy(dAtA[i:], m.AppPath)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ImagePath)))
+		i += copy(dAtA[i:], m.ImagePath)
 	}
+	if m.ImageType != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(m.ImageType))
+	}
+	if m.AccessLayer != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(m.AccessLayer))
+	}
+	if len(m.AccessPorts) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessPorts)))
+		i += copy(dAtA[i:], m.AccessPorts)
+	}
+	if len(m.ConfigMap) > 0 {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ConfigMap)))
+		i += copy(dAtA[i:], m.ConfigMap)
+	}
+	dAtA[i] = 0x4a
+	i++
+	i = encodeVarintApp(dAtA, i, uint64(m.Flavor.Size()))
+	n3, err := m.Flavor.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n3
+	dAtA[i] = 0x52
+	i++
+	i = encodeVarintApp(dAtA, i, uint64(m.Cluster.Size()))
+	n4, err := m.Cluster.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
 	return i, nil
 }
 
@@ -426,6 +547,22 @@ func (m *AppKey) Matches(filter *AppKey) bool {
 		return true
 	}
 	if !m.DeveloperKey.Matches(&filter.DeveloperKey) {
+		return false
+	}
+	if filter.Name != "" && filter.Name != m.Name {
+		return false
+	}
+	if filter.Version != "" && filter.Version != m.Version {
+		return false
+	}
+	return true
+}
+
+func (m *AppKey) MatchesIgnoreBackend(filter *AppKey) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.DeveloperKey.MatchesIgnoreBackend(&filter.DeveloperKey) {
 		return false
 	}
 	if filter.Name != "" && filter.Name != m.Name {
@@ -465,7 +602,53 @@ func (m *App) Matches(filter *App) bool {
 	if !m.Key.Matches(&filter.Key) {
 		return false
 	}
-	if filter.AppPath != "" && filter.AppPath != m.AppPath {
+	if filter.ImagePath != "" && filter.ImagePath != m.ImagePath {
+		return false
+	}
+	if filter.ImageType != 0 && filter.ImageType != m.ImageType {
+		return false
+	}
+	if filter.AccessLayer != 0 && filter.AccessLayer != m.AccessLayer {
+		return false
+	}
+	if filter.AccessPorts != "" && filter.AccessPorts != m.AccessPorts {
+		return false
+	}
+	if filter.ConfigMap != "" && filter.ConfigMap != m.ConfigMap {
+		return false
+	}
+	if !m.Flavor.Matches(&filter.Flavor) {
+		return false
+	}
+	if !m.Cluster.Matches(&filter.Cluster) {
+		return false
+	}
+	return true
+}
+
+func (m *App) MatchesIgnoreBackend(filter *App) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
+		return false
+	}
+	if filter.ImageType != 0 && filter.ImageType != m.ImageType {
+		return false
+	}
+	if filter.AccessLayer != 0 && filter.AccessLayer != m.AccessLayer {
+		return false
+	}
+	if filter.AccessPorts != "" && filter.AccessPorts != m.AccessPorts {
+		return false
+	}
+	if filter.ConfigMap != "" && filter.ConfigMap != m.ConfigMap {
+		return false
+	}
+	if !m.Flavor.MatchesIgnoreBackend(&filter.Flavor) {
+		return false
+	}
+	if !m.Cluster.MatchesIgnoreBackend(&filter.Cluster) {
 		return false
 	}
 	return true
@@ -476,20 +659,40 @@ const AppFieldKeyDeveloperKey = "2.1"
 const AppFieldKeyDeveloperKeyName = "2.1.2"
 const AppFieldKeyName = "2.2"
 const AppFieldKeyVersion = "2.3"
-const AppFieldAppPath = "4"
+const AppFieldImagePath = "4"
+const AppFieldImageType = "5"
+const AppFieldAccessLayer = "6"
+const AppFieldAccessPorts = "7"
+const AppFieldConfigMap = "8"
+const AppFieldFlavor = "9"
+const AppFieldFlavorName = "9.1"
+const AppFieldCluster = "10"
+const AppFieldClusterName = "10.1"
 
 var AppAllFields = []string{
 	AppFieldKeyDeveloperKeyName,
 	AppFieldKeyName,
 	AppFieldKeyVersion,
-	AppFieldAppPath,
+	AppFieldImagePath,
+	AppFieldImageType,
+	AppFieldAccessLayer,
+	AppFieldAccessPorts,
+	AppFieldConfigMap,
+	AppFieldFlavorName,
+	AppFieldClusterName,
 }
 
 var AppAllFieldsMap = map[string]struct{}{
 	AppFieldKeyDeveloperKeyName: struct{}{},
 	AppFieldKeyName:             struct{}{},
 	AppFieldKeyVersion:          struct{}{},
-	AppFieldAppPath:             struct{}{},
+	AppFieldImagePath:           struct{}{},
+	AppFieldImageType:           struct{}{},
+	AppFieldAccessLayer:         struct{}{},
+	AppFieldAccessPorts:         struct{}{},
+	AppFieldConfigMap:           struct{}{},
+	AppFieldFlavorName:          struct{}{},
+	AppFieldClusterName:         struct{}{},
 }
 
 func (m *App) CopyInFields(src *App) {
@@ -508,7 +711,29 @@ func (m *App) CopyInFields(src *App) {
 		}
 	}
 	if _, set := fmap["4"]; set {
-		m.AppPath = src.AppPath
+		m.ImagePath = src.ImagePath
+	}
+	if _, set := fmap["5"]; set {
+		m.ImageType = src.ImageType
+	}
+	if _, set := fmap["6"]; set {
+		m.AccessLayer = src.AccessLayer
+	}
+	if _, set := fmap["7"]; set {
+		m.AccessPorts = src.AccessPorts
+	}
+	if _, set := fmap["8"]; set {
+		m.ConfigMap = src.ConfigMap
+	}
+	if _, set := fmap["9"]; set {
+		if _, set := fmap["9.1"]; set {
+			m.Flavor.Name = src.Flavor.Name
+		}
+	}
+	if _, set := fmap["10"]; set {
+		if _, set := fmap["10.1"]; set {
+			m.Cluster.Name = src.Cluster.Name
+		}
 	}
 }
 
@@ -803,6 +1028,84 @@ func (m *App) GetKey() *AppKey {
 	return &m.Key
 }
 
+var ImageTypeStrings = []string{
+	"ImageTypeUnknown",
+	"ImageTypeDocker",
+	"ImageTypeQCOW",
+}
+
+const (
+	ImageTypeImageTypeUnknown uint64 = 1 << 0
+	ImageTypeImageTypeDocker  uint64 = 1 << 1
+	ImageTypeImageTypeQCOW    uint64 = 1 << 2
+)
+
+func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := ImageType_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = ImageType_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ImageType(val)
+	return nil
+}
+
+func (e ImageType) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var AccessLayerStrings = []string{
+	"AccessLayerUnknown",
+	"AccessLayerL4",
+	"AccessLayerL7",
+	"AccessLayerL4L7",
+}
+
+const (
+	AccessLayerAccessLayerUnknown uint64 = 1 << 0
+	AccessLayerAccessLayerL4      uint64 = 1 << 1
+	AccessLayerAccessLayerL7      uint64 = 1 << 2
+	AccessLayerAccessLayerL4L7    uint64 = 1 << 3
+)
+
+func (e *AccessLayer) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := AccessLayer_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = AccessLayer_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = AccessLayer(val)
+	return nil
+}
+
+func (e AccessLayer) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
 func (m *AppKey) Size() (n int) {
 	var l int
 	_ = l
@@ -830,10 +1133,28 @@ func (m *App) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovApp(uint64(l))
-	l = len(m.AppPath)
+	l = len(m.ImagePath)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
+	if m.ImageType != 0 {
+		n += 1 + sovApp(uint64(m.ImageType))
+	}
+	if m.AccessLayer != 0 {
+		n += 1 + sovApp(uint64(m.AccessLayer))
+	}
+	l = len(m.AccessPorts)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.ConfigMap)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = m.Flavor.Size()
+	n += 1 + l + sovApp(uint64(l))
+	l = m.Cluster.Size()
+	n += 1 + l + sovApp(uint64(l))
 	return n
 }
 
@@ -1078,7 +1399,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppPath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ImagePath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1103,7 +1424,163 @@ func (m *App) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AppPath = string(dAtA[iNdEx:postIndex])
+			m.ImagePath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ImageType", wireType)
+			}
+			m.ImageType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ImageType |= (ImageType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessLayer", wireType)
+			}
+			m.AccessLayer = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AccessLayer |= (AccessLayer(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessPorts", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessPorts = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConfigMap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConfigMap = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Flavor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Cluster", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Cluster.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1234,33 +1711,49 @@ var (
 func init() { proto.RegisterFile("app.proto", fileDescriptorApp) }
 
 var fileDescriptorApp = []byte{
-	// 448 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x91, 0xb1, 0x6f, 0xd3, 0x40,
-	0x14, 0xc6, 0xfb, 0x92, 0x28, 0xc5, 0xd7, 0x50, 0xc2, 0x09, 0x95, 0x23, 0x42, 0x69, 0xe4, 0x29,
-	0x20, 0x35, 0x46, 0x65, 0x41, 0xd9, 0x12, 0x2a, 0x96, 0x2e, 0x28, 0x88, 0xb9, 0x3a, 0xc7, 0xaf,
-	0xb6, 0x85, 0xe3, 0x7b, 0xb2, 0xcf, 0x2d, 0xd9, 0x10, 0x13, 0x3b, 0x0b, 0x23, 0x12, 0xff, 0x00,
-	0x7f, 0x46, 0x46, 0x24, 0x76, 0x04, 0x11, 0x03, 0x23, 0x52, 0x3a, 0x30, 0x22, 0x9f, 0x9d, 0xc8,
-	0xa0, 0x4e, 0x59, 0xac, 0xf7, 0x3d, 0xbf, 0xef, 0xf7, 0xbe, 0xbb, 0x63, 0x96, 0x24, 0x1a, 0x50,
-	0xa2, 0xb4, 0xe2, 0x16, 0x7a, 0x3e, 0x9a, 0xb2, 0x73, 0xdf, 0x57, 0xca, 0x8f, 0xd0, 0x91, 0x14,
-	0x3a, 0x32, 0x8e, 0x95, 0x96, 0x3a, 0x54, 0x71, 0x5a, 0x0c, 0x76, 0x5a, 0x09, 0xa6, 0x59, 0xa4,
-	0x4b, 0xf5, 0xc4, 0x0f, 0x75, 0x90, 0xb9, 0x83, 0xa9, 0x9a, 0x39, 0x33, 0xe5, 0x86, 0x51, 0x8e,
-	0x79, 0xed, 0xe4, 0xdf, 0xa3, 0x69, 0xa4, 0x32, 0xcf, 0x31, 0x73, 0x3e, 0xc6, 0x9b, 0xa2, 0x74,
-	0xde, 0xf2, 0xf0, 0x02, 0x23, 0x45, 0x98, 0x94, 0x8d, 0xa3, 0x0a, 0xca, 0x57, 0xbe, 0x2a, 0x0c,
-	0x6e, 0x76, 0x6e, 0x94, 0x11, 0xa6, 0x2a, 0xc6, 0xed, 0x77, 0xc0, 0x9a, 0x23, 0xa2, 0x53, 0x9c,
-	0xf3, 0x31, 0xbb, 0xb9, 0x81, 0x9d, 0xbd, 0xc2, 0xb9, 0x80, 0x1e, 0xf4, 0xf7, 0x8e, 0xef, 0x0e,
-	0x36, 0x67, 0x1a, 0x9c, 0xac, 0xff, 0x9f, 0xe2, 0x7c, 0xdc, 0x58, 0x7c, 0x3b, 0xdc, 0x99, 0xb4,
-	0xbc, 0x4a, 0x8f, 0x73, 0xd6, 0x88, 0xe5, 0x0c, 0x45, 0xad, 0x07, 0x7d, 0x6b, 0x62, 0x6a, 0x2e,
-	0xd8, 0xee, 0x05, 0x26, 0x69, 0xa8, 0x62, 0x51, 0x37, 0xed, 0xb5, 0x1c, 0xb6, 0x7e, 0xad, 0x04,
-	0xfc, 0x59, 0x09, 0xf8, 0xfc, 0xf1, 0x10, 0xec, 0x8c, 0xd5, 0x47, 0x44, 0xfc, 0x80, 0x35, 0xcf,
-	0x43, 0x8c, 0xbc, 0x54, 0x40, 0xaf, 0xde, 0xb7, 0x26, 0xa5, 0xe2, 0x0f, 0x58, 0x3d, 0x0f, 0x55,
-	0x33, 0xa1, 0x6e, 0x57, 0x42, 0x15, 0xf1, 0xcb, 0x38, 0xf9, 0x0c, 0xbf, 0xc7, 0x6e, 0x48, 0xa2,
-	0x33, 0x92, 0x3a, 0x10, 0x8d, 0x62, 0xa5, 0x24, 0x7a, 0x2e, 0x75, 0x30, 0x6c, 0xe7, 0x2b, 0x7f,
-	0xaf, 0x04, 0xbc, 0xb9, 0x12, 0xf0, 0xe1, 0x4a, 0xc0, 0xf1, 0xa7, 0x9a, 0xb9, 0x81, 0x11, 0x85,
-	0xfc, 0x19, 0xb3, 0x9e, 0x26, 0x28, 0x35, 0xe6, 0x39, 0xf6, 0xff, 0x5d, 0xd1, 0xa9, 0xae, 0x9c,
-	0x98, 0xc7, 0xb3, 0x0f, 0xde, 0x7e, 0xfd, 0xf9, 0xbe, 0xd6, 0xb6, 0xf7, 0x9c, 0xa9, 0xb1, 0x39,
-	0x92, 0x68, 0x08, 0x0f, 0x73, 0xce, 0x09, 0x46, 0xb8, 0x05, 0xc7, 0x33, 0xb6, 0x0a, 0xe7, 0x25,
-	0x79, 0xdb, 0xe4, 0xc9, 0x8c, 0x6d, 0xcd, 0x19, 0xb1, 0xdd, 0x17, 0x81, 0xba, 0xbc, 0x8e, 0xf2,
-	0x9f, 0xb6, 0xef, 0x18, 0xc4, 0xbe, 0x6d, 0x39, 0x69, 0xa0, 0x2e, 0x4b, 0xc0, 0x23, 0x18, 0xb7,
-	0x17, 0x3f, 0xba, 0x3b, 0x8b, 0x65, 0x17, 0xbe, 0x2c, 0xbb, 0xf0, 0x7d, 0xd9, 0x05, 0xb7, 0x69,
-	0x4c, 0x8f, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0x88, 0x4b, 0x5e, 0x20, 0xfe, 0x02, 0x00, 0x00,
+	// 696 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xbf, 0x6f, 0xd3, 0x40,
+	0x14, 0xee, 0x25, 0x6d, 0x82, 0x2f, 0x49, 0xeb, 0x1e, 0x25, 0x1c, 0x15, 0x4d, 0x43, 0xc4, 0x10,
+	0x2a, 0x25, 0x46, 0x29, 0xa8, 0xd0, 0x2d, 0x69, 0x55, 0x54, 0xb5, 0x88, 0x12, 0xa8, 0x18, 0xc3,
+	0xc5, 0xbe, 0x38, 0x56, 0x1d, 0xdf, 0xc9, 0x76, 0x5a, 0xb2, 0x21, 0x58, 0x10, 0x2b, 0x0b, 0x23,
+	0x12, 0x1b, 0x13, 0xe2, 0xaf, 0xe8, 0x88, 0xc4, 0x8e, 0xa0, 0x62, 0xe8, 0x88, 0xd4, 0x0e, 0xb0,
+	0x21, 0x9f, 0x7f, 0xe4, 0x8a, 0x18, 0x50, 0x97, 0xe8, 0x7d, 0xef, 0x7d, 0xdf, 0x77, 0x9f, 0x9e,
+	0x9f, 0x02, 0x15, 0xc2, 0x79, 0x9d, 0xbb, 0xcc, 0x67, 0x48, 0xa1, 0x86, 0x49, 0x45, 0x39, 0x7f,
+	0xd5, 0x64, 0xcc, 0xb4, 0xa9, 0x46, 0xb8, 0xa5, 0x11, 0xc7, 0x61, 0x3e, 0xf1, 0x2d, 0xe6, 0x78,
+	0x21, 0x71, 0x3e, 0xef, 0x52, 0x6f, 0x68, 0xfb, 0x11, 0xba, 0x63, 0x5a, 0x7e, 0x7f, 0xd8, 0xad,
+	0xeb, 0x6c, 0xa0, 0x0d, 0x58, 0xd7, 0xb2, 0x03, 0x9b, 0x67, 0x5a, 0xf0, 0x5b, 0xd3, 0x6d, 0x36,
+	0x34, 0x34, 0xc1, 0x33, 0xa9, 0x93, 0x14, 0x91, 0xf2, 0xde, 0xff, 0x29, 0xf5, 0x9a, 0x49, 0x9d,
+	0x9a, 0x3e, 0x88, 0xa1, 0x54, 0x44, 0x46, 0x33, 0x06, 0xdd, 0xa7, 0x36, 0xe3, 0xd4, 0x8d, 0x13,
+	0xf6, 0x6c, 0xb2, 0xcf, 0x62, 0x54, 0xd0, 0xed, 0xa1, 0xe7, 0x27, 0xc3, 0x9a, 0xf4, 0xac, 0xc9,
+	0x4c, 0x16, 0xba, 0x75, 0x87, 0x3d, 0x81, 0x04, 0x10, 0x55, 0x48, 0xaf, 0xbc, 0x02, 0x30, 0xd3,
+	0xe4, 0x7c, 0x8b, 0x8e, 0x50, 0x0b, 0x16, 0x92, 0x97, 0x3a, 0x7b, 0x74, 0x84, 0x41, 0x19, 0x54,
+	0x73, 0x8d, 0xcb, 0xf5, 0x64, 0x73, 0xf5, 0xf5, 0x78, 0xbe, 0x45, 0x47, 0xad, 0xc9, 0xc3, 0xaf,
+	0x8b, 0x13, 0xed, 0xbc, 0x21, 0xf5, 0x10, 0x82, 0x93, 0x0e, 0x19, 0x50, 0x9c, 0x2a, 0x83, 0xaa,
+	0xd2, 0x16, 0x35, 0xc2, 0x30, 0xbb, 0x4f, 0x5d, 0xcf, 0x62, 0x0e, 0x4e, 0x8b, 0x76, 0x0c, 0x57,
+	0xf3, 0xc7, 0x27, 0x18, 0xfc, 0x3a, 0xc1, 0xe0, 0xe3, 0xbb, 0x45, 0x50, 0xf9, 0x90, 0x86, 0xe9,
+	0x26, 0xe7, 0xa8, 0x08, 0x33, 0x3d, 0x8b, 0xda, 0x86, 0x87, 0x41, 0x39, 0x5d, 0x55, 0xda, 0x11,
+	0x42, 0x37, 0x60, 0x3a, 0x48, 0x95, 0x12, 0xa9, 0x66, 0xa5, 0x54, 0x61, 0xfe, 0x28, 0x4f, 0xc0,
+	0x41, 0xd7, 0x21, 0xb4, 0x06, 0xc4, 0xa4, 0x1d, 0x4e, 0xfc, 0x3e, 0x9e, 0x0c, 0x5e, 0x6d, 0x4d,
+	0x1d, 0xbf, 0xfc, 0x0d, 0x40, 0x5b, 0x11, 0x83, 0x1d, 0xe2, 0xf7, 0xd1, 0x72, 0xcc, 0xf2, 0x47,
+	0x9c, 0xe2, 0xa9, 0x32, 0xa8, 0x4e, 0x37, 0xe6, 0x24, 0xdf, 0xcd, 0x60, 0xf8, 0x78, 0xc4, 0x69,
+	0x24, 0x0a, 0x4a, 0x74, 0x17, 0xe6, 0x89, 0xae, 0x53, 0xcf, 0xeb, 0xd8, 0x64, 0x44, 0x5d, 0x9c,
+	0x11, 0xb2, 0xa2, 0x1c, 0x47, 0x8c, 0xb7, 0x83, 0x69, 0x3b, 0x47, 0xc6, 0x00, 0x5d, 0x4b, 0xa4,
+	0x9c, 0xb9, 0xbe, 0x87, 0xb3, 0x62, 0x1b, 0x11, 0x65, 0x27, 0x68, 0xa1, 0x05, 0x08, 0x75, 0xe6,
+	0xf4, 0x2c, 0xb3, 0x33, 0x20, 0x1c, 0x5f, 0x10, 0x04, 0x25, 0xec, 0xdc, 0x27, 0x1c, 0x35, 0x60,
+	0x26, 0xfc, 0xf6, 0x58, 0x11, 0x5b, 0x90, 0xd3, 0x6e, 0x88, 0xc1, 0x78, 0x11, 0x11, 0x13, 0xdd,
+	0x86, 0xd9, 0xe8, 0x42, 0x30, 0x14, 0xa2, 0x4b, 0x92, 0x68, 0x2d, 0x9c, 0x8c, 0x55, 0x31, 0x77,
+	0x75, 0x21, 0xf8, 0x36, 0x3f, 0x4f, 0x30, 0x78, 0x7e, 0x8a, 0xc1, 0xdb, 0x53, 0x0c, 0x5e, 0x7f,
+	0xba, 0xa2, 0x6c, 0xc6, 0xbb, 0x5b, 0xda, 0x84, 0x4a, 0xb2, 0x1e, 0x34, 0x07, 0xd5, 0x04, 0xec,
+	0x3a, 0x7b, 0x0e, 0x3b, 0x70, 0xd4, 0x09, 0x74, 0x11, 0xce, 0x24, 0xdd, 0x75, 0xa6, 0xef, 0x51,
+	0x57, 0x05, 0x68, 0x16, 0x16, 0x92, 0xe6, 0xc3, 0xb5, 0x07, 0x4f, 0xd4, 0xd4, 0xd2, 0x53, 0x98,
+	0x93, 0x56, 0x86, 0x8a, 0x10, 0x49, 0x70, 0x6c, 0x37, 0x0b, 0x0b, 0x52, 0x7f, 0xfb, 0x56, 0x68,
+	0x26, 0xb7, 0x56, 0xd4, 0x54, 0xf0, 0xe8, 0x19, 0xd6, 0xf6, 0x8a, 0x9a, 0x6e, 0xbc, 0x4f, 0x89,
+	0x23, 0x6f, 0x72, 0x0b, 0x6d, 0x40, 0x65, 0xcd, 0xa5, 0xc4, 0xa7, 0xc1, 0xa5, 0x4d, 0x9f, 0x3d,
+	0xa2, 0x79, 0xf9, 0xa8, 0xda, 0xe2, 0x5f, 0xa0, 0x52, 0x7c, 0xf1, 0xe5, 0xc7, 0x9b, 0x94, 0x5a,
+	0xc9, 0x69, 0xba, 0x90, 0x69, 0x84, 0xf3, 0x55, 0xb0, 0x14, 0xf8, 0xac, 0x53, 0x9b, 0x9e, 0xc3,
+	0xc7, 0x10, 0x32, 0xc9, 0x67, 0x97, 0x1b, 0xe7, 0xc9, 0x33, 0x14, 0xb2, 0xd8, 0xa7, 0x09, 0xb3,
+	0x8f, 0xfa, 0xec, 0xe0, 0x5f, 0x2e, 0x7f, 0xe1, 0xca, 0x9c, 0xb0, 0x98, 0xae, 0x28, 0x9a, 0xd7,
+	0x67, 0x07, 0x91, 0xc1, 0x4d, 0xd0, 0x52, 0x0f, 0xbf, 0x97, 0x26, 0x0e, 0x8f, 0x4a, 0xe0, 0xf3,
+	0x51, 0x09, 0x7c, 0x3b, 0x2a, 0x81, 0x6e, 0x46, 0x88, 0x96, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff,
+	0xbb, 0x85, 0x61, 0x6e, 0x47, 0x05, 0x00, 0x00,
 }

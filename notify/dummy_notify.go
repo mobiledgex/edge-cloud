@@ -14,6 +14,8 @@ type DummyHandler struct {
 	DefaultHandler
 	AppInstCache      edgeproto.AppInstCache
 	CloudletCache     edgeproto.CloudletCache
+	FlavorCache       edgeproto.FlavorCache
+	ClusterInstCache  edgeproto.ClusterInstCache
 	AppInstInfoCache  edgeproto.AppInstInfoCache
 	CloudletInfoCache edgeproto.CloudletInfoCache
 }
@@ -24,6 +26,8 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitCloudletCache(&h.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
+	edgeproto.InitFlavorCache(&h.FlavorCache)
+	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	h.DefaultHandler.SendAppInst = &h.AppInstCache
 	h.DefaultHandler.RecvAppInst = &h.AppInstCache
 	h.DefaultHandler.SendCloudlet = &h.CloudletCache
@@ -32,12 +36,18 @@ func NewDummyHandler() *DummyHandler {
 	h.DefaultHandler.RecvAppInstInfo = &h.AppInstInfoCache
 	h.DefaultHandler.SendCloudletInfo = &h.CloudletInfoCache
 	h.DefaultHandler.RecvCloudletInfo = &h.CloudletInfoCache
+	h.DefaultHandler.SendFlavor = &h.FlavorCache
+	h.DefaultHandler.RecvFlavor = &h.FlavorCache
+	h.DefaultHandler.SendClusterInst = &h.ClusterInstCache
+	h.DefaultHandler.RecvClusterInst = &h.ClusterInstCache
 	return h
 }
 
 func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
 	s.AppInstCache.SetNotifyCb(mgr.UpdateAppInst)
 	s.CloudletCache.SetNotifyCb(mgr.UpdateCloudlet)
+	s.FlavorCache.SetNotifyCb(mgr.UpdateFlavor)
+	s.ClusterInstCache.SetNotifyCb(mgr.UpdateClusterInst)
 }
 
 func (s *DummyHandler) SetClientCb(cl *Client) {
@@ -46,8 +56,12 @@ func (s *DummyHandler) SetClientCb(cl *Client) {
 }
 
 func (s *DummyHandler) WaitForAppInstInfo(count int) {
+	WaitForAppInstInfo(&s.AppInstInfoCache, count)
+}
+
+func WaitForAppInstInfo(cache *edgeproto.AppInstInfoCache, count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.AppInstInfoCache.Objs) == count {
+		if len(cache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -55,8 +69,12 @@ func (s *DummyHandler) WaitForAppInstInfo(count int) {
 }
 
 func (s *DummyHandler) WaitForCloudletInfo(count int) {
+	WaitForCloudletInfo(&s.CloudletInfoCache, count)
+}
+
+func WaitForCloudletInfo(cache *edgeproto.CloudletInfoCache, count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.CloudletInfoCache.Objs) == count {
+		if len(cache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -64,8 +82,12 @@ func (s *DummyHandler) WaitForCloudletInfo(count int) {
 }
 
 func (s *DummyHandler) WaitForAppInsts(count int) {
+	WaitForAppInsts(&s.AppInstCache, count)
+}
+
+func WaitForAppInsts(cache *edgeproto.AppInstCache, count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.AppInstCache.Objs) == count {
+		if len(cache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -73,8 +95,38 @@ func (s *DummyHandler) WaitForAppInsts(count int) {
 }
 
 func (s *DummyHandler) WaitForCloudlets(count int) {
+	WaitForCloudlets(&s.CloudletCache, count)
+}
+
+func WaitForCloudlets(cache *edgeproto.CloudletCache, count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.CloudletCache.Objs) == count {
+		if len(cache.Objs) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func (s *DummyHandler) WaitForFlavors(count int) {
+	WaitForFlavors(&s.FlavorCache, count)
+}
+
+func WaitForFlavors(cache *edgeproto.FlavorCache, count int) {
+	for i := 0; i < 10; i++ {
+		if len(cache.Objs) == count {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func (s *DummyHandler) WaitForClusterInsts(count int) {
+	WaitForClusterInsts(&s.ClusterInstCache, count)
+}
+
+func WaitForClusterInsts(cache *edgeproto.ClusterInstCache, count int) {
+	for i := 0; i < 10; i++ {
+		if len(cache.Objs) == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)

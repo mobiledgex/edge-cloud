@@ -8,6 +8,8 @@ type DefaultHandler struct {
 	// server handlers
 	SendAppInst      SendAppInstHandler
 	SendCloudlet     SendCloudletHandler
+	SendFlavor       SendFlavorHandler
+	SendClusterInst  SendClusterInstHandler
 	RecvAppInstInfo  RecvAppInstInfoHandler
 	RecvCloudletInfo RecvCloudletInfoHandler
 	// client handlers
@@ -15,6 +17,8 @@ type DefaultHandler struct {
 	SendCloudletInfo SendCloudletInfoHandler
 	RecvAppInst      RecvAppInstHandler
 	RecvCloudlet     RecvCloudletHandler
+	RecvFlavor       RecvFlavorHandler
+	RecvClusterInst  RecvClusterInstHandler
 }
 
 func (s *DefaultHandler) SendAppInstHandler() SendAppInstHandler {
@@ -23,6 +27,14 @@ func (s *DefaultHandler) SendAppInstHandler() SendAppInstHandler {
 
 func (s *DefaultHandler) SendCloudletHandler() SendCloudletHandler {
 	return s.SendCloudlet
+}
+
+func (s *DefaultHandler) SendFlavorHandler() SendFlavorHandler {
+	return s.SendFlavor
+}
+
+func (s *DefaultHandler) SendClusterInstHandler() SendClusterInstHandler {
+	return s.SendClusterInst
 }
 
 func (s *DefaultHandler) RecvAppInstInfoHandler() RecvAppInstInfoHandler {
@@ -47,4 +59,12 @@ func (s *DefaultHandler) RecvAppInstHandler() RecvAppInstHandler {
 
 func (s *DefaultHandler) RecvCloudletHandler() RecvCloudletHandler {
 	return s.RecvCloudlet
+}
+
+func (s *DefaultHandler) RecvFlavorHandler() RecvFlavorHandler {
+	return s.RecvFlavor
+}
+
+func (s *DefaultHandler) RecvClusterInstHandler() RecvClusterInstHandler {
+	return s.RecvClusterInst
 }

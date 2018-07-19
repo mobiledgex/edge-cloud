@@ -2,6 +2,32 @@ package testutil
 
 import "github.com/mobiledgex/edge-cloud/edgeproto"
 
+var FlavorData = []edgeproto.Flavor{
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.tiny",
+		},
+		Ram:   1024,
+		Vcpus: 1,
+		Disk:  1,
+	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.small",
+		},
+		Ram:   2048,
+		Vcpus: 2,
+		Disk:  2,
+	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.medium",
+		},
+		Ram:   4096,
+		Vcpus: 4,
+		Disk:  4,
+	},
+}
 var DevData = []edgeproto.Developer{
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
@@ -32,6 +58,36 @@ var DevData = []edgeproto.Developer{
 		Email:   "support@sierraware.com",
 	},
 }
+var ClusterData = []edgeproto.Cluster{
+	edgeproto.Cluster{
+		Key: edgeproto.ClusterKey{
+			Name: "Pokemons",
+		},
+		Flavor: FlavorData[0].Key,
+		Nodes:  3,
+	},
+	edgeproto.Cluster{
+		Key: edgeproto.ClusterKey{
+			Name: "Ever.Ai",
+		},
+		Flavor: FlavorData[1].Key,
+		Nodes:  3,
+	},
+	edgeproto.Cluster{
+		Key: edgeproto.ClusterKey{
+			Name: "1000realities",
+		},
+		Flavor: FlavorData[2].Key,
+		Nodes:  3,
+	},
+	edgeproto.Cluster{
+		Key: edgeproto.ClusterKey{
+			Name: "Big-Pokemons",
+		},
+		Flavor: FlavorData[2].Key,
+		Nodes:  5,
+	},
+}
 var AppData = []edgeproto.App{
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -39,7 +95,10 @@ var AppData = []edgeproto.App{
 			Name:         "Pokemon Go!",
 			Version:      "1.0.0",
 		},
-		AppPath: "/foo/bar/bin",
+		ImageType:   edgeproto.ImageType_ImageTypeDocker,
+		AccessLayer: edgeproto.AccessLayer_AccessLayerL7,
+		Flavor:      FlavorData[0].Key,
+		Cluster:     ClusterData[0].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -47,7 +106,9 @@ var AppData = []edgeproto.App{
 			Name:         "Pokemon Go!",
 			Version:      "1.0.1",
 		},
-		AppPath: "foo/bar/bin/1.0.1",
+		ImageType:   edgeproto.ImageType_ImageTypeDocker,
+		AccessLayer: edgeproto.AccessLayer_AccessLayerL7,
+		Flavor:      FlavorData[0].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -55,7 +116,9 @@ var AppData = []edgeproto.App{
 			Name:         "Harry Potter Go! Go!",
 			Version:      "0.0.1",
 		},
-		AppPath: "/some/path",
+		ImageType:   edgeproto.ImageType_ImageTypeDocker,
+		AccessLayer: edgeproto.AccessLayer_AccessLayerL7,
+		Flavor:      FlavorData[1].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -63,6 +126,10 @@ var AppData = []edgeproto.App{
 			Name:         "AI",
 			Version:      "1.2.0",
 		},
+		ImageType:   edgeproto.ImageType_ImageTypeQCOW,
+		AccessLayer: edgeproto.AccessLayer_AccessLayerL4,
+		AccessPorts: "12345-12349",
+		Flavor:      FlavorData[1].Key,
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -70,6 +137,11 @@ var AppData = []edgeproto.App{
 			Name:         "my reality",
 			Version:      "0.0.1",
 		},
+		ImageType:   edgeproto.ImageType_ImageTypeQCOW,
+		AccessLayer: edgeproto.AccessLayer_AccessLayerL4L7,
+		AccessPorts: "80,10080",
+		Flavor:      FlavorData[2].Key,
+		Cluster:     ClusterData[2].Key,
 	},
 }
 var OperatorData = []edgeproto.Operator{
@@ -124,6 +196,64 @@ var CloudletData = []edgeproto.Cloudlet{
 		AccessUri: "hi76.verizon.com",
 	},
 }
+var ClusterInstData = []edgeproto.ClusterInst{
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[0].Key,
+			CloudletKey: CloudletData[0].Key,
+		},
+		Flavor: ClusterData[0].Flavor,
+		Nodes:  ClusterData[0].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[0].Key,
+			CloudletKey: CloudletData[1].Key,
+		},
+		Flavor: ClusterData[0].Flavor,
+		Nodes:  ClusterData[0].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[0].Key,
+			CloudletKey: CloudletData[2].Key,
+		},
+		Flavor: ClusterData[0].Flavor,
+		Nodes:  ClusterData[0].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[1].Key,
+			CloudletKey: CloudletData[0].Key,
+		},
+		Flavor: ClusterData[1].Flavor,
+		Nodes:  ClusterData[1].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[1].Key,
+			CloudletKey: CloudletData[1].Key,
+		},
+		Flavor: ClusterData[1].Flavor,
+		Nodes:  ClusterData[1].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[2].Key,
+			CloudletKey: CloudletData[2].Key,
+		},
+		Flavor: ClusterData[2].Flavor,
+		Nodes:  ClusterData[2].Nodes,
+	},
+	edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey:  ClusterData[3].Key,
+			CloudletKey: CloudletData[3].Key,
+		},
+		Flavor: ClusterData[3].Flavor,
+		Nodes:  ClusterData[3].Nodes,
+	},
+}
 var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -132,9 +262,8 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[0].Location,
-		Liveness:    edgeproto.AppInst_STATIC,
 		Uri:         "10.100.10.1",
-		AppPath:     AppData[0].AppPath,
+		ImagePath:   AppData[0].ImagePath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -143,9 +272,8 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          2,
 		},
 		CloudletLoc: CloudletData[0].Location,
-		Liveness:    edgeproto.AppInst_DYNAMIC,
 		Uri:         "10.100.10.2",
-		AppPath:     AppData[0].AppPath,
+		ImagePath:   AppData[0].ImagePath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -154,9 +282,8 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		Liveness:    edgeproto.AppInst_STATIC,
 		Uri:         "pokemon.ny.mex.io",
-		AppPath:     AppData[0].AppPath,
+		ImagePath:   AppData[0].ImagePath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -165,9 +292,8 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		Liveness:    edgeproto.AppInst_STATIC,
 		Uri:         "pokemon.ny.mex.io",
-		AppPath:     AppData[1].AppPath,
+		ImagePath:   AppData[1].ImagePath,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -176,31 +302,25 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[2].Location,
-		Liveness:    edgeproto.AppInst_STATIC,
 		Uri:         "harrypotter.sf.mex.io",
-		AppPath:     AppData[2].AppPath,
+		ImagePath:   AppData[2].ImagePath,
 	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
 	edgeproto.AppInstInfo{
 		Key: AppInstData[0].Key,
-		Cpu: 1,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[1].Key,
-		Cpu: 2,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[2].Key,
-		Cpu: 3,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[3].Key,
-		Cpu: 4,
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[4].Key,
-		Cpu: 5,
 	},
 }
 var CloudletInfoData = []edgeproto.CloudletInfo{

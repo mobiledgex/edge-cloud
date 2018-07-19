@@ -1,0 +1,68 @@
+// A Cluster defines a Kubernetes cluster.
+// One or more AppInsts will belong to a Cluster.
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "result.proto";
+import "developer.proto";
+import "flavor.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message ClusterKey {
+  // cluster name
+  string name = 1;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// Developer creates a cluster so that apps can be assigned to it.
+// Clusters are not location specific. They may be instantiated on
+// 0 or more Cloudlets. When the controller (or the user) decides
+// create an AppInst (create an App on a Cloudlet), it sends the
+// Cluster to the CRM to create the cluster.
+message Cluster {
+  repeated string fields = 1;
+  // Unique key
+  ClusterKey key = 2 [(gogoproto.nullable) = false];
+  // flavor of each node the cluster
+  FlavorKey flavor = 3 [(gogoproto.nullable) = false];
+  // number of nodes in the cluster
+  int32 nodes = 4;
+  // Future: policy options on where this cluster can be created.
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+}
+
+service ClusterApi {
+  rpc CreateCluster(Cluster) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/cluster"
+      body: "*"
+    };
+  }
+  rpc DeleteCluster(Cluster) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/cluster"
+      body: "*"
+    };
+  }
+  rpc UpdateCluster(Cluster) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/cluster"
+      body: "*"
+    };
+  }
+  rpc ShowCluster(Cluster) returns (stream Cluster) {
+    option (google.api.http) = {
+      post: "/show/cluster"
+      body: "*"
+    };
+  }
+}

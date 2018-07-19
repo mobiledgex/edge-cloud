@@ -35,6 +35,14 @@ func TestAppInstApi(t *testing.T) {
 		_, err := developerApi.CreateDeveloper(ctx, &obj)
 		assert.Nil(t, err, "Create developer")
 	}
+	for _, obj := range testutil.FlavorData {
+		_, err := flavorApi.CreateFlavor(ctx, &obj)
+		assert.Nil(t, err, "Create flavor")
+	}
+	for _, obj := range testutil.ClusterData {
+		_, err := clusterApi.CreateCluster(ctx, &obj)
+		assert.Nil(t, err, "Create cluster")
+	}
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)
 		assert.Nil(t, err, "Create app")
@@ -46,6 +54,10 @@ func TestAppInstApi(t *testing.T) {
 	for _, obj := range testutil.CloudletData {
 		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
 		assert.Nil(t, err, "Create cloudlet")
+	}
+	for _, obj := range testutil.ClusterInstData {
+		_, err := clusterInstApi.CreateClusterInst(ctx, &obj)
+		assert.Nil(t, err, "Create clusterInst")
 	}
 
 	testutil.InternalAppInstCudTest(t, &appInstApi, testutil.AppInstData)
@@ -61,10 +73,10 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	// update app and check that app insts are updated
 	updater := edgeproto.App{}
 	updater.Key = testutil.AppData[0].Key
-	newPath := "a new path"
-	updater.AppPath = newPath
+	newPath := "a new config"
+	updater.ConfigMap = newPath
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppFieldAppPath)
+	updater.Fields = append(updater.Fields, edgeproto.AppFieldConfigMap)
 	_, err := cAppApi.UpdateApp(ctx, &updater)
 	assert.Nil(t, err, "Update app")
 
@@ -75,7 +87,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	assert.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
-		assert.Equal(t, newPath, inst.AppPath, "check app inst app path")
+		assert.Equal(t, newPath, inst.ConfigMap, "check app inst")
 	}
 	assert.True(t, len(show.Data) > 0, "number of matching app insts")
 

@@ -1,3 +1,10 @@
+flavors:
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+
 operators:
 - key:
     name: ATT
@@ -36,5 +43,7 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: "1.0"
-  apppath: /usr/bin/someapp
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
 

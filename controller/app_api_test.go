@@ -34,6 +34,14 @@ func TestAppApi(t *testing.T) {
 		_, err := developerApi.CreateDeveloper(ctx, &obj)
 		assert.Nil(t, err, "Create developer")
 	}
+	for _, obj := range testutil.FlavorData {
+		_, err := flavorApi.CreateFlavor(ctx, &obj)
+		assert.Nil(t, err, "Create flavor")
+	}
+	for _, obj := range testutil.ClusterData {
+		_, err := clusterApi.CreateCluster(ctx, &obj)
+		assert.Nil(t, err, "Create cluster")
+	}
 
 	testutil.InternalAppCudTest(t, &appApi, testutil.AppData)
 

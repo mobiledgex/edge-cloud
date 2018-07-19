@@ -47,7 +47,7 @@ type DmeProcess interface {
 }
 
 type CrmProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }
