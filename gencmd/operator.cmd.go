@@ -31,6 +31,7 @@ var _ = math.Inf
 var OperatorApiCmd edgeproto.OperatorApiClient
 var OperatorIn edgeproto.Operator
 var OperatorFlagSet = pflag.NewFlagSet("Operator", pflag.ExitOnError)
+var OperatorNoConfigFlagSet = pflag.NewFlagSet("OperatorNoConfig", pflag.ExitOnError)
 
 func OperatorCodeSlicer(in *edgeproto.OperatorCode) []string {
 	s := make([]string, 0, 2)
@@ -290,6 +291,13 @@ func init() {
 	DeleteOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	UpdateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	ShowOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
+}
+
+func OperatorApiAllowNoConfig() {
+	CreateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	DeleteOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	UpdateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	ShowOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
 }
 
 func OperatorSetFields() {

@@ -47,4 +47,5 @@ crms:
     name: crm1
     apiaddr: 37.50.143.110:55091
     notifyaddrs: 37.50.143.110:37001
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
   hostname: 37.50.143.110

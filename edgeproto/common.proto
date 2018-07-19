@@ -1,0 +1,12 @@
+// common definitions
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+
+enum Liveness {
+  LivenessUnknown = 0;
+  LivenessStatic = 1;
+  LivenessDynamic = 2;
+}

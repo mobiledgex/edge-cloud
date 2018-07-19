@@ -9,6 +9,9 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
 import "cloudlet.proto";
+import "flavor.proto";
+import "clusterinst.proto";
+import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
@@ -33,23 +36,31 @@ message AppInst {
   // Cache the location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // URI to connect to this instance
-  string uri = 4 [(protogen.test_update) = true];
-  // IP to connect to this instance (XXX why is this needed?)
-  bytes ip = 8;
+  string uri = 4 [(protogen.backend) = true];
+  // cluster instance on which this is instatiated
+  ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // type of instance
-  enum Liveness {
-    UNKNOWN = 0;
-    STATIC = 1;
-    DYNAMIC = 2;
-  }
-  Liveness liveness = 6;
-  // cache app path from app
-  string app_path = 7;
+  Liveness liveness = 6 [(protogen.backend) = true];
+  // cache data from app
+  // image path
+  string image_path = 7 [(protogen.backend) = true];
+  // image type
+  ImageType image_type = 8 [(protogen.backend) = true];
+  // mapped ports that are publicly accessible; correspond to
+  // ports on App. Only valid for L4 access types.
+  string mapped_ports = 9 [(protogen.backend) = true];
+  // mapped path to append to hostname for public access.
+  // Only valid for L7 access types.
+  string mapped_path = 10 [(protogen.backend) = true];
+  // initial config passed to docker
+  string config_map = 11 [(protogen.backend) = true];
+  // flavor defining resource requirements
+  FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
-  option (protocmd.noconfig) = "CloudletLoc,AppPath";
+  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Flavor,Uri,Liveness,ClusterInstKey.CloudletKey";
 }
 
 // This API is for manual configuration of static app instances.
@@ -90,19 +101,6 @@ message AppInstInfo {
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server
   int64 notify_id = 3;
-  // TODO: When max load is reached on k8s cluster, tell controller.
-  // At this point k8s cluster has already scaled AppInst to max instances.
-  // The only recourse is to instantiate another k8s cluster on another
-  // cloudlet, or perhaps expand the k8s cluster on this cloudlet.
-  // This is a placeholder, not sure how this will work.
-  uint64 load = 4;
-  // TODO: Used resources (for billing)
-  // These are also placeholders. What is supplied here
-  // depends on what Openstack/Kubernetes/Agents can measure.
-  uint64 cpu = 5;
-  uint64 max_disk = 6;
-  uint64 network_in = 7;
-  uint64 network_out = 8;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

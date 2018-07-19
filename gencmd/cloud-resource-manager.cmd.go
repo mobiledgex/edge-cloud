@@ -30,9 +30,11 @@ var _ = math.Inf
 var CloudResourceManagerCmd edgeproto.CloudResourceManagerClient
 var CloudResourceIn edgeproto.CloudResource
 var CloudResourceFlagSet = pflag.NewFlagSet("CloudResource", pflag.ExitOnError)
+var CloudResourceNoConfigFlagSet = pflag.NewFlagSet("CloudResourceNoConfig", pflag.ExitOnError)
 var CloudResourceInCategory string
 var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
 var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
+var EdgeCloudApplicationNoConfigFlagSet = pflag.NewFlagSet("EdgeCloudApplicationNoConfig", pflag.ExitOnError)
 var CloudResourceCategoryStrings = []string{
 	"AllCloudResources",
 	"Kubernetes",
@@ -503,6 +505,14 @@ func init() {
 	DeleteCloudResourceCmd.Flags().AddFlagSet(CloudResourceFlagSet)
 	DeployApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationFlagSet)
 	DeleteApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationFlagSet)
+}
+
+func CloudResourceManagerAllowNoConfig() {
+	ListCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	AddCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	DeleteCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	DeployApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationNoConfigFlagSet)
+	DeleteApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationNoConfigFlagSet)
 }
 
 func parseCloudResourceEnums() error {

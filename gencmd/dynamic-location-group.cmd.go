@@ -29,6 +29,7 @@ var _ = math.Inf
 var DynamicLocGroupApiCmd distributed_match_engine.DynamicLocGroupApiClient
 var DlgMessageIn distributed_match_engine.DlgMessage
 var DlgMessageFlagSet = pflag.NewFlagSet("DlgMessage", pflag.ExitOnError)
+var DlgMessageNoConfigFlagSet = pflag.NewFlagSet("DlgMessageNoConfig", pflag.ExitOnError)
 var DlgMessageInAckType string
 var DlgAckStrings = []string{
 	"DlgAckEachMessage",
@@ -137,6 +138,10 @@ func init() {
 	DlgMessageFlagSet.StringVar(&DlgMessageInAckType, "acktype", "", "one of [DlgAckEachMessage DlgAsyEveryNMessage DlgNoAck]")
 	DlgMessageFlagSet.StringVar(&DlgMessageIn.Message, "message", "", "Message")
 	SendToGroupCmd.Flags().AddFlagSet(DlgMessageFlagSet)
+}
+
+func DynamicLocGroupApiAllowNoConfig() {
+	SendToGroupCmd.Flags().AddFlagSet(DlgMessageNoConfigFlagSet)
 }
 
 func parseDlgMessageEnums() error {

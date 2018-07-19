@@ -24,8 +24,6 @@ import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
-import "errors"
-import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -34,31 +32,6 @@ import io "io"
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// type of instance
-type AppInst_Liveness int32
-
-const (
-	AppInst_UNKNOWN AppInst_Liveness = 0
-	AppInst_STATIC  AppInst_Liveness = 1
-	AppInst_DYNAMIC AppInst_Liveness = 2
-)
-
-var AppInst_Liveness_name = map[int32]string{
-	0: "UNKNOWN",
-	1: "STATIC",
-	2: "DYNAMIC",
-}
-var AppInst_Liveness_value = map[string]int32{
-	"UNKNOWN": 0,
-	"STATIC":  1,
-	"DYNAMIC": 2,
-}
-
-func (x AppInst_Liveness) String() string {
-	return proto.EnumName(AppInst_Liveness_name, int32(x))
-}
-func (AppInst_Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1, 0} }
 
 type AppInstKey struct {
 	// App key
@@ -84,11 +57,25 @@ type AppInst struct {
 	CloudletLoc distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
 	// URI to connect to this instance
 	Uri string `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
-	// IP to connect to this instance (XXX why is this needed?)
-	Ip       []byte           `protobuf:"bytes,8,opt,name=ip,proto3" json:"ip,omitempty"`
-	Liveness AppInst_Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.AppInst_Liveness" json:"liveness,omitempty"`
-	// cache app path from app
-	AppPath string `protobuf:"bytes,7,opt,name=app_path,json=appPath,proto3" json:"app_path,omitempty"`
+	// cluster instance on which this is instatiated
+	ClusterInstKey ClusterInstKey `protobuf:"bytes,5,opt,name=cluster_inst_key,json=clusterInstKey" json:"cluster_inst_key"`
+	// type of instance
+	Liveness Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
+	// cache data from app
+	// image path
+	ImagePath string `protobuf:"bytes,7,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	// image type
+	ImageType ImageType `protobuf:"varint,8,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	// mapped ports that are publicly accessible; correspond to
+	// ports on App. Only valid for L4 access types.
+	MappedPorts string `protobuf:"bytes,9,opt,name=mapped_ports,json=mappedPorts,proto3" json:"mapped_ports,omitempty"`
+	// mapped path to append to hostname for public access.
+	// Only valid for L7 access types.
+	MappedPath string `protobuf:"bytes,10,opt,name=mapped_path,json=mappedPath,proto3" json:"mapped_path,omitempty"`
+	// initial config passed to docker
+	ConfigMap string `protobuf:"bytes,11,opt,name=config_map,json=configMap,proto3" json:"config_map,omitempty"`
+	// flavor defining resource requirements
+	Flavor FlavorKey `protobuf:"bytes,12,opt,name=flavor" json:"flavor"`
 }
 
 func (m *AppInst) Reset()                    { *m = AppInst{} }
@@ -104,19 +91,6 @@ type AppInstInfo struct {
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Id of client assigned by server
 	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
-	// TODO: When max load is reached on k8s cluster, tell controller.
-	// At this point k8s cluster has already scaled AppInst to max instances.
-	// The only recourse is to instantiate another k8s cluster on another
-	// cloudlet, or perhaps expand the k8s cluster on this cloudlet.
-	// This is a placeholder, not sure how this will work.
-	Load uint64 `protobuf:"varint,4,opt,name=load,proto3" json:"load,omitempty"`
-	// TODO: Used resources (for billing)
-	// These are also placeholders. What is supplied here
-	// depends on what Openstack/Kubernetes/Agents can measure.
-	Cpu        uint64 `protobuf:"varint,5,opt,name=cpu,proto3" json:"cpu,omitempty"`
-	MaxDisk    uint64 `protobuf:"varint,6,opt,name=max_disk,json=maxDisk,proto3" json:"max_disk,omitempty"`
-	NetworkIn  uint64 `protobuf:"varint,7,opt,name=network_in,json=networkIn,proto3" json:"network_in,omitempty"`
-	NetworkOut uint64 `protobuf:"varint,8,opt,name=network_out,json=networkOut,proto3" json:"network_out,omitempty"`
 }
 
 func (m *AppInstInfo) Reset()                    { *m = AppInstInfo{} }
@@ -145,7 +119,6 @@ func init() {
 	proto.RegisterType((*AppInst)(nil), "edgeproto.AppInst")
 	proto.RegisterType((*AppInstInfo)(nil), "edgeproto.AppInstInfo")
 	proto.RegisterType((*AppInstMetrics)(nil), "edgeproto.AppInstMetrics")
-	proto.RegisterEnum("edgeproto.AppInst_Liveness", AppInst_Liveness_name, AppInst_Liveness_value)
 }
 func (this *AppInstKey) GoString() string {
 	if this == nil {
@@ -641,23 +614,56 @@ func (m *AppInst) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppInst(dAtA, i, uint64(len(m.Uri)))
 		i += copy(dAtA[i:], m.Uri)
 	}
+	dAtA[i] = 0x2a
+	i++
+	i = encodeVarintAppInst(dAtA, i, uint64(m.ClusterInstKey.Size()))
+	n5, err := m.ClusterInstKey.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
 	if m.Liveness != 0 {
 		dAtA[i] = 0x30
 		i++
 		i = encodeVarintAppInst(dAtA, i, uint64(m.Liveness))
 	}
-	if len(m.AppPath) > 0 {
+	if len(m.ImagePath) > 0 {
 		dAtA[i] = 0x3a
 		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(len(m.AppPath)))
-		i += copy(dAtA[i:], m.AppPath)
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.ImagePath)))
+		i += copy(dAtA[i:], m.ImagePath)
 	}
-	if len(m.Ip) > 0 {
-		dAtA[i] = 0x42
+	if m.ImageType != 0 {
+		dAtA[i] = 0x40
 		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(len(m.Ip)))
-		i += copy(dAtA[i:], m.Ip)
+		i = encodeVarintAppInst(dAtA, i, uint64(m.ImageType))
 	}
+	if len(m.MappedPorts) > 0 {
+		dAtA[i] = 0x4a
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.MappedPorts)))
+		i += copy(dAtA[i:], m.MappedPorts)
+	}
+	if len(m.MappedPath) > 0 {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.MappedPath)))
+		i += copy(dAtA[i:], m.MappedPath)
+	}
+	if len(m.ConfigMap) > 0 {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.ConfigMap)))
+		i += copy(dAtA[i:], m.ConfigMap)
+	}
+	dAtA[i] = 0x62
+	i++
+	i = encodeVarintAppInst(dAtA, i, uint64(m.Flavor.Size()))
+	n6, err := m.Flavor.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
 	return i, nil
 }
 
@@ -694,40 +700,15 @@ func (m *AppInstInfo) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintAppInst(dAtA, i, uint64(m.Key.Size()))
-	n5, err := m.Key.MarshalTo(dAtA[i:])
+	n7, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n5
+	i += n7
 	if m.NotifyId != 0 {
 		dAtA[i] = 0x18
 		i++
 		i = encodeVarintAppInst(dAtA, i, uint64(m.NotifyId))
-	}
-	if m.Load != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.Load))
-	}
-	if m.Cpu != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.Cpu))
-	}
-	if m.MaxDisk != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.MaxDisk))
-	}
-	if m.NetworkIn != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.NetworkIn))
-	}
-	if m.NetworkOut != 0 {
-		dAtA[i] = 0x40
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.NetworkOut))
 	}
 	return i, nil
 }
@@ -780,6 +761,22 @@ func (m *AppInstKey) Matches(filter *AppInstKey) bool {
 	return true
 }
 
+func (m *AppInstKey) MatchesIgnoreBackend(filter *AppInstKey) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.AppKey.MatchesIgnoreBackend(&filter.AppKey) {
+		return false
+	}
+	if !m.CloudletKey.MatchesIgnoreBackend(&filter.CloudletKey) {
+		return false
+	}
+	if filter.Id != 0 && filter.Id != m.Id {
+		return false
+	}
+	return true
+}
+
 func (m *AppInstKey) CopyInFields(src *AppInstKey) {
 	m.AppKey.DeveloperKey.Name = src.AppKey.DeveloperKey.Name
 	m.AppKey.Name = src.AppKey.Name
@@ -814,10 +811,38 @@ func (m *AppInst) Matches(filter *AppInst) bool {
 	if filter.Uri != "" && filter.Uri != m.Uri {
 		return false
 	}
+	if !m.ClusterInstKey.Matches(&filter.ClusterInstKey) {
+		return false
+	}
 	if filter.Liveness != 0 && filter.Liveness != m.Liveness {
 		return false
 	}
-	if filter.AppPath != "" && filter.AppPath != m.AppPath {
+	if filter.ImagePath != "" && filter.ImagePath != m.ImagePath {
+		return false
+	}
+	if filter.ImageType != 0 && filter.ImageType != m.ImageType {
+		return false
+	}
+	if filter.MappedPorts != "" && filter.MappedPorts != m.MappedPorts {
+		return false
+	}
+	if filter.MappedPath != "" && filter.MappedPath != m.MappedPath {
+		return false
+	}
+	if filter.ConfigMap != "" && filter.ConfigMap != m.ConfigMap {
+		return false
+	}
+	if !m.Flavor.Matches(&filter.Flavor) {
+		return false
+	}
+	return true
+}
+
+func (m *AppInst) MatchesIgnoreBackend(filter *AppInst) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
 		return false
 	}
 	return true
@@ -846,9 +871,21 @@ const AppInstFieldCloudletLocTimestamp = "3.8"
 const AppInstFieldCloudletLocTimestampSeconds = "3.8.1"
 const AppInstFieldCloudletLocTimestampNanos = "3.8.2"
 const AppInstFieldUri = "4"
+const AppInstFieldClusterInstKey = "5"
+const AppInstFieldClusterInstKeyClusterKey = "5.1"
+const AppInstFieldClusterInstKeyClusterKeyName = "5.1.1"
+const AppInstFieldClusterInstKeyCloudletKey = "5.2"
+const AppInstFieldClusterInstKeyCloudletKeyOperatorKey = "5.2.1"
+const AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName = "5.2.1.1"
+const AppInstFieldClusterInstKeyCloudletKeyName = "5.2.2"
 const AppInstFieldLiveness = "6"
-const AppInstFieldAppPath = "7"
-const AppInstFieldIp = "8"
+const AppInstFieldImagePath = "7"
+const AppInstFieldImageType = "8"
+const AppInstFieldMappedPorts = "9"
+const AppInstFieldMappedPath = "10"
+const AppInstFieldConfigMap = "11"
+const AppInstFieldFlavor = "12"
+const AppInstFieldFlavorName = "12.1"
 
 var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyDeveloperKeyName,
@@ -867,31 +904,45 @@ var AppInstAllFields = []string{
 	AppInstFieldCloudletLocTimestampSeconds,
 	AppInstFieldCloudletLocTimestampNanos,
 	AppInstFieldUri,
+	AppInstFieldClusterInstKeyClusterKeyName,
+	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName,
+	AppInstFieldClusterInstKeyCloudletKeyName,
 	AppInstFieldLiveness,
-	AppInstFieldAppPath,
-	AppInstFieldIp,
+	AppInstFieldImagePath,
+	AppInstFieldImageType,
+	AppInstFieldMappedPorts,
+	AppInstFieldMappedPath,
+	AppInstFieldConfigMap,
+	AppInstFieldFlavorName,
 }
 
 var AppInstAllFieldsMap = map[string]struct{}{
-	AppInstFieldKeyAppKeyDeveloperKeyName:     struct{}{},
-	AppInstFieldKeyAppKeyName:                 struct{}{},
-	AppInstFieldKeyAppKeyVersion:              struct{}{},
-	AppInstFieldKeyCloudletKeyOperatorKeyName: struct{}{},
-	AppInstFieldKeyCloudletKeyName:            struct{}{},
-	AppInstFieldKeyId:                         struct{}{},
-	AppInstFieldCloudletLocLat:                struct{}{},
-	AppInstFieldCloudletLocLong:               struct{}{},
-	AppInstFieldCloudletLocHorizontalAccuracy: struct{}{},
-	AppInstFieldCloudletLocVerticalAccuracy:   struct{}{},
-	AppInstFieldCloudletLocAltitude:           struct{}{},
-	AppInstFieldCloudletLocCourse:             struct{}{},
-	AppInstFieldCloudletLocSpeed:              struct{}{},
-	AppInstFieldCloudletLocTimestampSeconds:   struct{}{},
-	AppInstFieldCloudletLocTimestampNanos:     struct{}{},
-	AppInstFieldUri:                           struct{}{},
-	AppInstFieldLiveness:                      struct{}{},
-	AppInstFieldAppPath:                       struct{}{},
-	AppInstFieldIp:                            struct{}{},
+	AppInstFieldKeyAppKeyDeveloperKeyName:                struct{}{},
+	AppInstFieldKeyAppKeyName:                            struct{}{},
+	AppInstFieldKeyAppKeyVersion:                         struct{}{},
+	AppInstFieldKeyCloudletKeyOperatorKeyName:            struct{}{},
+	AppInstFieldKeyCloudletKeyName:                       struct{}{},
+	AppInstFieldKeyId:                                    struct{}{},
+	AppInstFieldCloudletLocLat:                           struct{}{},
+	AppInstFieldCloudletLocLong:                          struct{}{},
+	AppInstFieldCloudletLocHorizontalAccuracy:            struct{}{},
+	AppInstFieldCloudletLocVerticalAccuracy:              struct{}{},
+	AppInstFieldCloudletLocAltitude:                      struct{}{},
+	AppInstFieldCloudletLocCourse:                        struct{}{},
+	AppInstFieldCloudletLocSpeed:                         struct{}{},
+	AppInstFieldCloudletLocTimestampSeconds:              struct{}{},
+	AppInstFieldCloudletLocTimestampNanos:                struct{}{},
+	AppInstFieldUri:                                      struct{}{},
+	AppInstFieldClusterInstKeyClusterKeyName:             struct{}{},
+	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName: struct{}{},
+	AppInstFieldClusterInstKeyCloudletKeyName:            struct{}{},
+	AppInstFieldLiveness:                                 struct{}{},
+	AppInstFieldImagePath:                                struct{}{},
+	AppInstFieldImageType:                                struct{}{},
+	AppInstFieldMappedPorts:                              struct{}{},
+	AppInstFieldMappedPath:                               struct{}{},
+	AppInstFieldConfigMap:                                struct{}{},
+	AppInstFieldFlavorName:                               struct{}{},
 }
 
 func (m *AppInst) CopyInFields(src *AppInst) {
@@ -959,17 +1010,45 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 	if _, set := fmap["4"]; set {
 		m.Uri = src.Uri
 	}
+	if _, set := fmap["5"]; set {
+		if _, set := fmap["5.1"]; set {
+			if _, set := fmap["5.1.1"]; set {
+				m.ClusterInstKey.ClusterKey.Name = src.ClusterInstKey.ClusterKey.Name
+			}
+		}
+		if _, set := fmap["5.2"]; set {
+			if _, set := fmap["5.2.1"]; set {
+				if _, set := fmap["5.2.1.1"]; set {
+					m.ClusterInstKey.CloudletKey.OperatorKey.Name = src.ClusterInstKey.CloudletKey.OperatorKey.Name
+				}
+			}
+			if _, set := fmap["5.2.2"]; set {
+				m.ClusterInstKey.CloudletKey.Name = src.ClusterInstKey.CloudletKey.Name
+			}
+		}
+	}
 	if _, set := fmap["6"]; set {
 		m.Liveness = src.Liveness
 	}
 	if _, set := fmap["7"]; set {
-		m.AppPath = src.AppPath
+		m.ImagePath = src.ImagePath
 	}
 	if _, set := fmap["8"]; set {
-		if m.Ip == nil || len(m.Ip) < len(src.Ip) {
-			m.Ip = make([]byte, len(src.Ip))
+		m.ImageType = src.ImageType
+	}
+	if _, set := fmap["9"]; set {
+		m.MappedPorts = src.MappedPorts
+	}
+	if _, set := fmap["10"]; set {
+		m.MappedPath = src.MappedPath
+	}
+	if _, set := fmap["11"]; set {
+		m.ConfigMap = src.ConfigMap
+	}
+	if _, set := fmap["12"]; set {
+		if _, set := fmap["12.1"]; set {
+			m.Flavor.Name = src.Flavor.Name
 		}
-		copy(m.Ip, src.Ip)
 	}
 }
 
@@ -1274,19 +1353,17 @@ func (m *AppInstInfo) Matches(filter *AppInstInfo) bool {
 	if filter.NotifyId != 0 && filter.NotifyId != m.NotifyId {
 		return false
 	}
-	if filter.Load != 0 && filter.Load != m.Load {
+	return true
+}
+
+func (m *AppInstInfo) MatchesIgnoreBackend(filter *AppInstInfo) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
 		return false
 	}
-	if filter.Cpu != 0 && filter.Cpu != m.Cpu {
-		return false
-	}
-	if filter.MaxDisk != 0 && filter.MaxDisk != m.MaxDisk {
-		return false
-	}
-	if filter.NetworkIn != 0 && filter.NetworkIn != m.NetworkIn {
-		return false
-	}
-	if filter.NetworkOut != 0 && filter.NetworkOut != m.NetworkOut {
+	if filter.NotifyId != 0 && filter.NotifyId != m.NotifyId {
 		return false
 	}
 	return true
@@ -1304,11 +1381,6 @@ const AppInstInfoFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
 const AppInstInfoFieldKeyCloudletKeyName = "2.2.2"
 const AppInstInfoFieldKeyId = "2.3"
 const AppInstInfoFieldNotifyId = "3"
-const AppInstInfoFieldLoad = "4"
-const AppInstInfoFieldCpu = "5"
-const AppInstInfoFieldMaxDisk = "6"
-const AppInstInfoFieldNetworkIn = "7"
-const AppInstInfoFieldNetworkOut = "8"
 
 var AppInstInfoAllFields = []string{
 	AppInstInfoFieldKeyAppKeyDeveloperKeyName,
@@ -1318,11 +1390,6 @@ var AppInstInfoAllFields = []string{
 	AppInstInfoFieldKeyCloudletKeyName,
 	AppInstInfoFieldKeyId,
 	AppInstInfoFieldNotifyId,
-	AppInstInfoFieldLoad,
-	AppInstInfoFieldCpu,
-	AppInstInfoFieldMaxDisk,
-	AppInstInfoFieldNetworkIn,
-	AppInstInfoFieldNetworkOut,
 }
 
 var AppInstInfoAllFieldsMap = map[string]struct{}{
@@ -1333,11 +1400,6 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldKeyCloudletKeyName:            struct{}{},
 	AppInstInfoFieldKeyId:                         struct{}{},
 	AppInstInfoFieldNotifyId:                      struct{}{},
-	AppInstInfoFieldLoad:                          struct{}{},
-	AppInstInfoFieldCpu:                           struct{}{},
-	AppInstInfoFieldMaxDisk:                       struct{}{},
-	AppInstInfoFieldNetworkIn:                     struct{}{},
-	AppInstInfoFieldNetworkOut:                    struct{}{},
 }
 
 func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
@@ -1372,21 +1434,6 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
 	}
 	if _, set := fmap["3"]; set {
 		m.NotifyId = src.NotifyId
-	}
-	if _, set := fmap["4"]; set {
-		m.Load = src.Load
-	}
-	if _, set := fmap["5"]; set {
-		m.Cpu = src.Cpu
-	}
-	if _, set := fmap["6"]; set {
-		m.MaxDisk = src.MaxDisk
-	}
-	if _, set := fmap["7"]; set {
-		m.NetworkIn = src.NetworkIn
-	}
-	if _, set := fmap["8"]; set {
-		m.NetworkOut = src.NetworkOut
 	}
 }
 
@@ -1698,44 +1745,6 @@ func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) {
 	m.Something = src.Something
 }
 
-var LivenessStrings = []string{
-	"UNKNOWN",
-	"STATIC",
-	"DYNAMIC",
-}
-
-const (
-	LivenessUNKNOWN uint64 = 1 << 0
-	LivenessSTATIC  uint64 = 1 << 1
-	LivenessDYNAMIC uint64 = 1 << 2
-)
-
-func (e *AppInst_Liveness) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := AppInst_Liveness_value[str]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = AppInst_Liveness_name[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = AppInst_Liveness(val)
-	return nil
-}
-
-func (e AppInst_Liveness) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
-}
-
 func (m *AppInstKey) Size() (n int) {
 	var l int
 	_ = l
@@ -1766,17 +1775,32 @@ func (m *AppInst) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppInst(uint64(l))
 	}
+	l = m.ClusterInstKey.Size()
+	n += 1 + l + sovAppInst(uint64(l))
 	if m.Liveness != 0 {
 		n += 1 + sovAppInst(uint64(m.Liveness))
 	}
-	l = len(m.AppPath)
+	l = len(m.ImagePath)
 	if l > 0 {
 		n += 1 + l + sovAppInst(uint64(l))
 	}
-	l = len(m.Ip)
+	if m.ImageType != 0 {
+		n += 1 + sovAppInst(uint64(m.ImageType))
+	}
+	l = len(m.MappedPorts)
 	if l > 0 {
 		n += 1 + l + sovAppInst(uint64(l))
 	}
+	l = len(m.MappedPath)
+	if l > 0 {
+		n += 1 + l + sovAppInst(uint64(l))
+	}
+	l = len(m.ConfigMap)
+	if l > 0 {
+		n += 1 + l + sovAppInst(uint64(l))
+	}
+	l = m.Flavor.Size()
+	n += 1 + l + sovAppInst(uint64(l))
 	return n
 }
 
@@ -1793,21 +1817,6 @@ func (m *AppInstInfo) Size() (n int) {
 	n += 1 + l + sovAppInst(uint64(l))
 	if m.NotifyId != 0 {
 		n += 1 + sovAppInst(uint64(m.NotifyId))
-	}
-	if m.Load != 0 {
-		n += 1 + sovAppInst(uint64(m.Load))
-	}
-	if m.Cpu != 0 {
-		n += 1 + sovAppInst(uint64(m.Cpu))
-	}
-	if m.MaxDisk != 0 {
-		n += 1 + sovAppInst(uint64(m.MaxDisk))
-	}
-	if m.NetworkIn != 0 {
-		n += 1 + sovAppInst(uint64(m.NetworkIn))
-	}
-	if m.NetworkOut != 0 {
-		n += 1 + sovAppInst(uint64(m.NetworkOut))
 	}
 	return n
 }
@@ -2101,6 +2110,36 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 			}
 			m.Uri = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInstKey", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClusterInstKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Liveness", wireType)
@@ -2115,14 +2154,14 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Liveness |= (AppInst_Liveness(b) & 0x7F) << shift
+				m.Liveness |= (Liveness(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 7:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppPath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ImagePath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2147,13 +2186,13 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AppPath = string(dAtA[iNdEx:postIndex])
+			m.ImagePath = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ip", wireType)
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ImageType", wireType)
 			}
-			var byteLen int
+			m.ImageType = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppInst
@@ -2163,21 +2202,126 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				m.ImageType |= (ImageType(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MappedPorts", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthAppInst
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Ip = append(m.Ip[:0], dAtA[iNdEx:postIndex]...)
-			if m.Ip == nil {
-				m.Ip = []byte{}
+			m.MappedPorts = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MappedPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MappedPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConfigMap", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConfigMap = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Flavor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
 			iNdEx = postIndex
 		default:
@@ -2304,101 +2448,6 @@ func (m *AppInstInfo) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.NotifyId |= (int64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Load", wireType)
-			}
-			m.Load = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppInst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Load |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Cpu", wireType)
-			}
-			m.Cpu = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppInst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Cpu |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxDisk", wireType)
-			}
-			m.MaxDisk = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppInst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.MaxDisk |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NetworkIn", wireType)
-			}
-			m.NetworkIn = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppInst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NetworkIn |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NetworkOut", wireType)
-			}
-			m.NetworkOut = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppInst
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.NetworkOut |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -2601,60 +2650,63 @@ var (
 func init() { proto.RegisterFile("app_inst.proto", fileDescriptorAppInst) }
 
 var fileDescriptorAppInst = []byte{
-	// 865 bytes of a gzipped FileDescriptorProto
+	// 920 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0x23, 0x35,
-	0x14, 0xaf, 0x27, 0x21, 0x4d, 0x9c, 0x6e, 0x36, 0x35, 0xa5, 0x72, 0xb3, 0xdd, 0x36, 0x9a, 0x0b,
-	0x11, 0x22, 0x99, 0x2a, 0x1c, 0x40, 0xbd, 0xa0, 0x34, 0x15, 0x28, 0x6a, 0xb7, 0x0b, 0xb3, 0xbb,
-	0x42, 0x9c, 0xa2, 0xc9, 0x8c, 0x33, 0xb1, 0x3a, 0x63, 0x5b, 0x19, 0x0f, 0x6d, 0x6f, 0x68, 0x4f,
-	0x2b, 0x4e, 0x48, 0x5c, 0xb8, 0x20, 0xed, 0x47, 0x40, 0x7c, 0x8a, 0x1e, 0x91, 0x38, 0x22, 0x21,
-	0xa8, 0x38, 0x70, 0x03, 0xa9, 0x39, 0x70, 0x44, 0xf6, 0x38, 0xc9, 0x74, 0xcb, 0x02, 0xd2, 0x72,
-	0x89, 0x9e, 0x9f, 0xdf, 0xef, 0x8f, 0x7f, 0x76, 0x06, 0xd6, 0x3c, 0x21, 0x86, 0x94, 0x25, 0xb2,
-	0x23, 0xa6, 0x5c, 0x72, 0x54, 0x21, 0x41, 0x48, 0x74, 0xd9, 0xd8, 0x0e, 0x39, 0x0f, 0x23, 0xe2,
-	0x78, 0x82, 0x3a, 0x1e, 0x63, 0x5c, 0x7a, 0x92, 0x72, 0x96, 0x64, 0x83, 0x8d, 0xb5, 0x29, 0x49,
-	0xd2, 0xc8, 0xc0, 0x1a, 0xef, 0x85, 0x54, 0x4e, 0xd2, 0x51, 0xc7, 0xe7, 0xb1, 0x13, 0xf3, 0x11,
-	0x8d, 0x14, 0xcd, 0xb9, 0xa3, 0x7e, 0xdb, 0x7e, 0xc4, 0xd3, 0xc0, 0xd1, 0x73, 0x21, 0x61, 0x8b,
-	0xc2, 0x20, 0x3f, 0xfc, 0x6f, 0x48, 0xbf, 0x1d, 0x12, 0xd6, 0xf6, 0xe3, 0xf9, 0x32, 0x57, 0x18,
-	0xa2, 0x8a, 0x27, 0x84, 0x29, 0x6b, 0x1a, 0x18, 0x91, 0xb9, 0xbb, 0xfe, 0xbf, 0x6a, 0x04, 0xed,
-	0xd8, 0x93, 0xfe, 0xa4, 0x4d, 0x58, 0x48, 0x19, 0x71, 0x82, 0x98, 0xb4, 0x35, 0xd4, 0x89, 0xb8,
-	0x6f, 0x48, 0xda, 0x39, 0x92, 0x90, 0x87, 0x3c, 0xd3, 0x1f, 0xa5, 0x63, 0xbd, 0xca, 0xa6, 0x55,
-	0x95, 0x8d, 0xdb, 0xdf, 0x00, 0x08, 0x7b, 0x42, 0x0c, 0x58, 0x22, 0x8f, 0xc8, 0x05, 0xda, 0x83,
-	0xab, 0x2a, 0xe9, 0x53, 0x72, 0x81, 0x41, 0x13, 0xb4, 0xaa, 0xdd, 0xf5, 0xce, 0x22, 0xe9, 0x4e,
-	0x4f, 0x88, 0x23, 0x72, 0x71, 0x50, 0xbc, 0xfc, 0x69, 0x77, 0xc5, 0x2d, 0x79, 0x7a, 0x85, 0xde,
-	0x87, 0x6b, 0xf3, 0x63, 0x68, 0x98, 0xa5, 0x61, 0x9b, 0x39, 0x58, 0xdf, 0x6c, 0x2f, 0xb1, 0x55,
-	0x7f, 0xd9, 0x42, 0x35, 0x68, 0xd1, 0x00, 0x17, 0x9a, 0xa0, 0x55, 0x72, 0x2d, 0x1a, 0xec, 0xaf,
-	0xfd, 0x76, 0x8d, 0xc1, 0x9f, 0xd7, 0x18, 0x7c, 0xfb, 0x7c, 0x17, 0xd8, 0xbf, 0x5b, 0x70, 0xd5,
-	0xf8, 0x43, 0x9b, 0xb0, 0x34, 0xa6, 0x24, 0x0a, 0x12, 0x0c, 0x9a, 0x85, 0x56, 0xc5, 0x35, 0x2b,
-	0xd4, 0x86, 0x85, 0xa5, 0xf2, 0x1b, 0x37, 0x0d, 0x9b, 0x83, 0x19, 0x61, 0x35, 0x87, 0x3e, 0xc8,
-	0x39, 0x8e, 0xb8, 0xaf, 0xa5, 0xab, 0xdd, 0xfb, 0x9d, 0x80, 0x26, 0x72, 0x4a, 0x47, 0xa9, 0x24,
-	0xc1, 0x50, 0xc7, 0x3c, 0xcc, 0x62, 0xee, 0x1c, 0x73, 0xff, 0x45, 0xe3, 0xc7, 0xdc, 0x47, 0x9b,
-	0xb0, 0x90, 0x4e, 0x29, 0x2e, 0x36, 0x41, 0xab, 0x72, 0x50, 0x7c, 0x36, 0xc3, 0xc0, 0x55, 0x0d,
-	0xf4, 0x2e, 0x2c, 0x47, 0xf4, 0x33, 0xc2, 0x48, 0x92, 0xe0, 0x52, 0x13, 0xb4, 0x6a, 0xdd, 0x7b,
-	0xb7, 0x3d, 0x75, 0x8e, 0xcd, 0x88, 0xbb, 0x18, 0x46, 0x5b, 0xb0, 0xac, 0xc2, 0x17, 0x9e, 0x9c,
-	0xe0, 0x55, 0xc5, 0xea, 0xaa, 0xcb, 0xf8, 0xc8, 0x93, 0x13, 0x1d, 0x92, 0xc0, 0xe5, 0x26, 0x68,
-	0xad, 0xb9, 0x16, 0x15, 0xf6, 0x1e, 0x2c, 0xcf, 0x09, 0x50, 0x15, 0xae, 0x3e, 0x39, 0x39, 0x3a,
-	0x79, 0xf8, 0xc9, 0x49, 0x7d, 0x05, 0x41, 0x58, 0x7a, 0xf4, 0xb8, 0xf7, 0x78, 0xd0, 0xaf, 0x03,
-	0xb5, 0x71, 0xf8, 0xe9, 0x49, 0xef, 0xc1, 0xa0, 0x5f, 0xb7, 0xf6, 0xdf, 0x54, 0xb1, 0xfe, 0x71,
-	0x8d, 0xc1, 0xe7, 0x33, 0x0c, 0xbe, 0x9e, 0x61, 0xf0, 0xc5, 0x77, 0x5b, 0xaf, 0xf7, 0x97, 0xc7,
-	0x79, 0xbb, 0x97, 0x49, 0xd9, 0xcf, 0x2c, 0x58, 0x35, 0x26, 0x07, 0x6c, 0xcc, 0xff, 0xaf, 0xd4,
-	0xef, 0xc1, 0x0a, 0xe3, 0x92, 0x8e, 0x2f, 0x86, 0xe6, 0xb6, 0x0b, 0x6e, 0x39, 0x6b, 0x0c, 0x02,
-	0x84, 0x60, 0x31, 0xe2, 0x5e, 0xa0, 0xb3, 0x2c, 0xba, 0xba, 0x46, 0x75, 0x58, 0xf0, 0x45, 0x8a,
-	0x5f, 0xd3, 0x2d, 0x55, 0xaa, 0x7c, 0x62, 0xef, 0x7c, 0x18, 0xd0, 0xe4, 0x54, 0x07, 0x5b, 0x74,
-	0x57, 0x63, 0xef, 0xfc, 0x90, 0x26, 0xa7, 0xe8, 0x3e, 0x84, 0x8c, 0xc8, 0x33, 0x3e, 0x3d, 0x1d,
-	0x52, 0xa6, 0xc3, 0x2b, 0xba, 0x15, 0xd3, 0x19, 0x30, 0xb4, 0x0b, 0xab, 0xf3, 0x6d, 0x9e, 0x4a,
-	0x9d, 0x63, 0xd1, 0x9d, 0x23, 0x1e, 0xa6, 0x72, 0x7f, 0x23, 0x9f, 0xce, 0x97, 0x33, 0x0c, 0x9e,
-	0xcf, 0x30, 0xb0, 0x3b, 0xb0, 0x66, 0x0e, 0xf3, 0x80, 0xc8, 0x29, 0xf5, 0x13, 0xb4, 0x0d, 0x2b,
-	0x09, 0x8f, 0x89, 0x9c, 0x50, 0x16, 0x1a, 0x6b, 0xcb, 0x46, 0xf7, 0x47, 0x6b, 0xf1, 0x67, 0xea,
-	0x09, 0x8a, 0x5c, 0x78, 0xa7, 0x3f, 0x25, 0x9e, 0x24, 0xf3, 0x07, 0x8c, 0x6e, 0xa7, 0xd4, 0xc8,
-	0xff, 0xc1, 0x5c, 0xfd, 0xad, 0xb2, 0x1b, 0x4f, 0x7f, 0xf8, 0xf5, 0x2b, 0x6b, 0xc3, 0xbe, 0xeb,
-	0xf8, 0x1a, 0xee, 0x78, 0x42, 0xa8, 0x6f, 0xdf, 0x3e, 0x78, 0x4b, 0x71, 0x1e, 0x92, 0x88, 0xbc,
-	0x02, 0x67, 0xa0, 0xe1, 0x2f, 0x70, 0x3e, 0x11, 0xc1, 0xab, 0xf8, 0x4c, 0x35, 0x3c, 0xcf, 0xf9,
-	0x31, 0xac, 0x3e, 0x9a, 0xf0, 0xb3, 0x7f, 0x62, 0xfc, 0x9b, 0x9e, 0x8d, 0x35, 0x25, 0xb2, 0xef,
-	0x38, 0xc9, 0x84, 0x9f, 0xe5, 0x08, 0xf7, 0x40, 0x37, 0x59, 0xdc, 0x86, 0x7a, 0x97, 0x2a, 0x60,
-	0x0f, 0xde, 0xcd, 0x89, 0x64, 0xaf, 0xf5, 0x36, 0xa9, 0xea, 0x37, 0x5e, 0xd2, 0xb7, 0xb7, 0xb5,
-	0xe0, 0xa6, 0xbd, 0x7e, 0x43, 0x90, 0xb2, 0x31, 0xcf, 0x44, 0x9f, 0x02, 0xb8, 0x7e, 0xf3, 0x0d,
-	0x28, 0xe1, 0x18, 0xa2, 0x9c, 0xf0, 0xfc, 0x71, 0x6c, 0xdd, 0xd6, 0x30, 0x5b, 0x8d, 0x97, 0x6f,
-	0xd9, 0xbb, 0xda, 0xc1, 0x96, 0xbd, 0x71, 0xc3, 0x41, 0x9c, 0xed, 0x6a, 0x13, 0x07, 0xf5, 0xcb,
-	0x5f, 0x76, 0x56, 0x2e, 0xaf, 0x76, 0xc0, 0xf7, 0x57, 0x3b, 0xe0, 0xe7, 0xab, 0x1d, 0x30, 0x2a,
-	0x69, 0xaa, 0x77, 0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x8b, 0x90, 0x2a, 0x83, 0x18, 0x07, 0x00,
-	0x00,
+	0x14, 0x5f, 0x27, 0x6d, 0xda, 0x71, 0xb2, 0xd9, 0xad, 0x29, 0xc5, 0x0d, 0xa5, 0x8d, 0x46, 0x2b,
+	0x14, 0xa1, 0x24, 0xb3, 0x0a, 0x12, 0xa0, 0x5c, 0x50, 0x1b, 0xb4, 0x28, 0xda, 0x16, 0x2d, 0x81,
+	0x3d, 0x47, 0x93, 0x19, 0x67, 0x62, 0x31, 0x33, 0xb6, 0x66, 0x9c, 0x5d, 0x72, 0x43, 0xbb, 0x07,
+	0x24, 0x4e, 0x48, 0x5c, 0xb8, 0x20, 0xed, 0x47, 0x40, 0x7c, 0x8a, 0x1e, 0x11, 0x1c, 0x91, 0x10,
+	0x54, 0x1c, 0xf6, 0x88, 0xd4, 0x1e, 0xe0, 0x86, 0xec, 0xf1, 0x24, 0x9e, 0x96, 0x05, 0xa4, 0x72,
+	0x19, 0xd9, 0xef, 0xbd, 0xdf, 0x1f, 0x3f, 0x3f, 0x0f, 0xac, 0xbb, 0x9c, 0x8f, 0x69, 0x9c, 0x8a,
+	0x2e, 0x4f, 0x98, 0x60, 0xc8, 0x22, 0x7e, 0x40, 0xd4, 0xb2, 0xb1, 0x17, 0x30, 0x16, 0x84, 0xc4,
+	0x71, 0x39, 0x75, 0xdc, 0x38, 0x66, 0xc2, 0x15, 0x94, 0xc5, 0x69, 0x56, 0xd8, 0xa8, 0x25, 0x24,
+	0x9d, 0x87, 0x1a, 0xd6, 0x78, 0x27, 0xa0, 0x62, 0x36, 0x9f, 0x74, 0x3d, 0x16, 0x39, 0x11, 0x9b,
+	0xd0, 0x50, 0xd2, 0x7c, 0xea, 0xc8, 0x6f, 0xc7, 0x0b, 0xd9, 0xdc, 0x77, 0x54, 0x5d, 0x40, 0xe2,
+	0xe5, 0x42, 0x23, 0xdf, 0xff, 0x6f, 0x48, 0xaf, 0x13, 0x90, 0xb8, 0xe3, 0x45, 0xf9, 0xd6, 0x58,
+	0x68, 0x22, 0xcb, 0xe5, 0x5c, 0x2f, 0xeb, 0x0a, 0x18, 0x92, 0xdc, 0x5d, 0x6d, 0x1a, 0xba, 0x8f,
+	0x58, 0xa2, 0x77, 0x5b, 0x5e, 0x38, 0x4f, 0x05, 0x49, 0x56, 0xa7, 0x6e, 0xd4, 0x3c, 0x16, 0x45,
+	0x2c, 0xb7, 0x34, 0xf8, 0x57, 0x4b, 0x7e, 0x27, 0x72, 0x85, 0x37, 0xeb, 0x90, 0x38, 0xa0, 0x31,
+	0x71, 0xfc, 0x88, 0x74, 0x14, 0xd4, 0x09, 0x99, 0xa7, 0x49, 0x3a, 0x06, 0x49, 0xc0, 0x02, 0x96,
+	0xd9, 0x9d, 0xcc, 0xa7, 0x6a, 0x97, 0x55, 0xcb, 0x55, 0x56, 0x6e, 0x7f, 0x03, 0x20, 0x3c, 0xe4,
+	0x7c, 0x18, 0xa7, 0xe2, 0x3e, 0x59, 0xa0, 0xbb, 0x70, 0x43, 0x5e, 0xcc, 0x27, 0x64, 0x81, 0x41,
+	0x13, 0xb4, 0xaa, 0xbd, 0xad, 0xee, 0xf2, 0x62, 0xba, 0x87, 0x9c, 0xdf, 0x27, 0x8b, 0xa3, 0xb5,
+	0xd3, 0x9f, 0x0f, 0x6e, 0x8c, 0x2a, 0xae, 0xda, 0xa1, 0x77, 0x61, 0x2d, 0x3f, 0xb5, 0x82, 0x95,
+	0x14, 0x6c, 0xc7, 0x80, 0x0d, 0x74, 0x7a, 0x85, 0xad, 0x7a, 0xab, 0x10, 0xaa, 0xc3, 0x12, 0xf5,
+	0x71, 0xb9, 0x09, 0x5a, 0x95, 0x51, 0x89, 0xfa, 0xfd, 0xda, 0xf3, 0x73, 0x0c, 0xfe, 0x38, 0xc7,
+	0xe0, 0xdb, 0x67, 0x07, 0xc0, 0xfe, 0x61, 0x1d, 0x6e, 0x68, 0x7f, 0x68, 0x07, 0x56, 0xa6, 0x94,
+	0x84, 0x7e, 0x8a, 0x41, 0xb3, 0xdc, 0xb2, 0x46, 0x7a, 0x87, 0x3a, 0xb0, 0xbc, 0x52, 0x7e, 0xb9,
+	0x68, 0x58, 0x1f, 0x4c, 0x0b, 0xcb, 0x3a, 0x74, 0xcf, 0x70, 0x1c, 0x32, 0x4f, 0x49, 0x57, 0x7b,
+	0xaf, 0x75, 0x7d, 0x9a, 0x8a, 0x84, 0x4e, 0xe6, 0x82, 0xf8, 0x63, 0xd5, 0xe6, 0x71, 0xd6, 0xe6,
+	0xee, 0x31, 0xf3, 0x2e, 0x1b, 0x3f, 0x66, 0x1e, 0x7a, 0x05, 0x96, 0xe7, 0x09, 0xc5, 0x6b, 0x4d,
+	0xd0, 0xb2, 0x8e, 0xd6, 0x9f, 0x3f, 0xfd, 0x13, 0x80, 0x91, 0x8c, 0xa0, 0x0f, 0xe0, 0x6d, 0x7d,
+	0xd5, 0x6a, 0xc2, 0x55, 0x5b, 0xd6, 0x95, 0xc8, 0x6e, 0xa1, 0x2d, 0xaa, 0x24, 0x37, 0x68, 0x49,
+	0x81, 0x8c, 0xa4, 0xee, 0x15, 0x52, 0xe8, 0x2d, 0xb8, 0x19, 0xd2, 0x47, 0x24, 0x26, 0x69, 0x8a,
+	0x2b, 0x4d, 0xd0, 0xaa, 0xf7, 0x5e, 0x32, 0x78, 0x8e, 0x75, 0x2a, 0xb7, 0xb0, 0xac, 0x45, 0x77,
+	0x20, 0xa4, 0x91, 0x1b, 0x90, 0x31, 0x77, 0xc5, 0x0c, 0x6f, 0x98, 0x3e, 0x2d, 0x95, 0x78, 0xe0,
+	0x8a, 0x19, 0xea, 0xe7, 0x55, 0x62, 0xc1, 0x09, 0xde, 0x54, 0xfc, 0xdb, 0x06, 0xff, 0x50, 0x26,
+	0x3f, 0x5e, 0x70, 0x52, 0xc4, 0xca, 0x08, 0x6a, 0xc1, 0x5a, 0xe4, 0x72, 0x4e, 0xfc, 0x31, 0x67,
+	0x89, 0x48, 0xb1, 0x65, 0x6a, 0x54, 0xb3, 0xd4, 0x03, 0x99, 0x41, 0xaf, 0xc3, 0x6a, 0x5e, 0x29,
+	0xcd, 0x40, 0xb3, 0x10, 0xea, 0x42, 0xe9, 0xe6, 0x0e, 0x84, 0x1e, 0x8b, 0xa7, 0x34, 0x18, 0x47,
+	0x2e, 0xc7, 0xd5, 0x82, 0xe7, 0x2c, 0x71, 0xe2, 0x72, 0xf4, 0x36, 0xac, 0x64, 0x4f, 0x0b, 0xd7,
+	0x54, 0x5f, 0x4d, 0xbf, 0xf7, 0x54, 0xe2, 0x52, 0x4b, 0x75, 0x79, 0xff, 0x29, 0x90, 0xd3, 0xf5,
+	0xfb, 0x39, 0x06, 0x9f, 0x5d, 0x60, 0xf0, 0xf5, 0x05, 0x06, 0x5f, 0x7c, 0xb7, 0xcb, 0x06, 0xab,
+	0x5b, 0x6d, 0x0f, 0xf3, 0xc6, 0xb4, 0x97, 0x07, 0x6f, 0x9f, 0xac, 0x0e, 0x92, 0xaf, 0x65, 0xc1,
+	0x20, 0xf7, 0xd3, 0xce, 0x34, 0xdb, 0x0f, 0x13, 0xda, 0xce, 0xaf, 0xa3, 0x5d, 0xbc, 0x5f, 0xf3,
+	0x15, 0xd8, 0x9f, 0x03, 0x58, 0xd5, 0xb3, 0x39, 0x8c, 0xa7, 0xec, 0xff, 0x1a, 0xec, 0x57, 0xa1,
+	0x15, 0x33, 0x41, 0xa7, 0x8b, 0xb1, 0x7e, 0x50, 0xe5, 0xd1, 0x66, 0x16, 0x18, 0xfa, 0xfd, 0x6d,
+	0xf3, 0xe0, 0x5f, 0x5e, 0x60, 0xf0, 0xec, 0x02, 0x03, 0xbb, 0x0b, 0xeb, 0x9a, 0xeb, 0x84, 0x88,
+	0x84, 0x7a, 0x29, 0xda, 0x83, 0x56, 0xca, 0x22, 0x22, 0x66, 0x34, 0x0e, 0xd4, 0xd4, 0xae, 0x8d,
+	0x56, 0x81, 0xde, 0x4f, 0xa5, 0xe5, 0xef, 0xe2, 0x90, 0x53, 0x34, 0x82, 0x37, 0x07, 0x09, 0x71,
+	0x05, 0xc9, 0x9f, 0x28, 0xba, 0x6a, 0xb2, 0x61, 0xfe, 0x42, 0x46, 0xea, 0xe7, 0x6d, 0x37, 0x9e,
+	0xfc, 0xf8, 0xdb, 0x57, 0xa5, 0x6d, 0xfb, 0x96, 0xe3, 0x29, 0xb8, 0xe3, 0x72, 0x2e, 0x9f, 0x4a,
+	0x1f, 0xbc, 0x21, 0x39, 0xdf, 0x23, 0x21, 0xb9, 0x06, 0xa7, 0xaf, 0xe0, 0x97, 0x38, 0x1f, 0x72,
+	0xff, 0x3a, 0x3e, 0xe7, 0x0a, 0x6e, 0x72, 0x7e, 0x08, 0xab, 0x1f, 0xcd, 0xd8, 0xe3, 0x7f, 0x62,
+	0xfc, 0x9b, 0x98, 0x8d, 0x15, 0x25, 0xb2, 0x6f, 0x3a, 0xe9, 0x8c, 0x3d, 0x36, 0x08, 0xef, 0x82,
+	0x5e, 0xba, 0xbc, 0x0d, 0x39, 0x16, 0xb2, 0xc1, 0x2e, 0xbc, 0x65, 0x88, 0x64, 0xc3, 0x72, 0x95,
+	0x54, 0xc6, 0x1b, 0x2f, 0x88, 0xdb, 0x7b, 0x4a, 0x70, 0xc7, 0xde, 0x2a, 0x08, 0xd2, 0x78, 0xca,
+	0x32, 0xd1, 0x27, 0x00, 0x6e, 0x15, 0x67, 0x40, 0x0a, 0x47, 0x10, 0x19, 0xc2, 0xf9, 0x70, 0xec,
+	0x5e, 0xd5, 0xd0, 0xa9, 0xc6, 0x8b, 0x53, 0xf6, 0x81, 0x72, 0xb0, 0x6b, 0x6f, 0x17, 0x1c, 0x44,
+	0x59, 0x56, 0x99, 0x38, 0xba, 0x7d, 0xfa, 0xeb, 0xfe, 0x8d, 0xd3, 0xb3, 0x7d, 0xf0, 0xfd, 0xd9,
+	0x3e, 0xf8, 0xe5, 0x6c, 0x1f, 0x4c, 0x2a, 0x8a, 0xea, 0xcd, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff,
+	0x38, 0x66, 0x7f, 0x95, 0x29, 0x08, 0x00, 0x00,
 }

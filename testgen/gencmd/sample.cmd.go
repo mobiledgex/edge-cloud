@@ -45,6 +45,7 @@ var _ = math.Inf
 var TestApiCmd testgen.TestApiClient
 var TestGenIn testgen.TestGen
 var TestGenFlagSet = pflag.NewFlagSet("TestGen", pflag.ExitOnError)
+var TestGenNoConfigFlagSet = pflag.NewFlagSet("TestGenNoConfig", pflag.ExitOnError)
 var TestGenInOuterEn string
 var TestGenInInnerEn string
 var OuterEnumStrings = []string{
@@ -558,6 +559,10 @@ func init() {
 	RequestCmd.Flags().AddFlagSet(TestGenFlagSet)
 }
 
+func TestApiAllowNoConfig() {
+	RequestCmd.Flags().AddFlagSet(TestGenNoConfigFlagSet)
+}
+
 func TestGenSetFields() {
 	TestGenIn.Fields = make([]string, 0)
 	if TestGenFlagSet.Lookup("name").Changed {
@@ -798,6 +803,7 @@ func TestGenSetFields() {
 		TestGenIn.Fields = append(TestGenIn.Fields, "36.8.2")
 	}
 }
+
 func parseTestGenEnums() error {
 	if TestGenInOuterEn != "" {
 		switch TestGenInOuterEn {

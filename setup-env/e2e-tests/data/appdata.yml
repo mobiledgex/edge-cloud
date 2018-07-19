@@ -12,6 +12,23 @@ developers:
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
 
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
 cloudlets:
 - key:
     operatorkey:
@@ -36,7 +53,9 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: "1.0"
-  apppath: /usr/bin/someapp
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
 
 appinstances:
 - key:
@@ -55,7 +74,7 @@ appinstances:
     long: -91
   uri: /apps/someApplication
   liveness: 1
-  apppath: /usr/bin/someapp
+  imagetype: ImageTypeDocker
 - key:
     appkey:
       developerkey:
@@ -72,5 +91,5 @@ appinstances:
     long: -95
   uri: /apps/someApplication
   liveness: 1
-  apppath: /usr/bin/someapp
+  imagetype: ImageTypeDocker
 

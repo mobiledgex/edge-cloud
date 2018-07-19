@@ -84,9 +84,13 @@ message CloudletInfo {
   CloudletState state = 3;
   // Id of client assigned by server
   int64 notify_id = 4;
-  // TODO: Not entirely sure how resources will be specified.
-  // This is a placeholder for now.
-  uint64 resources = 5;
+  // cloudlet resources
+  // Ram in MB
+  uint64 os_max_ram = 6;
+  // VCPU cores
+  uint64 os_max_vcores = 7;
+  // disk in GB
+  uint64 os_max_vol_gb = 8;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

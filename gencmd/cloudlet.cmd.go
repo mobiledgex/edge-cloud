@@ -38,11 +38,14 @@ var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
 var CloudletMetricsApiCmd edgeproto.CloudletMetricsApiClient
 var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
+var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
 var CloudletInfoIn edgeproto.CloudletInfo
 var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
+var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
 var CloudletInfoInState string
 var CloudletMetricsIn edgeproto.CloudletMetrics
 var CloudletMetricsFlagSet = pflag.NewFlagSet("CloudletMetrics", pflag.ExitOnError)
+var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig", pflag.ExitOnError)
 var CloudletStateStrings = []string{
 	"Unknown",
 	"ConfiguringOpenstack",
@@ -107,7 +110,7 @@ func CloudletHeaderSlicer() []string {
 }
 
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -116,18 +119,22 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s = append(s, in.Key.Name)
 	s = append(s, edgeproto.CloudletState_name[int32(in.State)])
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Resources), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxRam), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxVcores), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxVolGb), 10))
 	return s
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "State")
 	s = append(s, "NotifyId")
-	s = append(s, "Resources")
+	s = append(s, "OsMaxRam")
+	s = append(s, "OsMaxVcores")
+	s = append(s, "OsMaxVolGb")
 	return s
 }
 
@@ -497,12 +504,21 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.AccessUri, "accessuri", "", "AccessUri")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Lat, "location-lat", 0, "Location.Lat")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Long, "location-long", 0, "Location.Long")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.HorizontalAccuracy, "location-horizontalaccuracy", 0, "Location.HorizontalAccuracy")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.VerticalAccuracy, "location-verticalaccuracy", 0, "Location.VerticalAccuracy")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Course, "location-course", 0, "Location.Course")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Speed, "location-speed", 0, "Location.Speed")
+	CloudletIn.Location.Timestamp = &google_protobuf.Timestamp{}
+	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.Location.Timestamp.Seconds, "location-timestamp-seconds", 0, "Location.Timestamp.Seconds")
+	CloudletNoConfigFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [Unknown ConfiguringOpenstack ConfiguringKubernetes Ready Offline]")
 	CloudletInfoFlagSet.Int64Var(&CloudletInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.Resources, "resources", 0, "Resources")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
 	CloudletMetricsFlagSet.Uint64Var(&CloudletMetricsIn.Foo, "foo", 0, "Foo")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
@@ -510,6 +526,21 @@ func init() {
 	ShowCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
 	ShowCloudletMetricsCmd.Flags().AddFlagSet(CloudletMetricsFlagSet)
+}
+
+func CloudletApiAllowNoConfig() {
+	CreateCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	DeleteCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	UpdateCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	ShowCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+}
+
+func CloudletInfoApiAllowNoConfig() {
+	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+}
+
+func CloudletMetricsApiAllowNoConfig() {
+	ShowCloudletMetricsCmd.Flags().AddFlagSet(CloudletMetricsNoConfigFlagSet)
 }
 
 func CloudletSetFields() {
@@ -551,6 +582,7 @@ func CloudletSetFields() {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
 	}
 }
+
 func CloudletInfoSetFields() {
 	CloudletInfoIn.Fields = make([]string, 0)
 	if CloudletInfoFlagSet.Lookup("key-operatorkey-name").Changed {
@@ -565,10 +597,17 @@ func CloudletInfoSetFields() {
 	if CloudletInfoFlagSet.Lookup("notifyid").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "4")
 	}
-	if CloudletInfoFlagSet.Lookup("resources").Changed {
-		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "5")
+	if CloudletInfoFlagSet.Lookup("osmaxram").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "6")
+	}
+	if CloudletInfoFlagSet.Lookup("osmaxvcores").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "7")
+	}
+	if CloudletInfoFlagSet.Lookup("osmaxvolgb").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "8")
 	}
 }
+
 func parseCloudletInfoEnums() error {
 	if CloudletInfoInState != "" {
 		switch CloudletInfoInState {

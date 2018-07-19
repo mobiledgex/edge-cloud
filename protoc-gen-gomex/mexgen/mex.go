@@ -155,7 +155,7 @@ func (e {{.Name}}) MarshalYAML() (interface{}, error) {
 
 `
 
-func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto) {
+func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto, ignoreBackend bool) {
 	if field.Type == nil {
 		return
 	}
@@ -163,11 +163,18 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		// TODO: matches support for repeated fields
 		return
 	}
+	if ignoreBackend && GetBackend(field) {
+		return
+	}
 	name := generator.CamelCase(*field.Name)
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 		nullcheck := ""
 		ref := "&"
+		fname := "Matches"
+		if ignoreBackend {
+			fname = "MatchesIgnoreBackend"
+		}
 		if gogoproto.IsNullable(field) {
 			nullcheck = fmt.Sprintf("filter.%s != nil && m.%s != nil && ", name, name)
 			ref = ""
@@ -177,7 +184,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		if *field.TypeName == ".google.protobuf.Timestamp" {
 			m.P("if ", nullcheck, "(m.", name, ".Seconds != filter.", name, ".Seconds || m.", name, ".Nanos != filter.", name, ".Nanos) {")
 		} else if GetGenerateMatches(subDesc.DescriptorProto) {
-			m.P("if ", nullcheck, "!m.", name, ".Matches(", ref, "filter.", name, ") {")
+			m.P("if ", nullcheck, "!m.", name, ".", fname, "(", ref, "filter.", name, ") {")
 		} else {
 			printedCheck = false
 		}
@@ -662,10 +669,20 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
+		ignoreBackend := false
 		m.P("func (m *", message.Name, ") Matches(filter *", message.Name, ") bool {")
 		m.P("if filter == nil { return true }")
 		for _, field := range message.Field {
-			m.generateFieldMatches(message, field)
+			m.generateFieldMatches(message, field, ignoreBackend)
+		}
+		m.P("return true")
+		m.P("}")
+		m.P("")
+		ignoreBackend = true
+		m.P("func (m *", message.Name, ") MatchesIgnoreBackend(filter *", message.Name, ") bool {")
+		m.P("if filter == nil { return true }")
+		for _, field := range message.Field {
+			m.generateFieldMatches(message, field, ignoreBackend)
 		}
 		m.P("return true")
 		m.P("}")
@@ -796,4 +813,8 @@ func GetNotifyCache(message *descriptor.DescriptorProto) bool {
 
 func GetObjKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_ObjKey, false)
+}
+
+func GetBackend(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_Backend, false)
 }

@@ -28,6 +28,7 @@ func readAppDataFile(file string) {
 func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	errFound := false
 	var showCmds = []string{
+		"flavors: ShowFlavor",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
 		"cloudlets: ShowCloudlet",
@@ -53,6 +54,26 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+string(out)+"\n", truncate)
 	}
 	return !errFound
+}
+
+func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	opAPI := edgeproto.NewFlavorApiClient(conn)
+	var err error = nil
+	for _, o := range appdata.Flavors {
+		log.Printf("API %v for flavor: %v", mode, o.Key.Name)
+		switch mode {
+		case "create":
+			_, err = opAPI.CreateFlavor(ctx, &o)
+		case "update":
+			_, err = opAPI.UpdateFlavor(ctx, &o)
+		case "delete":
+			_, err = opAPI.DeleteFlavor(ctx, &o)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func runOperatorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
@@ -115,6 +136,26 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 	return nil
 }
 
+func runClusterApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	clusterAPI := edgeproto.NewClusterApiClient(conn)
+	for _, a := range appdata.Clusters {
+		log.Printf("API %v for cluster: %v", mode, a.Key.Name)
+		switch mode {
+		case "create":
+			_, err = clusterAPI.CreateCluster(ctx, &a)
+		case "update":
+			_, err = clusterAPI.UpdateCluster(ctx, &a)
+		case "delete":
+			_, err = clusterAPI.DeleteCluster(ctx, &a)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
 	var err error = nil
 	appAPI := edgeproto.NewAppApiClient(conn)
@@ -132,6 +173,27 @@ func runAppApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.Ap
 			return err
 		}
 	}
+	return nil
+}
+
+func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	clusterinAPI := edgeproto.NewClusterInstApiClient(conn)
+	for _, a := range appdata.ClusterInsts {
+		log.Printf("API %v for clusterinst: %v", mode, a.Key.ClusterKey.Name)
+		switch mode {
+		case "create":
+			_, err = clusterinAPI.CreateClusterInst(ctx, &a)
+		case "update":
+			_, err = clusterinAPI.UpdateClusterInst(ctx, &a)
+		case "delete":
+			_, err = clusterinAPI.DeleteClusterInst(ctx, &a)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -196,9 +258,19 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in appinst API %v\n", err)
 				rc = false
 			}
+			err = runClusterInstApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in clusterinst API %v\n", err)
+				rc = false
+			}
 			err = runAppApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
+				rc = false
+			}
+			err = runClusterApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cluster API %v\n", err)
 				rc = false
 			}
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)
@@ -216,9 +288,19 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
+			err = runFlavorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in flavor API %v\n", err)
+				rc = false
+			}
 		case "create":
 			fallthrough
 		case "update":
+			err = runFlavorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in operator API %v\n", err)
+				rc = false
+			}
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
