@@ -1,9 +1,26 @@
 flavors:
 - key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
     name: x1.small
   ram: 2048
   vcpus: 2
   disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusters:
+- key:
+    name: SmallCluster
+  flavor:
+    name: x1.small
+  nodes: 3
 
 operators:
 - key:
@@ -43,7 +60,11 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
   flavor:
     name: x1.small
+  cluster:
+    name: SmallCluster
 

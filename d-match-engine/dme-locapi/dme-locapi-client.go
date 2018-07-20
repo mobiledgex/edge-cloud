@@ -41,7 +41,7 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 	resp, err := http.Post(locVerUrl, "application/json", body)
 
 	if err != nil {
-		log.WarnLog("Error in POST to GDDT Loc service error", err)
+		log.WarnLog("Error in POST to GDDT Loc service error", "error", err)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 	defer resp.Body.Close()

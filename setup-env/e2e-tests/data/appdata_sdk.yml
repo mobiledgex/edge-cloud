@@ -1,0 +1,30 @@
+flavors:
+
+clusters:
+
+operators:
+- key:
+    name: GDDT
+
+developers:
+- key:
+    name: EmptyMatchEngineApp
+  username: emptyapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: GDDT
+    name: gddtcloud1
+  accessuri: cloud1.gddt
+  location:
+    lat: 50.7374
+    long: -7.0982
+
+apps:
+
+appinstances:
+

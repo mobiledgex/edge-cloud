@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	url "net/url"
@@ -27,7 +28,8 @@ func readMERFile(merfile string) {
 	err := util.ReadYamlFile(merfile, &apiRequest, "", true)
 	if err != nil {
 		if !util.IsYamlOk(err, "mer") {
-			log.Fatal("One or more fatal unmarshal errors, exiting")
+			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", merfile)
+			os.Exit(1)
 		}
 	}
 }

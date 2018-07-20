@@ -1,5 +1,4 @@
-uri: http://tmocloud1/apps/someApplication
-serviceip: [10, 10, 10, 1]
+uri: someApplication.tmocloud1.mobiledgex.net
 cloudletlocation:
   lat: 31
   long: -91
