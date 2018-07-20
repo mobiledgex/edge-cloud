@@ -211,7 +211,7 @@ func StartLocal(name, bin string, args []string, logfile string) (*exec.Cmd, err
 	} else {
 		fmt.Printf("Creating logfile %v\n", logfile)
 		// open the out file for writing
-		outfile, err := os.Create(logfile)
+		outfile, err := os.OpenFile(logfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			fmt.Printf("ERROR Creating logfile %v -- %v\n", logfile, err)
 			panic(err)

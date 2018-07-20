@@ -15,13 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusters:
-- key:
-    name: SmallCluster
-  flavor:
-    name: x1.small
-  nodes: 3
-
 operators:
 - key:
     name: ATT
@@ -65,8 +58,6 @@ apps:
   accesslayer: AccessLayerL7
   flavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
 
 appinstances:
 - key:
@@ -84,13 +75,6 @@ appinstances:
     lat: 31
     long: -91
   uri: someApplication.tmocloud1.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud1
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
@@ -112,13 +96,6 @@ appinstances:
     lat: 35
     long: -95
   uri: someApplication.tmocloud2.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud2
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker

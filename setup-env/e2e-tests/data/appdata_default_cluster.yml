@@ -17,7 +17,7 @@ flavors:
 
 clusters:
 - key:
-    name: SmallCluster
+    name: AutoClustersomeApplication
   flavor:
     name: x1.small
   nodes: 3
@@ -66,7 +66,7 @@ apps:
   flavor:
     name: x1.small
   cluster:
-    name: SmallCluster
+    name: AutoClustersomeApplication
 
 appinstances:
 - key:
@@ -86,7 +86,7 @@ appinstances:
   uri: someApplication.tmocloud1.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: SmallCluster
+      name: AutoClustersomeApplication
     cloudletkey:
       operatorkey:
         name: TMUS
@@ -114,7 +114,7 @@ appinstances:
   uri: someApplication.tmocloud2.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: SmallCluster
+      name: AutoClustersomeApplication
     cloudletkey:
       operatorkey:
         name: TMUS
