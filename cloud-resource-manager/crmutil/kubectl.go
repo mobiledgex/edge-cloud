@@ -2,9 +2,8 @@ package crmutil
 
 import (
 	"bufio"
+	"fmt"
 	"os/exec"
-
-	"github.com/bobbae/q"
 )
 
 func runKubeCtlCreateDeployment(fn string) error {
@@ -29,7 +28,7 @@ func runCmd(cmdName string, cmdArgs []string) error {
 	scanner := bufio.NewScanner(cmdReader)
 	go func() {
 		for scanner.Scan() {
-			q.Q(cmdName, scanner.Text())
+			fmt.Println(cmdName, scanner.Text())
 		}
 	}()
 

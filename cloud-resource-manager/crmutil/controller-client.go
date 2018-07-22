@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	log "gitlab.com/bobbae/logrus"
 )
 
 func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerServer) error {
@@ -19,16 +19,12 @@ func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerSe
 	srv.mux.Lock()
 	defer srv.mux.Unlock()
 
-	q.Q("call cloudlet api", len(srv.CloudResourceData.CloudResources))
-
 	for i, cr := range srv.CloudResourceData.CloudResources {
-		q.Q(cr)
 		_, err = api.CreateCloudlet(ctx, &CloudletData[i])
 		if err != nil {
-			q.Q(err)
+			log.Errorf("error calling CreateCloudlet, %v %v", cr, err)
 			break
 		}
-		q.Q("CreateCloudlet", CloudletData[i])
 	}
 
 	return err

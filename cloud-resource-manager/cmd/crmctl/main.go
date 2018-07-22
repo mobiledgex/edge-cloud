@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"google.golang.org/grpc"
 )
@@ -63,14 +62,11 @@ func printHelpAndExit() {
 }
 
 func getAPI(address string) (edgeproto.CloudResourceManagerClient, error) {
-	q.Q("grpc dial", address)
-
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
 
-	q.Q("getting CRM api")
 	api := edgeproto.NewCloudResourceManagerClient(conn)
 
 	return api, nil
@@ -151,8 +147,6 @@ func doListCloudResource() {
 	cr := edgeproto.CloudResource{CloudletKey: &cloudletKey}
 	cr.Category = edgeproto.CloudResourceCategory(*category)
 
-	q.Q("calling ListCloudResource")
-
 	stream, err := api.ListCloudResource(ctx, &cr)
 	if err != nil {
 		fatalError("ListCloudResource call failed, %v", err)
@@ -162,14 +156,12 @@ func doListCloudResource() {
 
 	go func() {
 		for {
-			q.Q("wait for stream input")
 			in, err := stream.Recv()
 			if err == io.EOF {
 				close(waitc)
 				return
 			}
 
-			q.Q("received from stream", *in)
 			if err != nil {
 				fatalError("Failed to receive from stream, %v", err)
 			}
@@ -179,7 +171,6 @@ func doListCloudResource() {
 	}()
 
 	<-waitc
-	q.Q("stream done")
 }
 
 func doDeleteCloudResource() {
