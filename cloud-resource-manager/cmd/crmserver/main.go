@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/bobbae/q"
+	//"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -55,6 +55,22 @@ func main() {
 	grpcServer := grpc.NewServer()
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
+	go func() {
+		rootLB := crmutil.GetRootLBName()
+
+		err := crmutil.EnableRootLB(rootLB)
+		if err != nil {
+			log.FatalLog("Failed to enable root LB", "error", err)
+		}
+
+		err = crmutil.WaitForRootLB(rootLB)
+		if err != nil {
+			log.FatalLog("Error waiting for rootLB")
+			os.Exit(1) //XXX FatalLog does not exit?!
+		}
+		crmutil.RunMEXAgent(rootLB, false)
+	}()
+
 	if *standalone {
 		// In standalone mode, use "touch allownoconfig" for edgectl
 		// to set no-config fields like "flavor" on CreateClusterInst.
@@ -74,11 +90,9 @@ func main() {
 		defer notifyClient.Stop()
 	}
 
-	q.Q("registered CRM API server")
 	reflection.Register(grpcServer)
 
 	go func() {
-		q.Q("running grpc server")
 		if err := grpcServer.Serve(listener); err != nil {
 			log.FatalLog("Failed to serve grpc", "err", err)
 		}

@@ -36,6 +36,9 @@ var _ = math.Inf
 var AppInstApiCmd edgeproto.AppInstApiClient
 var AppInstInfoApiCmd edgeproto.AppInstInfoApiClient
 var AppInstMetricsApiCmd edgeproto.AppInstMetricsApiClient
+var AppInstMetricsIn edgeproto.AppInstMetrics
+var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
+var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
 var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
@@ -44,9 +47,6 @@ var AppInstInImageType string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
-var AppInstMetricsIn edgeproto.AppInstMetrics
-var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
-var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s := make([]string, 0, 3)

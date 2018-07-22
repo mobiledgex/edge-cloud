@@ -6,7 +6,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -56,15 +55,12 @@ func NewCloudResourceManagerServer(cd *ControllerData) (*CloudResourceManagerSer
 // List Cloud Resource
 func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudResource, cb edgeproto.CloudResourceManager_ListCloudResourceServer) error {
 	var err error
-	q.Q("ListCloudResource", *cr)
 
 	server.mux.Lock()
 	defer server.mux.Unlock()
 
 	for _, obj := range server.CloudResourceData.CloudResources {
-		q.Q(obj)
 		if cr.Category != 0 && cr.Category != obj.Category {
-			q.Q("skip")
 			continue
 		}
 
@@ -73,7 +69,6 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 			log.Printf("Can't strearm out resource, %v", err)
 			break
 		}
-		q.Q("stream out", *obj, err)
 	}
 
 	return err
@@ -81,7 +76,6 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 
 // Add Cloud Resource
 func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
-	q.Q("AddCloudResource", *cr)
 	server.mux.Lock()
 	defer server.mux.Unlock()
 
@@ -99,7 +93,6 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 }
 
 func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
-	q.Q("DeleteCloudResource", *cr)
 
 	server.mux.Lock()
 	defer server.mux.Unlock()

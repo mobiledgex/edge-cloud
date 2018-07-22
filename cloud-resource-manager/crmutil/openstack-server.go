@@ -1,11 +1,10 @@
 package crmutil
 
 import (
+	"fmt"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-
-	"github.com/bobbae/q"
 )
 
 type OpenstackServerArgs struct {
@@ -49,10 +48,8 @@ func CreateOpenstackServer(client *gophercloud.ServiceClient,
 	}).Extract()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error calling servers.Create, %v, %v", actual, err)
 	}
-
-	q.Q(*actual)
 
 	return nil
 }
