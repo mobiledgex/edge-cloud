@@ -21,6 +21,7 @@ import android.content.Intent;
 // Matching Engine API:
 import com.mobiledgex.matchingengine.FindCloudletResponse;
 import com.mobiledgex.matchingengine.MatchingEngine;
+import com.mobiledgex.matchingengine.util.NetworkManager;
 import com.mobiledgex.matchingengine.util.RequestPermissions;
 
 import distributed_match_engine.AppClient;
@@ -38,6 +39,7 @@ import com.google.android.gms.tasks.Task;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -51,6 +53,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
     private boolean mDoLocationUpdates;
+
+    private NetworkManager networkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mLocationRequest = new LocationRequest();
 
-        mMatchingEngine = new MatchingEngine();
+        mMatchingEngine = new MatchingEngine(this);
 
         // Restore mex location preference, defaulting to false:
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -320,8 +324,12 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             tv.setText(someText);
                         }
                     });
+                } catch (ExecutionException ee) {
+                    ee.printStackTrace();
                 } catch (IOException ioe) {
                     ioe.printStackTrace();
+                } catch (InterruptedException ie) {
+                    ie.printStackTrace();
                 } catch (StatusRuntimeException sre) {
                     sre.printStackTrace();
                 } catch (IllegalArgumentException iae) {
