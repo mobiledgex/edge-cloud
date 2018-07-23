@@ -3,16 +3,24 @@ package com.mobiledgex.matchingengine;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.LinkProperties;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
 import android.support.annotation.NonNull;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 
 import com.google.protobuf.ByteString;
+import com.mobiledgex.matchingengine.util.NetworkManager;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -25,13 +33,17 @@ import io.grpc.StatusRuntimeException;
 import android.content.pm.PackageInfo;
 import android.util.Log;
 
+import static android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET;
+import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
+
 
 // TODO: GRPC (which needs http/2).
 public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
     private final String mInitalDMEContactHost = "tdg.dme.mobiledgex.net";
     private String mCurrentNetworkOperatorName = "";
-    private String host = "tdg.dme.mobiledgex.net"; // FIXME: Need CarrierName from actual SIM card to generate.
+    private String host = "tdg.dme.mobiledgex.net";
+    private NetworkManager mNetworkManager;
     private int port = 50051;
 
     // A threadpool for all the MatchEngine API callable interfaces:
@@ -48,11 +60,16 @@ public class MatchingEngine {
     private AppClient.Match_Engine_Loc mMatchEngineLocation;
     private AppClient.Match_Engine_Loc_Verify mMatchEngineLocationVerify;
 
-    public MatchingEngine() {
+    public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
+        ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
+        mNetworkManager = new NetworkManager(connectivityManager);
+
     }
-    public MatchingEngine(ExecutorService executorService) {
+    public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
+        ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
+        mNetworkManager = new NetworkManager(connectivityManager, threadpool);
     }
 
     // Application state Bundle Key.
@@ -106,18 +123,30 @@ public class MatchingEngine {
     void setFindCloudletResponse(AppClient.Match_Engine_Reply reply) {
         mMatchEngineFindCloudletReply = reply;
     }
-
+    
     String getCurrentNetworkOperatorName() {
         return mCurrentNetworkOperatorName;
     }
-
+    
     void setCurrentNetworkOperatorName(String networkOperatorName) {
         this.mCurrentNetworkOperatorName = networkOperatorName;
     }
 
-    private void updateDmeHostAddress(String networkOperatorName) {
+    public void updateDmeHostAddress(String networkOperatorName) {
         setCurrentNetworkOperatorName(networkOperatorName);
-        this.host = getCurrentNetworkOperatorName() + ".dme.mobiledgex.net";
+        if (networkOperatorName == null && networkOperatorName.isEmpty()) {
+            this.host = mInitalDMEContactHost;
+            return;
+        }
+        this.host = getCurrentNetworkOperatorName().toLowerCase() + ".dme.mobiledgex.net";
+    }
+
+    NetworkManager getNetworkManager() {
+        return mNetworkManager;
+    }
+
+    void setNetworkManager(NetworkManager networkManager) {
+        mNetworkManager = networkManager;
     }
 
     /**
@@ -209,8 +238,7 @@ public class MatchingEngine {
                 .build();
 
 
-        // also update MatchingEngine state.
-        // FIXME: NetworkManager callback.
+        // This is the currently generated DME host.
         updateDmeHostAddress(networkOperatorName);
         return request;
     }
@@ -342,9 +370,11 @@ public class MatchingEngine {
      * @param request
      * @return boolean validated or not.
      * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws IOException
      */
     public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException, IOException {
+            throws StatusRuntimeException, InterruptedException, IOException, ExecutionException {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return verifyLocation.call();

@@ -5,6 +5,7 @@ import android.location.Location;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCanceledListener;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.mobiledgex.matchingengine.MatchingEngine;
@@ -59,7 +60,18 @@ public class MexLocation {
                                 mWaitingForNotify = false;
                                 syncObject.notify();
                             }
-                            Log.w(TAG, "getLastLocation: Exception (if any)", task.getException());
+                            if (task.getException() != null) {
+                                Log.w(TAG, "getLastLocation: Exception: ", task.getException());
+                            }
+                        }
+                    }
+                });
+                fusedLocationClient.getLastLocation().addOnCanceledListener(new OnCanceledListener() {
+                    @Override
+                    public void onCanceled() {
+                        synchronized (syncObject) {
+                            mWaitingForNotify = false;
+                            syncObject.notify();
                         }
                     }
                 });

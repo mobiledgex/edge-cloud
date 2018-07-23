@@ -1,7 +1,12 @@
 package com.mobiledgex.matchingengine;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkRequest;
 import android.util.Log;
 
+import com.mobiledgex.matchingengine.util.NetworkManager;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
@@ -49,29 +54,10 @@ public class RegisterClient implements Callable {
         return true;
     }
 
-    private String createDmeUri() {
-        return "http://"
-                + mMatchingEngine.getHost()
-                + ":"
-                + mMatchingEngine.getPort();
+    private void isBoundToCellNetwork() {
+
     }
 
-    private String getRedirectUri(String uri) {
-        HttpUrl url = HttpUrl.parse(uri);
-        return url.queryParameter("followURL");
-    }
-
-    private String getToken(String uri) {
-        HttpUrl url = HttpUrl.parse(uri);
-        return url.queryParameter("dt-id");
-    }
-
-    /**
-     *
-     * @return
-     * @throws MissingRequestException
-     * @throws StatusRuntimeException
-     */
     @Override
     public AppClient.Match_Engine_Status call() throws MissingRequestException,
             StatusRuntimeException, IOException {
@@ -83,7 +69,10 @@ public class RegisterClient implements Callable {
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
+            channel = ManagedChannelBuilder
+                    .forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort())
+                    .usePlaintext()
+                    .build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)

@@ -1,5 +1,7 @@
 package com.mobiledgex.matchingengine;
 
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.util.Log;
 
 import com.google.protobuf.ByteString;
@@ -11,6 +13,7 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
@@ -47,8 +50,10 @@ public class VerifyLocation implements Callable {
         return true;
     }
 
-    private String getToken() throws IOException {
+    private String getToken() throws InterruptedException, IOException, ExecutionException {
         String token;
+
+        Network newNetwork = mMatchingEngine.getNetworkManager().switchToCellularInternetNetworkBlocking();
 
         OkHttpClient httpClient = new OkHttpClient();
         httpClient.setFollowSslRedirects(false);
@@ -57,6 +62,7 @@ public class VerifyLocation implements Callable {
         Request request = new Request.Builder()
                 .url(mMatchingEngine.getTokenServerURI())
                 .build();
+
         Response response = httpClient.newCall(request).execute();
         if (!response.isRedirect()) {
             throw new IllegalStateException("Expected a redirect!");
@@ -71,6 +77,11 @@ public class VerifyLocation implements Callable {
             if (token == null) {
                 throw new IllegalStateException("Required Token ID Missinng");
             }
+        }
+
+        // Reset to whatever default network it was.
+        if (newNetwork != null) {
+            mMatchingEngine.getNetworkManager().resetNetworkToDefault();
         }
         return token;
     }
@@ -99,13 +110,14 @@ public class VerifyLocation implements Callable {
 
     @Override
     public AppClient.Match_Engine_Loc_Verify call()
-            throws MissingRequestException, StatusRuntimeException, IOException {
+            throws MissingRequestException, StatusRuntimeException,
+                   IOException, InterruptedException, ExecutionException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
         }
 
         // Make One time use of HTTP Request to Token Server:
-        String token = getToken(); // This is short lived.
+        String token = getToken(); // This token is short lived.
         mRequest = addTokenToRequest(token);
 
         AppClient.Match_Engine_Loc_Verify reply;
