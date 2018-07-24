@@ -114,6 +114,18 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 	},
 }
 
+var IsValidMEXOSEnv = false
+
+func ValidateMEXOSEnv(osEnvValid bool) bool {
+	if osEnvValid == false {
+		return false
+	}
+
+	//XXX do more validation on internal env vars
+	IsValidMEXOSEnv = true
+	return IsValidMEXOSEnv
+}
+
 func AddFlavor(flavor string) error {
 	if err := ValidateFlavor(flavor); err != nil {
 		return fmt.Errorf("invalid flavor")
