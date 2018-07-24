@@ -1,6 +1,26 @@
 flavors:
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 
 clusters:
+- key:
+    name: SmallCluster
+  flavor:
+    name: x1.small
+  nodes: 3
 
 operators:
 - key:
@@ -24,7 +44,60 @@ cloudlets:
     lat: 50.7374
     long: -7.0982
 
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: GDDT
+      name: gddtcloud1
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessStatic
+
 apps:
+- key:
+    developerkey:
+      name: EmptyMatchEngineApp
+    name: EmptyMatchEngineApp
+    version: "1"
+  imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  flavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
 
 appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: EmptyMatchEngineApp
+      name: EmptyMatchEngineApp
+      version: "1"
+    cloudletkey:
+      operatorkey:
+        name: GDDT
+      name: gddtcloud1
+    id: 5011
+  cloudletloc:
+    lat: 50.7374
+    long: -7.0982
+  uri: EmptyMatchEngineApp.gddtcloud1.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: GDDT
+      name: gddtcloud1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
+  imagetype: ImageTypeDocker
+  mappedpath: EmptyMatchEngineApp
+  flavor:
+    name: x1.small
 

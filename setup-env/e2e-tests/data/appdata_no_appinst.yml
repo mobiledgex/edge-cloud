@@ -28,6 +28,30 @@ operators:
 - key:
     name: DMUUS
 
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud1
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessStatic
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud2
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessStatic
+
 developers:
 - key:
     name: AcmeAppCo
