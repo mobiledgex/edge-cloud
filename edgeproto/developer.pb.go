@@ -485,6 +485,25 @@ var DeveloperAllFieldsMap = map[string]struct{}{
 	DeveloperFieldEmail:    struct{}{},
 }
 
+func (m *Developer) DiffFields(o *Developer, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[DeveloperFieldKeyName] = struct{}{}
+		fields[DeveloperFieldKey] = struct{}{}
+	}
+	if m.Username != o.Username {
+		fields[DeveloperFieldUsername] = struct{}{}
+	}
+	if m.Passhash != o.Passhash {
+		fields[DeveloperFieldPasshash] = struct{}{}
+	}
+	if m.Address != o.Address {
+		fields[DeveloperFieldAddress] = struct{}{}
+	}
+	if m.Email != o.Email {
+		fields[DeveloperFieldEmail] = struct{}{}
+	}
+}
+
 func (m *Developer) CopyInFields(src *Developer) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -724,6 +743,12 @@ func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *DeveloperCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) error {

@@ -463,6 +463,22 @@ var FlavorAllFieldsMap = map[string]struct{}{
 	FlavorFieldDisk:    struct{}{},
 }
 
+func (m *Flavor) DiffFields(o *Flavor, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[FlavorFieldKeyName] = struct{}{}
+		fields[FlavorFieldKey] = struct{}{}
+	}
+	if m.Ram != o.Ram {
+		fields[FlavorFieldRam] = struct{}{}
+	}
+	if m.Vcpus != o.Vcpus {
+		fields[FlavorFieldVcpus] = struct{}{}
+	}
+	if m.Disk != o.Disk {
+		fields[FlavorFieldDisk] = struct{}{}
+	}
+}
+
 func (m *Flavor) CopyInFields(src *Flavor) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -699,6 +715,12 @@ func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *FlavorCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {

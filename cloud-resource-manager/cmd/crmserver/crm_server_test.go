@@ -175,11 +175,11 @@ func TestCRM(t *testing.T) {
 	for ii, _ := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(&data.AppInstances[ii], 0)
 	}
-	notify.WaitForFlavors(&controllerData.FlavorCache, 3)
+	notify.WaitFor(&controllerData.FlavorCache, 3)
 	// Note for ClusterInsts and AppInsts, only those that match
 	// myCloudlet Key will be sent.
-	notify.WaitForClusterInsts(&controllerData.ClusterInstCache, 2)
-	notify.WaitForAppInsts(&controllerData.AppInstCache, 2)
+	notify.WaitFor(&controllerData.ClusterInstCache, 2)
+	notify.WaitFor(&controllerData.AppInstCache, 2)
 
 	// TODO: check that the above changes triggered cloudlet cluster/app creates
 	// for now just check stats
@@ -197,9 +197,9 @@ func TestCRM(t *testing.T) {
 	for ii, _ := range data.Flavors {
 		ctrlHandler.FlavorCache.Delete(&data.Flavors[ii], 0)
 	}
-	notify.WaitForFlavors(&controllerData.FlavorCache, 0)
-	notify.WaitForClusterInsts(&controllerData.ClusterInstCache, 0)
-	notify.WaitForAppInsts(&controllerData.AppInstCache, 0)
+	notify.WaitFor(&controllerData.FlavorCache, 0)
+	notify.WaitFor(&controllerData.ClusterInstCache, 0)
+	notify.WaitFor(&controllerData.AppInstCache, 0)
 
 	// TODO: check that deletes triggered cloudlet cluster/app deletes.
 	assert.Equal(t, 0, len(controllerData.FlavorCache.Objs))

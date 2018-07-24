@@ -945,6 +945,119 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldFlavorName:                               struct{}{},
 }
 
+func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
+	if m.Key.AppKey.DeveloperKey.Name != o.Key.AppKey.DeveloperKey.Name {
+		fields[AppInstFieldKeyAppKeyDeveloperKeyName] = struct{}{}
+		fields[AppInstFieldKeyAppKeyDeveloperKey] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Name != o.Key.AppKey.Name {
+		fields[AppInstFieldKeyAppKeyName] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Version != o.Key.AppKey.Version {
+		fields[AppInstFieldKeyAppKeyVersion] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[AppInstFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[AppInstFieldKeyCloudletKeyName] = struct{}{}
+		fields[AppInstFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.Id != o.Key.Id {
+		fields[AppInstFieldKeyId] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.CloudletLoc.Lat != o.CloudletLoc.Lat {
+		fields[AppInstFieldCloudletLocLat] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Long != o.CloudletLoc.Long {
+		fields[AppInstFieldCloudletLocLong] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.HorizontalAccuracy != o.CloudletLoc.HorizontalAccuracy {
+		fields[AppInstFieldCloudletLocHorizontalAccuracy] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.VerticalAccuracy != o.CloudletLoc.VerticalAccuracy {
+		fields[AppInstFieldCloudletLocVerticalAccuracy] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Altitude != o.CloudletLoc.Altitude {
+		fields[AppInstFieldCloudletLocAltitude] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Course != o.CloudletLoc.Course {
+		fields[AppInstFieldCloudletLocCourse] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Speed != o.CloudletLoc.Speed {
+		fields[AppInstFieldCloudletLocSpeed] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
+		fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
+		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
+		fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
+		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.Uri != o.Uri {
+		fields[AppInstFieldUri] = struct{}{}
+	}
+	if m.ClusterInstKey.ClusterKey.Name != o.ClusterInstKey.ClusterKey.Name {
+		fields[AppInstFieldClusterInstKeyClusterKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyClusterKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.ClusterInstKey.CloudletKey.OperatorKey.Name != o.ClusterInstKey.CloudletKey.OperatorKey.Name {
+		fields[AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.ClusterInstKey.CloudletKey.Name != o.ClusterInstKey.CloudletKey.Name {
+		fields[AppInstFieldClusterInstKeyCloudletKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.Liveness != o.Liveness {
+		fields[AppInstFieldLiveness] = struct{}{}
+	}
+	if m.ImagePath != o.ImagePath {
+		fields[AppInstFieldImagePath] = struct{}{}
+	}
+	if m.ImageType != o.ImageType {
+		fields[AppInstFieldImageType] = struct{}{}
+	}
+	if m.MappedPorts != o.MappedPorts {
+		fields[AppInstFieldMappedPorts] = struct{}{}
+	}
+	if m.MappedPath != o.MappedPath {
+		fields[AppInstFieldMappedPath] = struct{}{}
+	}
+	if m.ConfigMap != o.ConfigMap {
+		fields[AppInstFieldConfigMap] = struct{}{}
+	}
+	if m.Flavor.Name != o.Flavor.Name {
+		fields[AppInstFieldFlavorName] = struct{}{}
+		fields[AppInstFieldFlavor] = struct{}{}
+	}
+}
+
 func (m *AppInst) CopyInFields(src *AppInst) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -1272,6 +1385,12 @@ func (c *AppInstCache) Prune(validKeys map[AppInstKey]struct{}) {
 	}
 }
 
+func (c *AppInstCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
 	c.Mux.Lock()
@@ -1400,6 +1519,43 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldKeyCloudletKeyName:            struct{}{},
 	AppInstInfoFieldKeyId:                         struct{}{},
 	AppInstInfoFieldNotifyId:                      struct{}{},
+}
+
+func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
+	if m.Key.AppKey.DeveloperKey.Name != o.Key.AppKey.DeveloperKey.Name {
+		fields[AppInstInfoFieldKeyAppKeyDeveloperKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKeyDeveloperKey] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Name != o.Key.AppKey.Name {
+		fields[AppInstInfoFieldKeyAppKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Version != o.Key.AppKey.Version {
+		fields[AppInstInfoFieldKeyAppKeyVersion] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[AppInstInfoFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[AppInstInfoFieldKeyCloudletKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.Id != o.Key.Id {
+		fields[AppInstInfoFieldKeyId] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[AppInstInfoFieldNotifyId] = struct{}{}
+	}
 }
 
 func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
@@ -1655,6 +1811,12 @@ func (c *AppInstInfoCache) Prune(validKeys map[AppInstKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *AppInstInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 func (c *AppInstInfoCache) Flush(notifyId int64) {
 	c.Mux.Lock()

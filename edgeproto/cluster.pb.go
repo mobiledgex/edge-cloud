@@ -457,6 +457,20 @@ var ClusterAllFieldsMap = map[string]struct{}{
 	ClusterFieldNodes:      struct{}{},
 }
 
+func (m *Cluster) DiffFields(o *Cluster, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[ClusterFieldKeyName] = struct{}{}
+		fields[ClusterFieldKey] = struct{}{}
+	}
+	if m.Flavor.Name != o.Flavor.Name {
+		fields[ClusterFieldFlavorName] = struct{}{}
+		fields[ClusterFieldFlavor] = struct{}{}
+	}
+	if m.Nodes != o.Nodes {
+		fields[ClusterFieldNodes] = struct{}{}
+	}
+}
+
 func (m *Cluster) CopyInFields(src *Cluster) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -692,6 +706,12 @@ func (c *ClusterCache) Prune(validKeys map[ClusterKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *ClusterCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *ClusterCache) Show(filter *Cluster, cb func(ret *Cluster) error) error {
