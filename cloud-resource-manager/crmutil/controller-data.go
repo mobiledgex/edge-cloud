@@ -86,24 +86,28 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		log.InfoLog("TODO: implement cluster create/update for",
 			"cluster", clusterInst)
 
-		go func() {
-			err := CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
-			if err != nil {
-				log.InfoLog("Error: failed to create cluster instance", "error", err, "cluster", clusterInst)
-				return
-			}
-			//XXX no way to return results
-		}()
+		if IsValidMEXOSEnv {
+			go func() {
+				err := CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
+				if err != nil {
+					log.InfoLog("Error: failed to create cluster instance", "error", err, "cluster", clusterInst)
+					return
+				}
+				//XXX no way to return results
+			}()
+		}
 	} else {
 		// clusterInst was deleted
 		log.InfoLog("TODO: implement cluster delete for", "key", key)
-		go func() {
-			err := DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
-			if err != nil {
-				log.InfoLog("Error: can't delete cluster %v, %v", key, err)
-			}
-			//XXX no way to return results
-		}()
+		if IsValidMEXOSEnv {
+			go func() {
+				err := DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
+				if err != nil {
+					log.InfoLog("Error: can't delete cluster %v, %v", key, err)
+				}
+				//XXX no way to return results
+			}()
+		}
 	}
 }
 
@@ -129,41 +133,43 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 		log.InfoLog("TODO: implement appInst create/update for",
 			"appInst", appInst)
 
-		go func() {
-			imagetype, err := convertImageType(int(appInst.ImageType))
-			if err != nil {
-				log.InfoLog("Error: invalid image type", "imagetype", appInst.ImageType, "error", err)
-				return
-			}
-
-			//XXX no way to pass Kubernetes deployment, service, yaml, etc.
-			//XXX not sure what appInst.Flavor is
-
-			switch imagetype {
-			case "docker":
-				//Controller missing or not passing information:
-				//XXX possibly incorrectly named ImagePath seems to be the only
-				//  entry that can be used to specify docker image name.
-				//XXX appData has AccessLayer but appInst does not.
-				//   al, err := convertAccessLayer(appInst.AccessLayer)
-				//XXX no registry specification.
-				//XXX no namespace specification.
-				//XXX MappedPorts and MappedPath are strings but they can contain
-				//     multiple entries. Format is not clear.
-
-				err := CreateDockerApp(GetRootLBName(),
-					appInst.Key.AppKey.Name, clusterInst.Key.ClusterKey.Name, appInst.Flavor.Name,
-					"docker.io", appInst.Uri, appInst.ImagePath, appInst.MappedPorts, appInst.MappedPath, "unknown")
+		if IsValidMEXOSEnv {
+			go func() {
+				imagetype, err := convertImageType(int(appInst.ImageType))
 				if err != nil {
-					log.InfoLog("Error: can't create app", "error", err)
+					log.InfoLog("Error: invalid image type", "imagetype", appInst.ImageType, "error", err)
 					return
 				}
-			default:
-				log.InfoLog("Error: unknown image type")
-			}
 
-			//XXX no way to return results
-		}()
+				//XXX no way to pass Kubernetes deployment, service, yaml, etc.
+				//XXX not sure what appInst.Flavor is
+
+				switch imagetype {
+				case "docker":
+					//Controller missing or not passing information:
+					//XXX possibly incorrectly named ImagePath seems to be the only
+					//  entry that can be used to specify docker image name.
+					//XXX appData has AccessLayer but appInst does not.
+					//   al, err := convertAccessLayer(appInst.AccessLayer)
+					//XXX no registry specification.
+					//XXX no namespace specification.
+					//XXX MappedPorts and MappedPath are strings but they can contain
+					//     multiple entries. Format is not clear.
+
+					err := CreateDockerApp(GetRootLBName(),
+						appInst.Key.AppKey.Name, clusterInst.Key.ClusterKey.Name, appInst.Flavor.Name,
+						"docker.io", appInst.Uri, appInst.ImagePath, appInst.MappedPorts, appInst.MappedPath, "unknown")
+					if err != nil {
+						log.InfoLog("Error: can't create app", "error", err)
+						return
+					}
+				default:
+					log.InfoLog("Error: unknown image type")
+				}
+
+				//XXX no way to return results
+			}()
+		}
 	} else {
 		// appInst was deleted
 		log.InfoLog("TODO: implement appInst delete for",
