@@ -1053,6 +1053,384 @@ var TestGenAllFieldsMap = map[string]struct{}{
 	TestGenFieldRepeatedLocNonnullTimestampNanos:     struct{}{},
 }
 
+func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
+	if m.Name != o.Name {
+		fields[TestGenFieldName] = struct{}{}
+	}
+	if m.Db != o.Db {
+		fields[TestGenFieldDb] = struct{}{}
+	}
+	if m.Fl != o.Fl {
+		fields[TestGenFieldFl] = struct{}{}
+	}
+	if m.I32 != o.I32 {
+		fields[TestGenFieldI32] = struct{}{}
+	}
+	if m.I64 != o.I64 {
+		fields[TestGenFieldI64] = struct{}{}
+	}
+	if m.U32 != o.U32 {
+		fields[TestGenFieldU32] = struct{}{}
+	}
+	if m.U64 != o.U64 {
+		fields[TestGenFieldU64] = struct{}{}
+	}
+	if m.S32 != o.S32 {
+		fields[TestGenFieldS32] = struct{}{}
+	}
+	if m.S64 != o.S64 {
+		fields[TestGenFieldS64] = struct{}{}
+	}
+	if m.F32 != o.F32 {
+		fields[TestGenFieldF32] = struct{}{}
+	}
+	if m.F64 != o.F64 {
+		fields[TestGenFieldF64] = struct{}{}
+	}
+	if m.Sf32 != o.Sf32 {
+		fields[TestGenFieldSf32] = struct{}{}
+	}
+	if m.Sf64 != o.Sf64 {
+		fields[TestGenFieldSf64] = struct{}{}
+	}
+	if m.Bb != o.Bb {
+		fields[TestGenFieldBb] = struct{}{}
+	}
+	if m.OuterEn != o.OuterEn {
+		fields[TestGenFieldOuterEn] = struct{}{}
+	}
+	if m.InnerEn != o.InnerEn {
+		fields[TestGenFieldInnerEn] = struct{}{}
+	}
+	if m.InnerMsg.Url != o.InnerMsg.Url {
+		fields[TestGenFieldInnerMsgUrl] = struct{}{}
+		fields[TestGenFieldInnerMsg] = struct{}{}
+	}
+	if m.InnerMsg.Id != o.InnerMsg.Id {
+		fields[TestGenFieldInnerMsgId] = struct{}{}
+		fields[TestGenFieldInnerMsg] = struct{}{}
+	}
+	if m.InnerMsgNonnull.Url != o.InnerMsgNonnull.Url {
+		fields[TestGenFieldInnerMsgNonnullUrl] = struct{}{}
+		fields[TestGenFieldInnerMsgNonnull] = struct{}{}
+	}
+	if m.InnerMsgNonnull.Id != o.InnerMsgNonnull.Id {
+		fields[TestGenFieldInnerMsgNonnullId] = struct{}{}
+		fields[TestGenFieldInnerMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsg.Name != o.IncludeMsg.Name {
+		fields[TestGenFieldIncludeMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsg.Id != o.IncludeMsg.Id {
+		fields[TestGenFieldIncludeMsgId] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsg.NestedMsg.Name != o.IncludeMsg.NestedMsg.Name {
+		fields[TestGenFieldIncludeMsgNestedMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNestedMsg] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.Name != o.IncludeMsgNonnull.Name {
+		fields[TestGenFieldIncludeMsgNonnullName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.Id != o.IncludeMsgNonnull.Id {
+		fields[TestGenFieldIncludeMsgNonnullId] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.NestedMsg.Name != o.IncludeMsgNonnull.NestedMsg.Name {
+		fields[TestGenFieldIncludeMsgNonnullNestedMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnullNestedMsg] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeFields.Name != o.IncludeFields.Name {
+		fields[TestGenFieldIncludeFieldsName] = struct{}{}
+		fields[TestGenFieldIncludeFields] = struct{}{}
+	}
+	if m.IncludeFieldsNonnull.Name != o.IncludeFieldsNonnull.Name {
+		fields[TestGenFieldIncludeFieldsNonnullName] = struct{}{}
+		fields[TestGenFieldIncludeFieldsNonnull] = struct{}{}
+	}
+	if m.Loc.Lat != o.Loc.Lat {
+		fields[TestGenFieldLocLat] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Long != o.Loc.Long {
+		fields[TestGenFieldLocLong] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.HorizontalAccuracy != o.Loc.HorizontalAccuracy {
+		fields[TestGenFieldLocHorizontalAccuracy] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.VerticalAccuracy != o.Loc.VerticalAccuracy {
+		fields[TestGenFieldLocVerticalAccuracy] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Altitude != o.Loc.Altitude {
+		fields[TestGenFieldLocAltitude] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Course != o.Loc.Course {
+		fields[TestGenFieldLocCourse] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Speed != o.Loc.Speed {
+		fields[TestGenFieldLocSpeed] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Timestamp.Seconds != o.Loc.Timestamp.Seconds {
+		fields[TestGenFieldLocTimestampSeconds] = struct{}{}
+		fields[TestGenFieldLocTimestamp] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Timestamp.Nanos != o.Loc.Timestamp.Nanos {
+		fields[TestGenFieldLocTimestampNanos] = struct{}{}
+		fields[TestGenFieldLocTimestamp] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.LocNonnull.Lat != o.LocNonnull.Lat {
+		fields[TestGenFieldLocNonnullLat] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Long != o.LocNonnull.Long {
+		fields[TestGenFieldLocNonnullLong] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.HorizontalAccuracy != o.LocNonnull.HorizontalAccuracy {
+		fields[TestGenFieldLocNonnullHorizontalAccuracy] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.VerticalAccuracy != o.LocNonnull.VerticalAccuracy {
+		fields[TestGenFieldLocNonnullVerticalAccuracy] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Altitude != o.LocNonnull.Altitude {
+		fields[TestGenFieldLocNonnullAltitude] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Course != o.LocNonnull.Course {
+		fields[TestGenFieldLocNonnullCourse] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Speed != o.LocNonnull.Speed {
+		fields[TestGenFieldLocNonnullSpeed] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Timestamp.Seconds != o.LocNonnull.Timestamp.Seconds {
+		fields[TestGenFieldLocNonnullTimestampSeconds] = struct{}{}
+		fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Timestamp.Nanos != o.LocNonnull.Timestamp.Nanos {
+		fields[TestGenFieldLocNonnullTimestampNanos] = struct{}{}
+		fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if len(m.RepeatedInt) != len(o.RepeatedInt) {
+		fields[TestGenFieldRepeatedInt] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInt); i0++ {
+			if m.RepeatedInt[i0] != o.RepeatedInt[i0] {
+				fields[TestGenFieldRepeatedInt] = struct{}{}
+			}
+		}
+	}
+	if len(m.Ip) != len(o.Ip) {
+		fields[TestGenFieldIp] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Ip); i0++ {
+			if m.Ip[i0] != o.Ip[i0] {
+				fields[TestGenFieldIp] = struct{}{}
+			}
+		}
+	}
+	if len(m.Names) != len(o.Names) {
+		fields[TestGenFieldNames] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Names); i0++ {
+			if m.Names[i0] != o.Names[i0] {
+				fields[TestGenFieldNames] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedMsg) != len(o.RepeatedMsg) {
+		fields[TestGenFieldRepeatedMsg] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedMsg); i0++ {
+			if m.RepeatedMsg[i0].Name != o.RepeatedMsg[i0].Name {
+				fields[TestGenFieldRepeatedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+			if m.RepeatedMsg[i0].Id != o.RepeatedMsg[i0].Id {
+				fields[TestGenFieldRepeatedMsgId] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+			if m.RepeatedMsg[i0].NestedMsg.Name != o.RepeatedMsg[i0].NestedMsg.Name {
+				fields[TestGenFieldRepeatedMsgNestedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNestedMsg] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
+		fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedMsgNonnull); i0++ {
+			if m.RepeatedMsgNonnull[i0].Name != o.RepeatedMsgNonnull[i0].Name {
+				fields[TestGenFieldRepeatedMsgNonnullName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedMsgNonnull[i0].Id != o.RepeatedMsgNonnull[i0].Id {
+				fields[TestGenFieldRepeatedMsgNonnullId] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedMsgNonnull[i0].NestedMsg.Name != o.RepeatedMsgNonnull[i0].NestedMsg.Name {
+				fields[TestGenFieldRepeatedMsgNonnullNestedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnullNestedMsg] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedFields) != len(o.RepeatedFields) {
+		fields[TestGenFieldRepeatedFields] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedFields); i0++ {
+			if m.RepeatedFields[i0].Name != o.RepeatedFields[i0].Name {
+				fields[TestGenFieldRepeatedFieldsName] = struct{}{}
+				fields[TestGenFieldRepeatedFields] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
+		fields[TestGenFieldRepeatedFieldsNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedFieldsNonnull); i0++ {
+			if m.RepeatedFieldsNonnull[i0].Name != o.RepeatedFieldsNonnull[i0].Name {
+				fields[TestGenFieldRepeatedFieldsNonnullName] = struct{}{}
+				fields[TestGenFieldRepeatedFieldsNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
+		fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInnerMsg); i0++ {
+			if m.RepeatedInnerMsg[i0].Url != o.RepeatedInnerMsg[i0].Url {
+				fields[TestGenFieldRepeatedInnerMsgUrl] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+			}
+			if m.RepeatedInnerMsg[i0].Id != o.RepeatedInnerMsg[i0].Id {
+				fields[TestGenFieldRepeatedInnerMsgId] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
+		fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInnerMsgNonnull); i0++ {
+			if m.RepeatedInnerMsgNonnull[i0].Url != o.RepeatedInnerMsgNonnull[i0].Url {
+				fields[TestGenFieldRepeatedInnerMsgNonnullUrl] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedInnerMsgNonnull[i0].Id != o.RepeatedInnerMsgNonnull[i0].Id {
+				fields[TestGenFieldRepeatedInnerMsgNonnullId] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedLoc) != len(o.RepeatedLoc) {
+		fields[TestGenFieldRepeatedLoc] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedLoc); i0++ {
+			if m.RepeatedLoc[i0].Lat != o.RepeatedLoc[i0].Lat {
+				fields[TestGenFieldRepeatedLocLat] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Long != o.RepeatedLoc[i0].Long {
+				fields[TestGenFieldRepeatedLocLong] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].HorizontalAccuracy != o.RepeatedLoc[i0].HorizontalAccuracy {
+				fields[TestGenFieldRepeatedLocHorizontalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].VerticalAccuracy != o.RepeatedLoc[i0].VerticalAccuracy {
+				fields[TestGenFieldRepeatedLocVerticalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Altitude != o.RepeatedLoc[i0].Altitude {
+				fields[TestGenFieldRepeatedLocAltitude] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Course != o.RepeatedLoc[i0].Course {
+				fields[TestGenFieldRepeatedLocCourse] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Speed != o.RepeatedLoc[i0].Speed {
+				fields[TestGenFieldRepeatedLocSpeed] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Timestamp.Seconds != o.RepeatedLoc[i0].Timestamp.Seconds {
+				fields[TestGenFieldRepeatedLocTimestampSeconds] = struct{}{}
+				fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Timestamp.Nanos != o.RepeatedLoc[i0].Timestamp.Nanos {
+				fields[TestGenFieldRepeatedLocTimestampNanos] = struct{}{}
+				fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
+		fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedLocNonnull); i0++ {
+			if m.RepeatedLocNonnull[i0].Lat != o.RepeatedLocNonnull[i0].Lat {
+				fields[TestGenFieldRepeatedLocNonnullLat] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Long != o.RepeatedLocNonnull[i0].Long {
+				fields[TestGenFieldRepeatedLocNonnullLong] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].HorizontalAccuracy != o.RepeatedLocNonnull[i0].HorizontalAccuracy {
+				fields[TestGenFieldRepeatedLocNonnullHorizontalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].VerticalAccuracy != o.RepeatedLocNonnull[i0].VerticalAccuracy {
+				fields[TestGenFieldRepeatedLocNonnullVerticalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Altitude != o.RepeatedLocNonnull[i0].Altitude {
+				fields[TestGenFieldRepeatedLocNonnullAltitude] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Course != o.RepeatedLocNonnull[i0].Course {
+				fields[TestGenFieldRepeatedLocNonnullCourse] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Speed != o.RepeatedLocNonnull[i0].Speed {
+				fields[TestGenFieldRepeatedLocNonnullSpeed] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Timestamp.Seconds != o.RepeatedLocNonnull[i0].Timestamp.Seconds {
+				fields[TestGenFieldRepeatedLocNonnullTimestampSeconds] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Timestamp.Nanos != o.RepeatedLocNonnull[i0].Timestamp.Nanos {
+				fields[TestGenFieldRepeatedLocNonnullTimestampNanos] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+		}
+	}
+}
+
 func (m *TestGen) CopyInFields(src *TestGen) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {

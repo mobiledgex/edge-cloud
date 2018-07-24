@@ -492,6 +492,13 @@ var OperatorAllFieldsMap = map[string]struct{}{
 	OperatorFieldKeyName: struct{}{},
 }
 
+func (m *Operator) DiffFields(o *Operator, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[OperatorFieldKeyName] = struct{}{}
+		fields[OperatorFieldKey] = struct{}{}
+	}
+}
+
 func (m *Operator) CopyInFields(src *Operator) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -719,6 +726,12 @@ func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *OperatorCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) error {

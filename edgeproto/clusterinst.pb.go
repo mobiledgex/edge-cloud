@@ -490,6 +490,35 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldLiveness:                      struct{}{},
 }
 
+func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
+	if m.Key.ClusterKey.Name != o.Key.ClusterKey.Name {
+		fields[ClusterInstFieldKeyClusterKeyName] = struct{}{}
+		fields[ClusterInstFieldKeyClusterKey] = struct{}{}
+		fields[ClusterInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[ClusterInstFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[ClusterInstFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[ClusterInstFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[ClusterInstFieldKeyCloudletKeyName] = struct{}{}
+		fields[ClusterInstFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstFieldKey] = struct{}{}
+	}
+	if m.Flavor.Name != o.Flavor.Name {
+		fields[ClusterInstFieldFlavorName] = struct{}{}
+		fields[ClusterInstFieldFlavor] = struct{}{}
+	}
+	if m.Nodes != o.Nodes {
+		fields[ClusterInstFieldNodes] = struct{}{}
+	}
+	if m.Liveness != o.Liveness {
+		fields[ClusterInstFieldLiveness] = struct{}{}
+	}
+}
+
 func (m *ClusterInst) CopyInFields(src *ClusterInst) {
 	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
@@ -740,6 +769,12 @@ func (c *ClusterInstCache) Prune(validKeys map[ClusterInstKey]struct{}) {
 			}
 		}
 	}
+}
+
+func (c *ClusterInstCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) error) error {

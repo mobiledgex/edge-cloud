@@ -242,6 +242,56 @@ func (m *mex) generateFields(names, nums []string, desc *generator.Descriptor) {
 	}
 }
 
+func (m *mex) markDiff(names []string, name string) {
+	// set field and all parent fields
+	names = append(names, name)
+	for len(names) > 1 {
+		fieldName := strings.Join(names, "")
+		m.P("fields[", fieldName, "] = struct{}{}")
+		names = names[:len(names)-1]
+	}
+}
+
+func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descriptor) {
+	message := desc.DescriptorProto
+	for ii, field := range message.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_GROUP {
+			// deprecated in proto3
+			continue
+		}
+
+		name := generator.CamelCase(*field.Name)
+		hierName := strings.Join(append(parents, name), ".")
+		idx := ""
+
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+			incr := fmt.Sprintf("i%d", len(parents))
+			m.P("if len(m.", hierName, ") != len(o.", hierName, ") {")
+			m.markDiff(names, name)
+			m.P("} else {")
+			m.P("for ", incr, " := 0; ", incr, " < len(m.", hierName, "); ", incr, "++ {")
+			idx = "[" + incr + "]"
+		}
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.generateDiffFields(append(parents, name+idx), append(names, name), subDesc)
+		} else {
+			m.P("if m.", hierName, idx, " != o.", hierName, idx, " {")
+			m.markDiff(names, name)
+			m.P("}")
+		}
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+			m.P("}")
+			m.P("}")
+		}
+	}
+}
+
 type AllFieldsGen int
 
 const (
@@ -576,6 +626,12 @@ func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
 	}
 }
 
+func (c *{{.Name}}Cache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+
 {{- if .NotifyCache}}
 func (c *{{.Name}}Cache) Flush(notifyId int64) {
 	c.Mux.Lock()
@@ -697,6 +753,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("")
 		m.P("var ", *message.Name, "AllFieldsMap = map[string]struct{}{")
 		m.generateAllFields(AllFieldsGenMap, []string{*message.Name + "Field"}, []string{}, desc)
+		m.P("}")
+		m.P("")
+		m.P("func (m *", message.Name, ") DiffFields(o *", message.Name, ", fields map[string]struct{}) {")
+		m.generateDiffFields([]string{}, []string{*message.Name + "Field"}, desc)
 		m.P("}")
 		m.P("")
 	}
