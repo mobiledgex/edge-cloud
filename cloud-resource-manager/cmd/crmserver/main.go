@@ -38,10 +38,14 @@ var notifyHandler *notify.DefaultHandler
 var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 
+var OSEnvValid = false
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	parseCloudletKey()
+
+	OSEnvValid = ValidateOSEnv()
 
 	listener, err := net.Listen("tcp", *bindAddress)
 	if err != nil {
@@ -55,21 +59,23 @@ func main() {
 	grpcServer := grpc.NewServer()
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
-	go func() {
-		rootLB := crmutil.GetRootLBName()
+	if OSEnvValid {
+		go func() {
+			rootLB := crmutil.GetRootLBName()
 
-		err := crmutil.EnableRootLB(rootLB)
-		if err != nil {
-			log.FatalLog("Failed to enable root LB", "error", err)
-		}
+			err := crmutil.EnableRootLB(rootLB)
+			if err != nil {
+				log.FatalLog("Failed to enable root LB", "error", err)
+			}
 
-		err = crmutil.WaitForRootLB(rootLB)
-		if err != nil {
-			log.FatalLog("Error waiting for rootLB")
-			os.Exit(1) //XXX FatalLog does not exit?!
-		}
-		crmutil.RunMEXAgent(rootLB, false)
-	}()
+			err = crmutil.WaitForRootLB(rootLB)
+			if err != nil {
+				log.FatalLog("Error waiting for rootLB")
+				os.Exit(1) //XXX FatalLog does not exit?!
+			}
+			crmutil.RunMEXAgent(rootLB, false)
+		}()
+	}
 
 	if *standalone {
 		// In standalone mode, use "touch allownoconfig" for edgectl
@@ -159,4 +165,19 @@ func parseCloudletKey() {
 	if err != nil {
 		log.FatalLog("Invalid cloudletKey", "err", err)
 	}
+}
+
+func ValidateOSEnv() bool {
+	osUser := os.Getenv("OS_USERNAME")
+	osPass := os.Getenv("OS_PASSWORD")
+	osTenant := os.Getenv("OS_TENANT")
+	osAuthURL := os.Getenv("OS_AUTH_URL")
+	osRegion := os.Getenv("OS_REGION_NAME")
+	osCACert := os.Getenv("OC_CACERT")
+
+	if osUser != "" && osPass != "" && osTenant != "" &&
+		osAuthURL != "" && osRegion != "" && osCACert != "" {
+		return crmutil.ValidateMEXOSEnv(true)
+	}
+	return false
 }
