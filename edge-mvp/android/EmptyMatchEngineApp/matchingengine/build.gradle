@@ -4,10 +4,13 @@ apply plugin: 'maven-publish'
 
 def grpcVersion='1.13.1'
 
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def nexusUser = properties.getProperty("nexus.user")
+def nexusPassword = properties.getProperty("nexus.password")
+
 android {
     compileSdkVersion 27
-
-
 
     defaultConfig {
         minSdkVersion 21
@@ -95,30 +98,29 @@ dependencies {
 }
 
 publishing {
-    // Publish to local repository
     repositories {
         maven {
-            //name "plugin-repository"
-            url "http://localhost:8081/nexus/"
+            def version = android.defaultConfig.versionName
+            def releasesRepoUrl = "https://registry.mobiledgex.net/nexus/content/repositories/releases/"
+            def snapshotsRepoUrl = "https://registry.mobiledgex.net/nexus/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
             credentials {
-                username "admin"
-                password "admin123"
+                username nexusUser
+                password nexusPassword
             }
             authentication {
-                basic(BasicAuthentication)
                 digest(DigestAuthentication)
             }
         }
         mavenLocal()
     }
 
-    publications { // Doesn't include generated protobufs?
+    publications {
         maven(MavenPublication) {
             // AAR of each library
             version android.defaultConfig.versionName
             groupId "com.mobiledgex"
             artifactId "${project.name}"
-            //artifact "${project.buildDir}/outputs/aar/${project.name}-debug.aar"
             artifact "${project.buildDir}/outputs/aar/${project.name}-release.aar"
         }
     }
