@@ -18,7 +18,6 @@ toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
-    url: "http://{{vm1_external_ip}}:9999"
   hostname: "{{vm1_external_ip}}"
 
 etcds:

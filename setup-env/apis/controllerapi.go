@@ -33,6 +33,7 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	var showCmds = []string{
 		"flavors: ShowFlavor",
 		"clusters: ShowCluster",
+		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
 		"developers: ShowDeveloper",
 		"cloudlets: ShowCloudlet",
@@ -328,6 +329,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runAppApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in app API %v\n", err)
+				rc = false
+			}
+			err = runClusterInstApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in clusterinst API %v\n", err)
 				rc = false
 			}
 			err = runAppinstApi(ctrlapi, ctx, &appData, api)
