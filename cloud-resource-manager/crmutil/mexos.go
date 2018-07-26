@@ -693,12 +693,12 @@ func RunMEXAgent(fqdn string, pull bool) error {
 
 	err := EnableRootLB(fqdn)
 	if err != nil {
-		return fmt.Errorf("Failed to enable root LB", "error", err)
+		return fmt.Errorf("Failed to enable root LB %v", err)
 	}
 
 	err = WaitForRootLB(fqdn)
 	if err != nil {
-		return fmt.Errorf("Error waiting for rootLB", "error", err)
+		return fmt.Errorf("Error waiting for rootLB %v", err)
 	}
 
 	client, err := GetSSHClient(fqdn, eMEXExternalNetwork, "root")
