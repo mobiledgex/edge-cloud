@@ -6,19 +6,21 @@ package notify
 // depending upon what the calling code wants to implement.
 type DefaultHandler struct {
 	// server handlers
-	SendAppInst      SendAppInstHandler
-	SendCloudlet     SendCloudletHandler
-	SendFlavor       SendFlavorHandler
-	SendClusterInst  SendClusterInstHandler
-	RecvAppInstInfo  RecvAppInstInfoHandler
-	RecvCloudletInfo RecvCloudletInfoHandler
+	SendAppInst         SendAppInstHandler
+	SendCloudlet        SendCloudletHandler
+	SendFlavor          SendFlavorHandler
+	SendClusterInst     SendClusterInstHandler
+	RecvAppInstInfo     RecvAppInstInfoHandler
+	RecvClusterInstInfo RecvClusterInstInfoHandler
+	RecvCloudletInfo    RecvCloudletInfoHandler
 	// client handlers
-	SendAppInstInfo  SendAppInstInfoHandler
-	SendCloudletInfo SendCloudletInfoHandler
-	RecvAppInst      RecvAppInstHandler
-	RecvCloudlet     RecvCloudletHandler
-	RecvFlavor       RecvFlavorHandler
-	RecvClusterInst  RecvClusterInstHandler
+	SendAppInstInfo     SendAppInstInfoHandler
+	SendClusterInstInfo SendClusterInstInfoHandler
+	SendCloudletInfo    SendCloudletInfoHandler
+	RecvAppInst         RecvAppInstHandler
+	RecvCloudlet        RecvCloudletHandler
+	RecvFlavor          RecvFlavorHandler
+	RecvClusterInst     RecvClusterInstHandler
 }
 
 func (s *DefaultHandler) SendAppInstHandler() SendAppInstHandler {
@@ -41,12 +43,20 @@ func (s *DefaultHandler) RecvAppInstInfoHandler() RecvAppInstInfoHandler {
 	return s.RecvAppInstInfo
 }
 
+func (s *DefaultHandler) RecvClusterInstInfoHandler() RecvClusterInstInfoHandler {
+	return s.RecvClusterInstInfo
+}
+
 func (s *DefaultHandler) RecvCloudletInfoHandler() RecvCloudletInfoHandler {
 	return s.RecvCloudletInfo
 }
 
 func (s *DefaultHandler) SendAppInstInfoHandler() SendAppInstInfoHandler {
 	return s.SendAppInstInfo
+}
+
+func (s *DefaultHandler) SendClusterInstInfoHandler() SendClusterInstInfoHandler {
+	return s.SendClusterInstInfo
 }
 
 func (s *DefaultHandler) SendCloudletInfoHandler() SendCloudletInfoHandler {

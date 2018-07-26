@@ -53,10 +53,7 @@ func (s *ClusterApi) CreateCluster(ctx context.Context, in *edgeproto.Cluster) (
 	if strings.HasPrefix(in.Key.Name, ClusterAutoPrefix) {
 		return &edgeproto.Result{}, errors.New(ClusterAutoPrefixErr)
 	}
-	return s.createClusterInternal(in)
-}
-
-func (s *ClusterApi) createClusterInternal(in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	in.Auto = false
 	return s.store.Create(in, s.sync.syncWait)
 }
 
@@ -67,10 +64,6 @@ func (s *ClusterApi) UpdateCluster(ctx context.Context, in *edgeproto.Cluster) (
 }
 
 func (s *ClusterApi) DeleteCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
-	return s.deleteClusterInternal(in)
-}
-
-func (s *ClusterApi) deleteClusterInternal(in *edgeproto.Cluster) (*edgeproto.Result, error) {
 	if appApi.UsesCluster(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Cluster in use by Application")
 	}

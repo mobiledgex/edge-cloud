@@ -60,6 +60,7 @@ var actionChoices = map[string]string{
 	"stop":      "procname",
 	"status":    "procname",
 	"ctrlapi":   "procname",
+	"ctrlinfo":  "procname",
 	"dmeapi":    "procname",
 	"deploy":    "",
 	"cleanup":   "",
@@ -225,6 +226,14 @@ func main() {
 				log.Printf("Unable to run api for %s\n", action)
 				errorsFound += 1
 				errors = append(errors, "controller api failed")
+
+			}
+		case "ctrlinfo":
+			setupmex.UpdateApiAddrs()
+			if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+				log.Printf("Unable to run api for %s\n", action)
+				errorsFound += 1
+				errors = append(errors, "controller info api failed")
 
 			}
 		case "dmeapi":

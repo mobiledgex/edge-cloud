@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -122,22 +123,22 @@ func (e *EtcdClient) Delete(key string) (int64, error) {
 	return resp.Header.Revision, nil
 }
 
-func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
+func (e *EtcdClient) Get(key string) ([]byte, int64, int64, error) {
 	if e.client == nil {
-		return nil, 0, objstore.ErrKVStoreNotInitialized
+		return nil, 0, 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key)
 	cancel()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, 0, objstore.ErrKVStoreKeyNotFound
+		return nil, 0, 0, objstore.ErrKVStoreKeyNotFound
 	}
 	obj := resp.Kvs[0]
 	log.DebugLog(log.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
-	return obj.Value, obj.Version, nil
+	return obj.Value, obj.Version, obj.ModRevision, nil
 }
 
 func (e *EtcdClient) Put(key, val string) (int64, error) {
@@ -276,4 +277,12 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 		}
 	}
 	return nil
+}
+
+func (e *EtcdClient) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
+	resp, err := concurrency.NewSTM(e.client, apply)
+	if err != nil {
+		return 0, err
+	}
+	return resp.Header.Revision, nil
 }

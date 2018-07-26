@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -137,4 +138,12 @@ func (s *Sync) syncWait(rev int64) {
 	for s.rev < rev && !s.syncDone {
 		s.cond.Wait()
 	}
+}
+
+func (s *Sync) ApplySTMWait(apply func(concurrency.STM) error) error {
+	rev, err := s.store.ApplySTM(apply)
+	if err == nil {
+		s.syncWait(rev)
+	}
+	return err
 }

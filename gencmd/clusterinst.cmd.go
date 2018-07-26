@@ -32,10 +32,23 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var ClusterInstApiCmd edgeproto.ClusterInstApiClient
+var ClusterInstInfoApiCmd edgeproto.ClusterInstInfoApiClient
 var ClusterInstIn edgeproto.ClusterInst
 var ClusterInstFlagSet = pflag.NewFlagSet("ClusterInst", pflag.ExitOnError)
 var ClusterInstNoConfigFlagSet = pflag.NewFlagSet("ClusterInstNoConfig", pflag.ExitOnError)
 var ClusterInstInLiveness string
+var ClusterInstInfoIn edgeproto.ClusterInstInfo
+var ClusterInstInfoFlagSet = pflag.NewFlagSet("ClusterInstInfo", pflag.ExitOnError)
+var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig", pflag.ExitOnError)
+var ClusterInstInfoInState string
+var ClusterStateStrings = []string{
+	"ClusterStateUnknown",
+	"ClusterStateBuilding",
+	"ClusterStateReady",
+	"ClusterStateErrors",
+	"ClusterStateDeleting",
+	"ClusterStateDeleted",
+}
 
 func ClusterInstKeySlicer(in *edgeproto.ClusterInstKey) []string {
 	s := make([]string, 0, 2)
@@ -54,7 +67,7 @@ func ClusterInstKeyHeaderSlicer() []string {
 }
 
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -65,11 +78,12 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Flavor.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Nodes), 10))
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
+	s = append(s, strconv.FormatBool(in.Auto))
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -77,6 +91,37 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "Flavor-Name")
 	s = append(s, "Nodes")
 	s = append(s, "Liveness")
+	s = append(s, "Auto")
+	return s
+}
+
+func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
+	s := make([]string, 0, 5)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
+	}
+	s = append(s, in.Fields[0])
+	s = append(s, in.Key.ClusterKey.Name)
+	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
+	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
+	s = append(s, edgeproto.ClusterState_name[int32(in.State)])
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
+	return s
+}
+
+func ClusterInstInfoHeaderSlicer() []string {
+	s := make([]string, 0, 5)
+	s = append(s, "Fields")
+	s = append(s, "Key-ClusterKey-Name")
+	s = append(s, "Key-CloudletKey-OperatorKey-Name")
+	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "NotifyId")
+	s = append(s, "State")
+	s = append(s, "Errors")
 	return s
 }
 
@@ -309,6 +354,78 @@ var ClusterInstApiCmds = []*cobra.Command{
 	ShowClusterInstCmd,
 }
 
+var ShowClusterInstInfoCmd = &cobra.Command{
+	Use: "ShowClusterInstInfo",
+	Run: func(cmd *cobra.Command, args []string) {
+		if ClusterInstInfoApiCmd == nil {
+			fmt.Println("ClusterInstInfoApi client not initialized")
+			return
+		}
+		var err error
+		err = parseClusterInstInfoEnums()
+		if err != nil {
+			fmt.Println("ShowClusterInstInfo: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		stream, err := ClusterInstInfoApiCmd.ShowClusterInstInfo(ctx, &ClusterInstInfoIn)
+		if err != nil {
+			fmt.Println("ShowClusterInstInfo failed: ", err)
+			return
+		}
+		objs := make([]*edgeproto.ClusterInstInfo, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				fmt.Println("ShowClusterInstInfo recv failed: ", err)
+				break
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
+			for _, obj := range objs {
+				fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
+			}
+			output.Flush()
+		}
+	},
+}
+
+var ClusterInstInfoApiCmds = []*cobra.Command{
+	ShowClusterInstInfoCmd,
+}
+
 func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
@@ -316,10 +433,19 @@ func init() {
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterInstNoConfigFlagSet.Int32Var(&ClusterInstIn.Nodes, "nodes", 0, "Nodes")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
+	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
+	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted]")
+	ClusterInstInfoIn.Errors = make([]string, 1)
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Errors[0], "errors", "", "Errors")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	ShowClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
+	ShowClusterInstInfoCmd.Flags().AddFlagSet(ClusterInstInfoFlagSet)
 }
 
 func ClusterInstApiAllowNoConfig() {
@@ -327,6 +453,10 @@ func ClusterInstApiAllowNoConfig() {
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
 	ShowClusterInstCmd.Flags().AddFlagSet(ClusterInstNoConfigFlagSet)
+}
+
+func ClusterInstInfoApiAllowNoConfig() {
+	ShowClusterInstInfoCmd.Flags().AddFlagSet(ClusterInstInfoNoConfigFlagSet)
 }
 
 func ClusterInstSetFields() {
@@ -349,6 +479,31 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("liveness").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "9")
 	}
+	if ClusterInstFlagSet.Lookup("auto").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "10")
+	}
+}
+
+func ClusterInstInfoSetFields() {
+	ClusterInstInfoIn.Fields = make([]string, 0)
+	if ClusterInstInfoFlagSet.Lookup("key-clusterkey-name").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.1.1")
+	}
+	if ClusterInstInfoFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.2.1.1")
+	}
+	if ClusterInstInfoFlagSet.Lookup("key-cloudletkey-name").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.2.2")
+	}
+	if ClusterInstInfoFlagSet.Lookup("notifyid").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "3")
+	}
+	if ClusterInstInfoFlagSet.Lookup("state").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
+	}
+	if ClusterInstInfoFlagSet.Lookup("errors").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5")
+	}
 }
 
 func parseClusterInstEnums() error {
@@ -362,6 +517,28 @@ func parseClusterInstEnums() error {
 			ClusterInstIn.Liveness = edgeproto.Liveness(2)
 		default:
 			return errors.New("Invalid value for ClusterInstInLiveness")
+		}
+	}
+	return nil
+}
+
+func parseClusterInstInfoEnums() error {
+	if ClusterInstInfoInState != "" {
+		switch ClusterInstInfoInState {
+		case "ClusterStateUnknown":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(0)
+		case "ClusterStateBuilding":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(1)
+		case "ClusterStateReady":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(2)
+		case "ClusterStateErrors":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(3)
+		case "ClusterStateDeleting":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(4)
+		case "ClusterStateDeleted":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(5)
+		default:
+			return errors.New("Invalid value for ClusterInstInfoInState")
 		}
 	}
 	return nil

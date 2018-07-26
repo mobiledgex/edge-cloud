@@ -121,6 +121,7 @@ appinstances:
   mappedpath: someApplication
   flavor:
     name: x1.small
+  accesslayer: AccessLayerL7
 - key:
     appkey:
       developerkey:
@@ -149,4 +150,5 @@ appinstances:
   mappedpath: someApplication
   flavor:
     name: x1.small
+  accesslayer: AccessLayerL7
 

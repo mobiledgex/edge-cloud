@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/coreos/etcd/clientv3/concurrency"
 )
 
 // Use for version passed to Update to ignore version check
@@ -27,8 +29,8 @@ type KVStore interface {
 	// It returns the revision (transaction) number and any error.
 	Delete(key string) (int64, error)
 	// Get retrieves a single object with the given key string.
-	// Get returns the data, a version (not revision) number, and any error.
-	Get(key string) ([]byte, int64, error)
+	// Get returns the data, a version, mod revision, and any error.
+	Get(key string) ([]byte, int64, int64, error)
 	// Put the key-value pair, regardless of whether it already exists or not.
 	Put(key, val string) (int64, error)
 	// List retrives all objects that have the given key string prefix.
@@ -42,6 +44,16 @@ type KVStore interface {
 	// during that time must be removed from the local cache.
 	// Use a context with cancel to be able to cancel the call.
 	Sync(ctx context.Context, key string, cb SyncCb) error
+	// ApplySTM applies a Software Transaction Model which basically
+	// collects gets/puts and does an all-or-nothing transaction.
+	// It tracks revisions for all gets and puts. If any keys were
+	// changed before the transaction commits, all changes are aborted.
+	// Apply func is the function to make the changes which uses the
+	// STM to make the changes.
+	// Unfortunately the way etcd sets this up, there's no way to wrap
+	// the STM with an objstore-specific interface, so we're stuck exactly
+	// implementing the etcd-specific interface.
+	ApplySTM(apply func(concurrency.STM) error) (int64, error)
 }
 
 var ErrKVStoreNotInitialized = errors.New("Object Storage not initialized")
