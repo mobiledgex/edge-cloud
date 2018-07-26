@@ -48,7 +48,7 @@ func ClusterKeyHeaderSlicer() []string {
 }
 
 func ClusterSlicer(in *edgeproto.Cluster) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 5)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -56,15 +56,17 @@ func ClusterSlicer(in *edgeproto.Cluster) []string {
 	s = append(s, in.Key.Name)
 	s = append(s, in.Flavor.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Nodes), 10))
+	s = append(s, strconv.FormatBool(in.Auto))
 	return s
 }
 
 func ClusterHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 5)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
 	s = append(s, "Flavor-Name")
 	s = append(s, "Nodes")
+	s = append(s, "Auto")
 	return s
 }
 
@@ -281,6 +283,7 @@ func init() {
 	ClusterFlagSet.StringVar(&ClusterIn.Key.Name, "key-name", "", "Key.Name")
 	ClusterFlagSet.StringVar(&ClusterIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterFlagSet.Int32Var(&ClusterIn.Nodes, "nodes", 0, "Nodes")
+	ClusterNoConfigFlagSet.BoolVar(&ClusterIn.Auto, "auto", false, "Auto")
 	CreateClusterCmd.Flags().AddFlagSet(ClusterFlagSet)
 	DeleteClusterCmd.Flags().AddFlagSet(ClusterFlagSet)
 	UpdateClusterCmd.Flags().AddFlagSet(ClusterFlagSet)
@@ -304,5 +307,8 @@ func ClusterSetFields() {
 	}
 	if ClusterFlagSet.Lookup("nodes").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "4")
+	}
+	if ClusterFlagSet.Lookup("auto").Changed {
+		ClusterIn.Fields = append(ClusterIn.Fields, "5")
 	}
 }

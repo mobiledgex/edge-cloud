@@ -19,8 +19,11 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
 
 import io "io"
 
@@ -28,6 +31,39 @@ import io "io"
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
+
+type ClusterState int32
+
+const (
+	ClusterState_ClusterStateUnknown  ClusterState = 0
+	ClusterState_ClusterStateBuilding ClusterState = 1
+	ClusterState_ClusterStateReady    ClusterState = 2
+	ClusterState_ClusterStateErrors   ClusterState = 3
+	ClusterState_ClusterStateDeleting ClusterState = 4
+	ClusterState_ClusterStateDeleted  ClusterState = 5
+)
+
+var ClusterState_name = map[int32]string{
+	0: "ClusterStateUnknown",
+	1: "ClusterStateBuilding",
+	2: "ClusterStateReady",
+	3: "ClusterStateErrors",
+	4: "ClusterStateDeleting",
+	5: "ClusterStateDeleted",
+}
+var ClusterState_value = map[string]int32{
+	"ClusterStateUnknown":  0,
+	"ClusterStateBuilding": 1,
+	"ClusterStateReady":    2,
+	"ClusterStateErrors":   3,
+	"ClusterStateDeleting": 4,
+	"ClusterStateDeleted":  5,
+}
+
+func (x ClusterState) String() string {
+	return proto.EnumName(ClusterState_name, int32(x))
+}
+func (ClusterState) EnumDescriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{0} }
 
 type ClusterInstKey struct {
 	// cluster key
@@ -52,6 +88,8 @@ type ClusterInst struct {
 	// Future: policy options on where this cluster can be created.
 	// type of instance
 	Liveness Liveness `protobuf:"varint,9,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
+	// if auto-created
+	Auto bool `protobuf:"varint,10,opt,name=auto,proto3" json:"auto,omitempty"`
 }
 
 func (m *ClusterInst) Reset()                    { *m = ClusterInst{} }
@@ -59,9 +97,28 @@ func (m *ClusterInst) String() string            { return proto.CompactTextStrin
 func (*ClusterInst) ProtoMessage()               {}
 func (*ClusterInst) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{1} }
 
+type ClusterInstInfo struct {
+	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// unique identifier key
+	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	// Id of client assigned by server
+	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	// state of the cluster
+	State ClusterState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.ClusterState" json:"state,omitempty"`
+	// error messages
+	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
+}
+
+func (m *ClusterInstInfo) Reset()                    { *m = ClusterInstInfo{} }
+func (m *ClusterInstInfo) String() string            { return proto.CompactTextString(m) }
+func (*ClusterInstInfo) ProtoMessage()               {}
+func (*ClusterInstInfo) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{2} }
+
 func init() {
 	proto.RegisterType((*ClusterInstKey)(nil), "edgeproto.ClusterInstKey")
 	proto.RegisterType((*ClusterInst)(nil), "edgeproto.ClusterInst")
+	proto.RegisterType((*ClusterInstInfo)(nil), "edgeproto.ClusterInstInfo")
+	proto.RegisterEnum("edgeproto.ClusterState", ClusterState_name, ClusterState_value)
 }
 func (this *ClusterInstKey) GoString() string {
 	if this == nil {
@@ -282,6 +339,97 @@ var _ClusterInstApi_serviceDesc = grpc.ServiceDesc{
 	Metadata: "clusterinst.proto",
 }
 
+// Client API for ClusterInstInfoApi service
+
+type ClusterInstInfoApiClient interface {
+	ShowClusterInstInfo(ctx context.Context, in *ClusterInstInfo, opts ...grpc.CallOption) (ClusterInstInfoApi_ShowClusterInstInfoClient, error)
+}
+
+type clusterInstInfoApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewClusterInstInfoApiClient(cc *grpc.ClientConn) ClusterInstInfoApiClient {
+	return &clusterInstInfoApiClient{cc}
+}
+
+func (c *clusterInstInfoApiClient) ShowClusterInstInfo(ctx context.Context, in *ClusterInstInfo, opts ...grpc.CallOption) (ClusterInstInfoApi_ShowClusterInstInfoClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterInstInfoApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ClusterInstInfoApi/ShowClusterInstInfo", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterInstInfoApiShowClusterInstInfoClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterInstInfoApi_ShowClusterInstInfoClient interface {
+	Recv() (*ClusterInstInfo, error)
+	grpc.ClientStream
+}
+
+type clusterInstInfoApiShowClusterInstInfoClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterInstInfoApiShowClusterInstInfoClient) Recv() (*ClusterInstInfo, error) {
+	m := new(ClusterInstInfo)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for ClusterInstInfoApi service
+
+type ClusterInstInfoApiServer interface {
+	ShowClusterInstInfo(*ClusterInstInfo, ClusterInstInfoApi_ShowClusterInstInfoServer) error
+}
+
+func RegisterClusterInstInfoApiServer(s *grpc.Server, srv ClusterInstInfoApiServer) {
+	s.RegisterService(&_ClusterInstInfoApi_serviceDesc, srv)
+}
+
+func _ClusterInstInfoApi_ShowClusterInstInfo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClusterInstInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ClusterInstInfoApiServer).ShowClusterInstInfo(m, &clusterInstInfoApiShowClusterInstInfoServer{stream})
+}
+
+type ClusterInstInfoApi_ShowClusterInstInfoServer interface {
+	Send(*ClusterInstInfo) error
+	grpc.ServerStream
+}
+
+type clusterInstInfoApiShowClusterInstInfoServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterInstInfoApiShowClusterInstInfoServer) Send(m *ClusterInstInfo) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _ClusterInstInfoApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.ClusterInstInfoApi",
+	HandlerType: (*ClusterInstInfoApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowClusterInstInfo",
+			Handler:       _ClusterInstInfoApi_ShowClusterInstInfo_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "clusterinst.proto",
+}
+
 func (m *ClusterInstKey) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -372,6 +520,82 @@ func (m *ClusterInst) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintClusterinst(dAtA, i, uint64(m.Liveness))
 	}
+	if m.Auto {
+		dAtA[i] = 0x50
+		i++
+		if m.Auto {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i++
+	}
+	return i, nil
+}
+
+func (m *ClusterInstInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClusterInstInfo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintClusterinst(dAtA, i, uint64(m.Key.Size()))
+	n5, err := m.Key.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n5
+	if m.NotifyId != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintClusterinst(dAtA, i, uint64(m.NotifyId))
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintClusterinst(dAtA, i, uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			dAtA[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
 	return i, nil
 }
 
@@ -447,6 +671,9 @@ func (m *ClusterInst) Matches(filter *ClusterInst) bool {
 	if filter.Liveness != 0 && filter.Liveness != m.Liveness {
 		return false
 	}
+	if filter.Auto != false && filter.Auto != m.Auto {
+		return false
+	}
 	return true
 }
 
@@ -471,6 +698,7 @@ const ClusterInstFieldFlavor = "3"
 const ClusterInstFieldFlavorName = "3.1"
 const ClusterInstFieldNodes = "4"
 const ClusterInstFieldLiveness = "9"
+const ClusterInstFieldAuto = "10"
 
 var ClusterInstAllFields = []string{
 	ClusterInstFieldKeyClusterKeyName,
@@ -479,6 +707,7 @@ var ClusterInstAllFields = []string{
 	ClusterInstFieldFlavorName,
 	ClusterInstFieldNodes,
 	ClusterInstFieldLiveness,
+	ClusterInstFieldAuto,
 }
 
 var ClusterInstAllFieldsMap = map[string]struct{}{
@@ -488,6 +717,7 @@ var ClusterInstAllFieldsMap = map[string]struct{}{
 	ClusterInstFieldFlavorName:                    struct{}{},
 	ClusterInstFieldNodes:                         struct{}{},
 	ClusterInstFieldLiveness:                      struct{}{},
+	ClusterInstFieldAuto:                          struct{}{},
 }
 
 func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
@@ -516,6 +746,9 @@ func (m *ClusterInst) DiffFields(o *ClusterInst, fields map[string]struct{}) {
 	}
 	if m.Liveness != o.Liveness {
 		fields[ClusterInstFieldLiveness] = struct{}{}
+	}
+	if m.Auto != o.Auto {
+		fields[ClusterInstFieldAuto] = struct{}{}
 	}
 }
 
@@ -548,6 +781,9 @@ func (m *ClusterInst) CopyInFields(src *ClusterInst) {
 	}
 	if _, set := fmap["9"]; set {
 		m.Liveness = src.Liveness
+	}
+	if _, set := fmap["10"]; set {
+		m.Auto = src.Auto
 	}
 }
 
@@ -591,7 +827,7 @@ func (s *ClusterInstStore) Update(m *ClusterInst, wait func(int64)) (*Result, er
 	}
 	key := objstore.DbKeyString("ClusterInst", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -625,7 +861,7 @@ func (s *ClusterInstStore) Put(m *ClusterInst, wait func(int64)) (*Result, error
 	}
 	key := objstore.DbKeyString("ClusterInst", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur ClusterInst
 		err = json.Unmarshal(curBytes, &cur)
@@ -670,7 +906,7 @@ func (s *ClusterInstStore) Delete(m *ClusterInst, wait func(int64)) (*Result, er
 }
 
 func (s *ClusterInstStore) LoadOne(key string) (*ClusterInst, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -681,6 +917,32 @@ func (s *ClusterInstStore) LoadOne(key string) (*ClusterInst, int64, error) {
 		return nil, 0, err
 	}
 	return &obj, rev, nil
+}
+
+func (s *ClusterInstStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf *ClusterInst) bool {
+	keystr := objstore.DbKeyString("ClusterInst", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst) {
+	keystr := objstore.DbKeyString("ClusterInst", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *ClusterInstStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
+	keystr := objstore.DbKeyString("ClusterInst", key)
+	stm.Del(keystr)
 }
 
 // ClusterInstCache caches ClusterInst objects in memory in a hash table
@@ -848,6 +1110,514 @@ func (m *ClusterInst) GetKey() *ClusterInstKey {
 	return &m.Key
 }
 
+func (m *ClusterInstInfo) Matches(filter *ClusterInstInfo) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.Matches(&filter.Key) {
+		return false
+	}
+	if filter.NotifyId != 0 && filter.NotifyId != m.NotifyId {
+		return false
+	}
+	if filter.State != 0 && filter.State != m.State {
+		return false
+	}
+	return true
+}
+
+func (m *ClusterInstInfo) MatchesIgnoreBackend(filter *ClusterInstInfo) bool {
+	if filter == nil {
+		return true
+	}
+	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
+		return false
+	}
+	if filter.NotifyId != 0 && filter.NotifyId != m.NotifyId {
+		return false
+	}
+	if filter.State != 0 && filter.State != m.State {
+		return false
+	}
+	return true
+}
+
+const ClusterInstInfoFieldKey = "2"
+const ClusterInstInfoFieldKeyClusterKey = "2.1"
+const ClusterInstInfoFieldKeyClusterKeyName = "2.1.1"
+const ClusterInstInfoFieldKeyCloudletKey = "2.2"
+const ClusterInstInfoFieldKeyCloudletKeyOperatorKey = "2.2.1"
+const ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
+const ClusterInstInfoFieldKeyCloudletKeyName = "2.2.2"
+const ClusterInstInfoFieldNotifyId = "3"
+const ClusterInstInfoFieldState = "4"
+const ClusterInstInfoFieldErrors = "5"
+
+var ClusterInstInfoAllFields = []string{
+	ClusterInstInfoFieldKeyClusterKeyName,
+	ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName,
+	ClusterInstInfoFieldKeyCloudletKeyName,
+	ClusterInstInfoFieldNotifyId,
+	ClusterInstInfoFieldState,
+	ClusterInstInfoFieldErrors,
+}
+
+var ClusterInstInfoAllFieldsMap = map[string]struct{}{
+	ClusterInstInfoFieldKeyClusterKeyName:             struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName: struct{}{},
+	ClusterInstInfoFieldKeyCloudletKeyName:            struct{}{},
+	ClusterInstInfoFieldNotifyId:                      struct{}{},
+	ClusterInstInfoFieldState:                         struct{}{},
+	ClusterInstInfoFieldErrors:                        struct{}{},
+}
+
+func (m *ClusterInstInfo) DiffFields(o *ClusterInstInfo, fields map[string]struct{}) {
+	if m.Key.ClusterKey.Name != o.Key.ClusterKey.Name {
+		fields[ClusterInstInfoFieldKeyClusterKeyName] = struct{}{}
+		fields[ClusterInstInfoFieldKeyClusterKey] = struct{}{}
+		fields[ClusterInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[ClusterInstInfoFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[ClusterInstInfoFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[ClusterInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[ClusterInstInfoFieldKeyCloudletKeyName] = struct{}{}
+		fields[ClusterInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[ClusterInstInfoFieldKey] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[ClusterInstInfoFieldNotifyId] = struct{}{}
+	}
+	if m.State != o.State {
+		fields[ClusterInstInfoFieldState] = struct{}{}
+	}
+	if len(m.Errors) != len(o.Errors) {
+		fields[ClusterInstInfoFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[ClusterInstInfoFieldErrors] = struct{}{}
+			}
+		}
+	}
+}
+
+func (m *ClusterInstInfo) CopyInFields(src *ClusterInstInfo) {
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if _, set := fmap["2.1.1"]; set {
+				m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			if _, set := fmap["2.2.1"]; set {
+				if _, set := fmap["2.2.1.1"]; set {
+					m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+				}
+			}
+			if _, set := fmap["2.2.2"]; set {
+				m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+			}
+		}
+	}
+	if _, set := fmap["3"]; set {
+		m.NotifyId = src.NotifyId
+	}
+	if _, set := fmap["4"]; set {
+		m.State = src.State
+	}
+	if _, set := fmap["5"]; set {
+		if m.Errors == nil || len(m.Errors) < len(src.Errors) {
+			m.Errors = make([]string, len(src.Errors))
+		}
+		copy(m.Errors, src.Errors)
+	}
+}
+
+func (s *ClusterInstInfo) HasFields() bool {
+	return true
+}
+
+type ClusterInstInfoStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewClusterInstInfoStore(kvstore objstore.KVStore) ClusterInstInfoStore {
+	return ClusterInstInfoStore{kvstore: kvstore}
+}
+
+func (s *ClusterInstInfoStore) Create(m *ClusterInstInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(ClusterInstInfoAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("ClusterInstInfo", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *ClusterInstInfoStore) Update(m *ClusterInstInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("ClusterInstInfo", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur ClusterInstInfo
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *ClusterInstInfoStore) Put(m *ClusterInstInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("ClusterInstInfo", m.GetKey())
+	var val []byte
+	curBytes, _, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur ClusterInstInfo
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *ClusterInstInfoStore) Delete(m *ClusterInstInfo, wait func(int64)) (*Result, error) {
+	err := m.GetKey().Validate()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("ClusterInstInfo", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *ClusterInstInfoStore) LoadOne(key string) (*ClusterInstInfo, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj ClusterInstInfo
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse ClusterInstInfo data", "val", string(val))
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *ClusterInstInfoStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf *ClusterInstInfo) bool {
+	keystr := objstore.DbKeyString("ClusterInstInfo", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo) {
+	keystr := objstore.DbKeyString("ClusterInstInfo", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *ClusterInstInfoStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
+	keystr := objstore.DbKeyString("ClusterInstInfo", key)
+	stm.Del(keystr)
+}
+
+// ClusterInstInfoCache caches ClusterInstInfo objects in memory in a hash table
+// and keeps them in sync with the database.
+type ClusterInstInfoCache struct {
+	Objs      map[ClusterInstKey]*ClusterInstInfo
+	Mux       util.Mutex
+	List      map[ClusterInstKey]struct{}
+	NotifyCb  func(obj *ClusterInstKey)
+	UpdatedCb func(old *ClusterInstInfo, new *ClusterInstInfo)
+}
+
+func NewClusterInstInfoCache() *ClusterInstInfoCache {
+	cache := ClusterInstInfoCache{}
+	InitClusterInstInfoCache(&cache)
+	return &cache
+}
+
+func InitClusterInstInfoCache(cache *ClusterInstInfoCache) {
+	cache.Objs = make(map[ClusterInstKey]*ClusterInstInfo)
+}
+
+func (c *ClusterInstInfoCache) GetTypeString() string {
+	return "ClusterInstInfo"
+}
+
+func (c *ClusterInstInfoCache) Get(key *ClusterInstKey, valbuf *ClusterInstInfo) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		*valbuf = *inst
+	}
+	return found
+}
+
+func (c *ClusterInstInfoCache) HasKey(key *ClusterInstKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *ClusterInstInfoCache) GetAllKeys(keys map[ClusterInstKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		keys[key] = struct{}{}
+	}
+}
+
+func (c *ClusterInstInfoCache) Update(in *ClusterInstInfo, rev int64) {
+	c.Mux.Lock()
+	if c.UpdatedCb != nil {
+		old := c.Objs[in.Key]
+		new := &ClusterInstInfo{}
+		*new = *in
+		defer c.UpdatedCb(old, new)
+	}
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key)
+	}
+}
+
+func (c *ClusterInstInfoCache) Delete(in *ClusterInstInfo, rev int64) {
+	c.Mux.Lock()
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key)
+	}
+}
+
+func (c *ClusterInstInfoCache) Prune(validKeys map[ClusterInstKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			delete(c.Objs, key)
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+		}
+	}
+}
+
+func (c *ClusterInstInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+func (c *ClusterInstInfoCache) Flush(notifyId int64) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, val := range c.Objs {
+		if val.NotifyId != notifyId {
+			continue
+		}
+		delete(c.Objs, key)
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key)
+		}
+	}
+}
+
+func (c *ClusterInstInfoCache) Show(filter *ClusterInstInfo, cb func(ret *ClusterInstInfo) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, obj := range c.Objs {
+		if !obj.Matches(filter) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show ClusterInstInfo", "obj", obj)
+		err := cb(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *ClusterInstInfoCache) SetNotifyCb(fn func(obj *ClusterInstKey)) {
+	c.NotifyCb = fn
+}
+
+func (c *ClusterInstInfoCache) SetUpdatedCb(fn func(old *ClusterInstInfo, new *ClusterInstInfo)) {
+	c.UpdatedCb = fn
+}
+func (c *ClusterInstInfoCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := ClusterInstInfo{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse ClusterInstInfo data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *ClusterInstInfoCache) SyncDelete(key []byte, rev int64) {
+	obj := ClusterInstInfo{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	ClusterInstKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *ClusterInstInfoCache) SyncListStart() {
+	c.List = make(map[ClusterInstKey]struct{})
+}
+
+func (c *ClusterInstInfoCache) SyncListEnd() {
+	deleted := make(map[ClusterInstKey]struct{})
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, found := c.List[key]; !found {
+			delete(c.Objs, key)
+			deleted[key] = struct{}{}
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range deleted {
+			c.NotifyCb(&key)
+		}
+	}
+}
+func (m *ClusterInstInfo) GetKey() *ClusterInstKey {
+	return &m.Key
+}
+
+var ClusterStateStrings = []string{
+	"ClusterStateUnknown",
+	"ClusterStateBuilding",
+	"ClusterStateReady",
+	"ClusterStateErrors",
+	"ClusterStateDeleting",
+	"ClusterStateDeleted",
+}
+
+const (
+	ClusterStateClusterStateUnknown  uint64 = 1 << 0
+	ClusterStateClusterStateBuilding uint64 = 1 << 1
+	ClusterStateClusterStateReady    uint64 = 1 << 2
+	ClusterStateClusterStateErrors   uint64 = 1 << 3
+	ClusterStateClusterStateDeleting uint64 = 1 << 4
+	ClusterStateClusterStateDeleted  uint64 = 1 << 5
+)
+
+func (e *ClusterState) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := ClusterState_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = ClusterState_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ClusterState(val)
+	return nil
+}
+
+func (e ClusterState) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
 func (m *ClusterInstKey) Size() (n int) {
 	var l int
 	_ = l
@@ -876,6 +1646,35 @@ func (m *ClusterInst) Size() (n int) {
 	}
 	if m.Liveness != 0 {
 		n += 1 + sovClusterinst(uint64(m.Liveness))
+	}
+	if m.Auto {
+		n += 2
+	}
+	return n
+}
+
+func (m *ClusterInstInfo) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovClusterinst(uint64(l))
+		}
+	}
+	l = m.Key.Size()
+	n += 1 + l + sovClusterinst(uint64(l))
+	if m.NotifyId != 0 {
+		n += 1 + sovClusterinst(uint64(m.NotifyId))
+	}
+	if m.State != 0 {
+		n += 1 + sovClusterinst(uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovClusterinst(uint64(l))
+		}
 	}
 	return n
 }
@@ -1159,6 +1958,202 @@ func (m *ClusterInst) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Auto", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Auto = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipClusterinst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthClusterinst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClusterInstInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowClusterinst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClusterInstInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClusterInstInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClusterinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthClusterinst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
+			}
+			m.NotifyId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NotifyId |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (ClusterState(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowClusterinst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthClusterinst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipClusterinst(dAtA[iNdEx:])
@@ -1288,40 +2283,52 @@ var (
 func init() { proto.RegisterFile("clusterinst.proto", fileDescriptorClusterinst) }
 
 var fileDescriptorClusterinst = []byte{
-	// 554 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x93, 0x4f, 0x6b, 0x13, 0x4f,
-	0x18, 0xc7, 0x3b, 0x49, 0x13, 0x7e, 0x99, 0xe4, 0x17, 0xcd, 0xd6, 0x86, 0x69, 0x2c, 0x69, 0xd8,
-	0x53, 0x94, 0x26, 0xab, 0x11, 0x54, 0x82, 0x20, 0xa6, 0xa2, 0x48, 0xc5, 0x43, 0xc4, 0xab, 0xb2,
-	0xd9, 0x7d, 0xb2, 0x59, 0x9c, 0xdd, 0x09, 0x3b, 0xbb, 0xad, 0xb9, 0x89, 0xde, 0xbc, 0x49, 0x2f,
-	0x5e, 0x04, 0x5f, 0x82, 0xf8, 0x2a, 0x72, 0x14, 0xbc, 0x8b, 0x06, 0x0f, 0x3d, 0x0a, 0xe9, 0x41,
-	0x6f, 0xb2, 0xb3, 0xb3, 0x9b, 0x4d, 0xad, 0xd0, 0x43, 0x2f, 0xe1, 0xf9, 0xf3, 0xfd, 0x7e, 0x9e,
-	0x67, 0x9e, 0x24, 0xb8, 0x62, 0xd0, 0x80, 0xfb, 0xe0, 0xd9, 0x2e, 0xf7, 0xdb, 0x63, 0x8f, 0xf9,
-	0x4c, 0x29, 0x80, 0x69, 0x81, 0x08, 0x6b, 0x9b, 0x16, 0x63, 0x16, 0x05, 0x4d, 0x1f, 0xdb, 0x9a,
-	0xee, 0xba, 0xcc, 0xd7, 0x7d, 0x9b, 0xb9, 0x3c, 0x12, 0xd6, 0x6e, 0x5a, 0xb6, 0x3f, 0x0a, 0x06,
-	0x6d, 0x83, 0x39, 0x9a, 0xc3, 0x06, 0x36, 0x0d, 0x8d, 0x2f, 0xb4, 0xf0, 0xb3, 0x65, 0x50, 0x16,
-	0x98, 0x9a, 0xd0, 0x59, 0xe0, 0x26, 0x81, 0x74, 0xde, 0x3f, 0x9d, 0xd3, 0x68, 0x59, 0xe0, 0xb6,
-	0x0c, 0x27, 0x4e, 0x53, 0x81, 0x04, 0x95, 0x3c, 0xe0, 0x01, 0xf5, 0xe3, 0x6c, 0x48, 0xf5, 0x3d,
-	0xe6, 0xc9, 0xec, 0x7f, 0xf9, 0x34, 0x99, 0x96, 0x05, 0x98, 0x42, 0x22, 0x36, 0x98, 0xe3, 0xb0,
-	0x78, 0xa3, 0x56, 0x6a, 0x23, 0x8b, 0x59, 0x2c, 0x1a, 0x34, 0x08, 0x86, 0x22, 0x13, 0x89, 0x88,
-	0x22, 0xb9, 0xfa, 0x1e, 0xe1, 0xf2, 0x4e, 0x84, 0x7f, 0xe0, 0x72, 0x7f, 0x17, 0x26, 0xca, 0x2d,
-	0x5c, 0x94, 0x03, 0x9f, 0x3d, 0x87, 0x09, 0x41, 0x0d, 0xd4, 0x2c, 0x76, 0xd6, 0xdb, 0xc9, 0x31,
-	0xdb, 0x52, 0xbf, 0x0b, 0x93, 0xde, 0xea, 0xf4, 0xeb, 0xd6, 0x4a, 0x1f, 0x1b, 0x49, 0x45, 0xb9,
-	0x8d, 0x4b, 0xf1, 0x7e, 0xc2, 0x9e, 0x11, 0xf6, 0xea, 0x92, 0x3d, 0x6a, 0x2f, 0xfc, 0x45, 0x63,
-	0x51, 0xea, 0x96, 0x0e, 0xe7, 0x04, 0xfd, 0x9a, 0x13, 0xf4, 0xf1, 0xc3, 0x16, 0x52, 0xdf, 0x66,
-	0x70, 0x31, 0xb5, 0x9f, 0x52, 0xc5, 0xf9, 0xa1, 0x0d, 0xd4, 0xe4, 0x04, 0x35, 0xb2, 0xcd, 0x42,
-	0x5f, 0x66, 0xca, 0x55, 0x9c, 0x5d, 0x4c, 0xdb, 0xf8, 0x7b, 0x59, 0xf9, 0x38, 0x39, 0x30, 0xd4,
-	0x2a, 0x37, 0x70, 0x3e, 0x3a, 0x33, 0xc9, 0x0a, 0xd7, 0x85, 0x94, 0xeb, 0x9e, 0x68, 0x84, 0x86,
-	0x42, 0x68, 0x38, 0x7c, 0xfd, 0x1b, 0xa1, 0xbe, 0x94, 0x2b, 0x17, 0x71, 0xce, 0x65, 0x26, 0x70,
-	0xb2, 0xda, 0x40, 0xcd, 0x5c, 0x2f, 0x17, 0x75, 0xa3, 0x9a, 0x72, 0x1d, 0xff, 0x47, 0xed, 0x3d,
-	0x70, 0x81, 0x73, 0x52, 0x68, 0xa0, 0x66, 0xb9, 0xb3, 0x96, 0xe2, 0x3e, 0x94, 0xad, 0xd8, 0x94,
-	0x68, 0xbb, 0x97, 0xc2, 0x67, 0xff, 0x9c, 0x13, 0xf4, 0xf2, 0x88, 0xa0, 0x77, 0x47, 0x04, 0xbd,
-	0xf9, 0xb4, 0xb1, 0x1e, 0xad, 0xb1, 0xfd, 0x28, 0x24, 0x6f, 0xc7, 0xde, 0xce, 0x41, 0x76, 0xe9,
-	0x3b, 0xbb, 0x33, 0xb6, 0x95, 0xa7, 0xb8, 0xb2, 0xe3, 0x81, 0xee, 0xc3, 0xd2, 0xad, 0x4e, 0x3e,
-	0x43, 0xad, 0x92, 0xaa, 0xf7, 0xc5, 0xcf, 0x4e, 0xad, 0xbf, 0xfa, 0xf2, 0xe3, 0x20, 0x43, 0xd4,
-	0x35, 0xcd, 0x10, 0x18, 0x2d, 0xf5, 0x6f, 0xea, 0xa2, 0xcb, 0x21, 0xff, 0x2e, 0x50, 0x38, 0x03,
-	0xbe, 0x29, 0x30, 0x27, 0xf0, 0x9f, 0x8c, 0xcd, 0xb3, 0xd8, 0x3f, 0x10, 0x98, 0xe3, 0x7c, 0x1d,
-	0x9f, 0x7b, 0x3c, 0x62, 0xfb, 0xa7, 0xa1, 0xff, 0xa3, 0xae, 0x6e, 0x8a, 0x11, 0x55, 0xb5, 0xa2,
-	0xf1, 0x11, 0xdb, 0x3f, 0x36, 0xe0, 0x0a, 0xea, 0x9d, 0x9f, 0x7e, 0xaf, 0xaf, 0x4c, 0x67, 0x75,
-	0xf4, 0x79, 0x56, 0x47, 0xdf, 0x66, 0x75, 0x34, 0xc8, 0x0b, 0xc8, 0xb5, 0x3f, 0x01, 0x00, 0x00,
-	0xff, 0xff, 0x6b, 0xd0, 0x16, 0x90, 0x9b, 0x04, 0x00, 0x00,
+	// 750 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6b, 0x13, 0x4d,
+	0x18, 0xef, 0xe4, 0xa3, 0x34, 0x93, 0xbc, 0x69, 0x32, 0x69, 0xd3, 0xe9, 0xb6, 0xa4, 0x61, 0x4f,
+	0xa1, 0x34, 0xd9, 0xf7, 0xcd, 0x0b, 0x2a, 0x41, 0x90, 0xa6, 0x7e, 0x50, 0x2a, 0x1e, 0x52, 0x7a,
+	0xb5, 0x6c, 0x76, 0x27, 0xdb, 0xa5, 0x9b, 0x99, 0xb8, 0x3b, 0xdb, 0x9a, 0x9b, 0xe8, 0x41, 0xf0,
+	0x24, 0xf4, 0xe2, 0x45, 0x28, 0xf8, 0x0f, 0xa8, 0x7f, 0x45, 0x8f, 0x82, 0xe0, 0x51, 0xb4, 0x78,
+	0xe8, 0x51, 0x68, 0x0e, 0x7a, 0x93, 0x9d, 0xdd, 0x4d, 0x37, 0x69, 0x95, 0x82, 0xbd, 0x84, 0x79,
+	0x9e, 0xdf, 0xf3, 0xfb, 0x98, 0x67, 0xb3, 0x0b, 0xf3, 0x9a, 0xe5, 0x3a, 0x9c, 0xd8, 0x26, 0x75,
+	0x78, 0xad, 0x67, 0x33, 0xce, 0x50, 0x8a, 0xe8, 0x06, 0x11, 0x47, 0x69, 0xd1, 0x60, 0xcc, 0xb0,
+	0x88, 0xa2, 0xf6, 0x4c, 0x45, 0xa5, 0x94, 0x71, 0x95, 0x9b, 0x8c, 0x3a, 0xfe, 0xa0, 0x74, 0xc3,
+	0x30, 0xf9, 0x8e, 0xdb, 0xae, 0x69, 0xac, 0xab, 0x74, 0x59, 0xdb, 0xb4, 0x3c, 0xe2, 0x63, 0xc5,
+	0xfb, 0xad, 0x6a, 0x16, 0x73, 0x75, 0x45, 0xcc, 0x19, 0x84, 0x0e, 0x0f, 0x01, 0xf3, 0xde, 0xe5,
+	0x98, 0x5a, 0xd5, 0x20, 0xb4, 0xaa, 0x75, 0xc3, 0x32, 0x72, 0x08, 0x84, 0x32, 0x36, 0x71, 0x5c,
+	0x8b, 0x87, 0x55, 0xc7, 0x52, 0xf7, 0x98, 0x1d, 0x54, 0xff, 0x04, 0x57, 0x0b, 0xca, 0xac, 0x10,
+	0xb6, 0xc8, 0x70, 0x58, 0x63, 0xdd, 0x2e, 0x0b, 0x13, 0x55, 0x23, 0x89, 0x0c, 0x66, 0x30, 0xdf,
+	0xa8, 0xed, 0x76, 0x44, 0x25, 0x0a, 0x71, 0xf2, 0xc7, 0xe5, 0xd7, 0x00, 0x66, 0xd7, 0x7c, 0xf9,
+	0x75, 0xea, 0xf0, 0x0d, 0xd2, 0x47, 0x37, 0x61, 0x3a, 0x30, 0xdc, 0xde, 0x25, 0x7d, 0x0c, 0xca,
+	0xa0, 0x92, 0xae, 0xcf, 0xd6, 0x86, 0xcb, 0xac, 0x05, 0xf3, 0x1b, 0xa4, 0xdf, 0x4c, 0x1c, 0x7d,
+	0x5e, 0x9a, 0x68, 0x41, 0x6d, 0xd8, 0x41, 0xb7, 0x60, 0x26, 0xcc, 0x27, 0xe8, 0x31, 0x41, 0x2f,
+	0x8e, 0xd0, 0x7d, 0xf8, 0x8c, 0x9f, 0xd6, 0xce, 0x5a, 0x8d, 0xcc, 0xc9, 0x29, 0x06, 0x3f, 0x4e,
+	0x31, 0x78, 0x7b, 0xb8, 0x04, 0xe4, 0x77, 0x31, 0x98, 0x8e, 0xe4, 0x43, 0x45, 0x38, 0xd9, 0x31,
+	0x89, 0xa5, 0x3b, 0x18, 0x94, 0xe3, 0x95, 0x54, 0x2b, 0xa8, 0xd0, 0x7f, 0x30, 0x7e, 0xe6, 0x36,
+	0x7f, 0x3e, 0x6c, 0x70, 0xb9, 0xc0, 0xd0, 0x9b, 0x45, 0xd7, 0xe1, 0xa4, 0xbf, 0x66, 0x1c, 0x17,
+	0xac, 0x99, 0x08, 0xeb, 0xae, 0x00, 0x3c, 0x42, 0xca, 0x23, 0x9c, 0x3c, 0xfb, 0x09, 0x40, 0x2b,
+	0x18, 0x47, 0x0b, 0x30, 0x49, 0x99, 0x4e, 0x1c, 0x9c, 0x28, 0x83, 0x4a, 0xb2, 0x99, 0xf4, 0x51,
+	0xbf, 0x87, 0xae, 0xc1, 0x29, 0xcb, 0xdc, 0x23, 0x94, 0x38, 0x0e, 0x4e, 0x95, 0x41, 0x25, 0x5b,
+	0x2f, 0x44, 0x74, 0xef, 0x07, 0x50, 0x48, 0x1a, 0xce, 0xa2, 0x79, 0x98, 0x50, 0x5d, 0xce, 0x30,
+	0x2c, 0x83, 0xca, 0x54, 0x08, 0x8b, 0x56, 0xa3, 0xe6, 0x6d, 0xe4, 0xfb, 0x29, 0x06, 0x4f, 0x06,
+	0x18, 0xbc, 0x1a, 0x60, 0xf0, 0xe2, 0xfd, 0xbc, 0xe4, 0x27, 0x5c, 0x79, 0xe0, 0x99, 0xae, 0x84,
+	0xb2, 0x2b, 0xab, 0x2e, 0x67, 0xf2, 0x27, 0x00, 0xa7, 0x23, 0xd7, 0x5e, 0xa7, 0x1d, 0x76, 0x95,
+	0x7b, 0x5b, 0x80, 0x29, 0xca, 0xb8, 0xd9, 0xe9, 0x6f, 0x9b, 0xba, 0x58, 0x5d, 0xbc, 0x35, 0xe5,
+	0x37, 0xd6, 0x75, 0x54, 0x85, 0x49, 0x87, 0xab, 0x9c, 0x88, 0xdd, 0x64, 0xeb, 0x73, 0xe7, 0x15,
+	0x37, 0x3d, 0xb8, 0xe5, 0x4f, 0x79, 0xb1, 0x88, 0x6d, 0x33, 0xdb, 0xc1, 0x49, 0x3f, 0x96, 0x5f,
+	0x35, 0x66, 0xa2, 0x57, 0x7e, 0x39, 0xc0, 0xe0, 0x70, 0x80, 0xc1, 0xf2, 0x1b, 0x00, 0x33, 0x51,
+	0x15, 0x34, 0x07, 0x0b, 0xd1, 0x7a, 0x8b, 0xee, 0x52, 0xb6, 0x4f, 0x73, 0x13, 0x08, 0xc3, 0x99,
+	0x28, 0xd0, 0x74, 0x4d, 0x4b, 0x37, 0xa9, 0x91, 0x03, 0x68, 0x16, 0xe6, 0x47, 0x82, 0x10, 0x55,
+	0xef, 0xe7, 0x62, 0xa8, 0x08, 0x51, 0xb4, 0x7d, 0x47, 0xc4, 0xc8, 0xc5, 0xc7, 0x85, 0x6e, 0x13,
+	0x8b, 0x70, 0x4f, 0x28, 0x31, 0xee, 0x2d, 0x10, 0xa2, 0xe7, 0x92, 0xf5, 0x83, 0xf8, 0xc8, 0x2b,
+	0xb5, 0xda, 0x33, 0xd1, 0x43, 0x98, 0x5f, 0xb3, 0x89, 0xca, 0xc9, 0xc8, 0x5f, 0xf9, 0xe2, 0x6d,
+	0x4b, 0xf9, 0x48, 0xbf, 0x25, 0xbe, 0x0a, 0x72, 0xe9, 0xe9, 0xc7, 0x6f, 0x07, 0x31, 0x2c, 0x17,
+	0x14, 0x4d, 0xc8, 0x28, 0x91, 0x8f, 0x5d, 0x03, 0x2c, 0x7b, 0xfa, 0xbe, 0xff, 0x5f, 0xeb, 0xeb,
+	0x42, 0xe6, 0x02, 0xfd, 0xad, 0x9e, 0x7e, 0x15, 0xf9, 0x5d, 0x21, 0x33, 0xae, 0xaf, 0xc2, 0xe9,
+	0xcd, 0x1d, 0xb6, 0x7f, 0x19, 0xf5, 0xdf, 0xf4, 0xe5, 0x45, 0x61, 0x51, 0x94, 0xf3, 0x8a, 0xb3,
+	0xc3, 0xf6, 0xc7, 0x0c, 0xfe, 0x05, 0xf5, 0xe7, 0x60, 0xf8, 0x84, 0xc3, 0x97, 0xc2, 0x7b, 0x32,
+	0x8f, 0x60, 0x61, 0xcc, 0x59, 0xbc, 0x2e, 0xd2, 0xc5, 0x2e, 0x1e, 0x26, 0xfd, 0x01, 0x93, 0xcb,
+	0x22, 0x85, 0x24, 0xcf, 0x9e, 0x4b, 0x61, 0xd2, 0x0e, 0x13, 0x49, 0x9a, 0xb9, 0xa3, 0xaf, 0xa5,
+	0x89, 0xa3, 0xe3, 0x12, 0xf8, 0x70, 0x5c, 0x02, 0x5f, 0x8e, 0x4b, 0xa0, 0x3d, 0x29, 0xc4, 0xfe,
+	0xff, 0x15, 0x00, 0x00, 0xff, 0xff, 0xe9, 0xd6, 0xac, 0x50, 0xc4, 0x06, 0x00, 0x00,
 }

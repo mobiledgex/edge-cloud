@@ -65,6 +65,7 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
 	gencmd.CloudletInfoApiCmd = edgeproto.NewCloudletInfoApiClient(conn)
 	gencmd.AppInstInfoApiCmd = edgeproto.NewAppInstInfoApiClient(conn)
+	gencmd.ClusterInstInfoApiCmd = edgeproto.NewClusterInstInfoApiClient(conn)
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
 	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
@@ -100,6 +101,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstInfoApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterInstInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)

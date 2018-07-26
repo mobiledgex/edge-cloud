@@ -34,11 +34,13 @@ message ClusterInst {
   // Future: policy options on where this cluster can be created.
   // type of instance
   Liveness liveness = 9 [(protogen.backend) = true];
+  // if auto-created
+  bool auto = 10 [(protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
-  option (protocmd.noconfig) = "Flavor,Nodes,Liveness";
+  option (protocmd.noconfig) = "Flavor,Nodes,Liveness,Auto";
 }
 
 service ClusterInstApi {
@@ -63,6 +65,41 @@ service ClusterInstApi {
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
     option (google.api.http) = {
       post: "/show/clusterinst"
+      body: "*"
+    };
+  }
+}
+
+enum ClusterState {
+  ClusterStateUnknown = 0;
+  ClusterStateBuilding = 1;
+  ClusterStateReady = 2;
+  ClusterStateErrors = 3;
+  ClusterStateDeleting = 4;
+  ClusterStateDeleted = 5;
+}
+
+message ClusterInstInfo {
+  repeated string fields = 1;
+  // unique identifier key
+  ClusterInstKey key = 2 [(gogoproto.nullable) = false];
+  // Id of client assigned by server
+  int64 notify_id = 3;
+  // state of the cluster
+  ClusterState state = 4;
+  // error messages
+  repeated string errors = 5;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.notify_cache) = true;
+}
+
+service ClusterInstInfoApi {
+  rpc ShowClusterInstInfo(ClusterInstInfo) returns (stream ClusterInstInfo) {
+    option (google.api.http) = {
+      post: "/show/clusterinstinfo"
       body: "*"
     };
   }

@@ -174,6 +174,10 @@ func (s *AppInstInfo) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (s *ClusterInstInfo) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {

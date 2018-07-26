@@ -36,6 +36,7 @@
 		Cluster
 		ClusterInstKey
 		ClusterInst
+		ClusterInstInfo
 		DeveloperKey
 		Developer
 		FlavorKey
@@ -65,6 +66,7 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
@@ -816,7 +818,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -850,7 +852,7 @@ func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("App", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur App
 		err = json.Unmarshal(curBytes, &cur)
@@ -895,7 +897,7 @@ func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppStore) LoadOne(key string) (*App, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -906,6 +908,32 @@ func (s *AppStore) LoadOne(key string) (*App, int64, error) {
 		return nil, 0, err
 	}
 	return &obj, rev, nil
+}
+
+func (s *AppStore) STMGet(stm concurrency.STM, key *AppKey, buf *App) bool {
+	keystr := objstore.DbKeyString("App", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AppStore) STMPut(stm concurrency.STM, obj *App) {
+	keystr := objstore.DbKeyString("App", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
+	keystr := objstore.DbKeyString("App", key)
+	stm.Del(keystr)
 }
 
 // AppCache caches App objects in memory in a hash table

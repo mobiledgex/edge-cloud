@@ -67,11 +67,10 @@ service CloudletApi {
 }
 
 enum CloudletState {
-  Unknown = 0;
-  ConfiguringOpenstack = 1;
-  ConfiguringKubernetes = 2;
-  Ready = 3;
-  Offline = 4;
+  CloudletStateUnknown = 0;
+  CloudletStateErrors = 1;
+  CloudletStateReady = 2;
+  CloudletStateOffline = 3;
 }
 
 // CloudletInfo is the static information CRM passes up to the controller
@@ -91,6 +90,8 @@ message CloudletInfo {
   uint64 os_max_vcores = 7;
   // disk in GB
   uint64 os_max_vol_gb = 8;
+  // errors
+  repeated string errors = 9;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

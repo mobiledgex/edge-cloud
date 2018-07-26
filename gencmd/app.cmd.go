@@ -36,6 +36,7 @@ It has these top-level messages:
 	Cluster
 	ClusterInstKey
 	ClusterInst
+	ClusterInstInfo
 	DeveloperKey
 	Developer
 	FlavorKey

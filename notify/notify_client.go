@@ -35,8 +35,9 @@ type Client struct {
 	localAddr    string
 	localAddrMux util.Mutex
 	// The following fields are for the send thread
-	appInstInfos  map[edgeproto.AppInstKey]struct{}
-	cloudletInfos map[edgeproto.CloudletKey]struct{}
+	appInstInfos     map[edgeproto.AppInstKey]struct{}
+	clusterInstInfos map[edgeproto.ClusterInstKey]struct{}
+	cloudletInfos    map[edgeproto.CloudletKey]struct{}
 }
 
 type ClientRecvAllMaps struct {
@@ -53,6 +54,11 @@ type SendAppInstInfoHandler interface {
 type SendCloudletInfoHandler interface {
 	GetAllKeys(keys map[edgeproto.CloudletKey]struct{})
 	Get(key *edgeproto.CloudletKey, buf *edgeproto.CloudletInfo) bool
+}
+
+type SendClusterInstInfoHandler interface {
+	GetAllKeys(keys map[edgeproto.ClusterInstKey]struct{})
+	Get(key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterInstInfo) bool
 }
 
 type RecvAppInstHandler interface {
@@ -82,6 +88,7 @@ type RecvClusterInstHandler interface {
 type ClientHandler interface {
 	SendAppInstInfoHandler() SendAppInstInfoHandler
 	SendCloudletInfoHandler() SendCloudletInfoHandler
+	SendClusterInstInfoHandler() SendClusterInstInfoHandler
 	RecvAppInstHandler() RecvAppInstHandler
 	RecvCloudletHandler() RecvCloudletHandler
 	RecvFlavorHandler() RecvFlavorHandler
@@ -89,18 +96,19 @@ type ClientHandler interface {
 }
 
 type ClientStats struct {
-	Tries             uint64
-	Connects          uint64
-	NegotiateErrors   uint64
-	RecvErrors        uint64
-	SendErrors        uint64
-	AppInstInfosSent  uint64
-	CloudletInfosSent uint64
-	AppInstRecv       uint64
-	CloudletRecv      uint64
-	FlavorRecv        uint64
-	ClusterInstRecv   uint64
-	Recv              uint64
+	Tries                uint64
+	Connects             uint64
+	NegotiateErrors      uint64
+	RecvErrors           uint64
+	SendErrors           uint64
+	AppInstInfosSent     uint64
+	ClusterInstInfosSent uint64
+	CloudletInfosSent    uint64
+	AppInstRecv          uint64
+	CloudletRecv         uint64
+	FlavorRecv           uint64
+	ClusterInstRecv      uint64
+	Recv                 uint64
 }
 
 func cancelNoop() {}
@@ -120,6 +128,7 @@ func newClient(addrs []string, handler ClientHandler, requestor edgeproto.Notice
 	s.requestor = requestor
 	s.signal = make(chan bool, 1)
 	s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
+	s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 	s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
 	return &s
 }
@@ -384,15 +393,19 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	var notice edgeproto.NoticeRequest
 	var nAppInstInfo edgeproto.NoticeRequest_AppInstInfo
+	var nClusterInstInfo edgeproto.NoticeRequest_ClusterInstInfo
 	var nCloudletInfo edgeproto.NoticeRequest_CloudletInfo
 	var appInstInfo edgeproto.AppInstInfo
+	var clusterInstInfo edgeproto.ClusterInstInfo
 	var cloudletInfo edgeproto.CloudletInfo
 	var err error
 
 	sendAll := true
 	nAppInstInfo.AppInstInfo = &appInstInfo
+	nClusterInstInfo.ClusterInstInfo = &clusterInstInfo
 	nCloudletInfo.CloudletInfo = &cloudletInfo
 	sendAppInstInfo := s.handler.SendAppInstInfoHandler()
+	sendClusterInstInfo := s.handler.SendClusterInstInfoHandler()
 	sendCloudletInfo := s.handler.SendCloudletInfoHandler()
 	// trigger initial sendAll
 	s.wakeupSend()
@@ -404,13 +417,16 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		}
 		s.mux.Lock()
 		if len(s.appInstInfos) == 0 && len(s.cloudletInfos) == 0 &&
+			len(s.clusterInstInfos) == 0 &&
 			!s.done && !sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
 		}
 		appInstInfos := s.appInstInfos
+		clusterInstInfos := s.clusterInstInfos
 		cloudletInfos := s.cloudletInfos
 		s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
+		s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 		s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
 		s.mux.Unlock()
 		if s.done || stream.Context().Err() != nil {
@@ -426,6 +442,35 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			if sendCloudletInfo != nil {
 				sendCloudletInfo.GetAllKeys(cloudletInfos)
 			}
+			if sendClusterInstInfo != nil {
+				sendClusterInstInfo.GetAllKeys(clusterInstInfos)
+			}
+		}
+
+		if sendClusterInstInfo != nil {
+			notice.Data = &nClusterInstInfo
+			for key, _ := range clusterInstInfos {
+				found := sendClusterInstInfo.Get(&key, &clusterInstInfo)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					clusterInstInfo.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send ClusterInstInfo",
+					"server", s.GetServerAddr(),
+					"action", notice.Action,
+					"key", clusterInstInfo.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.ClusterInstInfosSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
 		}
 
 		if sendAppInstInfo != nil {
@@ -484,6 +529,7 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			sendAll = false
 		}
 		appInstInfos = nil
+		clusterInstInfos = nil
 		cloudletInfos = nil
 	}
 	close(s.sendRunning)
@@ -506,6 +552,13 @@ func (s *Client) UpdateAppInstInfo(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.appInstInfos[*key] = struct{}{}
+	s.wakeupSend()
+}
+
+func (s *Client) UpdateClusterInstInfo(key *edgeproto.ClusterInstKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.clusterInstInfos[*key] = struct{}{}
 	s.wakeupSend()
 }
 

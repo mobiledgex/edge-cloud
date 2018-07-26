@@ -15,7 +15,6 @@ tests:
   - includefile: verify_loc.yml
     loops: 3 
   - includefile: default_cluster_test.yml
+  - includefile: crminfo.yml
   - includefile: fetchlogs.yml
   - includefile: stop_cleanup.yml
-
-
