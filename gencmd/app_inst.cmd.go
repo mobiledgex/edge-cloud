@@ -41,12 +41,22 @@ var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
 var AppInstInLiveness string
 var AppInstInImageType string
+var AppInstInAccessLayer string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
+var AppInstInfoInState string
 var AppInstMetricsIn edgeproto.AppInstMetrics
 var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
 var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
+var AppStateStrings = []string{
+	"AppStateUnknown",
+	"AppStateBuilding",
+	"AppStateReady",
+	"AppStateErrors",
+	"AppStateDeleting",
+	"AppStateDeleted",
+}
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s := make([]string, 0, 3)
@@ -71,7 +81,7 @@ func AppInstKeyHeaderSlicer() []string {
 }
 
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 13)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -105,11 +115,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.MappedPath)
 	s = append(s, in.ConfigMap)
 	s = append(s, in.Flavor.Name)
+	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 13)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -136,11 +147,12 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPath")
 	s = append(s, "ConfigMap")
 	s = append(s, "Flavor-Name")
+	s = append(s, "AccessLayer")
 	return s
 }
 
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 5)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -152,11 +164,16 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
+	s = append(s, edgeproto.AppState_name[int32(in.State)])
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
 	return s
 }
 
 func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 5)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -165,6 +182,8 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Key-Id")
 	s = append(s, "NotifyId")
+	s = append(s, "State")
+	s = append(s, "Errors")
 	return s
 }
 
@@ -417,6 +436,11 @@ var ShowAppInstInfoCmd = &cobra.Command{
 			return
 		}
 		var err error
+		err = parseAppInstInfoEnums()
+		if err != nil {
+			fmt.Println("ShowAppInstInfo: ", err)
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
@@ -571,6 +595,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ConfigMap, "configmap", "", "ConfigMap")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
+	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -578,6 +603,9 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [AppStateUnknown AppStateBuilding AppStateReady AppStateErrors AppStateDeleting AppStateDeleted]")
+	AppInstInfoIn.Errors = make([]string, 1)
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Errors[0], "errors", "", "Errors")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -682,6 +710,9 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
+	if AppInstFlagSet.Lookup("accesslayer").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "13")
+	}
 }
 
 func AppInstInfoSetFields() {
@@ -706,6 +737,12 @@ func AppInstInfoSetFields() {
 	}
 	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
+	}
+	if AppInstInfoFlagSet.Lookup("state").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
+	}
+	if AppInstInfoFlagSet.Lookup("errors").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "5")
 	}
 }
 
@@ -732,6 +769,42 @@ func parseAppInstEnums() error {
 			AppInstIn.ImageType = edgeproto.ImageType(2)
 		default:
 			return errors.New("Invalid value for AppInstInImageType")
+		}
+	}
+	if AppInstInAccessLayer != "" {
+		switch AppInstInAccessLayer {
+		case "AccessLayerUnknown":
+			AppInstIn.AccessLayer = edgeproto.AccessLayer(0)
+		case "AccessLayerL4":
+			AppInstIn.AccessLayer = edgeproto.AccessLayer(1)
+		case "AccessLayerL7":
+			AppInstIn.AccessLayer = edgeproto.AccessLayer(2)
+		case "AccessLayerL4L7":
+			AppInstIn.AccessLayer = edgeproto.AccessLayer(3)
+		default:
+			return errors.New("Invalid value for AppInstInAccessLayer")
+		}
+	}
+	return nil
+}
+
+func parseAppInstInfoEnums() error {
+	if AppInstInfoInState != "" {
+		switch AppInstInfoInState {
+		case "AppStateUnknown":
+			AppInstInfoIn.State = edgeproto.AppState(0)
+		case "AppStateBuilding":
+			AppInstInfoIn.State = edgeproto.AppState(1)
+		case "AppStateReady":
+			AppInstInfoIn.State = edgeproto.AppState(2)
+		case "AppStateErrors":
+			AppInstInfoIn.State = edgeproto.AppState(3)
+		case "AppStateDeleting":
+			AppInstInfoIn.State = edgeproto.AppState(4)
+		case "AppStateDeleted":
+			AppInstInfoIn.State = edgeproto.AppState(5)
+		default:
+			return errors.New("Invalid value for AppInstInfoInState")
 		}
 	}
 	return nil

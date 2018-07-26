@@ -48,7 +48,7 @@ func NoticeReplyHeaderSlicer() []string {
 }
 
 func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	s = append(s, edgeproto.NoticeRequestor_name[int32(in.Requestor)])
@@ -57,7 +57,7 @@ func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
 }
 
 func NoticeRequestHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Action")
 	s = append(s, "Version")
 	s = append(s, "Requestor")

@@ -71,6 +71,12 @@ type RecvCloudletInfoHandler interface {
 	Flush(notifyId int64)
 }
 
+type RecvClusterInstInfoHandler interface {
+	Update(in *edgeproto.ClusterInstInfo, notifyId int64)
+	Delete(in *edgeproto.ClusterInstInfo, notifyId int64)
+	Flush(notifyId int64)
+}
+
 type ServerHandler interface {
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
@@ -78,6 +84,7 @@ type ServerHandler interface {
 	SendClusterInstHandler() SendClusterInstHandler
 	RecvAppInstInfoHandler() RecvAppInstInfoHandler
 	RecvCloudletInfoHandler() RecvCloudletInfoHandler
+	RecvClusterInstInfoHandler() RecvClusterInstInfoHandler
 }
 
 type ServerStats struct {
@@ -227,6 +234,10 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	recvCloudletInfo := server.handler.RecvCloudletInfoHandler()
 	if recvCloudletInfo != nil {
 		recvCloudletInfo.Flush(server.notifyId)
+	}
+	recvClusterInstInfo := server.handler.RecvClusterInstInfoHandler()
+	if recvClusterInstInfo != nil {
+		recvClusterInstInfo.Flush(server.notifyId)
 	}
 
 	close(server.running)
@@ -585,6 +596,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	recvAppInstInfo := s.handler.RecvAppInstInfoHandler()
 	recvCloudletInfo := s.handler.RecvCloudletInfoHandler()
+	recvClusterInstInfo := s.handler.RecvClusterInstInfoHandler()
 	for !s.done {
 		req, err := stream.Recv()
 		if s.done {
@@ -609,6 +621,15 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 				recvAppInstInfo.Update(appInstInfo, s.notifyId)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
 				recvAppInstInfo.Delete(appInstInfo, s.notifyId)
+			}
+		}
+		clusterInstInfo := req.GetClusterInstInfo()
+		if recvClusterInstInfo != nil && clusterInstInfo != nil {
+			clusterInstInfo.NotifyId = s.notifyId
+			if req.Action == edgeproto.NoticeAction_UPDATE {
+				recvClusterInstInfo.Update(clusterInstInfo, s.notifyId)
+			} else if req.Action == edgeproto.NoticeAction_DELETE {
+				recvClusterInstInfo.Delete(clusterInstInfo, s.notifyId)
 			}
 		}
 		cloudletInfo := req.GetCloudletInfo()

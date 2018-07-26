@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type ClusterInstApi struct {
@@ -38,30 +40,38 @@ func (s *ClusterInstApi) GetClusterInstsForCloudlets(cloudlets map[edgeproto.Clo
 
 func (s *ClusterInstApi) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
-	return s.createClusterInstInternal(in)
+	in.Auto = false
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		return s.createClusterInstInternal(stm, in)
+	})
+	return &edgeproto.Result{}, err
 }
 
-func (s *ClusterInstApi) createClusterInstInternal(in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *ClusterInstApi) createClusterInstInternal(stm concurrency.STM, in *edgeproto.ClusterInst) error {
+	if clusterInstApi.store.STMGet(stm, &in.Key, nil) {
+		return objstore.ErrKVStoreKeyExists
+	}
 	if in.Liveness == edgeproto.Liveness_LivenessUnknown {
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
-	if !cloudletApi.HasKey(&in.Key.CloudletKey) {
-		return &edgeproto.Result{}, errors.New("Specified Cloudlet not found")
+	if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, nil) {
+		return errors.New("Specified Cloudlet not found")
 	}
 	// cache data
 	var cluster edgeproto.Cluster
-	if !clusterApi.Get(&in.Key.ClusterKey, &cluster) {
-		return &edgeproto.Result{}, errors.New("Specified Cluster not found")
+	if !clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
+		return errors.New("Specified Cluster not found")
 	}
 	in.Flavor = cluster.Flavor
 	in.Nodes = cluster.Nodes
 
-	return s.store.Create(in, s.sync.syncWait)
+	s.store.STMPut(stm, in)
+	return nil
 }
 
 func (s *ClusterInstApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	// Unsupported for now
-	return &edgeproto.Result{}, errors.New("Update cluster not supported")
+	return &edgeproto.Result{}, errors.New("Update cluster instance not supported")
 	//return s.store.Update(in, s.sync.syncWait)
 }
 
@@ -73,7 +83,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(in *edgeproto.ClusterInst) (*
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return &edgeproto.Result{}, errors.New("ClusterInst in use by Application Instance")
 	}
-	return s.store.Delete(in, s.sync.syncWait)
+	resp, err := s.store.Delete(in, s.sync.syncWait)
+	if err == nil {
+		// also delete associated info
+		clusterInstInfoApi.internalDelete(&in.Key, s.sync.syncWait)
+	}
+	return resp, err
 }
 
 func (s *ClusterInstApi) ShowClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_ShowClusterInstServer) error {

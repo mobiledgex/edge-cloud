@@ -5,8 +5,10 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -97,64 +99,69 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
 
-	// cache location of cloudlet in app inst
-	var cloudlet edgeproto.Cloudlet
-	if !cloudletApi.Get(&in.Key.CloudletKey, &cloudlet) {
-		return &edgeproto.Result{}, errors.New("Specified cloudlet not found")
-	}
-	in.CloudletLoc = cloudlet.Location
-
-	// cache app path in app inst
-	var app edgeproto.App
-	if !appApi.Get(&in.Key.AppKey, &app) {
-		return &edgeproto.Result{}, errors.New("Specified app not found")
-	}
-	in.ImagePath = app.ImagePath
-	in.ImageType = app.ImageType
-	in.ConfigMap = app.ConfigMap
-	in.Flavor = app.Flavor
-
-	// CloudletKey is duplicated in both the ClusterInstKey and the
-	// AppInstKey. It's inconsistent to create an AppInst on a ClusterInst
-	// when the cloudlet keys don't match, so don't require the user to
-	// specify the CloudletKey in the cluster during AppInst create, just
-	// take it from the AppInst Key.
-	in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
-
-	if in.ClusterInstKey.ClusterKey.Name == "" {
-		// cluster inst unspecified, create one automatically
-		clusterInst := edgeproto.ClusterInst{}
-		clusterInst.Key.ClusterKey = app.Cluster
-		clusterInst.Key.CloudletKey = in.Key.CloudletKey
-		// it may be possible that cluster already exists
-		if !clusterInstApi.HasKey(&clusterInst.Key) {
-			resp, err := clusterInstApi.createClusterInstInternal(&clusterInst)
-			if err != nil {
-				return resp, err
-			}
-			defer func() {
-				if err != nil {
-					clusterInstApi.deleteClusterInstInternal(&clusterInst)
-				}
-			}()
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, in.GetKey(), nil) {
+			return objstore.ErrKVStoreKeyExists
 		}
-		in.ClusterInstKey = clusterInst.Key
-	} else if !clusterInstApi.HasKey(&in.ClusterInstKey) {
-		return &edgeproto.Result{}, errors.New("Specified ClusterInst not found")
-	}
 
-	// set up URI for this instance
-	in.Uri = util.DNSSanitize(in.Key.AppKey.Name) + "." +
-		util.DNSSanitize(in.Key.CloudletKey.Name) + "." +
-		util.AppDNSRoot
-	// TODO:
-	// Allocate mapped ports and mapped path(s)
-	// Reserve resources
-	in.MappedPorts = app.AccessPorts
-	in.MappedPath = util.DNSSanitize(app.Key.Name)
+		// cache location of cloudlet in app inst
+		var cloudlet edgeproto.Cloudlet
+		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+			return errors.New("Specified cloudlet not found")
+		}
+		in.CloudletLoc = cloudlet.Location
 
-	resp, err := s.store.Create(in, s.sync.syncWait)
-	return resp, err
+		// cache app path in app inst
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return errors.New("Specified app not found")
+		}
+		in.ImagePath = app.ImagePath
+		in.ImageType = app.ImageType
+		in.ConfigMap = app.ConfigMap
+		in.AccessLayer = app.AccessLayer
+		in.Flavor = app.Flavor
+
+		// CloudletKey is duplicated in both the ClusterInstKey and the
+		// AppInstKey. It's inconsistent to create an AppInst on a ClusterInst
+		// when the cloudlet keys don't match, so don't require the user to
+		// specify the CloudletKey in the cluster during AppInst create, just
+		// take it from the AppInst Key.
+		in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
+		in.ClusterInstKey.ClusterKey = app.Cluster
+
+		if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
+			// cluster inst does not exist, see if we can create it.
+			// because app cannot exist without cluster, cluster
+			// should exist. But check anyway.
+			if !clusterApi.store.STMGet(stm, &app.Cluster, nil) {
+				return errors.New("Cluster does not exist for app")
+			}
+			// auto-create cluster inst
+			clusterInst := edgeproto.ClusterInst{}
+			clusterInst.Key = in.ClusterInstKey
+			clusterInst.Auto = true
+			err := clusterInstApi.createClusterInstInternal(stm,
+				&clusterInst)
+			if err != nil {
+				return err
+			}
+		}
+
+		// set up URI for this instance
+		in.Uri = util.DNSSanitize(in.Key.AppKey.Name) + "." +
+			util.DNSSanitize(in.Key.CloudletKey.Name) + "." +
+			util.AppDNSRoot
+		// TODO:
+		// Allocate mapped ports and mapped path(s)
+		// Reserve resources
+		in.MappedPorts = app.AccessPorts
+		in.MappedPath = util.DNSSanitize(app.Key.Name)
+
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
@@ -172,10 +179,23 @@ func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (
 }
 
 func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
-	resp, err := s.store.Delete(in, s.sync.syncWait)
-	// also delete associated info
-	appInstInfoApi.Del(&in.Key, s.sync.syncWait)
-	return resp, err
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		appinst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, in.GetKey(), &appinst) {
+			// already deleted
+			return nil
+		}
+		// delete associated info
+		appInstInfoApi.internalDelete(stm, in.GetKey())
+		// if cluster inst was auto-created, delete it as well
+		clusterInst := edgeproto.ClusterInst{}
+		if clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) && clusterInst.Auto {
+			clusterInstApi.store.STMDel(stm, &in.ClusterInstKey)
+		}
+		s.store.STMDel(stm, in.GetKey())
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {

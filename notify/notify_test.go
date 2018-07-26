@@ -179,6 +179,16 @@ func TestNotify(t *testing.T) {
 		len(serverHandler.AppInstInfoCache.Objs),
 		"sent appInstInfo")
 
+	for _, ci := range testutil.ClusterInstData {
+		info := edgeproto.ClusterInstInfo{}
+		info.Key = ci.Key
+		crmHandler.ClusterInstInfoCache.Update(&info, 0)
+	}
+	serverHandler.WaitForClusterInstInfo(len(testutil.ClusterInstData))
+	assert.Equal(t, len(testutil.ClusterInstData),
+		len(serverHandler.ClusterInstInfoCache.Objs),
+		"sent clusterInstInfo")
+
 	for _, cl := range testutil.CloudletData {
 		info := edgeproto.CloudletInfo{}
 		info.Key = cl.Key

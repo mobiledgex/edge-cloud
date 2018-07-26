@@ -87,11 +87,15 @@ func main() {
 		edgeproto.RegisterClusterInstApiServer(grpcServer, &saServer)
 		edgeproto.RegisterAppInstApiServer(grpcServer, &saServer)
 		edgeproto.RegisterAppInstInfoApiServer(grpcServer, &saServer)
+		edgeproto.RegisterClusterInstInfoApiServer(grpcServer, &saServer)
 		edgeproto.RegisterCloudletInfoApiServer(grpcServer, &saServer)
 	} else {
 		notifyHandler = NewNotifyHandler(controllerData)
 		addrs := strings.Split(*notifyAddrs, ",")
 		notifyClient = notify.NewCRMClient(addrs, notifyHandler)
+		// set callbacks to trigger send of infos
+		controllerData.AppInstInfoCache.SetNotifyCb(notifyClient.UpdateAppInstInfo)
+		controllerData.ClusterInstInfoCache.SetNotifyCb(notifyClient.UpdateClusterInstInfo)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}

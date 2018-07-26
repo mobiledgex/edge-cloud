@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -230,7 +231,14 @@ func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, servi
 }
 
 func (g *GenCmd) generateInputVars() {
-	for flatType, desc := range g.inMessages {
+	// sort array to prevent generated file from changing all the time
+	strs := make([]string, 0, len(g.inMessages))
+	for flatType, _ := range g.inMessages {
+		strs = append(strs, flatType)
+	}
+	sort.Strings(strs)
+	for _, flatType := range strs {
+		desc := g.inMessages[flatType]
 		g.importPflag = true
 		g.P("var ", flatType, "In ", g.FQTypeName(desc))
 		g.P("var ", flatType, "FlagSet = pflag.NewFlagSet(\"", flatType, "\", pflag.ExitOnError)")
@@ -406,6 +414,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				fargs.Type = "BytesHex"
 			}
 			fargs.DefValue = "nil"
+		}
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED &&
+			*field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			typ := g.support.GoType(g.Generator, field)
+			g.P(msgName, "In.", hierField, " = make([]", typ, ", 1)")
 		}
 		err := g.fieldTmpl.Execute(g, fargs)
 		if err != nil {

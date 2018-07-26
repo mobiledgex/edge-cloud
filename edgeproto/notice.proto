@@ -52,6 +52,7 @@ message NoticeRequest {
   oneof data {
     CloudletInfo cloudletInfo = 5;
     AppInstInfo appInstInfo = 6;
+    ClusterInstInfo clusterInstInfo = 7;
   }
 }
 

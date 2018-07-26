@@ -239,6 +239,7 @@ var DebugApiCmds = []*cobra.Command{
 }
 
 func init() {
+	DebugLevelsIn.Levels = make([]log.DebugLevel, 1)
 	DebugLevelsFlagSet.StringVar(&DebugLevelsInLevels, "levels", "", "comma-separated list of [etcd api notify dmedb dmereq locapi]")
 	EnableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
 	DisableDebugLevelsCmd.Flags().AddFlagSet(DebugLevelsFlagSet)
