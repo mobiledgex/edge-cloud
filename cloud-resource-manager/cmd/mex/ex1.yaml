@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: mex-openstack-kubernetes
+metadata:
+  name: testPoke
+  tags: testPokeTag
+  tenant: Ninc
+  region: eu-central-1
+  zone: eu-central-1c
+  location: buckhorn
+spec:
+  flavor: x1.medium
+  rootlb: mex-lb-1.mobiledgex.net
+  networks:
+      - name: mex-k8s-net-1
+        kind: priv-subnet
+        cidr: 10.101.X.0/24
