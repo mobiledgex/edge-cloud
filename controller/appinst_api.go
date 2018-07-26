@@ -189,8 +189,8 @@ func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (
 		appInstInfoApi.internalDelete(stm, in.GetKey())
 		// if cluster inst was auto-created, delete it as well
 		clusterInst := edgeproto.ClusterInst{}
-		if clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) && clusterInst.Auto {
-			clusterInstApi.store.STMDel(stm, &in.ClusterInstKey)
+		if clusterInstApi.store.STMGet(stm, &appinst.ClusterInstKey, &clusterInst) && clusterInst.Auto {
+			clusterInstApi.store.STMDel(stm, &appinst.ClusterInstKey)
 		}
 		s.store.STMDel(stm, in.GetKey())
 		return nil

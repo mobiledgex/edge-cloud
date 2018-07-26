@@ -686,24 +686,6 @@ func Match_Engine_ApiAllowNoConfig() {
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddNoConfigFlagSet)
 }
 
-func parseMatch_Engine_RequestEnums() error {
-	if Match_Engine_RequestInIdType != "" {
-		switch Match_Engine_RequestInIdType {
-		case "ID_UNDEFINED":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(0)
-		case "IMEI":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(1)
-		case "MSISDN":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(2)
-		case "IPADDR":
-			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(3)
-		default:
-			return errors.New("Invalid value for Match_Engine_RequestInIdType")
-		}
-	}
-	return nil
-}
-
 func parseDynamicLocGroupAddEnums() error {
 	if DynamicLocGroupAddInIdType != "" {
 		switch DynamicLocGroupAddInIdType {
@@ -729,6 +711,24 @@ func parseDynamicLocGroupAddEnums() error {
 			DynamicLocGroupAddIn.CommType = distributed_match_engine.DynamicLocGroupAdd_DlgCommType(2)
 		default:
 			return errors.New("Invalid value for DynamicLocGroupAddInCommType")
+		}
+	}
+	return nil
+}
+
+func parseMatch_Engine_RequestEnums() error {
+	if Match_Engine_RequestInIdType != "" {
+		switch Match_Engine_RequestInIdType {
+		case "ID_UNDEFINED":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(0)
+		case "IMEI":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(1)
+		case "MSISDN":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(2)
+		case "IPADDR":
+			Match_Engine_RequestIn.IdType = distributed_match_engine.IDTypes(3)
+		default:
+			return errors.New("Invalid value for Match_Engine_RequestInIdType")
 		}
 	}
 	return nil

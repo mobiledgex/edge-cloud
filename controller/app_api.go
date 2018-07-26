@@ -133,13 +133,18 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		s.store.STMDel(stm, in.GetKey())
+		app := edgeproto.App{}
+		if !s.store.STMGet(stm, in.GetKey(), &app) {
+			// already deleted
+			return nil
+		}
 		// if cluster was auto-created, delete it as well
 		cluster := edgeproto.Cluster{}
-		if clusterApi.store.STMGet(stm, &in.Cluster, &cluster) &&
+		if clusterApi.store.STMGet(stm, &app.Cluster, &cluster) &&
 			cluster.Auto {
-			clusterApi.store.STMDel(stm, &in.Cluster)
+			clusterApi.store.STMDel(stm, &app.Cluster)
 		}
+		s.store.STMDel(stm, in.GetKey())
 		return nil
 	})
 	if err == nil && len(dynInsts) > 0 {

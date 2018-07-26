@@ -210,7 +210,14 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	// defined within a message. They end up having a type name of
 	// .proto.AppInst.Liveness, for example. They also end up having
 	// a generated type of AppInst_Liveness.
-	for msgName, enumList := range g.enumArgs {
+	// sort array to prevent generated file from changing all the time
+	strs := make([]string, 0, len(g.enumArgs))
+	for msgName, _ := range g.enumArgs {
+		strs = append(strs, msgName)
+	}
+	sort.Strings(strs)
+	for _, msgName := range strs {
+		enumList := g.enumArgs[msgName]
 		g.generateParseEnums(msgName, enumList)
 	}
 	gensupport.RunParseCheck(g.Generator, file)
