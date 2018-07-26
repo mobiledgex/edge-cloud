@@ -3,6 +3,7 @@ package crmutil
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/nanobox-io/golang-ssh"
 	"github.com/parnurzeal/gorequest"
+	log "gitlab.com/bobbae/logrus"
 	//"github.com/fsouza/go-dockerclient"
 )
 
@@ -338,7 +340,9 @@ func LBRemoveRoute(rootLB, name string) error {
 	}
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("can't delete route to rootLB, %s, %s, %v", cmd, out, err)
+		log.Warningf("can't delete route at rootLB, %s, %s, %v", cmd, out, err)
+		//not a fatal error
+		return nil
 	}
 
 	return nil
@@ -454,37 +458,46 @@ func DeleteClusterByName(rootLB, name string) error {
 		return err
 	}
 
+	log.Debugln("servers", srvs)
 	for _, s := range srvs {
 		if strings.Index(s.Name, name) > 0 {
-			err := oscli.DeleteServer(s.Name)
-			if err != nil {
-				return err
-			}
 			if strings.Index(s.Name, "mex-k8s-master") >= 0 {
 				err := LBRemoveRoute(rootLB, s.Name)
 				if err != nil {
-					return fmt.Errorf("failed remove route for %s, %v", s.Name, err)
+					err = fmt.Errorf("failed remove route for %s, %v", s.Name, err)
+					log.Debugln(err)
+					return err
 				}
-				break
+			}
+			log.Debugln("delete server", s.Name)
+			err := oscli.DeleteServer(s.Name)
+			if err != nil {
+				log.Debugln(err)
+				return err
 			}
 		}
 	}
 
 	sns, err := oscli.ListSubnets("")
 	if err != nil {
+		log.Debugln(err)
 		return err
 	}
+	log.Debugln("subnets", sns)
 
 	rn := oscli.GetMEXExternalRouter() //XXX for now
 	for _, s := range sns {
 		if strings.Index(s.Name, name) > 0 {
+			log.Debugln("removing router from subnet", rn, s.Name)
 			err := oscli.RemoveRouterSubnet(rn, s.Name)
 			if err != nil {
-				return err
+				log.Debugln(err)
+				//return err
 			}
 
 			err = oscli.DeleteSubnet(s.Name)
 			if err != nil {
+				log.Debugln(err)
 				return err
 			}
 			break
@@ -677,6 +690,17 @@ func RunMEXAgent(fqdn string, pull bool) error {
 	if !valid.IsDNSName(fqdn) {
 		return fmt.Errorf("fqdn %s is not valid", fqdn)
 	}
+
+	err := EnableRootLB(fqdn)
+	if err != nil {
+		return fmt.Errorf("Failed to enable root LB", "error", err)
+	}
+
+	err = WaitForRootLB(fqdn)
+	if err != nil {
+		return fmt.Errorf("Error waiting for rootLB", "error", err)
+	}
+
 	client, err := GetSSHClient(fqdn, eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
@@ -755,6 +779,7 @@ func RemoveMEXAgent(fqdn string) error {
 			}
 		}
 	}
+	//TODO remove mex-k8s  internal nets and router
 
 	return nil
 }
@@ -832,18 +857,18 @@ func ActivateFQDNA(fqdn string) error {
 		return fmt.Errorf("cannot get dns records for %s, %v", fqdn, err)
 	}
 
-	found := false
+	addr, err := GetServerIPAddr(eMEXExternalNetwork, fqdn)
+
 	for _, d := range dr {
 		if d.Type == "A" && d.Name == fqdn {
-			found = true
+			if d.Content == addr {
+				return nil
+			} else {
+				log.Infof("cloudflare A record has different address %v, not %s", d, addr)
+			}
 			break
 		}
 	}
-	if found {
-		return nil
-	}
-
-	addr, err := GetServerIPAddr(eMEXExternalNetwork, fqdn)
 
 	if err != nil {
 		return err
@@ -941,6 +966,15 @@ func CopyKubeConfig(rootLB, name string) error {
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy kubeconfig from %s, %s, %v", name, out, err)
+	}
+	cmd = fmt.Sprintf("cat kubeconfig-%s", name)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can't cat kubeconfig-%s, %s, %v", name, out, err)
+	}
+	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-"+name, []byte(out), 0666)
+	if err != nil {
+		return fmt.Errorf("can't write kubeconfig-%s content,%v", name, err)
 	}
 	return nil
 }

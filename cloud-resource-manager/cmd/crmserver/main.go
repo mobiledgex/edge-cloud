@@ -63,17 +63,11 @@ func main() {
 		go func() {
 			rootLB := crmutil.GetRootLBName()
 
-			err := crmutil.EnableRootLB(rootLB)
+			err = crmutil.RunMEXAgent(rootLB, false)
 			if err != nil {
-				log.FatalLog("Failed to enable root LB", "error", err)
+				log.FatalLog("Error running MEX Agent", "error", err)
+				os.Exit(1)
 			}
-
-			err = crmutil.WaitForRootLB(rootLB)
-			if err != nil {
-				log.FatalLog("Error waiting for rootLB")
-				os.Exit(1) //XXX FatalLog does not exit?!
-			}
-			crmutil.RunMEXAgent(rootLB, false)
 		}()
 	}
 
