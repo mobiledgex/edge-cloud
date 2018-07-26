@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -29,6 +32,7 @@ func (s *AppInstInfoApi) ShowAppInstInfo(in *edgeproto.AppInstInfo, cb edgeproto
 
 func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, notifyId int64) {
 	if !appInstApi.HasKey(in.GetKey()) {
+		fmt.Printf("app inst not found %v\n", in.GetKey())
 		return
 	}
 	// for now assume all fields have been specified
@@ -36,9 +40,8 @@ func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, notifyId int64) {
 	s.store.Put(in, nil)
 }
 
-func (s *AppInstInfoApi) Del(key *edgeproto.AppInstKey, wait func(int64)) {
-	in := edgeproto.AppInstInfo{Key: *key}
-	s.store.Delete(&in, wait)
+func (s *AppInstInfoApi) internalDelete(stm concurrency.STM, key *edgeproto.AppInstKey) {
+	s.store.STMDel(stm, key)
 }
 
 // Delete for notify never actually deletes the data

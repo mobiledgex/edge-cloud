@@ -350,3 +350,34 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	ctrlapi.Close()
 	return rc
 }
+
+func RunControllerInfoAPI(api, ctrlname, apiFile, outputDir string) bool {
+	log.Printf("Showing info structs via APIs\n")
+
+	ctrl := util.GetController(ctrlname)
+	errFound := false
+
+	var showCmds = []string{
+		"clusterInstInfos: ShowClusterInstInfo",
+		"appInstInfos: ShowAppInstInfo",
+	}
+	for i, c := range showCmds {
+		label := strings.Split(c, " ")[0]
+		cmdstr := strings.Split(c, " ")[1]
+		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr)
+		log.Printf("generating output for %s\n", label)
+		out, _ := cmd.CombinedOutput()
+		truncate := false
+		//truncate the file for the first command output, afterwards append
+		if i == 0 {
+			truncate = true
+		}
+		//edgectl returns exitcode 0 even if it cannot connect, so look for the error
+		if strings.Contains(string(out), cmdstr+" failed") {
+			log.Printf("Found failure in show output\n")
+			errFound = true
+		}
+		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+string(out)+"\n", truncate)
+	}
+	return !errFound
+}

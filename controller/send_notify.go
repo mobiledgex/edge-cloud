@@ -12,6 +12,7 @@ func NewNotifyHandler() *notify.DefaultHandler {
 	handler.SendAppInst = &appInstApi
 	handler.SendCloudlet = &cloudletApi
 	handler.RecvAppInstInfo = &appInstInfoApi
+	handler.RecvClusterInstInfo = &clusterInstInfoApi
 	handler.RecvCloudletInfo = &cloudletInfoApi
 	return &handler
 }

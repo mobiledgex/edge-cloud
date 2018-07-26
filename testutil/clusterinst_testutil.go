@@ -213,3 +213,113 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	assert.NotNil(t, err, "Create ClusterInst with no key info")
 
 }
+
+// Auto-generated code: DO NOT EDIT
+
+type ShowClusterInstInfo struct {
+	Data map[string]edgeproto.ClusterInstInfo
+	grpc.ServerStream
+}
+
+func (x *ShowClusterInstInfo) Init() {
+	x.Data = make(map[string]edgeproto.ClusterInstInfo)
+}
+
+func (x *ShowClusterInstInfo) Send(m *edgeproto.ClusterInstInfo) error {
+	x.Data[m.Key.GetKeyString()] = *m
+	return nil
+}
+
+func (x *ShowClusterInstInfo) ReadStream(stream edgeproto.ClusterInstInfoApi_ShowClusterInstInfoClient, err error) {
+	x.Data = make(map[string]edgeproto.ClusterInstInfo)
+	if err != nil {
+		return
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			break
+		}
+		x.Data[obj.Key.GetKeyString()] = *obj
+	}
+}
+
+func (x *ShowClusterInstInfo) CheckFound(obj *edgeproto.ClusterInstInfo) bool {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	return found
+}
+
+func (x *ShowClusterInstInfo) AssertFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
+	check, found := x.Data[obj.Key.GetKeyString()]
+	assert.True(t, found, "find ClusterInstInfo %s", obj.Key.GetKeyString())
+	if found && !check.MatchesIgnoreBackend(obj) {
+		assert.Equal(t, *obj, check, "ClusterInstInfo are equal")
+	}
+}
+
+func (x *ShowClusterInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
+	_, found := x.Data[obj.Key.GetKeyString()]
+	assert.False(t, found, "do not find ClusterInstInfo %s", obj.Key.GetKeyString())
+}
+
+func WaitAssertFoundClusterInstInfo(t *testing.T, api edgeproto.ClusterInstInfoApiClient, obj *edgeproto.ClusterInstInfo, count int, retry time.Duration) {
+	show := ShowClusterInstInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowClusterInstInfo(ctx, obj)
+		show.ReadStream(stream, err)
+		cancel()
+		if show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertFound(t, obj)
+}
+
+func WaitAssertNotFoundClusterInstInfo(t *testing.T, api edgeproto.ClusterInstInfoApiClient, obj *edgeproto.ClusterInstInfo, count int, retry time.Duration) {
+	show := ShowClusterInstInfo{}
+	filterNone := edgeproto.ClusterInstInfo{}
+	for ii := 0; ii < count; ii++ {
+		ctx, cancel := context.WithTimeout(context.Background(), retry)
+		stream, err := api.ShowClusterInstInfo(ctx, &filterNone)
+		show.ReadStream(stream, err)
+		cancel()
+		if !show.CheckFound(obj) {
+			break
+		}
+		time.Sleep(retry)
+	}
+	show.AssertNotFound(t, obj)
+}
+
+// Wrap the api with a common interface
+type ClusterInstInfoCommonApi struct {
+	internal_api edgeproto.ClusterInstInfoApiServer
+	client_api   edgeproto.ClusterInstInfoApiClient
+}
+
+func (x *ClusterInstInfoCommonApi) ShowClusterInstInfo(ctx context.Context, filter *edgeproto.ClusterInstInfo, showData *ShowClusterInstInfo) error {
+	if x.internal_api != nil {
+		return x.internal_api.ShowClusterInstInfo(filter, showData)
+	} else {
+		stream, err := x.client_api.ShowClusterInstInfo(ctx, filter)
+		showData.ReadStream(stream, err)
+		return err
+	}
+}
+
+func NewInternalClusterInstInfoApi(api edgeproto.ClusterInstInfoApiServer) *ClusterInstInfoCommonApi {
+	apiWrap := ClusterInstInfoCommonApi{}
+	apiWrap.internal_api = api
+	return &apiWrap
+}
+
+func NewClientClusterInstInfoApi(api edgeproto.ClusterInstInfoApiClient) *ClusterInstInfoCommonApi {
+	apiWrap := ClusterInstInfoCommonApi{}
+	apiWrap.client_api = api
+	return &apiWrap
+}

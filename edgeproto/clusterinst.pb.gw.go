@@ -88,6 +88,27 @@ func request_ClusterInstApi_ShowClusterInst_0(ctx context.Context, marshaler run
 
 }
 
+func request_ClusterInstInfoApi_ShowClusterInstInfo_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstInfoApiClient, req *http.Request, pathParams map[string]string) (ClusterInstInfoApi_ShowClusterInstInfoClient, runtime.ServerMetadata, error) {
+	var protoReq ClusterInstInfo
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowClusterInstInfo(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
 // RegisterClusterInstApiHandlerFromEndpoint is same as RegisterClusterInstApiHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterClusterInstApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -263,4 +284,82 @@ var (
 	forward_ClusterInstApi_UpdateClusterInst_0 = runtime.ForwardResponseMessage
 
 	forward_ClusterInstApi_ShowClusterInst_0 = runtime.ForwardResponseStream
+)
+
+// RegisterClusterInstInfoApiHandlerFromEndpoint is same as RegisterClusterInstInfoApiHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterClusterInstInfoApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterClusterInstInfoApiHandler(ctx, mux, conn)
+}
+
+// RegisterClusterInstInfoApiHandler registers the http handlers for service ClusterInstInfoApi to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterClusterInstInfoApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterClusterInstInfoApiHandlerClient(ctx, mux, NewClusterInstInfoApiClient(conn))
+}
+
+// RegisterClusterInstInfoApiHandler registers the http handlers for service ClusterInstInfoApi to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "ClusterInstInfoApiClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "ClusterInstInfoApiClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "ClusterInstInfoApiClient" to call the correct interceptors.
+func RegisterClusterInstInfoApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client ClusterInstInfoApiClient) error {
+
+	mux.Handle("POST", pattern_ClusterInstInfoApi_ShowClusterInstInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_ClusterInstInfoApi_ShowClusterInstInfo_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_ClusterInstInfoApi_ShowClusterInstInfo_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_ClusterInstInfoApi_ShowClusterInstInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "clusterinstinfo"}, ""))
+)
+
+var (
+	forward_ClusterInstInfoApi_ShowClusterInstInfo_0 = runtime.ForwardResponseStream
 )

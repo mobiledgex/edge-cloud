@@ -2,18 +2,19 @@ package crmutil
 
 import (
 	"fmt"
+
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
 )
 
 type ControllerData struct {
-	AppInstCache      edgeproto.AppInstCache
-	CloudletCache     edgeproto.CloudletCache
-	FlavorCache       edgeproto.FlavorCache
-	ClusterInstCache  edgeproto.ClusterInstCache
-	AppInstInfoCache  edgeproto.AppInstInfoCache
-	CloudletInfoCache edgeproto.CloudletInfoCache
+	AppInstCache         edgeproto.AppInstCache
+	CloudletCache        edgeproto.CloudletCache
+	FlavorCache          edgeproto.FlavorCache
+	ClusterInstCache     edgeproto.ClusterInstCache
+	AppInstInfoCache     edgeproto.AppInstInfoCache
+	CloudletInfoCache    edgeproto.CloudletInfoCache
+	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 }
 
 // NewControllerData creates a new instance to track data from the controller
@@ -22,6 +23,7 @@ func NewControllerData() *ControllerData {
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
+	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
@@ -34,15 +36,11 @@ func NewControllerData() *ControllerData {
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
 func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
-	// limits, err := oscli.GetLimits()
-	// for _, limit := range limits {
-	// // add info to cloudletInfo
-
 	limits, err := oscli.GetLimits()
 	if err != nil {
-		//XXX No way to return error
-		// And no log.ErrorLog()
-		log.InfoLog("Error: can't get openstack limits, %v", err)
+		str := fmt.Sprintf("Openstack get limits failed: %s", err)
+		info.Errors = append(info.Errors, str)
+		info.State = edgeproto.CloudletState_CloudletStateErrors
 		return
 	}
 
@@ -56,13 +54,9 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 			info.OsMaxVolGb = uint64(l.Value)
 		}
 	}
-
-	// for now, fake it.
-	//info.OsMaxVcores = 50
-	//info.OsMaxRam = 500
-	//info.OsMaxVolGb = 5000
 	// Is the cloudlet ready at this point?
-	info.State = edgeproto.CloudletState_Ready
+	info.Errors = nil
+	info.State = edgeproto.CloudletState_CloudletStateReady
 }
 
 // Note: these callback functions are called in the context of
@@ -75,39 +69,42 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
 	if found {
 		// create or update k8s cluster on this cloudlet
+		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
-			log.InfoLog("Error: did not find flavor for cluster",
-				"cluster", clusterInst)
-			//XXX no way to send error back to controller
+			str := fmt.Sprintf("Did not find flavor %s",
+				clusterInst.Flavor.Name)
+			cd.clusterInstInfoError(key, str)
 			return
 		}
-		log.InfoLog("TODO: implement cluster create/update for",
-			"cluster", clusterInst)
 
-		if IsValidMEXOSEnv {
-			go func() {
-				err := CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
-				if err != nil {
-					log.InfoLog("Error: failed to create cluster instance", "error", err, "cluster", clusterInst)
-					return
-				}
-				//XXX no way to return results
-			}()
-		}
+		go func() {
+			var err error = nil
+			if IsValidMEXOSEnv {
+				err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
+			}
+			if err != nil {
+				str := fmt.Sprintf("Create failed: %s", err)
+				cd.clusterInstInfoError(key, str)
+			} else {
+				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
+			}
+		}()
 	} else {
 		// clusterInst was deleted
-		log.InfoLog("TODO: implement cluster delete for", "key", key)
-		if IsValidMEXOSEnv {
-			go func() {
-				err := DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
-				if err != nil {
-					log.InfoLog("Error: can't delete cluster %v, %v", key, err)
-				}
-				//XXX no way to return results
-			}()
-		}
+		go func() {
+			var err error = nil
+			if IsValidMEXOSEnv {
+				err = DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
+			}
+			if err != nil {
+				str := fmt.Sprintf("Delete failed: %s", err)
+				cd.clusterInstInfoError(key, str)
+			} else {
+				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
+			}
+		}()
 	}
 }
 
@@ -116,64 +113,70 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 	found := cd.AppInstCache.Get(key, &appInst)
 	if found {
 		// create or update appInst
+		cd.appInstInfoState(key, edgeproto.AppState_AppStateBuilding)
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&appInst.Flavor, &flavor)
 		if !flavorFound {
-			log.InfoLog("Error: did not find flavor for appInst",
-				"appInst", appInst)
+			str := fmt.Sprintf("Flavor %s not found",
+				appInst.Flavor.Name)
+			cd.appInstInfoError(key, str)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
-			log.InfoLog("Error: did not find clusterInst for appInst",
-				"appInst", appInst)
+			str := fmt.Sprintf("Cluster instance %s not found",
+				appInst.ClusterInstKey.ClusterKey.Name)
+			cd.appInstInfoError(key, str)
 			return
 		}
-		log.InfoLog("TODO: implement appInst create/update for",
-			"appInst", appInst)
 
-		if IsValidMEXOSEnv {
-			go func() {
-				imagetype, err := convertImageType(int(appInst.ImageType))
-				if err != nil {
-					log.InfoLog("Error: invalid image type", "imagetype", appInst.ImageType, "error", err)
-					return
-				}
+		go func() {
+			imagetype, err := convertImageType(int(appInst.ImageType))
+			if err != nil {
+				str := fmt.Sprintf("Invalid image type: %s", err)
+				cd.appInstInfoError(key, str)
+				return
+			}
 
-				//XXX no way to pass Kubernetes deployment, service, yaml, etc.
-				//XXX not sure what appInst.Flavor is
+			//XXX no way to pass Kubernetes deployment, service, yaml, etc.
+			//XXX not sure what appInst.Flavor is
 
-				switch imagetype {
-				case "docker":
-					//Controller missing or not passing information:
-					//XXX possibly incorrectly named ImagePath seems to be the only
-					//  entry that can be used to specify docker image name.
-					//XXX appData has AccessLayer but appInst does not.
-					//   al, err := convertAccessLayer(appInst.AccessLayer)
-					//XXX no registry specification.
-					//XXX no namespace specification.
-					//XXX MappedPorts and MappedPath are strings but they can contain
-					//     multiple entries. Format is not clear.
+			switch imagetype {
+			case "docker":
+				//Controller missing or not passing information:
+				//XXX possibly incorrectly named ImagePath seems to be the only
+				//  entry that can be used to specify docker image name.
+				//XXX appData has AccessLayer but appInst does not.
+				//   al, err := convertAccessLayer(appInst.AccessLayer)
+				//XXX no registry specification.
+				//XXX no namespace specification.
+				//XXX MappedPorts and MappedPath are strings but they can contain
+				//     multiple entries. Format is not clear.
 
-					err := CreateDockerApp(GetRootLBName(),
+				var err error = nil
+				if IsValidMEXOSEnv {
+					err = CreateDockerApp(GetRootLBName(),
 						appInst.Key.AppKey.Name, clusterInst.Key.ClusterKey.Name, appInst.Flavor.Name,
 						"docker.io", appInst.Uri, appInst.ImagePath, appInst.MappedPorts, appInst.MappedPath, "unknown")
-					if err != nil {
-						log.InfoLog("Error: can't create app", "error", err)
-						return
-					}
-				default:
-					log.InfoLog("Error: unknown image type")
 				}
+				if err != nil {
+					str := fmt.Sprintf("Create failed: %s", err)
+					cd.appInstInfoError(key, str)
+					return
+				}
+			default:
+				str := "Unknown image type"
+				cd.appInstInfoError(key, str)
+				return
+			}
 
-				//XXX no way to return results
-			}()
-		}
+			cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
+		}()
 	} else {
 		// appInst was deleted
-		log.InfoLog("TODO: implement appInst delete for",
-			"key", key)
+		cd.appInstInfoError(key, "Delete not implemented yet")
+		// TODO: implement me
 	}
 }
 
@@ -189,4 +192,44 @@ func convertImageType(imageType int) (string, error) {
 	//XXX no kubernetes types, deployment, rc, rs, svc, po
 
 	return "", fmt.Errorf("unknown")
+}
+
+func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, err string) {
+	info := edgeproto.ClusterInstInfo{}
+	if !cd.ClusterInstInfoCache.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = append(info.Errors, err)
+	info.State = edgeproto.ClusterState_ClusterStateErrors
+	cd.ClusterInstInfoCache.Update(&info, 0)
+}
+
+func (cd *ControllerData) clusterInstInfoState(key *edgeproto.ClusterInstKey, state edgeproto.ClusterState) {
+	info := edgeproto.ClusterInstInfo{}
+	if !cd.ClusterInstInfoCache.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = nil
+	info.State = state
+	cd.ClusterInstInfoCache.Update(&info, 0)
+}
+
+func (cd *ControllerData) appInstInfoError(key *edgeproto.AppInstKey, err string) {
+	info := edgeproto.AppInstInfo{}
+	if !cd.AppInstInfoCache.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = append(info.Errors, err)
+	info.State = edgeproto.AppState_AppStateErrors
+	cd.AppInstInfoCache.Update(&info, 0)
+}
+
+func (cd *ControllerData) appInstInfoState(key *edgeproto.AppInstKey, state edgeproto.AppState) {
+	info := edgeproto.AppInstInfo{}
+	if !cd.AppInstInfoCache.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = nil
+	info.State = state
+	cd.AppInstInfoCache.Update(&info, 0)
 }

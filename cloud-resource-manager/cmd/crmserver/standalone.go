@@ -118,3 +118,11 @@ func (s *standaloneServer) ShowAppInstInfo(in *edgeproto.AppInstInfo, cb edgepro
 	})
 	return err
 }
+
+func (s *standaloneServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, cb edgeproto.ClusterInstInfoApi_ShowClusterInstInfoServer) error {
+	err := s.data.ClusterInstInfoCache.Show(in, func(obj *edgeproto.ClusterInstInfo) error {
+		err := cb.Send(obj)
+		return err
+	})
+	return err
+}
