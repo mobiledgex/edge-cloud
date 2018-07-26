@@ -251,7 +251,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	//construct master node name
 	id := 1
-	kvmname := fmt.Sprintf("mex-k8s-master-%d-%s-%s", id, name, guid.String())
+	kvmname := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SMaster, id, name, guid.String())
 
 	err = oscli.CreateMEXKVM(kvmname, "k8s-master", netSpec, tags, tenant, id)
 	if err != nil {
@@ -260,7 +260,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	for i := 1; i <= cf.NumNodes; i++ {
 		//construct node name
-		kvmnodename := fmt.Sprintf("mex-k8s-node-%d-%s-%s", i, name, guid.String())
+		kvmnodename := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SNode, i, name, guid.String())
 
 		err = oscli.CreateMEXKVM(kvmnodename, "k8s-node", netSpec, tags, tenant, i)
 		if err != nil {
@@ -355,7 +355,7 @@ func GetInternalIP(name string) (string, error) {
 	}
 	its := strings.Split(sd.Addresses, "=")
 	if len(its) != 2 {
-		return "", fmt.Errorf("can't parse server detail addresses, %s, %v", sd.Addresses, err)
+		return "", fmt.Errorf("GetInternalIP: can't parse server detail addresses, %v, %v", sd, err)
 	}
 
 	return its[1], nil
@@ -461,7 +461,7 @@ func DeleteClusterByName(rootLB, name string) error {
 	log.Debugln("servers", srvs)
 	for _, s := range srvs {
 		if strings.Index(s.Name, name) > 0 {
-			if strings.Index(s.Name, "mex-k8s-master") >= 0 {
+			if strings.Index(s.Name, eMEXK8SMaster) >= 0 {
 				err := LBRemoveRoute(rootLB, s.Name)
 				if err != nil {
 					err = fmt.Errorf("failed remove route for %s, %v", s.Name, err)
@@ -573,6 +573,9 @@ func EnableRootLB(rootLB string) error {
 		if err != nil {
 			return err
 		}
+		log.Debugln("created %s", rootLB)
+	} else {
+		log.Debugln("reusing %s", rootLB)
 	}
 
 	return nil
@@ -588,7 +591,7 @@ func GetServerIPAddr(networkName, serverName string) (string, error) {
 	}
 	its := strings.Split(sd.Addresses, "=")
 	if len(its) != 2 {
-		return "", fmt.Errorf("can't parse server detail addresses, %s, %v", sd.Addresses, err)
+		return "", fmt.Errorf("GetServerIPAddr: can't parse server detail addresses, %v, %v", sd, err)
 	}
 
 	if its[0] != networkName {
@@ -606,7 +609,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 	}
 
 	kf := eMEXDir + "/" + eMEXSSHKey
-	out, err := sh.Command("scp", "-i", kf, kf, "root@"+addr+":").Output()
+	out, err := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, kf, "root@"+addr+":").Output()
 	if err != nil {
 		return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
 	}
@@ -864,7 +867,10 @@ func ActivateFQDNA(fqdn string) error {
 			if d.Content == addr {
 				return nil
 			} else {
-				log.Infof("cloudflare A record has different address %v, not %s", d, addr)
+				log.Warningf("cloudflare A record has different address %v, not %s, it will be overwritten", d, addr)
+				if err := cloudflare.DeleteDNSRecord(eMEXZone, d.ID); err != nil {
+					return fmt.Errorf("can't delete DNS record for %s, %v", fqdn, err)
+				}
 			}
 			break
 		}
