@@ -33,6 +33,8 @@ var commandList = []string{
 }
 
 func main() {
+	flag.Parse()
+
 	if len(os.Args) < 2 {
 		printHelpAndExit()
 	}
