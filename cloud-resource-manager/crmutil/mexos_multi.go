@@ -8,17 +8,24 @@ import (
 	log "gitlab.com/bobbae/logrus"
 )
 
+const (
+	mexOSKubernetes = "mex-openstack-kubernetes"
+	gcloudGKE       = "gcloud-gke"
+	azureAKS        = "azure-aks"
+)
+
+//ClusterCreate creates a cluster
 func ClusterCreate(mf *Manifest) {
 	log.Debugf("creating cluster, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		if err := CreateCluster(mf.Spec.RootLB, mf.Spec.Flavor, mf.Metadata.Name,
 			mf.Spec.Networks[0].Kind+","+mf.Spec.Networks[0].Name+","+mf.Spec.Networks[0].CIDR,
 			mf.Metadata.Tags, mf.Metadata.Tenant); err != nil {
 			log.Fatalf("can't create cluster, %v", err)
 		}
-	case "gcloud-gke":
+	case gcloudGKE:
 		if err := gcloud.SetProject(mf.Metadata.Project); err != nil {
 			log.Fatal(err)
 		}
@@ -31,7 +38,7 @@ func ClusterCreate(mf *Manifest) {
 		if err := gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "azure-aks":
+	case azureAKS:
 		if err := azure.CreateResourceGroup(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
 			log.Fatal(err)
 		}
@@ -45,19 +52,20 @@ func ClusterCreate(mf *Manifest) {
 	log.Println("created cluster", mf)
 }
 
+//ClusterRemove removes a cluster
 func ClusterRemove(mf *Manifest) {
 	log.Debugf("removing cluster, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		if err := DeleteClusterByName(mf.Spec.RootLB, mf.Metadata.Name); err != nil {
 			log.Fatalf("can't remove cluster, %v", err)
 		}
-	case "gcloud-gke":
+	case gcloudGKE:
 		if err := gcloud.DeleteGKECluster(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "azure-aks":
+	case azureAKS:
 		if err := azure.DeleteAKSCluster(mf.Metadata.ResourceGroup); err != nil {
 			log.Fatal(err)
 		}
@@ -66,6 +74,7 @@ func ClusterRemove(mf *Manifest) {
 	log.Println("removed cluster", mf)
 }
 
+//SetEnvVars sets up environment vars and checks for credentials required for running
 func SetEnvVars(mf *Manifest) {
 	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
 	// TODO: use `secrets` or `vault`
@@ -83,13 +92,27 @@ func SetEnvVars(mf *Manifest) {
 		log.Fatalln("no MEX_DOCKER_REG_PASS")
 	}
 
-	os.Setenv("MEX_ROOT_LB", mf.Metadata.Name)
-	os.Setenv("MEX_AGENT_IMAGE", mf.Spec.Agent.Image)
-	os.Setenv("MEX_ZONE", mf.Metadata.DNSZone)
-	os.Setenv("MEX_EXT_NETWORK", mf.Spec.ExternalNetwork)
-	os.Setenv("MEX_NETWORK", mf.Spec.InternalNetwork)
-	os.Setenv("MEX_EXT_ROUTER", mf.Spec.ExternalRouter)
-	os.Setenv("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry)
+	if err := os.Setenv("MEX_ROOT_LB", mf.Metadata.Name); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_AGENT_IMAGE", mf.Spec.Agent.Image); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_ZONE", mf.Metadata.DNSZone); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_EXT_NETWORK", mf.Spec.ExternalNetwork); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_NETWORK", mf.Spec.InternalNetwork); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_EXT_ROUTER", mf.Spec.ExternalRouter); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry); err != nil {
+		log.Fatal(err)
+	}
 
 	log.Debugln("MEX_ROOT_LB", mf.Metadata.Name)
 	log.Debugln("MEX_AGENT_IMAGE", mf.Spec.Agent.Image)
@@ -100,31 +123,33 @@ func SetEnvVars(mf *Manifest) {
 	log.Debugln("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry)
 }
 
+//PlatformInit initializes platform
 func PlatformInit(mf *Manifest) {
 	log.Debugf("init platform, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		SetEnvVars(mf)
 		if err := RunMEXAgent(mf.Metadata.Name, false); err != nil {
 			log.Fatal(err)
 		}
-	case "gcloud-gke":
-	case "azure-aks":
+	case gcloudGKE:
+	case azureAKS:
 	}
 }
 
+//PlatformClean cleans up the platform
 func PlatformClean(mf *Manifest) {
 	log.Debugf("clean platform, %v", mf)
 
 	switch mf.Kind {
 
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		SetEnvVars(mf)
 		if err := RemoveMEXAgent(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "gcloud-gke":
-	case "azure-aks":
+	case gcloudGKE:
+	case azureAKS:
 	}
 }

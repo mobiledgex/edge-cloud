@@ -7,10 +7,12 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 )
 
+//OpenstackServerArgs lists args required for server API on openstack
 type OpenstackServerArgs struct {
 	Region, Name, Image, Flavor, Network string
 }
 
+//GetOpenstackClient gets handle for openstack client
 func GetOpenstackClient(region string) (*gophercloud.ServiceClient, error) {
 	authOpts, err := openstack.AuthOptionsFromEnv()
 	if err != nil {

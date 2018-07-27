@@ -7,6 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+//ControllerData contains cache data for controller
 type ControllerData struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
@@ -80,7 +81,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		}
 
 		go func() {
-			var err error = nil
+			var err error
 			if IsValidMEXOSEnv {
 				err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
 			}
@@ -94,7 +95,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 	} else {
 		// clusterInst was deleted
 		go func() {
-			var err error = nil
+			var err error
 			if IsValidMEXOSEnv {
 				err = DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
 			}
@@ -154,7 +155,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 				//XXX MappedPorts and MappedPath are strings but they can contain
 				//     multiple entries. Format is not clear.
 
-				var err error = nil
+				var err error
 				if IsValidMEXOSEnv {
 					err = CreateDockerApp(GetRootLBName(),
 						appInst.Key.AppKey.Name, clusterInst.Key.ClusterKey.Name, appInst.Flavor.Name,

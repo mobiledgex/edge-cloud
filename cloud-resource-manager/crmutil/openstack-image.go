@@ -5,6 +5,7 @@ import (
 	"github.com/gophercloud/gophercloud/openstack/imageservice/v2/images"
 )
 
+//OpenstackImageArgs lists args that are part of openstack image data
 type OpenstackImageArgs struct {
 	Name            string
 	ID              string
@@ -18,6 +19,7 @@ type OpenstackImageArgs struct {
 	Properties      map[string]string
 }
 
+//CreateOpenstackImage creates data in the image database in openstack glance
 func CreateOpenstackImage(client *gophercloud.ServiceClient,
 	args *OpenstackImageArgs) error {
 	res := images.Create(client, images.CreateOpts{

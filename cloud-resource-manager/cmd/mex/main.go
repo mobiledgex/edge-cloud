@@ -53,7 +53,9 @@ func main() {
 	debug := mainflag.Bool("debug", false, "debugging")
 	help := mainflag.Bool("help", false, "help")
 
-	mainflag.Parse(os.Args[1:])
+	if err := mainflag.Parse(os.Args[1:]); err != nil {
+		log.Fatalln("parse error", err)
+	}
 
 	if *help {
 		printUsage()
@@ -107,7 +109,11 @@ func manifestHandler(kind string, args []string) {
 
 	cmd := args[0]
 	args = args[1:]
-	subflags.Parse(args)
+
+	if err := subflags.Parse(args); err != nil {
+		log.Fatalln("parse error", err)
+	}
+
 	log.Debugln(kind, cmd, args)
 
 	if *manifest == "" {
