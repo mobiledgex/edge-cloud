@@ -7,6 +7,7 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -99,28 +100,23 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
 
+	// make sure cluster inst exists.
+	// This is a separate STM to avoid ordering issues between
+	// auto-clusterinst create and appinst create in watch cb.
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, in.GetKey(), nil) {
 			return objstore.ErrKVStoreKeyExists
 		}
-
-		// cache location of cloudlet in app inst
-		var cloudlet edgeproto.Cloudlet
-		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+		// make sure cloudlet exists
+		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, nil) {
 			return errors.New("Specified cloudlet not found")
 		}
-		in.CloudletLoc = cloudlet.Location
 
-		// cache app path in app inst
+		// find cluster from app
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return errors.New("Specified app not found")
 		}
-		in.ImagePath = app.ImagePath
-		in.ImageType = app.ImageType
-		in.ConfigMap = app.ConfigMap
-		in.AccessLayer = app.AccessLayer
-		in.Flavor = app.Flavor
 
 		// CloudletKey is duplicated in both the ClusterInstKey and the
 		// AppInstKey. It's inconsistent to create an AppInst on a ClusterInst
@@ -146,6 +142,47 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 			if err != nil {
 				return err
 			}
+			log.DebugLog(log.DebugLevelApi,
+				"Create auto-clusterinst",
+				"key", clusterInst.Key,
+				"appinst", in)
+		}
+		return nil
+	})
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	defer func() {
+		if err != nil {
+			s.deleteClusterInstAuto(&in.ClusterInstKey)
+		}
+	}()
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if s.store.STMGet(stm, in.GetKey(), nil) {
+			return objstore.ErrKVStoreKeyExists
+		}
+
+		// cache location of cloudlet in app inst
+		var cloudlet edgeproto.Cloudlet
+		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+			return errors.New("Specified cloudlet not found")
+		}
+		in.CloudletLoc = cloudlet.Location
+
+		// cache app path in app inst
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return errors.New("Specified app not found")
+		}
+		in.ImagePath = app.ImagePath
+		in.ImageType = app.ImageType
+		in.ConfigMap = app.ConfigMap
+		in.AccessLayer = app.AccessLayer
+		in.Flavor = app.Flavor
+
+		if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
+			return errors.New("Cluster instance does not exist for app")
 		}
 
 		// set up URI for this instance
@@ -179,23 +216,39 @@ func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (
 }
 
 func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		appinst := edgeproto.AppInst{}
 		if !s.store.STMGet(stm, in.GetKey(), &appinst) {
 			// already deleted
 			return nil
 		}
+		clusterInstKey = appinst.ClusterInstKey
 		// delete associated info
 		appInstInfoApi.internalDelete(stm, in.GetKey())
-		// if cluster inst was auto-created, delete it as well
-		clusterInst := edgeproto.ClusterInst{}
-		if clusterInstApi.store.STMGet(stm, &appinst.ClusterInstKey, &clusterInst) && clusterInst.Auto {
-			clusterInstApi.store.STMDel(stm, &appinst.ClusterInstKey)
-		}
+		// delete app inst
 		s.store.STMDel(stm, in.GetKey())
 		return nil
 	})
+	if err == nil {
+		// delete clusterinst afterwards if it was auto-created
+		s.deleteClusterInstAuto(&clusterInstKey)
+	}
 	return &edgeproto.Result{}, err
+}
+
+func (s *AppInstApi) deleteClusterInstAuto(key *edgeproto.ClusterInstKey) {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		clusterInst := edgeproto.ClusterInst{}
+		if clusterInstApi.store.STMGet(stm, key, &clusterInst) && clusterInst.Auto {
+			clusterInstApi.store.STMDel(stm, key)
+		}
+		return nil
+	})
+	if err != nil {
+		log.InfoLog("Failed to delete auto cluster inst",
+			"clusterInst", key, "err", err)
+	}
 }
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {

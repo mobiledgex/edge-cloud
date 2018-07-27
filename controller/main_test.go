@@ -40,7 +40,7 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 }
 
 func TestController(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
 
 	os.Args = append(os.Args, "-localEtcd")
 

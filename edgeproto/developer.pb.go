@@ -760,14 +760,20 @@ func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 }
 
 func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
+	notify := make(map[DeveloperKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }
