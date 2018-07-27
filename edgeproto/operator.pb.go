@@ -743,14 +743,20 @@ func (c *OperatorCache) Delete(in *Operator, rev int64) {
 }
 
 func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
+	notify := make(map[OperatorKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }

@@ -53,6 +53,10 @@ type KVStore interface {
 	// Unfortunately the way etcd sets this up, there's no way to wrap
 	// the STM with an objstore-specific interface, so we're stuck exactly
 	// implementing the etcd-specific interface.
+	// Important: Etcd apparently does not honor the order in which
+	// multiple puts appear within an apply func, at least for watch
+	// callbacks (perhaps because they all have the same revision ID).
+	// If ordering is important, do not use multiple puts in the same STM.
 	ApplySTM(apply func(concurrency.STM) error) (int64, error)
 }
 

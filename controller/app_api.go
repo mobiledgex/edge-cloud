@@ -73,6 +73,7 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 }
 
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	var err error
 	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
 		return &edgeproto.Result{}, errors.New("Please specify Image Type")
 	}
@@ -89,17 +90,15 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			util.DockerSanitize(in.Key.Name) + ":" +
 			util.DockerSanitize(in.Key.Version)
 	}
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
-			return errors.New("Specified developer not found")
-		}
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return errors.New("Specified flavor not found")
-		}
-		if s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyExists
-		}
-		if in.Cluster.Name == "" {
+
+	// make sure cluster exists
+	// This is a separate STM to avoid ordering issues between
+	// auto-cluster create and app create in watch cb.
+	if in.Cluster.Name == "" {
+		err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+			if s.store.STMGet(stm, &in.Key, nil) {
+				return objstore.ErrKVStoreKeyExists
+			}
 			// cluster not specified, create one automatically
 			in.Cluster.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix,
 				in.Key.Name)
@@ -111,9 +110,35 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			cluster.Auto = true
 			// it may be possible that cluster already exists
 			if !clusterApi.store.STMGet(stm, &cluster.Key, nil) {
+				log.DebugLog(log.DebugLevelApi,
+					"Create auto-cluster",
+					"key", cluster.Key,
+					"app", in)
 				clusterApi.store.STMPut(stm, &cluster)
 			}
-		} else if !clusterApi.store.STMGet(stm, &in.Cluster, nil) {
+			return nil
+		})
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+		defer func() {
+			if err != nil {
+				s.deleteClusterAuto(&in.Cluster)
+			}
+		}()
+	}
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
+			return errors.New("Specified developer not found")
+		}
+		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
+			return errors.New("Specified flavor not found")
+		}
+		if s.store.STMGet(stm, &in.Key, nil) {
+			return objstore.ErrKVStoreKeyExists
+		}
+		if !clusterApi.store.STMGet(stm, &in.Cluster, nil) {
 			return errors.New("Specified Cluster not found")
 		}
 		s.store.STMPut(stm, in)
@@ -132,21 +157,22 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}
+	clusterKey := edgeproto.ClusterKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		app := edgeproto.App{}
 		if !s.store.STMGet(stm, in.GetKey(), &app) {
 			// already deleted
 			return nil
 		}
-		// if cluster was auto-created, delete it as well
-		cluster := edgeproto.Cluster{}
-		if clusterApi.store.STMGet(stm, &app.Cluster, &cluster) &&
-			cluster.Auto {
-			clusterApi.store.STMDel(stm, &app.Cluster)
-		}
+		clusterKey = app.Cluster
+		// delete app
 		s.store.STMDel(stm, in.GetKey())
 		return nil
 	})
+	if err == nil {
+		// delete cluster afterwards if it was auto-created
+		s.deleteClusterAuto(&clusterKey)
+	}
 	if err == nil && len(dynInsts) > 0 {
 		// delete dynamic instances
 		for key, _ := range dynInsts {
@@ -160,6 +186,20 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 	}
 	return &edgeproto.Result{}, err
+}
+
+func (s *AppApi) deleteClusterAuto(key *edgeproto.ClusterKey) {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		cluster := edgeproto.Cluster{}
+		if clusterApi.store.STMGet(stm, key, &cluster) && cluster.Auto {
+			clusterApi.store.STMDel(stm, key)
+		}
+		return nil
+	})
+	if err != nil {
+		log.InfoLog("Failed to delete auto cluster",
+			"clusterInst", key, "err", err)
+	}
 }
 
 func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {

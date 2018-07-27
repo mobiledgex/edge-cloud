@@ -45,7 +45,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)
-		assert.Nil(t, err, "Create app")
+		assert.Nil(t, err, "Create app %v", obj)
 	}
 	for _, obj := range testutil.OperatorData {
 		_, err := operatorApi.CreateOperator(ctx, &obj)

@@ -43,7 +43,7 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
-		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr)
+		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr, "--hidetags", "nocmp")
 		log.Printf("generating output for %s\n", label)
 		out, _ := cmd.CombinedOutput()
 		truncate := false
@@ -364,7 +364,7 @@ func RunControllerInfoAPI(api, ctrlname, apiFile, outputDir string) bool {
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
-		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr)
+		cmd := exec.Command("edgectl", "--addr", ctrl.ApiAddr, "controller", cmdstr, "--hidetags", "nocmp")
 		log.Printf("generating output for %s\n", label)
 		out, _ := cmd.CombinedOutput()
 		truncate := false

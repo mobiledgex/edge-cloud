@@ -33,9 +33,20 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	m["1/1/12323445"] = "app3"
 	var expRev int64 = 1
 	var rev int64
+	var err error
 
 	syncCheck := NewSyncCheck(t, objStore)
 	defer syncCheck.Stop()
+
+	// check what happens if no put is called
+	// no change is made to database, function returns current revision.
+	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+		stm.Get("foo")
+		stm.Get("bar")
+		return nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, expRev, rev, "revision")
 
 	// test create
 	for key, val := range m {
@@ -45,7 +56,7 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 		assert.Equal(t, expRev, rev, "revision")
 		syncCheck.Expect(t, key, val, expRev)
 	}
-	_, err := objStore.Create(key1, val1)
+	_, err = objStore.Create(key1, val1)
 	assert.Equal(t, objstore.ErrKVStoreKeyExists, err, "Create object that already exists")
 
 	// test get and list
@@ -261,6 +272,16 @@ func testCalls(t *testing.T, objStore objstore.KVStore) {
 	assert.NotNil(t, err)
 	val, _, _, err = objStore.Get(k2)
 	assert.NotNil(t, err)
+
+	// check what happens if no put is called
+	// no change is made to database, function returns current revision.
+	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {
+		stm.Get(k1)
+		stm.Get(k2)
+		return nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, expRev, rev, "revision")
 
 	// check that get after put succeeds
 	rev, err = objStore.ApplySTM(func(stm concurrency.STM) error {

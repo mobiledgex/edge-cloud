@@ -32,6 +32,7 @@ type GenCmd struct {
 	fieldTmpl          *template.Template
 	inMessages         map[string]*generator.Descriptor
 	enumArgs           map[string][]*EnumArg
+	hideTags           map[string]struct{}
 	importTime         bool
 	importStrconv      bool
 	importStrings      bool
@@ -44,6 +45,7 @@ type GenCmd struct {
 	importPflag        bool
 	importErrors       bool
 	importOutputGen    bool
+	importCmdSup       bool
 }
 
 func (g *GenCmd) Name() string {
@@ -92,9 +94,12 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 		g.PrintImport("", "errors")
 	}
 	if g.importOutputGen {
+		g.importCmdSup = true
 		g.PrintImport("", "encoding/json")
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
 		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml")
+	}
+	if g.importCmdSup {
+		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
 	}
 }
 
@@ -113,8 +118,10 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.importPflag = false
 	g.importErrors = false
 	g.importOutputGen = false
+	g.importCmdSup = false
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
+	g.hideTags = make(map[string]struct{})
 	g.packageName = *file.FileDescriptorProto.Package
 	g.support.InitFile()
 
@@ -139,6 +146,18 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		g.generateSlicer(desc)
+	}
+
+	// Generate hidetags functions
+	for _, desc := range file.Messages() {
+		if desc.File() != file.FileDescriptorProto {
+			continue
+		}
+		visited := make([]*generator.Descriptor, 0)
+		if g.hasHideTags(desc, visited) {
+			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
+			g.generateHideTags(desc)
+		}
 	}
 
 	// Generate cobra command definitions
@@ -221,6 +240,89 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		g.generateParseEnums(msgName, enumList)
 	}
 	gensupport.RunParseCheck(g.Generator, file)
+}
+
+func (g *GenCmd) hasHideTags(desc *generator.Descriptor, visited []*generator.Descriptor) bool {
+	if gensupport.WasVisited(desc, visited) {
+		return false
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := g.GetDesc(field.GetTypeName())
+			if g.hasHideTags(subDesc, append(visited, desc)) {
+				return true
+			}
+		}
+		if GetHideTag(field) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *GenCmd) generateHideTags(desc *generator.Descriptor) {
+	msgName := desc.DescriptorProto.Name
+	g.P("func ", msgName, "HideTags(in *", g.FQTypeName(desc), ") {")
+	g.P("if cmdsup.HideTags == \"\" { return }")
+	g.P("tags := make(map[string]struct{})")
+	g.P("for _, tag := range strings.Split(cmdsup.HideTags, \",\") {")
+	g.P("tags[tag] = struct{}{}")
+	g.P("}")
+	visited := make([]*generator.Descriptor, 0)
+	g.generateHideTagFields(make([]string, 0), desc, visited)
+	g.P("}")
+	g.P()
+	g.importStrings = true
+	g.importCmdSup = true
+}
+
+func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	if gensupport.WasVisited(desc, visited) {
+		return
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if !supportedField(field) {
+			continue
+		}
+		tag := GetHideTag(field)
+		if tag == "" {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		hierField := strings.Join(append(parents, name), ".")
+
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			idx := ""
+			if gensupport.IsRepeated(field) {
+				ii := fmt.Sprintf("i%d", len(parents))
+				g.P("for ", ii, " := 0; ", ii, " < len(in.", hierField, "); ", ii, "++ {")
+				idx = "[" + ii + "]"
+			}
+			subDesc := g.GetDesc(field.GetTypeName())
+			g.generateHideTagFields(append(parents, name+idx),
+				subDesc, append(visited, desc))
+			if gensupport.IsRepeated(field) {
+				g.P("}")
+			}
+		} else {
+			val := "0"
+			if gensupport.IsRepeated(field) {
+				val = "nil"
+			} else {
+				switch *field.Type {
+				case descriptor.FieldDescriptorProto_TYPE_BOOL:
+					val = "false"
+				case descriptor.FieldDescriptorProto_TYPE_BYTES:
+					val = "nil"
+				}
+			}
+			g.P("if _, found := tags[\"", tag, "\"]; found {")
+			g.P("in.", hierField, " = ", val)
+			g.P("}")
+		}
+	}
 }
 
 func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
@@ -655,6 +757,7 @@ type tmplArgs struct {
 	ServerStream bool
 	HasEnums     bool
 	SetFields    bool
+	OutHideTags  bool
 }
 
 var tmpl = `
@@ -695,6 +798,9 @@ var {{.Method}}Cmd = &cobra.Command{
 				fmt.Println("{{.Method}} recv failed: ", err)
 				break
 			}
+{{- if .OutHideTags}}
+			{{.OutType}}HideTags(obj)
+{{- end}}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
@@ -707,6 +813,9 @@ var {{.Method}}Cmd = &cobra.Command{
 			fmt.Println("{{.Method}} failed: ", err)
 			return
 		}
+{{- if .OutHideTags}}
+		{{.OutType}}HideTags(objs)
+{{- end}}
 {{- end}}
 		switch cmdsup.OutputFormat {
 		case cmdsup.OutputFormatYaml:
@@ -748,6 +857,7 @@ var {{.Method}}Cmd = &cobra.Command{
 
 func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) bool {
 	in := g.GetDesc(method.GetInputType())
+	out := g.GetDesc(method.GetOutputType())
 	if in == nil || clientStreaming(method) || hasOneof(in) {
 		// not supported yet
 		return false
@@ -766,12 +876,15 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		Method:       *method.Name,
 		InType:       g.flatTypeName(*method.InputType),
 		OutType:      g.flatTypeName(*method.OutputType),
-		FQOutType:    g.FQTypeName(g.GetDesc(*method.OutputType)),
+		FQOutType:    g.FQTypeName(out),
 		ServerStream: serverStreaming(method),
 		HasEnums:     hasEnums,
 	}
 	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && HasGrpcFields(in.DescriptorProto) {
 		cmd.SetFields = true
+	}
+	if _, found := g.hideTags[*out.DescriptorProto.Name]; found {
+		cmd.OutHideTags = true
 	}
 	if cmd.ServerStream {
 		g.importIO = true
@@ -897,4 +1010,8 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 
 func GetNoConfig(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protocmd.E_Noconfig, "")
+}
+
+func GetHideTag(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
 }
