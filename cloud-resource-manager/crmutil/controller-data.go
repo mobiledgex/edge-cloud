@@ -76,6 +76,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		// XXX why check flavor every time?
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
+			//XXX returning flavor not found error to InstInfoError?
 			cd.clusterInstInfoError(key, fmt.Sprintf("Did not find flavor %s", clusterInst.Flavor.Name))
 			return
 		}
@@ -89,9 +90,15 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 			}
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
+				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
+				//   It should have rigorous format to discern errors, whether flavor or cloudlet error.
 			} else {
 				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
 				fmt.Println(*guid) //XXX No way to return this or any other details
+			}
+			err = AddFlavor(flavor.Key.Name)
+			if err != nil {
+				cd.clusterInstInfoError(key, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
 			}
 		}()
 	} else {
