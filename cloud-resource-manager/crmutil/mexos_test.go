@@ -2,9 +2,11 @@ package crmutil
 
 import (
 	"fmt"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 var FlavorData = []edgeproto.Flavor{
@@ -118,10 +120,12 @@ func TestCreateClusterFromClusterInstData(t *testing.T) {
 	TestAddFlavor(t)
 
 	for _, c := range ClusterInstData {
-		err := CreateClusterFromClusterInstData(eRootLBName, &c)
+		guid, err := CreateClusterFromClusterInstData(eRootLBName, &c)
 		if err != nil {
 			t.Error(err)
+			return
 		}
+		fmt.Println(*guid)
 	}
 }
 
@@ -311,6 +315,35 @@ func TestGetKubernetesConfigmapYAML(t *testing.T) {
 
 	if err != nil {
 		t.Error(err)
+		return
 	}
 	fmt.Println(out)
+}
+
+var kcname = "kubeconfig-mex-k8s-master-1-testPoke-bdd3pmpvu8hu8kcqjni0"
+
+func TestStartKubectlProxy(t *testing.T) {
+	if !IsValidMEXOSTest {
+		return
+	}
+	err := StartKubectlProxy(eRootLBName, kcname)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestProcessKubeconfig(t *testing.T) {
+	if !IsValidMEXOSTest {
+		return
+	}
+	dat, err := ioutil.ReadFile(eMEXDir + "/" + kcname)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	err = ProcessKubeconfig(kcname, dat)
+	if err != nil {
+		t.Error(err)
+		return
+	}
 }
