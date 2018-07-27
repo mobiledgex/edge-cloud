@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ghodss/yaml"
 	"github.com/rs/xid"
 
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
@@ -183,7 +184,7 @@ func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 }
 
 //CreateClusterFromClusterInstData uses clusterInst data to create cluster
-func CreateClusterFromClusterInstData(rootLB string, c *edgeproto.ClusterInst) error {
+func CreateClusterFromClusterInstData(rootLB string, c *edgeproto.ClusterInst) (*string, error) {
 	flavor := c.Flavor.Name
 	name := c.Key.ClusterKey.Name
 	netSpec := ""                 // not available from controller
@@ -200,27 +201,27 @@ func CreateClusterFromClusterInstData(rootLB string, c *edgeproto.ClusterInst) e
 }
 
 //CreateCluster creates a cluster of nodes. It can take a while, so call from a goroutine.
-func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
+func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) (*string, error) {
 	if flavor == "" {
-		return fmt.Errorf("empty flavor")
+		return nil, fmt.Errorf("empty flavor")
 	}
 
 	if err := ValidateFlavor(flavor); err != nil {
-		return fmt.Errorf("invalid flavor")
+		return nil, fmt.Errorf("invalid flavor")
 	}
 	//XXX we only support x1.medium for now
 
 	if !IsFlavorSupported(flavor) {
-		return fmt.Errorf("unsupported flavor")
+		return nil, fmt.Errorf("unsupported flavor")
 	}
 
 	cf, err := GetClusterFlavor(flavor)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if cf.NumNodes < 1 {
-		return fmt.Errorf("invalid flavor profile, %v", cf)
+		return nil, fmt.Errorf("invalid flavor profile, %v", cf)
 	}
 
 	if netSpec == "" {
@@ -230,11 +231,11 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	ni, err := oscli.ParseNetSpec(netSpec)
 	if err != nil {
-		return fmt.Errorf("invalid netSpec, %v", err)
+		return nil, fmt.Errorf("invalid netSpec, %v", err)
 	}
 
 	if ni.Kind != "priv-subnet" {
-		return fmt.Errorf("unsupported netSpec kind")
+		return nil, fmt.Errorf("unsupported netSpec kind")
 		// XXX for now
 	}
 
@@ -251,46 +252,46 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	err = ValidateTenant(tenant)
 	if err != nil {
-		return fmt.Errorf("can't validate tenant, %v", err)
+		return nil, fmt.Errorf("can't validate tenant, %v", err)
 	}
 
 	err = ValidateTags(tags)
 	if err != nil {
-		return fmt.Errorf("invalid tag, %v", err)
+		return nil, fmt.Errorf("invalid tag, %v", err)
 	}
 
 	//XXX should check for quota, permissions, access control, etc. here
 	//       but we don't have sufficient information from above layer
 
-	guid := xid.New()
+	guid := xid.New().String()
 
 	//construct master node name
 	id := 1
-	kvmname := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SMaster, id, name, guid.String())
+	kvmname := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SMaster, id, name, guid)
 
 	err = oscli.CreateMEXKVM(kvmname, "k8s-master", netSpec, tags, tenant, id)
 	if err != nil {
-		return fmt.Errorf("can't create k8s master, %v", err)
+		return nil, fmt.Errorf("can't create k8s master, %v", err)
 	}
 
 	for i := 1; i <= cf.NumNodes; i++ {
 		//construct node name
-		kvmnodename := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SNode, i, name, guid.String())
+		kvmnodename := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SNode, i, name, guid)
 
 		err = oscli.CreateMEXKVM(kvmnodename, "k8s-node", netSpec, tags, tenant, i)
 		if err != nil {
-			return fmt.Errorf("can't create k8s master, %v", err)
+			return nil, fmt.Errorf("can't create k8s master, %v", err)
 		}
 	}
 
 	//If RootLB is not running yet, then the following will fail.
 
 	if err = LBAddRoute(rootLB, kvmname); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = oscli.SetServerProperty(kvmname, "mex-flavor="+flavor); err != nil {
-		return err
+		return nil, err
 	}
 
 	ready := false
@@ -298,7 +299,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 	for i := 0; i < 10; i++ {
 		ready, err = IsClusterReady(rootLB, kvmname, flavor)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if ready {
 			break
@@ -308,10 +309,10 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 	}
 
 	if !ready {
-		return fmt.Errorf("cluster not ready (yet)")
+		return nil, fmt.Errorf("cluster not ready (yet)")
 	}
 
-	return nil
+	return &guid, nil
 }
 
 //LBAddRoute adds a route to LB
@@ -1008,6 +1009,46 @@ func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 	return true, nil
 }
 
+type clusterDetailKc struct {
+	CertificateAuthorityData string `json:"certificate-authority-data"`
+	Server                   string `json:"server"`
+}
+
+type clusterKc struct {
+	Name    string          `json:"name"`
+	Cluster clusterDetailKc `json:"cluster"`
+}
+
+type clusterKcContextDetail struct {
+	Cluster string `json:"cluster"`
+	User    string `json:"user"`
+}
+
+type clusterKcContext struct {
+	Name    string                 `json:"name"`
+	Context clusterKcContextDetail `json:"context"`
+}
+
+type clusterKcUserDetail struct {
+	ClientCertificateData string `json:"client-certificate-data"`
+	ClientKeyData         string `json:"client-key-data"`
+}
+
+type clusterKcUser struct {
+	Name string              `json:"name"`
+	User clusterKcUserDetail `json:"user"`
+}
+
+type clusterKubeconfig struct {
+	APIVersion     string             `json:"apiVersion"`
+	Kind           string             `json:"kind"`
+	CurrentContext string             `json:"current-context"`
+	Users          []clusterKcUser    `json:"users"`
+	Clusters       []clusterKc        `json:"clusters"`
+	Contexts       []clusterKcContext `json:"contexts"`
+	//XXX Missing preferences
+}
+
 //CopyKubeConfig copies over kubeconfig from the cluster
 func CopyKubeConfig(rootLB, name string) error {
 	ipaddr, err := FindNodeIP(name)
@@ -1029,9 +1070,35 @@ func CopyKubeConfig(rootLB, name string) error {
 	if err != nil {
 		return fmt.Errorf("can't cat kubeconfig-%s, %s, %v", name, out, err)
 	}
-	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-"+name, []byte(out), 0666)
+	return ProcessKubeconfig(name, []byte(out))
+}
+
+//ProcessKubeconfig validates kubeconfig and saves it and creates a copy for proxy access
+func ProcessKubeconfig(name string, dat []byte) error {
+	kc := &clusterKubeconfig{}
+	err := yaml.Unmarshal(dat, kc)
 	if err != nil {
-		return fmt.Errorf("can't write kubeconfig-%s content,%v", name, err)
+		return fmt.Errorf("can't unmarshal kubeconfig %s, %v", name, err)
+	}
+	if len(kc.Clusters) < 1 {
+		return fmt.Errorf("insufficient clusters info in kubeconfig %s", name)
+	}
+
+	log.Debugln("kubeconfig", kc)
+
+	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-"+name, dat, 0666)
+	if err != nil {
+		return fmt.Errorf("can't write kubeconfig %s content,%v", name, err)
+	}
+
+	kc.Clusters[0].Cluster.Server = "http://" + eRootLBName + ":8001" //XXX allow for more ports
+	dat, err = yaml.Marshal(kc)
+	if err != nil {
+		return fmt.Errorf("can't marshal kubeconfig proxy edit %s, %v", name, err)
+	}
+	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-proxy-"+name, dat, 0666)
+	if err != nil {
+		return fmt.Errorf("can't write kubeconfig proxy %s, %v", name, err)
 	}
 	return nil
 }
@@ -1346,4 +1413,36 @@ func AddPathReverseProxy(rootLB, path, origin string) []error {
 	errs = append(errs, fmt.Errorf("resp %v, body %s", resp, body))
 
 	return errs
+}
+
+//StartKubectlProxy starts kubectl proxy on the rootLB to handle kubectl commands remotely.
+//  To be called after copying over the kubeconfig file from cluster to rootLB.
+func StartKubectlProxy(rootLB, kubeconfig string) error {
+	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	if err != nil {
+		return err
+	}
+
+	//XXX --port for multiple kubectl proxy
+	cmd := fmt.Sprintf("kubectl proxy  --accept-hosts='.*' --address='0.0.0.0' --kubeconfig=%s ", kubeconfig)
+
+	//Use .Start() because we don't want to hang
+	cl1, cl2, err := client.Start(cmd)
+	if err != nil {
+		return fmt.Errorf("error running kubectl proxy, %s,  %v", cmd, err)
+	}
+	cl1.Close() //nolint
+	cl2.Close() //nolint
+
+	time.Sleep(10 * time.Second)
+
+	//verify
+	cmd = fmt.Sprintf("ps ax |grep %s", kubeconfig)
+	out, outerr := client.Output(cmd)
+	if outerr != nil {
+		return fmt.Errorf("error verifying kubectl proxy, %s, %v", out, outerr)
+	}
+	log.Debugln("kubectl", out)
+
+	return nil
 }
