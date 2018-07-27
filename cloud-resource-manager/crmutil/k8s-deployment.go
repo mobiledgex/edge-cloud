@@ -16,6 +16,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
+//Kubeconfig contains kubernetes config file path
 var Kubeconfig *string
 
 func init() {

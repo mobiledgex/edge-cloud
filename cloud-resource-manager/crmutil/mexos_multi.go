@@ -8,6 +8,7 @@ import (
 	log "gitlab.com/bobbae/logrus"
 )
 
+//ClusterCreate creates a cluster
 func ClusterCreate(mf *Manifest) {
 	log.Debugf("creating cluster, %v", mf)
 
@@ -45,6 +46,7 @@ func ClusterCreate(mf *Manifest) {
 	log.Println("created cluster", mf)
 }
 
+//ClusterRemove removes a cluster
 func ClusterRemove(mf *Manifest) {
 	log.Debugf("removing cluster, %v", mf)
 
@@ -66,6 +68,7 @@ func ClusterRemove(mf *Manifest) {
 	log.Println("removed cluster", mf)
 }
 
+//SetEnvVars sets up environment vars and checks for credentials required for running
 func SetEnvVars(mf *Manifest) {
 	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
 	// TODO: use `secrets` or `vault`
@@ -83,13 +86,27 @@ func SetEnvVars(mf *Manifest) {
 		log.Fatalln("no MEX_DOCKER_REG_PASS")
 	}
 
-	os.Setenv("MEX_ROOT_LB", mf.Metadata.Name)
-	os.Setenv("MEX_AGENT_IMAGE", mf.Spec.Agent.Image)
-	os.Setenv("MEX_ZONE", mf.Metadata.DNSZone)
-	os.Setenv("MEX_EXT_NETWORK", mf.Spec.ExternalNetwork)
-	os.Setenv("MEX_NETWORK", mf.Spec.InternalNetwork)
-	os.Setenv("MEX_EXT_ROUTER", mf.Spec.ExternalRouter)
-	os.Setenv("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry)
+	if err := os.Setenv("MEX_ROOT_LB", mf.Metadata.Name); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_AGENT_IMAGE", mf.Spec.Agent.Image); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_ZONE", mf.Metadata.DNSZone); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_EXT_NETWORK", mf.Spec.ExternalNetwork); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_NETWORK", mf.Spec.InternalNetwork); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_EXT_ROUTER", mf.Spec.ExternalRouter); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry); err != nil {
+		log.Fatal(err)
+	}
 
 	log.Debugln("MEX_ROOT_LB", mf.Metadata.Name)
 	log.Debugln("MEX_AGENT_IMAGE", mf.Spec.Agent.Image)
@@ -100,6 +117,7 @@ func SetEnvVars(mf *Manifest) {
 	log.Debugln("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry)
 }
 
+//PlatformInit initializes platform
 func PlatformInit(mf *Manifest) {
 	log.Debugf("init platform, %v", mf)
 
@@ -114,6 +132,7 @@ func PlatformInit(mf *Manifest) {
 	}
 }
 
+//PlatformClean cleans up the platform
 func PlatformClean(mf *Manifest) {
 	log.Debugf("clean platform, %v", mf)
 

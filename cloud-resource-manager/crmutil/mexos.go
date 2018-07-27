@@ -58,6 +58,7 @@ var eMEXDockerRegPass = os.Getenv("MEX_DOCKER_REG_PASS")
 //   Nor is there a way to return the IP address or DNS name. Or even know if it needs a DNS name.
 //   No ability to open ports, redirect or set up any kind of reverse proxy control.  etc.
 
+//ClusterFlavor contains definitions of cluster flavor
 type ClusterFlavor struct {
 	Type           string
 	Name           string
@@ -87,20 +88,24 @@ type ClusterFlavor struct {
 //  gluster,glusterv3-ext,param1,opt1,extra1
 //  postgres-cluster,post-v3,param1,opt1,extra1
 
+//ClusterNodeFlavor contains details of flavor for the node
 type ClusterNodeFlavor struct {
 	Type string
 	Name string
 }
 
+//ClusterMasterFlavor contains details of flavor for the master node
 type ClusterMasterFlavor struct {
 	Type string
 	Name string
 }
 
+//ValidClusterFlavors lists all valid flavor names
 var ValidClusterFlavors = []string{
 	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
 }
 
+//AvailableClusterFlavors lists currently available flavors
 var AvailableClusterFlavors = []*ClusterFlavor{
 	&ClusterFlavor{
 		Name:           "x1.medium",
@@ -116,8 +121,10 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 	},
 }
 
+//IsValidMEXOSEnv caches the validity of the env
 var IsValidMEXOSEnv = false
 
+//ValidateMEXOSEnv makes sure the environment is valid for mexos
 func ValidateMEXOSEnv(osEnvValid bool) bool {
 	if osEnvValid == false {
 		return false
@@ -128,6 +135,7 @@ func ValidateMEXOSEnv(osEnvValid bool) bool {
 	return IsValidMEXOSEnv
 }
 
+//AddFlavor adds a new flavor to be kept track of
 func AddFlavor(flavor string) error {
 	if err := ValidateFlavor(flavor); err != nil {
 		return fmt.Errorf("invalid flavor")
@@ -154,6 +162,7 @@ func AddFlavor(flavor string) error {
 	return nil
 }
 
+//GetClusterFlavor returns the flavor of the cluster
 func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 	for _, f := range AvailableClusterFlavors {
 		if flavor == f.Name {
@@ -168,6 +177,7 @@ func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 	return nil, fmt.Errorf("flavor does not exist")
 }
 
+//CreateClusterFromClusterInstData uses clusterInst data to create cluster
 func CreateClusterFromClusterInstData(rootLB string, c *edgeproto.ClusterInst) error {
 	flavor := c.Flavor.Name
 	name := c.Key.ClusterKey.Name
@@ -270,11 +280,11 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	//If RootLB is not running yet, then the following will fail.
 
-	if err := LBAddRoute(rootLB, kvmname); err != nil {
+	if err = LBAddRoute(rootLB, kvmname); err != nil {
 		return err
 	}
 
-	if err := oscli.SetServerProperty(kvmname, "mex-flavor="+flavor); err != nil {
+	if err = oscli.SetServerProperty(kvmname, "mex-flavor="+flavor); err != nil {
 		return err
 	}
 
@@ -296,6 +306,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 	return nil
 }
 
+//LBAddRoute adds a route to LB
 func LBAddRoute(rootLB, name string) error {
 	if rootLB == "" {
 		return fmt.Errorf("empty rootLB")
@@ -324,6 +335,7 @@ func LBAddRoute(rootLB, name string) error {
 	return nil
 }
 
+//LBRemoveRoute removes route for LB
 func LBRemoveRoute(rootLB, name string) error {
 	ap, err := LBGetRoute(rootLB, name)
 	if err != nil {
@@ -348,6 +360,7 @@ func LBRemoveRoute(rootLB, name string) error {
 	return nil
 }
 
+//GetInternalIP returns IP of the server
 func GetInternalIP(name string) (string, error) {
 	sd, err := oscli.GetServerDetails(name)
 	if err != nil {
@@ -361,6 +374,7 @@ func GetInternalIP(name string) (string, error) {
 	return its[1], nil
 }
 
+//GetInternalCIDR returns CIDR of server
 func GetInternalCIDR(name string) (string, error) {
 	addr, err := GetInternalIP(name)
 
@@ -373,6 +387,7 @@ func GetInternalCIDR(name string) (string, error) {
 	return cidr, nil
 }
 
+//LBGetRoute returns route of LB
 func LBGetRoute(rootLB, name string) ([]string, error) {
 	cidr, err := GetInternalCIDR(name)
 	if err != nil {
@@ -404,6 +419,7 @@ func LBGetRoute(rootLB, name string) ([]string, error) {
 	return []string{dn, fip.IPAddress}, nil
 }
 
+//ValidateNetSpec parses and validates the netSpec
 func ValidateNetSpec(netSpec string) error {
 	if netSpec == "" {
 		return fmt.Errorf("empty netspec")
@@ -411,6 +427,7 @@ func ValidateNetSpec(netSpec string) error {
 	return nil
 }
 
+//ValidateTags parses and validates tags
 func ValidateTags(tags string) error {
 	if tags == "" {
 		return fmt.Errorf("empty tags")
@@ -418,6 +435,7 @@ func ValidateTags(tags string) error {
 	return nil
 }
 
+//ValidateTenant parses and validates tenant
 func ValidateTenant(tenant string) error {
 	if tenant == "" {
 		return fmt.Errorf("emtpy tenant")
@@ -425,6 +443,7 @@ func ValidateTenant(tenant string) error {
 	return nil
 }
 
+//ValidateFlavor parses and validates flavor
 func ValidateFlavor(flavor string) error {
 	if flavor == "" {
 		return fmt.Errorf("empty flavor")
@@ -439,6 +458,7 @@ func ValidateFlavor(flavor string) error {
 	return fmt.Errorf("invalid flavor")
 }
 
+//IsFlavorSupported checks whether flavor is supported currently
 func IsFlavorSupported(flavor string) bool {
 	if flavor == "x1.medium" {
 		return true
@@ -447,6 +467,7 @@ func IsFlavorSupported(flavor string) bool {
 	return false
 }
 
+//DeleteClusterByName remove cluster by name
 func DeleteClusterByName(rootLB, name string) error {
 	// The ClusterKey name + random-string (generated at creation time) should be passed here.
 
@@ -462,7 +483,7 @@ func DeleteClusterByName(rootLB, name string) error {
 	for _, s := range srvs {
 		if strings.Index(s.Name, name) > 0 {
 			if strings.Index(s.Name, eMEXK8SMaster) >= 0 {
-				err := LBRemoveRoute(rootLB, s.Name)
+				err = LBRemoveRoute(rootLB, s.Name)
 				if err != nil {
 					err = fmt.Errorf("failed remove route for %s, %v", s.Name, err)
 					log.Debugln(err)
@@ -470,7 +491,7 @@ func DeleteClusterByName(rootLB, name string) error {
 				}
 			}
 			log.Debugln("delete server", s.Name)
-			err := oscli.DeleteServer(s.Name)
+			err = oscli.DeleteServer(s.Name)
 			if err != nil {
 				log.Debugln(err)
 				return err
@@ -508,6 +529,7 @@ func DeleteClusterByName(rootLB, name string) error {
 	return nil
 }
 
+//InitEnvVars sets up environment
 func InitEnvVars() {
 	dockerRegistry := os.Getenv("MEX_DOCKER_REGISTRY")
 	if dockerRegistry != "" {
@@ -583,6 +605,7 @@ func EnableRootLB(rootLB string) error {
 
 //XXX allow creating more than one LB
 
+//GetServerIPAddr gets the server IP
 func GetServerIPAddr(networkName, serverName string) (string, error) {
 	//sd, err := oscli.GetServerDetails(rootLB)
 	sd, err := oscli.GetServerDetails(serverName)
@@ -602,6 +625,7 @@ func GetServerIPAddr(networkName, serverName string) (string, error) {
 	return addr, nil
 }
 
+//CopySSHCredential copies over the ssh credential for mex to LB
 func CopySSHCredential(serverName, networkName, userName string) error {
 	addr, err := GetServerIPAddr(networkName, serverName)
 	if err != nil {
@@ -616,6 +640,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 	return nil
 }
 
+//GetSSHClient returns ssh client handle for the server
 func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) {
 	auth := ssh.Auth{Keys: []string{eMEXDir + "/id_rsa_mobiledgex"}}
 
@@ -632,6 +657,7 @@ func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) 
 	return client, nil
 }
 
+//GetRootLBName returns default rootLB name
 func GetRootLBName() string {
 	return eRootLBName
 }
@@ -668,6 +694,7 @@ func WaitForRootLB(rootLB string) error {
 	return nil
 }
 
+//InitDockerMachine preps docker-machine for use with docker command
 func InitDockerMachine(rootLB, addr string) error {
 	home := os.Getenv("HOME")
 
@@ -676,10 +703,18 @@ func InitDockerMachine(rootLB, addr string) error {
 		return err
 	}
 
-	os.Setenv("DOCKER_TLS_VERIFY", "1")
-	os.Setenv("DOCKER_HOST", "tcp://"+addr+":2376")
-	os.Setenv("DOCKER_CERT_PATH", home+"/.docker/machine/machines/"+rootLB)
-	os.Setenv("DOCKER_MACHINE_NAME", rootLB)
+	if err := os.Setenv("DOCKER_TLS_VERIFY", "1"); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("DOCKER_HOST", "tcp://"+addr+":2376"); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("DOCKER_CERT_PATH", home+"/.docker/machine/machines/"+rootLB); err != nil {
+		log.Fatal(err)
+	}
+	if err := os.Setenv("DOCKER_MACHINE_NAME", rootLB); err != nil {
+		log.Fatal(err)
+	}
 
 	return nil
 }
@@ -715,7 +750,7 @@ func RunMEXAgent(fqdn string, pull bool) error {
 		return nil
 	}
 
-	if err := ActivateFQDNA(fqdn); err != nil {
+	if err = ActivateFQDNA(fqdn); err != nil {
 		return err
 	}
 
@@ -748,6 +783,7 @@ func RunMEXAgent(fqdn string, pull bool) error {
 	return nil
 }
 
+//UpdateMEXAgent upgrades the mex agent
 func UpdateMEXAgent(fqdn string) error {
 	err := RemoveMEXAgent(fqdn)
 	if err != nil {
@@ -763,6 +799,7 @@ func UpdateMEXAgent(fqdn string) error {
 	return nil
 }
 
+//RemoveMEXAgent deletes mex agent docker instance
 func RemoveMEXAgent(fqdn string) error {
 	err := oscli.DeleteServer(fqdn)
 	if err != nil {
@@ -817,7 +854,7 @@ func AcquireCertificates(fqdn string) error {
 
 	success := false
 	for i := 0; i < 10; i++ {
-		_, err := client.Output(cmd)
+		_, err = client.Output(cmd)
 		if err == nil {
 			success = true
 			break
@@ -843,6 +880,7 @@ func AcquireCertificates(fqdn string) error {
 	return nil
 }
 
+//ActivateFQDNA updates and ensures FQDN is registered properly
 func ActivateFQDNA(fqdn string) error {
 	if eCFKey == "" {
 		return fmt.Errorf("no MEX_CF_KEY")
@@ -866,11 +904,10 @@ func ActivateFQDNA(fqdn string) error {
 		if d.Type == "A" && d.Name == fqdn {
 			if d.Content == addr {
 				return nil
-			} else {
-				log.Warningf("cloudflare A record has different address %v, not %s, it will be overwritten", d, addr)
-				if err := cloudflare.DeleteDNSRecord(eMEXZone, d.ID); err != nil {
-					return fmt.Errorf("can't delete DNS record for %s, %v", fqdn, err)
-				}
+			}
+			log.Warningf("cloudflare A record has different address %v, not %s, it will be overwritten", d, addr)
+			if err = cloudflare.DeleteDNSRecord(eMEXZone, d.ID); err != nil {
+				return fmt.Errorf("can't delete DNS record for %s, %v", fqdn, err)
 			}
 			break
 		}
@@ -894,13 +931,23 @@ func copyFile(src, dst string) error {
 	if err != nil {
 		return err
 	}
-	defer in.Close()
+	defer func() {
+		err = in.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	out, err := os.Create(dst)
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		err = out.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	_, err = io.Copy(out, in)
 	if err != nil {
@@ -909,6 +956,7 @@ func copyFile(src, dst string) error {
 	return out.Close()
 }
 
+//IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 	if flavor == "" {
 		return false, fmt.Errorf("empty flavor")
@@ -958,6 +1006,7 @@ func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 	return true, nil
 }
 
+//CopyKubeConfig copies over kubeconfig from the cluster
 func CopyKubeConfig(rootLB, name string) error {
 	ipaddr, err := FindNodeIP(name)
 	if err != nil {
@@ -985,6 +1034,7 @@ func CopyKubeConfig(rootLB, name string) error {
 	return nil
 }
 
+//FindNodeIP finds IP for the given node
 func FindNodeIP(name string) (string, error) {
 	if name == "" {
 		return "", fmt.Errorf("empty name")
@@ -1006,6 +1056,7 @@ func FindNodeIP(name string) (string, error) {
 	return "", fmt.Errorf("node %s not found", name)
 }
 
+//FindClusterWithKey finds cluster given a key string
 func FindClusterWithKey(key string) (string, error) {
 	if key == "" {
 		return "", fmt.Errorf("empty key")
@@ -1023,6 +1074,7 @@ func FindClusterWithKey(key string) (string, error) {
 	return "", fmt.Errorf("key %s not found", key)
 }
 
+//CreateKubernetesApp instantiates a new kubernetes deployment
 func CreateKubernetesApp(rootLB, clustername, deployment, manifest string) error {
 	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, clustername, manifest)
 	if err != nil {
@@ -1064,6 +1116,7 @@ func CreateKubernetesApp(rootLB, clustername, deployment, manifest string) error
 
 //TODO `helm` support
 
+//ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB, clustername, manifest string) (string, ssh.Client, string, error) {
 	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
 	if err != nil {
@@ -1090,6 +1143,7 @@ func ValidateKubernetesParameters(rootLB, clustername, manifest string) (string,
 	return kubeconfig, client, ipaddr, nil
 }
 
+//KubernetesApplyManifest does `apply` on the manifest yaml
 func KubernetesApplyManifest(rootLB, clustername, manifest string) error {
 	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, clustername, manifest)
 	if err != nil {
@@ -1105,6 +1159,7 @@ func KubernetesApplyManifest(rootLB, clustername, manifest string) error {
 	return nil
 }
 
+//CreateKubernetesNamespace creates a new namespace in kubernetes
 func CreateKubernetesNamespace(rootLB, clustername, manifest string) error {
 	err := KubernetesApplyManifest(rootLB, clustername, manifest)
 	if err != nil {
@@ -1120,6 +1175,7 @@ func CreateKubernetesNamespace(rootLB, clustername, manifest string) error {
 
 //TODO allow configmap creation from files
 
+//SetKubernetesConfigmapValues sets a key-value in kubernetes configmap
 func SetKubernetesConfigmapValues(rootLB, clustername, configname string, keyvalues ...string) error {
 	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, clustername, "")
 	if err != nil {
@@ -1150,6 +1206,7 @@ func SetKubernetesConfigmapValues(rootLB, clustername, configname string, keyval
 //func GetKubernetesConfigmapValues(rootLB, clustername, configname string) (map[string]string, error) {
 //}
 
+//GetKubernetesConfigmapYAML returns yaml reprentation of the key-values
 func GetKubernetesConfigmapYAML(rootLB, clustername, configname string) (string, error) {
 	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, clustername, "")
 	if err != nil {
@@ -1170,6 +1227,7 @@ func GetKubernetesConfigmapYAML(rootLB, clustername, configname string) (string,
 
 //TODO support https://github.com/bitnami-labs/kubewatch
 
+//CreateDockerApp creates an app stricly just plain docker, not kubernetes
 func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri, imagename, mports, mpaths, accesslayer string) error {
 	if appname == "" {
 		return fmt.Errorf("emptyh app name")
@@ -1258,6 +1316,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 
 //TODO docker logs
 
+//AddPathReverseProxy adds a new route to origin on the reverse proxy
 func AddPathReverseProxy(rootLB, path, origin string) []error {
 	if path == "" {
 		return []error{fmt.Errorf("empty path")}

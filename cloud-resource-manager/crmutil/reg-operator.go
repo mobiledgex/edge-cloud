@@ -7,6 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+//RegisterOperators registers operators
 func RegisterOperators(api edgeproto.OperatorApiClient) error {
 	var err error
 

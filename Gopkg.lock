@@ -51,6 +51,7 @@
   packages = [
     "auth/authpb",
     "clientv3",
+    "clientv3/concurrency",
     "etcdserver/api/v3rpc/rpctypes",
     "etcdserver/etcdserverpb",
     "mvcc/mvccpb",
@@ -275,10 +276,12 @@
   branch = "master"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
+    "k8s-prov/azure",
+    "k8s-prov/gcloud",
     "openstack-prov/oscliapi",
     "openstack-tenant/agent/cloudflare"
   ]
-  revision = "b7de7ffb3794b2331e6ed3281c8178dcd9659d04"
+  revision = "ba2ba5025715edea709f6ee9027efb60e72efc23"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -655,6 +658,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9099480649693ab73964cd26c64f88cabceeac13665f82f77849603bb5c42f94"
+  inputs-digest = "0bca84292c4d47bc51d18495f89e98236fcbbf9ff6779363afc9c3df7701120d"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -9,6 +9,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+//CloudResourceData contains resources
 type CloudResourceData struct {
 	CloudResources []*edgeproto.CloudResource
 }
@@ -38,7 +39,7 @@ var crs = []*edgeproto.CloudResource{
 	},
 }
 
-var resourceID int32 = 0
+var resourceID int32
 
 // CloudResourceManagerServer describes Cloud Resource Manager Server instance container
 type CloudResourceManagerServer struct {
@@ -52,7 +53,7 @@ func NewCloudResourceManagerServer(cd *ControllerData) (*CloudResourceManagerSer
 	return &CloudResourceManagerServer{CloudResourceData: crdb, ControllerData: cd}, nil
 }
 
-// List Cloud Resource
+//ListCloudResource lists resources
 func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudResource, cb edgeproto.CloudResourceManager_ListCloudResourceServer) error {
 	var err error
 
@@ -74,7 +75,7 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 	return err
 }
 
-// Add Cloud Resource
+// AddCloudResource adds new resource
 func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
 	server.mux.Lock()
 	defer server.mux.Unlock()
@@ -92,6 +93,7 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 	return &edgeproto.Result{}, nil
 }
 
+//DeleteCloudResource removes a resource
 func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
 
 	server.mux.Lock()
@@ -113,6 +115,7 @@ func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Contex
 	return nil, fmt.Errorf("Resource not found")
 }
 
+//DeployApplication runs app
 func (server *CloudResourceManagerServer) DeployApplication(ctx context.Context, app *edgeproto.EdgeCloudApplication) (*edgeproto.Result, error) {
 	if err := RunApp(app); err != nil {
 		return nil, err
@@ -127,6 +130,7 @@ func (server *CloudResourceManagerServer) DeployApplication(ctx context.Context,
 	return &edgeproto.Result{}, nil
 }
 
+// DeleteApplication removes app
 func (server *CloudResourceManagerServer) DeleteApplication(ctx context.Context, app *edgeproto.EdgeCloudApplication) (*edgeproto.Result, error) {
 	if err := KillApp(app); err != nil {
 		return nil, err

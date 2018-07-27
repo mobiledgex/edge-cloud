@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+//RunApp runs the cloud app
 func RunApp(app *edgeproto.EdgeCloudApplication) error {
 	switch app.Kind {
 	case "k8s-manifest":
@@ -58,6 +59,7 @@ func RunApp(app *edgeproto.EdgeCloudApplication) error {
 	return nil
 }
 
+//KillApp stops and deletes cloud app
 func KillApp(app *edgeproto.EdgeCloudApplication) error {
 	switch app.Kind {
 	case "k8s-manifest":
@@ -114,13 +116,23 @@ func getHTTPFile(uri string, localFile string) error {
 	if err != nil {
 		return err
 	}
-	defer out.Close()
+	defer func() {
+		err = out.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	resp, err := http.Get(uri)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
@@ -131,7 +143,10 @@ func getHTTPFile(uri string, localFile string) error {
 
 func getTempFileName(prefix, suffix string) string {
 	randBytes := make([]byte, 16)
-	rand.Read(randBytes)
+	_, err := rand.Read(randBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
 	return filepath.Join(os.TempDir(), prefix+hex.EncodeToString(randBytes)+suffix)
 }
 
