@@ -105,12 +105,17 @@ var ValidClusterFlavors = []string{
 	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
 }
 
+const (
+	activeStatus  = "active"
+	activeService = "ACTIVE"
+)
+
 //AvailableClusterFlavors lists currently available flavors
 var AvailableClusterFlavors = []*ClusterFlavor{
 	&ClusterFlavor{
 		Name:           "x1.medium",
 		Type:           "k8s",
-		Status:         "active",
+		Status:         activeStatus,
 		NumNodes:       2,
 		NumMasterNodes: 1,
 		Topology:       "type-1",
@@ -126,7 +131,7 @@ var IsValidMEXOSEnv = false
 
 //ValidateMEXOSEnv makes sure the environment is valid for mexos
 func ValidateMEXOSEnv(osEnvValid bool) bool {
-	if osEnvValid == false {
+	if !osEnvValid {
 		return false
 	}
 
@@ -143,18 +148,18 @@ func AddFlavor(flavor string) error {
 
 	for _, f := range AvailableClusterFlavors {
 		if flavor == f.Name {
-			if f.Status == "active" {
+			if f.Status == activeStatus {
 				return nil // fmt.Errorf("exists already")
 			}
 			if f.Status == "available" {
-				f.Status = "active"
+				f.Status = activeStatus
 				return nil
 			}
 		}
 	}
 
 	nf := ClusterFlavor{Name: flavor}
-	nf.Status = "active"
+	nf.Status = activeStatus
 	AvailableClusterFlavors = append(AvailableClusterFlavors, &nf)
 
 	//XXX need local database to store this persistently since controller won't
@@ -166,7 +171,7 @@ func AddFlavor(flavor string) error {
 func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 	for _, f := range AvailableClusterFlavors {
 		if flavor == f.Name {
-			if f.Status == "active" {
+			if f.Status == activeStatus {
 				return f, nil
 			}
 			return nil, fmt.Errorf("flavor exists but status not active")
@@ -205,7 +210,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 	}
 	//XXX we only support x1.medium for now
 
-	if IsFlavorSupported(flavor) == false {
+	if !IsFlavorSupported(flavor) {
 		return fmt.Errorf("unsupported flavor")
 	}
 
@@ -292,14 +297,17 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) error {
 
 	for i := 0; i < 10; i++ {
 		ready, err = IsClusterReady(rootLB, kvmname, flavor)
-		if ready == true {
+		if err != nil {
+			return err
+		}
+		if ready {
 			break
 		}
 
 		time.Sleep(30 * time.Second)
 	}
 
-	if ready == false {
+	if !ready {
 		return fmt.Errorf("cluster not ready (yet)")
 	}
 
@@ -460,11 +468,7 @@ func ValidateFlavor(flavor string) error {
 
 //IsFlavorSupported checks whether flavor is supported currently
 func IsFlavorSupported(flavor string) bool {
-	if flavor == "x1.medium" {
-		return true
-	}
-
-	return false
+	return flavor == "x1.medium"
 }
 
 //DeleteClusterByName remove cluster by name
@@ -481,8 +485,8 @@ func DeleteClusterByName(rootLB, name string) error {
 
 	log.Debugln("servers", srvs)
 	for _, s := range srvs {
-		if strings.Index(s.Name, name) > 0 {
-			if strings.Index(s.Name, eMEXK8SMaster) >= 0 {
+		if strings.Contains(s.Name, name) {
+			if strings.Contains(s.Name, eMEXK8SMaster) {
 				err = LBRemoveRoute(rootLB, s.Name)
 				if err != nil {
 					err = fmt.Errorf("failed remove route for %s, %v", s.Name, err)
@@ -508,7 +512,7 @@ func DeleteClusterByName(rootLB, name string) error {
 
 	rn := oscli.GetMEXExternalRouter() //XXX for now
 	for _, s := range sns {
-		if strings.Index(s.Name, name) > 0 {
+		if strings.Contains(s.Name, name) {
 			log.Debugln("removing router from subnet", rn, s.Name)
 			err := oscli.RemoveRouterSubnet(rn, s.Name)
 			if err != nil {
@@ -584,7 +588,7 @@ func EnableRootLB(rootLB string) error {
 	}
 	found := 0
 	for _, s := range sl {
-		if strings.Index(s.Name, "mex-lb-") >= 0 && strings.Index(s.Name, "mobiledgex.net") >= 0 {
+		if strings.Contains(s.Name, "mex-lb-") && strings.Contains(s.Name, "mobiledgex.net") {
 			found++
 		}
 	}
@@ -684,7 +688,7 @@ func WaitForRootLB(rootLB string) error {
 		time.Sleep(30 * time.Second)
 	}
 
-	if running == false {
+	if !running {
 		return fmt.Errorf("while creating cluster, timeout waiting for RootLB")
 	}
 
@@ -745,8 +749,10 @@ func RunMEXAgent(fqdn string, pull bool) error {
 	}
 
 	cmd := fmt.Sprintf("docker ps |grep %s", eMEXAgentImage)
-	out, err := client.Output(cmd)
+	_, err = client.Output(cmd)
 	if err == nil {
+		//agent docker instance exists
+		//XXX check better
 		return nil
 	}
 
@@ -764,7 +770,7 @@ func RunMEXAgent(fqdn string, pull bool) error {
 	}
 
 	cmd = fmt.Sprintf("echo %s > .docker-pass", eMEXDockerRegPass)
-	out, err = client.Output(cmd)
+	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't store docker pass, %s, %v", out, err)
 	}
@@ -791,12 +797,7 @@ func UpdateMEXAgent(fqdn string) error {
 	}
 
 	// Force pulling a potentially newer docker image
-	err = RunMEXAgent(fqdn, true)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return RunMEXAgent(fqdn, true)
 }
 
 //RemoveMEXAgent deletes mex agent docker instance
@@ -862,7 +863,7 @@ func AcquireCertificates(fqdn string) error {
 		time.Sleep(30 * time.Second) // ACME takes minimum 200 seconds
 	}
 
-	if success == false {
+	if !success {
 		return fmt.Errorf("timeout waiting for ACME")
 	}
 
@@ -926,6 +927,7 @@ func ActivateFQDNA(fqdn string) error {
 	return nil
 }
 
+//nolint
 func copyFile(src, dst string) error {
 	in, err := os.Open(src)
 	if err != nil {
@@ -962,7 +964,7 @@ func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 		return false, fmt.Errorf("empty flavor")
 	}
 
-	if IsFlavorSupported(flavor) == false {
+	if !IsFlavorSupported(flavor) {
 		return false, fmt.Errorf("unsupported flavor")
 	}
 	cf, err := GetClusterFlavor(flavor)
@@ -996,7 +998,7 @@ func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 	totalNodes := cf.NumNodes + cf.NumMasterNodes
 	tn := fmt.Sprintf("%d", totalNodes)
 
-	if strings.Index(out, tn) != 0 {
+	if !strings.Contains(out, tn) {
 		return false, fmt.Errorf("not ready, %s", out)
 	}
 
@@ -1045,7 +1047,7 @@ func FindNodeIP(name string) (string, error) {
 	}
 
 	for _, s := range srvs {
-		if s.Status == "ACTIVE" && strings.Index(s.Name, name) >= 0 {
+		if s.Status == activeService && strings.Contains(s.Name, name) {
 			ipaddr, err := GetInternalIP(s.Name)
 			if err != nil {
 				return "", fmt.Errorf("can't get IP for %s, %v", s.Name, err)
@@ -1067,7 +1069,7 @@ func FindClusterWithKey(key string) (string, error) {
 	}
 
 	for _, s := range srvs {
-		if s.Status == "ACTIVE" && strings.Index(s.Name, key) >= 0 && strings.Index(s.Name, eMEXK8SMaster) >= 0 {
+		if s.Status == activeService && strings.Contains(s.Name, key) && strings.Contains(s.Name, eMEXK8SMaster) {
 			return s.Name, nil
 		}
 	}
@@ -1125,8 +1127,8 @@ func ValidateKubernetesParameters(rootLB, clustername, manifest string) (string,
 
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
 	if manifest != "" &&
-		strings.HasPrefix(manifest, "http://") == false &&
-		strings.HasPrefix(manifest, "https://") == false {
+		!strings.HasPrefix(manifest, "http://") &&
+		!strings.HasPrefix(manifest, "https://") {
 		return "", nil, "", fmt.Errorf("unsupported manifest")
 	}
 
@@ -1233,7 +1235,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 		return fmt.Errorf("emptyh app name")
 	}
 
-	if IsFlavorSupported(flavorname) == false {
+	if !IsFlavorSupported(flavorname) {
 		return fmt.Errorf("unsupported flavor")
 	}
 
@@ -1250,7 +1252,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 		//  to hold URL that can be used to set up reverse proxy at a publicly accessible
 		//  DNS pointed Internet node which acts as a path based router for internally
 		//  deployed services.
-		if strings.HasPrefix(uri, rootLB) == false {
+		if !strings.HasPrefix(uri, rootLB) {
 			return fmt.Errorf("invalid uri %s", uri)
 		}
 		pis := strings.Split(uri, "/")
@@ -1286,7 +1288,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 		//XXX ideally the caller should fill origin out and know how to supply proper information.
 	}
 
-	if mpaths != "" {
+	if mpaths != "" { //nolint
 		// TODO format of mapped path string. Multiple -v can be specified, but there is only one mpath string
 	}
 
@@ -1337,7 +1339,7 @@ func AddPathReverseProxy(rootLB, path, origin string) []error {
 		return errs
 	}
 
-	if strings.Index(body, "OK") >= 0 {
+	if strings.Contains(body, "OK") {
 		return nil
 	}
 

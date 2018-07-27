@@ -8,18 +8,24 @@ import (
 	log "gitlab.com/bobbae/logrus"
 )
 
+const (
+	mexOSKubernetes = "mex-openstack-kubernetes"
+	gcloudGKE       = "gcloud-gke"
+	azureAKS        = "azure-aks"
+)
+
 //ClusterCreate creates a cluster
 func ClusterCreate(mf *Manifest) {
 	log.Debugf("creating cluster, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		if err := CreateCluster(mf.Spec.RootLB, mf.Spec.Flavor, mf.Metadata.Name,
 			mf.Spec.Networks[0].Kind+","+mf.Spec.Networks[0].Name+","+mf.Spec.Networks[0].CIDR,
 			mf.Metadata.Tags, mf.Metadata.Tenant); err != nil {
 			log.Fatalf("can't create cluster, %v", err)
 		}
-	case "gcloud-gke":
+	case gcloudGKE:
 		if err := gcloud.SetProject(mf.Metadata.Project); err != nil {
 			log.Fatal(err)
 		}
@@ -32,7 +38,7 @@ func ClusterCreate(mf *Manifest) {
 		if err := gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "azure-aks":
+	case azureAKS:
 		if err := azure.CreateResourceGroup(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
 			log.Fatal(err)
 		}
@@ -51,15 +57,15 @@ func ClusterRemove(mf *Manifest) {
 	log.Debugf("removing cluster, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		if err := DeleteClusterByName(mf.Spec.RootLB, mf.Metadata.Name); err != nil {
 			log.Fatalf("can't remove cluster, %v", err)
 		}
-	case "gcloud-gke":
+	case gcloudGKE:
 		if err := gcloud.DeleteGKECluster(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "azure-aks":
+	case azureAKS:
 		if err := azure.DeleteAKSCluster(mf.Metadata.ResourceGroup); err != nil {
 			log.Fatal(err)
 		}
@@ -122,13 +128,13 @@ func PlatformInit(mf *Manifest) {
 	log.Debugf("init platform, %v", mf)
 
 	switch mf.Kind {
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		SetEnvVars(mf)
 		if err := RunMEXAgent(mf.Metadata.Name, false); err != nil {
 			log.Fatal(err)
 		}
-	case "gcloud-gke":
-	case "azure-aks":
+	case gcloudGKE:
+	case azureAKS:
 	}
 }
 
@@ -138,12 +144,12 @@ func PlatformClean(mf *Manifest) {
 
 	switch mf.Kind {
 
-	case "mex-openstack-kubernetes":
+	case mexOSKubernetes:
 		SetEnvVars(mf)
 		if err := RemoveMEXAgent(mf.Metadata.Name); err != nil {
 			log.Fatal(err)
 		}
-	case "gcloud-gke":
-	case "azure-aks":
+	case gcloudGKE:
+	case azureAKS:
 	}
 }

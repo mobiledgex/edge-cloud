@@ -20,10 +20,7 @@ func RunApp(app *edgeproto.EdgeCloudApplication) error {
 	case "k8s-manifest":
 		df := getManifest(app.Manifest)
 		if df != "" {
-			if err := runKubeCtlCreateDeployment(df); err != nil {
-				return err
-			}
-			return nil
+			return runKubeCtlCreateDeployment(df)
 		}
 	case "k8s-simple":
 		if len(app.Apps) < 1 {
@@ -65,10 +62,7 @@ func KillApp(app *edgeproto.EdgeCloudApplication) error {
 	case "k8s-manifest":
 		df := getManifest(app.Manifest)
 		if df != "" {
-			if err := runKubeCtlDeleteDeployment(df); err != nil {
-				return err
-			}
-			return nil
+			return runKubeCtlDeleteDeployment(df)
 		}
 	case "k8s-simple":
 		if len(app.Apps) < 1 {
@@ -135,10 +129,7 @@ func getHTTPFile(uri string, localFile string) error {
 	}()
 
 	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func getTempFileName(prefix, suffix string) string {

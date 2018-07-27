@@ -130,11 +130,7 @@ func createKubernetesDeployment(app *edgeproto.EdgeCloudApp) error {
 	deploymentsClient := clientset.AppsV1().Deployments(app.Namespace)
 
 	_, err = deploymentsClient.Create(deployment)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func deleteKubernetesDeployment(app *edgeproto.EdgeCloudApp) error {
@@ -146,9 +142,5 @@ func deleteKubernetesDeployment(app *edgeproto.EdgeCloudApp) error {
 	deploymentsClient := clientset.AppsV1().Deployments(app.Namespace)
 
 	err = deploymentsClient.Delete(app.Name, &metav1.DeleteOptions{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
