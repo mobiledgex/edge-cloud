@@ -111,7 +111,7 @@ message AppInstInfo {
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server
-  int64 notify_id = 3;
+  int64 notify_id = 3 [(protocmd.hidetag) = "nocmp"];
   // state
   AppState state = 4;
   // errors
