@@ -20,11 +20,13 @@ func ClusterCreate(mf *Manifest) {
 
 	switch mf.Kind {
 	case mexOSKubernetes:
-		if err := CreateCluster(mf.Spec.RootLB, mf.Spec.Flavor, mf.Metadata.Name,
+		guid, err := CreateCluster(mf.Spec.RootLB, mf.Spec.Flavor, mf.Metadata.Name,
 			mf.Spec.Networks[0].Kind+","+mf.Spec.Networks[0].Name+","+mf.Spec.Networks[0].CIDR,
-			mf.Metadata.Tags, mf.Metadata.Tenant); err != nil {
+			mf.Metadata.Tags, mf.Metadata.Tenant)
+		if err != nil {
 			log.Fatalf("can't create cluster, %v", err)
 		}
+		log.Infoln("guid", *guid)
 	case gcloudGKE:
 		if err := gcloud.SetProject(mf.Metadata.Project); err != nil {
 			log.Fatal(err)

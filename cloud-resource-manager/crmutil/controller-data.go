@@ -72,24 +72,26 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		// create or update k8s cluster on this cloudlet
 		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.Flavor{}
+
+		// XXX why check flavor every time?
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
-			str := fmt.Sprintf("Did not find flavor %s",
-				clusterInst.Flavor.Name)
-			cd.clusterInstInfoError(key, str)
+			cd.clusterInstInfoError(key, fmt.Sprintf("Did not find flavor %s", clusterInst.Flavor.Name))
 			return
 		}
 
 		go func() {
 			var err error
+			var guid *string
+
 			if IsValidMEXOSEnv {
-				err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
+				guid, err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
 			}
 			if err != nil {
-				str := fmt.Sprintf("Create failed: %s", err)
-				cd.clusterInstInfoError(key, str)
+				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
 			} else {
 				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
+				fmt.Println(*guid) //XXX No way to return this or any other details
 			}
 		}()
 	} else {
@@ -115,6 +117,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 	if found {
 		// create or update appInst
 		cd.appInstInfoState(key, edgeproto.AppState_AppStateBuilding)
+		//XXX why check flavor each time?
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&appInst.Flavor, &flavor)
 		if !flavorFound {
@@ -123,6 +126,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 			cd.appInstInfoError(key, str)
 			return
 		}
+		//XXX why check clusterInst each time?
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
