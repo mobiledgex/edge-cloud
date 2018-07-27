@@ -23,7 +23,7 @@ func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan util.ReturnCodeWithText)
 	var numProcs = 0 //len(procs Controllers) + len(procs.Crms) + len(procs.Dmes)
-	for _, ctrl := range util.Procs.Controllers {
+	for _, ctrl := range util.Deployment.Controllers {
 		if processName != "" && processName != ctrl.Name {
 			continue
 		}
@@ -31,7 +31,7 @@ func WaitForProcesses(processName string) bool {
 		ctrlp := ctrl.ControllerLocal
 		go util.ConnectController(&ctrlp, c)
 	}
-	for _, dme := range util.Procs.Dmes {
+	for _, dme := range util.Deployment.Dmes {
 		if processName != "" && processName != dme.Name {
 			continue
 		}
@@ -39,7 +39,7 @@ func WaitForProcesses(processName string) bool {
 		dmep := dme.DmeLocal
 		go util.ConnectDme(&dmep, c)
 	}
-	for _, crm := range util.Procs.Crms {
+	for _, crm := range util.Deployment.Crms {
 		if processName != "" && processName != crm.Name {
 			continue
 		}
@@ -62,33 +62,33 @@ func WaitForProcesses(processName string) bool {
 //and some unique arguments to look for for pgrep. Returns info about
 // the hostname, process executable and arguments
 func findProcess(processName string) (string, string, string) {
-	for _, etcd := range util.Procs.Etcds {
+	for _, etcd := range util.Deployment.Etcds {
 		if etcd.Name == processName {
 			return etcd.Hostname, "etcd", "-name " + etcd.Name
 		}
 	}
-	for _, ctrl := range util.Procs.Controllers {
+	for _, ctrl := range util.Deployment.Controllers {
 		if ctrl.Name == processName {
 			return ctrl.Hostname, "controller", "-apiAddr " + ctrl.ApiAddr
 		}
 	}
-	for _, crm := range util.Procs.Crms {
+	for _, crm := range util.Deployment.Crms {
 		if crm.Name == processName {
 
 			return crm.Hostname, "crmserver", "-apiAddr " + crm.ApiAddr
 		}
 	}
-	for _, dme := range util.Procs.Dmes {
+	for _, dme := range util.Deployment.Dmes {
 		if dme.Name == processName {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
 		}
 	}
-	for _, tok := range util.Procs.Toksims {
+	for _, tok := range util.Deployment.Toksims {
 		if tok.Name == processName {
 			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
 		}
 	}
-	for _, loc := range util.Procs.Locsims {
+	for _, loc := range util.Deployment.Locsims {
 		if loc.Name == processName {
 			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
 		}
@@ -111,14 +111,14 @@ func UpdateApiAddrs() {
 		//no need to do this more than once
 		return
 	}
-	for i, ctrl := range util.Procs.Controllers {
-		util.Procs.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
+	for i, ctrl := range util.Deployment.Controllers {
+		util.Deployment.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
 	}
-	for i, dme := range util.Procs.Dmes {
-		util.Procs.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
+	for i, dme := range util.Deployment.Dmes {
+		util.Deployment.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
 	}
-	for i, crm := range util.Procs.Crms {
-		util.Procs.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+	for i, crm := range util.Deployment.Crms {
+		util.Deployment.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
 	}
 	apiAddrsUpdated = true
 }
@@ -151,7 +151,7 @@ func ReadSetupFile(setupfile string, dataDir string) {
 	if len(varlist) > 0 {
 		varstring = strings.Join(varlist, ",")
 	}
-	err := util.ReadYamlFile(setupfile, &util.Procs, varstring, true)
+	err := util.ReadYamlFile(setupfile, &util.Deployment, varstring, true)
 	if err != nil {
 		if !util.IsYamlOk(err, "setup") {
 			fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s, exiting", setupfile)
@@ -160,8 +160,8 @@ func ReadSetupFile(setupfile string, dataDir string) {
 	//equals sign is not well handled in yaml so it is url encoded and changed after loading
 	//for some reason, this only happens when the yaml is read as ProcessData and not
 	//as a generic interface.  TODO: further study on this.
-	for i, _ := range util.Procs.Dmes {
-		util.Procs.Dmes[i].TokSrvUrl = strings.Replace(util.Procs.Dmes[i].TokSrvUrl, "%3D", "=", -1)
+	for i, _ := range util.Deployment.Dmes {
+		util.Deployment.Dmes[i].TokSrvUrl = strings.Replace(util.Deployment.Dmes[i].TokSrvUrl, "%3D", "=", -1)
 	}
 }
 
@@ -186,7 +186,7 @@ func StopProcesses(processName string) bool {
 		}
 		return true
 	}
-	for _, p := range util.Procs.Etcds {
+	for _, p := range util.Deployment.Etcds {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
@@ -207,7 +207,7 @@ func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
 	invFile, found := createAnsibleInventoryFile(procNamefilter)
 	ansHome := os.Getenv("ANSIBLE_DIR")
 
-	if !stageYamlFile("setup.yml", ansHome+"/playbooks", &util.Procs) {
+	if !stageYamlFile("setup.yml", ansHome+"/playbooks", &util.Deployment) {
 		return false
 	}
 
@@ -291,7 +291,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
 
-	for _, p := range util.Procs.Etcds {
+	for _, p := range util.Deployment.Etcds {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -301,7 +301,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
-	for _, p := range util.Procs.Controllers {
+	for _, p := range util.Deployment.Controllers {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -311,7 +311,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
-	for _, p := range util.Procs.Crms {
+	for _, p := range util.Deployment.Crms {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -321,7 +321,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
-	for _, p := range util.Procs.Dmes {
+	for _, p := range util.Deployment.Dmes {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -331,7 +331,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
-	for _, p := range util.Procs.Locsims {
+	for _, p := range util.Deployment.Locsims {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -345,7 +345,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			}
 		}
 	}
-	for _, p := range util.Procs.Toksims {
+	for _, p := range util.Deployment.Toksims {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
@@ -453,7 +453,7 @@ func FetchRemoteLogs(outputDir string) bool {
 
 func StartProcesses(processName string, outputDir string) bool {
 	util.PrintStepBanner("starting local processes")
-	for _, etcd := range util.Procs.Etcds {
+	for _, etcd := range util.Deployment.Etcds {
 		if processName != "" && processName != etcd.Name {
 			continue
 		}
@@ -471,7 +471,7 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-	for _, ctrl := range util.Procs.Controllers {
+	for _, ctrl := range util.Deployment.Controllers {
 		if processName != "" && processName != ctrl.Name {
 			continue
 		}
@@ -485,7 +485,7 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-	for _, crm := range util.Procs.Crms {
+	for _, crm := range util.Deployment.Crms {
 		if processName != "" && processName != crm.Name {
 			continue
 		}
@@ -499,7 +499,7 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-	for _, dme := range util.Procs.Dmes {
+	for _, dme := range util.Deployment.Dmes {
 		if processName != "" && processName != dme.Name {
 			continue
 		}
@@ -513,7 +513,7 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-	for _, loc := range util.Procs.Locsims {
+	for _, loc := range util.Deployment.Locsims {
 		if processName != "" && processName != loc.Name {
 			continue
 		}
@@ -531,7 +531,7 @@ func StartProcesses(processName string, outputDir string) bool {
 
 		}
 	}
-	for _, tok := range util.Procs.Toksims {
+	for _, tok := range util.Deployment.Toksims {
 		if processName != "" && processName != tok.Name {
 			continue
 		}

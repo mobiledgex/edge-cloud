@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
+	"github.com/mobiledgex/edge-cloud/setup-env/k8s"
 	setupmex "github.com/mobiledgex/edge-cloud/setup-env/setup-mex"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
@@ -172,9 +174,18 @@ func main() {
 		util.PrintStepBanner("running action: " + a)
 		switch action {
 		case "deploy":
-			if !setupmex.DeployProcesses() {
-				errorsFound += 1
-				errors = append(errors, "deploy failed")
+			if util.Deployment.GCloud.Cluster != "" {
+				dir := path.Dir(*setupFile)
+				err := k8s.DeployGoogleK8s(dir)
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			} else {
+				if !setupmex.DeployProcesses() {
+					errorsFound += 1
+					errors = append(errors, "deploy failed")
+				}
 			}
 		case "start":
 			startFailed := false
@@ -236,10 +247,18 @@ func main() {
 
 			}
 		case "cleanup":
-			if !setupmex.CleanupRemoteProcesses() {
-				errorsFound += 1
-				errors = append(errors, "cleanup failed")
-
+			if util.Deployment.GCloud.Cluster != "" {
+				dir := path.Dir(*setupFile)
+				err := k8s.CleanupGoogleK8s(dir)
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				} else {
+					if !setupmex.CleanupRemoteProcesses() {
+						errorsFound += 1
+						errors = append(errors, "cleanup failed")
+					}
+				}
 			}
 		case "fetchlogs":
 			if !setupmex.FetchRemoteLogs(*outputDir) {

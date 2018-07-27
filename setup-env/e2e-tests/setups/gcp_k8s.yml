@@ -1,0 +1,38 @@
+gcloud:
+    cluster: mex-cluster-1
+    zone: us-west1-a
+    machinetype: n1-standard-1
+
+
+k8s-deployment:
+
+   - file: rbac.yml
+     description: setup permissions for service account
+
+   - file: mex-secret.yml
+     description: secret used to access private repo
+    
+   - file: etcd-operator.yml
+     description: create an operator deployment to manage etcd
+ 
+   - file: mex-etcd-cluster.yml
+     description: creates the MEX etcd cluster
+
+   - file: mex-controller-deploy.yml
+     description: deploys the controllers
+
+   - file: mex-controller-lb.yml
+     description: create a load balancer for controllers
+
+   - file: mex-dme-deploy.yml
+     description: deploys the dmes
+
+   - file: mex-dme-lb.yml
+     description: create a load balancer for dmes
+
+   - file: mex-crm-deploy.yml
+     description: deploys the crms
+
+   - file: mex-crm-lb.yml
+     description: create a load balancer for crms
+

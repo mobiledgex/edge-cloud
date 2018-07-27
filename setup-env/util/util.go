@@ -20,7 +20,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 )
 
-var Procs ProcessData
+var Deployment DeploymentData
 
 type yamlFileType int
 
@@ -41,6 +41,17 @@ type ProcessInfo struct {
 type ReturnCodeWithText struct {
 	Success bool
 	Text    string
+}
+
+type GoogleCloudInfo struct {
+	Cluster     string
+	Zone        string
+	MachineType string
+}
+
+type K8sYamlFile struct {
+	File        string
+	Description string
 }
 
 type EtcdProcess struct {
@@ -68,13 +79,15 @@ type TokSimProcess struct {
 	Hostname string
 }
 
-type ProcessData struct {
-	Locsims     []LocSimProcess     `yaml:"locsims"`
-	Toksims     []TokSimProcess     `yaml:"toksims"`
-	Etcds       []EtcdProcess       `yaml:"etcds"`
-	Controllers []ControllerProcess `yaml:"controllers"`
-	Dmes        []DmeProcess        `yaml:"dmes"`
-	Crms        []CrmProcess        `yaml:"crms"`
+type DeploymentData struct {
+	GCloud        GoogleCloudInfo     `yaml:"gcloud"`
+	K8sDeployment []K8sYamlFile       `yaml:"k8s-deployment"`
+	Locsims       []LocSimProcess     `yaml:"locsims"`
+	Toksims       []TokSimProcess     `yaml:"toksims"`
+	Etcds         []EtcdProcess       `yaml:"etcds"`
+	Controllers   []ControllerProcess `yaml:"controllers"`
+	Dmes          []DmeProcess        `yaml:"dmes"`
+	Crms          []CrmProcess        `yaml:"crms"`
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -157,9 +170,9 @@ func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
 //default is to connect to the first controller, unless we specified otherwise
 func GetController(ctrlname string) *ControllerProcess {
 	if ctrlname == "" {
-		return &Procs.Controllers[0]
+		return &Deployment.Controllers[0]
 	}
-	for _, ctrl := range Procs.Controllers {
+	for _, ctrl := range Deployment.Controllers {
 		if ctrl.Name == ctrlname {
 			return &ctrl
 		}
@@ -170,9 +183,9 @@ func GetController(ctrlname string) *ControllerProcess {
 
 func GetDme(dmename string) *DmeProcess {
 	if dmename == "" {
-		return &Procs.Dmes[0]
+		return &Deployment.Dmes[0]
 	}
-	for _, dme := range Procs.Dmes {
+	for _, dme := range Deployment.Dmes {
 		if dme.Name == dmename {
 			return &dme
 		}

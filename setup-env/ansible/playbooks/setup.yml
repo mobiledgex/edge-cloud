@@ -1,0 +1,56 @@
+gcloud:
+  cluster: ""
+  zone: ""
+  machinetype: ""
+k8s-deployment: []
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: /Users/jimmorris/go/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data/locsim.yml
+  hostname: 107.170.0.14
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+  hostname: 107.170.0.14
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: http://127.0.0.1:30011
+    clientaddrs: http://127.0.0.1:30001
+    initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+  hostname: 107.170.0.14
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: http://127.0.0.1:30012
+    clientaddrs: http://127.0.0.1:30002
+    initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+  hostname: 107.170.0.14
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: http://127.0.0.1:30013
+    clientaddrs: http://127.0.0.1:30003
+    initialcluster: etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013
+  hostname: 107.170.0.14
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003
+    apiaddr: 0.0.0.0:55001
+    httpaddr: 0.0.0.0:36001
+    notifyaddr: 127.0.0.1:37001
+  hostname: 107.170.0.14
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: 0.0.0.0:50051
+    notifyaddrs: 127.0.0.1:37001
+    locverurl: http://127.0.0.1:8888/verifyLocation
+    toksrvurl: http://107.170.0.14:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc
+    carrier: TDG
+  hostname: 107.170.0.14
+crms: []

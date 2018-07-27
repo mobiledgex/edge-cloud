@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dme
+  labels:
+    app: dme
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dme
+  template:
+    metadata:
+      labels:
+        app: dme
+    spec:
+      containers:
+      - name: dme
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        command:
+         - "dme-server"
+         - "--apiAddr"
+         - "0.0.0.0:50051"
+         - "--locverurl"
+         - "http://loc-api-srv:8888/verifyLocation"
+         - "--carrier"
+         - "TDG"
+         - "--d"
+         - "dmelocapi,dmedb,dmereq"
+         - "--toksrvurl"
+         - "http://37.50.143.110:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+         - "--notifyAddrs"
+         - "controller:37001"
+         
+      imagePullSecrets:
+       - name: mexreg-secret 
+
