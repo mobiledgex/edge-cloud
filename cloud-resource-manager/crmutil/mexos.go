@@ -1060,15 +1060,20 @@ func CopyKubeConfig(rootLB, name string) error {
 		return fmt.Errorf("can't get ssh client for copying kubeconfig, %v", err)
 	}
 
-	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config  kubeconfig-%s", eMEXSSHKey, ipaddr, name)
+	kconfname := fmt.Sprintf("kubeconfig-%s", name)
+	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config %s", eMEXSSHKey, ipaddr, kconfname)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy kubeconfig from %s, %s, %v", name, out, err)
 	}
-	cmd = fmt.Sprintf("cat kubeconfig-%s", name)
+	cmd = fmt.Sprintf("cat %s", kconfname)
 	out, err = client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("can't cat kubeconfig-%s, %s, %v", name, out, err)
+		return fmt.Errorf("can't cat %s, %s, %v", kconfname, out, err)
+	}
+	err = StartKubectlProxy(rootLB, kconfname)
+	if err != nil {
+		return err
 	}
 	return ProcessKubeconfig(name, []byte(out))
 }
@@ -1086,7 +1091,8 @@ func ProcessKubeconfig(name string, dat []byte) error {
 
 	log.Debugln("kubeconfig", kc)
 
-	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-"+name, dat, 0666)
+	kconfname := fmt.Sprintf("kubeconfig-%s", name)
+	err = ioutil.WriteFile(eMEXDir+"/"+kconfname, dat, 0666)
 	if err != nil {
 		return fmt.Errorf("can't write kubeconfig %s content,%v", name, err)
 	}
@@ -1434,15 +1440,16 @@ func StartKubectlProxy(rootLB, kubeconfig string) error {
 	cl1.Close() //nolint
 	cl2.Close() //nolint
 
-	time.Sleep(10 * time.Second)
-
-	//verify
 	cmd = fmt.Sprintf("ps ax |grep %s", kubeconfig)
-	out, outerr := client.Output(cmd)
-	if outerr != nil {
-		return fmt.Errorf("error verifying kubectl proxy, %s, %v", out, outerr)
+	for i := 0; i < 5; i++ {
+		//verify
+		out, outerr := client.Output(cmd)
+		if outerr == nil {
+			log.Debugln("kubectl running", out)
+			return nil
+		}
+		time.Sleep(3 * time.Second)
 	}
-	log.Debugln("kubectl", out)
 
-	return nil
+	return fmt.Errorf("timeout error verifying kubectl proxy")
 }
