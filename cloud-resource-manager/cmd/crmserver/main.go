@@ -38,6 +38,7 @@ var notifyHandler *notify.DefaultHandler
 var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 
+//OSEnvValid is used to signal validity of Openstack  platform environment
 var OSEnvValid = false
 
 func main() {
@@ -97,7 +98,7 @@ func main() {
 	reflection.Register(grpcServer)
 
 	go func() {
-		if err := grpcServer.Serve(listener); err != nil {
+		if err = grpcServer.Serve(listener); err != nil {
 			log.FatalLog("Failed to serve grpc", "err", err)
 		}
 	}()
@@ -110,7 +111,13 @@ func main() {
 		log.FatalLog("Failed to connect to controller",
 			"addr", *controllerAddress, "err", err)
 	}
-	defer conn.Close()
+	defer func() {
+		err := conn.Close()
+		if err != nil {
+			log.FatalLog("Failed to close connection", "error", err)
+			os.Exit(1)
+		}
+	}()
 
 	// gather cloudlet info
 	if *standalone {
@@ -165,6 +172,7 @@ func parseCloudletKey() {
 	}
 }
 
+//ValidateOSEnv makes sure environment is set up correctly for opensource
 func ValidateOSEnv() bool {
 	osUser := os.Getenv("OS_USERNAME")
 	osPass := os.Getenv("OS_PASSWORD")

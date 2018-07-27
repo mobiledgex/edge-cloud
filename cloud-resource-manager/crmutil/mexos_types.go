@@ -1,5 +1,6 @@
 package crmutil
 
+//MetadataType has metadata
 type MetadataType struct {
 	Name          string `json:"name"`
 	Tags          string `json:"tags"`
@@ -13,6 +14,7 @@ type MetadataType struct {
 	DNSZone       string `json:"dnszone"`
 }
 
+//NetworkType has network data
 type NetworkType struct {
 	Name    string `json:"name"`
 	Kind    string `json:"kind"`
@@ -21,11 +23,13 @@ type NetworkType struct {
 	Extra   string `json:"extra"`
 }
 
+//AgentType has data on agent
 type AgentType struct {
 	Image  string `json:"image"`
 	Status string `json:"status"`
 }
 
+//ImageType has data on image
 type ImageType struct {
 	Name     string `json:"name"`
 	Kind     string `json:"kind"`
@@ -33,6 +37,7 @@ type ImageType struct {
 	OSFlavor string `json:"osflavor"`
 }
 
+//FlavorType has data on flavor
 type FlavorType struct {
 	Name          string `json:"name"`
 	CPUs          int    `json:"cpus"`
@@ -44,6 +49,7 @@ type FlavorType struct {
 	NetworkScheme string `json:"networkscheme"`
 }
 
+//SpecType holds spec block
 type SpecType struct {
 	Flavor          string        `json:"flavor"`
 	RootLB          string        `json:"rootlb"`
@@ -58,6 +64,7 @@ type SpecType struct {
 	ExternalRouter  string        `json:"externalrouter"`
 }
 
+//Manifest is general container for the manifest yaml used by `mex`
 type Manifest struct {
 	APIVersion string       `json:"apiVersion"`
 	Kind       string       `json:"kind"`

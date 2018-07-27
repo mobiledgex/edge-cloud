@@ -39,7 +39,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 	},
 }
 
-var DevData = []edgeproto.Developer{
+var DevData = []edgeproto.Developer{ //nolint
 	edgeproto.Developer{
 		Key: edgeproto.DeveloperKey{
 			Name: "Atlantic, Inc.",
@@ -49,7 +49,7 @@ var DevData = []edgeproto.Developer{
 	},
 }
 
-var AppData = []edgeproto.App{
+var AppData = []edgeproto.App{ //nolint
 	edgeproto.App{
 		Key: edgeproto.AppKey{
 			DeveloperKey: DevData[0].Key,
@@ -68,7 +68,7 @@ var AppData = []edgeproto.App{
 //  But the ClusterInstKey is not part of that. It is part of AppInstData.
 //  There is no image repo URI.
 //  AccessLayer in AppData.  But not in AppInstData. No way to tell L4 or L7.
-var AppInstData = []edgeproto.AppInst{
+var AppInstData = []edgeproto.AppInst{ //nolint
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:      AppData[0].Key,

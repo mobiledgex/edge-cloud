@@ -19,7 +19,7 @@ func runKubeCtlDeleteDeployment(fn string) error {
 }
 
 func runCmd(cmdName string, cmdArgs []string) error {
-	cmd := exec.Command(cmdName, cmdArgs...)
+	cmd := exec.Command(cmdName, cmdArgs...) //nolint
 	cmdReader, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -37,10 +37,5 @@ func runCmd(cmdName string, cmdArgs []string) error {
 		return err
 	}
 
-	err = cmd.Wait()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return cmd.Wait()
 }
