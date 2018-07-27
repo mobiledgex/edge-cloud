@@ -15,8 +15,8 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -123,6 +123,19 @@ func ClusterInstInfoHeaderSlicer() []string {
 	s = append(s, "State")
 	s = append(s, "Errors")
 	return s
+}
+
+func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
 }
 
 var CreateClusterInstCmd = &cobra.Command{
@@ -384,6 +397,7 @@ var ShowClusterInstInfoCmd = &cobra.Command{
 				fmt.Println("ShowClusterInstInfo recv failed: ", err)
 				break
 			}
+			ClusterInstInfoHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {

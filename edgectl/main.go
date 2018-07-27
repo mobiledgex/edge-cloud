@@ -90,6 +90,7 @@ func main() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 	cmdsup.AddOutputFormatFlag(rootCmd.PersistentFlags())
+	cmdsup.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
 
 	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)

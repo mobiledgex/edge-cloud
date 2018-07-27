@@ -243,6 +243,10 @@ func GetStringExtension(pb proto.Message, extension *proto.ExtensionDesc, def st
 	return def
 }
 
+func IsRepeated(field *descriptor.FieldDescriptorProto) bool {
+	return *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
+}
+
 // RunParseCheck will run the parser to check for parse errors in the
 // generated code. While the gogo generator does this as well, if there
 // is a failure it does not generate line numbers, which makes it very

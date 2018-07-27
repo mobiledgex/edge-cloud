@@ -4,7 +4,9 @@
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import "strings"
 import "strconv"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -63,6 +65,16 @@ func NoticeRequestHeaderSlicer() []string {
 	s = append(s, "Requestor")
 	s = append(s, "Revision")
 	return s
+}
+
+func NoticeRequestHideTags(in *edgeproto.NoticeRequest) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
 }
 
 func init() {

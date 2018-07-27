@@ -243,6 +243,10 @@ func (e *dummyEtcd) commit(stm *dummySTM) (int64, error) {
 	// which checks for both read and write conflicts.
 	e.mux.Lock()
 	defer e.mux.Unlock()
+	if len(stm.wset) == 0 {
+		return e.rev, nil
+	}
+
 	rev := int64(math.MaxInt64 - 1)
 	// check that gets have not changed
 	for key, resp := range stm.rset {

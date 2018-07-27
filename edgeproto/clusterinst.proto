@@ -84,7 +84,7 @@ message ClusterInstInfo {
   // unique identifier key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server
-  int64 notify_id = 3;
+  int64 notify_id = 3 [(protocmd.hidetag) = "nocmp"];
   // state of the cluster
   ClusterState state = 4;
   // error messages

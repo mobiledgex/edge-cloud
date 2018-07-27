@@ -16,8 +16,8 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -197,6 +197,19 @@ func AppInstMetricsHeaderSlicer() []string {
 	s := make([]string, 0, 1)
 	s = append(s, "Something")
 	return s
+}
+
+func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.NotifyId = 0
+	}
 }
 
 var CreateAppInstCmd = &cobra.Command{
@@ -458,6 +471,7 @@ var ShowAppInstInfoCmd = &cobra.Command{
 				fmt.Println("ShowAppInstInfo recv failed: ", err)
 				break
 			}
+			AppInstInfoHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {

@@ -36,6 +36,7 @@ func InitSync(store objstore.KVStore) *Sync {
 	sync.initWait = true
 	sync.mux.InitCond(&sync.cond)
 	sync.caches = make(map[string]ObjCache)
+	sync.rev = 1
 	return &sync
 }
 

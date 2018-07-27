@@ -732,14 +732,20 @@ func (c *FlavorCache) Delete(in *Flavor, rev int64) {
 }
 
 func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
+	notify := make(map[FlavorKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }
