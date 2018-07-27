@@ -58,16 +58,10 @@ type SpecType struct {
 	ExternalRouter  string        `json:"externalrouter"`
 }
 
-type ClusterManifest struct {
+type Manifest struct {
 	APIVersion string       `json:"apiVersion"`
 	Kind       string       `json:"kind"`
-	Metadata   MetadataType `json:"metadata"`
-	Spec       SpecType     `json:"spec"`
-}
-
-type PlatformManifest struct {
-	APIVersion string       `json:"apiVersion"`
-	Kind       string       `json:"kind"`
+	Resource   string       `json:"resource"`
 	Metadata   MetadataType `json:"metadata"`
 	Spec       SpecType     `json:"spec"`
 }
