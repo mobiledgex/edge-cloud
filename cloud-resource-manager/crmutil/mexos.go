@@ -107,8 +107,9 @@ var ValidClusterFlavors = []string{
 }
 
 const (
-	activeStatus  = "active"
-	activeService = "ACTIVE"
+	activeStatus    = "active"
+	availableStatus = "available"
+	activeService   = "ACTIVE"
 )
 
 //AvailableClusterFlavors lists currently available flavors
@@ -152,7 +153,7 @@ func AddFlavor(flavor string) error {
 			if f.Status == activeStatus {
 				return nil // fmt.Errorf("exists already")
 			}
-			if f.Status == "available" {
+			if f.Status == availableStatus {
 				f.Status = activeStatus
 				return nil
 			}
