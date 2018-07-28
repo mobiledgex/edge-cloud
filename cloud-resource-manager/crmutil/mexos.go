@@ -26,21 +26,30 @@ import (
 	//"github.com/fsouza/go-dockerclient"
 )
 
-var eRootLBName = "mex-lb-1.mobiledgex.net" //has to be FQDN
-var eMEXAgentPort = "18889"
-var eMEXZone = "mobiledgex.net"
-var eMEXDir = os.Getenv("HOME") + "/.mobiledgex"
-var eMEXSSHKey = "id_rsa_mobiledgex"
-var eMEXAgentImage = "registry.mobiledgex.net:5000/mobiledgex/mexosagent" //XXX missing vers
-var eMEXExternalRouter = "mex-k8s-router-1"
-var eMEXExternalNetwork = "external-network-shared"
-var eMEXK8SMaster = "mex-k8s-master"
-var eMEXK8SNode = "mex-k8s-node"
-var eMEXNetwork = "mex-k8s-net-1"
-var eCFKey = os.Getenv("MEX_CF_KEY")
-var eCFUser = os.Getenv("MEX_CF_USER")
-var eMEXDockerRegistry = "registry.mobiledgex.net:5000"
-var eMEXDockerRegPass = os.Getenv("MEX_DOCKER_REG_PASS")
+type envData struct {
+	eRootLBName, eMEXAgentPort, eMEXZone, eMEXDir, eMEXSSHKey, eKeyJSONStr           string
+	eMEXAgentImage, eMEXExternalRouter, eMEXExternalNetwork, eMEXK8SMaster           string
+	eMEXK8SNode, eMEXNetwork, eCFKey, eCFUser, eMEXDockerRegistry, eMEXDockerRegPass string
+}
+
+var mexEnv = envData{
+	eRootLBName:         "mex-lb-1.mobiledgex.net", //has to be FQDN
+	eKeyJSONStr:         "",
+	eMEXAgentPort:       "18889",
+	eMEXZone:            "mobiledgex.net",
+	eMEXDir:             os.Getenv("HOME") + "/.mobiledgex",
+	eMEXSSHKey:          "id_rsa_mobiledgex",
+	eMEXAgentImage:      "registry.mobiledgex.net:5000/mobiledgex/mexosagent", //XXX missing vers
+	eMEXExternalRouter:  "mex-k8s-router-1",
+	eMEXExternalNetwork: "external-network-shared",
+	eMEXK8SMaster:       "mex-k8s-master",
+	eMEXK8SNode:         "mex-k8s-node",
+	eMEXNetwork:         "mex-k8s-net-1",
+	eCFKey:              os.Getenv("MEX_CF_KEY"),
+	eCFUser:             os.Getenv("MEX_CF_USER"),
+	eMEXDockerRegistry:  "registry.mobiledgex.net:5000",
+	eMEXDockerRegPass:   os.Getenv("MEX_DOCKER_REG_PASS"),
+}
 
 //XXX ClusterInst seems to have Nodes which is a number.
 //   The Nodes should be part of the Cluster flavor.  And there should be Max nodes, and current num of nodes.
@@ -268,7 +277,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) (*string,
 
 	//construct master node name
 	id := 1
-	kvmname := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SMaster, id, name, guid)
+	kvmname := fmt.Sprintf("%s-%d-%s-%s", mexEnv.eMEXK8SMaster, id, name, guid)
 
 	err = oscli.CreateMEXKVM(kvmname, "k8s-master", netSpec, tags, tenant, id)
 	if err != nil {
@@ -277,7 +286,7 @@ func CreateCluster(rootLB, flavor, name, netSpec, tags, tenant string) (*string,
 
 	for i := 1; i <= cf.NumNodes; i++ {
 		//construct node name
-		kvmnodename := fmt.Sprintf("%s-%d-%s-%s", eMEXK8SNode, i, name, guid)
+		kvmnodename := fmt.Sprintf("%s-%d-%s-%s", mexEnv.eMEXK8SNode, i, name, guid)
 
 		err = oscli.CreateMEXKVM(kvmnodename, "k8s-node", netSpec, tags, tenant, i)
 		if err != nil {
@@ -333,7 +342,7 @@ func LBAddRoute(rootLB, name string) error {
 	}
 
 	cmd := fmt.Sprintf("ip route add %s via %s dev ens3", ap[0], ap[1])
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
@@ -356,7 +365,7 @@ func LBRemoveRoute(rootLB, name string) error {
 	}
 
 	cmd := fmt.Sprintf("ip route delete %s via %s dev ens3", ap[0], ap[1])
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
@@ -488,7 +497,7 @@ func DeleteClusterByName(rootLB, name string) error {
 	log.Debugln("servers", srvs)
 	for _, s := range srvs {
 		if strings.Contains(s.Name, name) {
-			if strings.Contains(s.Name, eMEXK8SMaster) {
+			if strings.Contains(s.Name, mexEnv.eMEXK8SMaster) {
 				err = LBRemoveRoute(rootLB, s.Name)
 				if err != nil {
 					err = fmt.Errorf("failed remove route for %s, %v", s.Name, err)
@@ -536,48 +545,47 @@ func DeleteClusterByName(rootLB, name string) error {
 }
 
 //InitEnvVars sets up environment
-func InitEnvVars() {
+func InitEnvVars(rootLB string) {
 	dockerRegistry := os.Getenv("MEX_DOCKER_REGISTRY")
 	if dockerRegistry != "" {
-		eMEXDockerRegistry = dockerRegistry
+		mexEnv.eMEXDockerRegistry = dockerRegistry
 	}
 	extRouter := os.Getenv("MEX_EXT_ROUTER") // mex-k8s-router-1
 	if extRouter != "" {
-		eMEXExternalRouter = extRouter
+		mexEnv.eMEXExternalRouter = extRouter
 	}
 	intNetwork := os.Getenv("MEX_NETWORK")
 	if intNetwork != "" {
-		eMEXNetwork = intNetwork
+		mexEnv.eMEXNetwork = intNetwork
 	}
-
 	extNetwork := os.Getenv("MEX_EXT_NETWORK") // "external-network-shared"
 	if extNetwork != "" {
-		eMEXExternalNetwork = extNetwork
+		mexEnv.eMEXExternalNetwork = extNetwork
 	}
-
 	domainZone := os.Getenv("MEX_ZONE")
 	if domainZone != "" {
-		eMEXZone = domainZone
+		mexEnv.eMEXZone = domainZone
 	}
-
 	agentImage := os.Getenv("MEX_AGENT_IMAGE")
 	if agentImage != "" {
-		eMEXAgentImage = agentImage
+		mexEnv.eMEXAgentImage = agentImage
 	}
 	mexDir := os.Getenv("MEX_DIR")
 	if mexDir != "" {
-		eMEXDir = mexDir
+		mexEnv.eMEXDir = mexDir
 	}
-	rootLB := os.Getenv("MEX_ROOT_LB")
-	if rootLB != "" {
-		eRootLBName = rootLB //XXX
+	envrootLB := os.Getenv("MEX_ROOT_LB")
+	if envrootLB != "" && valid.IsDNSName(envrootLB) {
+		//N.B. ENVIRONEMENT CAN OVERWRITE THIS
+		mexEnv.eRootLBName = envrootLB
 	}
+	log.Debugln("mexEnv", mexEnv)
 }
 
 //EnableRootLB creates a seed presence node in cloudlet that also becomes first Agent node.
 //  It also sets up first basic network router and subnet, ready for running first MEX agent.
 func EnableRootLB(rootLB string) error {
-	InitEnvVars()
+	InitEnvVars(rootLB)
 
 	err := oscli.PrepNetwork()
 	if err != nil {
@@ -638,7 +646,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 		return err
 	}
 
-	kf := eMEXDir + "/" + eMEXSSHKey
+	kf := mexEnv.eMEXDir + "/" + mexEnv.eMEXSSHKey
 	out, err := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, kf, "root@"+addr+":").Output()
 	if err != nil {
 		return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
@@ -648,7 +656,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 
 //GetSSHClient returns ssh client handle for the server
 func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) {
-	auth := ssh.Auth{Keys: []string{eMEXDir + "/id_rsa_mobiledgex"}}
+	auth := ssh.Auth{Keys: []string{mexEnv.eMEXDir + "/id_rsa_mobiledgex"}}
 
 	addr, err := GetServerIPAddr(networkName, serverName)
 	if err != nil {
@@ -665,13 +673,13 @@ func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) 
 
 //GetRootLBName returns default rootLB name
 func GetRootLBName() string {
-	return eRootLBName
+	return mexEnv.eRootLBName
 }
 
 //WaitForRootLB waits for the RootLB instance to be up and copies of SSH credentials for internal networks.
 //  Idempotent, but don't call all the time.
 func WaitForRootLB(rootLB string) error {
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
@@ -681,7 +689,7 @@ func WaitForRootLB(rootLB string) error {
 		_, err := client.Output("grep done /tmp/mobiledgex.log") //XXX beware of use of word done
 		if err == nil {
 			running = true
-			if err := CopySSHCredential(rootLB, eMEXExternalNetwork, "root"); err != nil {
+			if err := CopySSHCredential(rootLB, mexEnv.eMEXExternalNetwork, "root"); err != nil {
 				return fmt.Errorf("can't copy ssh credential to RootLB, %v", err)
 			}
 			break
@@ -704,7 +712,7 @@ func WaitForRootLB(rootLB string) error {
 func InitDockerMachine(rootLB, addr string) error {
 	home := os.Getenv("HOME")
 
-	_, err := sh.Command("docker-machine", "create", "-d", "generic", "--generic-ip-address", addr, "--generic-ssh-key", eMEXDir+"/id_rsa_mobiledgex", "--generic-ssh-user", "bob", rootLB).Output()
+	_, err := sh.Command("docker-machine", "create", "-d", "generic", "--generic-ip-address", addr, "--generic-ssh-key", mexEnv.eMEXDir+"/id_rsa_mobiledgex", "--generic-ssh-user", "bob", rootLB).Output()
 	if err != nil {
 		return err
 	}
@@ -729,12 +737,12 @@ func InitDockerMachine(rootLB, addr string) error {
 //   It then obtains certficiates from Letsencrypt, if not done yet.  Then it runs the docker instance of MEX agent
 //   on the RootLB. It can be told to manually pull image from docker repository.  This allows upgrading with new image.
 //   It uses MEX private docker repository.  If an instance is running already, we don't start another one.
-func RunMEXAgent(fqdn string, pull bool) error {
+func RunMEXAgent(fqdn, keyjsonstr string, pull bool) error {
 	//fqdn is that of the machine/kvm-instance running the agent
 	if !valid.IsDNSName(fqdn) {
 		return fmt.Errorf("fqdn %s is not valid", fqdn)
 	}
-
+	mexEnv.eKeyJSONStr = keyjsonstr
 	err := EnableRootLB(fqdn)
 	if err != nil {
 		return fmt.Errorf("Failed to enable root LB %v", err)
@@ -745,12 +753,12 @@ func RunMEXAgent(fqdn string, pull bool) error {
 		return fmt.Errorf("Error waiting for rootLB %v", err)
 	}
 
-	client, err := GetSSHClient(fqdn, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(fqdn, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
 
-	cmd := fmt.Sprintf("docker ps |grep %s", eMEXAgentImage)
+	cmd := fmt.Sprintf("docker ps |grep %s", mexEnv.eMEXAgentImage)
 	_, err = client.Output(cmd)
 	if err == nil {
 		//agent docker instance exists
@@ -767,20 +775,20 @@ func RunMEXAgent(fqdn string, pull bool) error {
 		return fmt.Errorf("can't acquire certificate for %s, %v", fqdn, err)
 	}
 
-	if eMEXDockerRegPass == "" {
+	if mexEnv.eMEXDockerRegPass == "" {
 		return fmt.Errorf("empty docker registry pass env var")
 	}
 
-	cmd = fmt.Sprintf("echo %s > .docker-pass", eMEXDockerRegPass)
+	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv.eMEXDockerRegPass)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't store docker pass, %s, %v", out, err)
 	}
 
 	if pull {
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker pull %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", eMEXAgentImage, eMEXDockerRegistry, fqdn, eMEXAgentImage)
+		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker pull %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", mexEnv.eMEXAgentImage, mexEnv.eMEXDockerRegistry, fqdn, mexEnv.eMEXAgentImage)
 	} else {
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", eMEXDockerRegistry, fqdn, eMEXAgentImage)
+		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", mexEnv.eMEXDockerRegistry, fqdn, mexEnv.eMEXAgentImage)
 	}
 
 	out, err = client.Output(cmd)
@@ -799,7 +807,7 @@ func UpdateMEXAgent(fqdn string) error {
 	}
 
 	// Force pulling a potentially newer docker image
-	return RunMEXAgent(fqdn, true)
+	return RunMEXAgent(fqdn, "", true)
 }
 
 //RemoveMEXAgent deletes mex agent docker instance
@@ -809,7 +817,7 @@ func RemoveMEXAgent(fqdn string) error {
 		return err
 	}
 
-	recs, err := cloudflare.GetDNSRecords(eMEXZone)
+	recs, err := cloudflare.GetDNSRecords(mexEnv.eMEXZone)
 	if err != nil {
 		return fmt.Errorf("can not get dns records for %s, %v", fqdn, err)
 	}
@@ -829,14 +837,14 @@ func RemoveMEXAgent(fqdn string) error {
 
 //AcquireCertificates obtains certficates from Letsencrypt over ACME. It should be used carefully. The API calls have quota.
 func AcquireCertificates(fqdn string) error {
-	if eCFKey == "" {
+	if mexEnv.eCFKey == "" {
 		return fmt.Errorf("no MEX_CF_KEY")
 	}
-	if eCFUser == "" {
+	if mexEnv.eCFUser == "" {
 		return fmt.Errorf("no MEX_CF_USER")
 	}
 
-	client, err := GetSSHClient(fqdn, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(fqdn, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return fmt.Errorf("can't get ssh client for acme.sh, %v", err)
 	}
@@ -847,7 +855,7 @@ func AcquireCertificates(fqdn string) error {
 		return nil
 	}
 
-	cmd = fmt.Sprintf("docker run --rm -e CF_Key=%s -e CF_Email=%s -v `pwd`:/acme.sh --net=host neilpang/acme.sh --issue -d %s --dns dns_cf", eCFKey, eCFUser, fqdn)
+	cmd = fmt.Sprintf("docker run --rm -e CF_Key=%s -e CF_Email=%s -v `pwd`:/acme.sh --net=host neilpang/acme.sh --issue -d %s --dns dns_cf", mexEnv.eCFKey, mexEnv.eCFUser, fqdn)
 
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -885,23 +893,23 @@ func AcquireCertificates(fqdn string) error {
 
 //ActivateFQDNA updates and ensures FQDN is registered properly
 func ActivateFQDNA(fqdn string) error {
-	if eCFKey == "" {
+	if mexEnv.eCFKey == "" {
 		return fmt.Errorf("no MEX_CF_KEY")
 	}
-	if eCFUser == "" {
+	if mexEnv.eCFUser == "" {
 		return fmt.Errorf("no MEX_CF_USER")
 	}
 
-	if err := cloudflare.InitAPI(eCFUser, eCFKey); err != nil {
+	if err := cloudflare.InitAPI(mexEnv.eCFUser, mexEnv.eCFKey); err != nil {
 		return fmt.Errorf("cannot init cloudflare api, %v", err)
 	}
 
-	dr, err := cloudflare.GetDNSRecords(eMEXZone)
+	dr, err := cloudflare.GetDNSRecords(mexEnv.eMEXZone)
 	if err != nil {
 		return fmt.Errorf("cannot get dns records for %s, %v", fqdn, err)
 	}
 
-	addr, err := GetServerIPAddr(eMEXExternalNetwork, fqdn)
+	addr, err := GetServerIPAddr(mexEnv.eMEXExternalNetwork, fqdn)
 
 	for _, d := range dr {
 		if d.Type == "A" && d.Name == fqdn {
@@ -909,7 +917,7 @@ func ActivateFQDNA(fqdn string) error {
 				return nil
 			}
 			log.Warningf("cloudflare A record has different address %v, not %s, it will be overwritten", d, addr)
-			if err = cloudflare.DeleteDNSRecord(eMEXZone, d.ID); err != nil {
+			if err = cloudflare.DeleteDNSRecord(mexEnv.eMEXZone, d.ID); err != nil {
 				return fmt.Errorf("can't delete DNS record for %s, %v", fqdn, err)
 			}
 			break
@@ -919,7 +927,7 @@ func ActivateFQDNA(fqdn string) error {
 	if err != nil {
 		return err
 	}
-	if err := cloudflare.CreateDNSRecord(eMEXZone, fqdn, "A", addr, 1, false); err != nil {
+	if err := cloudflare.CreateDNSRecord(mexEnv.eMEXZone, fqdn, "A", addr, 1, false); err != nil {
 		return fmt.Errorf("can't create DNS record for %s, %v", fqdn, err)
 	}
 
@@ -986,12 +994,12 @@ func IsClusterReady(rootLB, clustername, flavor string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return false, fmt.Errorf("can't get ssh client for cluser ready check, %v", err)
 	}
 
-	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes | grep Ready |grep -v NotReady| wc -l", eMEXSSHKey, ipaddr)
+	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes | grep Ready |grep -v NotReady| wc -l", mexEnv.eMEXSSHKey, ipaddr)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return false, fmt.Errorf("kubectl fail on %s, %s, %v", name, out, err)
@@ -1056,13 +1064,13 @@ func CopyKubeConfig(rootLB, name string) error {
 	if err != nil {
 		return err
 	}
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return fmt.Errorf("can't get ssh client for copying kubeconfig, %v", err)
 	}
 
 	kconfname := fmt.Sprintf("kubeconfig-%s", name)
-	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config %s", eMEXSSHKey, ipaddr, kconfname)
+	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config %s", mexEnv.eMEXSSHKey, ipaddr, kconfname)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy kubeconfig from %s, %s, %v", name, out, err)
@@ -1093,17 +1101,17 @@ func ProcessKubeconfig(name string, dat []byte) error {
 	log.Debugln("kubeconfig", kc)
 
 	kconfname := fmt.Sprintf("kubeconfig-%s", name)
-	err = ioutil.WriteFile(eMEXDir+"/"+kconfname, dat, 0666)
+	err = ioutil.WriteFile(mexEnv.eMEXDir+"/"+kconfname, dat, 0666)
 	if err != nil {
 		return fmt.Errorf("can't write kubeconfig %s content,%v", name, err)
 	}
 
-	kc.Clusters[0].Cluster.Server = "http://" + eRootLBName + ":8001" //XXX allow for more ports
+	kc.Clusters[0].Cluster.Server = "http://" + mexEnv.eRootLBName + ":8001" //XXX allow for more ports
 	dat, err = yaml.Marshal(kc)
 	if err != nil {
 		return fmt.Errorf("can't marshal kubeconfig proxy edit %s, %v", name, err)
 	}
-	err = ioutil.WriteFile(eMEXDir+"/kubeconfig-proxy-"+name, dat, 0666)
+	err = ioutil.WriteFile(mexEnv.eMEXDir+"/kubeconfig-proxy-"+name, dat, 0666)
 	if err != nil {
 		return fmt.Errorf("can't write kubeconfig proxy %s, %v", name, err)
 	}
@@ -1143,7 +1151,7 @@ func FindClusterWithKey(key string) (string, error) {
 	}
 
 	for _, s := range srvs {
-		if s.Status == activeService && strings.Contains(s.Name, key) && strings.Contains(s.Name, eMEXK8SMaster) {
+		if s.Status == activeService && strings.Contains(s.Name, key) && strings.Contains(s.Name, mexEnv.eMEXK8SMaster) {
 			return s.Name, nil
 		}
 	}
@@ -1194,7 +1202,7 @@ func CreateKubernetesApp(rootLB, clustername, deployment, manifest string) error
 
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB, clustername, manifest string) (string, ssh.Client, string, error) {
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return "", nil, "", err
 	}
@@ -1349,7 +1357,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 		return fmt.Errorf("access layer %s not supported (yet)", accesslayer)
 	}
 
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
@@ -1370,8 +1378,8 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 	switch registryname {
 	case "docker.io":
 		cmd = fmt.Sprintf("docker run -d --rm --name %s --net=host %s", appname, imagename)
-	case eMEXDockerRegistry:
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host %s", eMEXDockerRegistry, appname, imagename)
+	case mexEnv.eMEXDockerRegistry:
+		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host %s", mexEnv.eMEXDockerRegistry, appname, imagename)
 	default:
 		return fmt.Errorf("unsupported registry %s", registryname)
 	}
@@ -1403,7 +1411,7 @@ func AddPathReverseProxy(rootLB, path, origin string) []error {
 
 	request := gorequest.New()
 
-	maURI := fmt.Sprintf("http://%s:%s/v1/proxy", rootLB, eMEXAgentPort)
+	maURI := fmt.Sprintf("http://%s:%s/v1/proxy", rootLB, mexEnv.eMEXAgentPort)
 
 	// The L7 reverse proxy terminates TLS at the RootLB and uses path routing to get to the service at a IP:port
 	pl := fmt.Sprintf(`{ "message": "add", "proxies": [ { "path": "/%s", "origin": "%s" } ] }`, path, origin)
@@ -1425,7 +1433,7 @@ func AddPathReverseProxy(rootLB, path, origin string) []error {
 //StartKubectlProxy starts kubectl proxy on the rootLB to handle kubectl commands remotely.
 //  To be called after copying over the kubeconfig file from cluster to rootLB.
 func StartKubectlProxy(rootLB, kubeconfig string) error {
-	client, err := GetSSHClient(rootLB, eMEXExternalNetwork, "root")
+	client, err := GetSSHClient(rootLB, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		return err
 	}

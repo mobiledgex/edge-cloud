@@ -21,22 +21,17 @@ var resourceMap = map[string]func(args []string){
 	"platform": platformHandler,
 }
 
-type commandsType struct {
-	cmd     string
-	handler func(*crmutil.Manifest)
+var clusterCommands = map[string]func(*crmutil.Manifest) error{
+	"create": crmutil.MEXClusterCreate,
+	"remove": crmutil.MEXClusterRemove,
 }
 
-var clusterCommands = map[string]func(*crmutil.Manifest){
-	"create": crmutil.ClusterCreate,
-	"remove": crmutil.ClusterRemove,
+var platformCommands = map[string]func(*crmutil.Manifest) error{
+	"init":  crmutil.MEXPlatformInit,
+	"clean": crmutil.MEXPlatformClean,
 }
 
-var platformCommands = map[string]func(*crmutil.Manifest){
-	"init":  crmutil.PlatformInit,
-	"clean": crmutil.PlatformClean,
-}
-
-var resourceCommands = map[string]map[string]func(*crmutil.Manifest){
+var resourceCommands = map[string]map[string]func(*crmutil.Manifest) error{
 	"cluster":  clusterCommands,
 	"platform": platformCommands,
 }
@@ -132,10 +127,13 @@ func manifestHandler(kind string, args []string) {
 	if mf.APIVersion != apiversion {
 		log.Fatalf("invalid api version")
 	}
-	if strings.Index(mf.Resource, kind) < 0 {
+	if !strings.Contains(mf.Resource, kind) {
 		log.Fatalf("not %s resource", kind)
 	}
-	resourceCommands[kind][cmd](mf)
+	err = resourceCommands[kind][cmd](mf)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func clusterHandler(args []string) {

@@ -65,7 +65,6 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 // they should be done in a separate worker thread.
 
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
-	//XXX validate CloudletKey
 	clusterInst := edgeproto.ClusterInst{}
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
 	if found {
@@ -73,6 +72,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.Flavor{}
 
+		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
 		// XXX why check flavor every time?
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
@@ -83,10 +83,9 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 
 		go func() {
 			var err error
-			var guid *string
 
 			if IsValidMEXOSEnv {
-				guid, err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
+				err = MEXClusterCreateClustInst(clusterInst.Key.ClusterKey.Name, clusterInst.Flavor.Name)
 			}
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
@@ -94,9 +93,8 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 				//   It should have rigorous format to discern errors, whether flavor or cloudlet error.
 			} else {
 				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
-				fmt.Println(*guid) //XXX No way to return this or any other details
 			}
-			err = AddFlavor(flavor.Key.Name)
+			err = MEXAddFlavorClusterInst(flavor.Key.Name) //Flavor is inside ClusterInst even though it comes from FlavorCache
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
 			}
@@ -105,15 +103,16 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		// clusterInst was deleted
 		go func() {
 			var err error
-			if IsValidMEXOSEnv {
-				err = DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
+			if !IsValidMEXOSEnv {
+				return
 			}
+			err = MEXClusterRemoveClustInst(key.ClusterKey.Name)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, str)
-			} else {
-				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
+				return
 			}
+			cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
 		}()
 	}
 }

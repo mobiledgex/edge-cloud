@@ -120,7 +120,7 @@ func TestCreateClusterFromClusterInstData(t *testing.T) {
 	TestAddFlavor(t)
 
 	for _, c := range ClusterInstData {
-		guid, err := CreateClusterFromClusterInstData(eRootLBName, &c)
+		guid, err := CreateClusterFromClusterInstData(mexEnv.eRootLBName, &c)
 		if err != nil {
 			t.Error(err)
 			return
@@ -134,7 +134,7 @@ func TestDeleteClusterByName(t *testing.T) {
 		return
 	}
 	for _, c := range ClusterInstData {
-		err := DeleteClusterByName(eRootLBName, c.Key.ClusterKey.Name)
+		err := DeleteClusterByName(mexEnv.eRootLBName, c.Key.ClusterKey.Name)
 		if err != nil {
 			t.Error(err)
 		}
@@ -145,7 +145,7 @@ func TestEnableRootLB(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := EnableRootLB(eRootLBName)
+	err := EnableRootLB(mexEnv.eRootLBName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -155,7 +155,7 @@ func TestWaitForRootLB(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := WaitForRootLB(eRootLBName)
+	err := WaitForRootLB(mexEnv.eRootLBName)
 
 	if err != nil {
 		t.Error(err)
@@ -166,7 +166,7 @@ func TestRunMEXAgent(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := RunMEXAgent(eRootLBName, false)
+	err := RunMEXAgent(mexEnv.eRootLBName, "", false)
 	if err != nil {
 		t.Error(err)
 	}
@@ -176,7 +176,7 @@ func TestRemoveMexAgent(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := RemoveMEXAgent(eRootLBName)
+	err := RemoveMEXAgent(mexEnv.eRootLBName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -186,7 +186,7 @@ func TestUpdateMexAgent(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := UpdateMEXAgent(eRootLBName)
+	err := UpdateMEXAgent(mexEnv.eRootLBName)
 	if err != nil {
 		t.Error(err)
 	}
@@ -197,7 +197,7 @@ func TestLBAddRoute(t *testing.T) {
 		return
 	}
 	name := os.Getenv("MEX_TEST_MN")
-	err := LBAddRoute(eRootLBName, name)
+	err := LBAddRoute(mexEnv.eRootLBName, name)
 	if err != nil {
 		t.Error(err)
 	}
@@ -207,7 +207,7 @@ func TestCopySSHCredential(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := CopySSHCredential(eRootLBName, eMEXExternalNetwork, "root")
+	err := CopySSHCredential(mexEnv.eRootLBName, mexEnv.eMEXExternalNetwork, "root")
 	if err != nil {
 		t.Error(err)
 	}
@@ -218,7 +218,7 @@ func TestIsClusterReady(t *testing.T) {
 		return
 	}
 	name := os.Getenv("MEX_TEST_MN")
-	ready, err := IsClusterReady(eRootLBName, name, "x1.medium")
+	ready, err := IsClusterReady(mexEnv.eRootLBName, name, "x1.medium")
 	if err != nil {
 		t.Error(err)
 		return
@@ -231,7 +231,7 @@ func TestCopyKubeConfig(t *testing.T) {
 		return
 	}
 	name := os.Getenv("MEX_TEST_MN")
-	err := CopyKubeConfig(eRootLBName, name)
+	err := CopyKubeConfig(mexEnv.eRootLBName, name)
 	if err != nil {
 		t.Error(err)
 		return
@@ -255,8 +255,8 @@ func TestCreateDockerApp(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := CreateDockerApp(eRootLBName, "test-docker-nginx", os.Getenv("MEX_TEST_MN"), "x1.medium",
-		"docker.io", eRootLBName+"/test-docker-nginx", "nginx", "", "", "L7")
+	err := CreateDockerApp(mexEnv.eRootLBName, "test-docker-nginx", os.Getenv("MEX_TEST_MN"), "x1.medium",
+		"docker.io", mexEnv.eRootLBName+"/test-docker-nginx", "nginx", "", "", "L7")
 	if err != nil {
 		t.Error(err)
 	}
@@ -269,7 +269,7 @@ func TestAddPathReverseProxy(t *testing.T) {
 	path := "test-docker-nginx"
 	origin := "http://localhost:80" //simple case
 
-	errs := AddPathReverseProxy(eRootLBName, path, origin)
+	errs := AddPathReverseProxy(mexEnv.eRootLBName, path, origin)
 	if errs != nil {
 		t.Error(errs[0])
 	}
@@ -279,7 +279,7 @@ func TestCreateKubernetesApp(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := CreateKubernetesApp(eRootLBName, "mex-k8s", "nginx", "https://k8s.io/examples/application/deployment.yaml")
+	err := CreateKubernetesApp(mexEnv.eRootLBName, "mex-k8s", "nginx", "https://k8s.io/examples/application/deployment.yaml")
 	if err != nil {
 		t.Error(err)
 	}
@@ -289,7 +289,7 @@ func TestCreateKubernetesNamespace(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := CreateKubernetesNamespace(eRootLBName, "mex-k8s", "https://k8s.io/examples/admin/namespace-prod.json")
+	err := CreateKubernetesNamespace(mexEnv.eRootLBName, "mex-k8s", "https://k8s.io/examples/admin/namespace-prod.json")
 
 	if err != nil {
 		t.Error(err)
@@ -300,7 +300,7 @@ func TestSetKubernetesConfigmapValues(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := SetKubernetesConfigmapValues(eRootLBName, "mex-k8s", "test-configmap-1", "key1=val1", "key2=val2")
+	err := SetKubernetesConfigmapValues(mexEnv.eRootLBName, "mex-k8s", "test-configmap-1", "key1=val1", "key2=val2")
 
 	if err != nil {
 		t.Error(err)
@@ -311,7 +311,7 @@ func TestGetKubernetesConfigmapYAML(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	out, err := GetKubernetesConfigmapYAML(eRootLBName, "mex-k8s", "test-configmap-1")
+	out, err := GetKubernetesConfigmapYAML(mexEnv.eRootLBName, "mex-k8s", "test-configmap-1")
 
 	if err != nil {
 		t.Error(err)
@@ -326,7 +326,7 @@ func TestStartKubectlProxy(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	err := StartKubectlProxy(eRootLBName, kcname)
+	err := StartKubectlProxy(mexEnv.eRootLBName, kcname)
 	if err != nil {
 		t.Error(err)
 	}
@@ -336,7 +336,7 @@ func TestProcessKubeconfig(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
 	}
-	dat, err := ioutil.ReadFile(eMEXDir + "/" + kcname)
+	dat, err := ioutil.ReadFile(mexEnv.eMEXDir + "/" + kcname)
 	if err != nil {
 		t.Error(err)
 		return

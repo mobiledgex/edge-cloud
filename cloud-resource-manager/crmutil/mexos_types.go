@@ -12,6 +12,9 @@ type MetadataType struct {
 	ResourceGroup string `json:"resourcegroup"`
 	OpenRC        string `json:"openrc"`
 	DNSZone       string `json:"dnszone"`
+	Kind          string `json:"kind"`
+	Operator      string `json:"operator"`
+	Key           string `json:"key"`
 }
 
 //NetworkType has network data
@@ -40,28 +43,32 @@ type ImageType struct {
 //FlavorType has data on flavor
 type FlavorType struct {
 	Name          string `json:"name"`
-	CPUs          int    `json:"cpus"`
+	Favorite      string `json:"favorite"`
 	Memory        string `json:"memory"`
+	Topology      string `json:"topology"`
+	NodeFlavor    string `json:"nodeflavor"`
+	MasterFlavor  string `json:"masterflavor"`
+	NetworkScheme string `json:"networkscheme"`
 	Storage       string `json:"storage"`
+	StorageScheme string `json:"storagescheme"`
+	CPUs          int    `json:"cpus"`
 	Masters       int    `json:"masters"`
 	Nodes         int    `json:"nodes"`
-	Favorite      string `json:"favorite"`
-	NetworkScheme string `json:"networkscheme"`
 }
 
 //SpecType holds spec block
 type SpecType struct {
 	Flavor          string        `json:"flavor"`
 	RootLB          string        `json:"rootlb"`
-	Networks        []NetworkType `json:"networks"`
-	Agent           AgentType     `json:"agent"`
-	Images          []ImageType   `json:"images"`
-	Flavors         []FlavorType  `json:"flavors"`
 	DockerRegistry  string        `json:"dockerregistry"`
 	ExternalNetwork string        `json:"externalnetwork"`
 	InternalNetwork string        `json:"internalnetwork"`
 	InternalCIDR    string        `json:"internalcidr"`
 	ExternalRouter  string        `json:"externalrouter"`
+	Networks        []NetworkType `json:"networks"`
+	Images          []ImageType   `json:"images"`
+	Flavors         []FlavorType  `json:"flavors"`
+	Agent           AgentType     `json:"agent"`
 }
 
 //Manifest is general container for the manifest yaml used by `mex`
