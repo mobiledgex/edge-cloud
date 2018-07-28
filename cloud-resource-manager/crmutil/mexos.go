@@ -1309,8 +1309,6 @@ func GetKubernetesConfigmapYAML(rootLB, clustername, configname string) (string,
 	return out, nil
 }
 
-//TODO support https://github.com/bitnami-labs/kubewatch
-
 //CreateDockerApp creates an app stricly just plain docker, not kubernetes
 func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri, imagename, mports, mpaths, accesslayer string) error {
 	if appname == "" {
@@ -1349,9 +1347,12 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 		return err
 	}
 
-	if accesslayer == "unknown" {
-		accesslayer = "L7" //XXX default to L7
+	if strings.Contains(accesslayer, "unknown") ||
+		strings.Contains(accesslayer, "Unknown") ||
+		strings.Contains(accesslayer, "L7") {
+		accesslayer = "L7"
 	}
+	//XXX what is AccessLayerL4L7
 
 	if accesslayer != "L7" { // XXX for now
 		return fmt.Errorf("access layer %s not supported (yet)", accesslayer)
@@ -1379,6 +1380,7 @@ func CreateDockerApp(rootLB, appname, clustername, flavorname, registryname, uri
 	case "docker.io":
 		cmd = fmt.Sprintf("docker run -d --rm --name %s --net=host %s", appname, imagename)
 	case mexEnv.eMEXDockerRegistry:
+		//XXX using mobiledgex registry
 		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host %s", mexEnv.eMEXDockerRegistry, appname, imagename)
 	default:
 		return fmt.Errorf("unsupported registry %s", registryname)

@@ -14,7 +14,6 @@ type MetadataType struct {
 	DNSZone       string `json:"dnszone"`
 	Kind          string `json:"kind"`
 	Operator      string `json:"operator"`
-	Key           string `json:"key"`
 }
 
 //NetworkType has network data
@@ -58,16 +57,24 @@ type FlavorType struct {
 
 //SpecType holds spec block
 type SpecType struct {
-	Flavor          string        `json:"flavor"`
+	Flavor          string        `json:"flavor"` // appInst flavor?
 	RootLB          string        `json:"rootlb"`
+	Image           string        `json:"image"`
+	AccessLayer     string        `json:"accesslayer"`
 	DockerRegistry  string        `json:"dockerregistry"`
 	ExternalNetwork string        `json:"externalnetwork"`
 	InternalNetwork string        `json:"internalnetwork"`
 	InternalCIDR    string        `json:"internalcidr"`
 	ExternalRouter  string        `json:"externalrouter"`
+	ProxyPath       string        `json:"proxypath"`
+	PortMap         string        `json:"portmap"`
+	PathMap         string        `json:"pathmap"`
+	URI             string        `json:"uri"`
+	Key             string        `json:"key"`
+	Kubernetes      string        `json:"kubernetes"`
 	Networks        []NetworkType `json:"networks"`
-	Images          []ImageType   `json:"images"`
-	Flavors         []FlavorType  `json:"flavors"`
+	Images          []ImageType   `json:"images"`  //platform VM images, qcow2s
+	Flavors         []FlavorType  `json:"flavors"` //mex flavors
 	Agent           AgentType     `json:"agent"`
 }
 

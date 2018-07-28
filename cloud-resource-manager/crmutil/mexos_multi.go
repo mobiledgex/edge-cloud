@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -43,15 +44,20 @@ spec:
 `
 
 type templateFill struct {
-	Name, Kind, Flavor, Tags, Tenant, Region, Zone   string
-	Location, RootLB, NetworkName, NetworkKind, CIDR string
-	StorageSpec, NetworkSpec, MasterFlavor, Topology string
-	NodeFlavor, Operator, Key                        string
-	NumMasters, NumNodes                             int
+	Name, Kind, Flavor, Tags, Tenant, Region, Zone     string
+	Location, RootLB, NetworkName, NetworkKind, CIDR   string
+	StorageSpec, NetworkSpec, MasterFlavor, Topology   string
+	NodeFlavor, Operator, Key, Image, Registry         string
+	AppFlavor, ProxyPath, PortMap, PathMap, Kubernetes string
+	AccessLayer                                        string
+	NumMasters, NumNodes                               int
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
-func MEXClusterCreateClustInst(name, flavor string) error {
+func MEXClusterCreateClustInst(clusterInst *edgeproto.ClusterInst) error {
+	//XXX future: trigger off clusterInst or flavor to pick the right template: mex, aks, gke
+	name := clusterInst.Key.ClusterKey.Name
+	flavor := clusterInst.Flavor.Name
 	data := templateFill{
 		Name:        name,
 		Tags:        name + "-tag",
@@ -87,7 +93,7 @@ func MEXClusterCreate(mf *Manifest) error {
 	switch mf.Kind {
 	case mexOSKubernetes:
 		log.Debugln(MEXGUIDMap)
-		guidval, ok := MEXGUIDMap[mf.Metadata.Name]
+		guidval, ok := MEXGUIDMap[mf.Metadata.Name] //TODO save map on nonvolatile storage
 		if ok {
 			return fmt.Errorf("%s exists as %s", mf.Metadata.Name, guidval)
 		}
@@ -133,7 +139,8 @@ func MEXClusterCreate(mf *Manifest) error {
 }
 
 //MEXClusterRemoveClustInst calls MEXClusterCreate with a manifest created from the template
-func MEXClusterRemoveClustInst(name string) error {
+func MEXClusterRemoveClustInst(clusterInst *edgeproto.ClusterInst) error {
+	name := clusterInst.Key.ClusterKey.Name
 	data := templateFill{
 		Name:        name,
 		Tags:        name + "-tag",
@@ -177,10 +184,11 @@ spec:
 `
 
 //MEXAddFlavorClusterInst uses template to fill in details for flavor add request and calls MEXAddFlavor
-func MEXAddFlavorClusterInst(flavor string) error {
+func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
+	name := flavor.Key.Name
 	data := templateFill{
-		Name:         flavor,
-		Tags:         flavor + "-tag",
+		Name:         name,
+		Tags:         name + "-tag",
 		RootLB:       "mex-lb-1.mobiledgex.net",
 		Kind:         "k8s-cluster-flavor",
 		NumMasters:   1,
@@ -281,6 +289,7 @@ func MEXSetEnvVars(mf *Manifest) error {
 		return err
 	}
 
+	//TODO need to allow users to save the environment under platform name inside .mobiledgex
 	return nil
 }
 
@@ -288,17 +297,19 @@ var yamlMEXPlatform = `apiVersion: v1
 kind: mex-openstack-kubernetes
 resource: openstack-platform
 metadata:
+  kind: {{.Kind}}
   name: {{.Name}}
   rootlb: {{.RootLB}}
-  tags: tdg-bonn
-  tenant: Ninc
+  tags: {{.Tags}}
+  tenant: {{.Tenant}}
   operator: {{.Operator}}
-  region: eu-central-1
-  zone: eu-central-1c
-  location: bonn
+  region: {{.Region}}
+  zone: {{.Zone}}
+  location: {{.Location}}
   openrc: ~/.mobiledgex/openrc
   dnszone: mobiledgex.net
 spec:
+  key: {{.Key}}
   dockerregistry: registry.mobiledgex.net:5000
   externalnetwork: external-network-shared
   internalnetwork: mex-k8s-net-1
@@ -325,6 +336,7 @@ spec:
 
 //MEXPlatformInitCloudletKey calls MEXPlatformInit with templated manifest
 func MEXPlatformInitCloudletKey(rootLB, cloudletKeyStr string) error {
+	//XXX fugure: trigger off cloudletKeyStr or flavor to pick the right template: mex, aks, gke
 	clk := edgeproto.CloudletKey{}
 	err := json.Unmarshal([]byte(cloudletKeyStr), &clk)
 	if err != nil {
@@ -337,8 +349,11 @@ func MEXPlatformInitCloudletKey(rootLB, cloudletKeyStr string) error {
 		Tags:     name + "-tag",
 		Key:      cloudletKeyStr,
 		Operator: operator,
+		Location: "bonn",
+		Region:   "eu-central-1",
+		Zone:     "eu-central-1c",
 		RootLB:   "mex-lb-1.mobiledgex.net",
-		Kind:     "mex-platform-openstack",
+		Kind:     "mex-tdg-openstack-kubernetes",
 	}
 
 	mf, err := templateUnmarshal(&data, yamlMEXPlatform)
@@ -382,7 +397,7 @@ func MEXPlatformInit(mf *Manifest) error {
 			return err
 		}
 		//TODO validate all mf content against platform data
-		if err = RunMEXAgent(mf.Spec.RootLB, mf.Metadata.Key, false); err != nil {
+		if err = RunMEXAgent(mf.Spec.RootLB, mf.Spec.Key, false); err != nil {
 			return err
 		}
 	case gcloudGKE:
@@ -405,6 +420,124 @@ func MEXPlatformClean(mf *Manifest) error {
 		}
 		if err = RemoveMEXAgent(mf.Metadata.Name); err != nil {
 			return err
+		}
+	case gcloudGKE:
+	case azureAKS:
+	}
+	return nil
+}
+
+var yamlMEXApp = `apiVersion: v1
+kind: mex-openstack-kubernetes
+resource: kubernetes-cluster
+metadata:
+  kind: {{.Kind}}
+  name: {{.Name}}
+  tags: {{.Tags}}
+  tenant: {{.Tenant}}
+spec:
+  key: {{.Key}}
+  rootlb: {{.RootLB}}
+  dockerregistry: {{.Registry}}
+  image: {{.Image}}
+  proxypath: {{.ProxyPath}}
+  portmap: {{.PortMap}} 
+  pathmap: {{.PathMap}}
+  flavor: {{.AppFlavor}}
+  uri: {{.AppUri}}
+  kubernetes: {{.Kubernetes}}
+  accesslayer: {{.AccessLayer}}
+`
+
+func MEXCreateAppInst(clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
+	appname := appInst.Key.AppKey.Name
+	rootLB := GetRootLBName()
+	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
+	if !ok {
+		return fmt.Errorf("cannot find imagetype in map")
+	}
+	accessLayer, aok := edgeproto.AccessLayer_name[int32(appInst.AccessLayer)]
+	if !aok {
+		return fmt.Errorf("cannot find accesslayer in map")
+	}
+
+	var data templateFill
+
+	switch imageType {
+	case "ImageTypeDocker": //XXX does not distinguish plain docker vs kubernetes
+		data = templateFill{
+			Kind:        "mex-app-docker",
+			Name:        appname,
+			Tags:        appname + "-docker-tag",
+			Key:         clusterInst.Key.ClusterKey.Name,
+			Tenant:      appname + "-tenant",
+			RootLB:      rootLB,
+			Registry:    "registry.mobiledgex.net:5000",
+			Image:       appInst.ImagePath,      //XXX docker image name?
+			ProxyPath:   rootLB + "/" + appname, //appInst.Uri ?
+			PortMap:     appInst.MappedPorts,    //XXX format
+			PathMap:     appInst.MappedPath,     //XXX format
+			AppFlavor:   appInst.Flavor.Name,    //XXX not sure what this is
+			AccessLayer: accessLayer,
+			Kubernetes:  "https://k8s.io/examples/application/deployment.yaml",
+		}
+	case "ImageTypeQCOW":
+		data = templateFill{
+			Kind:        "mex-app-virtual-machine",
+			Name:        appname,
+			Tags:        appname + "-qcow-tag",
+			Key:         clusterInst.Key.ClusterKey.Name,
+			Tenant:      appname + "-tenant",
+			RootLB:      rootLB,
+			Registry:    "registry.mobiledgex.net:5000",
+			Image:       appInst.ImagePath,      //XXX qcow image name?
+			ProxyPath:   rootLB + "/" + appname, //appInst.Uri ?
+			PortMap:     appInst.MappedPorts,    //XXX format
+			PathMap:     appInst.MappedPath,     //XXX format
+			AppFlavor:   appInst.Flavor.Name,    //XXX not sure what this is
+			AccessLayer: accessLayer,
+		}
+	default:
+		return fmt.Errorf("unknown image type")
+	}
+
+	//TODO Use non kubernetes data as CRD or ConfigMap
+
+	mf, err := templateUnmarshal(&data, yamlMEXPlatform)
+	if err != nil {
+		return err
+	}
+	return MEXCreateApp(mf)
+}
+
+func MEXCreateApp(mf *Manifest) error {
+	log.Debugln("create app", mf)
+
+	switch mf.Kind {
+	case mexOSKubernetes:
+		if strings.Contains(mf.Metadata.Tags, "docker") {
+			if mf.Spec.Kubernetes == "" { //plain docker
+				return CreateDockerApp(mf.Spec.RootLB,
+					mf.Metadata.Name,
+					mf.Spec.Key,
+					mf.Spec.Flavor,
+					mf.Spec.DockerRegistry,
+					mf.Spec.ProxyPath,
+					mf.Spec.Image,
+					mf.Spec.PortMap,
+					mf.Spec.PathMap,
+					mf.Spec.AccessLayer,
+				)
+			} else {
+				return CreateKubernetesApp(mf.Spec.RootLB,
+					mf.Spec.Key,
+					mf.Metadata.Name,
+					mf.Spec.Kubernetes,
+				)
+			}
+		} else if strings.Contains(mf.Metadata.Tags, "qcow") {
+		} else {
+			return fmt.Errorf("insufficient tag info")
 		}
 	case gcloudGKE:
 	case azureAKS:

@@ -72,6 +72,8 @@ func main() {
 				log.FatalLog("Error running MEX Agent", "error", err)
 				os.Exit(1)
 			}
+			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
+			//   Unlike, clusterInst, appInst, ... there are no messages flowing for cloudletInst
 		}()
 	}
 
