@@ -12,6 +12,8 @@ type MetadataType struct {
 	ResourceGroup string `json:"resourcegroup"`
 	OpenRC        string `json:"openrc"`
 	DNSZone       string `json:"dnszone"`
+	Kind          string `json:"kind"`
+	Operator      string `json:"operator"`
 }
 
 //NetworkType has network data
@@ -40,28 +42,42 @@ type ImageType struct {
 //FlavorType has data on flavor
 type FlavorType struct {
 	Name          string `json:"name"`
-	CPUs          int    `json:"cpus"`
+	Favorite      string `json:"favorite"`
 	Memory        string `json:"memory"`
+	Topology      string `json:"topology"`
+	NodeFlavor    string `json:"nodeflavor"`
+	MasterFlavor  string `json:"masterflavor"`
+	NetworkScheme string `json:"networkscheme"`
 	Storage       string `json:"storage"`
+	StorageScheme string `json:"storagescheme"`
+	CPUs          int    `json:"cpus"`
 	Masters       int    `json:"masters"`
 	Nodes         int    `json:"nodes"`
-	Favorite      string `json:"favorite"`
-	NetworkScheme string `json:"networkscheme"`
 }
 
 //SpecType holds spec block
 type SpecType struct {
-	Flavor          string        `json:"flavor"`
+	Flavor          string        `json:"flavor"` // appInst flavor?
+	Flags           string        `json:"flags"`
 	RootLB          string        `json:"rootlb"`
-	Networks        []NetworkType `json:"networks"`
-	Agent           AgentType     `json:"agent"`
-	Images          []ImageType   `json:"images"`
-	Flavors         []FlavorType  `json:"flavors"`
+	Image           string        `json:"image"`
+	AccessLayer     string        `json:"accesslayer"`
 	DockerRegistry  string        `json:"dockerregistry"`
 	ExternalNetwork string        `json:"externalnetwork"`
 	InternalNetwork string        `json:"internalnetwork"`
 	InternalCIDR    string        `json:"internalcidr"`
 	ExternalRouter  string        `json:"externalrouter"`
+	Options         string        `json:"options"`
+	ProxyPath       string        `json:"proxypath"`
+	PortMap         string        `json:"portmap"`
+	PathMap         string        `json:"pathmap"`
+	URI             string        `json:"uri"`
+	Key             string        `json:"key"`
+	Kubernetes      string        `json:"kubernetes"`
+	Networks        []NetworkType `json:"networks"`
+	Images          []ImageType   `json:"images"`  //platform VM images, qcow2s
+	Flavors         []FlavorType  `json:"flavors"` //mex flavors
+	Agent           AgentType     `json:"agent"`
 }
 
 //Manifest is general container for the manifest yaml used by `mex`
