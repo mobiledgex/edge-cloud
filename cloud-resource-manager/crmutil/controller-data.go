@@ -9,6 +9,7 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
+	CRMRootLB            *MEXRootLB
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
@@ -65,7 +66,6 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 // they should be done in a separate worker thread.
 
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
-	//XXX validate CloudletKey
 	clusterInst := edgeproto.ClusterInst{}
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
 	if found {
@@ -73,7 +73,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.Flavor{}
 
-		// XXX why check flavor every time?
+		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
 			//XXX returning flavor not found error to InstInfoError?
@@ -83,20 +83,17 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 
 		go func() {
 			var err error
-			var guid *string
 
 			if IsValidMEXOSEnv {
-				guid, err = CreateClusterFromClusterInstData(GetRootLBName(), &clusterInst)
+				err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
 			}
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
-				//   It should have rigorous format to discern errors, whether flavor or cloudlet error.
 			} else {
 				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
-				fmt.Println(*guid) //XXX No way to return this or any other details
 			}
-			err = AddFlavor(flavor.Key.Name)
+			err = MEXAddFlavorClusterInst(&flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
 			}
@@ -105,15 +102,16 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		// clusterInst was deleted
 		go func() {
 			var err error
-			if IsValidMEXOSEnv {
-				err = DeleteClusterByName(GetRootLBName(), key.ClusterKey.Name)
+			if !IsValidMEXOSEnv {
+				return
 			}
+			err = MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, str)
-			} else {
-				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
+				return
 			}
+			cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
 		}()
 	}
 }
@@ -124,7 +122,6 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 	if found {
 		// create or update appInst
 		cd.appInstInfoState(key, edgeproto.AppState_AppStateBuilding)
-		//XXX why check flavor each time?
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&appInst.Flavor, &flavor)
 		if !flavorFound {
@@ -133,7 +130,6 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 			cd.appInstInfoError(key, str)
 			return
 		}
-		//XXX why check clusterInst each time?
 		clusterInst := edgeproto.ClusterInst{}
 		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
@@ -151,35 +147,24 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 				return
 			}
 
-			//XXX no way to pass Kubernetes deployment, service, yaml, etc.
 			//XXX not sure what appInst.Flavor is
 
 			switch imagetype {
 			case "docker":
-				//Controller missing or not passing information:
-				//XXX possibly incorrectly named ImagePath seems to be the only
-				//  entry that can be used to specify docker image name.
-				//XXX appData has AccessLayer but appInst does not.
-				//   al, err := convertAccessLayer(appInst.AccessLayer)
-				//XXX no registry specification.
-				//XXX no namespace specification.
-				//XXX MappedPorts and MappedPath are strings but they can contain
-				//     multiple entries. Format is not clear.
+				//XXX ImagePath seems to be the only entry that can be used to specify docker image name.
+				//XXX no registry & namspace specification.
+				//XXX MappedPorts and MappedPath are strings but they can contain multiple entries.
 
 				var err error
 				if IsValidMEXOSEnv {
-					err = CreateDockerApp(GetRootLBName(),
-						appInst.Key.AppKey.Name, clusterInst.Key.ClusterKey.Name, appInst.Flavor.Name,
-						"docker.io", appInst.Uri, appInst.ImagePath, appInst.MappedPorts, appInst.MappedPath, "unknown")
+					err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 				}
 				if err != nil {
-					str := fmt.Sprintf("Create failed: %s", err)
-					cd.appInstInfoError(key, str)
+					cd.appInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
 					return
 				}
 			default:
-				str := "Unknown image type"
-				cd.appInstInfoError(key, str)
+				cd.appInstInfoError(key, "Unsupported image type")
 				return
 			}
 

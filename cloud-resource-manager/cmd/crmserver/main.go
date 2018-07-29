@@ -26,6 +26,7 @@ var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
+var rootLBName = flag.String("rootlb", "mex-lb-1.mobiledgex.net", "FQDN of root LB")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -61,14 +62,20 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	if OSEnvValid {
+		crmutil.MEXInit()
 		go func() {
-			rootLB := crmutil.GetRootLBName()
-
-			err = crmutil.RunMEXAgent(rootLB, false)
+			crmRootLB, err := crmutil.NewRootLB(*rootLBName)
+			if err != nil {
+				log.FatalLog("Can't get crm mex root")
+				os.Exit(1)
+			}
+			controllerData.CRMRootLB = crmRootLB
+			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
 			if err != nil {
 				log.FatalLog("Error running MEX Agent", "error", err)
 				os.Exit(1)
 			}
+			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
 		}()
 	}
 
