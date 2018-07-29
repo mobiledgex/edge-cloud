@@ -256,7 +256,7 @@ func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
 		return nil, fmt.Errorf("invalid flavor")
 	}
 	if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
-		return nil, fmt.Errorf("unsupported kubernetes flavor", mf.Spec.Flavor)
+		return nil, fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {

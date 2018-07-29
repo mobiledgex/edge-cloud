@@ -501,5 +501,4 @@ func MEXKillAppManifest(mf *Manifest) error {
 	default:
 		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
-	return nil
 }
