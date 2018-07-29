@@ -80,7 +80,6 @@ l+CiuBqG+a/qu6qJVvPH1zt5lN+z+VorKI0qM0bLkr9+2Qq01FPfaSUm9LfL3ggh
 rsYPlqEPvtSrS1HPve+6akMCAwEAAQ==
 -----END PUBLIC KEY-----`
 
-var mexSubject = "SessionCookie"
 
 // returns Peer IP or Error
 func VerifyCookie(cookie string) (string, error) {
