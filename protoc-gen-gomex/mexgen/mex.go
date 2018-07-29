@@ -84,6 +84,7 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	if hasGenerateCud {
 		m.gen.PrintImport("", "encoding/json")
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/objstore")
+		m.gen.PrintImport("", "github.com/coreos/etcd/clientv3/concurrency")
 	}
 	if m.importUtil {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
@@ -166,6 +167,7 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 	if ignoreBackend && GetBackend(field) {
 		return
 	}
+	defval := "0"
 	name := generator.CamelCase(*field.Name)
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -200,8 +202,11 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		m.P("if filter.", name, " != \"\" && filter.", name, " != m.", name, "{")
 		m.P("return false")
 		m.P("}")
+	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		defval = "false"
+		fallthrough
 	default:
-		m.P("if filter.", name, " != 0 && filter.", name, " != m.", name, "{")
+		m.P("if filter.", name, " != ", defval, " && filter.", name, " != m.", name, "{")
 		m.P("return false")
 		m.P("}")
 	}
@@ -446,7 +451,7 @@ func (s *{{.Name}}Store) Update(m *{{.Name}}, wait func(int64)) (*Result, error)
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var vers int64 = 0
 {{- if (.HasFields)}}
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil { return nil, err }
 	var cur {{.Name}}
 	err = json.Unmarshal(curBytes, &cur)
@@ -478,7 +483,7 @@ func (s *{{.Name}}Store) Put(m *{{.Name}}, wait func(int64)) (*Result, error) {
 	key := objstore.DbKeyString("{{.Name}}", m.GetKey())
 	var val []byte
 {{- if (.HasFields)}}
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur {{.Name}}
 		err = json.Unmarshal(curBytes, &cur)
@@ -516,7 +521,7 @@ func (s *{{.Name}}Store) Delete(m *{{.Name}}, wait func(int64)) (*Result, error)
 }
 
 func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -528,6 +533,33 @@ func (s *{{.Name}}Store) LoadOne(key string) (*{{.Name}}, int64, error) {
 	}
 	return &obj, rev, nil
 }
+
+func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.Name}}) bool {
+	keystr := objstore.DbKeyString("{{.Name}}", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}) {
+	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
+	keystr := objstore.DbKeyString("{{.Name}}", key)
+	stm.Del(keystr)
+}
+
 `
 
 type cacheTemplateArgs struct {
@@ -614,14 +646,20 @@ func (c *{{.Name}}Cache) Delete(in *{{.Name}}, rev int64) {
 }
 
 func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
+	notify := make(map[{{.KeyType}}]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }

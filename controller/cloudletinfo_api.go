@@ -41,7 +41,7 @@ func (s *CloudletInfoApi) Del(key *edgeproto.CloudletKey, wait func(int64)) {
 
 // Delete from notify just marks the cloudlet offline
 func (s *CloudletInfoApi) Delete(in *edgeproto.CloudletInfo, notifyId int64) {
-	in.State = edgeproto.CloudletState_Offline
+	in.State = edgeproto.CloudletState_CloudletStateOffline
 	in.Fields = []string{edgeproto.CloudletInfoFieldState}
 	s.store.Put(in, nil)
 }
@@ -56,7 +56,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 			continue
 		}
 		info.Key = val.Key
-		info.State = edgeproto.CloudletState_Offline
+		info.State = edgeproto.CloudletState_CloudletStateOffline
 		info.Fields = fields
 		s.store.Put(&info, nil)
 	}

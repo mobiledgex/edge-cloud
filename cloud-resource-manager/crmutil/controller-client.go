@@ -8,9 +8,10 @@ import (
 	log "gitlab.com/bobbae/logrus"
 )
 
+//CloudletClient calls CreateCloudlet
 func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerServer) error {
 	if len(srv.CloudResourceData.CloudResources) < 3 {
-		return fmt.Errorf("At least 3 Cloud Resource items required.")
+		return fmt.Errorf("at least 3 Cloud Resource items required")
 	}
 
 	err := prepCloudletData(srv)

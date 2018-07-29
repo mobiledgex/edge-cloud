@@ -56,6 +56,8 @@ message AppInst {
   string config_map = 11 [(protogen.backend) = true];
   // flavor defining resource requirements
   FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Access layer(s)
+  AccessLayer access_layer = 13;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -93,6 +95,15 @@ service AppInstApi {
   }
 }
 
+enum AppState {
+  AppStateUnknown = 0;
+  AppStateBuilding = 1;
+  AppStateReady = 2;
+  AppStateErrors = 3;
+  AppStateDeleting = 4;
+  AppStateDeleted = 5;
+}
+
 // AppInstInfo contains static data collected by the CRM to be sent
 // to the connected controller. It is put into etcd or equivalent.
 message AppInstInfo {
@@ -100,7 +111,11 @@ message AppInstInfo {
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Id of client assigned by server
-  int64 notify_id = 3;
+  int64 notify_id = 3 [(protocmd.hidetag) = "nocmp"];
+  // state
+  AppState state = 4;
+  // errors
+  repeated string errors = 5;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

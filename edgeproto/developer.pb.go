@@ -18,6 +18,7 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 
@@ -565,7 +566,7 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +600,7 @@ func (s *DeveloperStore) Put(m *Developer, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Developer", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Developer
 		err = json.Unmarshal(curBytes, &cur)
@@ -644,7 +645,7 @@ func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error)
 }
 
 func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -655,6 +656,32 @@ func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
 		return nil, 0, err
 	}
 	return &obj, rev, nil
+}
+
+func (s *DeveloperStore) STMGet(stm concurrency.STM, key *DeveloperKey, buf *Developer) bool {
+	keystr := objstore.DbKeyString("Developer", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *DeveloperStore) STMPut(stm concurrency.STM, obj *Developer) {
+	keystr := objstore.DbKeyString("Developer", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *DeveloperStore) STMDel(stm concurrency.STM, key *DeveloperKey) {
+	keystr := objstore.DbKeyString("Developer", key)
+	stm.Del(keystr)
 }
 
 // DeveloperCache caches Developer objects in memory in a hash table
@@ -733,14 +760,20 @@ func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 }
 
 func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
+	notify := make(map[DeveloperKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }

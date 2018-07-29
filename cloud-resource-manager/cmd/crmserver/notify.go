@@ -5,6 +5,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
+//NewNotifyHandler instantiates new notify handler
 func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
 	h := notify.DefaultHandler{}
 	h.SendAppInst = &cd.AppInstCache
@@ -13,6 +14,8 @@ func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
 	h.RecvCloudlet = &cd.CloudletCache
 	h.SendAppInstInfo = &cd.AppInstInfoCache
 	h.RecvAppInstInfo = &cd.AppInstInfoCache
+	h.SendClusterInstInfo = &cd.ClusterInstInfoCache
+	h.RecvClusterInstInfo = &cd.ClusterInstInfoCache
 	h.SendCloudletInfo = &cd.CloudletInfoCache
 	h.RecvCloudletInfo = &cd.CloudletInfoCache
 	h.RecvFlavor = &cd.FlavorCache

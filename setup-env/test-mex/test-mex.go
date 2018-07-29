@@ -256,6 +256,14 @@ func main() {
 				errorsFound += 1
 				errors = append(errors, "controller api failed")
 			}
+		case "ctrlinfo":
+			setupmex.UpdateApiAddrs()
+			if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+				log.Printf("Unable to run api for %s\n", action)
+				errorsFound += 1
+				errors = append(errors, "controller info api failed")
+
+			}
 		case "dmeapi":
 			setupmex.UpdateApiAddrs()
 			if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {

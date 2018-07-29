@@ -166,13 +166,13 @@ func TestCRM(t *testing.T) {
 	assert.Equal(t, uint64(1), stats.Connects)
 
 	// Add data to controller
-	for ii, _ := range data.Flavors {
+	for ii := range data.Flavors {
 		ctrlHandler.FlavorCache.Update(&data.Flavors[ii], 0)
 	}
-	for ii, _ := range data.ClusterInsts {
+	for ii := range data.ClusterInsts {
 		ctrlHandler.ClusterInstCache.Update(&data.ClusterInsts[ii], 0)
 	}
-	for ii, _ := range data.AppInstances {
+	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Update(&data.AppInstances[ii], 0)
 	}
 	notify.WaitFor(&controllerData.FlavorCache, 3)
@@ -188,13 +188,13 @@ func TestCRM(t *testing.T) {
 	assert.Equal(t, 2, len(controllerData.AppInstCache.Objs))
 
 	// delete
-	for ii, _ := range data.AppInstances {
+	for ii := range data.AppInstances {
 		ctrlHandler.AppInstCache.Delete(&data.AppInstances[ii], 0)
 	}
-	for ii, _ := range data.ClusterInsts {
+	for ii := range data.ClusterInsts {
 		ctrlHandler.ClusterInstCache.Delete(&data.ClusterInsts[ii], 0)
 	}
-	for ii, _ := range data.Flavors {
+	for ii := range data.Flavors {
 		ctrlHandler.FlavorCache.Delete(&data.Flavors[ii], 0)
 	}
 	notify.WaitFor(&controllerData.FlavorCache, 0)

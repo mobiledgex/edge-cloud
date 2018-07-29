@@ -36,6 +36,7 @@ It has these top-level messages:
 	Cluster
 	ClusterInstKey
 	ClusterInst
+	ClusterInstInfo
 	DeveloperKey
 	Developer
 	FlavorKey
@@ -60,8 +61,8 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"

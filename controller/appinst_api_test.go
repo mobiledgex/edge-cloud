@@ -45,7 +45,7 @@ func TestAppInstApi(t *testing.T) {
 	}
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)
-		assert.Nil(t, err, "Create app")
+		assert.Nil(t, err, "Create app %v", obj)
 	}
 	for _, obj := range testutil.OperatorData {
 		_, err := operatorApi.CreateOperator(ctx, &obj)
@@ -124,4 +124,59 @@ func ClientAppInstCachedFieldsTest(t *testing.T, appApi edgeproto.AppApiClient, 
 	cCloudletApi := testutil.NewClientCloudletApi(cloudletApi)
 	cAppInstApi := testutil.NewClientAppInstApi(appInstApi)
 	appInstCachedFieldsTest(t, cAppApi, cCloudletApi, cAppInstApi)
+}
+
+func TestAutoClusterInst(t *testing.T) {
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
+	objstore.InitRegion(1)
+
+	dummy := dummyEtcd{}
+	dummy.Start()
+
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
+
+	// create supporting data
+	ctx := context.TODO()
+	for _, obj := range testutil.DevData {
+		_, err := developerApi.CreateDeveloper(ctx, &obj)
+		assert.Nil(t, err, "Create developer")
+	}
+	for _, obj := range testutil.FlavorData {
+		_, err := flavorApi.CreateFlavor(ctx, &obj)
+		assert.Nil(t, err, "Create flavor")
+	}
+	for _, obj := range testutil.ClusterData {
+		_, err := clusterApi.CreateCluster(ctx, &obj)
+		assert.Nil(t, err, "Create cluster")
+	}
+	for _, obj := range testutil.AppData {
+		_, err := appApi.CreateApp(ctx, &obj)
+		assert.Nil(t, err, "Create app")
+	}
+	for _, obj := range testutil.OperatorData {
+		_, err := operatorApi.CreateOperator(ctx, &obj)
+		assert.Nil(t, err, "Create operator")
+	}
+	for _, obj := range testutil.CloudletData {
+		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
+		assert.Nil(t, err, "Create cloudlet")
+	}
+
+	// since cluster inst does not exist, it will be auto-created
+	_, err := appInstApi.CreateAppInst(ctx, &testutil.AppInstData[0])
+	assert.Nil(t, err, "create app inst")
+	clusterInst := edgeproto.ClusterInst{}
+	found := clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
+	assert.True(t, found, "get auto-clusterinst")
+	assert.True(t, clusterInst.Auto, "clusterinst is auto")
+	// delete appinst should also delete clusterinst
+	_, err = appInstApi.DeleteAppInst(ctx, &testutil.AppInstData[0])
+	assert.Nil(t, err, "delete app inst")
+	found = clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
+	assert.False(t, found, "get auto-clusterinst")
+
+	dummy.Stop()
 }

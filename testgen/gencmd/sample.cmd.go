@@ -28,8 +28,8 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -507,8 +507,10 @@ func init() {
 	TestGenIn.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.LocNonnull.Timestamp.Seconds, "locnonnull-timestamp-seconds", 0, "LocNonnull.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.LocNonnull.Timestamp.Nanos, "locnonnull-timestamp-nanos", 0, "LocNonnull.Timestamp.Nanos")
+	TestGenIn.RepeatedInt = make([]int64, 1)
 	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInt[0], "repeatedint", 0, "RepeatedInt")
 	TestGenFlagSet.BytesHexVar(&TestGenIn.Ip, "ip", nil, "Ip")
+	TestGenIn.Names = make([]string, 1)
 	TestGenFlagSet.StringVar(&TestGenIn.Names[0], "names", "", "Names")
 	TestGenIn.RepeatedMsg = make([]*testgen.IncludeMessage, 1)
 	TestGenIn.RepeatedMsg[0] = &testgen.IncludeMessage{}

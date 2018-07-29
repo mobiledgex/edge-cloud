@@ -18,6 +18,7 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 
@@ -548,7 +549,7 @@ func (s *OperatorStore) Update(m *Operator, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Operator", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -582,7 +583,7 @@ func (s *OperatorStore) Put(m *Operator, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Operator", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Operator
 		err = json.Unmarshal(curBytes, &cur)
@@ -627,7 +628,7 @@ func (s *OperatorStore) Delete(m *Operator, wait func(int64)) (*Result, error) {
 }
 
 func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -638,6 +639,32 @@ func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
 		return nil, 0, err
 	}
 	return &obj, rev, nil
+}
+
+func (s *OperatorStore) STMGet(stm concurrency.STM, key *OperatorKey, buf *Operator) bool {
+	keystr := objstore.DbKeyString("Operator", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *OperatorStore) STMPut(stm concurrency.STM, obj *Operator) {
+	keystr := objstore.DbKeyString("Operator", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *OperatorStore) STMDel(stm concurrency.STM, key *OperatorKey) {
+	keystr := objstore.DbKeyString("Operator", key)
+	stm.Del(keystr)
 }
 
 // OperatorCache caches Operator objects in memory in a hash table
@@ -716,14 +743,20 @@ func (c *OperatorCache) Delete(in *Operator, rev int64) {
 }
 
 func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
+	notify := make(map[OperatorKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }

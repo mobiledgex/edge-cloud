@@ -16,8 +16,8 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -47,11 +47,10 @@ var CloudletMetricsIn edgeproto.CloudletMetrics
 var CloudletMetricsFlagSet = pflag.NewFlagSet("CloudletMetrics", pflag.ExitOnError)
 var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig", pflag.ExitOnError)
 var CloudletStateStrings = []string{
-	"Unknown",
-	"ConfiguringOpenstack",
-	"ConfiguringKubernetes",
-	"Ready",
-	"Offline",
+	"CloudletStateUnknown",
+	"CloudletStateErrors",
+	"CloudletStateReady",
+	"CloudletStateOffline",
 }
 
 func CloudletKeySlicer(in *edgeproto.CloudletKey) []string {
@@ -110,7 +109,7 @@ func CloudletHeaderSlicer() []string {
 }
 
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -122,11 +121,15 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxRam), 10))
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxVcores), 10))
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxVolGb), 10))
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
 	return s
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -135,6 +138,7 @@ func CloudletInfoHeaderSlicer() []string {
 	s = append(s, "OsMaxRam")
 	s = append(s, "OsMaxVcores")
 	s = append(s, "OsMaxVolGb")
+	s = append(s, "Errors")
 	return s
 }
 
@@ -514,11 +518,13 @@ func init() {
 	CloudletNoConfigFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [Unknown ConfiguringOpenstack ConfiguringKubernetes Ready Offline]")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline]")
 	CloudletInfoFlagSet.Int64Var(&CloudletInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
+	CloudletInfoIn.Errors = make([]string, 1)
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Errors[0], "errors", "", "Errors")
 	CloudletMetricsFlagSet.Uint64Var(&CloudletMetricsIn.Foo, "foo", 0, "Foo")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
@@ -606,21 +612,22 @@ func CloudletInfoSetFields() {
 	if CloudletInfoFlagSet.Lookup("osmaxvolgb").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "8")
 	}
+	if CloudletInfoFlagSet.Lookup("errors").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "9")
+	}
 }
 
 func parseCloudletInfoEnums() error {
 	if CloudletInfoInState != "" {
 		switch CloudletInfoInState {
-		case "Unknown":
+		case "CloudletStateUnknown":
 			CloudletInfoIn.State = edgeproto.CloudletState(0)
-		case "ConfiguringOpenstack":
+		case "CloudletStateErrors":
 			CloudletInfoIn.State = edgeproto.CloudletState(1)
-		case "ConfiguringKubernetes":
+		case "CloudletStateReady":
 			CloudletInfoIn.State = edgeproto.CloudletState(2)
-		case "Ready":
+		case "CloudletStateOffline":
 			CloudletInfoIn.State = edgeproto.CloudletState(3)
-		case "Offline":
-			CloudletInfoIn.State = edgeproto.CloudletState(4)
 		default:
 			return errors.New("Invalid value for CloudletInfoInState")
 		}

@@ -33,11 +33,14 @@ message Cluster {
   FlavorKey flavor = 3 [(gogoproto.nullable) = false];
   // number of nodes in the cluster
   int32 nodes = 4;
+  // auto set to true when automatically created by back-end
+  bool auto = 5 [(protogen.backend) = true];
   // Future: policy options on where this cluster can be created.
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "Auto";
 }
 
 service ClusterApi {

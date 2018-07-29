@@ -65,6 +65,7 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.AppInstApiCmd = edgeproto.NewAppInstApiClient(conn)
 	gencmd.CloudletInfoApiCmd = edgeproto.NewCloudletInfoApiClient(conn)
 	gencmd.AppInstInfoApiCmd = edgeproto.NewAppInstInfoApiClient(conn)
+	gencmd.ClusterInstInfoApiCmd = edgeproto.NewClusterInstInfoApiClient(conn)
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
 	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
@@ -89,6 +90,7 @@ func main() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.PersistentFlags().StringVar(&addr, "addr", "127.0.0.1:55001", "address to connect to")
 	cmdsup.AddOutputFormatFlag(rootCmd.PersistentFlags())
+	cmdsup.AddHideTagsFormatFlag(rootCmd.PersistentFlags())
 
 	controllerCmd.AddCommand(gencmd.DeveloperApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
@@ -100,6 +102,7 @@ func main() {
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstInfoApiCmds...)
+	controllerCmd.AddCommand(gencmd.ClusterInstInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)

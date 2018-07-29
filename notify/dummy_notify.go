@@ -12,12 +12,13 @@ import (
 
 type DummyHandler struct {
 	DefaultHandler
-	AppInstCache      edgeproto.AppInstCache
-	CloudletCache     edgeproto.CloudletCache
-	FlavorCache       edgeproto.FlavorCache
-	ClusterInstCache  edgeproto.ClusterInstCache
-	AppInstInfoCache  edgeproto.AppInstInfoCache
-	CloudletInfoCache edgeproto.CloudletInfoCache
+	AppInstCache         edgeproto.AppInstCache
+	CloudletCache        edgeproto.CloudletCache
+	FlavorCache          edgeproto.FlavorCache
+	ClusterInstCache     edgeproto.ClusterInstCache
+	AppInstInfoCache     edgeproto.AppInstInfoCache
+	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
+	CloudletInfoCache    edgeproto.CloudletInfoCache
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -25,6 +26,7 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitAppInstCache(&h.AppInstCache)
 	edgeproto.InitCloudletCache(&h.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
+	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
@@ -34,6 +36,8 @@ func NewDummyHandler() *DummyHandler {
 	h.DefaultHandler.RecvCloudlet = &h.CloudletCache
 	h.DefaultHandler.SendAppInstInfo = &h.AppInstInfoCache
 	h.DefaultHandler.RecvAppInstInfo = &h.AppInstInfoCache
+	h.DefaultHandler.SendClusterInstInfo = &h.ClusterInstInfoCache
+	h.DefaultHandler.RecvClusterInstInfo = &h.ClusterInstInfoCache
 	h.DefaultHandler.SendCloudletInfo = &h.CloudletInfoCache
 	h.DefaultHandler.RecvCloudletInfo = &h.CloudletInfoCache
 	h.DefaultHandler.SendFlavor = &h.FlavorCache
@@ -52,6 +56,7 @@ func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
 
 func (s *DummyHandler) SetClientCb(cl *Client) {
 	s.AppInstInfoCache.SetNotifyCb(cl.UpdateAppInstInfo)
+	s.ClusterInstInfoCache.SetNotifyCb(cl.UpdateClusterInstInfo)
 	s.CloudletInfoCache.SetNotifyCb(cl.UpdateCloudletInfo)
 }
 
@@ -63,6 +68,7 @@ const (
 	FlavorType
 	ClusterInstType
 	AppInstInfoType
+	ClusterInstInfoType
 	CloudletInfoType
 )
 
@@ -83,6 +89,8 @@ func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 		cache = &s.ClusterInstCache
 	case AppInstInfoType:
 		cache = &s.AppInstInfoCache
+	case ClusterInstInfoType:
+		cache = &s.ClusterInstInfoCache
 	case CloudletInfoType:
 		cache = &s.CloudletInfoCache
 	}
@@ -103,6 +111,10 @@ func WaitFor(cache WaitForCache, count int) {
 
 func (s *DummyHandler) WaitForAppInstInfo(count int) {
 	WaitFor(&s.AppInstInfoCache, count)
+}
+
+func (s *DummyHandler) WaitForClusterInstInfo(count int) {
+	WaitFor(&s.ClusterInstInfoCache, count)
 }
 
 func (s *DummyHandler) WaitForCloudletInfo(count int) {

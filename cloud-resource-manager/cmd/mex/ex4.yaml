@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: mex-openstack-kubernetes
+resource: openstack-platform
+metadata:
+  name: mex-lb-1.mobiledgex.net
+  tags: tdg-bonn
+  tenant: Ninc
+  region: eu-central-1
+  zone: eu-central-1c
+  location: bonn
+  openrc: ~/.mobiledgex/openrc
+  dnszone: mobiledgex.net
+spec:
+  dockerregistry: registry.mobiledgex.net:5000
+  externalnetwork: external-network-shared
+  internalnetwork: mex-k8s-net-1
+  internalcidr: 10.101.101.0/24
+  externalrouter: mex-k8s-router-1
+  agent: 
+    image: registry.mobiledgex.net:5000/mobiledgex/mexosagent
+    status: active
+  images:
+    - name: mobiledgex-16.04-2
+      kind: qcow2
+      favorite: yes
+      osflavor: m4.large
+  flavors:
+    - name: x1.medium
+      cpus: 4
+      memory: 8G
+      storage: local
+      masters: 1
+      nodes: 2
+      favorite: yes
+      networkscheme: mexproxy

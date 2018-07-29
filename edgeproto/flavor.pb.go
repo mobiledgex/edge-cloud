@@ -19,6 +19,7 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 
@@ -537,7 +538,7 @@ func (s *FlavorStore) Update(m *Flavor, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Flavor", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.kvstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -571,7 +572,7 @@ func (s *FlavorStore) Put(m *Flavor, wait func(int64)) (*Result, error) {
 	}
 	key := objstore.DbKeyString("Flavor", m.GetKey())
 	var val []byte
-	curBytes, _, err := s.kvstore.Get(key)
+	curBytes, _, _, err := s.kvstore.Get(key)
 	if err == nil {
 		var cur Flavor
 		err = json.Unmarshal(curBytes, &cur)
@@ -616,7 +617,7 @@ func (s *FlavorStore) Delete(m *Flavor, wait func(int64)) (*Result, error) {
 }
 
 func (s *FlavorStore) LoadOne(key string) (*Flavor, int64, error) {
-	val, rev, err := s.kvstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -627,6 +628,32 @@ func (s *FlavorStore) LoadOne(key string) (*Flavor, int64, error) {
 		return nil, 0, err
 	}
 	return &obj, rev, nil
+}
+
+func (s *FlavorStore) STMGet(stm concurrency.STM, key *FlavorKey, buf *Flavor) bool {
+	keystr := objstore.DbKeyString("Flavor", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *FlavorStore) STMPut(stm concurrency.STM, obj *Flavor) {
+	keystr := objstore.DbKeyString("Flavor", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *FlavorStore) STMDel(stm concurrency.STM, key *FlavorKey) {
+	keystr := objstore.DbKeyString("Flavor", key)
+	stm.Del(keystr)
 }
 
 // FlavorCache caches Flavor objects in memory in a hash table
@@ -705,14 +732,20 @@ func (c *FlavorCache) Delete(in *Flavor, rev int64) {
 }
 
 func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
+	notify := make(map[FlavorKey]struct{})
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
 			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				notify[key] = struct{}{}
 			}
+		}
+	}
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, _ := range notify {
+			c.NotifyCb(&key)
 		}
 	}
 }

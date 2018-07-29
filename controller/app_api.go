@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -71,12 +73,7 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 }
 
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
-	if !developerApi.HasDeveloper(&in.Key.DeveloperKey) {
-		return &edgeproto.Result{}, errors.New("Specified developer not found")
-	}
-	if !flavorApi.HasFlavor(&in.Flavor) {
-		return &edgeproto.Result{}, errors.New("Specified flavor not found")
-	}
+	var err error
 	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
 		return &edgeproto.Result{}, errors.New("Please specify Image Type")
 	}
@@ -84,8 +81,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// default to L7
 		in.AccessLayer = edgeproto.AccessLayer_AccessLayerL7
 	}
-	if in.AccessPorts == "" && (in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4 ||
-		in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4L7) {
+	if in.AccessPorts == "" && (in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4 || in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4L7) {
 		return &edgeproto.Result{}, errors.New("Please specify ports for L4 access types")
 	}
 	if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
@@ -94,32 +90,61 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			util.DockerSanitize(in.Key.Name) + ":" +
 			util.DockerSanitize(in.Key.Version)
 	}
+
+	// make sure cluster exists
+	// This is a separate STM to avoid ordering issues between
+	// auto-cluster create and app create in watch cb.
 	if in.Cluster.Name == "" {
-		// cluster not specified, create one automatically
-		in.Cluster.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix,
-			in.Key.Name)
-		in.Cluster.Name = util.K8SSanitize(in.Cluster.Name)
-		cluster := edgeproto.Cluster{}
-		cluster.Key = in.Cluster
-		cluster.Flavor = in.Flavor
-		cluster.Nodes = ClusterAutoNodes
-		// it may be possible that cluster already exists
-		if !clusterApi.HasKey(&cluster.Key) {
-			resp, err := clusterApi.createClusterInternal(&cluster)
-			if err != nil {
-				return resp, err
+		err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+			if s.store.STMGet(stm, &in.Key, nil) {
+				return objstore.ErrKVStoreKeyExists
 			}
-			defer func() {
-				if err != nil {
-					clusterApi.deleteClusterInternal(&cluster)
-				}
-			}()
+			// cluster not specified, create one automatically
+			in.Cluster.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix,
+				in.Key.Name)
+			in.Cluster.Name = util.K8SSanitize(in.Cluster.Name)
+			cluster := edgeproto.Cluster{}
+			cluster.Key = in.Cluster
+			cluster.Flavor = in.Flavor
+			cluster.Nodes = ClusterAutoNodes
+			cluster.Auto = true
+			// it may be possible that cluster already exists
+			if !clusterApi.store.STMGet(stm, &cluster.Key, nil) {
+				log.DebugLog(log.DebugLevelApi,
+					"Create auto-cluster",
+					"key", cluster.Key,
+					"app", in)
+				clusterApi.store.STMPut(stm, &cluster)
+			}
+			return nil
+		})
+		if err != nil {
+			return &edgeproto.Result{}, err
 		}
-	} else if !clusterApi.HasKey(&in.Cluster) {
-		return &edgeproto.Result{}, errors.New("Specified Cluster not found")
+		defer func() {
+			if err != nil {
+				s.deleteClusterAuto(&in.Cluster)
+			}
+		}()
 	}
-	resp, err := s.store.Create(in, s.sync.syncWait)
-	return resp, err
+
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
+			return errors.New("Specified developer not found")
+		}
+		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
+			return errors.New("Specified flavor not found")
+		}
+		if s.store.STMGet(stm, &in.Key, nil) {
+			return objstore.ErrKVStoreKeyExists
+		}
+		if !clusterApi.store.STMGet(stm, &in.Cluster, nil) {
+			return errors.New("Specified Cluster not found")
+		}
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
@@ -132,8 +157,23 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}
-	res, err := s.store.Delete(in, s.sync.syncWait)
-	if len(dynInsts) > 0 {
+	clusterKey := edgeproto.ClusterKey{}
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		app := edgeproto.App{}
+		if !s.store.STMGet(stm, in.GetKey(), &app) {
+			// already deleted
+			return nil
+		}
+		clusterKey = app.Cluster
+		// delete app
+		s.store.STMDel(stm, in.GetKey())
+		return nil
+	})
+	if err == nil {
+		// delete cluster afterwards if it was auto-created
+		s.deleteClusterAuto(&clusterKey)
+	}
+	if err == nil && len(dynInsts) > 0 {
 		// delete dynamic instances
 		for key, _ := range dynInsts {
 			appInst := edgeproto.AppInst{Key: key}
@@ -145,7 +185,21 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			}
 		}
 	}
-	return res, err
+	return &edgeproto.Result{}, err
+}
+
+func (s *AppApi) deleteClusterAuto(key *edgeproto.ClusterKey) {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		cluster := edgeproto.Cluster{}
+		if clusterApi.store.STMGet(stm, key, &cluster) && cluster.Auto {
+			clusterApi.store.STMDel(stm, key)
+		}
+		return nil
+	})
+	if err != nil {
+		log.InfoLog("Failed to delete auto cluster",
+			"clusterInst", key, "err", err)
+	}
 }
 
 func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: gcloud-gke
+resource: kubernetes-cluster
+metadata:
+  name: testpoke
+  tags: testpoketag
+  tenant: ninc
+  region: us-west1
+  zone: us-west1-a
+  location: us-west
+  project: still-entity-201400

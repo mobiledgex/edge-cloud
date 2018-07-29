@@ -33,6 +33,8 @@ var commandList = []string{
 }
 
 func main() {
+	flag.Parse()
+
 	if len(os.Args) < 2 {
 		printHelpAndExit()
 	}
@@ -83,7 +85,10 @@ func doAddCloudResource() {
 
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *name == "" || *address == "" || *location == "" || *opkey == "" || *opkeyname == "" || *crm == "" {
 		cmd.PrintDefaults()
@@ -124,7 +129,10 @@ func doListCloudResource() {
 	category := cmd.Int("category", 0, "Category of the cloudlet to list")
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *category < 0 {
 		cmd.PrintDefaults()
@@ -184,7 +192,10 @@ func doDeleteCloudResource() {
 
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *name == "" || *address == "" || *location == "" || *opkey == "" || *opkeyname == "" || *crm == "" {
 		cmd.PrintDefaults()
@@ -230,7 +241,10 @@ func doDeployApplication() {
 
 	//TODO context, limitfactor, cpu, memory, repository, ...
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *crm == "" || *name == "" || *kind == "" || *image == "" {
 		cmd.PrintDefaults()
@@ -299,7 +313,10 @@ func doDeleteApplication() {
 	namespace := cmd.String("namespace", "default", "Namespace of the application")
 	region := cmd.String("region", "", "Region of the application")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *crm == "" || *name == "" || *kind == "" {
 		cmd.PrintDefaults()
