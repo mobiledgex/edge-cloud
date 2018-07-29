@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -35,6 +34,7 @@ metadata:
   zone: {{.Zone}}
   location: {{.Location}}
 spec:
+  flags: {{.Flags}}
   flavor: {{.Flavor}}
   rootlb: {{.RootLB}}
   networks:
@@ -44,18 +44,27 @@ spec:
 `
 
 type templateFill struct {
-	Name, Kind, Flavor, Tags, Tenant, Region, Zone     string
-	Location, RootLB, NetworkName, NetworkKind, CIDR   string
-	StorageSpec, NetworkSpec, MasterFlavor, Topology   string
-	NodeFlavor, Operator, Key, Image, Registry         string
-	AppFlavor, ProxyPath, PortMap, PathMap, Kubernetes string
-	AccessLayer                                        string
-	NumMasters, NumNodes                               int
+	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone string
+	Location, RootLB, NetworkName, NetworkKind, CIDR        string
+	StorageSpec, NetworkSpec, MasterFlavor, Topology        string
+	NodeFlavor, Operator, Key, Image, Registry, Options     string
+	AppFlavor, ProxyPath, PortMap, PathMap, Kubernetes      string
+	AccessLayer, ExternalNetwork, InternalNetwork           string
+	InternalCIDR, ExternalRouter, Flags                     string
+	NumMasters, NumNodes                                    int
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
-func MEXClusterCreateClustInst(clusterInst *edgeproto.ClusterInst) error {
-	//XXX future: trigger off clusterInst or flavor to pick the right template: mex, aks, gke
+func MEXClusterCreateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst) error {
+	//XXX trigger off clusterInst or flavor to pick the right template: mex, aks, gke
+	mf, err := getManifestClustInst(rootLB, clusterInst)
+	if err != nil {
+		return err
+	}
+	return MEXClusterCreateManifest(mf)
+}
+
+func getManifestClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
 	name := clusterInst.Key.ClusterKey.Name
 	flavor := clusterInst.Flavor.Name
 	data := templateFill{
@@ -67,99 +76,76 @@ func MEXClusterCreateClustInst(clusterInst *edgeproto.ClusterInst) error {
 		Zone:        "eu-central-1c",
 		Location:    "bonn",
 		Flavor:      flavor,
-		RootLB:      "mex-lb-1.mobiledgex.net",
+		RootLB:      rootLB.Name,
 		NetworkName: "mex-k8s-net-1",
 		NetworkKind: "priv-subnet",
 		CIDR:        "10.101.X.0/24",
 	}
-
 	mf, err := templateUnmarshal(&data, yamlMEXCluster)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return MEXClusterCreate(mf)
+	return mf, nil
 }
 
-//MEXGUIDMap is a map of name=>guid for initialized clusters
-var MEXGUIDMap = make(map[string]string)
-
-//MEXClusterCreate creates a cluster
-func MEXClusterCreate(mf *Manifest) error {
+//MEXClusterCreateManifest creates a cluster
+func MEXClusterCreateManifest(mf *Manifest) error {
 	log.Debug("creating cluster", mf)
-
-	var err error
-	var guid *string
-
 	switch mf.Kind {
 	case mexOSKubernetes:
-		log.Debugln(MEXGUIDMap)
-		guidval, ok := MEXGUIDMap[mf.Metadata.Name] //TODO save map on nonvolatile storage
-		if ok {
-			return fmt.Errorf("%s exists as %s", mf.Metadata.Name, guidval)
-		}
-		guid, err = CreateCluster(mf.Spec.RootLB, mf.Spec.Flavor, mf.Metadata.Name,
-			mf.Spec.Networks[0].Kind+","+mf.Spec.Networks[0].Name+","+mf.Spec.Networks[0].CIDR,
-			mf.Metadata.Tags, mf.Metadata.Tenant)
+		guid, err := mexCreateClusterKubernetes(mf)
 		if err != nil {
 			return fmt.Errorf("can't create cluster, %v", err)
 		}
-		log.Debugln("guid", *guid)
-		_, ok = MEXGUIDMap[mf.Metadata.Name]
-		if ok {
-			log.Warningf("guid %s exists for %s", *guid, mf.Metadata.Name)
-		}
-		MEXGUIDMap[mf.Metadata.Name] = *guid
-		log.Debugln(MEXGUIDMap)
+		log.Debugln("new guid", *guid)
+		return nil
 	case gcloudGKE:
-		if err = gcloud.SetProject(mf.Metadata.Project); err != nil {
-			return err
-		}
-		if err = gcloud.SetZone(mf.Metadata.Zone); err != nil {
-			return err
-		}
-		if err = gcloud.CreateGKECluster(mf.Metadata.Name); err != nil {
-			return err
-		}
-		if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
-			return err
-		}
+		return gcloudCreateGKE(mf)
 	case azureAKS:
-		if err = azure.CreateResourceGroup(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
-			return err
-		}
-		if err = azure.CreateAKSCluster(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
-			return err
-		}
-		if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
-			return err
-		}
+		return azureCreateAKS(mf)
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
-	log.Debugln("created cluster", mf)
-	return err
 }
 
-//MEXClusterRemoveClustInst calls MEXClusterCreate with a manifest created from the template
-func MEXClusterRemoveClustInst(clusterInst *edgeproto.ClusterInst) error {
-	name := clusterInst.Key.ClusterKey.Name
-	data := templateFill{
-		Name:        name,
-		Tags:        name + "-tag",
-		Tenant:      name + "-tenant",
-		Region:      "eu-central-1",
-		Zone:        "eu-central-1c",
-		Location:    "bonn",
-		Flavor:      "x1.medium",
-		RootLB:      "mex-lb-1.mobiledgex.net",
-		NetworkName: "mex-k8s-net-1",
-		NetworkKind: "priv-subnet",
-		CIDR:        "10.101.X.0/24",
+func azureCreateAKS(mf *Manifest) error {
+	var err error
+	if err = azure.CreateResourceGroup(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
+		return err
 	}
+	if err = azure.CreateAKSCluster(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
+		return err
+	}
+	if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Location); err != nil {
+		return err
+	}
+	return nil
+}
 
-	mf, err := templateUnmarshal(&data, yamlMEXCluster)
+func gcloudCreateGKE(mf *Manifest) error {
+	var err error
+	if err = gcloud.SetProject(mf.Metadata.Project); err != nil {
+		return err
+	}
+	if err = gcloud.SetZone(mf.Metadata.Zone); err != nil {
+		return err
+	}
+	if err = gcloud.CreateGKECluster(mf.Metadata.Name); err != nil {
+		return err
+	}
+	if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
+		return err
+	}
+	return nil
+}
+
+//MEXClusterRemoveClustInst calls MEXClusterRemove with a manifest created from the template
+func MEXClusterRemoveClustInst(rootLb *MEXRootLB, clusterInst *edgeproto.ClusterInst) error {
+	mf, err := getManifestClustInst(rootLb, clusterInst)
 	if err != nil {
 		return err
 	}
-	return MEXClusterRemove(mf)
+	return MEXClusterRemoveManifest(mf)
 }
 
 var yamlMEXFlavor = `apiVersion: v1
@@ -170,6 +156,7 @@ metadata:
   tags: {{.Tags}}
   kind: {{.Kind}}
 spec:
+  flags: {{.Flags}}
   flavor: {{.Name}}
   nummasters: {{.NumMaster}}
   flavors: 
@@ -199,7 +186,6 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
 		MasterFlavor: "m4.large",
 		Topology:     "type-1",
 	}
-
 	mf, err := templateUnmarshal(&data, yamlMEXFlavor)
 	if err != nil {
 		return err
@@ -210,87 +196,30 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
 //MEXAddFlavor adds flavor using manifest
 func MEXAddFlavor(mf *Manifest) error {
 	log.Debugln("add flavor", mf)
-
 	//TODO use full manifest and validate against platform data
 	return AddFlavor(mf.Spec.Flavor)
 }
 
 // TODO DeleteFlavor -- but almost never done
 
-//MEXClusterRemove removes a cluster
-func MEXClusterRemove(mf *Manifest) error {
+// TODO lookup guid using name
+
+//MEXClusterRemoveManifest removes a cluster
+func MEXClusterRemoveManifest(mf *Manifest) error {
 	log.Debugln("removing cluster", mf)
-
-	var err error
-
 	switch mf.Kind {
 	case mexOSKubernetes:
-		log.Debugln(MEXGUIDMap)
-		_, ok := MEXGUIDMap[mf.Metadata.Name]
-		if !ok {
-			return fmt.Errorf("cluster %s does not exist", mf.Metadata.Name)
-		}
-		if err = DeleteClusterByName(mf.Spec.RootLB, mf.Metadata.Name); err != nil {
+		if err := mexDeleteClusterKubernetes(mf); err != nil {
 			return fmt.Errorf("can't remove cluster, %v", err)
 		}
-		delete(MEXGUIDMap, mf.Metadata.Name)
-		log.Debugln(MEXGUIDMap)
+		return nil
 	case gcloudGKE:
-		if err = gcloud.DeleteGKECluster(mf.Metadata.Name); err != nil {
-			return err
-		}
+		return gcloud.DeleteGKECluster(mf.Metadata.Name)
 	case azureAKS:
-		if err = azure.DeleteAKSCluster(mf.Metadata.ResourceGroup); err != nil {
-			return err
-		}
+		return azure.DeleteAKSCluster(mf.Metadata.ResourceGroup)
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
-
-	log.Debugln("removed cluster", mf)
-	return nil
-}
-
-//MEXSetEnvVars sets up environment vars and checks for credentials required for running
-func MEXSetEnvVars(mf *Manifest) error {
-	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
-	// TODO: use `secrets` or `vault`
-
-	eCFKey := os.Getenv("MEX_CF_KEY")
-	if eCFKey == "" {
-		return fmt.Errorf("no MEX_CF_KEY")
-	}
-	eCFUser := os.Getenv("MEX_CF_USER")
-	if eCFUser == "" {
-		return fmt.Errorf("no MEX_CF_USER")
-	}
-	eMEXDockerRegPass := os.Getenv("MEX_DOCKER_REG_PASS")
-	if eMEXDockerRegPass == "" {
-		return fmt.Errorf("no MEX_DOCKER_REG_PASS")
-	}
-
-	if err := os.Setenv("MEX_ROOT_LB", mf.Metadata.Name); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_AGENT_IMAGE", mf.Spec.Agent.Image); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_ZONE", mf.Metadata.DNSZone); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_EXT_NETWORK", mf.Spec.ExternalNetwork); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_NETWORK", mf.Spec.InternalNetwork); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_EXT_ROUTER", mf.Spec.ExternalRouter); err != nil {
-		return err
-	}
-	if err := os.Setenv("MEX_DOCKER_REGISTRY", mf.Spec.DockerRegistry); err != nil {
-		return err
-	}
-
-	//TODO need to allow users to save the environment under platform name inside .mobiledgex
-	return nil
 }
 
 var yamlMEXPlatform = `apiVersion: v1
@@ -299,7 +228,6 @@ resource: openstack-platform
 metadata:
   kind: {{.Kind}}
   name: {{.Name}}
-  rootlb: {{.RootLB}}
   tags: {{.Tags}}
   tenant: {{.Tenant}}
   operator: {{.Operator}}
@@ -307,16 +235,19 @@ metadata:
   zone: {{.Zone}}
   location: {{.Location}}
   openrc: ~/.mobiledgex/openrc
-  dnszone: mobiledgex.net
+  dnszone: {{.DNSZone}}
 spec:
+  flags: {{.Flags}}
   key: {{.Key}}
-  dockerregistry: registry.mobiledgex.net:5000
-  externalnetwork: external-network-shared
-  internalnetwork: mex-k8s-net-1
-  internalcidr: 10.101.101.0/24
-  externalrouter: mex-k8s-router-1
+  rootlb: {{.RootLB}}
+  dockerregistry: {{.Registry}}
+  externalnetwork: {{.ExternalNetwork}}
+  internalnetwork: {{.InternalNetwork}}
+  internalcidr: {{.InternalCIDR}}
+  externalrouter: {{.ExternalRouter}}
+  options: {{.Options}}
   agent: 
-    image: registry.mobiledgex.net:5000/mobiledgex/mexosagent
+    image: {{.Image}}
     status: active
   images:
     - name: mobiledgex-16.04-2
@@ -334,33 +265,59 @@ spec:
       networkscheme: mexproxy
 `
 
+//XXX how to handle password, keys, ID, etc. in manifest
+
 //MEXPlatformInitCloudletKey calls MEXPlatformInit with templated manifest
-func MEXPlatformInitCloudletKey(rootLB, cloudletKeyStr string) error {
-	//XXX fugure: trigger off cloudletKeyStr or flavor to pick the right template: mex, aks, gke
+func MEXPlatformInitCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) error {
+	//XXX trigger off cloudletKeyStr or flavor to pick the right template: mex, aks, gke
+	mf, err := fillTemplateCloudletKey(rootLB, cloudletKeyStr)
+	if err != nil {
+		return err
+	}
+	return MEXPlatformInitManifest(mf)
+}
+
+func fillTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (*Manifest, error) {
 	clk := edgeproto.CloudletKey{}
 	err := json.Unmarshal([]byte(cloudletKeyStr), &clk)
 	if err != nil {
-		return fmt.Errorf("can't unmarshal json cloudletkey %s, %v", cloudletKeyStr, err)
+		return nil, fmt.Errorf("can't unmarshal json cloudletkey %s, %v", cloudletKeyStr, err)
 	}
 	name := clk.Name
 	operator := clk.OperatorKey.Name
 	data := templateFill{
-		Name:     name,
-		Tags:     name + "-tag",
-		Key:      cloudletKeyStr,
-		Operator: operator,
-		Location: "bonn",
-		Region:   "eu-central-1",
-		Zone:     "eu-central-1c",
-		RootLB:   "mex-lb-1.mobiledgex.net",
-		Kind:     "mex-tdg-openstack-kubernetes",
+		Name:            name,
+		Tags:            name + "-tag",
+		Key:             cloudletKeyStr,
+		Operator:        operator,
+		Location:        "bonn",
+		Region:          "eu-central-1",
+		Zone:            "eu-central-1c",
+		RootLB:          rootLB.Name,
+		Image:           "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
+		Kind:            "mex-tdg-openstack-kubernetes",
+		Registry:        "registry.mobiledgex.net:5000",
+		ExternalNetwork: "external-network-shared",
+		InternalNetwork: "mex-k8s-net-1",
+		InternalCIDR:    "10.101.X.X/24",
+		DNSZone:         "mobiledgex.net",
+		ExternalRouter:  "mex-k8s-router-1",
+		Options:         "dhcp",
 	}
-
 	mf, err := templateUnmarshal(&data, yamlMEXPlatform)
+	if err != nil {
+		return nil, err
+	}
+	return mf, nil
+}
+
+//MEXPlatformCleanCloudletKey calls MEXPlatformClean with templated manifest
+func MEXPlatformCleanCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) error {
+	mf, err := fillTemplateCloudletKey(rootLB, cloudletKeyStr)
 	if err != nil {
 		return err
 	}
-	return MEXPlatformInit(mf)
+	return MEXPlatformCleanManifest(mf)
 }
 
 func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
@@ -372,7 +329,7 @@ func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
 	bufwriter := bufio.NewWriter(&outbuffer)
 	err = tmpl.Execute(bufwriter, data)
 	if err != nil {
-		log.Debugln(data)
+		log.Debugln("template data", data)
 		return nil, fmt.Errorf("can't execute template, %v", err)
 	}
 	mf := &Manifest{}
@@ -380,49 +337,50 @@ func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
 	if err != nil {
 		return nil, fmt.Errorf("can't unmarshal templated data, %v", err)
 	}
-
 	return mf, nil
 }
 
-//MEXPlatformInit initializes platform
-func MEXPlatformInit(mf *Manifest) error {
+//MEXPlatformInitManifest initializes platform
+func MEXPlatformInitManifest(mf *Manifest) error {
 	log.Debug("init platform", mf)
-
 	var err error
-
 	switch mf.Kind {
 	case mexOSKubernetes:
-		err = MEXSetEnvVars(mf)
-		if err != nil {
+		if err = MEXCheckEnvVars(mf); err != nil {
 			return err
 		}
 		//TODO validate all mf content against platform data
-		if err = RunMEXAgent(mf.Spec.RootLB, mf.Spec.Key, false); err != nil {
+		if err = RunMEXAgentManifest(mf, false); err != nil {
 			return err
 		}
 	case gcloudGKE:
+		return nil //nothing to do
 	case azureAKS:
+		return nil //nothing to do
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
 	return nil
 }
 
-//MEXPlatformClean cleans up the platform
-func MEXPlatformClean(mf *Manifest) error {
+//MEXPlatformCleanManifest cleans up the platform
+func MEXPlatformCleanManifest(mf *Manifest) error {
 	log.Debugln("clean platform", mf)
-
 	var err error
-
 	switch mf.Kind {
 	case mexOSKubernetes:
-		err = MEXSetEnvVars(mf)
-		if err != nil {
+		if err = MEXCheckEnvVars(mf); err != nil {
 			return err
 		}
-		if err = RemoveMEXAgent(mf.Metadata.Name); err != nil {
+		if err = RemoveMEXAgentManifest(mf); err != nil {
 			return err
 		}
 	case gcloudGKE:
+		return nil //nothing to do
 	case azureAKS:
+		return nil
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
 	return nil
 }
@@ -436,6 +394,7 @@ metadata:
   tags: {{.Tags}}
   tenant: {{.Tenant}}
 spec:
+  flags: {{.Flags}}
   key: {{.Key}}
   rootlb: {{.RootLB}}
   dockerregistry: {{.Registry}}
@@ -449,9 +408,8 @@ spec:
   accesslayer: {{.AccessLayer}}
 `
 
-func MEXCreateAppInst(clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
-	appname := appInst.Key.AppKey.Name
-	rootLB := GetRootLBName()
+//MEXCreateAppInst calls MEXCreateApp with templated manifest
+func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
 	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
 	if !ok {
 		return fmt.Errorf("cannot find imagetype in map")
@@ -460,87 +418,88 @@ func MEXCreateAppInst(clusterInst *edgeproto.ClusterInst, appInst *edgeproto.App
 	if !aok {
 		return fmt.Errorf("cannot find accesslayer in map")
 	}
-
 	var data templateFill
-
 	switch imageType {
-	case "ImageTypeDocker": //XXX does not distinguish plain docker vs kubernetes
+	case "ImageTypeDocker": //XXX does not distinguish plain docker vs kubernetes deployments
 		data = templateFill{
 			Kind:        "mex-app-docker",
-			Name:        appname,
-			Tags:        appname + "-docker-tag",
+			Name:        appInst.Key.AppKey.Name,
+			Tags:        appInst.Key.AppKey.Name + "-docker-tag",
 			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      appname + "-tenant",
-			RootLB:      rootLB,
+			Tenant:      appInst.Key.AppKey.Name + "-tenant",
+			RootLB:      rootLB.Name,
 			Registry:    "registry.mobiledgex.net:5000",
-			Image:       appInst.ImagePath,      //XXX docker image name?
-			ProxyPath:   rootLB + "/" + appname, //appInst.Uri ?
-			PortMap:     appInst.MappedPorts,    //XXX format
-			PathMap:     appInst.MappedPath,     //XXX format
-			AppFlavor:   appInst.Flavor.Name,    //XXX not sure what this is
+			Image:       appInst.ImagePath,                           //XXX docker image name?
+			ProxyPath:   rootLB.Name + "/" + appInst.Key.AppKey.Name, //appInst.Uri ?
+			PortMap:     "80:80",                                     //appInst.MappedPorts,         //XXX format
+			PathMap:     appInst.MappedPath,                          //XXX format
+			AppFlavor:   appInst.Flavor.Name,                         //XXX not sure what this is
 			AccessLayer: accessLayer,
-			Kubernetes:  "https://k8s.io/examples/application/deployment.yaml",
+			Kubernetes:  "", // XXX "https://k8s.io/examples/application/deployment.yaml",
 		}
 	case "ImageTypeQCOW":
 		data = templateFill{
 			Kind:        "mex-app-virtual-machine",
-			Name:        appname,
-			Tags:        appname + "-qcow-tag",
+			Name:        appInst.Key.AppKey.Name,
+			Tags:        appInst.Key.AppKey.Name + "-qcow-tag",
 			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      appname + "-tenant",
-			RootLB:      rootLB,
+			Tenant:      appInst.Key.AppKey.Name + "-tenant",
+			RootLB:      rootLB.Name,
 			Registry:    "registry.mobiledgex.net:5000",
-			Image:       appInst.ImagePath,      //XXX qcow image name?
-			ProxyPath:   rootLB + "/" + appname, //appInst.Uri ?
-			PortMap:     appInst.MappedPorts,    //XXX format
-			PathMap:     appInst.MappedPath,     //XXX format
-			AppFlavor:   appInst.Flavor.Name,    //XXX not sure what this is
+			Image:       appInst.ImagePath,                           //XXX qcow image name?
+			ProxyPath:   rootLB.Name + "/" + appInst.Key.AppKey.Name, //appInst.Uri ?
+			PortMap:     appInst.MappedPorts,                         //XXX format
+			PathMap:     appInst.MappedPath,                          //XXX format
+			AppFlavor:   appInst.Flavor.Name,                         //XXX not sure what this is
 			AccessLayer: accessLayer,
 		}
 	default:
 		return fmt.Errorf("unknown image type")
 	}
-
 	//TODO Use non kubernetes data as CRD or ConfigMap
-
 	mf, err := templateUnmarshal(&data, yamlMEXPlatform)
 	if err != nil {
 		return err
 	}
-	return MEXCreateApp(mf)
+	return MEXCreateAppManifest(mf)
 }
 
-func MEXCreateApp(mf *Manifest) error {
+//MEXCreateApp creates app instances on the cluster platform
+func MEXCreateAppManifest(mf *Manifest) error {
 	log.Debugln("create app", mf)
-
 	switch mf.Kind {
 	case mexOSKubernetes:
 		if strings.Contains(mf.Metadata.Tags, "docker") {
 			if mf.Spec.Kubernetes == "" { //plain docker
-				return CreateDockerApp(mf.Spec.RootLB,
-					mf.Metadata.Name,
-					mf.Spec.Key,
-					mf.Spec.Flavor,
-					mf.Spec.DockerRegistry,
-					mf.Spec.ProxyPath,
-					mf.Spec.Image,
-					mf.Spec.PortMap,
-					mf.Spec.PathMap,
-					mf.Spec.AccessLayer,
-				)
-			} else {
-				return CreateKubernetesApp(mf.Spec.RootLB,
-					mf.Spec.Key,
-					mf.Metadata.Name,
-					mf.Spec.Kubernetes,
-				)
+				return CreateDockerAppManifest(mf)
 			}
+			return CreateKubernetesAppManifest(mf)
 		} else if strings.Contains(mf.Metadata.Tags, "qcow") {
 		} else {
 			return fmt.Errorf("insufficient tag info")
 		}
 	case gcloudGKE:
+		return fmt.Errorf("not yet supported, type %s", mf.Kind)
 	case azureAKS:
+		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
+	}
+	return nil
+}
+
+//MEXKillAppManifest kills app
+func MEXKillAppManifest(mf *Manifest) error {
+	log.Debugln("delete app", mf)
+	switch mf.Kind {
+	case mexOSKubernetes:
+		return DestroyDockerAppManifest(mf)
+	case gcloudGKE:
+		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+	case azureAKS:
+		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+	default:
+		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
 	return nil
 }

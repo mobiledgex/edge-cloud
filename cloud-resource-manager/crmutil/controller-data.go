@@ -9,6 +9,7 @@ import (
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
+	CRMRootLB            *MEXRootLB
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
@@ -84,7 +85,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 			var err error
 
 			if IsValidMEXOSEnv {
-				err = MEXClusterCreateClustInst(&clusterInst)
+				err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
 			}
 			if err != nil {
 				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
@@ -104,7 +105,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 			if !IsValidMEXOSEnv {
 				return
 			}
-			err = MEXClusterRemoveClustInst(&clusterInst)
+			err = MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, str)
@@ -156,7 +157,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 
 				var err error
 				if IsValidMEXOSEnv {
-					err = MEXCreateAppInst(&clusterInst, &appInst)
+					err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 				}
 				if err != nil {
 					cd.appInstInfoError(key, fmt.Sprintf("Create failed: %s", err))

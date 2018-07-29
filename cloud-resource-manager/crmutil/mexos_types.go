@@ -58,6 +58,7 @@ type FlavorType struct {
 //SpecType holds spec block
 type SpecType struct {
 	Flavor          string        `json:"flavor"` // appInst flavor?
+	Flags           string        `json:"flags"`
 	RootLB          string        `json:"rootlb"`
 	Image           string        `json:"image"`
 	AccessLayer     string        `json:"accesslayer"`
@@ -66,6 +67,7 @@ type SpecType struct {
 	InternalNetwork string        `json:"internalnetwork"`
 	InternalCIDR    string        `json:"internalcidr"`
 	ExternalRouter  string        `json:"externalrouter"`
+	Options         string        `json:"options"`
 	ProxyPath       string        `json:"proxypath"`
 	PortMap         string        `json:"portmap"`
 	PathMap         string        `json:"pathmap"`
