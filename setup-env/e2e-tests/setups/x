@@ -1,0 +1,29 @@
+2018-07-27T22:46:39.070Z	INFO	crmserver/main.go:108	Server started	{"addr": "0.0.0.0:55091"}
+2018-07-27T22:46:39.071Z	DPANIC	log/logger.go:31	Ignored key without a value.	{"ignored": "cannot get limits from openstack, exec: \"openstack\": executable file not found in $PATH"}
+github.com/mobiledgex/edge-cloud/log.InfoLog
+	/go/src/github.com/mobiledgex/edge-cloud/log/logger.go:31
+github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil.GatherCloudletInfo
+	/go/src/github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil/controller-data.go:46
+main.main
+	/go/src/github.com/mobiledgex/edge-cloud/cloud-resource-manager/cmd/crmserver/main.go:125
+runtime.main
+	/usr/local/src/runtime/proc.go:198
+panic: Ignored key without a value.
+
+goroutine 1 [running]:
+github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/zapcore.(*CheckedEntry).Write(0xc42018ce70, 0xc42030d2c0, 0x1, 0x1)
+	/go/src/github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/zapcore/entry.go:229 +0x4f4
+github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap.(*Logger).DPanic(0xc42007c420, 0x13a978e, 0x1c, 0xc42030d2c0, 0x1, 0x1)
+	/go/src/github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/logger.go:215 +0x7f
+github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap.(*SugaredLogger).sweetenFields(0xc42000c078, 0xc42036bdd8, 0x1, 0x1, 0xc42018cdc0, 0x1, 0x14a6280)
+	/go/src/github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/sugar.go:258 +0x7f6
+github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap.(*SugaredLogger).log(0xc42000c078, 0xc42036bd00, 0x13b4bec, 0x25, 0x0, 0x0, 0x0, 0xc42036bdd8, 0x1, 0x1)
+	/go/src/github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/sugar.go:234 +0xca
+github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap.(*SugaredLogger).Infow(0xc42000c078, 0x13b4bec, 0x25, 0xc42036bdd8, 0x1, 0x1)
+	/go/src/github.com/mobiledgex/edge-cloud/vendor/go.uber.org/zap/sugar.go:179 +0x79
+github.com/mobiledgex/edge-cloud/log.InfoLog(0x13b4bec, 0x25, 0xc42036bdd8, 0x1, 0x1)
+	/go/src/github.com/mobiledgex/edge-cloud/log/logger.go:31 +0x5f
+github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil.GatherCloudletInfo(0x1d0b340)
+	/go/src/github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil/controller-data.go:46 +0x1de
+main.main()
+	/go/src/github.com/mobiledgex/edge-cloud/cloud-resource-manager/cmd/crmserver/main.go:125 +0x801

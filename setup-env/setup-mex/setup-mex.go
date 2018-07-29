@@ -19,6 +19,10 @@ import (
 
 var apiAddrsUpdated = false
 
+//when first creating a cluster, it may take a while for the load balancer to get an IP. Usually
+// this happens much faster, but occasionally it takes longer
+var maxWaitForServiceSeconds = 300
+
 func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan util.ReturnCodeWithText)
@@ -111,14 +115,39 @@ func UpdateApiAddrs() {
 		//no need to do this more than once
 		return
 	}
-	for i, ctrl := range util.Deployment.Controllers {
-		util.Deployment.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
-	}
-	for i, dme := range util.Deployment.Dmes {
-		util.Deployment.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
-	}
-	for i, crm := range util.Deployment.Crms {
-		util.Deployment.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+	//for k8s deployments, get the ip from the service
+	if util.IsK8sDeployment() {
+		if len(util.Deployment.Controllers) > 0 {
+			addr, err := util.GetK8sServiceAddr("controller", maxWaitForServiceSeconds)
+			if err != nil {
+				log.Fatalf("unable to get controller service")
+			}
+			util.Deployment.Controllers[0].ApiAddr = addr
+		}
+		if len(util.Deployment.Dmes) > 0 {
+			addr, err := util.GetK8sServiceAddr("dme", maxWaitForServiceSeconds)
+			if err != nil {
+				log.Fatalf("unable to get dme service")
+			}
+			util.Deployment.Dmes[0].ApiAddr = addr
+		}
+		if len(util.Deployment.Crms) > 0 {
+			addr, err := util.GetK8sServiceAddr("crm", maxWaitForServiceSeconds)
+			if err != nil {
+				log.Fatalf("unable to get crm service")
+			}
+			util.Deployment.Crms[0].ApiAddr = addr
+		}
+	} else {
+		for i, ctrl := range util.Deployment.Controllers {
+			util.Deployment.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
+		}
+		for i, dme := range util.Deployment.Dmes {
+			util.Deployment.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
+		}
+		for i, crm := range util.Deployment.Crms {
+			util.Deployment.Crms[i].ApiAddr = getExternalApiAddress(crm.ApiAddr, crm.Hostname)
+		}
 	}
 	apiAddrsUpdated = true
 }
@@ -131,7 +160,7 @@ func getLogFile(procname string, outputDir string) string {
 	}
 }
 
-func ReadSetupFile(setupfile string, dataDir string) {
+func ReadSetupFile(setupfile string, dataDir string) bool {
 	//the setup file has a vars section with replacement variables.  ingest the file once
 	//to get these variables, and then ingest again to parse the setup data with the variables
 	var replacementVars util.YamlReplacementVariables
@@ -154,7 +183,8 @@ func ReadSetupFile(setupfile string, dataDir string) {
 	err := util.ReadYamlFile(setupfile, &util.Deployment, varstring, true)
 	if err != nil {
 		if !util.IsYamlOk(err, "setup") {
-			fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s, exiting", setupfile)
+			fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s", setupfile)
+			return false
 		}
 	}
 	//equals sign is not well handled in yaml so it is url encoded and changed after loading
@@ -163,6 +193,7 @@ func ReadSetupFile(setupfile string, dataDir string) {
 	for i, _ := range util.Deployment.Dmes {
 		util.Deployment.Dmes[i].TokSrvUrl = strings.Replace(util.Deployment.Dmes[i].TokSrvUrl, "%3D", "=", -1)
 	}
+	return true
 }
 
 func StopProcesses(processName string) bool {
@@ -414,6 +445,9 @@ func DeployProcesses() bool {
 }
 
 func StartRemoteProcesses(processName string) bool {
+	if util.IsK8sDeployment() {
+		return true //nothing to do for k8s
+	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_start.yml"
 
@@ -421,6 +455,11 @@ func StartRemoteProcesses(processName string) bool {
 }
 
 func StopRemoteProcesses(processName string) bool {
+
+	if util.IsK8sDeployment() {
+		return true //nothing to do for k8s
+	}
+
 	ansHome := os.Getenv("ANSIBLE_DIR")
 
 	if processName != "" {
@@ -446,12 +485,19 @@ func CleanupRemoteProcesses() bool {
 }
 
 func FetchRemoteLogs(outputDir string) bool {
+	if util.IsK8sDeployment() {
+		//TODO: need to get the logs from K8s
+		return true
+	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_fetch_logs.yml"
 	return runPlaybook(playbook, []string{"local_log_path=" + outputDir}, "")
 }
 
 func StartProcesses(processName string, outputDir string) bool {
+	if util.IsK8sDeployment() {
+		return true //nothing to do for k8s
+	}
 	util.PrintStepBanner("starting local processes")
 	for _, etcd := range util.Deployment.Etcds {
 		if processName != "" && processName != etcd.Name {

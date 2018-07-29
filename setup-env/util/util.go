@@ -49,9 +49,23 @@ type GoogleCloudInfo struct {
 	MachineType string
 }
 
-type K8sYamlFile struct {
+type K8sPod struct {
+	PodName  string
+	PodCount int
+	MaxWait  int
+}
+
+type K8CopyFile struct {
+	PodName string
+	Src     string
+	Dest    string
+}
+
+type K8sDeploymentStep struct {
 	File        string
 	Description string
+	WaitForPods []K8sPod
+	CopyFile    K8CopyFile
 }
 
 type EtcdProcess struct {
@@ -81,7 +95,7 @@ type TokSimProcess struct {
 
 type DeploymentData struct {
 	GCloud        GoogleCloudInfo     `yaml:"gcloud"`
-	K8sDeployment []K8sYamlFile       `yaml:"k8s-deployment"`
+	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
 	Locsims       []LocSimProcess     `yaml:"locsims"`
 	Toksims       []TokSimProcess     `yaml:"toksims"`
 	Etcds         []EtcdProcess       `yaml:"etcds"`
@@ -101,6 +115,10 @@ var yamlExceptions = map[string]map[string]bool{
 	},
 }
 
+func IsK8sDeployment() bool {
+	return Deployment.GCloud.Cluster != "" //TODO Azure
+}
+
 func IsYamlOk(e error, yamltype string) bool {
 	rc := true
 	errstr := e.Error()
@@ -116,7 +134,7 @@ func IsYamlOk(e error, yamltype string) bool {
 			// ignore this summary error
 		} else {
 			//all other errors are unexpected and mean something is wrong in the yaml
-			log.Printf("Fatal Unmarshal Error: %v\n", err1)
+			log.Printf("Fatal Unmarshal Error in: %v\n", err1)
 			rc = false
 		}
 	}

@@ -2,6 +2,7 @@ package crmutil
 
 import (
 	"fmt"
+
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -40,9 +41,9 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 
 	limits, err := oscli.GetLimits()
 	if err != nil {
-		//XXX No way to return error
-		// And no log.ErrorLog()
-		log.InfoLog("Error: can't get openstack limits, %v", err)
+                //XXX No way to return error
+                // And no log.ErrorLog()
+		log.InfoLog("Error: can't get openstack limits", "error", err.Error())
 		return
 	}
 
