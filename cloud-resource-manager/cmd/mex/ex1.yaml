@@ -9,6 +9,8 @@ metadata:
   zone: eu-central-1c
   location: bonn
 spec:
+  flags: force
+  externalnetwork: external-network-shared
   flavor: x1.medium
   rootlb: mex-lb-1.mobiledgex.net
   networks:

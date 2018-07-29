@@ -2,6 +2,7 @@ apiVersion: v1
 kind: mex-openstack-kubernetes
 resource: openstack-platform
 metadata:
+  kind: mex-tdg-openstack-kubernetes
   name: mex-lb-1.mobiledgex.net
   tags: tdg-bonn
   tenant: Ninc
@@ -10,12 +11,17 @@ metadata:
   location: bonn
   openrc: ~/.mobiledgex/openrc
   dnszone: mobiledgex.net
+  operator: "tmobile"
 spec:
+  flavor: x1.medium
+  rootlb: mex-lb-1.mobiledgex.net
+  key: '{"operator_key":{"name":"TMUS"},"name":"tmocloud1"}'
   dockerregistry: registry.mobiledgex.net:5000
   externalnetwork: external-network-shared
   internalnetwork: mex-k8s-net-1
   internalcidr: 10.101.101.0/24
   externalrouter: mex-k8s-router-1
+  options: dhcp
   agent: 
     image: registry.mobiledgex.net:5000/mobiledgex/mexosagent
     status: active
