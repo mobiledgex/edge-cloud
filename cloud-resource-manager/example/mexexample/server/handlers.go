@@ -5,6 +5,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/example/mexexample/api"
 	"golang.org/x/net/context"
 	"net"
+	"os"
 )
 
 type Server struct{}
@@ -28,22 +29,26 @@ func (srv *Server) Info(ctx context.Context, req *api.InfoRequest) (res *api.Inf
 	res = &api.InfoResponse{
 		Message:    req.Message,
 		Outbound:   GetOutboundIP(),
-		Hostname:   os.Hostname(),
 		Interfaces: []*api.Interface{},
 	}
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		res.Message = fmt.Sprintf("error getting interfaces, %v", err)
-		return res, nil
+		res.Message += fmt.Sprintf("error getting interfaces, %v ", err)
+	}
+	hn, err := os.Hostname()
+	if err != nil {
+		res.Message += fmt.Sprintf("error getting hostname, %v ", err)
+	} else {
+		res.Hostname = hn
 	}
 	for _, intf := range interfaces {
 		addrs, err := intf.Addrs()
 		if err != nil {
-			res.Message = fmt.Sprintf("error getting addrs for intf %v, %v", intf, err)
-			return res, nil
+			res.Message += fmt.Sprintf("error getting addrs for intf %v, %v ", intf, err)
+		} else {
+			intfAddrs := fmt.Sprintf("%v", addrs)
+			res.Interfaces = append(res.Interfaces, &api.Interface{Name: intf.Name, Addresses: intfAddrs})
 		}
-		intfAddrs := fmt.Sprintf("%v", addrs)
-		res.Interfaces = append(res.Interfaces, &api.Interface{Name: intf.Name, Addresses: intfAddrs})
 	}
 	return res, nil
 }
