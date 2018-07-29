@@ -2,16 +2,16 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: crm
-  name: crm
+    app: locsim
+  name: locsim
   namespace: default
 spec:
   externalTrafficPolicy: Cluster
   ports:
-   - port: 55091
-     protocol: TCP
-     targetPort: 55091
+  - name: locsim
+    port: 8888
+    protocol: TCP
   selector:
-    app: crm
+    app: locsim
   sessionAffinity: None
-  type: LoadBalancer
+  type: NodePort

@@ -13,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
-	"github.com/mobiledgex/edge-cloud/setup-env/k8s"
 	setupmex "github.com/mobiledgex/edge-cloud/setup-env/setup-mex"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
@@ -58,14 +57,16 @@ func init() {
 
 //this is possible actions and optional parameters
 var actionChoices = map[string]string{
-	"start":     "procname",
-	"stop":      "procname",
-	"status":    "procname",
-	"ctrlapi":   "procname",
-	"dmeapi":    "procname",
-	"deploy":    "",
-	"cleanup":   "",
-	"fetchlogs": "",
+	"start":         "procname",
+	"stop":          "procname",
+	"status":        "procname",
+	"ctrlapi":       "procname",
+	"dmeapi":        "procname",
+	"deploy":        "",
+	"cleanup":       "",
+	"fetchlogs":     "",
+	"createcluster": "",
+	"deletecluster": "",
 }
 
 func printUsage() {
@@ -164,7 +165,9 @@ func main() {
 	}
 
 	if *setupFile != "" {
-		setupmex.ReadSetupFile(*setupFile, *dataDir)
+		if !setupmex.ReadSetupFile(*setupFile, *dataDir) {
+			os.Exit(1)
+		}
 	}
 
 	for _, a := range actionSlice {
@@ -173,10 +176,26 @@ func main() {
 
 		util.PrintStepBanner("running action: " + a)
 		switch action {
+		case "createcluster":
+			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
+				err := util.CreateGloudCluster()
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			}
+		case "deletecluster":
+			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
+				err := util.DeleteGloudCluster()
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			}
 		case "deploy":
 			if util.Deployment.GCloud.Cluster != "" {
 				dir := path.Dir(*setupFile)
-				err := k8s.DeployGoogleK8s(dir)
+				err := util.DeployK8sServices(dir)
 				if err != nil {
 					errorsFound += 1
 					errors = append(errors, err.Error())
@@ -236,7 +255,6 @@ func main() {
 				log.Printf("Unable to run api for %s\n", action)
 				errorsFound += 1
 				errors = append(errors, "controller api failed")
-
 			}
 		case "dmeapi":
 			setupmex.UpdateApiAddrs()
@@ -249,7 +267,7 @@ func main() {
 		case "cleanup":
 			if util.Deployment.GCloud.Cluster != "" {
 				dir := path.Dir(*setupFile)
-				err := k8s.CleanupGoogleK8s(dir)
+				err := util.DeleteK8sServices(dir)
 				if err != nil {
 					errorsFound += 1
 					errors = append(errors, err.Error())
@@ -280,7 +298,6 @@ func main() {
 		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, fileType) {
 			errorsFound += 1
 			errors = append(errors, "compare yaml failed")
-
 		}
 
 	}

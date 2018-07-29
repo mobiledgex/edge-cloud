@@ -2,16 +2,16 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: crm
-  name: crm
+    app: controller
+  name: controller-notify
   namespace: default
 spec:
   externalTrafficPolicy: Cluster
   ports:
-   - port: 55091
-     protocol: TCP
-     targetPort: 55091
+  - name: controller-notify
+    port: 37001
+    protocol: TCP
   selector:
-    app: crm
+    app: controller
   sessionAffinity: None
-  type: LoadBalancer
+  type: NodePort

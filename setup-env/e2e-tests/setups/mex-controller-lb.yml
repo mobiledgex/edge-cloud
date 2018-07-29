@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: controller
-  name: controller-service
+  name: controller
   namespace: default
 spec:
   externalTrafficPolicy: Cluster

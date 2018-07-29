@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: dme
-  name: dme-service
+  name: dme
   namespace: default
 spec:
   externalTrafficPolicy: Cluster
