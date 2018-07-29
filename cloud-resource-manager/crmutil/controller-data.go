@@ -94,7 +94,11 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 				//   It should have rigorous format to discern errors, whether flavor or cloudlet error.
 			} else {
 				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
-				fmt.Println(*guid) //XXX No way to return this or any other details
+				if guid == nil {
+					fmt.Println("Error: guid pointer nil")
+				} else {
+					fmt.Println(*guid) //XXX No way to return this or any other details
+				}
 			}
 			err = AddFlavor(flavor.Key.Name)
 			if err != nil {
