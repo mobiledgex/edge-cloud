@@ -127,6 +127,25 @@ message Match_Engine_Status {
   string TokenServerURI = 6;
 }
 
+message CloudletLocation {
+     string CarrierName = 1;
+     string CloudletName = 2;
+     Loc GpsLocation = 3;
+     double Distance = 4;
+}
+
+message Match_Engine_Cloudlet_List {
+  uint32 ver = 1;
+  // Status of the reply
+  enum CL_Status {
+    CL_UNDEFINED = 0;
+    CL_SUCCESS = 1;
+    CL_FAIL = 2;
+  }
+  CL_Status Status = 2;
+  repeated CloudletLocation Cloudlets = 3;
+}
+
 message DynamicLocGroupAdd {
   uint32 ver = 1;
   // User ID type - IMEI, MSISDN etc
@@ -164,6 +183,8 @@ service Match_Engine_Api {
   rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
   rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
   rpc AddUserToGroup(DynamicLocGroupAdd) returns (Match_Engine_Status) {}
+  rpc GetCloudlets(Match_Engine_Request) returns (Match_Engine_Cloudlet_List) {}
+
 }
 
 

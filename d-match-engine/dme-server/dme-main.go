@@ -42,6 +42,16 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request
 	return mreq, nil
 }
 
+func (s *server) GetCloudlets(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Cloudlet_List, error) {
+	_, err := dmecommon.VerifyCookie(req.SessionCookie)
+	if err != nil {
+		return nil, err
+	}
+	clist := new(dme.Match_Engine_Cloudlet_List)
+	getCloudlets(req, clist)
+	return clist, nil
+}
+
 func (s *server) VerifyLocation(ctx context.Context,
 	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
 

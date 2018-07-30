@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"sync"
 
@@ -228,6 +229,29 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			"uri", found.uri,
 			"IP", ipaddr.String())
 		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
+	}
+	tbl.RUnlock()
+}
+
+func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
+	var tbl *carrierApps
+	tbl = carrierAppTbl
+	fmt.Printf("TBL %v", tbl)
+
+	listAppinstTbl()
+	tbl.RLock()
+	for _, a := range tbl.apps {
+		fmt.Printf("GETCLOUDLET APP %v", a)
+		for _, i := range a.insts {
+			fmt.Printf("GETCLOULDET APPINST %+v", i)
+			d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+			cloc := dme.CloudletLocation{}
+			cloc.GpsLocation = &i.location
+			cloc.CarrierName = i.carrierName
+			cloc.CloudletName = i.cloudletKey.Name
+			cloc.Distance = d
+			clist.Cloudlets = append(clist.Cloudlets, &cloc)
+		}
 	}
 	tbl.RUnlock()
 }
