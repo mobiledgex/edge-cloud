@@ -29,6 +29,9 @@ COPY --from=build /go/bin/crmctl /usr/local/bin
 COPY --from=build /go/bin/crmserver /usr/local/bin
 COPY --from=build /go/bin/dme-server /usr/local/bin
 COPY --from=build /go/bin/edgectl /usr/local/bin
+COPY --from=build /go/bin/tok-srv-sim /usr/local/bin
+COPY --from=build /go/bin/loc-api-sim /usr/local/bin
+
 
 ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh

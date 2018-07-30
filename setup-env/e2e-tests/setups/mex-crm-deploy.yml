@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm
+  labels:
+    app: crm
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: crm
+  template:
+    metadata:
+      labels:
+        app: crm
+    spec:
+      containers:
+      - name: crm
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        command:
+         - "crmserver"
+         - "--apiAddr"
+         - "0.0.0.0:55091"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"GDDT\"},\"name\":\"Buckhorn\"}"
+         - "--notifyAddrs"
+         - "controller:37001"
+         
+      imagePullSecrets:
+       - name: mexreg-secret 
+

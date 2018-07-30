@@ -28,6 +28,14 @@ case "$1" in
 		shift
 		edgectl $*
 		;;
+	loc-api-sim)
+		shift
+		loc-api-sim $*
+		;;
+	tok-srv-sim)
+		shift
+		tok-srv-sim $*
+		;;
 	*)
 		echo invalid program $1
 		exit 1
