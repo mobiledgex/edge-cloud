@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: crm
+  name: crm
+  namespace: default
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+   - port: 55091
+     protocol: TCP
+     targetPort: 55091
+  selector:
+    app: crm
+  sessionAffinity: None
+  type: LoadBalancer

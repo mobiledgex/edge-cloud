@@ -1,0 +1,89 @@
+gcloud:
+    cluster: mex-cluster-1
+    zone: us-west1-a
+    machinetype: n1-standard-1
+
+k8s-deployment:
+
+   - file: rbac.yml
+     description: setup permissions for service account
+
+   - file: mex-secret.yml
+     description: secret used to access private repo
+
+   - file: mex-crm-lb.yml
+     description: create a load balancer for crms
+
+   - file: mex-locsim-deploy.yml
+     description: create a location api simulator
+     waitforpods:
+     - podname: locsim
+       podcount: 1
+       maxwait: 60
+     copyfile:
+       podname: locsim
+       src: ../data/locsim.yml
+       dest: /var/tmp
+  
+   - file: mex-locsim-svc.yml
+     description: create service to allow locsim to be accessed within cluster
+   
+   - file: etcd-operator.yml
+     description: create an operator deployment to manage etcd
+     waitforpods:
+      - podname: etcd-operator
+        podcount: 1
+        maxwait: 60
+ 
+   - file: mex-etcd-cluster.yml
+     description: creates the MEX etcd cluster
+     waitforpods:
+      - podname: mex-etcd-cluster
+        podcount: 3 
+        maxwait: 60
+
+   - file: mex-controller-deploy.yml
+     description: deploys the controllers
+     waitforpods:
+      - podname: controller
+        podcount: 2
+        maxwait: 60
+
+   - file: mex-controller-lb.yml
+     description: create a load balancer for controllers
+
+   - file: mex-controller-notify-svc.yml
+     description: expose controller notify port within cluster
+
+   - file: mex-dme-deploy.yml
+     description: deploys the dmes
+     waitforpods:
+      - podname: dme
+        podcount: 2
+        maxwait: 60
+
+   - file: mex-dme-lb.yml
+     description: create a load balancer for dmes
+
+   - file: mex-crm-deploy.yml
+     description: deploys the crms
+     waitforpods:
+      - podname: crm
+        podcount: 2
+        maxwait: 60
+
+   - file: mex-crm-lb.yml
+     description: create a load balancer for crms
+
+controllers:
+- controllerlocal:
+    name: ctrl-pool
+
+dmes:
+- dmelocal:
+    name: dme-pool
+    carrier: TDG
+
+crms:
+- crmlocal:
+    name: crm-pool

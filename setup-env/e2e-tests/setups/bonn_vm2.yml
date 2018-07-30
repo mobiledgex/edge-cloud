@@ -1,0 +1,64 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- vm2_internal_ip: 10.1.1.4
+- vm2_external_ip: 37.50.143.100
+- locverurl: "http://10.1.1.4:8888/verifyLocation"
+- toksrvurl: "http://37.50.143.100:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: "{{datadir}}/locsim.yml"
+  hostname: "{{vm2_external_ip}}"
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+  hostname: "{{vm2_external_ip}}"
+
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: "http://{{vm2_internal_ip}}:30011"
+    clientaddrs: "http://{{vm2_internal_ip}}:30001"
+    initialcluster: "etcd1=http://{{vm2_internal_ip}}:30011,etcd2=http://{{vm2_internal_ip}}:30012,etcd3=http://{{vm2_internal_ip}}:30013"
+  hostname: "{{vm2_external_ip}}"
+
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: "http://{{vm2_internal_ip}}:30012"
+    clientaddrs: "http://{{vm2_internal_ip}}:30002"
+    initialcluster: "etcd1=http://{{vm2_internal_ip}}:30011,etcd2=http://{{vm2_internal_ip}}:30012,etcd3=http://{{vm2_internal_ip}}:30013"
+  hostname: "{{vm2_external_ip}}"
+
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: "http://{{vm2_internal_ip}}:30013"
+    clientaddrs: "http://{{vm2_internal_ip}}:30003"
+    initialcluster: "etcd1=http://{{vm2_internal_ip}}:30011,etcd2=http://{{vm2_internal_ip}}:30012,etcd3=http://{{vm2_internal_ip}}:30013"
+  hostname: "{{vm2_external_ip}}"
+
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: "http://{{vm2_internal_ip}}:30001,http://{{vm2_internal_ip}}:30002,http://{{vm2_internal_ip}}:30003"
+    apiaddr: "0.0.0.0:55001"
+    httpaddr: "0.0.0.0:36001"
+    notifyaddr: "{{vm2_internal_ip}}:37001"
+  hostname: "{{vm2_external_ip}}"
+
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: "0.0.0.0:50051"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
+    carrier: TDG
+    notifyaddrs: "{{vm2_internal_ip}}:37001"
+  hostname: "{{vm2_external_ip}}"
+
