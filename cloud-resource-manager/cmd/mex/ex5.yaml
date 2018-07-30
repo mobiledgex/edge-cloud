@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: mex-openstack-kubernetes
+resource: docker-application
+metadata:
+  kind: mex-app-docker
+  name: testPoke
+  tags: nginx-docker-tag
+  tenant: nginx-tenant
+spec:
+  flags: none
+  key: '{"operator_key":{"name":"TMUS"},"name":"tmocloud1"}'
+  rootlb: mex-lb-1.mobiledgex.net
+  dockerregistry: docker.io
+  image: nginx
+  proxypath: mex-lb-1.mobiledgex.net/nginx
+  portmap: 
+  pathmap: /etc:/nginx
+  flavor: app-docker-flavor
+  uri: unused-uri
+  kubernetes: 
+  accesslayer: L7

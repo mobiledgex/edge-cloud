@@ -1,0 +1,61 @@
+syntax = "proto3";
+package api;
+
+import "google/api/annotations.proto";
+
+service MexExample {
+    rpc Echo(EchoRequest) returns (EchoResponse) {
+        option (google.api.http) = {
+            post: "/echo",
+            body: "*"
+        };
+    }
+    rpc Status(StatusRequest) returns (StatusResponse) {
+        option (google.api.http) = {
+            post: "/status",
+            body: "*"
+        };
+    }
+    rpc Info(InfoRequest) returns (InfoResponse) {
+        option (google.api.http) = {
+            post: "/info",
+            body: "*"
+        };
+    }
+}
+
+message EchoRequest {
+    string message = 1;
+}
+
+message EchoResponse {
+    string message = 1;
+}
+
+
+message StatusRequest {
+    string message = 1;
+}
+
+message StatusResponse {
+    string message = 1;
+    string status = 2;
+}
+
+message InfoRequest {
+    string message = 1;
+}
+
+message InfoResponse {
+    string message = 1;
+    string info = 2;
+    string outbound = 3;
+    string hostname = 4;
+    repeated Interface interfaces = 5;
+}
+
+message Interface {
+    string name = 1;
+    string addresses = 2;
+}
+
