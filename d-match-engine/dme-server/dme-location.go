@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	locapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -24,16 +22,27 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 
 	mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 
+	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
+		"appName", key.appKey.Name,
+		"appVersion", key.appKey.Version,
+		"carrier", key.carrierName,
+		"devName", key.appKey.DeveloperKey.Name,
+		"lat", mreq.GpsLocation.Lat,
+		"long", mreq.GpsLocation.Long)
+
 	tbl.RLock()
 	app, ok := tbl.apps[key]
 	if !ok {
 		tbl.RUnlock()
-		fmt.Printf("Couldn't find the key %v\n", key)
+		log.InfoLog("Could not find key in app table", "key", key)
+		mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER
 		return
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and GDDT
 	switch carrier {
+	case "gddt":
+		fallthrough
 	case "GDDT":
 		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus

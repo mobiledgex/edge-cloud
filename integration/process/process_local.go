@@ -2,6 +2,7 @@ package process
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -93,7 +94,8 @@ func connectAPIImpl(timeout time.Duration, apiaddr string) (*grpc.ClientConn, er
 		currTimeMs := time.Now().UnixNano() / int64(time.Millisecond)
 
 		if currTimeMs > maxTimeMs {
-			log.Printf("Timeout in connection to %v\n", apiaddr)
+			err := errors.New("Timeout in connection to " + apiaddr)
+			log.Printf("Error: %v\n", err)
 			return nil, err
 		}
 		if err == nil {

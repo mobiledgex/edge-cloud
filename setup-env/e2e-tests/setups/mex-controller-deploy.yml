@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controller
+  labels:
+    app: controller
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: controller
+  template:
+    metadata:
+      labels:
+        app: controller
+    spec:
+      containers:
+      - name: controller
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        command:
+         - "controller"
+         - "--apiAddr"
+         - "0.0.0.0:55001"
+         - "--httpAddr"
+         - "0.0.0.0:36001"
+         - "--notifyAddr"
+         - "0.0.0.0:37001"
+         - "--etcdUrls"  
+         - "mex-etcd-cluster:2379"
+
+      imagePullSecrets:
+       - name: mexreg-secret 
+

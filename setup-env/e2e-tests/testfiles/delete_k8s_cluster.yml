@@ -1,0 +1,10 @@
+##
+##
+description: deletes k8s cluster 
+
+tests:
+
+- name: delete a cluster 
+  actions: [deletecluster]
+
+

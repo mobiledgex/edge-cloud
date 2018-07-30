@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 
@@ -56,15 +57,17 @@ func init() {
 
 //this is possible actions and optional parameters
 var actionChoices = map[string]string{
-	"start":     "procname",
-	"stop":      "procname",
-	"status":    "procname",
-	"ctrlapi":   "procname",
-	"ctrlinfo":  "procname",
-	"dmeapi":    "procname",
-	"deploy":    "",
-	"cleanup":   "",
-	"fetchlogs": "",
+	"start":         "procname",
+	"stop":          "procname",
+	"status":        "procname",
+	"ctrlapi":       "procname",
+        "ctrlinfo":      "procname",
+	"dmeapi":        "procname",
+	"deploy":        "",
+	"cleanup":       "",
+	"fetchlogs":     "",
+	"createcluster": "",
+	"deletecluster": "",
 }
 
 func printUsage() {
@@ -163,7 +166,9 @@ func main() {
 	}
 
 	if *setupFile != "" {
-		setupmex.ReadSetupFile(*setupFile, *dataDir)
+		if !setupmex.ReadSetupFile(*setupFile, *dataDir) {
+			os.Exit(1)
+		}
 	}
 
 	for _, a := range actionSlice {
@@ -172,10 +177,35 @@ func main() {
 
 		util.PrintStepBanner("running action: " + a)
 		switch action {
+		case "createcluster":
+			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
+				err := util.CreateGloudCluster()
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			}
+		case "deletecluster":
+			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
+				err := util.DeleteGloudCluster()
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			}
 		case "deploy":
-			if !setupmex.DeployProcesses() {
-				errorsFound += 1
-				errors = append(errors, "deploy failed")
+			if util.Deployment.GCloud.Cluster != "" {
+				dir := path.Dir(*setupFile)
+				err := util.DeployK8sServices(dir)
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				}
+			} else {
+				if !setupmex.DeployProcesses() {
+					errorsFound += 1
+					errors = append(errors, "deploy failed")
+				}
 			}
 		case "start":
 			startFailed := false
@@ -226,7 +256,6 @@ func main() {
 				log.Printf("Unable to run api for %s\n", action)
 				errorsFound += 1
 				errors = append(errors, "controller api failed")
-
 			}
 		case "ctrlinfo":
 			setupmex.UpdateApiAddrs()
@@ -245,10 +274,18 @@ func main() {
 
 			}
 		case "cleanup":
-			if !setupmex.CleanupRemoteProcesses() {
-				errorsFound += 1
-				errors = append(errors, "cleanup failed")
-
+			if util.Deployment.GCloud.Cluster != "" {
+				dir := path.Dir(*setupFile)
+				err := util.DeleteK8sServices(dir)
+				if err != nil {
+					errorsFound += 1
+					errors = append(errors, err.Error())
+				} else {
+					if !setupmex.CleanupRemoteProcesses() {
+						errorsFound += 1
+						errors = append(errors, "cleanup failed")
+					}
+				}
 			}
 		case "fetchlogs":
 			if !setupmex.FetchRemoteLogs(*outputDir) {
@@ -270,7 +307,6 @@ func main() {
 		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, fileType) {
 			errorsFound += 1
 			errors = append(errors, "compare yaml failed")
-
 		}
 
 	}
