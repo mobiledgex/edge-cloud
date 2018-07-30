@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"sync"
 
@@ -236,21 +235,28 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
 	var tbl *carrierApps
 	tbl = carrierAppTbl
-	fmt.Printf("TBL %v", tbl)
+	foundCloudlets := make(map[string]bool)
 
 	listAppinstTbl()
 	tbl.RLock()
 	for _, a := range tbl.apps {
-		fmt.Printf("GETCLOUDLET APP %v", a)
+		//if the app name was provided, only look for cloudlets for that app
+		if mreq.AppName != "" && mreq.AppName != a.key.appKey.Name {
+			continue
+		}
 		for _, i := range a.insts {
-			fmt.Printf("GETCLOULDET APPINST %+v", i)
 			d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
 			cloc := dme.CloudletLocation{}
 			cloc.GpsLocation = &i.location
 			cloc.CarrierName = i.carrierName
 			cloc.CloudletName = i.cloudletKey.Name
 			cloc.Distance = d
-			clist.Cloudlets = append(clist.Cloudlets, &cloc)
+			key := cloc.CarrierName + cloc.CloudletName
+			exists, _ := foundCloudlets[key]
+			if !exists {
+				clist.Cloudlets = append(clist.Cloudlets, &cloc)
+				foundCloudlets[key] = true
+			}
 		}
 	}
 	tbl.RUnlock()
