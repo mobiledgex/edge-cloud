@@ -56,6 +56,8 @@ Available Commands:
   controller
   dme
   crm
+  loc-api-sim
+  tok-srv-sim
   completion-script Generates bash completion script
   help              Help about any command
 

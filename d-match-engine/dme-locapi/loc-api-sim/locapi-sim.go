@@ -9,12 +9,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmelocapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	locutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
@@ -24,11 +24,12 @@ var (
 	locport     = flag.Int("port", 8080, "listen port")
 	indexpath   = "/"
 	verpath     = "/verifyLocation"
-	updatepath  = "/updateLocation"
 	showlocpath = "/showLocations"
 
 	locdbfile = flag.String("file", "/var/tmp/locapisim.yml", "file of IP to location mappings")
 )
+
+var locdbLastUpdate = int64(0)
 
 func printUsage() {
 	fmt.Println("\nUsage: \nlocsim [options]\n\noptions:")
@@ -38,13 +39,28 @@ func printUsage() {
 func showIndex(w http.ResponseWriter, r *http.Request) {
 	log.Println("doing showIndex")
 	rc := "/verifyLocation -- verifies the location of an token vs lat and long\n"
-	rc += "/updateLocation -- adds or replaces and IP->location entry\n"
 	rc += "/showLocations -- shows current locations\n"
 	w.Write([]byte(rc))
 }
 
+func checkForLocUpdate() {
+	file, err := os.Stat(*locdbfile)
+	if err != nil {
+		fmt.Printf("Error in getting locdb file time %v", err)
+		return
+	}
+
+	modifiedtime := file.ModTime().Unix()
+	if modifiedtime > locdbLastUpdate {
+		fmt.Printf("need to refresh locations from file\n")
+		readLocationFile()
+		locdbLastUpdate = time.Now().Unix()
+	}
+}
+
 func showLocations(w http.ResponseWriter, r *http.Request) {
 	log.Printf("doing showLocations %+v\n", locations)
+	checkForLocUpdate()
 	b, err := json.Marshal(locations)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
@@ -53,48 +69,9 @@ func showLocations(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func updateLocation(w http.ResponseWriter, r *http.Request) {
-	log.Println("doing updateLocation")
-
-	reqb, err := ioutil.ReadAll(r.Body)
-	log.Printf("body: %v\n", string(reqb))
-
-	var req dmelocapi.LocationRequestMessage
-
-	err = json.Unmarshal(reqb, &req)
-	if err != nil {
-		log.Printf("json unmarshall error: %v\n", err)
-		http.Error(w, err.Error(), 500)
-		return
-	}
-	if req.Ipaddress == "" || req.Lat == 0 || req.Long == 0 {
-		log.Printf("missing field in request:  %+v\n", req)
-		http.Error(w, "improperly formatted request", 400)
-		return
-	}
-
-	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
-
-	ymlout, err := yaml.Marshal(locations)
-	if err != nil {
-		log.Printf("Error in yaml marshal of location db: %v\n", err)
-		http.Error(w, err.Error(), 500)
-	} else {
-		ofile, err := os.OpenFile(*locdbfile, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
-		defer ofile.Close()
-		if err != nil {
-			log.Fatalf("unable to write to file: %s, err: %v\n", *locdbfile, err)
-		}
-		fmt.Fprintf(ofile, string(ymlout))
-	}
-
-	w.Write([]byte("Location DB Updated OK for " + req.Ipaddress + "\n"))
-
-}
-
 func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	log.Println("doing verifyLocation")
-
+	checkForLocUpdate()
 	reqb, err := ioutil.ReadAll(r.Body)
 	log.Printf("body: %v\n", string(reqb))
 
@@ -156,16 +133,14 @@ func readLocationFile() {
 	} else {
 		err := util.ReadYamlFile(*locdbfile, &locations, "", false)
 		if err != nil {
-			log.Fatalf("unable to read yaml location file %v\n", err)
+			log.Printf("unable to read yaml location file %v\n", err)
 		}
 	}
 }
 
 func run() {
 	http.HandleFunc(indexpath, showIndex)
-
 	http.HandleFunc(verpath, verifyLocation)
-	http.HandleFunc(updatepath, updateLocation)
 	http.HandleFunc(showlocpath, showLocations)
 
 	portstr := fmt.Sprintf(":%d", *locport)
@@ -174,6 +149,7 @@ func run() {
 	if err := http.ListenAndServe(portstr, nil); err != nil {
 		panic(err)
 	}
+
 }
 
 func validateArgs() {
@@ -183,6 +159,5 @@ func validateArgs() {
 
 func main() {
 	validateArgs()
-	readLocationFile()
 	run()
 }

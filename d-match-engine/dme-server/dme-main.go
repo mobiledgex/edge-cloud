@@ -1,19 +1,17 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"net"
-	"strings"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -31,32 +29,11 @@ var carrier = flag.String("carrier", "standalone", "carrier name for API connect
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
-func verifyCookie(ctx context.Context, sessionCookie string) (int, error, string) {
-	p, ok := peer.FromContext(ctx)
-	if !ok {
-		return -1, errors.New("unable to get peer IP info"), ""
-	}
-	//peer address is ip:port
-	ss := strings.Split(p.Addr.String(), ":")
-	if len(ss) != 2 {
-		return -1, errors.New("unable to parse peer address " + p.Addr.String()), ""
-	}
-	peerIp := ss[0]
-
-	// This will be encrypted on our public key and will need to be decrypted
-	// For now just verify the clear txt IP
-	fmt.Printf("SessionCookie is %s\n", sessionCookie)
-	if sessionCookie != peerIp {
-		return -1, errors.New("unable to verify SessionCookie"), ""
-	}
-	return 0, nil, peerIp
-}
-
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
 
-	ok, err, _ := verifyCookie(ctx, req.SessionCookie)
-	if ok != 0 {
+	_, err := dmecommon.VerifyCookie(req.SessionCookie)
+	if err != nil {
 		return nil, err
 	}
 
@@ -71,8 +48,8 @@ func (s *server) VerifyLocation(ctx context.Context,
 	var mreq *dme.Match_Engine_Loc_Verify
 	mreq = new(dme.Match_Engine_Loc_Verify)
 
-	ok, err, peerIp := verifyCookie(ctx, req.SessionCookie)
-	if ok != 0 {
+	peerIp, err := dmecommon.VerifyCookie(req.SessionCookie)
+	if err != nil {
 		return nil, err
 	}
 
@@ -86,8 +63,8 @@ func (s *server) GetLocation(ctx context.Context,
 	var mloc *dme.Match_Engine_Loc
 	mloc = new(dme.Match_Engine_Loc)
 
-	ok, err, _ := verifyCookie(ctx, req.SessionCookie)
-	if ok != 0 {
+	_, err := dmecommon.VerifyCookie(req.SessionCookie)
+	if err != nil {
 		return nil, err
 	}
 
@@ -107,28 +84,14 @@ func (s *server) RegisterClient(ctx context.Context,
 	var mstatus *dme.Match_Engine_Status
 	mstatus = new(dme.Match_Engine_Status)
 
+	cookie, err := dmecommon.GenerateCookie(req.AppName, ctx)
+	if err != nil {
+		mstatus.Status = dme.Match_Engine_Status_ME_FAIL
+		return mstatus, err
+	}
+	mstatus.SessionCookie = cookie
 	mstatus.TokenServerURI = *tokSrvUrl
-
-	// Set the src IP as the session cookie for now so we can verify the client later
-	// without needing to call into the operator backend and also have some context
-	// when subsequent call comes. Todo: this part will get enhanced as we go along. For
-	// now teach the sdk to store the cookie and send it in each subsequent calls
-	p, ok := peer.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("unable to get peer IP info")
-	}
-	//peer address is ip:port
-	ss := strings.Split(p.Addr.String(), ":")
-	if len(ss) != 2 {
-		return nil, errors.New("unable to parse peer address " + p.Addr.String())
-	}
-	peerIp := ss[0]
-
-	// For now, just send the unencrypoted cookie back
-	// Fix me to return a cookie encryoted on DME public key
-	mstatus.SessionCookie = peerIp
 	mstatus.Status = dme.Match_Engine_Status_ME_SUCCESS
-
 	return mstatus, nil
 }
 
