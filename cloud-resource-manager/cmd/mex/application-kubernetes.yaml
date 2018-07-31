@@ -1,0 +1,22 @@
+#application: kubernetes
+apiVersion: v1
+kind: mex-openstack-kubernetes
+resource: kubernetes-application
+metadata:
+  kind: mex-app-kubernetes
+  name: mexexample
+  tags: mexexample-kubernetes-tag
+  tenant: mexexample-tenant
+spec:
+  flags: none
+  key: testPoke
+  rootlb: mexlb.tdg.mobiledgex.net
+  image: registry.mobiledgex.net:5000/mobiledgex/mexexample
+  imagetype: ImageTypeDocker
+  proxypath: mexexample
+  portmap: 
+  pathmap: /etc:/mexexample
+  flavor: app-kubernetes-flavor
+  uri: https://mexexample.tdg.mobiledgex.net
+  kubemanifest: http://registry.mobiledgex.net:8080/mexexample.yaml
+  accesslayer: L7

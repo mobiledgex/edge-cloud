@@ -61,6 +61,7 @@ type SpecType struct {
 	Flags           string        `json:"flags"`
 	RootLB          string        `json:"rootlb"`
 	Image           string        `json:"image"`
+	ImageType       string        `json:"imagetype"`
 	AccessLayer     string        `json:"accesslayer"`
 	DockerRegistry  string        `json:"dockerregistry"`
 	ExternalNetwork string        `json:"externalnetwork"`
@@ -73,7 +74,7 @@ type SpecType struct {
 	PathMap         string        `json:"pathmap"`
 	URI             string        `json:"uri"`
 	Key             string        `json:"key"`
-	Kubernetes      string        `json:"kubernetes"`
+	KubeManifest    string        `json:"kubemanifest"`
 	Networks        []NetworkType `json:"networks"`
 	Images          []ImageType   `json:"images"`  //platform VM images, qcow2s
 	Flavors         []FlavorType  `json:"flavors"` //mex flavors
