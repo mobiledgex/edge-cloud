@@ -1,12 +1,12 @@
 package crmutil
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -20,9 +20,9 @@ import (
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/nanobox-io/golang-ssh"
 	"github.com/parnurzeal/gorequest"
-	log "gitlab.com/bobbae/logrus"
 	//"github.com/fsouza/go-dockerclient"
 )
 
@@ -35,6 +35,7 @@ var mexEnv = map[string]string{
 	"MEX_SSH_KEY":         "id_rsa_mobiledgex",
 	"MEX_K8S_MASTER":      "mex-k8s-master",
 	"MEX_K8S_NODE":        "mex-k8s-node",
+	"MEX_DOCKER_REGISTRY": "registry.mobiledgex.net:5000",
 }
 
 //MEXInit initializes MEX API
@@ -114,7 +115,7 @@ func DeleteRootLB(rootLBName string) {
 //   There is no indication of type of cluster being created.  So assume k8s.
 //   Nor is there any tenant information, so no ability to isolate, identify, account for usage or quota.
 //   And no network type information or storage type information.
-//   So if an app needs an esternal IP, we can't figure out if that is the case.
+//   So if an app needs an external IP, we can't figure out if that is the case.
 //   Nor is there a way to return the IP address or DNS name. Or even know if it needs a DNS name.
 //   No ability to open ports, redirect or set up any kind of reverse proxy control.  etc.
 
@@ -244,7 +245,6 @@ func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 //CreateCluster creates a cluster of nodes. It can take a while, so call from a goroutine.
 func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
 	log.Debugln("create kubernetes cluster", mf)
-	//XXX TODO update rootLB.Env[] with manifest specified values
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return nil, err
@@ -254,9 +254,6 @@ func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
 	}
 	if err := ValidateFlavor(mf.Spec.Flavor); err != nil {
 		return nil, fmt.Errorf("invalid flavor")
-	}
-	if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
-		return nil, fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
@@ -270,7 +267,7 @@ func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
 		return nil, fmt.Errorf("empty network spec")
 	}
 	if mf.Spec.Networks[0].Kind != "priv-subnet" {
-		return nil, fmt.Errorf("unsupported netSpec kind")
+		return nil, fmt.Errorf("unsupported netSpec kind %s", mf.Spec.Networks)
 		// XXX for now
 	}
 	//TODO allow more net types
@@ -289,6 +286,7 @@ func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid tag, %v", err)
 	}
+	//TODO add whole manifest yaml->json into stringified property of the kvm instance for later
 	//XXX should check for quota, permissions, access control, etc. here
 	guid := xid.New().String()
 	kvmname := fmt.Sprintf("%s-1-%s-%s", mexEnv["MEX_K8S_MASTER"], mf.Metadata.Name, guid)
@@ -529,7 +527,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 					log.Warningln("forced to continue")
 				}
 			}
-			log.Debugln("delete server", s.Name)
+			log.Debugln("delete kubernetes server", s.Name)
 			err = oscli.DeleteServer(s.Name)
 			if err != nil {
 				if !force {
@@ -655,7 +653,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 
 //GetSSHClient returns ssh client handle for the server
 func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) {
-	auth := ssh.Auth{Keys: []string{mexEnv["MEX_DIR"] + "/id_rsa_mobiledgex"}}
+	auth := ssh.Auth{Keys: []string{mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]}}
 	addr, err := GetServerIPAddr(networkName, serverName)
 	if err != nil {
 		return nil, err
@@ -704,7 +702,7 @@ func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 func InitDockerMachine(rootLB, addr string) error {
 	log.Debugln("init docker machine", rootLB)
 	home := os.Getenv("HOME")
-	_, err := sh.Command("docker-machine", "create", "-d", "generic", "--generic-ip-address", addr, "--generic-ssh-key", mexEnv["MEX_DIR"]+"/id_rsa_mobiledgex", "--generic-ssh-user", "bob", rootLB).Output()
+	_, err := sh.Command("docker-machine", "create", "-d", "generic", "--generic-ip-address", addr, "--generic-ssh-key", mexEnv["MEX_DIR"]+"/"+mexEnv["MEX_SSH_KEY"], "--generic-ssh-user", "bob", rootLB).Output()
 	if err != nil {
 		return err
 	}
@@ -727,9 +725,8 @@ func InitDockerMachine(rootLB, addr string) error {
 //   It then obtains certficiates from Letsencrypt, if not done yet.  Then it runs the docker instance of MEX agent
 //   on the RootLB. It can be told to manually pull image from docker repository.  This allows upgrading with new image.
 //   It uses MEX private docker repository.  If an instance is running already, we don't start another one.
-func RunMEXAgentManifest(mf *Manifest, pull bool) error {
+func RunMEXAgentManifest(mf *Manifest) error {
 	log.Debugln("run mex agent", mf)
-	//XXX TODO update rootLB.Env with manifest
 	fqdn := mf.Spec.RootLB
 	//fqdn is that of the machine/kvm-instance running the agent
 	if !valid.IsDNSName(fqdn) {
@@ -748,9 +745,6 @@ func RunMEXAgentManifest(mf *Manifest, pull bool) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
 	}
-	if mf.Spec.DockerRegistry == "" {
-		return fmt.Errorf("missing docker registry")
-	}
 	log.Debugln("record platform config", mf)
 	rootLB.PlatConf = mf
 	err = EnableRootLB(mf, rootLB)
@@ -767,9 +761,10 @@ func RunMEXAgentManifest(mf *Manifest, pull bool) error {
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("docker ps |grep %s", mf.Spec.Agent.Image)
-	_, err = client.Output(cmd)
-	if err == nil {
+	//XXX rewrite this with --format {{.Names}}
+	cmd := fmt.Sprintf("docker ps --filter ancestor=%s --format {{.Names}}", mf.Spec.Agent.Image)
+	out, err := client.Output(cmd)
+	if err == nil && strings.Contains(out, rootLB.Name) {
 		//agent docker instance exists
 		//XXX check better
 		log.Debugln("agent docker instance already running")
@@ -788,23 +783,30 @@ func RunMEXAgentManifest(mf *Manifest, pull bool) error {
 		return fmt.Errorf("empty docker registry pass env var")
 	}
 	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv["MEX_DOCKER_REG_PASS"])
-	out, err := client.Output(cmd)
+	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't store docker pass, %s, %v", out, err)
 	}
 	log.Debugln("seeded docker registry password")
 	dockerinstanceName := fmt.Sprintf("%s-%s", mf.Metadata.Name, rootLB.Name)
-	if pull { //XXX needs to be in manifest
-		log.Debugln("force pull from docker registry")
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker pull %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", mf.Spec.Agent.Image, mf.Spec.DockerRegistry, dockerinstanceName, mf.Spec.Agent.Image)
-	} else {
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", mf.Spec.DockerRegistry, dockerinstanceName, mf.Spec.Agent.Image)
+	cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s", mf.Spec.DockerRegistry)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error docker login at %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
+	log.Debugln("docker login ok")
+	cmd = fmt.Sprintf("docker pull %s", mf.Spec.Agent.Image) //probably redundant
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error pulling docker image at %s, %s, %s, %v", rootLB.Name, cmd, out, err)
+	}
+	log.Debugln("pulled agent image ok")
+	cmd = fmt.Sprintf("docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", dockerinstanceName, mf.Spec.Agent.Image)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error running dockerized agent on RootLB %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
-	log.Debugln("running dockerized agent")
+	log.Debugln("now running dockerized agent")
 	return nil
 }
 
@@ -816,19 +818,28 @@ func UpdateMEXAgentManifest(mf *Manifest) error {
 		return err
 	}
 	// Force pulling a potentially newer docker image
-	return RunMEXAgentManifest(mf, true)
+	return RunMEXAgentManifest(mf)
 }
 
 //RemoveMEXAgentManifest deletes mex agent docker instance
 func RemoveMEXAgentManifest(mf *Manifest) error {
 	log.Debugln("deleting mex agent", mf)
-	//XXX delete server!!!
+	//XXX we are deleting server kvm!!!
 	err := oscli.DeleteServer(mf.Spec.RootLB)
+	force := strings.Contains(mf.Spec.Flags, "force")
 	if err != nil {
-		return err
+		if !force {
+			return err
+		}
+		log.Debugln("deleting mex agent error", err)
+		log.Debugln("forced, continue", mf.Spec.RootLB)
 	}
+	log.Debugln("removed rootlb", mf.Spec.RootLB)
 	if mf.Metadata.DNSZone == "" {
 		return fmt.Errorf("missing dns zone in manifest")
+	}
+	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", err)
 	}
 	recs, err := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
 	fqdn := mf.Spec.RootLB
@@ -837,12 +848,13 @@ func RemoveMEXAgentManifest(mf *Manifest) error {
 	}
 	for _, rec := range recs {
 		if rec.Type == "A" && rec.Name == fqdn {
-			err = cloudflare.DeleteDNSRecord(fqdn, rec.ID)
+			err = cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID)
 			if err != nil {
-				return fmt.Errorf("cannot delete dns record id %s zone %s, %v", rec.ID, fqdn, err)
+				return fmt.Errorf("cannot delete dns record id %s Zone %s, %v", rec.ID, mf.Metadata.DNSZone, err)
 			}
 		}
 	}
+	log.Debugln("removed DNS A record", fqdn)
 	//TODO remove mex-k8s  internal nets and router
 	return nil
 }
@@ -864,6 +876,7 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if mf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("acquire certificate, missing external network in manifest")
 	}
+	//XXX TODO check with registry for existence of certificates for this domain name. Reuse. Don't generate it again!
 	if err := CheckCredentialsCF(); err != nil {
 		return err
 	}
@@ -907,6 +920,7 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if err != nil {
 		return fmt.Errorf("can't copy to key.pem on %s, %s, %v", fqdn, out, err)
 	}
+	//XXX TODO store certs and keys in the registry for reuse
 	return nil
 }
 
@@ -948,13 +962,21 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	}
 	log.Debugln("wating for cloudflare...")
 	//once successfully inserted the A record will take a bit of time, but not too long due to fast cloudflare anycast
-	time.Sleep(10 * time.Second) //XXX just one time wait
+	time.Sleep(10 * time.Second) //XXX verify by doing a DNS lookup
 	return nil
+}
+
+type genericItem struct {
+	Item interface{} `json:"items"`
+}
+
+type genericItems struct {
+	Items []genericItem `json:"items"`
 }
 
 //IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
-	log.Debugln("checking if cluster is ready", rootLB)
+	log.Debugln("checking if cluster is ready", rootLB, *rootLB.PlatConf)
 	cf, err := GetClusterFlavor(rootLB.PlatConf.Spec.Flavor)
 	if err != nil {
 		return false, err
@@ -962,9 +984,9 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if cf.NumNodes < 1 {
 		return false, fmt.Errorf("invalid flavor profile, %v", cf)
 	}
-	name, err := FindClusterWithKey(mf.Metadata.Name)
+	name, err := FindClusterWithKey(mf.Spec.Key)
 	if err != nil {
-		return false, fmt.Errorf("can't find cluster with key %s, %v", mf.Metadata.Name, err)
+		return false, fmt.Errorf("can't find cluster with key %s, %v", mf.Spec.Key, err)
 	}
 	ipaddr, err := FindNodeIP(name)
 	if err != nil {
@@ -978,18 +1000,22 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 		return false, fmt.Errorf("can't get ssh client for cluser ready check, %v", err)
 	}
 	log.Debugln("checking host", ipaddr, "for kubernetes nodes")
-	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes | grep Ready |grep -v NotReady| wc -l", mexEnv["MEX_SSH_KEY"], ipaddr)
+	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes -o json", mexEnv["MEX_SSH_KEY"], ipaddr)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return false, fmt.Errorf("kubectl fail on %s, %s, %v", name, out, err)
+		return false, nil //This is intentional
 	}
-	totalNodes := cf.NumNodes + cf.NumMasterNodes
-	tn := fmt.Sprintf("%d", totalNodes)
-	if !strings.Contains(out, tn) {
+	gitems := &genericItems{}
+	err = json.Unmarshal([]byte(out), gitems)
+	if err != nil {
+		return false, fmt.Errorf("failed to json unmarshal kubectl get nodes output, %v", err)
+	}
+	log.Debugln("kubectl reports nodes", len(gitems.Items))
+	if len(gitems.Items) < (cf.NumNodes + cf.NumMasterNodes) {
 		log.Debugln("kubernetes cluster not ready, %s", out)
 		return false, nil
 	}
-	log.Debugln("cluster ready", out)
+	log.Debugln("cluster nodes", cf.NumNodes, "master nodes", cf.NumMasterNodes)
 	kcpath := mexEnv["MEX_DIR"] + "/" + name + ".kubeconfig"
 	if _, err := os.Stat(kcpath); err == nil {
 		return true, nil
@@ -997,6 +1023,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if err := CopyKubeConfig(rootLB, name); err != nil {
 		return false, fmt.Errorf("kubeconfig copy failed, %v", err)
 	}
+	log.Debugf("cluster ready. use KUBECONFIG=%s kubectl ...", kcpath)
 	return true, nil
 }
 
@@ -1091,7 +1118,7 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, dat []byte) error {
 		return fmt.Errorf("can't write kubeconfig %s content,%v", name, err)
 	}
 	log.Debugln("wrote", fullpath)
-	kc.Clusters[0].Cluster.Server = "http://" + rootLB.Name + ":8001" //XXX allow for more ports and multiple instances XXX
+	kc.Clusters[0].Cluster.Server = "http://" + rootLB.Name + ":8001" //XXX allow for more ports and multiple instances
 	dat, err = yaml.Marshal(kc)
 	if err != nil {
 		return fmt.Errorf("can't marshal kubeconfig proxy edit %s, %v", name, err)
@@ -1145,6 +1172,20 @@ func FindClusterWithKey(key string) (string, error) {
 	return "", fmt.Errorf("key %s not found", key)
 }
 
+type ksaPort struct {
+	Name       string `json:"name"`
+	Protocol   string `json:"protocol"`
+	Port       int    `json:"port"`
+	NodePort   int    `json:"nodePort"`
+	TargetPort int    `json:"targetPort"`
+}
+type ksaSpec struct {
+	Ports []ksaPort `json:"ports"`
+}
+type kubernetesServiceAbbrev struct {
+	Spec ksaSpec `json:"spec"`
+}
+
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
 func CreateKubernetesAppManifest(mf *Manifest) error {
 	log.Debugln("create kubernetes app", mf)
@@ -1152,47 +1193,97 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name")
-	}
-	if mf.Spec.Kubernetes == "" {
+	if mf.Spec.KubeManifest == "" {
 		return fmt.Errorf("missing kubernetes spec")
 	}
+	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
+		return fmt.Errorf("empty app URI")
+	}
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
-	if !strings.HasPrefix(mf.Spec.Kubernetes, "http://") &&
-		!strings.HasPrefix(mf.Spec.Kubernetes, "https://") {
-		return fmt.Errorf("unsupported kubernetes spec %s", mf.Spec.Kubernetes)
+	if !strings.HasPrefix(mf.Spec.KubeManifest, "http://") &&
+		!strings.HasPrefix(mf.Spec.KubeManifest, "https://") {
+		return fmt.Errorf("unsupported kubernetes spec %s", mf.Spec.KubeManifest)
 	}
 	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name")
+		return fmt.Errorf("missing name for kubernetes deployment")
 	}
-	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, mf.Metadata.Name)
+	if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
+		return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
+	}
+	if mf.Spec.Key == "" {
+		return fmt.Errorf("empty kubernetes cluster name")
+	}
+	if mf.Spec.Image == "" {
+		return fmt.Errorf("empty kubernetes image")
+	}
+	if mf.Spec.ProxyPath == "" {
+		return fmt.Errorf("empty kubernetes proxy path")
+	}
+	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl apply -f %s", kubeconfig, mf.Spec.Kubernetes)
+	var cmd string
+	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
+		return fmt.Errorf("empty docker registry password environment variable")
+	}
+	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv["MEX_DOCKER_REG_PASS"])
 	out, err := client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can't store docker password, %s, %v", out, err)
+	}
+	log.Debugln("stored docker password")
+	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s .docker-pass %s:", mexEnv["MEX_SSH_KEY"], ipaddr)
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can't copy docker password to k8s-master, %s, %v", out, err)
+	}
+	log.Debugln("copied over docker password")
+	cmd = fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", mexEnv["MEX_SSH_KEY"], ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can't docker login on k8s-master to %s, %s, %v", mexEnv["MEX_DOCKER_REGISTRY"], out, err)
+	}
+	log.Debugln("docker login ok")
+	cmd = fmt.Sprintf("%s kubectl create secret docker-registry mexregistrysecret --docker-server=%s --docker-username=mobiledgex --docker-password=%s --docker-email=docker@mobiledgex.com", kubeconfig, mexEnv["MEX_DOCKER_REGISTRY"], mexEnv["MEX_DOCKER_REG_PASS"])
+	out, err = client.Output(cmd)
+	if err != nil {
+		if strings.Contains(out, "AlreadyExists") {
+			log.Debugln("secret already exists")
+		} else {
+			return fmt.Errorf("error creating mexregistrysecret, %s, %s, %v", cmd, out, err)
+		}
+	}
+	log.Debugln("created mexregistrysecret docker secret")
+	cmd = fmt.Sprintf("%s kubectl create -f %s", kubeconfig, mf.Spec.KubeManifest)
+	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
-	//TODO: use service manifest, or require a single manifest with both deployment and service. Use namespaces.
-	cmd = fmt.Sprintf("%s kubectl expose deployment %s-deployment --type LoadBalancer --name %s-service --external-ip %s", kubeconfig, mf.Metadata.Name, mf.Metadata.Name, ipaddr)
-	out, err = client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error creating service for kubernetes deployment, %s, %s, %v", cmd, out, err)
-	}
-	cmd = fmt.Sprintf("%s kubectl get svc %-service -o jsonpath='{.spec.ports[0].port}'", mf.Spec.Kubernetes, mf.Metadata.Name)
+	log.Debugln("applied kubernetes manifest", mf.Spec.KubeManifest)
+	cmd = fmt.Sprintf("%s kubectl get svc %s-service -o json", kubeconfig, mf.Metadata.Name)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
-	if _, err := strconv.Atoi(out); err == nil {
-		return fmt.Errorf("malformed port from kubectl for svc %s, %s, %v", mf.Metadata.Name, out, err)
+	svcData := &kubernetesServiceAbbrev{}
+	err = json.Unmarshal([]byte(out), svcData)
+	if err != nil {
+		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
 	}
-	origin := fmt.Sprintf("http://%s:%s", ipaddr, out)
-	errs := AddPathReverseProxy(rootLB.Name, mf.Metadata.Name, origin)
-	if errs != nil {
-		return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
+	log.Debugln("got ports for kubernetes service", mf.Spec.KubeManifest, svcData.Spec.Ports)
+	for _, port := range svcData.Spec.Ports {
+		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
+		proxypath := mf.Spec.ProxyPath + port.Name
+		errs := AddPathReverseProxy(rootLB.Name, proxypath, origin)
+		if errs != nil {
+			errmsg := fmt.Sprintf("%v", errs)
+			if strings.Contains(errmsg, "exists") {
+				log.Debugln("already exists", proxypath, origin)
+			} else {
+				return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
+			}
+		}
 	}
 	return nil
 }
@@ -1203,7 +1294,7 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (string, ssh.Client, string, error) {
-	log.Debugln("validate kubernetes parameters", rootLB, clustName)
+	log.Debugln("validate kubernetes parameters rootLB", rootLB, "cluster", clustName)
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return "", nil, "", fmt.Errorf("validate kubernetes parameters, missing external network in platform config")
 	}
@@ -1233,11 +1324,11 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
 	}
-	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, mf.Metadata.Name)
+	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl apply -f %s", kubeconfig, mf.Spec.Kubernetes)
+	cmd := fmt.Sprintf("%s kubectl apply -f %s", kubeconfig, mf.Spec.KubeManifest)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error applying kubernetes manifest, %s, %s, %v", cmd, out, err)
@@ -1312,93 +1403,6 @@ func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname strin
 	return out, nil
 }
 
-//CreateDockerAppManifest creates an app stricly just plain docker, not kubernetes
-func CreateDockerAppManifest(mf *Manifest) error {
-	log.Debugln("create docker app", mf)
-	rootLB, err := getRootLB(mf.Spec.RootLB)
-	if err != nil {
-		return fmt.Errorf("can't locate rootLB %s", mf.Spec.RootLB)
-	}
-	if mf.Spec.DockerRegistry == "" {
-		return fmt.Errorf("missing docker registry")
-	}
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name")
-	}
-	if !strings.Contains(mf.Spec.Flavor, "docker") {
-		return fmt.Errorf("unsupported docker flavor %s", mf.Spec.Flavor)
-	}
-	if mf.Spec.Key == "" {
-		return fmt.Errorf("empty cluster name")
-	}
-	if mf.Spec.Image == "" {
-		return fmt.Errorf("empty image path")
-	}
-	if mf.Spec.ProxyPath == "" {
-		return fmt.Errorf("empty proxy path")
-	}
-	if !strings.Contains(mf.Spec.ProxyPath, rootLB.Name) {
-		return fmt.Errorf("invalid proxy path %s", mf.Spec.ProxyPath)
-	}
-	pis := strings.Split(mf.Spec.ProxyPath, "/")
-	if len(pis) != 2 {
-		return fmt.Errorf("malformed proxy path %s", mf.Spec.ProxyPath)
-	}
-	proxypath := pis[1]
-	if proxypath == "" {
-		return fmt.Errorf("empty proxy path after parsing")
-	}
-	ready, err := IsClusterReady(mf, rootLB)
-	if !ready {
-		return err
-	}
-	//XXX what is AccessLayerL4L7
-	if !strings.Contains(mf.Spec.AccessLayer, "L7") { // XXX for now
-		return fmt.Errorf("access layer %s not supported (yet)", mf.Spec.AccessLayer)
-	}
-	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
-		return fmt.Errorf("create docker app, missing external network in platform config")
-	}
-	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
-	if err != nil {
-		return err
-	}
-	var origin string
-	//TODO XXX unknown format of the mapped ports string
-	if mf.Spec.PortMap != "" {
-		if !strings.Contains(mf.Spec.PortMap, ":") {
-			return fmt.Errorf("invalid port map string %s", mf.Spec.PortMap)
-		}
-		ix := strings.Index(mf.Spec.PortMap, ":")
-		origin = "http://localhost" + mf.Spec.PortMap[ix:] //XXX temporary until ports string is sorted out.
-	}
-	//dockerPort:= mf.Spec.PortMap[:ix]
-	//TODO mf.Spec.PortMap and mf.Spec.PathMap
-	var cmd string
-	log.Debugln("attempt to use docker registry", mf.Spec.DockerRegistry)
-	switch mf.Spec.DockerRegistry {
-	case "docker.io":
-		cmd = fmt.Sprintf("docker run -d --rm --name %s --net=host %s", mf.Metadata.Name, mf.Spec.Image) //XXX net=host
-	case "registry.mobiledgex.net:5000":
-		cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s; docker run -d --rm --name %s --net=host %s", mf.Spec.DockerRegistry, mf.Metadata.Name, mf.Spec.Image)
-	default:
-		return fmt.Errorf("unsupported registry %s", mf.Spec.DockerRegistry)
-	}
-	out, err := client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error running docker app, %s, %s, %v", cmd, out, err)
-	}
-	if origin != "" {
-		errs := AddPathReverseProxy(rootLB.Name, proxypath, origin)
-		if errs != nil {
-			return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
-		}
-	}
-	return nil
-}
-
-//TODO docker logs
-
 //AddPathReverseProxy adds a new route to origin on the reverse proxy
 func AddPathReverseProxy(rootLBName, path, origin string) []error {
 	log.Debugln("add path to reverse proxy", rootLBName, path, origin)
@@ -1411,12 +1415,13 @@ func AddPathReverseProxy(rootLBName, path, origin string) []error {
 	request := gorequest.New()
 	maURI := fmt.Sprintf("http://%s:%s/v1/proxy", rootLBName, mexEnv["MEX_AGENT_PORT"])
 	// The L7 reverse proxy terminates TLS at the RootLB and uses path routing to get to the service at a IP:port
-	pl := fmt.Sprintf(`{ "message": "add", "proxies": [ { "path": "/%s", "origin": "%s" } ] }`, path, origin)
+	pl := fmt.Sprintf(`{ "message": "add", "proxies": [ { "path": "/%s/*catchall", "origin": "%s" } ] }`, path, origin)
 	resp, body, errs := request.Post(maURI).Set("Content-Type", "application/json").Send(pl).End()
 	if errs != nil {
 		return errs
 	}
 	if strings.Contains(body, "OK") {
+		log.Debugln("added path to revproxy")
 		return nil
 	}
 	errs = append(errs, fmt.Errorf("resp %v, body %s", resp, body))
@@ -1443,12 +1448,12 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 	}
 	cl1.Close() //nolint
 	cl2.Close() //nolint
-	cmd = fmt.Sprintf("ps ax |grep %s", kubeconfig)
+	cmd = "ps -C kubectl"
 	for i := 0; i < 5; i++ {
 		//verify
-		out, outerr := client.Output(cmd)
+		_, outerr := client.Output(cmd)
 		if outerr == nil {
-			log.Debugln("kubectl proxy confirmed running", out)
+			log.Debugln("kubectl proxy confirmed running")
 			return nil
 		}
 		log.Debugln("waiting for kubectl proxy...")
@@ -1457,26 +1462,79 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 	return fmt.Errorf("timeout error verifying kubectl proxy")
 }
 
-//DestroyDockerAppManifest  kills an app stricly just plain docker, not kubernetes
-func DestroyDockerAppManifest(mf *Manifest) error {
-	log.Debugln("kill docker app", mf)
+//DestroyKubernetesAppManifest destroys kubernetes app
+func DestroyKubernetesAppManifest(mf *Manifest) error {
+	log.Debugln("delete kubernetes app", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
-	if err != nil {
-		return fmt.Errorf("can't locate rootLB %s", mf.Spec.RootLB)
-	}
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name")
-	}
-	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
 	if err != nil {
 		return err
 	}
-	//var origin string
-	cmd := fmt.Sprintf("docker kill %s", mf.Metadata.Name)
+	if mf.Spec.KubeManifest == "" {
+		return fmt.Errorf("missing kubernetes spec")
+	}
+	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
+		return fmt.Errorf("empty app URI")
+	}
+	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
+	if !strings.HasPrefix(mf.Spec.KubeManifest, "http://") &&
+		!strings.HasPrefix(mf.Spec.KubeManifest, "https://") {
+		return fmt.Errorf("unsupported kubernetes spec %s", mf.Spec.KubeManifest)
+	}
+	if mf.Metadata.Name == "" {
+		return fmt.Errorf("missing name for kubernetes deployment")
+	}
+	if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
+		return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
+	}
+	if mf.Spec.Key == "" {
+		return fmt.Errorf("empty kubernetes cluster name")
+	}
+	if mf.Spec.Image == "" {
+		return fmt.Errorf("empty kubernetes image")
+	}
+	if mf.Spec.ProxyPath == "" {
+		return fmt.Errorf("empty kubernetes proxy path")
+	}
+	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf("%s kubectl get svc %s-service -o json", kubeconfig, mf.Metadata.Name)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error killing docker app, %s, %s, %v", cmd, out, err)
+		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
-	//TODO remove reverse proxy if it was added. need to tag and signal this fact.
+	svcData := &kubernetesServiceAbbrev{}
+	err = json.Unmarshal([]byte(out), svcData)
+	if err != nil {
+		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
+	}
+	log.Debugln("got ports for kubernetes service", mf.Spec.KubeManifest, svcData.Spec.Ports)
+	for _, port := range svcData.Spec.Ports {
+		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
+		proxypath := mf.Spec.ProxyPath + port.Name
+		errs := DeletePathReverseProxy(rootLB.Name, proxypath, origin)
+		if errs != nil {
+			return fmt.Errorf("Errors deleting reverse proxy path, %v", errs)
+		}
+	}
+	cmd = fmt.Sprintf("%s kubectl delete service %s", kubeconfig, mf.Metadata.Name+"-service")
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting kubernetes service, %s, %s, %v", cmd, out, err)
+	}
+	log.Debugln("deleted service")
+	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kubeconfig, mf.Metadata.Name+"-deployment")
+	out, err = client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
+	}
+	log.Debugln("deleted deployment")
+	return nil
+}
+
+//DeletePathReverseProxy Deletes a new route to origin on the reverse proxy
+func DeletePathReverseProxy(rootLBName, path, origin string) []error {
+	//TODO
 	return nil
 }

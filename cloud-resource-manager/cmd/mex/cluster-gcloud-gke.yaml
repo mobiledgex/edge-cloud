@@ -1,3 +1,4 @@
+#cluster: gcloud gke
 apiVersion: v1
 kind: gcloud-gke
 resource: kubernetes-cluster

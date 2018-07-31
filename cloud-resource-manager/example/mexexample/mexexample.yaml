@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mexexample-service
+  labels:
+    run: mexexample
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 27272
+    targetPort: 27272
+    protocol: TCP
+    name: grpc
+  - port: 27273
+    targetPort: 27273
+    protocol: TCP
+    name: rest
+  - port: 27274
+    targetPort: 27274
+    protocol: TCP
+    name: http
+  selector:
+    run: mexexample
+  externalIPs:
+  - 10.101.102.2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mexexample-deployment
+spec:
+  selector:
+    matchLabels:
+      run: mexexample
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: mexexample
+    spec:
+      volumes:
+      imagePullSecrets: 
+      - name: mexregistrysecret
+      containers:
+      - name: mexexample
+        image: registry.mobiledgex.net:5000/mobiledgex/mexexample
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 27272
+        - containerPort: 27273
+        - containerPort: 27274

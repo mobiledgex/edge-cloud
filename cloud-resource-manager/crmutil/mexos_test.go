@@ -8,7 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-var testRootLB = "mex-lb-1.mobiledgex.net"
+var testRootLB = "mexlb.tdg.mobiledgex.net"
 var testExtNet = "external-network-shared"
 var testMexDir = os.Getenv("HOME") + "/.mobiledgex"
 
@@ -82,7 +82,7 @@ var AppInstData = []edgeproto.AppInst{ //nolint
 		},
 		ClusterInstKey: ClusterInstData[0].Key,
 		CloudletLoc:    CloudletData[0].Location,
-		Uri:            "https://mex-lb-1.mobiledgex.net/pokemon-go", //XXX
+		Uri:            "https://mexlb.tdg.mobiledgex.net/pokemon-go", //XXX
 		ImagePath:      AppData[0].ImagePath,
 		ImageType:      AppData[0].ImageType,
 	},

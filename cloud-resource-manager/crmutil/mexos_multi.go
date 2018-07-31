@@ -5,15 +5,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"text/template"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
-	log "gitlab.com/bobbae/logrus"
 )
 
 const (
@@ -36,6 +35,7 @@ metadata:
 spec:
   flags: {{.Flags}}
   flavor: {{.Flavor}}
+  key: {{.Key}}
   rootlb: {{.RootLB}}
   networks:
       - name: {{.NetworkName}}
@@ -47,10 +47,10 @@ type templateFill struct {
 	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone string
 	Location, RootLB, NetworkName, NetworkKind, CIDR        string
 	StorageSpec, NetworkSpec, MasterFlavor, Topology        string
-	NodeFlavor, Operator, Key, Image, Registry, Options     string
-	AppFlavor, ProxyPath, PortMap, PathMap, Kubernetes      string
+	NodeFlavor, Operator, Key, Image, Options               string
+	ImageType, AppURI, ProxyPath, PortMap, PathMap          string
 	AccessLayer, ExternalNetwork, InternalNetwork           string
-	InternalCIDR, ExternalRouter, Flags                     string
+	InternalCIDR, ExternalRouter, Flags, KubeManifest       string
 	NumMasters, NumNodes                                    int
 }
 
@@ -71,6 +71,7 @@ func getManifestClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst)
 		Name:        name,
 		Tags:        name + "-tag",
 		Tenant:      name + "-tenant",
+		Key:         clusterInst.Key.ClusterKey.Name,
 		Kind:        "mex-k8s-cluster",
 		Region:      "eu-central-1",
 		Zone:        "eu-central-1c",
@@ -158,7 +159,6 @@ metadata:
 spec:
   flags: {{.Flags}}
   flavor: {{.Name}}
-  nummasters: {{.NumMaster}}
   flavors: 
     - name: {{.Name}}
       nodes: {{.NumNodes}}
@@ -176,7 +176,7 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
 	data := templateFill{
 		Name:         name,
 		Tags:         name + "-tag",
-		RootLB:       "mex-lb-1.mobiledgex.net",
+		RootLB:       "mexlb.tdg.mobiledgex.net",
 		Kind:         "k8s-cluster-flavor",
 		NumMasters:   1,
 		NumNodes:     2,
@@ -240,7 +240,6 @@ spec:
   flags: {{.Flags}}
   key: {{.Key}}
   rootlb: {{.RootLB}}
-  dockerregistry: {{.Registry}}
   externalnetwork: {{.ExternalNetwork}}
   internalnetwork: {{.InternalNetwork}}
   internalcidr: {{.InternalCIDR}}
@@ -296,7 +295,6 @@ func fillTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (*Manifes
 		RootLB:          rootLB.Name,
 		Image:           "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
 		Kind:            "mex-tdg-openstack-kubernetes",
-		Registry:        "registry.mobiledgex.net:5000",
 		ExternalNetwork: "external-network-shared",
 		InternalNetwork: "mex-k8s-net-1",
 		InternalCIDR:    "10.101.X.X/24",
@@ -350,7 +348,7 @@ func MEXPlatformInitManifest(mf *Manifest) error {
 			return err
 		}
 		//TODO validate all mf content against platform data
-		if err = RunMEXAgentManifest(mf, false); err != nil {
+		if err = RunMEXAgentManifest(mf); err != nil {
 			return err
 		}
 	case gcloudGKE:
@@ -397,14 +395,13 @@ spec:
   flags: {{.Flags}}
   key: {{.Key}}
   rootlb: {{.RootLB}}
-  dockerregistry: {{.Registry}}
+  imagetype:{{.ImageType}}
   image: {{.Image}}
   proxypath: {{.ProxyPath}}
   portmap: {{.PortMap}} 
   pathmap: {{.PathMap}}
-  flavor: {{.AppFlavor}}
-  uri: {{.AppUri}}
-  kubernetes: {{.Kubernetes}}
+  uri: {{.AppURI}}
+  kubemanifest: {{.KubeManifest}}
   accesslayer: {{.AccessLayer}}
 `
 
@@ -420,37 +417,37 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 	}
 	var data templateFill
 	switch imageType {
-	case "ImageTypeDocker": //XXX does not distinguish plain docker vs kubernetes deployments
+	case "ImageTypeDocker":
 		data = templateFill{
-			Kind:        "mex-app-docker",
-			Name:        appInst.Key.AppKey.Name,
-			Tags:        appInst.Key.AppKey.Name + "-docker-tag",
-			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      appInst.Key.AppKey.Name + "-tenant",
-			RootLB:      rootLB.Name,
-			Registry:    "registry.mobiledgex.net:5000",
-			Image:       appInst.ImagePath,                           //XXX docker image name?
-			ProxyPath:   rootLB.Name + "/" + appInst.Key.AppKey.Name, //appInst.Uri ?
-			PortMap:     "80:80",                                     //appInst.MappedPorts,         //XXX format
-			PathMap:     appInst.MappedPath,                          //XXX format
-			AppFlavor:   appInst.Flavor.Name,                         //XXX not sure what this is
-			AccessLayer: accessLayer,
-			Kubernetes:  "", // XXX "https://k8s.io/examples/application/deployment.yaml",
+			Kind:         "mex-app-kubernetes",
+			Name:         appInst.Key.AppKey.Name,
+			Tags:         appInst.Key.AppKey.Name + "-kubernetes-tag",
+			Key:          clusterInst.Key.ClusterKey.Name,
+			Tenant:       appInst.Key.AppKey.Name + "-tenant",
+			RootLB:       rootLB.Name,
+			Image:        appInst.ImagePath,
+			ImageType:    imageType,
+			ProxyPath:    appInst.Key.AppKey.Name,
+			AppURI:       appInst.Uri,
+			PortMap:      appInst.MappedPorts,
+			PathMap:      appInst.MappedPath,
+			AccessLayer:  accessLayer,
+			KubeManifest: "", // XXX Need from controller, "https://k8s.io/examples/application/deployment.yaml",
 		}
 	case "ImageTypeQCOW":
 		data = templateFill{
-			Kind:        "mex-app-virtual-machine",
+			Kind:        "mex-app-virtual-machine-qcow2",
 			Name:        appInst.Key.AppKey.Name,
 			Tags:        appInst.Key.AppKey.Name + "-qcow-tag",
 			Key:         clusterInst.Key.ClusterKey.Name,
 			Tenant:      appInst.Key.AppKey.Name + "-tenant",
 			RootLB:      rootLB.Name,
-			Registry:    "registry.mobiledgex.net:5000",
-			Image:       appInst.ImagePath,                           //XXX qcow image name?
-			ProxyPath:   rootLB.Name + "/" + appInst.Key.AppKey.Name, //appInst.Uri ?
-			PortMap:     appInst.MappedPorts,                         //XXX format
-			PathMap:     appInst.MappedPath,                          //XXX format
-			AppFlavor:   appInst.Flavor.Name,                         //XXX not sure what this is
+			Image:       appInst.ImagePath,
+			ImageType:   imageType,
+			ProxyPath:   appInst.Key.AppKey.Name,
+			AppURI:      appInst.Uri,
+			PortMap:     appInst.MappedPorts,
+			PathMap:     appInst.MappedPath,
 			AccessLayer: accessLayer,
 		}
 	default:
@@ -464,19 +461,18 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 	return MEXCreateAppManifest(mf)
 }
 
-//MEXCreateApp creates app instances on the cluster platform
+//MEXCreateAppManifest creates app instances on the cluster platform
 func MEXCreateAppManifest(mf *Manifest) error {
 	log.Debugln("create app", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
-		if strings.Contains(mf.Metadata.Tags, "docker") {
-			if mf.Spec.Kubernetes == "" { //plain docker
-				return CreateDockerAppManifest(mf)
-			}
+		if mf.Spec.ImageType == "ImageTypeDocker" {
 			return CreateKubernetesAppManifest(mf)
-		} else if strings.Contains(mf.Metadata.Tags, "qcow") {
+		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
+			//TODO
+			return fmt.Errorf("running vm images not yet supported")
 		} else {
-			return fmt.Errorf("insufficient tag info")
+			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
 	case gcloudGKE:
 		return fmt.Errorf("not yet supported, type %s", mf.Kind)
@@ -485,7 +481,6 @@ func MEXCreateAppManifest(mf *Manifest) error {
 	default:
 		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
-	return nil
 }
 
 //MEXKillAppManifest kills app
@@ -493,7 +488,13 @@ func MEXKillAppManifest(mf *Manifest) error {
 	log.Debugln("delete app", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
-		return DestroyDockerAppManifest(mf)
+		if mf.Spec.ImageType == "ImageTypeDocker" {
+			return DestroyKubernetesAppManifest(mf)
+		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
+			return fmt.Errorf("vm app not yet supproted")
+		} else {
+			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
+		}
 	case gcloudGKE:
 		return fmt.Errorf("not yet supported, type %s", mf.Kind)
 	case azureAKS:

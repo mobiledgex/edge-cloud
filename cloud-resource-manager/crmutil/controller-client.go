@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "gitlab.com/bobbae/logrus"
 )
 
 //CloudletClient calls CreateCloudlet
