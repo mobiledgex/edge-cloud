@@ -247,6 +247,33 @@ func IsRepeated(field *descriptor.FieldDescriptorProto) bool {
 	return *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }
 
+type MapType struct {
+	KeyField     *descriptor.FieldDescriptorProto
+	ValField     *descriptor.FieldDescriptorProto
+	KeyType      string
+	ValType      string
+	ValIsMessage bool
+}
+
+func (s *PluginSupport) GetMapType(g *generator.Generator, field *descriptor.FieldDescriptorProto) *MapType {
+	if *field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+		return nil
+	}
+	desc := GetDesc(g, field.GetTypeName())
+	if !desc.GetOptions().GetMapEntry() {
+		return nil
+	}
+	m := MapType{}
+	m.KeyField = desc.Field[0]
+	m.ValField = desc.Field[1]
+	m.KeyType = s.GoType(g, m.KeyField)
+	m.ValType = s.GoType(g, m.ValField)
+	if *m.ValField.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+		m.ValIsMessage = true
+	}
+	return &m
+}
+
 // RunParseCheck will run the parser to check for parse errors in the
 // generated code. While the gogo generator does this as well, if there
 // is a failure it does not generate line numbers, which makes it very

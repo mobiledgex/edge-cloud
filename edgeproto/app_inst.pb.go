@@ -1692,6 +1692,7 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 		for i0 := 0; i0 < len(m.Errors); i0++ {
 			if m.Errors[i0] != o.Errors[i0] {
 				fields[AppInstInfoFieldErrors] = struct{}{}
+				break
 			}
 		}
 	}
@@ -1734,7 +1735,7 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
 		m.State = src.State
 	}
 	if _, set := fmap["5"]; set {
-		if m.Errors == nil || len(m.Errors) < len(src.Errors) {
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
 			m.Errors = make([]string, len(src.Errors))
 		}
 		copy(m.Errors, src.Errors)
