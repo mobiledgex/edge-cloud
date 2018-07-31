@@ -111,7 +111,7 @@ func IncludeFieldsHeaderSlicer() []string {
 }
 
 func TestGenSlicer(in *testgen.TestGen) []string {
-	s := make([]string, 0, 36)
+	s := make([]string, 0, 38)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -299,7 +299,7 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 }
 
 func TestGenHeaderSlicer() []string {
-	s := make([]string, 0, 36)
+	s := make([]string, 0, 38)
 	s = append(s, "Fields")
 	s = append(s, "Name")
 	s = append(s, "Db")

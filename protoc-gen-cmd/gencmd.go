@@ -286,6 +286,11 @@ func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descrip
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 		tag := GetHideTag(field)
 		if tag == "" {
 			continue
@@ -427,6 +432,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 		idx := ""
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			idx = "[0]"
@@ -547,6 +557,11 @@ func (g *GenCmd) generateSetFields(msgName string, parents, nums []string, desc 
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 		name := generator.CamelCase(*field.Name)
 		if name == "Fields" {
 			continue
@@ -606,6 +621,9 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 }
 
 func (g *GenCmd) generateSlicer(desc *generator.Descriptor) {
+	if desc.GetOptions().GetMapEntry() {
+		return
+	}
 	message := desc.DescriptorProto
 	g.P("func ", gensupport.GetMsgName(desc), "Slicer(in *", g.FQTypeName(desc), ") []string {")
 	g.P("s := make([]string, 0, ", len(message.Field), ")")
@@ -634,6 +652,11 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 		idx := ""
 		name := generator.CamelCase(*field.Name)
 		hierName := strings.Join(append(parents, name), ".")
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			idx = "[0]"
@@ -711,6 +734,11 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 	}
 	for _, field := range desc.DescriptorProto.Field {
 		if !supportedField(field) {
+			continue
+		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
 			continue
 		}
 

@@ -75,6 +75,8 @@ message TestGen {
   repeated InnerMessage repeated_inner_msg_nonnull = 34 [(gogoproto.nullable) = false];
   repeated distributed_match_engine.Loc repeated_loc = 35;
   repeated distributed_match_engine.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
+  map<int32, int32> intMap = 37;
+  map<int32, NestedMessage> msgMap = 38;
 }
 
 service TestApi {
