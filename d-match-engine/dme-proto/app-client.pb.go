@@ -1044,11 +1044,11 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 		}
 	}
 	m.AppId = src.AppId
-	if m.Protocol == nil || len(m.Protocol) < len(src.Protocol) {
+	if m.Protocol == nil || len(m.Protocol) != len(src.Protocol) {
 		m.Protocol = make([]byte, len(src.Protocol))
 	}
 	copy(m.Protocol, src.Protocol)
-	if m.ServerPort == nil || len(m.ServerPort) < len(src.ServerPort) {
+	if m.ServerPort == nil || len(m.ServerPort) != len(src.ServerPort) {
 		m.ServerPort = make([]byte, len(src.ServerPort))
 	}
 	copy(m.ServerPort, src.ServerPort)
@@ -1062,7 +1062,7 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	m.Ver = src.Ver
 	m.Uri = src.Uri
-	if m.ServiceIp == nil || len(m.ServiceIp) < len(src.ServiceIp) {
+	if m.ServiceIp == nil || len(m.ServiceIp) != len(src.ServiceIp) {
 		m.ServiceIp = make([]byte, len(src.ServiceIp))
 	}
 	copy(m.ServiceIp, src.ServiceIp)

@@ -1401,6 +1401,7 @@ func (m *CloudletInfo) DiffFields(o *CloudletInfo, fields map[string]struct{}) {
 		for i0 := 0; i0 < len(m.Errors); i0++ {
 			if m.Errors[i0] != o.Errors[i0] {
 				fields[CloudletInfoFieldErrors] = struct{}{}
+				break
 			}
 		}
 	}
@@ -1434,7 +1435,7 @@ func (m *CloudletInfo) CopyInFields(src *CloudletInfo) {
 		m.OsMaxVolGb = src.OsMaxVolGb
 	}
 	if _, set := fmap["9"]; set {
-		if m.Errors == nil || len(m.Errors) < len(src.Errors) {
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
 			m.Errors = make([]string, len(src.Errors))
 		}
 		copy(m.Errors, src.Errors)

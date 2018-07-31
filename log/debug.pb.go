@@ -307,7 +307,7 @@ func encodeVarintDebug(dAtA []byte, offset int, v uint64) int {
 	return offset + 1
 }
 func (m *DebugLevels) CopyInFields(src *DebugLevels) {
-	if m.Levels == nil || len(m.Levels) < len(src.Levels) {
+	if m.Levels == nil || len(m.Levels) != len(src.Levels) {
 		m.Levels = make([]DebugLevel, len(src.Levels))
 	}
 	copy(m.Levels, src.Levels)

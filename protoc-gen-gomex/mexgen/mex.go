@@ -213,10 +213,19 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 }
 
 func (m *mex) printCopyInMakeArray(name string, desc *generator.Descriptor, field *descriptor.FieldDescriptorProto) {
-	typ, _ := m.gen.GoType(desc, field)
-	m.P("if m.", name, " == nil || len(m.", name, ") < len(src.", name, ") {")
-	m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
-	m.P("}")
+	mapType := m.support.GetMapType(m.gen, field)
+	if mapType != nil {
+		valType := mapType.ValType
+		if mapType.ValIsMessage {
+			valType = "*" + valType
+		}
+		m.P("m.", name, " = make(map[", mapType.KeyType, "]", valType, ")")
+	} else {
+		typ, _ := m.gen.GoType(desc, field)
+		m.P("if m.", name, " == nil || len(m.", name, ") != len(src.", name, ") {")
+		m.P("m.", name, " = make(", typ, ", len(src.", name, "))")
+		m.P("}")
+	}
 }
 
 func (m *mex) getFieldDesc(field *descriptor.FieldDescriptorProto) *generator.Descriptor {
@@ -271,28 +280,55 @@ func (m *mex) generateDiffFields(parents, names []string, desc *generator.Descri
 		name := generator.CamelCase(*field.Name)
 		hierName := strings.Join(append(parents, name), ".")
 		idx := ""
+		mapType := m.support.GetMapType(m.gen, field)
+		loop := false
+		skipMap := false
 
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
-			incr := fmt.Sprintf("i%d", len(parents))
+			depth := fmt.Sprintf("%d", len(parents))
 			m.P("if len(m.", hierName, ") != len(o.", hierName, ") {")
 			m.markDiff(names, name)
 			m.P("} else {")
-			m.P("for ", incr, " := 0; ", incr, " < len(m.", hierName, "); ", incr, "++ {")
-			idx = "[" + incr + "]"
+			if mapType == nil {
+				m.P("for i", depth, " := 0; i", depth, " < len(m.", hierName, "); i", depth, "++ {")
+				idx = "[i" + depth + "]"
+			} else {
+				m.P("for k", depth, ", _ := range m.", hierName, " {")
+				m.P("_, vok", depth, " := o.", hierName, "[k", depth, "]")
+				m.P("if !vok", depth, " {")
+				m.markDiff(names, name)
+				m.P("} else {")
+				if !mapType.ValIsMessage {
+					skipMap = true
+				}
+				idx = "[k" + depth + "]"
+			}
+			loop = true
 		}
-		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && !skipMap {
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			m.generateDiffFields(append(parents, name+idx), append(names, name), subDesc)
+			subNames := append(names, name)
+			if mapType != nil {
+				subDesc = gensupport.GetDesc(m.gen, mapType.ValField.GetTypeName())
+				subNames = append(subNames, "Value")
+			}
+			m.generateDiffFields(append(parents, name+idx), subNames, subDesc)
 		} else {
 			m.P("if m.", hierName, idx, " != o.", hierName, idx, " {")
 			m.markDiff(names, name)
+			if loop {
+				m.P("break")
+			}
 			m.P("}")
 		}
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
 			*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
 			m.P("}")
 			m.P("}")
+			if mapType != nil {
+				m.P("}")
+			}
 		}
 	}
 }
@@ -348,6 +384,8 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE && gogoproto.IsNullable(field) {
 			nullableMessage = true
 		}
+		mapType := m.support.GetMapType(m.gen, field)
+		skipMap := false
 
 		if hasGrpcFields {
 			numStr := strings.Join(append(nums, num), ".")
@@ -362,15 +400,32 @@ func (m *mex) generateCopyIn(parents, nums []string, desc *generator.Descriptor,
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			m.printCopyInMakeArray(hierName, desc, field)
 			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-				incr := fmt.Sprintf("i%d", len(parents))
-				m.P("for ", incr, " := 0; ", incr, " < len(src.", hierName, "); ", incr, "++ {")
-				idx = "[" + incr + "]"
+				depth := fmt.Sprintf("%d", len(parents))
+				if mapType == nil {
+					m.P("for i", depth, " := 0; i", depth, " < len(src.", hierName, "); i", depth, "++ {")
+					idx = "[i" + depth + "]"
+				} else {
+					m.P("for k", depth, ", _ := range src.", hierName, " {")
+					idx = "[k" + depth + "]"
+					if !mapType.ValIsMessage {
+						skipMap = true
+						m.P("m.", hierName, idx, " = src.", hierName, idx)
+					}
+				}
 			}
 		}
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if skipMap {
+				break
+			}
 			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
-			if gogoproto.IsNullable(field) {
+			if mapType != nil {
+				if mapType.ValIsMessage {
+					m.P("m.", hierName, idx, " = &", mapType.ValType, "{}")
+				}
+				subDesc = gensupport.GetDesc(m.gen, mapType.ValField.GetTypeName())
+			} else if gogoproto.IsNullable(field) {
 				typ := m.support.FQTypeName(m.gen, subDesc)
 				m.P("m.", hierName, idx, " = &", typ, "{}")
 			}
@@ -798,6 +853,10 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 	}
+	if desc.GetOptions().GetMapEntry() {
+		return
+	}
+
 	msgtyp := m.gen.TypeName(desc)
 	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
 	if HasGrpcFields(message) {
