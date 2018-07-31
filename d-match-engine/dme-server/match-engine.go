@@ -240,8 +240,13 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 	listAppinstTbl()
 	tbl.RLock()
 	for _, a := range tbl.apps {
-		//if the app name was provided, only look for cloudlets for that app
-		if mreq.AppName != "" && mreq.AppName != a.key.appKey.Name {
+		//if the carrier name was provided, only look for cloudlets for that carrier
+		if mreq.CarrierName != "" && mreq.CarrierName != a.key.carrierName {
+			continue
+		}
+		//if the app name or version was provided, only look for cloudlets for that app
+		if (mreq.AppName != "" && mreq.AppName != a.key.appKey.Name) ||
+			(mreq.AppVers != "" && mreq.AppVers != a.key.appKey.Version) {
 			continue
 		}
 		for _, i := range a.insts {
@@ -251,11 +256,16 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 			cloc.CarrierName = i.carrierName
 			cloc.CloudletName = i.cloudletKey.Name
 			cloc.Distance = d
-			key := cloc.CarrierName + cloc.CloudletName
-			exists, _ := foundCloudlets[key]
+			// if the app was provided in the request, return the uri
+			if mreq.AppName != "" {
+				cloc.Uri = i.uri
+			}
+			//the same cloudlet could show for more than one app instance.  Just return it once
+			hashkey := cloc.CarrierName + cloc.CloudletName
+			exists, _ := foundCloudlets[hashkey]
 			if !exists {
 				clist.Cloudlets = append(clist.Cloudlets, &cloc)
-				foundCloudlets[key] = true
+				foundCloudlets[hashkey] = true
 			}
 		}
 	}

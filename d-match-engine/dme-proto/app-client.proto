@@ -131,7 +131,10 @@ message CloudletLocation {
      string CarrierName = 1;
      string CloudletName = 2;
      Loc GpsLocation = 3;
+     //distance of cloudlet vs loc in request
      double Distance = 4;
+     // application uri, if an app was provided in the request
+     string Uri = 5;
 }
 
 message Match_Engine_Cloudlet_List {
@@ -184,7 +187,6 @@ service Match_Engine_Api {
   rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
   rpc AddUserToGroup(DynamicLocGroupAdd) returns (Match_Engine_Status) {}
   rpc GetCloudlets(Match_Engine_Request) returns (Match_Engine_Cloudlet_List) {}
-
 }
 
 
