@@ -1,3 +1,4 @@
+#cluster: kubernetes 
 apiVersion: v1
 kind: mex-openstack-kubernetes
 resource: kubernetes-cluster
@@ -11,8 +12,9 @@ metadata:
 spec:
   flags: force
   externalnetwork: external-network-shared
+  key: testPoke
   flavor: x1.medium
-  rootlb: mex-lb-1.mobiledgex.net
+  rootlb: mexlb.gddt.mobiledgex.net
   networks:
       - name: mex-k8s-net-1
         kind: priv-subnet

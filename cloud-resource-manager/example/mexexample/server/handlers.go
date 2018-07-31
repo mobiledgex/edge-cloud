@@ -31,15 +31,15 @@ func (srv *Server) Info(ctx context.Context, req *api.InfoRequest) (res *api.Inf
 		Outbound:   GetOutboundIP(),
 		Interfaces: []*api.Interface{},
 	}
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		res.Message += fmt.Sprintf("error getting interfaces, %v ", err)
-	}
 	hn, err := os.Hostname()
 	if err != nil {
 		res.Message += fmt.Sprintf("error getting hostname, %v ", err)
 	} else {
 		res.Hostname = hn
+	}
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		res.Message += fmt.Sprintf("error getting interfaces, %v ", err)
 	}
 	for _, intf := range interfaces {
 		addrs, err := intf.Addrs()

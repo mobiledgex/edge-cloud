@@ -1,0 +1,21 @@
+#application: qcow2
+apiVersion: v1
+kind: mex-openstack-kubernetes
+resource: docker-application
+metadata:
+  kind: mex-app-docker
+  name: mexexample-docker
+  tags: mexexample-docker-tag
+  tenant: mexexample-tenant
+spec:
+  flags: none
+  key: testPoke
+  rootlb: mexlb.gddt.mobiledgex.net
+  image: registry.mobiledgex.net:5000/mobiledgex/mexexample
+  proxypath: mexexample
+  portmap: 
+  pathmap: /etc:/mexexample
+  flavor: app-docker-flavor
+  uri: https://mexexample.gddt.mobiledgex.net
+  kubemanifest: 
+  accesslayer: L7
