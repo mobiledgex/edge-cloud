@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: azure-aks
-resource: kubernetes-cluster
-metadata:
-  name: testpoke
-  tags: testpoketag
-  tenant: ninc
-  location: centralus
-  resourcegroup: testpokegroup
