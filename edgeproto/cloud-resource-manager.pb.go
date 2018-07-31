@@ -598,7 +598,7 @@ func (m *CloudResource) CopyInFields(src *CloudResource) {
 	}
 	m.Active = src.Active
 	m.Id = src.Id
-	if m.AccessIp == nil || len(m.AccessIp) < len(src.AccessIp) {
+	if m.AccessIp == nil || len(m.AccessIp) != len(src.AccessIp) {
 		m.AccessIp = make([]byte, len(src.AccessIp))
 	}
 	copy(m.AccessIp, src.AccessIp)
@@ -633,7 +633,7 @@ func (m *EdgeCloudApplication) CopyInFields(src *EdgeCloudApplication) {
 	m.Manifest = src.Manifest
 	m.Kind = src.Kind
 	if src.Apps != nil {
-		if m.Apps == nil || len(m.Apps) < len(src.Apps) {
+		if m.Apps == nil || len(m.Apps) != len(src.Apps) {
 			m.Apps = make([]*EdgeCloudApp, len(src.Apps))
 		}
 		for i0 := 0; i0 < len(src.Apps); i0++ {
