@@ -1,3 +1,4 @@
+#cluster: azure aks
 apiVersion: v1
 kind: azure-aks
 resource: kubernetes-cluster

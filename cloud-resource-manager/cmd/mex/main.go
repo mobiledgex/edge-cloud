@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/ghodss/yaml"
-	log "gitlab.com/bobbae/logrus"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 )
@@ -92,6 +92,7 @@ func main() {
 			log.Fatalln("can't read platform from %s", *platform)
 			os.Exit(1)
 		}
+		//TODO allow reading manifest data file from https://
 		err = yaml.Unmarshal(dat, mf)
 		if err != nil {
 			log.Fatalln("can't unmarshal %v", err)
