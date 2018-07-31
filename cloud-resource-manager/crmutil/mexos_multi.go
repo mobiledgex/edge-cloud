@@ -159,7 +159,6 @@ metadata:
 spec:
   flags: {{.Flags}}
   flavor: {{.Name}}
-  nummasters: {{.NumMaster}}
   flavors: 
     - name: {{.Name}}
       nodes: {{.NumNodes}}
