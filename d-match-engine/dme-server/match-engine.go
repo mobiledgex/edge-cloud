@@ -262,7 +262,7 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 			}
 			//the same cloudlet could show for more than one app instance.  Just return it once
 			hashkey := cloc.CarrierName + cloc.CloudletName
-			exists, _ := foundCloudlets[hashkey]
+			_, exists := foundCloudlets[hashkey]
 			if !exists {
 				clist.Cloudlets = append(clist.Cloudlets, &cloc)
 				foundCloudlets[hashkey] = true
