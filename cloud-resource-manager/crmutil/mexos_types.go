@@ -1,7 +1,7 @@
 package crmutil
 
-//MetadataType has metadata
-type MetadataType struct {
+//MetadataDetail has metadata
+type MetadataDetail struct {
 	Name          string `json:"name"`
 	Tags          string `json:"tags"`
 	Tenant        string `json:"tenant"`
@@ -16,8 +16,8 @@ type MetadataType struct {
 	Operator      string `json:"operator"`
 }
 
-//NetworkType has network data
-type NetworkType struct {
+//NetworkDetail has network data
+type NetworkDetail struct {
 	Name    string `json:"name"`
 	Kind    string `json:"kind"`
 	CIDR    string `json:"cidr"`
@@ -25,22 +25,14 @@ type NetworkType struct {
 	Extra   string `json:"extra"`
 }
 
-//AgentType has data on agent
-type AgentType struct {
+//AgentDetail has data on agent
+type AgentDetail struct {
 	Image  string `json:"image"`
 	Status string `json:"status"`
 }
 
-//ImageType has data on image
-type ImageType struct {
-	Name     string `json:"name"`
-	Kind     string `json:"kind"`
-	Favorite string `json:"favorite"`
-	OSFlavor string `json:"osflavor"`
-}
-
-//FlavorType has data on flavor
-type FlavorType struct {
+//FlavorDetail has data on flavor
+type FlavorDetail struct {
 	Name          string `json:"name"`
 	Favorite      string `json:"favorite"`
 	Memory        string `json:"memory"`
@@ -55,37 +47,34 @@ type FlavorType struct {
 	Nodes         int    `json:"nodes"`
 }
 
-//SpecType holds spec block
-type SpecType struct {
-	Flavor          string        `json:"flavor"` // appInst flavor?
-	Flags           string        `json:"flags"`
-	RootLB          string        `json:"rootlb"`
-	Image           string        `json:"image"`
-	ImageType       string        `json:"imagetype"`
-	AccessLayer     string        `json:"accesslayer"`
-	DockerRegistry  string        `json:"dockerregistry"`
-	ExternalNetwork string        `json:"externalnetwork"`
-	InternalNetwork string        `json:"internalnetwork"`
-	InternalCIDR    string        `json:"internalcidr"`
-	ExternalRouter  string        `json:"externalrouter"`
-	Options         string        `json:"options"`
-	ProxyPath       string        `json:"proxypath"`
-	PortMap         string        `json:"portmap"`
-	PathMap         string        `json:"pathmap"`
-	URI             string        `json:"uri"`
-	Key             string        `json:"key"`
-	KubeManifest    string        `json:"kubemanifest"`
-	Networks        []NetworkType `json:"networks"`
-	Images          []ImageType   `json:"images"`  //platform VM images, qcow2s
-	Flavors         []FlavorType  `json:"flavors"` //mex flavors
-	Agent           AgentType     `json:"agent"`
+//SpecDetail holds spec block
+type SpecDetail struct {
+	Flavor          string      `json:"flavor"` // appInst flavor?
+	Flags           string      `json:"flags"`
+	RootLB          string      `json:"rootlb"`
+	Image           string      `json:"image"`
+	ImageFlavor     string      `json:"imageflavor"`
+	ImageType       string      `json:"imagetype"`
+	AccessLayer     string      `json:"accesslayer"`
+	DockerRegistry  string      `json:"dockerregistry"`
+	ExternalNetwork string      `json:"externalnetwork"`
+	ExternalRouter  string      `json:"externalrouter"`
+	Options         string      `json:"options"`
+	ProxyPath       string      `json:"proxypath"`
+	PortMap         string      `json:"portmap"`
+	PathMap         string      `json:"pathmap"`
+	URI             string      `json:"uri"`
+	Key             string      `json:"key"`
+	KubeManifest    string      `json:"kubemanifest"`
+	NetworkScheme   string      `json:"networkscheme"`
+	Agent           AgentDetail `json:"agent"`
 }
 
 //Manifest is general container for the manifest yaml used by `mex`
 type Manifest struct {
-	APIVersion string       `json:"apiVersion"`
-	Kind       string       `json:"kind"`
-	Resource   string       `json:"resource"`
-	Metadata   MetadataType `json:"metadata"`
-	Spec       SpecType     `json:"spec"`
+	APIVersion string         `json:"apiVersion"`
+	Kind       string         `json:"kind"`
+	Resource   string         `json:"resource"`
+	Metadata   MetadataDetail `json:"metadata"`
+	Spec       SpecDetail     `json:"spec"`
 }

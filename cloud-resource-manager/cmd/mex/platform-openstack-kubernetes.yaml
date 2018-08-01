@@ -20,24 +20,9 @@ spec:
   key: testPoke
   dockerregistry: registry.mobiledgex.net:5000
   externalnetwork: external-network-shared
-  internalnetwork: mex-k8s-net-1
-  internalcidr: 10.101.101.0/24
+  networkscheme: priv-subnet,mex-k8s-net-1,10.101.X.0/24
   externalrouter: mex-k8s-router-1
   options: dhcp
   agent: 
     image: registry.mobiledgex.net:5000/mobiledgex/mexosagent
     status: active
-  images:
-    - name: mobiledgex-16.04-2
-      kind: qcow2
-      favorite: yes
-      osflavor: m4.large
-  flavors:
-    - name: x1.medium
-      cpus: 4
-      memory: 8G
-      storage: local
-      masters: 1
-      nodes: 2
-      favorite: yes
-      networkscheme: mexproxy

@@ -8,8 +8,8 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
 	"github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 )
@@ -69,6 +69,7 @@ func main() {
 	if *debug {
 		log.SetLevel(log.DebugLevel)
 	}
+	//XXX TODO make log to a remote server / aggregator
 	args := mainflag.Args()
 	log.Debugln("args", args)
 	if len(args) < 2 {
