@@ -1,0 +1,501 @@
+cloudlets:
+- carriername: OP1
+  cloudletname: cloudlet-1
+  gpslocation:
+    long: -175
+  distance: 9020.118223772786
+- carriername: OP1
+  cloudletname: cloudlet-10
+  gpslocation:
+    long: -166
+  distance: 8221.379797628093
+- carriername: OP1
+  cloudletname: cloudlet-100
+  gpslocation:
+    long: -76
+  distance: 4505.1469358956565
+- carriername: OP1
+  cloudletname: cloudlet-11
+  gpslocation:
+    long: -165
+  distance: 8133.518420832045
+- carriername: OP1
+  cloudletname: cloudlet-12
+  gpslocation:
+    long: -164
+  distance: 8045.878833542605
+- carriername: OP1
+  cloudletname: cloudlet-13
+  gpslocation:
+    long: -163
+  distance: 7958.474075335188
+- carriername: OP1
+  cloudletname: cloudlet-14
+  gpslocation:
+    long: -162
+  distance: 7871.31755874705
+- carriername: OP1
+  cloudletname: cloudlet-15
+  gpslocation:
+    long: -161
+  distance: 7784.42309252711
+- carriername: OP1
+  cloudletname: cloudlet-16
+  gpslocation:
+    long: -160
+  distance: 7697.804905753897
+- carriername: OP1
+  cloudletname: cloudlet-17
+  gpslocation:
+    long: -159
+  distance: 7611.477672861311
+- carriername: OP1
+  cloudletname: cloudlet-18
+  gpslocation:
+    long: -158
+  distance: 7525.456539610637
+- carriername: OP1
+  cloudletname: cloudlet-19
+  gpslocation:
+    long: -157
+  distance: 7439.75715004554
+- carriername: OP1
+  cloudletname: cloudlet-2
+  gpslocation:
+    long: -174
+  distance: 8930.796498002217
+- carriername: OP1
+  cloudletname: cloudlet-20
+  gpslocation:
+    long: -156
+  distance: 7354.395674464356
+- carriername: OP1
+  cloudletname: cloudlet-21
+  gpslocation:
+    long: -155
+  distance: 7269.388838441056
+- carriername: OP1
+  cloudletname: cloudlet-22
+  gpslocation:
+    long: -154
+  distance: 7184.753952922469
+- carriername: OP1
+  cloudletname: cloudlet-23
+  gpslocation:
+    long: -153
+  distance: 7100.508945424692
+- carriername: OP1
+  cloudletname: cloudlet-24
+  gpslocation:
+    long: -152
+  distance: 7016.67239234581
+- carriername: OP1
+  cloudletname: cloudlet-25
+  gpslocation:
+    long: -151
+  distance: 6933.263552405183
+- carriername: OP1
+  cloudletname: cloudlet-26
+  gpslocation:
+    long: -150
+  distance: 6850.302401211158
+- carriername: OP1
+  cloudletname: cloudlet-27
+  gpslocation:
+    long: -149
+  distance: 6767.809666949192
+- carriername: OP1
+  cloudletname: cloudlet-28
+  gpslocation:
+    long: -148
+  distance: 6685.806867170595
+- carriername: OP1
+  cloudletname: cloudlet-29
+  gpslocation:
+    long: -147
+  distance: 6604.316346648359
+- carriername: OP1
+  cloudletname: cloudlet-3
+  gpslocation:
+    long: -173
+  distance: 8841.592529594249
+- carriername: OP1
+  cloudletname: cloudlet-30
+  gpslocation:
+    long: -146
+  distance: 6523.36131625046
+- carriername: OP1
+  cloudletname: cloudlet-31
+  gpslocation:
+    long: -145
+  distance: 6442.9658927623395
+- carriername: OP1
+  cloudletname: cloudlet-32
+  gpslocation:
+    long: -144
+  distance: 6363.155139568704
+- carriername: OP1
+  cloudletname: cloudlet-33
+  gpslocation:
+    long: -143
+  distance: 6283.955108080063
+- carriername: OP1
+  cloudletname: cloudlet-34
+  gpslocation:
+    long: -142
+  distance: 6205.392879761032
+- carriername: OP1
+  cloudletname: cloudlet-35
+  gpslocation:
+    long: -141
+  distance: 6127.4966085852775
+- carriername: OP1
+  cloudletname: cloudlet-36
+  gpslocation:
+    long: -140
+  distance: 6050.295563705469
+- carriername: OP1
+  cloudletname: cloudlet-37
+  gpslocation:
+    long: -139
+  distance: 5973.820172085597
+- carriername: OP1
+  cloudletname: cloudlet-38
+  gpslocation:
+    long: -138
+  distance: 5898.102060796972
+- carriername: OP1
+  cloudletname: cloudlet-39
+  gpslocation:
+    long: -137
+  distance: 5823.174098628087
+- carriername: OP1
+  cloudletname: cloudlet-4
+  gpslocation:
+    long: -172
+  distance: 8752.516924767822
+- carriername: OP1
+  cloudletname: cloudlet-40
+  gpslocation:
+    long: -136
+  distance: 5749.070436601804
+- carriername: OP1
+  cloudletname: cloudlet-41
+  gpslocation:
+    long: -135
+  distance: 5675.8265469310445
+- carriername: OP1
+  cloudletname: cloudlet-42
+  gpslocation:
+    long: -134
+  distance: 5603.479259876133
+- carriername: OP1
+  cloudletname: cloudlet-43
+  gpslocation:
+    long: -133
+  distance: 5532.066797893307
+- carriername: OP1
+  cloudletname: cloudlet-44
+  gpslocation:
+    long: -132
+  distance: 5461.628806384824
+- carriername: OP1
+  cloudletname: cloudlet-45
+  gpslocation:
+    long: -131
+  distance: 5392.206380277176
+- carriername: OP1
+  cloudletname: cloudlet-46
+  gpslocation:
+    long: -130
+  distance: 5323.842085565724
+- carriername: OP1
+  cloudletname: cloudlet-47
+  gpslocation:
+    long: -129
+  distance: 5256.579974872906
+- carriername: OP1
+  cloudletname: cloudlet-48
+  gpslocation:
+    long: -128
+  distance: 5190.465595974288
+- carriername: OP1
+  cloudletname: cloudlet-49
+  gpslocation:
+    long: -127
+  distance: 5125.545992154237
+- carriername: OP1
+  cloudletname: cloudlet-5
+  gpslocation:
+    long: -171
+  distance: 8663.580485753291
+- carriername: OP1
+  cloudletname: cloudlet-50
+  gpslocation:
+    long: -126
+  distance: 5061.869693163341
+- carriername: OP1
+  cloudletname: cloudlet-51
+  gpslocation:
+    long: -125
+  distance: 4999.486695465828
+- carriername: OP1
+  cloudletname: cloudlet-52
+  gpslocation:
+    long: -124
+  distance: 4938.4484303909885
+- carriername: OP1
+  cloudletname: cloudlet-53
+  gpslocation:
+    long: -123
+  distance: 4878.807718742244
+- carriername: OP1
+  cloudletname: cloudlet-54
+  gpslocation:
+    long: -122
+  distance: 4820.6187103760885
+- carriername: OP1
+  cloudletname: cloudlet-55
+  gpslocation:
+    long: -121
+  distance: 4763.9368072463785
+- carriername: OP1
+  cloudletname: cloudlet-56
+  gpslocation:
+    long: -120
+  distance: 4708.818568423599
+- carriername: OP1
+  cloudletname: cloudlet-57
+  gpslocation:
+    long: -119
+  distance: 4655.321595650497
+- carriername: OP1
+  cloudletname: cloudlet-58
+  gpslocation:
+    long: -118
+  distance: 4603.504398091852
+- carriername: OP1
+  cloudletname: cloudlet-59
+  gpslocation:
+    long: -117
+  distance: 4553.426235083992
+- carriername: OP1
+  cloudletname: cloudlet-6
+  gpslocation:
+    long: -170
+  distance: 8574.794228073193
+- carriername: OP1
+  cloudletname: cloudlet-60
+  gpslocation:
+    long: -116
+  distance: 4505.1469358956565
+- carriername: OP1
+  cloudletname: cloudlet-61
+  gpslocation:
+    long: -115
+  distance: 4458.726695781393
+- carriername: OP1
+  cloudletname: cloudlet-62
+  gpslocation:
+    long: -114
+  distance: 4414.2258479463635
+- carriername: OP1
+  cloudletname: cloudlet-63
+  gpslocation:
+    long: -113
+  distance: 4371.704611449468
+- carriername: OP1
+  cloudletname: cloudlet-64
+  gpslocation:
+    long: -112
+  distance: 4331.222815549596
+- carriername: OP1
+  cloudletname: cloudlet-65
+  gpslocation:
+    long: -111
+  distance: 4292.839601544164
+- carriername: OP1
+  cloudletname: cloudlet-66
+  gpslocation:
+    long: -110
+  distance: 4256.613103752215
+- carriername: OP1
+  cloudletname: cloudlet-67
+  gpslocation:
+    long: -109
+  distance: 4222.6001119444
+- carriername: OP1
+  cloudletname: cloudlet-68
+  gpslocation:
+    long: -108
+  distance: 4190.855718202691
+- carriername: OP1
+  cloudletname: cloudlet-69
+  gpslocation:
+    long: -107
+  distance: 4161.432951882301
+- carriername: OP1
+  cloudletname: cloudlet-7
+  gpslocation:
+    long: -169
+  distance: 8486.16939832425
+- carriername: OP1
+  cloudletname: cloudlet-70
+  gpslocation:
+    long: -106
+  distance: 4134.382407021683
+- carriername: OP1
+  cloudletname: cloudlet-71
+  gpslocation:
+    long: -105
+  distance: 4109.7518671744265
+- carriername: OP1
+  cloudletname: cloudlet-72
+  gpslocation:
+    long: -104
+  distance: 4087.585933187737
+- carriername: OP1
+  cloudletname: cloudlet-73
+  gpslocation:
+    long: -103
+  distance: 4067.925659893704
+- carriername: OP1
+  cloudletname: cloudlet-74
+  gpslocation:
+    long: -102
+  distance: 4050.8082079802502
+- carriername: OP1
+  cloudletname: cloudlet-75
+  gpslocation:
+    long: -101
+  distance: 4036.2665174405383
+- carriername: OP1
+  cloudletname: cloudlet-76
+  gpslocation:
+    long: -100
+  distance: 4024.3290089401717
+- carriername: OP1
+  cloudletname: cloudlet-77
+  gpslocation:
+    long: -99
+  distance: 4015.0193191760295
+- carriername: OP1
+  cloudletname: cloudlet-78
+  gpslocation:
+    long: -98
+  distance: 4008.3560758237727
+- carriername: OP1
+  cloudletname: cloudlet-79
+  gpslocation:
+    long: -97
+  distance: 4004.352716988749
+- carriername: OP1
+  cloudletname: cloudlet-8
+  gpslocation:
+    long: -168
+  distance: 8397.717492500102
+- carriername: OP1
+  cloudletname: cloudlet-80
+  gpslocation:
+    long: -96
+  distance: 4003.017359204114
+- carriername: OP1
+  cloudletname: cloudlet-81
+  gpslocation:
+    long: -95
+  distance: 4004.352716988749
+- carriername: OP1
+  cloudletname: cloudlet-82
+  gpslocation:
+    long: -94
+  distance: 4008.3560758237727
+- carriername: OP1
+  cloudletname: cloudlet-83
+  gpslocation:
+    long: -93
+  distance: 4015.0193191760295
+- carriername: OP1
+  cloudletname: cloudlet-84
+  gpslocation:
+    long: -92
+  distance: 4024.3290089401717
+- carriername: OP1
+  cloudletname: cloudlet-85
+  gpslocation:
+    long: -91
+  distance: 4036.2665174405383
+- carriername: OP1
+  cloudletname: cloudlet-86
+  gpslocation:
+    long: -90
+  distance: 4050.8082079802502
+- carriername: OP1
+  cloudletname: cloudlet-87
+  gpslocation:
+    long: -89
+  distance: 4067.925659893704
+- carriername: OP1
+  cloudletname: cloudlet-88
+  gpslocation:
+    long: -88
+  distance: 4087.585933187737
+- carriername: OP1
+  cloudletname: cloudlet-89
+  gpslocation:
+    long: -87
+  distance: 4109.7518671744265
+- carriername: OP1
+  cloudletname: cloudlet-9
+  gpslocation:
+    long: -167
+  distance: 8309.450274894869
+- carriername: OP1
+  cloudletname: cloudlet-90
+  gpslocation:
+    long: -86
+  distance: 4134.382407021683
+- carriername: OP1
+  cloudletname: cloudlet-91
+  gpslocation:
+    long: -85
+  distance: 4161.432951882301
+- carriername: OP1
+  cloudletname: cloudlet-92
+  gpslocation:
+    long: -84
+  distance: 4190.855718202691
+- carriername: OP1
+  cloudletname: cloudlet-93
+  gpslocation:
+    long: -83
+  distance: 4222.6001119444
+- carriername: OP1
+  cloudletname: cloudlet-94
+  gpslocation:
+    long: -82
+  distance: 4256.613103752215
+- carriername: OP1
+  cloudletname: cloudlet-95
+  gpslocation:
+    long: -81
+  distance: 4292.839601544164
+- carriername: OP1
+  cloudletname: cloudlet-96
+  gpslocation:
+    long: -80
+  distance: 4331.222815549596
+- carriername: OP1
+  cloudletname: cloudlet-97
+  gpslocation:
+    long: -79
+  distance: 4371.704611449468
+- carriername: OP1
+  cloudletname: cloudlet-98
+  gpslocation:
+    long: -78
+  distance: 4414.2258479463635
+- carriername: OP1
+  cloudletname: cloudlet-99
+  gpslocation:
+    long: -77
+  distance: 4458.726695781393
