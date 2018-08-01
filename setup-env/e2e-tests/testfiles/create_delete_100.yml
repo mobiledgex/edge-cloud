@@ -1,0 +1,29 @@
+##
+##
+description: Adds and deletes 100 clusters with 2 apps each 
+
+tests:
+
+- name: create provisioning 100 cloudlets
+  actions: [ctrlapi-create,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_100.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/show100.yml"
+    filetype: appdata
+
+- includefile: register.yml
+
+- name: get cloudlets
+  actions: [dmeapi-getcloudlets]
+  apifile: "{{datadir}}/mer_get_cloudlets.yml"
+     #filetype: getcloudlets
+
+- name: delete provisioning 100 cloudlets
+  actions: [ctrlapi-elete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_100.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+

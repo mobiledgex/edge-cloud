@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	url "net/url"
@@ -43,6 +44,7 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		log.Println("Error: Cannot run DME APIs without API file")
 		return false
 	}
+	log.Printf("RunDmeAPI for api %s\n", api)
 
 	readMERFile(apiFile)
 
@@ -55,7 +57,6 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 	}
 	defer conn.Close()
 	client := dmeproto.NewMatch_Engine_ApiClient(conn)
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 
 	defer cancel()
@@ -97,13 +98,22 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 			u.Path = apiRequest.TokenServerPath
 			tokSrvUrl = u.String()
 		}
-
 		token := GetTokenFromTokSrv(tokSrvUrl)
 		if token == "" {
 			return false
 		}
 		apiRequest.MatchEngineRequest.VerifyLocToken = token
 		dmereply, dmeerror = client.VerifyLocation(ctx, &apiRequest.MatchEngineRequest)
+	case "getcloudlets":
+		// unlike the other responses, this is a slice of multiple entries which needs
+		// to be sorted to allow a consistent yaml compare
+		log.Printf("DME REQUEST: %+v\n", apiRequest.MatchEngineRequest)
+		mel, err := client.GetCloudlets(ctx, &apiRequest.MatchEngineRequest)
+		sort.Slice((*mel).Cloudlets, func(i, j int) bool {
+			return (*mel).Cloudlets[i].CloudletName < (*mel).Cloudlets[j].CloudletName
+		})
+		dmereply = mel
+		dmeerror = err
 	default:
 		log.Printf("Unsupported dme api %s\n", api)
 		return false

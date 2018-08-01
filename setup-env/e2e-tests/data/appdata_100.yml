@@ -1,9 +1,16 @@
+
 flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
 - key:
     name: x1.small
   ram: 2048
   vcpus: 2
   disk: 2
+
 
 operators:
 - key:
@@ -13,7 +20,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-1
-  accessuri: http://cloudlet-1
+  accessuri: OP1.cloudlet-1
   location:
     lat: 0
     long: -175
@@ -23,7 +30,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-2
-  accessuri: http://cloudlet-2
+  accessuri: OP1.cloudlet-2
   location:
     lat: 0
     long: -174
@@ -33,7 +40,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-3
-  accessuri: http://cloudlet-3
+  accessuri: OP1.cloudlet-3
   location:
     lat: 0
     long: -173
@@ -43,7 +50,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-4
-  accessuri: http://cloudlet-4
+  accessuri: OP1.cloudlet-4
   location:
     lat: 0
     long: -172
@@ -53,7 +60,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-5
-  accessuri: http://cloudlet-5
+  accessuri: OP1.cloudlet-5
   location:
     lat: 0
     long: -171
@@ -63,7 +70,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-6
-  accessuri: http://cloudlet-6
+  accessuri: OP1.cloudlet-6
   location:
     lat: 0
     long: -170
@@ -73,7 +80,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-7
-  accessuri: http://cloudlet-7
+  accessuri: OP1.cloudlet-7
   location:
     lat: 0
     long: -169
@@ -83,7 +90,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-8
-  accessuri: http://cloudlet-8
+  accessuri: OP1.cloudlet-8
   location:
     lat: 0
     long: -168
@@ -93,7 +100,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-9
-  accessuri: http://cloudlet-9
+  accessuri: OP1.cloudlet-9
   location:
     lat: 0
     long: -167
@@ -103,7 +110,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-10
-  accessuri: http://cloudlet-10
+  accessuri: OP1.cloudlet-10
   location:
     lat: 0
     long: -166
@@ -113,7 +120,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-11
-  accessuri: http://cloudlet-11
+  accessuri: OP1.cloudlet-11
   location:
     lat: 0
     long: -165
@@ -123,7 +130,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-12
-  accessuri: http://cloudlet-12
+  accessuri: OP1.cloudlet-12
   location:
     lat: 0
     long: -164
@@ -133,7 +140,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-13
-  accessuri: http://cloudlet-13
+  accessuri: OP1.cloudlet-13
   location:
     lat: 0
     long: -163
@@ -143,7 +150,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-14
-  accessuri: http://cloudlet-14
+  accessuri: OP1.cloudlet-14
   location:
     lat: 0
     long: -162
@@ -153,7 +160,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-15
-  accessuri: http://cloudlet-15
+  accessuri: OP1.cloudlet-15
   location:
     lat: 0
     long: -161
@@ -163,7 +170,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-16
-  accessuri: http://cloudlet-16
+  accessuri: OP1.cloudlet-16
   location:
     lat: 0
     long: -160
@@ -173,7 +180,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-17
-  accessuri: http://cloudlet-17
+  accessuri: OP1.cloudlet-17
   location:
     lat: 0
     long: -159
@@ -183,7 +190,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-18
-  accessuri: http://cloudlet-18
+  accessuri: OP1.cloudlet-18
   location:
     lat: 0
     long: -158
@@ -193,7 +200,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-19
-  accessuri: http://cloudlet-19
+  accessuri: OP1.cloudlet-19
   location:
     lat: 0
     long: -157
@@ -203,7 +210,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-20
-  accessuri: http://cloudlet-20
+  accessuri: OP1.cloudlet-20
   location:
     lat: 0
     long: -156
@@ -213,7 +220,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-21
-  accessuri: http://cloudlet-21
+  accessuri: OP1.cloudlet-21
   location:
     lat: 0
     long: -155
@@ -223,7 +230,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-22
-  accessuri: http://cloudlet-22
+  accessuri: OP1.cloudlet-22
   location:
     lat: 0
     long: -154
@@ -233,7 +240,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-23
-  accessuri: http://cloudlet-23
+  accessuri: OP1.cloudlet-23
   location:
     lat: 0
     long: -153
@@ -243,7 +250,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-24
-  accessuri: http://cloudlet-24
+  accessuri: OP1.cloudlet-24
   location:
     lat: 0
     long: -152
@@ -253,7 +260,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-25
-  accessuri: http://cloudlet-25
+  accessuri: OP1.cloudlet-25
   location:
     lat: 0
     long: -151
@@ -263,7 +270,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-26
-  accessuri: http://cloudlet-26
+  accessuri: OP1.cloudlet-26
   location:
     lat: 0
     long: -150
@@ -273,7 +280,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-27
-  accessuri: http://cloudlet-27
+  accessuri: OP1.cloudlet-27
   location:
     lat: 0
     long: -149
@@ -283,7 +290,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-28
-  accessuri: http://cloudlet-28
+  accessuri: OP1.cloudlet-28
   location:
     lat: 0
     long: -148
@@ -293,7 +300,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-29
-  accessuri: http://cloudlet-29
+  accessuri: OP1.cloudlet-29
   location:
     lat: 0
     long: -147
@@ -303,7 +310,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-30
-  accessuri: http://cloudlet-30
+  accessuri: OP1.cloudlet-30
   location:
     lat: 0
     long: -146
@@ -313,7 +320,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-31
-  accessuri: http://cloudlet-31
+  accessuri: OP1.cloudlet-31
   location:
     lat: 0
     long: -145
@@ -323,7 +330,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-32
-  accessuri: http://cloudlet-32
+  accessuri: OP1.cloudlet-32
   location:
     lat: 0
     long: -144
@@ -333,7 +340,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-33
-  accessuri: http://cloudlet-33
+  accessuri: OP1.cloudlet-33
   location:
     lat: 0
     long: -143
@@ -343,7 +350,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-34
-  accessuri: http://cloudlet-34
+  accessuri: OP1.cloudlet-34
   location:
     lat: 0
     long: -142
@@ -353,7 +360,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-35
-  accessuri: http://cloudlet-35
+  accessuri: OP1.cloudlet-35
   location:
     lat: 0
     long: -141
@@ -363,7 +370,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-36
-  accessuri: http://cloudlet-36
+  accessuri: OP1.cloudlet-36
   location:
     lat: 0
     long: -140
@@ -373,7 +380,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-37
-  accessuri: http://cloudlet-37
+  accessuri: OP1.cloudlet-37
   location:
     lat: 0
     long: -139
@@ -383,7 +390,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-38
-  accessuri: http://cloudlet-38
+  accessuri: OP1.cloudlet-38
   location:
     lat: 0
     long: -138
@@ -393,7 +400,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-39
-  accessuri: http://cloudlet-39
+  accessuri: OP1.cloudlet-39
   location:
     lat: 0
     long: -137
@@ -403,7 +410,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-40
-  accessuri: http://cloudlet-40
+  accessuri: OP1.cloudlet-40
   location:
     lat: 0
     long: -136
@@ -413,7 +420,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-41
-  accessuri: http://cloudlet-41
+  accessuri: OP1.cloudlet-41
   location:
     lat: 0
     long: -135
@@ -423,7 +430,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-42
-  accessuri: http://cloudlet-42
+  accessuri: OP1.cloudlet-42
   location:
     lat: 0
     long: -134
@@ -433,7 +440,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-43
-  accessuri: http://cloudlet-43
+  accessuri: OP1.cloudlet-43
   location:
     lat: 0
     long: -133
@@ -443,7 +450,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-44
-  accessuri: http://cloudlet-44
+  accessuri: OP1.cloudlet-44
   location:
     lat: 0
     long: -132
@@ -453,7 +460,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-45
-  accessuri: http://cloudlet-45
+  accessuri: OP1.cloudlet-45
   location:
     lat: 0
     long: -131
@@ -463,7 +470,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-46
-  accessuri: http://cloudlet-46
+  accessuri: OP1.cloudlet-46
   location:
     lat: 0
     long: -130
@@ -473,7 +480,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-47
-  accessuri: http://cloudlet-47
+  accessuri: OP1.cloudlet-47
   location:
     lat: 0
     long: -129
@@ -483,7 +490,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-48
-  accessuri: http://cloudlet-48
+  accessuri: OP1.cloudlet-48
   location:
     lat: 0
     long: -128
@@ -493,7 +500,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-49
-  accessuri: http://cloudlet-49
+  accessuri: OP1.cloudlet-49
   location:
     lat: 0
     long: -127
@@ -503,7 +510,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-50
-  accessuri: http://cloudlet-50
+  accessuri: OP1.cloudlet-50
   location:
     lat: 0
     long: -126
@@ -513,7 +520,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-51
-  accessuri: http://cloudlet-51
+  accessuri: OP1.cloudlet-51
   location:
     lat: 0
     long: -125
@@ -523,7 +530,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-52
-  accessuri: http://cloudlet-52
+  accessuri: OP1.cloudlet-52
   location:
     lat: 0
     long: -124
@@ -533,7 +540,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-53
-  accessuri: http://cloudlet-53
+  accessuri: OP1.cloudlet-53
   location:
     lat: 0
     long: -123
@@ -543,7 +550,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-54
-  accessuri: http://cloudlet-54
+  accessuri: OP1.cloudlet-54
   location:
     lat: 0
     long: -122
@@ -553,7 +560,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-55
-  accessuri: http://cloudlet-55
+  accessuri: OP1.cloudlet-55
   location:
     lat: 0
     long: -121
@@ -563,7 +570,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-56
-  accessuri: http://cloudlet-56
+  accessuri: OP1.cloudlet-56
   location:
     lat: 0
     long: -120
@@ -573,7 +580,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-57
-  accessuri: http://cloudlet-57
+  accessuri: OP1.cloudlet-57
   location:
     lat: 0
     long: -119
@@ -583,7 +590,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-58
-  accessuri: http://cloudlet-58
+  accessuri: OP1.cloudlet-58
   location:
     lat: 0
     long: -118
@@ -593,7 +600,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-59
-  accessuri: http://cloudlet-59
+  accessuri: OP1.cloudlet-59
   location:
     lat: 0
     long: -117
@@ -603,7 +610,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-60
-  accessuri: http://cloudlet-60
+  accessuri: OP1.cloudlet-60
   location:
     lat: 0
     long: -116
@@ -613,7 +620,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-61
-  accessuri: http://cloudlet-61
+  accessuri: OP1.cloudlet-61
   location:
     lat: 0
     long: -115
@@ -623,7 +630,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-62
-  accessuri: http://cloudlet-62
+  accessuri: OP1.cloudlet-62
   location:
     lat: 0
     long: -114
@@ -633,7 +640,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-63
-  accessuri: http://cloudlet-63
+  accessuri: OP1.cloudlet-63
   location:
     lat: 0
     long: -113
@@ -643,7 +650,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-64
-  accessuri: http://cloudlet-64
+  accessuri: OP1.cloudlet-64
   location:
     lat: 0
     long: -112
@@ -653,7 +660,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-65
-  accessuri: http://cloudlet-65
+  accessuri: OP1.cloudlet-65
   location:
     lat: 0
     long: -111
@@ -663,7 +670,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-66
-  accessuri: http://cloudlet-66
+  accessuri: OP1.cloudlet-66
   location:
     lat: 0
     long: -110
@@ -673,7 +680,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-67
-  accessuri: http://cloudlet-67
+  accessuri: OP1.cloudlet-67
   location:
     lat: 0
     long: -109
@@ -683,7 +690,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-68
-  accessuri: http://cloudlet-68
+  accessuri: OP1.cloudlet-68
   location:
     lat: 0
     long: -108
@@ -693,7 +700,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-69
-  accessuri: http://cloudlet-69
+  accessuri: OP1.cloudlet-69
   location:
     lat: 0
     long: -107
@@ -703,7 +710,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-70
-  accessuri: http://cloudlet-70
+  accessuri: OP1.cloudlet-70
   location:
     lat: 0
     long: -106
@@ -713,7 +720,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-71
-  accessuri: http://cloudlet-71
+  accessuri: OP1.cloudlet-71
   location:
     lat: 0
     long: -105
@@ -723,7 +730,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-72
-  accessuri: http://cloudlet-72
+  accessuri: OP1.cloudlet-72
   location:
     lat: 0
     long: -104
@@ -733,7 +740,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-73
-  accessuri: http://cloudlet-73
+  accessuri: OP1.cloudlet-73
   location:
     lat: 0
     long: -103
@@ -743,7 +750,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-74
-  accessuri: http://cloudlet-74
+  accessuri: OP1.cloudlet-74
   location:
     lat: 0
     long: -102
@@ -753,7 +760,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-75
-  accessuri: http://cloudlet-75
+  accessuri: OP1.cloudlet-75
   location:
     lat: 0
     long: -101
@@ -763,7 +770,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-76
-  accessuri: http://cloudlet-76
+  accessuri: OP1.cloudlet-76
   location:
     lat: 0
     long: -100
@@ -773,7 +780,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-77
-  accessuri: http://cloudlet-77
+  accessuri: OP1.cloudlet-77
   location:
     lat: 0
     long: -99
@@ -783,7 +790,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-78
-  accessuri: http://cloudlet-78
+  accessuri: OP1.cloudlet-78
   location:
     lat: 0
     long: -98
@@ -793,7 +800,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-79
-  accessuri: http://cloudlet-79
+  accessuri: OP1.cloudlet-79
   location:
     lat: 0
     long: -97
@@ -803,7 +810,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-80
-  accessuri: http://cloudlet-80
+  accessuri: OP1.cloudlet-80
   location:
     lat: 0
     long: -96
@@ -813,7 +820,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-81
-  accessuri: http://cloudlet-81
+  accessuri: OP1.cloudlet-81
   location:
     lat: 0
     long: -95
@@ -823,7 +830,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-82
-  accessuri: http://cloudlet-82
+  accessuri: OP1.cloudlet-82
   location:
     lat: 0
     long: -94
@@ -833,7 +840,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-83
-  accessuri: http://cloudlet-83
+  accessuri: OP1.cloudlet-83
   location:
     lat: 0
     long: -93
@@ -843,7 +850,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-84
-  accessuri: http://cloudlet-84
+  accessuri: OP1.cloudlet-84
   location:
     lat: 0
     long: -92
@@ -853,7 +860,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-85
-  accessuri: http://cloudlet-85
+  accessuri: OP1.cloudlet-85
   location:
     lat: 0
     long: -91
@@ -863,7 +870,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-86
-  accessuri: http://cloudlet-86
+  accessuri: OP1.cloudlet-86
   location:
     lat: 0
     long: -90
@@ -873,7 +880,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-87
-  accessuri: http://cloudlet-87
+  accessuri: OP1.cloudlet-87
   location:
     lat: 0
     long: -89
@@ -883,7 +890,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-88
-  accessuri: http://cloudlet-88
+  accessuri: OP1.cloudlet-88
   location:
     lat: 0
     long: -88
@@ -893,7 +900,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-89
-  accessuri: http://cloudlet-89
+  accessuri: OP1.cloudlet-89
   location:
     lat: 0
     long: -87
@@ -903,7 +910,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-90
-  accessuri: http://cloudlet-90
+  accessuri: OP1.cloudlet-90
   location:
     lat: 0
     long: -86
@@ -913,7 +920,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-91
-  accessuri: http://cloudlet-91
+  accessuri: OP1.cloudlet-91
   location:
     lat: 0
     long: -85
@@ -923,7 +930,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-92
-  accessuri: http://cloudlet-92
+  accessuri: OP1.cloudlet-92
   location:
     lat: 0
     long: -84
@@ -933,7 +940,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-93
-  accessuri: http://cloudlet-93
+  accessuri: OP1.cloudlet-93
   location:
     lat: 0
     long: -83
@@ -943,7 +950,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-94
-  accessuri: http://cloudlet-94
+  accessuri: OP1.cloudlet-94
   location:
     lat: 0
     long: -82
@@ -953,7 +960,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-95
-  accessuri: http://cloudlet-95
+  accessuri: OP1.cloudlet-95
   location:
     lat: 0
     long: -81
@@ -963,7 +970,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-96
-  accessuri: http://cloudlet-96
+  accessuri: OP1.cloudlet-96
   location:
     lat: 0
     long: -80
@@ -973,7 +980,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-97
-  accessuri: http://cloudlet-97
+  accessuri: OP1.cloudlet-97
   location:
     lat: 0
     long: -79
@@ -983,7 +990,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-98
-  accessuri: http://cloudlet-98
+  accessuri: OP1.cloudlet-98
   location:
     lat: 0
     long: -78
@@ -993,7 +1000,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-99
-  accessuri: http://cloudlet-99
+  accessuri: OP1.cloudlet-99
   location:
     lat: 0
     long: -77
@@ -1003,7 +1010,7 @@ cloudlets:
     operatorkey:
       name: OP1
     name: cloudlet-100
-  accessuri: http://cloudlet-100
+  accessuri: OP1.cloudlet-100
   location:
     lat: 0
     long: -76
@@ -1017,23 +1024,33 @@ developers:
   address: 1234 Dev1 street
   email: Dev1@gmail.com
 
-
 apps:
 - key:
     developerkey:
        name: Dev1
-    name: App1
-    version: "1.0"
+    name: app1
+    version : "1.0"
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
+  accesslayer: AccessLayerL7
+
+- key:
+    developerkey:
+       name: Dev1
+    name: app2
+    version : "1.0"
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
 
 appinstances:
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1043,16 +1060,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -175
-  uri: /apps/App1
+  uri: app1.cloudlet-1.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+    id: 1
+  cloudletloc:
+    lat: 0
+    long: -175
+  uri: app2.cloudlet-1.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1062,16 +1096,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -174
-  uri: /apps/App1
+  uri: app1.cloudlet-2.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+    id: 2
+  cloudletloc:
+    lat: 0
+    long: -174
+  uri: app2.cloudlet-2.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1081,16 +1132,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -173
-  uri: /apps/App1
+  uri: app1.cloudlet-3.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+    id: 3
+  cloudletloc:
+    lat: 0
+    long: -173
+  uri: app2.cloudlet-3.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1100,16 +1168,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -172
-  uri: /apps/App1
+  uri: app1.cloudlet-4.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+    id: 4
+  cloudletloc:
+    lat: 0
+    long: -172
+  uri: app2.cloudlet-4.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1119,16 +1204,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -171
-  uri: /apps/App1
+  uri: app1.cloudlet-5.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+    id: 5
+  cloudletloc:
+    lat: 0
+    long: -171
+  uri: app2.cloudlet-5.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1138,16 +1240,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -170
-  uri: /apps/App1
+  uri: app1.cloudlet-6.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+    id: 6
+  cloudletloc:
+    lat: 0
+    long: -170
+  uri: app2.cloudlet-6.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1157,16 +1276,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -169
-  uri: /apps/App1
+  uri: app1.cloudlet-7.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+    id: 7
+  cloudletloc:
+    lat: 0
+    long: -169
+  uri: app2.cloudlet-7.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1176,16 +1312,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -168
-  uri: /apps/App1
+  uri: app1.cloudlet-8.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+    id: 8
+  cloudletloc:
+    lat: 0
+    long: -168
+  uri: app2.cloudlet-8.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1195,16 +1348,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -167
-  uri: /apps/App1
+  uri: app1.cloudlet-9.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+    id: 9
+  cloudletloc:
+    lat: 0
+    long: -167
+  uri: app2.cloudlet-9.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1214,16 +1384,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -166
-  uri: /apps/App1
+  uri: app1.cloudlet-10.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+    id: 10
+  cloudletloc:
+    lat: 0
+    long: -166
+  uri: app2.cloudlet-10.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1233,16 +1420,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -165
-  uri: /apps/App1
+  uri: app1.cloudlet-11.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+    id: 11
+  cloudletloc:
+    lat: 0
+    long: -165
+  uri: app2.cloudlet-11.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1252,16 +1456,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -164
-  uri: /apps/App1
+  uri: app1.cloudlet-12.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+    id: 12
+  cloudletloc:
+    lat: 0
+    long: -164
+  uri: app2.cloudlet-12.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1271,16 +1492,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -163
-  uri: /apps/App1
+  uri: app1.cloudlet-13.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+    id: 13
+  cloudletloc:
+    lat: 0
+    long: -163
+  uri: app2.cloudlet-13.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1290,16 +1528,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -162
-  uri: /apps/App1
+  uri: app1.cloudlet-14.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+    id: 14
+  cloudletloc:
+    lat: 0
+    long: -162
+  uri: app2.cloudlet-14.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1309,16 +1564,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -161
-  uri: /apps/App1
+  uri: app1.cloudlet-15.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+    id: 15
+  cloudletloc:
+    lat: 0
+    long: -161
+  uri: app2.cloudlet-15.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1328,16 +1600,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -160
-  uri: /apps/App1
+  uri: app1.cloudlet-16.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+    id: 16
+  cloudletloc:
+    lat: 0
+    long: -160
+  uri: app2.cloudlet-16.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1347,16 +1636,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -159
-  uri: /apps/App1
+  uri: app1.cloudlet-17.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+    id: 17
+  cloudletloc:
+    lat: 0
+    long: -159
+  uri: app2.cloudlet-17.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1366,16 +1672,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -158
-  uri: /apps/App1
+  uri: app1.cloudlet-18.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+    id: 18
+  cloudletloc:
+    lat: 0
+    long: -158
+  uri: app2.cloudlet-18.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1385,16 +1708,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -157
-  uri: /apps/App1
+  uri: app1.cloudlet-19.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+    id: 19
+  cloudletloc:
+    lat: 0
+    long: -157
+  uri: app2.cloudlet-19.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1404,16 +1744,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -156
-  uri: /apps/App1
+  uri: app1.cloudlet-20.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+    id: 20
+  cloudletloc:
+    lat: 0
+    long: -156
+  uri: app2.cloudlet-20.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1423,16 +1780,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -155
-  uri: /apps/App1
+  uri: app1.cloudlet-21.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+    id: 21
+  cloudletloc:
+    lat: 0
+    long: -155
+  uri: app2.cloudlet-21.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1442,16 +1816,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -154
-  uri: /apps/App1
+  uri: app1.cloudlet-22.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+    id: 22
+  cloudletloc:
+    lat: 0
+    long: -154
+  uri: app2.cloudlet-22.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1461,16 +1852,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -153
-  uri: /apps/App1
+  uri: app1.cloudlet-23.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+    id: 23
+  cloudletloc:
+    lat: 0
+    long: -153
+  uri: app2.cloudlet-23.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1480,16 +1888,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -152
-  uri: /apps/App1
+  uri: app1.cloudlet-24.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+    id: 24
+  cloudletloc:
+    lat: 0
+    long: -152
+  uri: app2.cloudlet-24.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1499,16 +1924,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -151
-  uri: /apps/App1
+  uri: app1.cloudlet-25.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+    id: 25
+  cloudletloc:
+    lat: 0
+    long: -151
+  uri: app2.cloudlet-25.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1518,16 +1960,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -150
-  uri: /apps/App1
+  uri: app1.cloudlet-26.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+    id: 26
+  cloudletloc:
+    lat: 0
+    long: -150
+  uri: app2.cloudlet-26.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1537,16 +1996,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -149
-  uri: /apps/App1
+  uri: app1.cloudlet-27.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+    id: 27
+  cloudletloc:
+    lat: 0
+    long: -149
+  uri: app2.cloudlet-27.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1556,16 +2032,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -148
-  uri: /apps/App1
+  uri: app1.cloudlet-28.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+    id: 28
+  cloudletloc:
+    lat: 0
+    long: -148
+  uri: app2.cloudlet-28.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1575,16 +2068,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -147
-  uri: /apps/App1
+  uri: app1.cloudlet-29.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+    id: 29
+  cloudletloc:
+    lat: 0
+    long: -147
+  uri: app2.cloudlet-29.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1594,16 +2104,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -146
-  uri: /apps/App1
+  uri: app1.cloudlet-30.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+    id: 30
+  cloudletloc:
+    lat: 0
+    long: -146
+  uri: app2.cloudlet-30.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1613,16 +2140,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -145
-  uri: /apps/App1
+  uri: app1.cloudlet-31.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+    id: 31
+  cloudletloc:
+    lat: 0
+    long: -145
+  uri: app2.cloudlet-31.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1632,16 +2176,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -144
-  uri: /apps/App1
+  uri: app1.cloudlet-32.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+    id: 32
+  cloudletloc:
+    lat: 0
+    long: -144
+  uri: app2.cloudlet-32.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1651,16 +2212,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -143
-  uri: /apps/App1
+  uri: app1.cloudlet-33.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+    id: 33
+  cloudletloc:
+    lat: 0
+    long: -143
+  uri: app2.cloudlet-33.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1670,16 +2248,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -142
-  uri: /apps/App1
+  uri: app1.cloudlet-34.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+    id: 34
+  cloudletloc:
+    lat: 0
+    long: -142
+  uri: app2.cloudlet-34.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1689,16 +2284,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -141
-  uri: /apps/App1
+  uri: app1.cloudlet-35.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+    id: 35
+  cloudletloc:
+    lat: 0
+    long: -141
+  uri: app2.cloudlet-35.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1708,16 +2320,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -140
-  uri: /apps/App1
+  uri: app1.cloudlet-36.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+    id: 36
+  cloudletloc:
+    lat: 0
+    long: -140
+  uri: app2.cloudlet-36.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1727,16 +2356,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -139
-  uri: /apps/App1
+  uri: app1.cloudlet-37.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+    id: 37
+  cloudletloc:
+    lat: 0
+    long: -139
+  uri: app2.cloudlet-37.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1746,16 +2392,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -138
-  uri: /apps/App1
+  uri: app1.cloudlet-38.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+    id: 38
+  cloudletloc:
+    lat: 0
+    long: -138
+  uri: app2.cloudlet-38.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1765,16 +2428,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -137
-  uri: /apps/App1
+  uri: app1.cloudlet-39.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+    id: 39
+  cloudletloc:
+    lat: 0
+    long: -137
+  uri: app2.cloudlet-39.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1784,16 +2464,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -136
-  uri: /apps/App1
+  uri: app1.cloudlet-40.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+    id: 40
+  cloudletloc:
+    lat: 0
+    long: -136
+  uri: app2.cloudlet-40.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1803,16 +2500,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -135
-  uri: /apps/App1
+  uri: app1.cloudlet-41.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+    id: 41
+  cloudletloc:
+    lat: 0
+    long: -135
+  uri: app2.cloudlet-41.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1822,16 +2536,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -134
-  uri: /apps/App1
+  uri: app1.cloudlet-42.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+    id: 42
+  cloudletloc:
+    lat: 0
+    long: -134
+  uri: app2.cloudlet-42.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1841,16 +2572,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -133
-  uri: /apps/App1
+  uri: app1.cloudlet-43.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+    id: 43
+  cloudletloc:
+    lat: 0
+    long: -133
+  uri: app2.cloudlet-43.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1860,16 +2608,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -132
-  uri: /apps/App1
+  uri: app1.cloudlet-44.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+    id: 44
+  cloudletloc:
+    lat: 0
+    long: -132
+  uri: app2.cloudlet-44.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1879,16 +2644,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -131
-  uri: /apps/App1
+  uri: app1.cloudlet-45.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+    id: 45
+  cloudletloc:
+    lat: 0
+    long: -131
+  uri: app2.cloudlet-45.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1898,16 +2680,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -130
-  uri: /apps/App1
+  uri: app1.cloudlet-46.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+    id: 46
+  cloudletloc:
+    lat: 0
+    long: -130
+  uri: app2.cloudlet-46.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1917,16 +2716,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -129
-  uri: /apps/App1
+  uri: app1.cloudlet-47.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+    id: 47
+  cloudletloc:
+    lat: 0
+    long: -129
+  uri: app2.cloudlet-47.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1936,16 +2752,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -128
-  uri: /apps/App1
+  uri: app1.cloudlet-48.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+    id: 48
+  cloudletloc:
+    lat: 0
+    long: -128
+  uri: app2.cloudlet-48.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1955,16 +2788,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -127
-  uri: /apps/App1
+  uri: app1.cloudlet-49.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+    id: 49
+  cloudletloc:
+    lat: 0
+    long: -127
+  uri: app2.cloudlet-49.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1974,16 +2824,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -126
-  uri: /apps/App1
+  uri: app1.cloudlet-50.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+    id: 50
+  cloudletloc:
+    lat: 0
+    long: -126
+  uri: app2.cloudlet-50.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -1993,16 +2860,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -125
-  uri: /apps/App1
+  uri: app1.cloudlet-51.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+    id: 51
+  cloudletloc:
+    lat: 0
+    long: -125
+  uri: app2.cloudlet-51.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2012,16 +2896,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -124
-  uri: /apps/App1
+  uri: app1.cloudlet-52.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+    id: 52
+  cloudletloc:
+    lat: 0
+    long: -124
+  uri: app2.cloudlet-52.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2031,16 +2932,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -123
-  uri: /apps/App1
+  uri: app1.cloudlet-53.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+    id: 53
+  cloudletloc:
+    lat: 0
+    long: -123
+  uri: app2.cloudlet-53.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2050,16 +2968,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -122
-  uri: /apps/App1
+  uri: app1.cloudlet-54.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+    id: 54
+  cloudletloc:
+    lat: 0
+    long: -122
+  uri: app2.cloudlet-54.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2069,16 +3004,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -121
-  uri: /apps/App1
+  uri: app1.cloudlet-55.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+    id: 55
+  cloudletloc:
+    lat: 0
+    long: -121
+  uri: app2.cloudlet-55.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2088,16 +3040,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -120
-  uri: /apps/App1
+  uri: app1.cloudlet-56.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+    id: 56
+  cloudletloc:
+    lat: 0
+    long: -120
+  uri: app2.cloudlet-56.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2107,16 +3076,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -119
-  uri: /apps/App1
+  uri: app1.cloudlet-57.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+    id: 57
+  cloudletloc:
+    lat: 0
+    long: -119
+  uri: app2.cloudlet-57.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2126,16 +3112,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -118
-  uri: /apps/App1
+  uri: app1.cloudlet-58.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+    id: 58
+  cloudletloc:
+    lat: 0
+    long: -118
+  uri: app2.cloudlet-58.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2145,16 +3148,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -117
-  uri: /apps/App1
+  uri: app1.cloudlet-59.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+    id: 59
+  cloudletloc:
+    lat: 0
+    long: -117
+  uri: app2.cloudlet-59.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2164,16 +3184,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -116
-  uri: /apps/App1
+  uri: app1.cloudlet-60.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+    id: 60
+  cloudletloc:
+    lat: 0
+    long: -116
+  uri: app2.cloudlet-60.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2183,16 +3220,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -115
-  uri: /apps/App1
+  uri: app1.cloudlet-61.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+    id: 61
+  cloudletloc:
+    lat: 0
+    long: -115
+  uri: app2.cloudlet-61.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2202,16 +3256,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -114
-  uri: /apps/App1
+  uri: app1.cloudlet-62.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+    id: 62
+  cloudletloc:
+    lat: 0
+    long: -114
+  uri: app2.cloudlet-62.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2221,16 +3292,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -113
-  uri: /apps/App1
+  uri: app1.cloudlet-63.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+    id: 63
+  cloudletloc:
+    lat: 0
+    long: -113
+  uri: app2.cloudlet-63.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2240,16 +3328,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -112
-  uri: /apps/App1
+  uri: app1.cloudlet-64.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+    id: 64
+  cloudletloc:
+    lat: 0
+    long: -112
+  uri: app2.cloudlet-64.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2259,16 +3364,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -111
-  uri: /apps/App1
+  uri: app1.cloudlet-65.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+    id: 65
+  cloudletloc:
+    lat: 0
+    long: -111
+  uri: app2.cloudlet-65.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2278,16 +3400,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -110
-  uri: /apps/App1
+  uri: app1.cloudlet-66.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+    id: 66
+  cloudletloc:
+    lat: 0
+    long: -110
+  uri: app2.cloudlet-66.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2297,16 +3436,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -109
-  uri: /apps/App1
+  uri: app1.cloudlet-67.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+    id: 67
+  cloudletloc:
+    lat: 0
+    long: -109
+  uri: app2.cloudlet-67.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2316,16 +3472,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -108
-  uri: /apps/App1
+  uri: app1.cloudlet-68.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+    id: 68
+  cloudletloc:
+    lat: 0
+    long: -108
+  uri: app2.cloudlet-68.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2335,16 +3508,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -107
-  uri: /apps/App1
+  uri: app1.cloudlet-69.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+    id: 69
+  cloudletloc:
+    lat: 0
+    long: -107
+  uri: app2.cloudlet-69.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2354,16 +3544,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -106
-  uri: /apps/App1
+  uri: app1.cloudlet-70.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+    id: 70
+  cloudletloc:
+    lat: 0
+    long: -106
+  uri: app2.cloudlet-70.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2373,16 +3580,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -105
-  uri: /apps/App1
+  uri: app1.cloudlet-71.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+    id: 71
+  cloudletloc:
+    lat: 0
+    long: -105
+  uri: app2.cloudlet-71.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2392,16 +3616,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -104
-  uri: /apps/App1
+  uri: app1.cloudlet-72.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+    id: 72
+  cloudletloc:
+    lat: 0
+    long: -104
+  uri: app2.cloudlet-72.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2411,16 +3652,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -103
-  uri: /apps/App1
+  uri: app1.cloudlet-73.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+    id: 73
+  cloudletloc:
+    lat: 0
+    long: -103
+  uri: app2.cloudlet-73.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2430,16 +3688,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -102
-  uri: /apps/App1
+  uri: app1.cloudlet-74.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+    id: 74
+  cloudletloc:
+    lat: 0
+    long: -102
+  uri: app2.cloudlet-74.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2449,16 +3724,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -101
-  uri: /apps/App1
+  uri: app1.cloudlet-75.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+    id: 75
+  cloudletloc:
+    lat: 0
+    long: -101
+  uri: app2.cloudlet-75.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2468,16 +3760,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -100
-  uri: /apps/App1
+  uri: app1.cloudlet-76.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+    id: 76
+  cloudletloc:
+    lat: 0
+    long: -100
+  uri: app2.cloudlet-76.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2487,16 +3796,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -99
-  uri: /apps/App1
+  uri: app1.cloudlet-77.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+    id: 77
+  cloudletloc:
+    lat: 0
+    long: -99
+  uri: app2.cloudlet-77.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2506,16 +3832,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -98
-  uri: /apps/App1
+  uri: app1.cloudlet-78.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+    id: 78
+  cloudletloc:
+    lat: 0
+    long: -98
+  uri: app2.cloudlet-78.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2525,16 +3868,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -97
-  uri: /apps/App1
+  uri: app1.cloudlet-79.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+    id: 79
+  cloudletloc:
+    lat: 0
+    long: -97
+  uri: app2.cloudlet-79.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2544,16 +3904,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -96
-  uri: /apps/App1
+  uri: app1.cloudlet-80.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+    id: 80
+  cloudletloc:
+    lat: 0
+    long: -96
+  uri: app2.cloudlet-80.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2563,16 +3940,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -95
-  uri: /apps/App1
+  uri: app1.cloudlet-81.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+    id: 81
+  cloudletloc:
+    lat: 0
+    long: -95
+  uri: app2.cloudlet-81.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2582,16 +3976,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -94
-  uri: /apps/App1
+  uri: app1.cloudlet-82.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+    id: 82
+  cloudletloc:
+    lat: 0
+    long: -94
+  uri: app2.cloudlet-82.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2601,16 +4012,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -93
-  uri: /apps/App1
+  uri: app1.cloudlet-83.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+    id: 83
+  cloudletloc:
+    lat: 0
+    long: -93
+  uri: app2.cloudlet-83.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2620,16 +4048,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -92
-  uri: /apps/App1
+  uri: app1.cloudlet-84.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+    id: 84
+  cloudletloc:
+    lat: 0
+    long: -92
+  uri: app2.cloudlet-84.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2639,16 +4084,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -91
-  uri: /apps/App1
+  uri: app1.cloudlet-85.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+    id: 85
+  cloudletloc:
+    lat: 0
+    long: -91
+  uri: app2.cloudlet-85.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2658,16 +4120,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -90
-  uri: /apps/App1
+  uri: app1.cloudlet-86.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+    id: 86
+  cloudletloc:
+    lat: 0
+    long: -90
+  uri: app2.cloudlet-86.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2677,16 +4156,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -89
-  uri: /apps/App1
+  uri: app1.cloudlet-87.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+    id: 87
+  cloudletloc:
+    lat: 0
+    long: -89
+  uri: app2.cloudlet-87.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2696,16 +4192,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -88
-  uri: /apps/App1
+  uri: app1.cloudlet-88.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+    id: 88
+  cloudletloc:
+    lat: 0
+    long: -88
+  uri: app2.cloudlet-88.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2715,16 +4228,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -87
-  uri: /apps/App1
+  uri: app1.cloudlet-89.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+    id: 89
+  cloudletloc:
+    lat: 0
+    long: -87
+  uri: app2.cloudlet-89.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2734,16 +4264,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -86
-  uri: /apps/App1
+  uri: app1.cloudlet-90.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+    id: 90
+  cloudletloc:
+    lat: 0
+    long: -86
+  uri: app2.cloudlet-90.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2753,16 +4300,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -85
-  uri: /apps/App1
+  uri: app1.cloudlet-91.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+    id: 91
+  cloudletloc:
+    lat: 0
+    long: -85
+  uri: app2.cloudlet-91.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2772,16 +4336,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -84
-  uri: /apps/App1
+  uri: app1.cloudlet-92.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+    id: 92
+  cloudletloc:
+    lat: 0
+    long: -84
+  uri: app2.cloudlet-92.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2791,16 +4372,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -83
-  uri: /apps/App1
+  uri: app1.cloudlet-93.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+    id: 93
+  cloudletloc:
+    lat: 0
+    long: -83
+  uri: app2.cloudlet-93.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2810,16 +4408,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -82
-  uri: /apps/App1
+  uri: app1.cloudlet-94.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+    id: 94
+  cloudletloc:
+    lat: 0
+    long: -82
+  uri: app2.cloudlet-94.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2829,16 +4444,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -81
-  uri: /apps/App1
+  uri: app1.cloudlet-95.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+    id: 95
+  cloudletloc:
+    lat: 0
+    long: -81
+  uri: app2.cloudlet-95.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2848,16 +4480,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -80
-  uri: /apps/App1
+  uri: app1.cloudlet-96.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+    id: 96
+  cloudletloc:
+    lat: 0
+    long: -80
+  uri: app2.cloudlet-96.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2867,16 +4516,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -79
-  uri: /apps/App1
+  uri: app1.cloudlet-97.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+    id: 97
+  cloudletloc:
+    lat: 0
+    long: -79
+  uri: app2.cloudlet-97.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2886,16 +4552,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -78
-  uri: /apps/App1
+  uri: app1.cloudlet-98.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+    id: 98
+  cloudletloc:
+    lat: 0
+    long: -78
+  uri: app2.cloudlet-98.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2905,16 +4588,33 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -77
-  uri: /apps/App1
+  uri: app1.cloudlet-99.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
 
 
 - key:
     appkey:
       developerkey:
         name: Dev1
-      name: App1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+    id: 99
+  cloudletloc:
+    lat: 0
+    long: -77
+  uri: app2.cloudlet-99.mobiledgex.net
+  liveness: 1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -2924,7 +4624,24 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -76
-  uri: /apps/App1
+  uri: app1.cloudlet-100.mobiledgex.net
   liveness: 1
-  apppath: /usr/bin/App1
+
+
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+    id: 100
+  cloudletloc:
+    lat: 0
+    long: -76
+  uri: app2.cloudlet-100.mobiledgex.net
+  liveness: 1
 
