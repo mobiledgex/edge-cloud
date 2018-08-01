@@ -18,5 +18,5 @@ spec:
   pathmap: /etc:/mexexample
   flavor: app-kubernetes-flavor
   uri: https://mexexample.gddt.mobiledgex.net
-  kubemanifest: http://registry.mobiledgex.net:8080/mexexample.yaml
+  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
   accesslayer: L7

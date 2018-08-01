@@ -11,11 +11,7 @@ metadata:
   location: buckhorn
 spec:
   flags: force
-  externalnetwork: external-network-shared
   key: testPoke
   flavor: x1.medium
   rootlb: mexlb.gddt.mobiledgex.net
-  networks:
-      - name: mex-k8s-net-1
-        kind: priv-subnet
-        cidr: 10.101.X.0/24
+  networkscheme: priv-subnet,mex-k8s-net-1,10.101.X.0/24
