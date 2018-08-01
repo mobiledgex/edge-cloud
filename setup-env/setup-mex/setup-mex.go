@@ -439,6 +439,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 }
 
 func DeployProcesses() bool {
+	if util.IsK8sDeployment() {
+		return true //nothing to do for k8s
+	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_deploy.yml"
 	return runPlaybook(playbook, []string{}, "")

@@ -1,0 +1,38 @@
+##
+##
+description: adds dataset with 100 cloudlets and 2 apps. Does get cloudlets for all or just one app
+
+tests:
+
+- name: create and verify provisioning 100 cloudlets 
+  actions: [ctrlapi-create,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_100.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/show100.yml"
+    filetype: appdata
+
+- includefile: register.yml
+
+- name: get cloudlets with no app name
+  actions: [dmeapi-getcloudlets]
+  apifile: "{{datadir}}/mer_get_cloudlets_all.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/getcloudlets.yml"
+    yaml2: "{{datadir}}/get_cloudlets_result_all.yml"
+
+- name: get cloudlets for app1 only
+  actions: [dmeapi-getcloudlets]
+  apifile: "{{datadir}}/mer_get_cloudlets_app1.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/getcloudlets.yml"
+    yaml2: "{{datadir}}/get_cloudlets_result_app1.yml"
+
+- name: delete provisioning for 100 cloudlets
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_100.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+

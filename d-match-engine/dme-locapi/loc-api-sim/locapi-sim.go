@@ -98,7 +98,7 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	} else {
-		err, foundLoc := findLocForIp(ip)
+		foundLoc, err := findLocForIP(ip)
 		if err != nil {
 			resp.LocationResult = dmecommon.LocationUnknown
 		} else {
@@ -115,27 +115,24 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(string(respb)))
 }
 
-func findLocForIp(ipaddr string) (error, dme.Loc) {
+func findLocForIP(ipaddr string) (dme.Loc, error) {
 	log.Printf("Searching for ip %v\n", ipaddr)
 
 	loc, ok := locations[ipaddr]
 	if ok {
-		return nil, loc
+		return loc, nil
 	}
 	log.Printf("unable to find IP %s\n", ipaddr)
-	return errors.New("unable to find IP "), dme.Loc{}
+	return dme.Loc{}, errors.New("unable to find IP ")
 }
 
 func readLocationFile() {
-	if _, err := os.Stat(*locdbfile); err != nil {
-		fmt.Printf("file " + *locdbfile + " does not exist, will be created\n")
-		locations = make(map[string]dme.Loc)
-	} else {
-		err := util.ReadYamlFile(*locdbfile, &locations, "", false)
-		if err != nil {
-			log.Printf("unable to read yaml location file %v\n", err)
-		}
+	locations = make(map[string]dme.Loc)
+	err := util.ReadYamlFile(*locdbfile, &locations, "", false)
+	if err != nil {
+		log.Printf("unable to read yaml location file %v\n", err)
 	}
+
 }
 
 func run() {
