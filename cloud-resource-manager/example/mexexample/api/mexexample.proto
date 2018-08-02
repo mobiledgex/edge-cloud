@@ -6,7 +6,7 @@ import "google/api/annotations.proto";
 service MexExample {
     rpc DataTest(DataTestRequest) returns (DataTestResponse) {
         option (google.api.http) = {
-            post: "/data",
+            post: "/datatest",
             body: "*"
         };
     }

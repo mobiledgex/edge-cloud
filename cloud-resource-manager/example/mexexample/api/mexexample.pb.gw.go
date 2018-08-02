@@ -238,7 +238,7 @@ func RegisterMexExampleHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 }
 
 var (
-	pattern_MexExample_DataTest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"data"}, ""))
+	pattern_MexExample_DataTest_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"datatest"}, ""))
 
 	pattern_MexExample_Echo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"echo"}, ""))
 
