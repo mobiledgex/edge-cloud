@@ -98,6 +98,7 @@ func main() {
 		// set callbacks to trigger send of infos
 		controllerData.AppInstInfoCache.SetNotifyCb(notifyClient.UpdateAppInstInfo)
 		controllerData.ClusterInstInfoCache.SetNotifyCb(notifyClient.UpdateClusterInstInfo)
+		controllerData.CloudletInfoCache.SetNotifyCb(notifyClient.UpdateCloudletInfo)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
