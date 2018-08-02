@@ -15,6 +15,8 @@ It has these top-level messages:
 	Match_Engine_Loc_Verify
 	Match_Engine_Loc
 	Match_Engine_Status
+	CloudletLocation
+	Match_Engine_Cloudlet_List
 	DynamicLocGroupAdd
 	DlgMessage
 	DlgReply
@@ -93,6 +95,12 @@ var ME_StatusStrings = []string{
 	"ME_UNDEFINED",
 	"ME_SUCCESS",
 	"ME_FAIL",
+}
+
+var CL_StatusStrings = []string{
+	"CL_UNDEFINED",
+	"CL_SUCCESS",
+	"CL_FAIL",
 }
 
 var DlgCommTypeStrings = []string{
@@ -301,6 +309,98 @@ func Match_Engine_StatusHeaderSlicer() []string {
 	s = append(s, "SessionCookie")
 	s = append(s, "GroupCookie")
 	s = append(s, "TokenServerURI")
+	return s
+}
+
+func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []string {
+	s := make([]string, 0, 5)
+	s = append(s, in.CarrierName)
+	s = append(s, in.CloudletName)
+	if in.GpsLocation == nil {
+		in.GpsLocation = &distributed_match_engine.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Lat), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
+	if in.GpsLocation.Timestamp == nil {
+		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	}
+	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
+	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatFloat(float64(in.Distance), 'e', -1, 32))
+	s = append(s, in.Uri)
+	return s
+}
+
+func CloudletLocationHeaderSlicer() []string {
+	s := make([]string, 0, 5)
+	s = append(s, "CarrierName")
+	s = append(s, "CloudletName")
+	s = append(s, "GpsLocation-Lat")
+	s = append(s, "GpsLocation-Long")
+	s = append(s, "GpsLocation-HorizontalAccuracy")
+	s = append(s, "GpsLocation-VerticalAccuracy")
+	s = append(s, "GpsLocation-Altitude")
+	s = append(s, "GpsLocation-Course")
+	s = append(s, "GpsLocation-Speed")
+	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "Distance")
+	s = append(s, "Uri")
+	return s
+}
+
+func Match_Engine_Cloudlet_ListSlicer(in *distributed_match_engine.Match_Engine_Cloudlet_List) []string {
+	s := make([]string, 0, 3)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, distributed_match_engine.Match_Engine_Cloudlet_List_CL_Status_name[int32(in.Status)])
+	if in.Cloudlets == nil {
+		in.Cloudlets = make([]*distributed_match_engine.CloudletLocation, 1)
+	}
+	if in.Cloudlets[0] == nil {
+		in.Cloudlets[0] = &distributed_match_engine.CloudletLocation{}
+	}
+	s = append(s, in.Cloudlets[0].CarrierName)
+	s = append(s, in.Cloudlets[0].CloudletName)
+	if in.Cloudlets[0].GpsLocation == nil {
+		in.Cloudlets[0].GpsLocation = &distributed_match_engine.Loc{}
+	}
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Lat), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Speed), 'e', -1, 32))
+	if in.Cloudlets[0].GpsLocation.Timestamp == nil {
+		in.Cloudlets[0].GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	}
+	_Cloudlets_0__GpsLocation_TimestampTime := time.Unix(in.Cloudlets[0].GpsLocation.Timestamp.Seconds, int64(in.Cloudlets[0].GpsLocation.Timestamp.Nanos))
+	s = append(s, _Cloudlets_0__GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].Distance), 'e', -1, 32))
+	s = append(s, in.Cloudlets[0].Uri)
+	return s
+}
+
+func Match_Engine_Cloudlet_ListHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Ver")
+	s = append(s, "Status")
+	s = append(s, "Cloudlets-CarrierName")
+	s = append(s, "Cloudlets-CloudletName")
+	s = append(s, "Cloudlets-GpsLocation-Lat")
+	s = append(s, "Cloudlets-GpsLocation-Long")
+	s = append(s, "Cloudlets-GpsLocation-HorizontalAccuracy")
+	s = append(s, "Cloudlets-GpsLocation-VerticalAccuracy")
+	s = append(s, "Cloudlets-GpsLocation-Altitude")
+	s = append(s, "Cloudlets-GpsLocation-Course")
+	s = append(s, "Cloudlets-GpsLocation-Speed")
+	s = append(s, "Cloudlets-GpsLocation-Timestamp")
+	s = append(s, "Cloudlets-Distance")
+	s = append(s, "Cloudlets-Uri")
 	return s
 }
 
@@ -614,12 +714,64 @@ var AddUserToGroupCmd = &cobra.Command{
 	},
 }
 
+var GetCloudletsCmd = &cobra.Command{
+	Use: "GetCloudlets",
+	Run: func(cmd *cobra.Command, args []string) {
+		if Match_Engine_ApiCmd == nil {
+			fmt.Println("Match_Engine_Api client not initialized")
+			return
+		}
+		var err error
+		err = parseMatch_Engine_RequestEnums()
+		if err != nil {
+			fmt.Println("GetCloudlets: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		objs, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
+		cancel()
+		if err != nil {
+			fmt.Println("GetCloudlets failed: ", err)
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(objs), "\t"))
+			output.Flush()
+		}
+	},
+}
+
 var Match_Engine_ApiCmds = []*cobra.Command{
 	FindCloudletCmd,
 	VerifyLocationCmd,
 	GetLocationCmd,
 	RegisterClientCmd,
 	AddUserToGroupCmd,
+	GetCloudletsCmd,
 }
 
 func init() {
@@ -676,6 +828,7 @@ func init() {
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddFlagSet)
+	GetCloudletsCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 }
 
 func Match_Engine_ApiAllowNoConfig() {
@@ -684,6 +837,7 @@ func Match_Engine_ApiAllowNoConfig() {
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddNoConfigFlagSet)
+	GetCloudletsCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 }
 
 func parseDynamicLocGroupAddEnums() error {
