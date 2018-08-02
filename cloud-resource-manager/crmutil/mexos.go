@@ -48,7 +48,7 @@ func MEXInit() {
 			mexEnv[evstr] = evval
 		}
 	}
-	log.InfoLog("mex environment", "mexEnv", mexEnv)
+	Debug("mex environment", "mexEnv", mexEnv)
 }
 
 //MEXCheckEnvVars sets up environment vars and checks for credentials required for running
@@ -75,7 +75,7 @@ var MEXRootLBMap = make(map[string]*MEXRootLB)
 
 //NewRootLB gets a new rootLB instance
 func NewRootLB(rootLBName string) (*MEXRootLB, error) {
-	log.InfoLog("new rootLB", "rootLBName", rootLBName)
+	Debug("new rootLB", "rootLBName", rootLBName)
 	curlb, ok := MEXRootLBMap[rootLBName]
 	if ok {
 		return nil, fmt.Errorf("rootlb exists %v", curlb)
@@ -87,7 +87,7 @@ func NewRootLB(rootLBName string) (*MEXRootLB, error) {
 
 //NewRootLBManifest creates rootLB instance and sets Platform Config with manifest
 func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
-	log.InfoLog("new rootLB with manifest", "mf", mf)
+	Debug("new rootLB with manifest", "mf", mf)
 	rootLB, err := NewRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return nil, err
@@ -195,19 +195,19 @@ var IsValidMEXOSEnv = false
 //ValidateMEXOSEnv makes sure the environment is valid for mexos
 func ValidateMEXOSEnv(osEnvValid bool) bool {
 	if !osEnvValid {
-		log.InfoLog("invalid mex env")
+		Debug("invalid mex env")
 		IsValidMEXOSEnv = false
 		return false
 	}
 	//XXX do more validation on internal env vars
 	IsValidMEXOSEnv = true
-	log.InfoLog("valid mex env")
+	Debug("valid mex env")
 	return IsValidMEXOSEnv
 }
 
 //AddFlavor adds a new flavor to be kept track of
 func AddFlavor(flavor string) error {
-	log.InfoLog("add flavor", "flavor", flavor)
+	Debug("add flavor", "flavor", flavor)
 	if err := ValidateFlavor(flavor); err != nil {
 		return fmt.Errorf("invalid flavor")
 	}
@@ -231,7 +231,7 @@ func AddFlavor(flavor string) error {
 
 //GetClusterFlavor returns the flavor of the cluster
 func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
-	log.InfoLog("get cluster flavor", "flavor", flavor)
+	Debug("get cluster flavor", "flavor", flavor)
 	for _, f := range AvailableClusterFlavors {
 		if flavor == f.Name {
 			if f.Status == activeStatus {
@@ -246,7 +246,7 @@ func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 //mexCreateClusterKubernetes creates a cluster of nodes. It can take a while, so call from a goroutine.
 func mexCreateClusterKubernetes(mf *Manifest) error {
 	//func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
-	log.InfoLog("create kubernetes cluster", "mf", mf)
+	Debug("create kubernetes cluster", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -296,11 +296,11 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	sd, err := oscli.GetServerDetails(kvmname)
 	if err == nil {
 		if sd.Name == kvmname {
-			log.InfoLog("k8s master exists", "kvmname", kvmname)
+			Debug("k8s master exists", "kvmname", kvmname)
 			return nil
 		}
 	}
-	log.InfoLog("proceed to create k8s master kvm", "kvmname", kvmname)
+	Debug("proceed to create k8s master kvm", "kvmname", kvmname)
 	err = oscli.CreateMEXKVM(kvmname,
 		"k8s-master",
 		mf.Spec.NetworkScheme,
@@ -341,10 +341,10 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 			return err
 		}
 		if ready {
-			log.InfoLog("kubernetes cluster ready")
+			Debug("kubernetes cluster ready")
 			break
 		}
-		log.InfoLog("wating for kubernetes cluster to be ready...")
+		Debug("wating for kubernetes cluster to be ready...")
 		time.Sleep(30 * time.Second)
 	}
 	if !ready {
@@ -380,7 +380,7 @@ func LBAddRoute(rootLBName, extNet, name string) error {
 	out, err := client.Output(cmd)
 	if err != nil {
 		if strings.Contains(out, "RTNETLINK") && strings.Contains(out, " exists") {
-			log.InfoLog("warning, can't add existing route to rootLB", "cmd", cmd, "out", out, "error", err)
+			Debug("warning, can't add existing route to rootLB", "cmd", cmd, "out", out, "error", err)
 			return nil
 		}
 		return fmt.Errorf("can't add route to rootlb, %s, %s, %v", cmd, out, err)
@@ -404,7 +404,7 @@ func LBRemoveRoute(rootLB, extNet, name string) error {
 	}
 	out, err := client.Output(cmd)
 	if err != nil {
-		log.InfoLog("can't delete route at rootLB", "cmd", cmd, "out", out, "error", err)
+		Debug("can't delete route at rootLB", "cmd", cmd, "out", out, "error", err)
 		//not a fatal error
 		return nil
 	}
@@ -515,7 +515,7 @@ func getRootLB(name string) (*MEXRootLB, error) {
 
 //mexDeleteClusterKubernetes deletes kubernetes cluster
 func mexDeleteClusterKubernetes(mf *Manifest) error {
-	log.InfoLog("deleting kubernetes cluster", "mf", mf)
+	Debug("deleting kubernetes cluster", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -525,7 +525,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	log.InfoLog("looking for server", "name", name, "servers", srvs)
+	Debug("looking for server", "name", name, "servers", srvs)
 	force := strings.Contains(mf.Spec.Flags, "force")
 	serverDeleted := false
 	for _, s := range srvs {
@@ -535,46 +535,46 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 				if err != nil {
 					if !force {
 						err = fmt.Errorf("failed to remove route for %s, %v", s.Name, err)
-						log.InfoLog("failed to remove route", "name", s.Name, "error", err)
+						Debug("failed to remove route", "name", s.Name, "error", err)
 						return err
 					}
-					log.InfoLog("forced to continue, failed to remove route ", "name", s.Name, "error", err)
+					Debug("forced to continue, failed to remove route ", "name", s.Name, "error", err)
 				}
 			}
-			log.InfoLog("delete kubernetes server", "name", s.Name)
+			Debug("delete kubernetes server", "name", s.Name)
 			err = oscli.DeleteServer(s.Name)
 			if err != nil {
 				if !force {
-					log.InfoLog("delete server fail", "error", err)
+					Debug("delete server fail", "error", err)
 					return err
 				}
-				log.InfoLog("forced to continue, error while deleting server", "server", s.Name, "error", err)
+				Debug("forced to continue, error while deleting server", "server", s.Name, "error", err)
 			}
 			serverDeleted = true
 		}
 	}
 	if !serverDeleted {
-		log.InfoLog("server not found", "name", name)
+		Debug("server not found", "name", name)
 		return fmt.Errorf("no server with name %s", name)
 	}
 	sns, err := oscli.ListSubnets("")
 	if err != nil {
-		log.InfoLog("can't list subnets", "error", err)
+		Debug("can't list subnets", "error", err)
 		return err
 	}
 	rn := oscli.GetMEXExternalRouter() //XXX for now
-	log.InfoLog("removing router from subnet", "routername", rn, "subnets", sns)
+	Debug("removing router from subnet", "routername", rn, "subnets", sns)
 	for _, s := range sns {
 		if strings.Contains(s.Name, name) {
-			log.InfoLog("removing router from subnet", "router", rn, "subnet", s.Name)
+			Debug("removing router from subnet", "router", rn, "subnet", s.Name)
 			err := oscli.RemoveRouterSubnet(rn, s.Name)
 			if err != nil {
-				log.InfoLog("not fatal, continue, can't remove router from subnet", "error", err)
+				Debug("not fatal, continue, can't remove router from subnet", "error", err)
 				//return err
 			}
 			err = oscli.DeleteSubnet(s.Name)
 			if err != nil {
-				log.InfoLog("error while deleting subnet", "error", err)
+				Debug("error while deleting subnet", "error", err)
 				return err
 			}
 			break
@@ -588,7 +588,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 //EnableRootLB creates a seed presence node in cloudlet that also becomes first Agent node.
 //  It also sets up first basic network router and subnet, ready for running first MEX agent.
 func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
-	log.InfoLog("enable rootlb", "name", rootLB)
+	Debug("enable rootlb", "name", rootLB)
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("enable rootlb, missing external network in manifest")
 	}
@@ -606,17 +606,17 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	found := 0
 	for _, s := range sl {
 		if s.Name == rootLB.Name {
-			log.InfoLog("found existing rootlb", "server", s)
+			Debug("found existing rootlb", "server", s)
 			found++
 		}
 	}
 	if found == 0 {
-		log.InfoLog("not found existing server", "name", rootLB.Name)
+		Debug("not found existing server", "name", rootLB.Name)
 		netspec := fmt.Sprintf("external-ip,%s", rootLB.PlatConf.Spec.ExternalNetwork)
 		if strings.Contains(mf.Spec.Options, "dhcp") {
 			netspec = netspec + ",dhcp"
 		}
-		log.InfoLog("creating agent node kvm", "mf", mf, "netspec", netspec)
+		Debug("creating agent node kvm", "mf", mf, "netspec", netspec)
 		err := oscli.CreateMEXKVM(rootLB.Name,
 			"mex-agent-node", //important, don't change
 			netspec,
@@ -624,14 +624,14 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 			mf.Metadata.Tenant,
 			1)
 		if err != nil {
-			log.InfoLog("error while creating mex kvm", "error", err)
+			Debug("error while creating mex kvm", "error", err)
 			return err
 		}
-		log.InfoLog("created kvm instance", "name", rootLB.Name)
+		Debug("created kvm instance", "name", rootLB.Name)
 	} else {
-		log.InfoLog("re-using existing kvm instance", "name", rootLB.Name)
+		Debug("re-using existing kvm instance", "name", rootLB.Name)
 	}
-	log.InfoLog("done enabling rootlb", "name", rootLB)
+	Debug("done enabling rootlb", "name", rootLB)
 	return nil
 }
 
@@ -639,7 +639,7 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 
 //GetServerIPAddr gets the server IP
 func GetServerIPAddr(networkName, serverName string) (string, error) {
-	log.InfoLog("get server ip addr", "networkname", networkName, "servername", serverName)
+	Debug("get server ip addr", "networkname", networkName, "servername", serverName)
 	//sd, err := oscli.GetServerDetails(rootLB)
 	sd, err := oscli.GetServerDetails(serverName)
 	if err != nil {
@@ -653,13 +653,13 @@ func GetServerIPAddr(networkName, serverName string) (string, error) {
 		return "", fmt.Errorf("invalid network name in server detail address, %s", sd.Addresses)
 	}
 	addr := its[1]
-	log.InfoLog("got server ip addr", "ipaddr", addr, "netname", networkName, "servername", serverName)
+	Debug("got server ip addr", "ipaddr", addr, "netname", networkName, "servername", serverName)
 	return addr, nil
 }
 
 //CopySSHCredential copies over the ssh credential for mex to LB
 func CopySSHCredential(serverName, networkName, userName string) error {
-	log.InfoLog("copying ssh credentials", "server", serverName, "network", networkName, "user", userName)
+	Debug("copying ssh credentials", "server", serverName, "network", networkName, "user", userName)
 	addr, err := GetServerIPAddr(networkName, serverName)
 	if err != nil {
 		return err
@@ -689,7 +689,7 @@ func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) 
 //WaitForRootLB waits for the RootLB instance to be up and copies of SSH credentials for internal networks.
 //  Idempotent, but don't call all the time.
 func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
-	log.InfoLog("wait for rootlb", "name", rootLB)
+	Debug("wait for rootlb", "name", rootLB)
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("waiting for lb, missing external network in manifest")
 	}
@@ -701,20 +701,20 @@ func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	for i := 0; i < 10; i++ {
 		_, err := client.Output("grep done /tmp/mobiledgex.log") //XXX beware of use of word done
 		if err == nil {
-			log.InfoLog("rootlb is running", "name", rootLB)
+			Debug("rootlb is running", "name", rootLB)
 			running = true
 			if err := CopySSHCredential(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root"); err != nil {
 				return fmt.Errorf("can't copy ssh credential to RootLB, %v", err)
 			}
 			break
 		}
-		log.InfoLog("wating for rootlb...")
+		Debug("wating for rootlb...")
 		time.Sleep(30 * time.Second)
 	}
 	if !running {
 		return fmt.Errorf("while creating cluster, timeout waiting for RootLB")
 	}
-	log.InfoLog("done waiting for rootlb", "name", rootLB)
+	Debug("done waiting for rootlb", "name", rootLB)
 	return nil
 }
 
@@ -728,7 +728,7 @@ func setPlatConfManifest(mf *Manifest) error {
 }
 
 func setPlatConf(rootLB *MEXRootLB, mf *Manifest) {
-	log.InfoLog("rootlb platconf set", "rootlb", rootLB, "platconf", mf)
+	Debug("rootlb platconf set", "rootlb", rootLB, "platconf", mf)
 	rootLB.PlatConf = mf
 }
 
@@ -737,7 +737,7 @@ func setPlatConf(rootLB *MEXRootLB, mf *Manifest) {
 //   on the RootLB. It can be told to manually pull image from docker repository.  This allows upgrading with new image.
 //   It uses MEX private docker repository.  If an instance is running already, we don't start another one.
 func RunMEXAgentManifest(mf *Manifest) error {
-	log.InfoLog("run mex agent", "mf", mf)
+	Debug("run mex agent", "mf", mf)
 	fqdn := mf.Spec.RootLB
 	//fqdn is that of the machine/kvm-instance running the agent
 	if !valid.IsDNSName(fqdn) {
@@ -749,11 +749,11 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	sd, err := oscli.GetServerDetails(fqdn)
 	if err == nil {
 		if sd.Name == fqdn {
-			log.InfoLog("mex agent exists", "fqdn", fqdn)
+			Debug("mex agent exists", "fqdn", fqdn)
 			return nil
 		}
 	}
-	log.InfoLog("proceed to create mex agent", "fqdn", fqdn)
+	Debug("proceed to create mex agent", "fqdn", fqdn)
 	rootLB, err := getRootLB(fqdn)
 	if err != nil {
 		return fmt.Errorf("cannot find rootlb %s", fqdn)
@@ -767,15 +767,15 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
 	}
-	log.InfoLog("record platform config", "mf", mf, "rootLB", rootLB)
+	Debug("record platform config", "mf", mf, "rootLB", rootLB)
 	err = EnableRootLB(mf, rootLB)
 	if err != nil {
-		log.InfoLog("can't enable agent", "name", rootLB.Name)
+		Debug("can't enable agent", "name", rootLB.Name)
 		return fmt.Errorf("Failed to enable root LB %v", err)
 	}
 	err = WaitForRootLB(mf, rootLB)
 	if err != nil {
-		log.InfoLog("timeout wating for agent to run", "name", rootLB.Name)
+		Debug("timeout wating for agent to run", "name", rootLB.Name)
 		return fmt.Errorf("Error waiting for rootLB %v", err)
 	}
 	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
@@ -788,18 +788,18 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if err == nil && strings.Contains(out, rootLB.Name) {
 		//agent docker instance exists
 		//XXX check better
-		log.InfoLog("agent docker instance already running")
+		Debug("agent docker instance already running")
 		return nil
 	}
 	if err = ActivateFQDNA(mf, rootLB, rootLB.Name); err != nil {
 		return err
 	}
-	log.InfoLog("FQDN A record activated", "name", rootLB.Name)
+	Debug("FQDN A record activated", "name", rootLB.Name)
 	err = AcquireCertificates(mf, rootLB, rootLB.Name) //fqdn name may be different than rootLB.Name
 	if err != nil {
 		return fmt.Errorf("can't acquire certificate for %s, %v", rootLB.Name, err)
 	}
-	log.InfoLog("acquired certificates from letsencrypt", "name", rootLB.Name)
+	Debug("acquired certificates from letsencrypt", "name", rootLB.Name)
 	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
 		return fmt.Errorf("empty docker registry pass env var")
 	}
@@ -808,10 +808,10 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("can't store docker pass, %s, %v", out, err)
 	}
-	log.InfoLog("seeded docker registry password")
+	Debug("seeded docker registry password")
 	dockerinstanceName := fmt.Sprintf("%s-%s", mf.Metadata.Name, rootLB.Name)
 	if mf.Spec.DockerRegistry == "" {
-		log.InfoLog("warning, empty docker registry spec, using default.")
+		Debug("warning, empty docker registry spec, using default.")
 		mf.Spec.DockerRegistry = "registry.mobiledgex.net:5000" // XXX
 	}
 	cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s", mf.Spec.DockerRegistry)
@@ -819,25 +819,25 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("error docker login at %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
-	log.InfoLog("docker login ok")
+	Debug("docker login ok")
 	cmd = fmt.Sprintf("docker pull %s", mf.Spec.Agent.Image) //probably redundant
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error pulling docker image at %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
-	log.InfoLog("pulled agent image ok")
+	Debug("pulled agent image ok")
 	cmd = fmt.Sprintf("docker run -d --rm --name %s --net=host -v `pwd`:/var/www/.cache -v /etc/ssl/certs:/etc/ssl/certs %s -debug", dockerinstanceName, mf.Spec.Agent.Image)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error running dockerized agent on RootLB %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
-	log.InfoLog("now running dockerized agent")
+	Debug("now running dockerized agent")
 	return nil
 }
 
 //UpdateMEXAgentManifest upgrades the mex agent
 func UpdateMEXAgentManifest(mf *Manifest) error {
-	log.InfoLog("update mex agent", "mf", mf)
+	Debug("update mex agent", "mf", mf)
 	err := RemoveMEXAgentManifest(mf)
 	if err != nil {
 		return err
@@ -848,7 +848,7 @@ func UpdateMEXAgentManifest(mf *Manifest) error {
 
 //RemoveMEXAgentManifest deletes mex agent docker instance
 func RemoveMEXAgentManifest(mf *Manifest) error {
-	log.InfoLog("deleting mex agent", "mf", mf)
+	Debug("deleting mex agent", "mf", mf)
 	//XXX we are deleting server kvm!!!
 	err := oscli.DeleteServer(mf.Spec.RootLB)
 	force := strings.Contains(mf.Spec.Flags, "force")
@@ -856,9 +856,9 @@ func RemoveMEXAgentManifest(mf *Manifest) error {
 		if !force {
 			return err
 		}
-		log.InfoLog("forced to continue, deleting mex agent error", "error", err, "rootLB", mf.Spec.RootLB)
+		Debug("forced to continue, deleting mex agent error", "error", err, "rootLB", mf.Spec.RootLB)
 	}
-	log.InfoLog("removed rootlb", "name", mf.Spec.RootLB)
+	Debug("removed rootlb", "name", mf.Spec.RootLB)
 	if mf.Metadata.DNSZone == "" {
 		return fmt.Errorf("missing dns zone in manifest")
 	}
@@ -878,14 +878,14 @@ func RemoveMEXAgentManifest(mf *Manifest) error {
 			}
 		}
 	}
-	log.InfoLog("removed DNS A record", "FQDN", fqdn)
+	Debug("removed DNS A record", "FQDN", fqdn)
 	//TODO remove mex-k8s  internal nets and router
 	return nil
 }
 
 //CheckCredentialsCF checks for Cloudflare
 func CheckCredentialsCF() error {
-	log.InfoLog("check for cloudflare credentials")
+	Debug("check for cloudflare credentials")
 	for _, envname := range []string{"MEX_CF_KEY", "MEX_CF_USER"} {
 		if _, ok := mexEnv[envname]; !ok {
 			return fmt.Errorf("no env var for %s", envname)
@@ -895,7 +895,7 @@ func CheckCredentialsCF() error {
 }
 
 func downloadFile(url, fname string) error {
-	log.InfoLog("attempt to retrieve file from url", "file", fname, "URL", url)
+	Debug("attempt to retrieve file from url", "file", fname, "URL", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("cannot get file from URL %s, %v", url, err)
@@ -910,13 +910,13 @@ func downloadFile(url, fname string) error {
 	}
 	resp.Body.Close()
 	fileout.Close()
-	log.InfoLog("retrieved file from URL", "URL", url, "file", fname)
+	Debug("retrieved file from URL", "URL", url, "file", fname)
 	return nil
 }
 
 //AcquireCertificates obtains certficates from Letsencrypt over ACME. It should be used carefully. The API calls have quota.
 func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
-	log.InfoLog("acquiring certificates for FQDN", "FQDN", fqdn)
+	Debug("acquiring certificates for FQDN", "FQDN", fqdn)
 	certRegistryURL := "http://registry.mobiledgex.net:8080/certs/" + fqdn //XXX parameterize this
 	url := certRegistryURL + "/" + fqdn + ".cer"
 	err := downloadFile(url, "cert.pem") //XXX better file location
@@ -925,10 +925,10 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 		err = downloadFile(url, "key.pem")
 		if err == nil {
 			//because Letsencrypt complains if we get certs repeated for the same fqdn
-			log.InfoLog("got cached certs from registry", "FQDN", fqdn)
+			Debug("got cached certs from registry", "FQDN", fqdn)
 			addr, err := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, fqdn) //XXX should just use fqdn but paranoid
 			if err != nil {
-				log.InfoLog("failed to get server ip addr", "FQDN", fqdn, "error", err)
+				Debug("failed to get server ip addr", "FQDN", fqdn, "error", err)
 				return err
 			}
 			kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
@@ -940,12 +940,12 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 			if err != nil {
 				return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
 			}
-			log.InfoLog("copied cert and key", "FQDN", fqdn)
+			Debug("copied cert and key", "FQDN", fqdn)
 			return nil
 		}
 		return fmt.Errorf("only cert file exists at %s, %v", certRegistryURL, err)
 	}
-	log.InfoLog("did not get cached certs")
+	Debug("did not get cached certs")
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("acquire certificate, missing external network in manifest")
 	}
@@ -976,7 +976,7 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 			success = true
 			break
 		}
-		log.InfoLog("waiting for letsencrypt...")
+		Debug("waiting for letsencrypt...")
 		time.Sleep(30 * time.Second) // ACME takes minimum 200 seconds
 	}
 	if !success {
@@ -992,7 +992,7 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if err != nil {
 		return fmt.Errorf("can't copy to key.pem on %s, %s, %v", fqdn, out, err)
 	}
-	log.InfoLog("copied over cert and key", "FQDN", fqdn)
+	Debug("copied over cert and key", "FQDN", fqdn)
 	return nil
 }
 
@@ -1007,7 +1007,7 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
 		return fmt.Errorf("cannot init cloudflare api, %v", err)
 	}
-	log.InfoLog("getting dns record for zone", "DNSZone", mf.Metadata.DNSZone)
+	Debug("getting dns record for zone", "DNSZone", mf.Metadata.DNSZone)
 	dr, err := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
 	if err != nil {
 		return fmt.Errorf("cannot get dns records for %s, %v", fqdn, err)
@@ -1016,10 +1016,10 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	for _, d := range dr {
 		if d.Type == "A" && d.Name == fqdn {
 			if d.Content == addr {
-				log.InfoLog("existing A record", "FQDN", fqdn, "addr", addr)
+				Debug("existing A record", "FQDN", fqdn, "addr", addr)
 				return nil
 			}
-			log.InfoLog("cloudflare A record has different address, it will be overwritten", "existing", d, "addr", addr)
+			Debug("cloudflare A record has different address, it will be overwritten", "existing", d, "addr", addr)
 			if err = cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, d.ID); err != nil {
 				return fmt.Errorf("can't delete DNS record for %s, %v", fqdn, err)
 			}
@@ -1027,13 +1027,13 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 		}
 	}
 	if err != nil {
-		log.InfoLog("error while talking to cloudflare", "error", err)
+		Debug("error while talking to cloudflare", "error", err)
 		return err
 	}
 	if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", addr, 1, false); err != nil {
 		return fmt.Errorf("can't create DNS record for %s, %v", fqdn, err)
 	}
-	log.InfoLog("wating for cloudflare...")
+	Debug("wating for cloudflare...")
 	//once successfully inserted the A record will take a bit of time, but not too long due to fast cloudflare anycast
 	time.Sleep(10 * time.Second) //XXX verify by doing a DNS lookup
 	return nil
@@ -1049,7 +1049,7 @@ type genericItems struct {
 
 //IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
-	log.InfoLog("checking if cluster is ready", "rootLB", rootLB, "platconf", *rootLB.PlatConf)
+	Debug("checking if cluster is ready", "rootLB", rootLB, "platconf", *rootLB.PlatConf)
 	cf, err := GetClusterFlavor(rootLB.PlatConf.Spec.Flavor)
 	if err != nil {
 		return false, err
@@ -1072,7 +1072,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("can't get ssh client for cluser ready check, %v", err)
 	}
-	log.InfoLog("checking host for kubernetes nodes", "ipaddr", ipaddr)
+	Debug("checking host for kubernetes nodes", "ipaddr", ipaddr)
 	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes -o json", mexEnv["MEX_SSH_KEY"], ipaddr)
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -1083,21 +1083,21 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to json unmarshal kubectl get nodes output, %v", err)
 	}
-	log.InfoLog("kubectl reports nodes", "numnodes", len(gitems.Items))
+	Debug("kubectl reports nodes", "numnodes", len(gitems.Items))
 	if len(gitems.Items) < (cf.NumNodes + cf.NumMasterNodes) {
-		log.InfoLog("kubernetes cluster not ready", "log", out)
+		Debug("kubernetes cluster not ready", "log", out)
 		return false, nil
 	}
-	log.InfoLog("cluster nodes", "numnodes", cf.NumNodes, "nummasters", cf.NumMasterNodes)
+	Debug("cluster nodes", "numnodes", cf.NumNodes, "nummasters", cf.NumMasterNodes)
 	kcpath := mexEnv["MEX_DIR"] + "/" + name + ".kubeconfig"
 	if _, err := os.Stat(kcpath); err == nil {
-		log.InfoLog("kubeconfig file exists, will not overwrite", "name", kcpath)
+		Debug("kubeconfig file exists, will not overwrite", "name", kcpath)
 		return true, nil
 	}
 	if err := CopyKubeConfig(rootLB, name); err != nil {
 		return false, fmt.Errorf("kubeconfig copy failed, %v", err)
 	}
-	log.InfoLog("cluster ready.", "KUBECONFIG", kcpath)
+	Debug("cluster ready.", "KUBECONFIG", kcpath)
 	return true, nil
 }
 
@@ -1143,7 +1143,7 @@ type clusterKubeconfig struct {
 
 //CopyKubeConfig copies over kubeconfig from the cluster
 func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
-	log.InfoLog("copying kubeconfig", "name", name)
+	Debug("copying kubeconfig", "name", name)
 	ipaddr, err := FindNodeIP(name)
 	if err != nil {
 		return err
@@ -1175,7 +1175,7 @@ func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
 
 //ProcessKubeconfig validates kubeconfig and saves it and creates a copy for proxy access
 func ProcessKubeconfig(rootLB *MEXRootLB, name string, dat []byte) error {
-	log.InfoLog("process kubeconfig file", "name", name)
+	Debug("process kubeconfig file", "name", name)
 	kc := &clusterKubeconfig{}
 	err := yaml.Unmarshal(dat, kc)
 	if err != nil {
@@ -1191,7 +1191,7 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, dat []byte) error {
 	if err != nil {
 		return fmt.Errorf("can't write kubeconfig %s content,%v", name, err)
 	}
-	log.InfoLog("wrote kubeconfig", "file", fullpath)
+	Debug("wrote kubeconfig", "file", fullpath)
 	kc.Clusters[0].Cluster.Server = "http://" + rootLB.Name + ":8001" //XXX allow for more ports and multiple instances
 	dat, err = yaml.Marshal(kc)
 	if err != nil {
@@ -1202,13 +1202,13 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, dat []byte) error {
 	if err != nil {
 		return fmt.Errorf("can't write kubeconfig proxy %s, %v", name, err)
 	}
-	log.InfoLog("kubeconfig wrote", "file", fullpath)
+	Debug("kubeconfig wrote", "file", fullpath)
 	return nil
 }
 
 //FindNodeIP finds IP for the given node
 func FindNodeIP(name string) (string, error) {
-	log.InfoLog("find node ip", "name", name)
+	Debug("find node ip", "name", name)
 	if name == "" {
 		return "", fmt.Errorf("empty name")
 	}
@@ -1230,7 +1230,7 @@ func FindNodeIP(name string) (string, error) {
 
 //FindClusterWithKey finds cluster given a key string
 func FindClusterWithKey(key string) (string, error) {
-	log.InfoLog("find cluster with key", "key", key)
+	Debug("find cluster with key", "key", key)
 	if key == "" {
 		return "", fmt.Errorf("empty key")
 	}
@@ -1262,7 +1262,7 @@ type kubernetesServiceAbbrev struct {
 
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
 func CreateKubernetesAppManifest(mf *Manifest) error {
-	log.InfoLog("create kubernetes app", "mf", mf)
+	Debug("create kubernetes app", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1306,35 +1306,35 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("can't store docker password, %s, %v", out, err)
 	}
-	log.InfoLog("stored docker password")
+	Debug("stored docker password")
 	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s .docker-pass %s:", mexEnv["MEX_SSH_KEY"], ipaddr)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy docker password to k8s-master, %s, %v", out, err)
 	}
-	log.InfoLog("copied over docker password")
+	Debug("copied over docker password")
 	cmd = fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", mexEnv["MEX_SSH_KEY"], ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't docker login on k8s-master to %s, %s, %v", mexEnv["MEX_DOCKER_REGISTRY"], out, err)
 	}
-	log.InfoLog("docker login ok")
+	Debug("docker login ok")
 	cmd = fmt.Sprintf("%s kubectl create secret docker-registry mexregistrysecret --docker-server=%s --docker-username=mobiledgex --docker-password=%s --docker-email=docker@mobiledgex.com", kubeconfig, mexEnv["MEX_DOCKER_REGISTRY"], mexEnv["MEX_DOCKER_REG_PASS"])
 	out, err = client.Output(cmd)
 	if err != nil {
 		if strings.Contains(out, "AlreadyExists") {
-			log.InfoLog("secret already exists")
+			Debug("secret already exists")
 		} else {
 			return fmt.Errorf("error creating mexregistrysecret, %s, %s, %v", cmd, out, err)
 		}
 	}
-	log.InfoLog("created mexregistrysecret docker secret")
+	Debug("created mexregistrysecret docker secret")
 	cmd = fmt.Sprintf("%s kubectl create -f %s", kubeconfig, mf.Spec.KubeManifest)
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
-	log.InfoLog("applied kubernetes manifest", "kubemanifest", mf.Spec.KubeManifest)
+	Debug("applied kubernetes manifest", "kubemanifest", mf.Spec.KubeManifest)
 	cmd = fmt.Sprintf("%s kubectl get svc %s-service -o json", kubeconfig, mf.Metadata.Name)
 	out, err = client.Output(cmd)
 	if err != nil {
@@ -1345,7 +1345,7 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
 	}
-	log.InfoLog("got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
+	Debug("got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
 	for _, port := range svcData.Spec.Ports {
 		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
 		proxypath := mf.Spec.ProxyPath + port.Name
@@ -1353,7 +1353,7 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		if errs != nil {
 			errmsg := fmt.Sprintf("%v", errs)
 			if strings.Contains(errmsg, "exists") {
-				log.InfoLog("rproxy path already exists", "path", proxypath, "origin", origin)
+				Debug("rproxy path already exists", "path", proxypath, "origin", origin)
 			} else {
 				return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
 			}
@@ -1368,7 +1368,7 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (string, ssh.Client, string, error) {
-	log.InfoLog("validate kubernetes parameters rootLB", "rootLB", rootLB, "cluster", clustName)
+	Debug("validate kubernetes parameters rootLB", "rootLB", rootLB, "cluster", clustName)
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return "", nil, "", fmt.Errorf("validate kubernetes parameters, missing external network in platform config")
 	}
@@ -1390,7 +1390,7 @@ func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (string, 
 
 //KubernetesApplyManifest does `apply` on the manifest yaml
 func KubernetesApplyManifest(mf *Manifest) error {
-	log.InfoLog("apply kubernetes manifest", "mf", mf)
+	Debug("apply kubernetes manifest", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1412,7 +1412,7 @@ func KubernetesApplyManifest(mf *Manifest) error {
 
 //CreateKubernetesNamespaceManifest creates a new namespace in kubernetes
 func CreateKubernetesNamespaceManifest(mf *Manifest) error {
-	log.InfoLog("create kubernetes namespace", "mf", mf)
+	Debug("create kubernetes namespace", "mf", mf)
 	err := KubernetesApplyManifest(mf)
 	if err != nil {
 		return fmt.Errorf("error applying kubernetes namespace manifest, %v", err)
@@ -1428,7 +1428,7 @@ func CreateKubernetesNamespaceManifest(mf *Manifest) error {
 
 //SetKubernetesConfigmapValues sets a key-value in kubernetes configmap
 func SetKubernetesConfigmapValues(rootLBName string, clustername string, configname string, keyvalues ...string) error {
-	log.InfoLog("set configmap values", "rootlbname", rootLBName, "clustername", clustername, "configname", configname)
+	Debug("set configmap values", "rootlbname", rootLBName, "clustername", clustername, "configname", configname)
 	rootLB, err := getRootLB(rootLBName)
 	if err != nil {
 		return err
@@ -1459,7 +1459,7 @@ func SetKubernetesConfigmapValues(rootLBName string, clustername string, confign
 
 //GetKubernetesConfigmapYAML returns yaml reprentation of the key-values
 func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname string) (string, error) {
-	log.InfoLog("get kubernetes configmap", "rootlbname", rootLBName, "clustername", clustername, "configname", configname)
+	Debug("get kubernetes configmap", "rootlbname", rootLBName, "clustername", clustername, "configname", configname)
 	rootLB, err := getRootLB(rootLBName)
 	if err != nil {
 		return "", err
@@ -1479,7 +1479,7 @@ func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname strin
 
 //AddPathReverseProxy adds a new route to origin on the reverse proxy
 func AddPathReverseProxy(rootLBName, path, origin string) []error {
-	log.InfoLog("add path to reverse proxy", "rootlbname", rootLBName, "path", path, "origin", origin)
+	Debug("add path to reverse proxy", "rootlbname", rootLBName, "path", path, "origin", origin)
 	if path == "" {
 		return []error{fmt.Errorf("empty path")}
 	}
@@ -1495,7 +1495,7 @@ func AddPathReverseProxy(rootLBName, path, origin string) []error {
 		return errs
 	}
 	if strings.Contains(body, "OK") {
-		log.InfoLog("added path to revproxy")
+		Debug("added path to revproxy")
 		return nil
 	}
 	errs = append(errs, fmt.Errorf("resp %v, body %s", resp, body))
@@ -1515,7 +1515,7 @@ type kubectlRunning struct {
 //StartKubectlProxy starts kubectl proxy on the rootLB to handle kubectl commands remotely.
 //  To be called after copying over the kubeconfig file from cluster to rootLB.
 func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
-	log.InfoLog("start kubectl proxy", "rootlb", rootLB, "kubeconfig", kubeconfig)
+	Debug("start kubectl proxy", "rootlb", rootLB, "kubeconfig", kubeconfig)
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("start kubectl proxy, missing external network in platform config")
 	}
@@ -1530,15 +1530,15 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 	if err == nil {
 		err = json.Unmarshal([]byte(out), kubectlProxies)
 		if err != nil {
-			log.InfoLog("warning, malformed", "jsonfile", kubectlJSONFile, "error", err)
+			Debug("warning, malformed", "jsonfile", kubectlJSONFile, "error", err)
 			kubectlProxies = &kubectlRunning{}
 		}
 	} else {
-		log.InfoLog("warning, cannot find file ", "filename", kubectlJSONFile)
+		Debug("warning, cannot find file ", "filename", kubectlJSONFile)
 	}
 	maxPort := 8001
 	if len(kubectlProxies.Processes) > 0 {
-		log.InfoLog("kubectl proxies running", "kubectlproxies", kubectlProxies)
+		Debug("kubectl proxies running", "kubectlproxies", kubectlProxies)
 		for _, kp := range kubectlProxies.Processes {
 			if kp.Port > maxPort {
 				maxPort = kp.Port
@@ -1546,7 +1546,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 		}
 		maxPort++
 	}
-	log.InfoLog("kubectl proxy port", "maxport", maxPort)
+	Debug("kubectl proxy port", "maxport", maxPort)
 	cmd = fmt.Sprintf("kubectl proxy  --port %d --accept-hosts='.*' --address='0.0.0.0' --kubeconfig=%s ", maxPort, kubeconfig)
 	//Use .Start() because we don't want to hang
 	cl1, cl2, err := client.Start(cmd)
@@ -1560,7 +1560,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 		//verify
 		out, outerr := client.Output(cmd)
 		if outerr == nil {
-			log.InfoLog("kubectl proxy confirmed running")
+			Debug("kubectl proxy confirmed running")
 			kcp := kubectlProxy{
 				Pid:  strings.TrimSpace(out),
 				Port: maxPort,
@@ -1569,25 +1569,25 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 			kubectlProxies.Processes = append(kubectlProxies.Processes, kcp)
 			kpbytes, err := json.Marshal(kubectlProxies)
 			if err != nil {
-				log.InfoLog("warning, can't marshal kubectlProxies", "kubectlproxies", kubectlProxies, "error", err)
+				Debug("warning, can't marshal kubectlProxies", "kubectlproxies", kubectlProxies, "error", err)
 				return nil
 			}
 			localkjf := kubectlJSONFile + "-" + rootLB.Name
 			err = ioutil.WriteFile(localkjf, kpbytes, 0666)
 			if err != nil {
-				log.InfoLog("can't write  locally", "filename", localkjf, "error", err)
+				Debug("can't write  locally", "filename", localkjf, "error", err)
 				return nil
 			}
 			kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
 			_, err = sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, localkjf, "root@"+rootLB.Name+":").Output()
 			if err != nil {
-				log.InfoLog("failed to copy", "file", localkjf, "rootlb", rootLB.Name, "error", err)
+				Debug("failed to copy", "file", localkjf, "rootlb", rootLB.Name, "error", err)
 				return nil
 			}
-			log.InfoLog("copied ", "file", localkjf, "rootlb", rootLB.Name)
+			Debug("copied ", "file", localkjf, "rootlb", rootLB.Name)
 			return nil
 		}
-		log.InfoLog("waiting for kubectl proxy...")
+		Debug("waiting for kubectl proxy...")
 		time.Sleep(3 * time.Second)
 	}
 	return fmt.Errorf("timeout error verifying kubectl proxy")
@@ -1595,7 +1595,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) error {
 
 //DestroyKubernetesAppManifest destroys kubernetes app
 func DestroyKubernetesAppManifest(mf *Manifest) error {
-	log.InfoLog("delete kubernetes app", "mf", mf)
+	Debug("delete kubernetes app", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1640,7 +1640,7 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
 	}
-	log.InfoLog("got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
+	Debug("got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
 	for _, port := range svcData.Spec.Ports {
 		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
 		proxypath := mf.Spec.ProxyPath + port.Name
@@ -1654,13 +1654,13 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes service, %s, %s, %v", cmd, out, err)
 	}
-	log.InfoLog("deleted service", "name", mf.Metadata.Name)
+	Debug("deleted service", "name", mf.Metadata.Name)
 	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kubeconfig, mf.Metadata.Name+"-deployment")
 	out, err = client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
 	}
-	log.InfoLog("deleted deployment", "name", mf.Metadata.Name)
+	Debug("deleted deployment", "name", mf.Metadata.Name)
 	return nil
 }
 
@@ -1671,7 +1671,7 @@ func DeletePathReverseProxy(rootLBName, path, origin string) []error {
 }
 
 func CreateQCOW2AppManifest(mf *Manifest) error {
-	log.InfoLog("create qcow2 vm based app", "mf", mf)
+	Debug("create qcow2 vm based app", "mf", mf)
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
 	if !strings.HasPrefix(mf.Spec.Image, "http://") &&
 		!strings.HasPrefix(mf.Spec.Image, "https://") {
@@ -1700,11 +1700,11 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 	}
 	for _, img := range images {
 		if img.Name == mf.Metadata.Name && img.Status == "active" {
-			log.InfoLog("warning, glance has image already", "name", mf.Metadata.Name)
+			Debug("warning, glance has image already", "name", mf.Metadata.Name)
 			if !strings.Contains(mf.Spec.Flags, "force") {
 				alreadyExist = true
 			} else {
-				log.InfoLog("forced to download image again. delete existing glance image")
+				Debug("forced to download image again. delete existing glance image")
 				if err := oscli.DeleteImage(mf.Metadata.Name); err != nil {
 					return fmt.Errorf("error deleting glance image %s, %v", mf.Metadata.Name, err)
 				}
@@ -1712,7 +1712,7 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 		}
 	}
 	if !alreadyExist {
-		log.InfoLog("getting qcow2 image", "image", mf.Spec.Image, "name", savedQcowName)
+		Debug("getting qcow2 image", "image", mf.Spec.Image, "name", savedQcowName)
 		out, err := sh.Command("curl", "-s", "-o", savedQcowName, mf.Spec.Image).Output()
 		if err != nil {
 			return fmt.Errorf("error retrieving qcow image, %s, %s, %v", savedQcowName, out, err)
@@ -1727,13 +1727,13 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 		if finfo.Size() < 1000 { //too small
 			return fmt.Errorf("invalid downloaded qcow2 file %s", savedQcowName)
 		}
-		log.InfoLog("qcow2 image being created", "image", mf.Spec.Image, "name", savedQcowName)
+		Debug("qcow2 image being created", "image", mf.Spec.Image, "name", savedQcowName)
 		//openstack image create ubuntu-16.04-mex --disk-format qcow2 --container-format bare --public  --file /var/tmp/ubuntu-16.04.qcow2
 		err = oscli.CreateImage(mf.Metadata.Name, savedQcowName)
 		if err != nil {
 			return fmt.Errorf("cannot create openstack glance image instance from %s, %v", savedQcowName, err)
 		}
-		log.InfoLog("saved qcow image to glance", "name", mf.Metadata.Name)
+		Debug("saved qcow image to glance", "name", mf.Metadata.Name)
 		found := false
 		for i := 0; i < 10; i++ {
 			images, err := oscli.ListImages()
@@ -1749,14 +1749,14 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 			if found {
 				break
 			}
-			log.InfoLog("waiting for the image to become active", "name", mf.Metadata.Name)
+			Debug("waiting for the image to become active", "name", mf.Metadata.Name)
 			time.Sleep(2 * time.Second)
 		}
 		if !found {
 			return fmt.Errorf("timed out waiting for glance to activate the qcow2 image %s", mf.Metadata.Name)
 		}
 	}
-	log.InfoLog("qcow image is active in glance", "name", mf.Metadata.Name)
+	Debug("qcow image is active in glance", "name", mf.Metadata.Name)
 	if !strings.HasPrefix(mf.Spec.NetworkScheme, "external-ip,") { //XXX for now
 		return fmt.Errorf("invalid network scheme for qcow2 kvm app, %s", mf.Spec.NetworkScheme)
 	}
@@ -1773,12 +1773,12 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 	}
 	//TODO properties
 	//TODO userdata
-	log.InfoLog("calling create openstack kvm server", "opts", opts)
+	Debug("calling create openstack kvm server", "opts", opts)
 	err = oscli.CreateServer(opts)
 	if err != nil {
 		return fmt.Errorf("can't create openstack kvm server instance %v, %v", opts, err)
 	}
-	log.InfoLog("created openstack kvm server", "opts", opts)
+	Debug("created openstack kvm server", "opts", opts)
 	return nil
 }
 
@@ -1790,4 +1790,8 @@ func DestroyQCOW2AppManifest(mf *Manifest) error {
 		return fmt.Errorf("cannot delete openstack kvm %s, %v", mf.Metadata.Name, err)
 	}
 	return nil
+}
+
+func Debug(msg string, keysAndValues ...interface{}) {
+	log.DebugLog(log.DebugLevelMexos, msg, keysAndValues...)
 }

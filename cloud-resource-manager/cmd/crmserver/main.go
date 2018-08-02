@@ -62,27 +62,27 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	if OSEnvValid {
-		log.InfoLog("OS env valid")
+		crmutil.Debug("OS env valid")
 		crmutil.MEXInit()
 		go func() {
-			log.InfoLog("creating new rootLB", "rootlb", *rootLBName)
+			crmutil.Debug("creating new rootLB", "rootlb", *rootLBName)
 			crmRootLB, err := crmutil.NewRootLB(*rootLBName)
 			if err != nil {
-				log.InfoLog("Can't get crm mex rootlb")
+				crmutil.Debug("Can't get crm mex rootlb")
 				return
 			}
-			log.InfoLog("created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
+			crmutil.Debug("created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
 			controllerData.CRMRootLB = crmRootLB
-			log.InfoLog("init platform with key", "cloudletkeystr", *cloudletKeyStr)
+			crmutil.Debug("init platform with key", "cloudletkeystr", *cloudletKeyStr)
 			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
 			if err != nil {
-				log.InfoLog("Error running MEX Agent", "error", err)
+				crmutil.Debug("Error running MEX Agent", "error", err)
 			}
-			log.InfoLog("init platform with cloudlet key ok")
+			crmutil.Debug("init platform with cloudlet key ok")
 			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
 		}()
 	} else {
-		log.InfoLog("OS env invalid")
+		crmutil.Debug("OS env invalid")
 	}
 
 	if *standalone {
@@ -132,7 +132,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	log.InfoLog("gather cloudlet info")
+	crmutil.Debug("gather cloudlet info")
 
 	// gather cloudlet info
 	if *standalone {
@@ -144,11 +144,11 @@ func main() {
 		// gather cloudlet info from openstack, etc.
 		crmutil.GatherCloudletInfo(&myCloudlet)
 	}
-	log.InfoLog("sending cloudlet info cache update")
+	crmutil.Debug("sending cloudlet info cache update")
 	// trigger send of info upstream to controller
 	controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
 
-	log.InfoLog("sent cloudletinfocache update")
+	crmutil.Debug("sent cloudletinfocache update")
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
@@ -167,7 +167,7 @@ func parseCloudletKey() {
 		myCloudlet.Key = testutil.CloudletData[0].Key
 		bytes, _ := json.Marshal(&myCloudlet.Key)
 		*cloudletKeyStr = string(bytes)
-		log.InfoLog("Using cloudletKey", "key", *cloudletKeyStr)
+		crmutil.Debug("Using cloudletKey", "key", *cloudletKeyStr)
 		return
 	}
 
@@ -199,11 +199,11 @@ func ValidateOSEnv() bool {
 	osCACert := os.Getenv("OS_CACERT")
 
 	if osUser != "" && osPass != "" && osTenant != "" && osAuthURL != "" && osRegion != "" && osCACert != "" {
-		log.InfoLog("Valid environment")
+		crmutil.Debug("Valid environment")
 		return crmutil.ValidateMEXOSEnv(true)
 	} else {
-		log.InfoLog("Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
-		//log.InfoLog("Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
+		crmutil.Debug("Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
+		//crmutil.Debug("Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
 	}
 	return false
 }

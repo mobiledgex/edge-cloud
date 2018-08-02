@@ -46,14 +46,15 @@ var mainflag = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 func printUsage() {
 	mainflag.Usage()
-	fmt.Println("e.g. mex [-debug] platform {init|clean} -manifest my.yaml")
-	fmt.Println("e.g. mex [-debug] [-platform pl.yaml] cluster {create|remove} -manifest my.yaml")
-	fmt.Println("e.g. mex [-debug] [-platform pl.yaml] application {kill|run} -manifest my.yaml")
+	fmt.Println("e.g. mex platform {init|clean} -manifest my.yaml")
+	fmt.Println("e.g. mex [-platform pl.yaml] cluster {create|remove} -manifest my.yaml")
+	fmt.Println("e.g. mex [-platform pl.yaml] application {kill|run} -manifest my.yaml")
 }
 
 func main() {
 	var err error
 	help := mainflag.Bool("help", false, "help")
+	debugLevels := mainflag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 	platform := mainflag.String("platform", "", "platform data")
 	if err = mainflag.Parse(os.Args[1:]); err != nil {
 		log.FatalLog("parse error", "error", err)
@@ -62,18 +63,21 @@ func main() {
 		printUsage()
 		os.Exit(0)
 	}
+	log.SetDebugLevelStrs(*debugLevels)
 	//XXX TODO make log to a remote server / aggregator
 	args := mainflag.Args()
 	if len(args) < 2 {
 		printUsage()
-		log.FatalLog("insufficient args")
+		fmt.Println("insufficient args")
+		os.Exit(1)
 	}
 	_, ok := resourceMap[args[0]]
 	if !ok {
 		printUsage()
-		log.FatalLog("valid resources are", "resources", reflect.ValueOf(resourceMap).MapKeys())
+		fmt.Println("valid resources are", "resources", reflect.ValueOf(resourceMap).MapKeys())
+		os.Exit(1)
 	}
-	log.InfoLog("platform init should be not done too often. letsencrypt api has 20 per week limit")
+	crmutil.Debug("platform init should be not done too often. letsencrypt api has 20 per week limit")
 	crmutil.MEXInit()
 	if *platform != "" {
 		mf := &crmutil.Manifest{}
@@ -90,7 +94,7 @@ func main() {
 		if err != nil {
 			log.FatalLog("can't get new rootLB", "error", err)
 		}
-		log.InfoLog("got rootLB", "rootLB", rootLB)
+		crmutil.Debug("got rootLB", "rootLB", rootLB)
 	}
 	resourceMap[args[0]](args[1:])
 }
@@ -122,7 +126,7 @@ func manifestHandler(kind string, args []string) {
 	if err := subflags.Parse(args); err != nil {
 		log.FatalLog("parse error", "error", err)
 	}
-	log.InfoLog("We have", "kind", kind, "cmd", cmd, "args", args)
+	crmutil.Debug("We have", "kind", kind, "cmd", cmd, "args", args)
 	if *manifest == "" {
 		printUsage()
 		log.FatalLog("no manifest file")
