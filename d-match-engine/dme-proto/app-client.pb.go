@@ -1336,7 +1336,7 @@ func (m *Match_Engine_Cloudlet_List) CopyInFields(src *Match_Engine_Cloudlet_Lis
 	m.Ver = src.Ver
 	m.Status = src.Status
 	if src.Cloudlets != nil {
-		if m.Cloudlets == nil || len(m.Cloudlets) < len(src.Cloudlets) {
+		if m.Cloudlets == nil || len(m.Cloudlets) != len(src.Cloudlets) {
 			m.Cloudlets = make([]*CloudletLocation, len(src.Cloudlets))
 		}
 		for i0 := 0; i0 < len(src.Cloudlets); i0++ {
