@@ -4,6 +4,12 @@ package api;
 import "google/api/annotations.proto";
 
 service MexExample {
+    rpc DataTest(DataTestRequest) returns (DataTestResponse) {
+        option (google.api.http) = {
+            post: "/data",
+            body: "*"
+        };
+    }
     rpc Echo(EchoRequest) returns (EchoResponse) {
         option (google.api.http) = {
             post: "/echo",
@@ -23,6 +29,15 @@ service MexExample {
         };
     }
 }
+
+message DataTestRequest {
+    int64 numbytes = 1;
+}
+
+message DataTestResponse {
+    string bytes = 1;
+}
+
 
 message EchoRequest {
     string message = 1;

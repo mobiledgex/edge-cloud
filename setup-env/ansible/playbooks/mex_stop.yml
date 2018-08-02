@@ -105,3 +105,20 @@
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ toksims }}"
+
+- name: stop sample apps
+  gather_facts: no
+  user: root
+  hosts: sampleapps
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: stop sample app process
+    shell: "pkill -9 {{ item.sampleapplocal.exename }} || true"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ sampleapps }}"
+

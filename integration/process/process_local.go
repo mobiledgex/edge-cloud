@@ -272,6 +272,24 @@ func (p *TokSrvSimLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
+//Generic sample app for use in test
+type SampleAppLocal struct {
+	Name    string
+	Exename string
+	Args    []string
+	cmd     *exec.Cmd
+}
+
+func (p *SampleAppLocal) Start(logfile string) error {
+	var err error
+	p.cmd, err = StartLocal(p.Name, p.Exename, p.Args, logfile)
+	return err
+}
+
+func (p *SampleAppLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
 type ColorWriter struct {
 	Name  string
 	Color ct.Color
