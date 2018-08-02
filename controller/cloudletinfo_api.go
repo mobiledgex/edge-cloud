@@ -26,9 +26,6 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 }
 
 func (s *CloudletInfoApi) Update(in *edgeproto.CloudletInfo, notifyId int64) {
-	if !cloudletApi.HasKey(in.GetKey()) {
-		return
-	}
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
 	s.store.Put(in, nil)
