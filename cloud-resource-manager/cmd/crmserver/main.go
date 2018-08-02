@@ -62,21 +62,27 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	if OSEnvValid {
+		crmutil.Debug("OS env valid")
 		crmutil.MEXInit()
 		go func() {
+			crmutil.Debug("creating new rootLB", "rootlb", *rootLBName)
 			crmRootLB, err := crmutil.NewRootLB(*rootLBName)
 			if err != nil {
-				log.FatalLog("Can't get crm mex root")
-				os.Exit(1)
+				crmutil.Debug("Can't get crm mex rootlb")
+				return
 			}
+			crmutil.Debug("created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
 			controllerData.CRMRootLB = crmRootLB
+			crmutil.Debug("init platform with key", "cloudletkeystr", *cloudletKeyStr)
 			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
 			if err != nil {
-				log.FatalLog("Error running MEX Agent", "error", err)
-				os.Exit(1)
+				crmutil.Debug("Error running MEX Agent", "error", err)
 			}
+			crmutil.Debug("init platform with cloudlet key ok")
 			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
 		}()
+	} else {
+		crmutil.Debug("OS env invalid")
 	}
 
 	if *standalone {
@@ -126,6 +132,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+	crmutil.Debug("gather cloudlet info")
 
 	// gather cloudlet info
 	if *standalone {
@@ -137,9 +144,11 @@ func main() {
 		// gather cloudlet info from openstack, etc.
 		crmutil.GatherCloudletInfo(&myCloudlet)
 	}
+	crmutil.Debug("sending cloudlet info cache update")
 	// trigger send of info upstream to controller
 	controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
 
+	crmutil.Debug("sent cloudletinfocache update")
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, os.Kill)
 
@@ -158,7 +167,7 @@ func parseCloudletKey() {
 		myCloudlet.Key = testutil.CloudletData[0].Key
 		bytes, _ := json.Marshal(&myCloudlet.Key)
 		*cloudletKeyStr = string(bytes)
-		log.InfoLog("Using cloudletKey", "key", *cloudletKeyStr)
+		crmutil.Debug("Using cloudletKey", "key", *cloudletKeyStr)
 		return
 	}
 
@@ -184,14 +193,17 @@ func parseCloudletKey() {
 func ValidateOSEnv() bool {
 	osUser := os.Getenv("OS_USERNAME")
 	osPass := os.Getenv("OS_PASSWORD")
-	osTenant := os.Getenv("OS_TENANT")
+	osTenant := os.Getenv("OS_TENANT_NAME")
 	osAuthURL := os.Getenv("OS_AUTH_URL")
 	osRegion := os.Getenv("OS_REGION_NAME")
-	osCACert := os.Getenv("OC_CACERT")
+	osCACert := os.Getenv("OS_CACERT")
 
-	if osUser != "" && osPass != "" && osTenant != "" &&
-		osAuthURL != "" && osRegion != "" && osCACert != "" {
+	if osUser != "" && osPass != "" && osTenant != "" && osAuthURL != "" && osRegion != "" && osCACert != "" {
+		crmutil.Debug("Valid environment")
 		return crmutil.ValidateMEXOSEnv(true)
+	} else {
+		crmutil.Debug("Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
+		//crmutil.Debug("Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
 	}
 	return false
 }

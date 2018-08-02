@@ -59,6 +59,7 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
+	Debug("update limits", "info", info, "limits", limits)
 }
 
 // Note: these callback functions are called in the context of
@@ -66,9 +67,11 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 // they should be done in a separate worker thread.
 
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
+	Debug("clusterInstChange", "key", key)
 	clusterInst := edgeproto.ClusterInst{}
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
 	if found {
+		Debug("cluster inst changed", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
 		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.Flavor{}
@@ -76,47 +79,64 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
 		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
+			Debug("did not find flavor", "flavor", flavor)
 			//XXX returning flavor not found error to InstInfoError?
 			cd.clusterInstInfoError(key, fmt.Sprintf("Did not find flavor %s", clusterInst.Flavor.Name))
 			return
 		}
-
+		Debug("Found flavor", "flavor", flavor)
 		go func() {
 			var err error
-
-			if IsValidMEXOSEnv {
-				err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
+			Debug("cluster inst changed")
+			if !IsValidMEXOSEnv {
+				Debug("not valid mexos env, fake cluster ready")
+				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
+				return
 			}
+			Debug("create cluster inst", "clusterinst", clusterInst)
+			err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
+				Debug("error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
-			} else {
-				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
+				return
 			}
+			Debug("adding flavor", "flavor", flavor)
 			err = MEXAddFlavorClusterInst(&flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
 			if err != nil {
+				Debug("cannot add flavor", "flavor", flavor)
 				cd.clusterInstInfoError(key, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
+				return
 			}
+			Debug("cluster state ready", "clusterinst", clusterInst)
+			cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateReady)
 		}()
 	} else {
+		Debug("cluster inst deleted", "clusterinst", clusterInst)
 		// clusterInst was deleted
 		go func() {
 			var err error
+			Debug("cluster inst changed, deleted")
 			if !IsValidMEXOSEnv {
+				Debug("invalid mexos env, fake cluster state deleted")
+				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
 				return
 			}
+			Debug("remove cluster inst", "clusterinst", clusterInst)
 			err = MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, str)
 				return
 			}
+			Debug("set cluster inst deleted", "clusterinst", clusterInst)
 			cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
 		}()
 	}
 }
 
 func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
+	Debug("app inst changed", "key", key)
 	appInst := edgeproto.AppInst{}
 	found := cd.AppInstCache.Get(key, &appInst)
 	if found {
@@ -140,34 +160,44 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 		}
 
 		go func() {
+			if !IsValidMEXOSEnv {
+				Debug("not valid mexos env, fake app state ready")
+				cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
+				return
+			}
 			imagetype, err := convertImageType(int(appInst.ImageType))
 			if err != nil {
 				str := fmt.Sprintf("Invalid image type: %s", err)
 				cd.appInstInfoError(key, str)
+				Debug("can't decode imagetype", "error", str, "imagetype", imagetype, "key", key)
 				return
 			}
-
-			//XXX not sure what appInst.Flavor is
-
 			switch imagetype {
 			case "docker":
-				//XXX ImagePath seems to be the only entry that can be used to specify docker image name.
-				//XXX no registry & namspace specification.
-				//XXX MappedPorts and MappedPath are strings but they can contain multiple entries.
-
-				var err error
-				if IsValidMEXOSEnv {
-					err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
-				}
+				Debug("docker image type, create app inst", "appinst", appInst, "clusterinst", clusterInst)
+				err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 				if err != nil {
-					cd.appInstInfoError(key, fmt.Sprintf("Create failed: %s", err))
+					errstr := fmt.Sprintf("Create failed: %s", err)
+					cd.appInstInfoError(key, errstr)
+					Debug("can't create app inst", "error", errstr, "key", key, "imagetype", imagetype)
 					return
 				}
+				Debug("created docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
+			case "qcow2":
+				Debug("qcow2 image type, create app inst", "appinst", appInst, "clusterinst", clusterInst)
+				err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+				if err != nil {
+					errstr := fmt.Sprintf("Create failed: %s", err)
+					cd.appInstInfoError(key, errstr)
+					Debug("can't create app inst", "error", errstr, "key", key, "imagetype", imagetype)
+					return
+				}
+				Debug("created qcow2 app inst", "appinst", appInst, "clusterinst", clusterInst)
 			default:
 				cd.appInstInfoError(key, "Unsupported image type")
 				return
 			}
-
+			Debug("update appinst state ready")
 			cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
 		}()
 	} else {
