@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	log "github.com/sirupsen/logrus"
 )
 
 //CloudletClient calls CreateCloudlet
@@ -23,7 +22,7 @@ func CloudletClient(api edgeproto.CloudletApiClient, srv *CloudResourceManagerSe
 	for i, cr := range srv.CloudResourceData.CloudResources {
 		_, err = api.CreateCloudlet(ctx, &CloudletData[i])
 		if err != nil {
-			log.Errorf("error calling CreateCloudlet, %v %v", cr, err)
+			Debug("error calling CreateCloudlet", "cloudresource", cr, "error", err)
 			break
 		}
 	}
