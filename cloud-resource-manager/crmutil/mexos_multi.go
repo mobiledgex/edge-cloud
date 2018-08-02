@@ -1,19 +1,16 @@
 package crmutil
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"text/template"
 
-	"github.com/mobiledgex/edge-cloud/edgeproto"
-
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
-	log "github.com/sirupsen/logrus"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 const (
@@ -35,8 +32,9 @@ metadata:
   location: {{.Location}}
 spec:
   flags: {{.Flags}}
-  flavor: {{.Flavor}}
+  flavor: x1.medium
   key: {{.Key}}
+  dockerregistry: registry.mobiledgex.net:5000
   rootlb: {{.RootLB}}
   networkscheme: {{.NetworkScheme}}
 `
@@ -87,14 +85,16 @@ func getManifestClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst)
 
 //MEXClusterCreateManifest creates a cluster
 func MEXClusterCreateManifest(mf *Manifest) error {
-	log.Debug("creating cluster", mf)
+	Debug("creating cluster", "mf", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
-		guid, err := mexCreateClusterKubernetes(mf)
+		//guid, err := mexCreateClusterKubernetes(mf)
+		err := mexCreateClusterKubernetes(mf)
 		if err != nil {
 			return fmt.Errorf("can't create cluster, %v", err)
 		}
-		log.Debugln("new guid", *guid)
+		//Debug("new guid", "guid", *guid)
+		Debug("created kubernetes cluster", "mf", mf)
 		return nil
 	case gcloudGKE:
 		return gcloudCreateGKE(mf)
@@ -191,7 +191,7 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
 
 //MEXAddFlavor adds flavor using manifest
 func MEXAddFlavor(mf *Manifest) error {
-	log.Debugln("add flavor", mf)
+	Debug("add flavor", "mf", mf)
 	//TODO use full manifest and validate against platform data
 	return AddFlavor(mf.Spec.Flavor)
 }
@@ -202,7 +202,7 @@ func MEXAddFlavor(mf *Manifest) error {
 
 //MEXClusterRemoveManifest removes a cluster
 func MEXClusterRemoveManifest(mf *Manifest) error {
-	log.Debugln("removing cluster", mf)
+	Debug("removing cluster", "mf", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
 		if err := mexDeleteClusterKubernetes(mf); err != nil {
@@ -235,6 +235,7 @@ metadata:
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
+  flavor: {{.Flavor}}
   rootlb: {{.RootLB}}
   externalnetwork: {{.ExternalNetwork}}
   externalrouter: {{.ExternalRouter}}
@@ -257,17 +258,20 @@ func MEXPlatformInitCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) error 
 }
 
 func fillTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (*Manifest, error) {
+	Debug("fill template cloudletkeystr", "cloudletkeystr", cloudletKeyStr)
 	clk := edgeproto.CloudletKey{}
 	err := json.Unmarshal([]byte(cloudletKeyStr), &clk)
 	if err != nil {
 		return nil, fmt.Errorf("can't unmarshal json cloudletkey %s, %v", cloudletKeyStr, err)
 	}
+	Debug("unmarshalled cloudletkeystr", "cloudletkey", clk)
 	name := clk.Name
 	operator := clk.OperatorKey.Name
 	data := templateFill{
 		Name:            name,
 		Tags:            name + "-tag",
-		Key:             cloudletKeyStr,
+		Key:             clk.OperatorKey.Name + "," + clk.Name,
+		Flavor:          "x1.medium", // XXX
 		Operator:        operator,
 		Location:        "bonn",
 		Region:          "eu-central-1",
@@ -298,20 +302,21 @@ func MEXPlatformCleanCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) error
 }
 
 func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
-	tmpl, err := template.New("mexflavor").Parse(yamltext)
+	//Debug("template unmarshal", "yamltext", string, "data", data)
+	tmpl, err := template.New("mex").Parse(yamltext)
 	if err != nil {
 		return nil, fmt.Errorf("can't create template for, %v", err)
 	}
 	var outbuffer bytes.Buffer
-	bufwriter := bufio.NewWriter(&outbuffer)
-	err = tmpl.Execute(bufwriter, data)
+	err = tmpl.Execute(&outbuffer, data)
 	if err != nil {
-		log.Debugln("template data", data)
+		//Debug("template data", "data", data)
 		return nil, fmt.Errorf("can't execute template, %v", err)
 	}
 	mf := &Manifest{}
 	err = yaml.Unmarshal(outbuffer.Bytes(), mf)
 	if err != nil {
+		Debug("error yaml unmarshal, templated data", "templated buffer data", string(outbuffer.Bytes()))
 		return nil, fmt.Errorf("can't unmarshal templated data, %v", err)
 	}
 	return mf, nil
@@ -335,7 +340,7 @@ func checkEnvironment() error {
 
 //MEXPlatformInitManifest initializes platform
 func MEXPlatformInitManifest(mf *Manifest) error {
-	log.Debug("init platform", mf)
+	Debug("init platform", "mf", mf)
 	err := checkEnvironment()
 	if err != nil {
 		return err
@@ -361,7 +366,7 @@ func MEXPlatformInitManifest(mf *Manifest) error {
 
 //MEXPlatformCleanManifest cleans up the platform
 func MEXPlatformCleanManifest(mf *Manifest) error {
-	log.Debugln("clean platform", mf)
+	Debug("clean platform", "mf", mf)
 	err := checkEnvironment()
 	if err != nil {
 		return err
@@ -396,7 +401,7 @@ spec:
   flags: {{.Flags}}
   key: {{.Key}}
   rootlb: {{.RootLB}}
-  imagetype:{{.ImageType}}
+  imagetype: {{.ImageType}}
   image: {{.Image}}
   proxypath: {{.ProxyPath}}
   portmap: {{.PortMap}} 
@@ -417,7 +422,7 @@ spec:
   flags: {{.Flags}}
   key: {{.Key}}
   rootlb: {{.RootLB}}
-  imagetype:{{.ImageType}}
+  imagetype: {{.ImageType}}
   image: {{.Image}}
   imageflavor: {{.ImageFlavor}}
   proxypath: {{.ProxyPath}}
@@ -431,6 +436,7 @@ spec:
 
 //MEXCreateAppInst calls MEXCreateApp with templated manifest
 func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
+	Debug("mex create app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
 	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
 	if !ok {
 		return fmt.Errorf("cannot find imagetype in map")
@@ -458,7 +464,7 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 			PortMap:      appInst.MappedPorts,
 			PathMap:      appInst.MappedPath,
 			AccessLayer:  accessLayer,
-			KubeManifest: "", // XXX Need from controller, appInst.KubeManifest: "https://k8s.io/examples/application/deployment.yaml",
+			KubeManifest: appInst.ConfigMap,
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {
@@ -494,7 +500,7 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 
 //MEXCreateAppManifest creates app instances on the cluster platform
 func MEXCreateAppManifest(mf *Manifest) error {
-	log.Debugln("create app from manifest", mf)
+	Debug("create app from manifest", "mf", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
 		if mf.Spec.ImageType == "ImageTypeDocker" {
@@ -516,7 +522,7 @@ func MEXCreateAppManifest(mf *Manifest) error {
 
 //MEXKillAppManifest kills app
 func MEXKillAppManifest(mf *Manifest) error {
-	log.Debugln("delete app", mf)
+	Debug("delete app", "mf", mf)
 	switch mf.Kind {
 	case mexOSKubernetes:
 		if mf.Spec.ImageType == "ImageTypeDocker" {
