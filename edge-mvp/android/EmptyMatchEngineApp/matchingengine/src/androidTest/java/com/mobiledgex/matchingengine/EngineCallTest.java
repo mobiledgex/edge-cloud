@@ -174,7 +174,7 @@ public class EngineCallTest {
     @Test
     public void registerClientTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
@@ -219,7 +219,7 @@ public class EngineCallTest {
     @Test
     public void registerClientFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
@@ -259,7 +259,7 @@ public class EngineCallTest {
     @Test
     public void mexDisabledTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(false);
         MexLocation mexLoc = new MexLocation(me);
 
@@ -323,7 +323,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         AppClient.Match_Engine_Status registerResponse;
         FindCloudletResponse cloudletResponse = null;
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
@@ -367,7 +367,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         Future<FindCloudletResponse> response;
         FindCloudletResponse result = null;
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
@@ -403,7 +403,7 @@ public class EngineCallTest {
     public void verifyLocationTest() {
         Context context = InstrumentationRegistry.getTargetContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
@@ -439,14 +439,14 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
     }
 
     @Test
     public void verifyLocationFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
@@ -478,7 +478,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
     }
 
 
@@ -494,7 +494,7 @@ public class EngineCallTest {
         Location mockLoc = createLocation("verifyMockedLocationTest_NorthPole", 90d, 0d);
 
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
 
@@ -525,14 +525,14 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(verifyLocationResult.getVer(), 0);
         assertEquals(verifyLocationResult.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN); // Based on test data.
+        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER); // Based on test data.
 
     }
 
     @Test
     public void getLocationTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -585,7 +585,7 @@ public class EngineCallTest {
     @Test
     public void getLocationFutureTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
@@ -638,7 +638,7 @@ public class EngineCallTest {
     public void dynamicLocationGroupAddTest() {
         Context context = InstrumentationRegistry.getContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         AppClient.Match_Engine_Status response = null;
@@ -680,7 +680,7 @@ public class EngineCallTest {
     public void dynamicLocationGroupAddFutureTest() {
         Context context = InstrumentationRegistry.getContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         AppClient.Match_Engine_Status response = null;
