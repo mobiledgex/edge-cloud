@@ -316,7 +316,7 @@ func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
 	mf := &Manifest{}
 	err = yaml.Unmarshal(outbuffer.Bytes(), mf)
 	if err != nil {
-		Debug("error yaml unmarshal, templated data", "templated buffer data", string(outbuffer.Bytes()))
+		Debug("error yaml unmarshal, templated data", "templated buffer data", outbuffer.String())
 		return nil, fmt.Errorf("can't unmarshal templated data, %v", err)
 	}
 	return mf, nil
