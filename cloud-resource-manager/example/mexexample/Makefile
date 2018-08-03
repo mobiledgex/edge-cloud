@@ -9,17 +9,16 @@ API_FILES = api/mexexample.pb.go api/mexexample.pb.gw.go api/mexexample.swagger.
 default: build docker-build docker-push
 
 docker-build:
-	docker build -t mobiledgex/mexexample .
+	./docker-build.sh
 
-# docker login first!
 docker-push:
 	docker tag mobiledgex/mexexample registry.mobiledgex.net:5000/mobiledgex/mexexample
 	docker push registry.mobiledgex.net:5000/mobiledgex/mexexample
 
 build: api dep ## Build mexexample
 	go get ./...
-	@mkdir -p build
-	@CGO_ENABLED=0 go build  -o build/${PROGRAM} .
+	mkdir -p build
+	CGO_ENABLED=0 go build  -o build/${PROGRAM} .
 
 dep: api ## Fetch dependencies
 	@go get ./...
