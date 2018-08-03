@@ -26,7 +26,7 @@ func (a *ApplicationData) Sort() {
 		return a.AppInstances[i].Key.GetKeyString() < a.AppInstances[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Applications[:], func(i, j int) bool {
-		return a.Applications[i].Key.GetKeyString() < a.Applications[i].Key.GetKeyString()
+		return a.Applications[i].Key.GetKeyString() < a.Applications[j].Key.GetKeyString()
 	})
 	sort.Slice(a.Cloudlets[:], func(i, j int) bool {
 		return a.Cloudlets[i].Key.GetKeyString() < a.Cloudlets[j].Key.GetKeyString()
