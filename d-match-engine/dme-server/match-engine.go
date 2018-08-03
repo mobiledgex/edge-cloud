@@ -237,7 +237,6 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 	tbl = carrierAppTbl
 	foundCloudlets := make(map[string]bool)
 
-	listAppinstTbl()
 	tbl.RLock()
 	for _, a := range tbl.apps {
 		//if the carrier name was provided, only look for cloudlets for that carrier

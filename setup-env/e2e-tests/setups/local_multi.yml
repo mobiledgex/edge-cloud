@@ -2,6 +2,14 @@ vars:
   - locverurl: "http://127.0.0.1:8888/verifyLocation" 
   - toksrvurl: "http://127.0.0.1:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc" 
 
+sampleapps:
+- sampleapplocal:
+    name: mexexample1
+    exename: mexexample
+    args: 
+     - "-debug"
+  hostname: "127.0.0.1"
+ 
 locsims:
 - locapisimlocal:
     name: locsim1

@@ -33,6 +33,9 @@ type YamlReplacementVariables struct {
 	Vars []map[string]string
 }
 
+// replacement variables taken from the setup
+var DeploymentReplacementVars string
+
 type ProcessInfo struct {
 	pid   int
 	alive bool
@@ -92,6 +95,11 @@ type TokSimProcess struct {
 	process.TokSrvSimLocal
 	Hostname string
 }
+type SampleAppProcess struct {
+	process.SampleAppLocal
+	Args     []string
+	Hostname string
+}
 
 type DeploymentData struct {
 	GCloud        GoogleCloudInfo     `yaml:"gcloud"`
@@ -102,6 +110,7 @@ type DeploymentData struct {
 	Controllers   []ControllerProcess `yaml:"controllers"`
 	Dmes          []DmeProcess        `yaml:"dmes"`
 	Crms          []CrmProcess        `yaml:"crms"`
+	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
