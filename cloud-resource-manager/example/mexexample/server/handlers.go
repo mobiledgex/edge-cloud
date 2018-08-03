@@ -1,14 +1,25 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/example/mexexample/api"
-	"golang.org/x/net/context"
 	"net"
 	"os"
+
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/example/mexexample/api"
+	"golang.org/x/net/context"
 )
 
 type Server struct{}
+
+func (srv *Server) DataTest(ctx context.Context, req *api.DataTestRequest) (res *api.DataTestResponse, err error) {
+	b := []byte("Z")
+	response := string(bytes.Repeat(b, int(req.Numbytes)))
+	res = &api.DataTestResponse{
+		Bytes: response,
+	}
+	return res, nil
+}
 
 func (srv *Server) Echo(ctx context.Context, req *api.EchoRequest) (res *api.EchoResponse, err error) {
 	res = &api.EchoResponse{
