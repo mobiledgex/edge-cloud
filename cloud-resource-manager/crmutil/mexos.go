@@ -908,8 +908,8 @@ func downloadFile(url, fname string) error {
 	if err != nil {
 		return fmt.Errorf("can't write file %s, %v", fname, err)
 	}
-	resp.Body.Close()
-	fileout.Close()
+	resp.Body.Close() // nolint
+	fileout.Close()   // nolint
 	Debug("retrieved file from URL", "URL", url, "file", fname)
 	return nil
 }
@@ -1670,6 +1670,7 @@ func DeletePathReverseProxy(rootLBName, path, origin string) []error {
 	return nil
 }
 
+//CreateQCOW2AppManifest creates qcow2 app
 func CreateQCOW2AppManifest(mf *Manifest) error {
 	Debug("create qcow2 vm based app", "mf", mf)
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
@@ -1782,6 +1783,7 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 	return nil
 }
 
+//DestroyQCOW2AppManifest destroys qcow2 app
 func DestroyQCOW2AppManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name, no openstack kvm to delete")
@@ -1792,6 +1794,7 @@ func DestroyQCOW2AppManifest(mf *Manifest) error {
 	return nil
 }
 
+//Debug prints mexos debug msgs
 func Debug(msg string, keysAndValues ...interface{}) {
 	log.DebugLog(log.DebugLevelMexos, msg, keysAndValues...)
 }
