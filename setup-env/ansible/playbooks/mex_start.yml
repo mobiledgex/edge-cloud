@@ -132,3 +132,28 @@
     with_items:
        -  "{{ toksims }}"
 
+- name: startup sample apps
+  gather_facts: no
+  user: root
+  hosts: sampleapps
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: check sample app binary exists
+    stat:
+      path: "{{ remote_bin_path }}/{{ item.sampleapplocal.exename }}"
+    register: samp_stat
+    failed_when: samp_stat.stat.exists == False
+    with_items:
+       -  "{{ sampleapps }}"
+
+
+  - name: start up sample app process
+    shell: "nohup {{ remote_bin_path }}/{{ item.sampleapplocal.exename }} {{ item.sampleapplocal.args |join(' ') }} > {{ remote_log_path }}/{{ item.sampleapplocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ sampleapps }}"
+

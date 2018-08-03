@@ -97,6 +97,12 @@ func findProcess(processName string) (string, string, string) {
 			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
 		}
 	}
+	for _, sam := range util.Deployment.SampleApps {
+		if sam.Name == processName {
+			argstr := strings.Join(sam.Args, " ")
+			return sam.Hostname, sam.Exename, argstr
+		}
+	}
 	return "", "", ""
 }
 
@@ -163,9 +169,9 @@ func getLogFile(procname string, outputDir string) string {
 func ReadSetupFile(setupfile string, dataDir string) bool {
 	//the setup file has a vars section with replacement variables.  ingest the file once
 	//to get these variables, and then ingest again to parse the setup data with the variables
-	var replacementVars util.YamlReplacementVariables
 	var varlist []string
-	varstring := ""
+	var replacementVars util.YamlReplacementVariables
+	util.DeploymentReplacementVars = ""
 
 	if dataDir != "" {
 		varlist = append(varlist, "datadir="+dataDir)
@@ -178,9 +184,9 @@ func ReadSetupFile(setupfile string, dataDir string) bool {
 		}
 	}
 	if len(varlist) > 0 {
-		varstring = strings.Join(varlist, ",")
+		util.DeploymentReplacementVars = strings.Join(varlist, ",")
 	}
-	err := util.ReadYamlFile(setupfile, &util.Deployment, varstring, true)
+	err := util.ReadYamlFile(setupfile, &util.Deployment, util.DeploymentReplacementVars, true)
 	if err != nil {
 		if !util.IsYamlOk(err, "setup") {
 			fmt.Fprintf(os.Stderr, "One or more fatal unmarshal errors in %s", setupfile)
@@ -221,7 +227,12 @@ func StopProcesses(processName string) bool {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
 	}
-	processExeNames := [6]string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim"}
+
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim"}
+	for _, a := range util.Deployment.SampleApps {
+		processExeNames = append(processExeNames, a.Exename)
+	}
+
 	//anything not gracefully exited in maxwait seconds is forcefully killed
 
 	for _, p := range processExeNames {
@@ -259,7 +270,7 @@ func runPlaybook(playbook string, evars []string, procNamefilter string) bool {
 	log.Printf("Ansible Output:\n%v\n", string(output))
 
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ansible playbook failed: %v", err)
+		fmt.Fprintf(os.Stderr, "Ansible playbook failed: %v ", err)
 		return false
 	}
 	return true
@@ -321,6 +332,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	dmeRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
+	sampleApps := make(map[string]string)
 
 	for _, p := range util.Deployment.Etcds {
 		if procNameFilter != "" && procNameFilter != p.Name {
@@ -386,6 +398,16 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
+	for _, p := range util.Deployment.SampleApps {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+			allRemoteServers[p.Hostname] = p.Name
+			sampleApps[p.Hostname] = p.Name
+			foundServer = true
+		}
+	}
 
 	//create ansible inventory
 	fmt.Fprintln(invfile, "[mexservers]")
@@ -431,6 +453,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[toksims]")
 		for s := range tokSrvSimulators {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(sampleApps) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[sampleapps]")
+		for s := range sampleApps {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -590,6 +619,20 @@ func StartProcesses(processName string, outputDir string) bool {
 			err := tok.Start(logfile)
 			if err != nil {
 				log.Printf("Error on TokSim startup: %v", err)
+				return false
+			}
+		}
+	}
+	for _, sam := range util.Deployment.SampleApps {
+		if processName != "" && processName != sam.Name {
+			continue
+		}
+		if sam.Hostname == "localhost" || sam.Hostname == "127.0.0.1" {
+			log.Printf("Starting Sample app %+v\n", sam)
+			logfile := getLogFile(sam.Name, outputDir)
+			err := sam.Start(logfile)
+			if err != nil {
+				log.Printf("Error on Sample App startup: %v", err)
 				return false
 			}
 		}

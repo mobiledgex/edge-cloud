@@ -15,6 +15,32 @@
     "application/json"
   ],
   "paths": {
+    "/datatest": {
+      "post": {
+        "operationId": "DataTest",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiDataTestResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiDataTestRequest"
+            }
+          }
+        ],
+        "tags": [
+          "MexExample"
+        ]
+      }
+    },
     "/echo": {
       "post": {
         "operationId": "Echo",
@@ -95,6 +121,23 @@
     }
   },
   "definitions": {
+    "apiDataTestRequest": {
+      "type": "object",
+      "properties": {
+        "numbytes": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "apiDataTestResponse": {
+      "type": "object",
+      "properties": {
+        "bytes": {
+          "type": "string"
+        }
+      }
+    },
     "apiEchoRequest": {
       "type": "object",
       "properties": {

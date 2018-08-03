@@ -110,6 +110,23 @@
        name: "{{ toksim_remote_bin }}"
        state: absent
 
+- name: cleanup sample apps
+  gather_facts: no
+  user: root
+  hosts: sampleapps
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: remove sample app binary
+    file:
+       name: "{{ remote_bin_path }}/{{ item.sampleapplocal.exename }}"
+       state: absent
+    with_items:
+       -  "{{ sampleapps }}"
+
 
 - name: cleanup logs
   gather_facts: no
