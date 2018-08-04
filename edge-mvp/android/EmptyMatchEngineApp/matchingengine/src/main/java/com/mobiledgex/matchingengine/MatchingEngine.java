@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -404,6 +405,25 @@ public class MatchingEngine {
         AddUserToGroup addUserToGroup = new AddUserToGroup(this);
         addUserToGroup.setRequest(request, timeoutInMilliseconds);
         return submit(addUserToGroup);
+    }
+
+    /**
+     * Retrieve nearby Cloudlets (or AppInsts) for registered application. This is a blocking call.
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public AppClient.Match_Engine_Cloudlet_List getCloudletList(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        GetCloudletList getCloudletList = new GetCloudletList(this);
+        getCloudletList.setRequest(request, timeoutInMilliseconds);
+        return getCloudletList.call();
+    }
+
+    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+        GetCloudletList getCloudletList = new GetCloudletList(this);
+        getCloudletList.setRequest(request, timeoutInMilliseconds);
+        return submit(getCloudletList);
     }
 
     public String getHost() {
