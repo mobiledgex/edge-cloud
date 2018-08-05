@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"syscall"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"net"
@@ -46,7 +47,7 @@ func main() {
 		}
 	}()
 	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, os.Kill)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
 	os.Exit(0)
 }
@@ -62,7 +63,7 @@ func frontpage(w http.ResponseWriter, r *http.Request) {
 		localAddr := conn.LocalAddr().(*net.UDPAddr)
 		fmt.Fprintf(w, "outbound ip %v", localAddr.IP)
 	}
-	conn.Close()
+	conn.Close() // nolint
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, intf := range interfaces {
