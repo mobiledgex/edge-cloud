@@ -612,9 +612,10 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 		cmd = fmt.Sprintf("kill -9 %d", pidnum)
 		out, err = client.Output(cmd)
 		if err != nil {
-			return fmt.Errorf("error killing kubectl proxy", "command", cmd, "out", out, "error", err)
+			log.InfoLog("error killing kubectl proxy", "command", cmd, "out", out, "error", err)
+		} else {
+			log.DebugLog(log.DebugLevelMexos, "killed kubectl proxy", "line", ln, "cmd", cmd)
 		}
-		log.DebugLog(log.DebugLevelMexos, "killed kubectl proxy", "line", ln, "cmd", cmd)
 		return nil
 	}
 	return nil
