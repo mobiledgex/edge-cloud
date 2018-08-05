@@ -605,25 +605,11 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 	}
 	lines := strings.Split(out, "\n")
 	for _, ln := range lines {
-		if !strings.Contains(ln, "kubectl") {
+		pidnum := parseKCPid(ln, mf.Spec.Key)
+		if pidnum == 0 {
 			continue
 		}
-		if !strings.Contains(ln, mf.Spec.Key) {
-			continue
-		}
-		var pid string
-		n, serr := fmt.Sscanf(ln, "%s", &pid)
-		if serr != nil {
-			continue
-		}
-		if n != 1 {
-			continue
-		}
-		_, aerr := strconv.Atoi(pid)
-		if aerr != nil {
-			continue
-		}
-		cmd = "kill -9 " + pid
+		cmd = fmt.Sprintf("kill -9 %d", pidnum)
 		out, err = client.Output(cmd)
 		if err != nil {
 			return fmt.Errorf("error killing kubectl proxy", "command", cmd, "out", out, "error", err)
@@ -1592,24 +1578,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 	if err == nil && out != "" {
 		lines := strings.Split(out, "\n")
 		for _, ln := range lines {
-			if !strings.Contains(ln, "kubectl") {
-				continue
-			}
-			if !strings.Contains(ln, "--port") {
-				continue
-			}
-			var a, b, c, port string
-			n, serr := fmt.Sscanf(ln, "%s %s %s %s", &a, &b, &c, &port)
-			if serr != nil {
-				continue
-			}
-			if n != 4 {
-				continue
-			}
-			portnum, aerr := strconv.Atoi(port)
-			if aerr != nil {
-				continue
-			}
+			portnum := parseKCPort(ln)
 			if portnum > maxPort {
 				maxPort = portnum
 			}
@@ -1635,26 +1604,8 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 			}
 			lines := strings.Split(out, "\n")
 			for _, ln := range lines {
-				if !strings.Contains(ln, "kubectl") {
-					continue
-				}
-				if !strings.Contains(ln, "--port") {
-					continue
-				}
-				var a, b, c, port string
-				n, serr := fmt.Sscanf(ln, "%s %s %s %s", &a, &b, &c, &port)
-				if serr != nil {
-					continue
-				}
-				if n != 4 {
-					continue
-				}
-				portnum, aerr := strconv.Atoi(port)
-				if aerr != nil {
-					continue
-				}
-				if portnum == maxPort {
-					log.DebugLog(log.DebugLevelMexos, "kubectl confirmed running with port", "port", portnum)
+				if parseKCPort(ln) == maxPort {
+					log.DebugLog(log.DebugLevelMexos, "kubectl confirmed running with port", "port", maxPort)
 				}
 			}
 			return maxPort, nil
@@ -1864,4 +1815,49 @@ func DestroyQCOW2AppManifest(mf *Manifest) error {
 		return fmt.Errorf("cannot delete openstack kvm %s, %v", mf.Metadata.Name, err)
 	}
 	return nil
+}
+
+func parseKCPort(ln string) int {
+	if !strings.Contains(ln, "kubectl") {
+		return 0
+	}
+	if !strings.Contains(ln, "--port") {
+		return 0
+	}
+	var a, b, c, port string
+	n, serr := fmt.Sscanf(ln, "%s %s %s %s", &a, &b, &c, &port)
+	if serr != nil {
+		return 0
+	}
+	if n != 4 {
+		return 0
+	}
+	portnum, aerr := strconv.Atoi(port)
+	if aerr != nil {
+		return 0
+	}
+	return portnum
+}
+
+func parseKCPid(ln string, key string) int {
+	ln = strings.TrimSpace(ln)
+	if !strings.Contains(ln, "kubectl") {
+		return 0
+	}
+	if !strings.HasSuffix(ln, key) {
+		return 0
+	}
+	var pid string
+	n, serr := fmt.Sscanf(ln, "%s", &pid)
+	if serr != nil {
+		return 0
+	}
+	if n != 1 {
+		return 0
+	}
+	pidnum, aerr := strconv.Atoi(pid)
+	if aerr != nil {
+		return 0
+	}
+	return pidnum
 }
