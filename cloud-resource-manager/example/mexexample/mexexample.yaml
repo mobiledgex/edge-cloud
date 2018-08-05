@@ -21,8 +21,6 @@ spec:
     name: http
   selector:
     run: mexexample
-  externalIPs:
-  - 10.101.102.2
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -44,7 +42,7 @@ spec:
       containers:
       - name: mexexample
         image: registry.mobiledgex.net:5000/mobiledgex/mexexample
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 27272
         - containerPort: 27273

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"syscall"
 
 	//"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
@@ -62,27 +63,27 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	if OSEnvValid {
-		crmutil.Debug("OS env valid")
+		log.DebugLog(log.DebugLevelMexos, "OS env valid")
 		crmutil.MEXInit()
 		go func() {
-			crmutil.Debug("creating new rootLB", "rootlb", *rootLBName)
-			crmRootLB, err := crmutil.NewRootLB(*rootLBName)
-			if err != nil {
-				crmutil.Debug("Can't get crm mex rootlb")
+			log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", *rootLBName)
+			crmRootLB, cerr := crmutil.NewRootLB(*rootLBName)
+			if cerr != nil {
+				log.DebugLog(log.DebugLevelMexos, "Can't get crm mex rootlb", "error", cerr)
 				return
 			}
-			crmutil.Debug("created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
+			log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
 			controllerData.CRMRootLB = crmRootLB
-			crmutil.Debug("init platform with key", "cloudletkeystr", *cloudletKeyStr)
+			log.DebugLog(log.DebugLevelMexos, "init platform with key", "cloudletkeystr", *cloudletKeyStr)
 			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
 			if err != nil {
-				crmutil.Debug("Error running MEX Agent", "error", err)
+				log.DebugLog(log.DebugLevelMexos, "Error running MEX Agent", "error", err)
 			}
-			crmutil.Debug("init platform with cloudlet key ok")
+			log.DebugLog(log.DebugLevelMexos, "init platform with cloudlet key ok")
 			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
 		}()
 	} else {
-		crmutil.Debug("OS env invalid")
+		log.DebugLog(log.DebugLevelMexos, "OS env invalid")
 	}
 
 	if *standalone {
@@ -132,7 +133,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	crmutil.Debug("gather cloudlet info")
+	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
 	// gather cloudlet info
 	if *standalone {
@@ -144,13 +145,13 @@ func main() {
 		// gather cloudlet info from openstack, etc.
 		crmutil.GatherCloudletInfo(&myCloudlet)
 	}
-	crmutil.Debug("sending cloudlet info cache update")
+	log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 	// trigger send of info upstream to controller
 	controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
 
-	crmutil.Debug("sent cloudletinfocache update")
+	log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, os.Kill)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
@@ -167,7 +168,7 @@ func parseCloudletKey() {
 		myCloudlet.Key = testutil.CloudletData[0].Key
 		bytes, _ := json.Marshal(&myCloudlet.Key)
 		*cloudletKeyStr = string(bytes)
-		crmutil.Debug("Using cloudletKey", "key", *cloudletKeyStr)
+		log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", *cloudletKeyStr)
 		return
 	}
 
@@ -199,11 +200,10 @@ func ValidateOSEnv() bool {
 	osCACert := os.Getenv("OS_CACERT")
 
 	if osUser != "" && osPass != "" && osTenant != "" && osAuthURL != "" && osRegion != "" && osCACert != "" {
-		crmutil.Debug("Valid environment")
+		log.DebugLog(log.DebugLevelMexos, "Valid environment")
 		return crmutil.ValidateMEXOSEnv(true)
-	} else {
-		crmutil.Debug("Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
-		//crmutil.Debug("Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
 	}
+	log.DebugLog(log.DebugLevelMexos, "Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
+	//log.DebugLog(log.DebugLevelMexos, "Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
 	return false
 }
