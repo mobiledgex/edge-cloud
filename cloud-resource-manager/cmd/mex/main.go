@@ -77,7 +77,7 @@ func main() {
 		fmt.Println("valid resources are", "resources", reflect.ValueOf(resourceMap).MapKeys())
 		os.Exit(1)
 	}
-	crmutil.Debug("platform init should be not done too often. letsencrypt api has 20 per week limit")
+	log.DebugLog(log.DebugLevelMexos, "platform init should be not done too often. letsencrypt api has 20 per week limit")
 	crmutil.MEXInit()
 	if *platform != "" {
 		mf := &crmutil.Manifest{}
@@ -94,7 +94,7 @@ func main() {
 		if err != nil {
 			log.FatalLog("can't get new rootLB", "error", err)
 		}
-		crmutil.Debug("got rootLB", "rootLB", rootLB)
+		log.DebugLog(log.DebugLevelMexos, "got rootLB", "rootLB", rootLB)
 	}
 	resourceMap[args[0]](args[1:])
 }
@@ -126,7 +126,7 @@ func manifestHandler(kind string, args []string) {
 	if err := subflags.Parse(args); err != nil {
 		log.FatalLog("parse error", "error", err)
 	}
-	crmutil.Debug("We have", "kind", kind, "cmd", cmd, "args", args)
+	log.DebugLog(log.DebugLevelMexos, "We have", "kind", kind, "cmd", cmd, "args", args)
 	if *manifest == "" {
 		printUsage()
 		log.FatalLog("no manifest file")
@@ -148,6 +148,6 @@ func manifestHandler(kind string, args []string) {
 	}
 	err = categories[kind][cmd](mf)
 	if err != nil {
-		log.FatalLog("bad category", "error", err, "cmd", cmd, "kind", kind)
+		log.FatalLog("failure", "error", err, "cmd", cmd, "kind", kind)
 	}
 }

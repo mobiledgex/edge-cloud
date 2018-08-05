@@ -69,7 +69,7 @@ func GetOutboundIP() string {
 	if err != nil {
 		return fmt.Sprintf("error getting outbound ip, %v", err)
 	}
-	defer conn.Close()
+	defer conn.Close() // no lint
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	return fmt.Sprintf("%v", localAddr.IP)
 }
