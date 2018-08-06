@@ -49,23 +49,26 @@ message App {
   repeated string fields = 1;
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
-  // Path to the application container or VM on shared storage
+  // Path to the application container or VM on image repo
   string image_path = 4 [(protogen.backend) = true];
   // Image type
   ImageType image_type = 5;
   // Access layer(s)
   AccessLayer access_layer = 6;
   // For Layer4 access, the ports the app listens on.
+  // This is a comma separated list of protocol:port pairs, i.e.
+  // tcp:80,tcp:443,udp:10002.
+  // Only tcp and udp protocols are supported.
   string access_ports = 7;
   // initial config passed to image (docker only)?
   // is this a string format of the file or a pointer to the
   // file stored elsewhere?
   string config_map = 8;
-  // resource requirements
-  FlavorKey flavor = 9 [(gogoproto.nullable) = false];
+  // default flavor for the app, may be overridden on app inst
+  FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
   // Cluster on which the app can be instantiated.
   // If not specified during create, a cluster will be automatically created.
-  ClusterKey cluster = 10 [(gogoproto.nullable) = false];
+  ClusterKey cluster = 10 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

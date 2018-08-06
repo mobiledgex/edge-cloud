@@ -20,6 +20,6 @@ func TestOperatorApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalOperatorCudTest(t, &operatorApi, testutil.OperatorData)
+	testutil.InternalOperatorTest(t, "cud", &operatorApi, testutil.OperatorData)
 	dummy.Stop()
 }

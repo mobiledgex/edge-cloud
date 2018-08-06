@@ -281,9 +281,9 @@ var FlavorApiCmds = []*cobra.Command{
 
 func init() {
 	FlavorFlagSet.StringVar(&FlavorIn.Key.Name, "key-name", "", "Key.Name")
-	FlavorFlagSet.Int64Var(&FlavorIn.Ram, "ram", 0, "Ram")
-	FlavorFlagSet.Int64Var(&FlavorIn.Vcpus, "vcpus", 0, "Vcpus")
-	FlavorFlagSet.Int64Var(&FlavorIn.Disk, "disk", 0, "Disk")
+	FlavorFlagSet.Uint64Var(&FlavorIn.Ram, "ram", 0, "Ram")
+	FlavorFlagSet.Uint64Var(&FlavorIn.Vcpus, "vcpus", 0, "Vcpus")
+	FlavorFlagSet.Uint64Var(&FlavorIn.Disk, "disk", 0, "Disk")
 	CreateFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
 	DeleteFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)
 	UpdateFlavorCmd.Flags().AddFlagSet(FlavorFlagSet)

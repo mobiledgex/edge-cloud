@@ -20,5 +20,17 @@ var LivenessStrings = []string{
 	"LivenessDynamic",
 }
 
+var IpSupportStrings = []string{
+	"IpSupportUnknown",
+	"IpSupportStatic",
+	"IpSupportDynamic",
+}
+
+var L4ProtoStrings = []string{
+	"L4ProtoUnknown",
+	"L4ProtoTCP",
+	"L4ProtoUDP",
+}
+
 func init() {
 }

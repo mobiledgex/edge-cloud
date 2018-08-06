@@ -8,6 +8,7 @@ func NewNotifyHandler() *notify.DefaultHandler {
 	handler := notify.DefaultHandler{}
 
 	handler.SendFlavor = &flavorApi
+	handler.SendClusterFlavor = &clusterFlavorApi
 	handler.SendClusterInst = &clusterInstApi
 	handler.SendAppInst = &appInstApi
 	handler.SendCloudlet = &cloudletApi

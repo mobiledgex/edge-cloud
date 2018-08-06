@@ -10,3 +10,20 @@ enum Liveness {
   LivenessStatic = 1;
   LivenessDynamic = 2;
 }
+
+// IpSupport indicates the types of IP support the Cloudlet has.
+// Static IP support indicates a set of static IPs are provided
+// to the controller, and the controller manages which IPs are
+// used where. Dynamic means that services must use DHCP to obtain
+// IP addresses and the controller has no control of which IPs are assigned.
+enum IpSupport {
+  IpSupportUnknown = 0;
+  IpSupportStatic = 1;
+  IpSupportDynamic = 2;
+}
+
+enum L4Proto {
+  L4ProtoUnknown = 0;
+  L4ProtoTCP = 1;
+  L4ProtoUDP = 2;
+}

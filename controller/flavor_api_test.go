@@ -20,7 +20,7 @@ func TestFlavorApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalFlavorCudTest(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalFlavorTest(t, "cud", &flavorApi, testutil.FlavorData)
 
 	dummy.Stop()
 }

@@ -10,18 +10,21 @@ It is generated from these files:
 	cloud-resource-manager.proto
 	cloudlet.proto
 	cluster.proto
+	clusterflavor.proto
 	clusterinst.proto
 	common.proto
 	developer.proto
 	flavor.proto
 	notice.proto
 	operator.proto
+	refs.proto
 	result.proto
 
 It has these top-level messages:
 	AppKey
 	App
 	AppInstKey
+	AppPort
 	AppInst
 	AppInstInfo
 	AppInstMetrics
@@ -34,6 +37,8 @@ It has these top-level messages:
 	CloudletMetrics
 	ClusterKey
 	Cluster
+	ClusterFlavorKey
+	ClusterFlavor
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
@@ -46,6 +51,8 @@ It has these top-level messages:
 	OperatorCode
 	OperatorKey
 	Operator
+	CloudletRefs
+	ClusterRefs
 	Result
 */
 package testutil
@@ -111,8 +118,13 @@ func (x *ShowApp) CheckFound(obj *edgeproto.App) bool {
 func (x *ShowApp) AssertFound(t *testing.T, obj *edgeproto.App) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find App %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "App are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -203,14 +215,39 @@ func NewClientAppApi(api edgeproto.AppApiClient) *AppCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalAppCudTest(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
-	basicAppCudTest(t, NewInternalAppApi(api), testData)
+
+func InternalAppTest(t *testing.T, test string, api edgeproto.AppApiServer, testData []edgeproto.App) {
+	switch test {
+	case "cud":
+		basicAppCudTest(t, NewInternalAppApi(api), testData)
+	case "show":
+		basicAppShowTest(t, NewInternalAppApi(api), testData)
+	}
 }
 
-func ClientAppCudTest(t *testing.T, api edgeproto.AppApiClient, testData []edgeproto.App) {
-	basicAppCudTest(t, NewClientAppApi(api), testData)
+func ClientAppTest(t *testing.T, test string, api edgeproto.AppApiClient, testData []edgeproto.App) {
+	switch test {
+	case "cud":
+		basicAppCudTest(t, NewClientAppApi(api), testData)
+	case "show":
+		basicAppShowTest(t, NewClientAppApi(api), testData)
+	}
 }
 
+func basicAppShowTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowApp{}
+	show.Init()
+	filterNone := edgeproto.App{}
+	err = api.ShowApp(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
 	ctx := context.TODO()
@@ -221,28 +258,21 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateApp(ctx, &obj)
-		assert.Nil(t, err, "Create App %s", obj.Key.GetKeyString())
-	}
+	createAppData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateApp(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate App")
 
 	// test show all items
-	show := ShowApp{}
-	show.Init()
-	filterNone := edgeproto.App{}
-	err = api.ShowApp(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicAppShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteApp(ctx, &testData[0])
 	assert.Nil(t, err, "delete App %s", testData[0].Key.GetKeyString())
+	show := ShowApp{}
 	show.Init()
+	filterNone := edgeproto.App{}
 	err = api.ShowApp(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -259,4 +289,22 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	_, err = api.CreateApp(ctx, &bad)
 	assert.NotNil(t, err, "Create App with no key info")
 
+}
+
+func InternalAppCreate(t *testing.T, api edgeproto.AppApiServer, testData []edgeproto.App) {
+	createAppData(t, NewInternalAppApi(api), testData)
+}
+
+func ClientAppCreate(t *testing.T, api edgeproto.AppApiClient, testData []edgeproto.App) {
+	createAppData(t, NewClientAppApi(api), testData)
+}
+
+func createAppData(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateApp(ctx, &obj)
+		assert.Nil(t, err, "Create App %s", obj.Key.GetKeyString())
+	}
 }

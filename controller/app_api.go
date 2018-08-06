@@ -6,6 +6,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -54,7 +57,7 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Flavor.Matches(key) {
+		if app.DefaultFlavor.Matches(key) {
 			return true
 		}
 	}
@@ -84,11 +87,21 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if in.AccessPorts == "" && (in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4 || in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4L7) {
 		return &edgeproto.Result{}, errors.New("Please specify ports for L4 access types")
 	}
-	if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-		in.ImagePath = "mobiledgex_" +
-			util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
-			util.DockerSanitize(in.Key.Name) + ":" +
-			util.DockerSanitize(in.Key.Version)
+	if in.ImagePath == "" {
+		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
+			in.ImagePath = "mobiledgex_" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name) + ":" +
+				util.DockerSanitize(in.Key.Version)
+		} else {
+			in.ImagePath = "qcow path not determined yet"
+		}
+	}
+	if in.AccessPorts != "" {
+		_, err := parseAppPorts(in.AccessPorts)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
 	}
 
 	// make sure cluster exists
@@ -105,8 +118,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			in.Cluster.Name = util.K8SSanitize(in.Cluster.Name)
 			cluster := edgeproto.Cluster{}
 			cluster.Key = in.Cluster
-			cluster.Flavor = in.Flavor
-			cluster.Nodes = ClusterAutoNodes
+			clusterFlavorKey, lookup := GetClusterFlavorForFlavor(&in.DefaultFlavor)
+			if lookup != nil {
+				return lookup
+			}
+			cluster.DefaultFlavor = *clusterFlavorKey
 			cluster.Auto = true
 			// it may be possible that cluster already exists
 			if !clusterApi.store.STMGet(stm, &cluster.Key, nil) {
@@ -132,8 +148,8 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
 			return errors.New("Specified developer not found")
 		}
-		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
-			return errors.New("Specified flavor not found")
+		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
+			return errors.New("Specified default flavor not found")
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists
@@ -215,7 +231,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.ImagePath != new.ImagePath || old.ImageType != new.ImageType ||
-		old.ConfigMap != new.ConfigMap || !old.Flavor.Matches(&new.Flavor) {
+		old.ConfigMap != new.ConfigMap {
 		log.DebugLog(log.DebugLevelApi, "updating image path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
@@ -223,7 +239,6 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 				inst.ImagePath = new.ImagePath
 				inst.ImageType = new.ImageType
 				inst.ConfigMap = new.ConfigMap
-				inst.Flavor = new.Flavor
 				// TODO: update mapped ports if needed
 				if appInstApi.cache.NotifyCb != nil {
 					appInstApi.cache.NotifyCb(inst.GetKey())
@@ -232,4 +247,74 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		}
 		appInstApi.cache.Mux.Unlock()
 	}
+}
+
+func GetL4Proto(s string) (edgeproto.L4Proto, error) {
+	s = strings.ToLower(s)
+	switch s {
+	case "tcp":
+		return edgeproto.L4Proto_L4ProtoTCP, nil
+	case "udp":
+		return edgeproto.L4Proto_L4ProtoUDP, nil
+	}
+	return 0, fmt.Errorf("%s is not a supported L4 Protocol", s)
+}
+
+func parseAppPorts(ports string) ([]edgeproto.AppPort, error) {
+	appports := make([]edgeproto.AppPort, 0)
+	strs := strings.Split(ports, ",")
+	for _, str := range strs {
+		vals := strings.Split(str, ":")
+		if len(vals) != 2 {
+			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
+		}
+		proto, err := GetL4Proto(vals[0])
+		if err != nil {
+			return nil, err
+		}
+		port, err := strconv.ParseInt(vals[1], 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert port %s to integer: %s", vals[1], err)
+		}
+		if port < 1 || port > 65535 {
+			return nil, fmt.Errorf("Port %s out of range", vals[1])
+		}
+		p := edgeproto.AppPort{
+			Proto:        proto,
+			InternalPort: int32(port),
+		}
+		appports = append(appports, p)
+	}
+	return appports, nil
+}
+
+// GetClusterFlavorForFlavor finds the smallest cluster flavor whose
+// node flavor matches the passed in flavor.
+func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.ClusterFlavorKey, error) {
+	matchingFlavors := make([]*edgeproto.ClusterFlavor, 0)
+
+	clusterFlavorApi.cache.Mux.Lock()
+	defer clusterFlavorApi.cache.Mux.Unlock()
+	for _, val := range clusterFlavorApi.cache.Objs {
+		fmt.Printf("Matching %v and %v\n", val, flavorKey)
+		if val.NodeFlavor.Matches(flavorKey) {
+			matchingFlavors = append(matchingFlavors, val)
+		}
+	}
+	if len(matchingFlavors) == 0 {
+		return nil, fmt.Errorf("No cluster flavors matching flavor %s found", flavorKey.Name)
+	}
+	sort.Slice(matchingFlavors, func(i, j int) bool {
+		if matchingFlavors[i].MaxNodes < matchingFlavors[j].MaxNodes {
+			return true
+		}
+		if matchingFlavors[i].NumNodes < matchingFlavors[j].NumNodes {
+			return true
+		}
+		if matchingFlavors[i].NumMasters < matchingFlavors[j].NumMasters {
+			return true
+		}
+		return false
+	})
+	return &matchingFlavors[0].Key, nil
 }

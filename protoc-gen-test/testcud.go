@@ -77,8 +77,13 @@ func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, {{.Pkg}}.MatchIgnoreBackend(), {{.Pkg}}.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "{{.Name}} are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -172,15 +177,44 @@ func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi 
 	return &apiWrap
 }
 
+func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	switch test {
 {{- if not .ShowOnly}}
-func Internal{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
-	basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
+	case "cud":
+		basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
+{{- end}}
+	case "show":
+		basic{{.Name}}ShowTest(t, NewInternal{{.Name}}Api(api), testData)
+	}
 }
 
-func Client{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
-	basic{{.Name}}CudTest(t, NewClient{{.Name}}Api(api), testData)
+func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	switch test {
+{{- if not .ShowOnly}}
+	case "cud":
+		basic{{.Name}}CudTest(t, NewClient{{.Name}}Api(api), testData)
+{{- end}}
+	case "show":
+		basic{{.Name}}ShowTest(t, NewClient{{.Name}}Api(api), testData)
+	}
 }
 
+func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+	var err error
+	ctx := context.TODO()
+
+	show := Show{{.Name}}{}
+	show.Init()
+	filterNone := {{.Pkg}}.{{.Name}}{}
+	err = api.Show{{.Name}}(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
+
+{{- if not .ShowOnly}}
 func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
 	ctx := context.TODO()
@@ -191,28 +225,21 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.Create{{.Name}}(ctx, &obj)
-		assert.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
-	}
+	create{{.Name}}Data(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate {{.Name}}")
 
 	// test show all items
-	show := Show{{.Name}}{}
-	show.Init()
-	filterNone := {{.Pkg}}.{{.Name}}{}
-	err = api.Show{{.Name}}(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basic{{.Name}}ShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.Delete{{.Name}}(ctx, &testData[0])
 	assert.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
+	show := Show{{.Name}}{}
 	show.Init()
+	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData) - 1, len(show.Data), "Show count")
@@ -252,8 +279,25 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	assert.Nil(t, err, "Update back {{.Name}}")
 {{- end}}
 }
-{{- end}}
 
+func Internal{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	create{{.Name}}Data(t, NewInternal{{.Name}}Api(api), testData)
+}
+
+func Client{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	create{{.Name}}Data(t, NewClient{{.Name}}Api(api), testData)
+}
+
+func create{{.Name}}Data(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.Create{{.Name}}(ctx, &obj)
+		assert.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
+	}
+}
+{{- end}}
 `
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
