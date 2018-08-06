@@ -302,7 +302,7 @@ func ClusterSetFields() {
 	if ClusterFlagSet.Lookup("defaultflavor-name").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "3.1")
 	}
-	if ClusterFlagSet.Lookup("auto").Changed {
+	if ClusterNoConfigFlagSet.Lookup("auto").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "5")
 	}
 }
