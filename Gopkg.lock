@@ -8,21 +8,6 @@
   version = "v0.25.0"
 
 [[projects]]
-  branch = "master"
-  name = "github.com/Azure/go-ansiterm"
-  packages = [
-    ".",
-    "winterm"
-  ]
-  revision = "d6e3b3328b783f23731bc4d058875b0371ff8109"
-
-[[projects]]
-  name = "github.com/Sirupsen/logrus"
-  packages = ["."]
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
-
-[[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
@@ -63,8 +48,8 @@
     "mvcc/mvccpb",
     "pkg/types"
   ]
-  revision = "70c8726202dd91e482fb4029fd14af1d4ed1d5af"
-  version = "v3.3.5"
+  revision = "fca8add78a9d926166eb739b8e4a124434025ba3"
+  version = "v3.3.9"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -86,12 +71,9 @@
 
 [[projects]]
   name = "github.com/docker/docker"
-  packages = [
-    "pkg/term",
-    "pkg/term/windows"
-  ]
-  revision = "092cba3727bb9b4a2f0e922cd6c0f93ea270e363"
-  version = "v1.13.1"
+  packages = ["pkg/term"]
+  revision = "a8a31eff10544860d2188dddabdee4d727545796"
+  version = "v1.5.0"
 
 [[projects]]
   name = "github.com/docker/machine"
@@ -350,10 +332,10 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/rs/xid"
+  name = "github.com/sirupsen/logrus"
   packages = ["."]
-  revision = "2c7e97ce663ff82c49656bca3048df0fdd83c5f9"
-  version = "v1.2.0"
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
 
 [[projects]]
   name = "github.com/spf13/cobra"
@@ -703,6 +685,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4956f186a8f4f850b4e073a49191c4f6a065f7f19e0cbbffaf37273a2b56226b"
+  inputs-digest = "351025d4a936df104d00f2a80449707be90625c16f881cda56ebeb94a92c4e96"
   solver-name = "gps-cdcl"
   solver-version = 1
