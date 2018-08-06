@@ -699,52 +699,52 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("key-id").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.3")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-lat").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-lat").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-long").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-long").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.2")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-horizontalaccuracy").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-horizontalaccuracy").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.3")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-verticalaccuracy").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-verticalaccuracy").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.4")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-altitude").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-altitude").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.5")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-course").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-course").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.6")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-speed").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-speed").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.7")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-timestamp-seconds").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-seconds").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.1")
 	}
-	if AppInstFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
 	}
-	if AppInstFlagSet.Lookup("uri").Changed {
+	if AppInstNoConfigFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
-	if AppInstFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
+	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.1.1")
 	}
-	if AppInstFlagSet.Lookup("clusterinstkey-cloudletkey-operatorkey-name").Changed {
+	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-operatorkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.1.1")
 	}
-	if AppInstFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
+	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.2")
 	}
-	if AppInstFlagSet.Lookup("liveness").Changed {
+	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
 	}
-	if AppInstFlagSet.Lookup("imagepath").Changed {
+	if AppInstNoConfigFlagSet.Lookup("imagepath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "7")
 	}
-	if AppInstFlagSet.Lookup("imagetype").Changed {
+	if AppInstNoConfigFlagSet.Lookup("imagetype").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "8")
 	}
 	if AppInstFlagSet.Lookup("mappedports-proto").Changed {
@@ -756,13 +756,13 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("mappedports-publicport").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "9.3")
 	}
-	if AppInstFlagSet.Lookup("mappedpath").Changed {
+	if AppInstNoConfigFlagSet.Lookup("mappedpath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "10")
 	}
-	if AppInstFlagSet.Lookup("configmap").Changed {
+	if AppInstNoConfigFlagSet.Lookup("configmap").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "11")
 	}
-	if AppInstFlagSet.Lookup("flavor-name").Changed {
+	if AppInstNoConfigFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
 	if AppInstFlagSet.Lookup("accesslayer").Changed {

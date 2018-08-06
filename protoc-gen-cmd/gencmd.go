@@ -33,6 +33,7 @@ type GenCmd struct {
 	inMessages         map[string]*generator.Descriptor
 	enumArgs           map[string][]*EnumArg
 	hideTags           map[string]struct{}
+	noconfigFields     map[string]struct{}
 	importTime         bool
 	importStrconv      bool
 	importStrings      bool
@@ -122,6 +123,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
 	g.hideTags = make(map[string]struct{})
+	g.noconfigFields = make(map[string]struct{})
 	g.packageName = *file.FileDescriptorProto.Package
 	g.support.InitFile()
 
@@ -474,6 +476,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 		}
 		if _, found := noconfig[hierField]; found || parentNoConfig {
 			fargs.MsgName = msgName + "NoConfig"
+			g.noconfigFields[hierField] = struct{}{}
 		}
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -584,12 +587,18 @@ func (g *GenCmd) generateSetFields(msgName string, parents, nums []string, desc 
 		}
 		num := fmt.Sprintf("%d", *field.Number)
 
+		hierField := strings.Join(append(parents, name), ".")
+		flagSet := "FlagSet"
+		if _, found := g.noconfigFields[hierField]; found {
+			flagSet = "NoConfigFlagSet"
+		}
+
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
 			g.generateSetFields(msgName, append(parents, name), append(nums, num), subDesc, append(visited, desc))
 		default:
-			g.P("if ", msgName, "FlagSet.Lookup(\"", argName(append(parents, name)), "\").Changed {")
+			g.P("if ", msgName, flagSet, ".Lookup(\"", argName(append(parents, name)), "\").Changed {")
 			g.P(msgName, "In.Fields = append(", msgName, "In.Fields, \"", strings.Join(append(nums, num), "."), "\")")
 			g.P("}")
 		}

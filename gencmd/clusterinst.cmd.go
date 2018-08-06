@@ -479,13 +479,13 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("key-cloudletkey-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.2.2")
 	}
-	if ClusterInstFlagSet.Lookup("flavor-name").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("flavor-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "3.1")
 	}
-	if ClusterInstFlagSet.Lookup("liveness").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("liveness").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "9")
 	}
-	if ClusterInstFlagSet.Lookup("auto").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("auto").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "10")
 	}
 }
