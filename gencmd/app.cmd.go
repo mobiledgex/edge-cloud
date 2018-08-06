@@ -418,7 +418,7 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("key-version").Changed {
 		AppIn.Fields = append(AppIn.Fields, "2.3")
 	}
-	if AppFlagSet.Lookup("imagepath").Changed {
+	if AppNoConfigFlagSet.Lookup("imagepath").Changed {
 		AppIn.Fields = append(AppIn.Fields, "4")
 	}
 	if AppFlagSet.Lookup("imagetype").Changed {
