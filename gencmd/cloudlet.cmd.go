@@ -702,25 +702,25 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("location-long").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.2")
 	}
-	if CloudletFlagSet.Lookup("location-horizontalaccuracy").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-horizontalaccuracy").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.3")
 	}
-	if CloudletFlagSet.Lookup("location-verticalaccuracy").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-verticalaccuracy").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.4")
 	}
 	if CloudletFlagSet.Lookup("location-altitude").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.5")
 	}
-	if CloudletFlagSet.Lookup("location-course").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-course").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.6")
 	}
-	if CloudletFlagSet.Lookup("location-speed").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-speed").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.7")
 	}
-	if CloudletFlagSet.Lookup("location-timestamp-seconds").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-timestamp-seconds").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.1")
 	}
-	if CloudletFlagSet.Lookup("location-timestamp-nanos").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-timestamp-nanos").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
 	}
 	if CloudletFlagSet.Lookup("ipsupport").Changed {
