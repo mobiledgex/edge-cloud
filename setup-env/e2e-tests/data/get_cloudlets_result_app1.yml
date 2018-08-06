@@ -4,598 +4,598 @@ cloudlets:
   gpslocation:
     long: -175
   distance: 9020.118223772786
-  uri: app1.cloudlet-1.mobiledgex.net
+  uri: cloudlet-1.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-10
   gpslocation:
     long: -166
   distance: 8221.379797628093
-  uri: app1.cloudlet-10.mobiledgex.net
+  uri: cloudlet-10.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-100
   gpslocation:
     long: -76
   distance: 4505.1469358956565
-  uri: app1.cloudlet-100.mobiledgex.net
+  uri: cloudlet-100.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-11
   gpslocation:
     long: -165
   distance: 8133.518420832045
-  uri: app1.cloudlet-11.mobiledgex.net
+  uri: cloudlet-11.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-12
   gpslocation:
     long: -164
   distance: 8045.878833542605
-  uri: app1.cloudlet-12.mobiledgex.net
+  uri: cloudlet-12.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-13
   gpslocation:
     long: -163
   distance: 7958.474075335188
-  uri: app1.cloudlet-13.mobiledgex.net
+  uri: cloudlet-13.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-14
   gpslocation:
     long: -162
   distance: 7871.31755874705
-  uri: app1.cloudlet-14.mobiledgex.net
+  uri: cloudlet-14.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-15
   gpslocation:
     long: -161
   distance: 7784.42309252711
-  uri: app1.cloudlet-15.mobiledgex.net
+  uri: cloudlet-15.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-16
   gpslocation:
     long: -160
   distance: 7697.804905753897
-  uri: app1.cloudlet-16.mobiledgex.net
+  uri: cloudlet-16.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-17
   gpslocation:
     long: -159
   distance: 7611.477672861311
-  uri: app1.cloudlet-17.mobiledgex.net
+  uri: cloudlet-17.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-18
   gpslocation:
     long: -158
   distance: 7525.456539610637
-  uri: app1.cloudlet-18.mobiledgex.net
+  uri: cloudlet-18.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-19
   gpslocation:
     long: -157
   distance: 7439.75715004554
-  uri: app1.cloudlet-19.mobiledgex.net
+  uri: cloudlet-19.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-2
   gpslocation:
     long: -174
   distance: 8930.796498002217
-  uri: app1.cloudlet-2.mobiledgex.net
+  uri: cloudlet-2.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-20
   gpslocation:
     long: -156
   distance: 7354.395674464356
-  uri: app1.cloudlet-20.mobiledgex.net
+  uri: cloudlet-20.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-21
   gpslocation:
     long: -155
   distance: 7269.388838441056
-  uri: app1.cloudlet-21.mobiledgex.net
+  uri: cloudlet-21.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-22
   gpslocation:
     long: -154
   distance: 7184.753952922469
-  uri: app1.cloudlet-22.mobiledgex.net
+  uri: cloudlet-22.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-23
   gpslocation:
     long: -153
   distance: 7100.508945424692
-  uri: app1.cloudlet-23.mobiledgex.net
+  uri: cloudlet-23.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-24
   gpslocation:
     long: -152
   distance: 7016.67239234581
-  uri: app1.cloudlet-24.mobiledgex.net
+  uri: cloudlet-24.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-25
   gpslocation:
     long: -151
   distance: 6933.263552405183
-  uri: app1.cloudlet-25.mobiledgex.net
+  uri: cloudlet-25.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-26
   gpslocation:
     long: -150
   distance: 6850.302401211158
-  uri: app1.cloudlet-26.mobiledgex.net
+  uri: cloudlet-26.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-27
   gpslocation:
     long: -149
   distance: 6767.809666949192
-  uri: app1.cloudlet-27.mobiledgex.net
+  uri: cloudlet-27.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-28
   gpslocation:
     long: -148
   distance: 6685.806867170595
-  uri: app1.cloudlet-28.mobiledgex.net
+  uri: cloudlet-28.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-29
   gpslocation:
     long: -147
   distance: 6604.316346648359
-  uri: app1.cloudlet-29.mobiledgex.net
+  uri: cloudlet-29.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-3
   gpslocation:
     long: -173
   distance: 8841.592529594249
-  uri: app1.cloudlet-3.mobiledgex.net
+  uri: cloudlet-3.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-30
   gpslocation:
     long: -146
   distance: 6523.36131625046
-  uri: app1.cloudlet-30.mobiledgex.net
+  uri: cloudlet-30.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-31
   gpslocation:
     long: -145
   distance: 6442.9658927623395
-  uri: app1.cloudlet-31.mobiledgex.net
+  uri: cloudlet-31.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-32
   gpslocation:
     long: -144
   distance: 6363.155139568704
-  uri: app1.cloudlet-32.mobiledgex.net
+  uri: cloudlet-32.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-33
   gpslocation:
     long: -143
   distance: 6283.955108080063
-  uri: app1.cloudlet-33.mobiledgex.net
+  uri: cloudlet-33.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-34
   gpslocation:
     long: -142
   distance: 6205.392879761032
-  uri: app1.cloudlet-34.mobiledgex.net
+  uri: cloudlet-34.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-35
   gpslocation:
     long: -141
   distance: 6127.4966085852775
-  uri: app1.cloudlet-35.mobiledgex.net
+  uri: cloudlet-35.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-36
   gpslocation:
     long: -140
   distance: 6050.295563705469
-  uri: app1.cloudlet-36.mobiledgex.net
+  uri: cloudlet-36.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-37
   gpslocation:
     long: -139
   distance: 5973.820172085597
-  uri: app1.cloudlet-37.mobiledgex.net
+  uri: cloudlet-37.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-38
   gpslocation:
     long: -138
   distance: 5898.102060796972
-  uri: app1.cloudlet-38.mobiledgex.net
+  uri: cloudlet-38.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-39
   gpslocation:
     long: -137
   distance: 5823.174098628087
-  uri: app1.cloudlet-39.mobiledgex.net
+  uri: cloudlet-39.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-4
   gpslocation:
     long: -172
   distance: 8752.516924767822
-  uri: app1.cloudlet-4.mobiledgex.net
+  uri: cloudlet-4.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-40
   gpslocation:
     long: -136
   distance: 5749.070436601804
-  uri: app1.cloudlet-40.mobiledgex.net
+  uri: cloudlet-40.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-41
   gpslocation:
     long: -135
   distance: 5675.8265469310445
-  uri: app1.cloudlet-41.mobiledgex.net
+  uri: cloudlet-41.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-42
   gpslocation:
     long: -134
   distance: 5603.479259876133
-  uri: app1.cloudlet-42.mobiledgex.net
+  uri: cloudlet-42.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-43
   gpslocation:
     long: -133
   distance: 5532.066797893307
-  uri: app1.cloudlet-43.mobiledgex.net
+  uri: cloudlet-43.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-44
   gpslocation:
     long: -132
   distance: 5461.628806384824
-  uri: app1.cloudlet-44.mobiledgex.net
+  uri: cloudlet-44.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-45
   gpslocation:
     long: -131
   distance: 5392.206380277176
-  uri: app1.cloudlet-45.mobiledgex.net
+  uri: cloudlet-45.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-46
   gpslocation:
     long: -130
   distance: 5323.842085565724
-  uri: app1.cloudlet-46.mobiledgex.net
+  uri: cloudlet-46.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-47
   gpslocation:
     long: -129
   distance: 5256.579974872906
-  uri: app1.cloudlet-47.mobiledgex.net
+  uri: cloudlet-47.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-48
   gpslocation:
     long: -128
   distance: 5190.465595974288
-  uri: app1.cloudlet-48.mobiledgex.net
+  uri: cloudlet-48.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-49
   gpslocation:
     long: -127
   distance: 5125.545992154237
-  uri: app1.cloudlet-49.mobiledgex.net
+  uri: cloudlet-49.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-5
   gpslocation:
     long: -171
   distance: 8663.580485753291
-  uri: app1.cloudlet-5.mobiledgex.net
+  uri: cloudlet-5.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-50
   gpslocation:
     long: -126
   distance: 5061.869693163341
-  uri: app1.cloudlet-50.mobiledgex.net
+  uri: cloudlet-50.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-51
   gpslocation:
     long: -125
   distance: 4999.486695465828
-  uri: app1.cloudlet-51.mobiledgex.net
+  uri: cloudlet-51.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-52
   gpslocation:
     long: -124
   distance: 4938.4484303909885
-  uri: app1.cloudlet-52.mobiledgex.net
+  uri: cloudlet-52.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-53
   gpslocation:
     long: -123
   distance: 4878.807718742244
-  uri: app1.cloudlet-53.mobiledgex.net
+  uri: cloudlet-53.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-54
   gpslocation:
     long: -122
   distance: 4820.6187103760885
-  uri: app1.cloudlet-54.mobiledgex.net
+  uri: cloudlet-54.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-55
   gpslocation:
     long: -121
   distance: 4763.9368072463785
-  uri: app1.cloudlet-55.mobiledgex.net
+  uri: cloudlet-55.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-56
   gpslocation:
     long: -120
   distance: 4708.818568423599
-  uri: app1.cloudlet-56.mobiledgex.net
+  uri: cloudlet-56.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-57
   gpslocation:
     long: -119
   distance: 4655.321595650497
-  uri: app1.cloudlet-57.mobiledgex.net
+  uri: cloudlet-57.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-58
   gpslocation:
     long: -118
   distance: 4603.504398091852
-  uri: app1.cloudlet-58.mobiledgex.net
+  uri: cloudlet-58.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-59
   gpslocation:
     long: -117
   distance: 4553.426235083992
-  uri: app1.cloudlet-59.mobiledgex.net
+  uri: cloudlet-59.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-6
   gpslocation:
     long: -170
   distance: 8574.794228073193
-  uri: app1.cloudlet-6.mobiledgex.net
+  uri: cloudlet-6.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-60
   gpslocation:
     long: -116
   distance: 4505.1469358956565
-  uri: app1.cloudlet-60.mobiledgex.net
+  uri: cloudlet-60.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-61
   gpslocation:
     long: -115
   distance: 4458.726695781393
-  uri: app1.cloudlet-61.mobiledgex.net
+  uri: cloudlet-61.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-62
   gpslocation:
     long: -114
   distance: 4414.2258479463635
-  uri: app1.cloudlet-62.mobiledgex.net
+  uri: cloudlet-62.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-63
   gpslocation:
     long: -113
   distance: 4371.704611449468
-  uri: app1.cloudlet-63.mobiledgex.net
+  uri: cloudlet-63.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-64
   gpslocation:
     long: -112
   distance: 4331.222815549596
-  uri: app1.cloudlet-64.mobiledgex.net
+  uri: cloudlet-64.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-65
   gpslocation:
     long: -111
   distance: 4292.839601544164
-  uri: app1.cloudlet-65.mobiledgex.net
+  uri: cloudlet-65.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-66
   gpslocation:
     long: -110
   distance: 4256.613103752215
-  uri: app1.cloudlet-66.mobiledgex.net
+  uri: cloudlet-66.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-67
   gpslocation:
     long: -109
   distance: 4222.6001119444
-  uri: app1.cloudlet-67.mobiledgex.net
+  uri: cloudlet-67.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-68
   gpslocation:
     long: -108
   distance: 4190.855718202691
-  uri: app1.cloudlet-68.mobiledgex.net
+  uri: cloudlet-68.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-69
   gpslocation:
     long: -107
   distance: 4161.432951882301
-  uri: app1.cloudlet-69.mobiledgex.net
+  uri: cloudlet-69.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-7
   gpslocation:
     long: -169
   distance: 8486.16939832425
-  uri: app1.cloudlet-7.mobiledgex.net
+  uri: cloudlet-7.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-70
   gpslocation:
     long: -106
   distance: 4134.382407021683
-  uri: app1.cloudlet-70.mobiledgex.net
+  uri: cloudlet-70.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-71
   gpslocation:
     long: -105
   distance: 4109.7518671744265
-  uri: app1.cloudlet-71.mobiledgex.net
+  uri: cloudlet-71.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-72
   gpslocation:
     long: -104
   distance: 4087.585933187737
-  uri: app1.cloudlet-72.mobiledgex.net
+  uri: cloudlet-72.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-73
   gpslocation:
     long: -103
   distance: 4067.925659893704
-  uri: app1.cloudlet-73.mobiledgex.net
+  uri: cloudlet-73.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-74
   gpslocation:
     long: -102
   distance: 4050.8082079802502
-  uri: app1.cloudlet-74.mobiledgex.net
+  uri: cloudlet-74.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-75
   gpslocation:
     long: -101
   distance: 4036.2665174405383
-  uri: app1.cloudlet-75.mobiledgex.net
+  uri: cloudlet-75.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-76
   gpslocation:
     long: -100
   distance: 4024.3290089401717
-  uri: app1.cloudlet-76.mobiledgex.net
+  uri: cloudlet-76.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-77
   gpslocation:
     long: -99
   distance: 4015.0193191760295
-  uri: app1.cloudlet-77.mobiledgex.net
+  uri: cloudlet-77.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-78
   gpslocation:
     long: -98
   distance: 4008.3560758237727
-  uri: app1.cloudlet-78.mobiledgex.net
+  uri: cloudlet-78.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-79
   gpslocation:
     long: -97
   distance: 4004.352716988749
-  uri: app1.cloudlet-79.mobiledgex.net
+  uri: cloudlet-79.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-8
   gpslocation:
     long: -168
   distance: 8397.717492500102
-  uri: app1.cloudlet-8.mobiledgex.net
+  uri: cloudlet-8.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-80
   gpslocation:
     long: -96
   distance: 4003.017359204114
-  uri: app1.cloudlet-80.mobiledgex.net
+  uri: cloudlet-80.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-81
   gpslocation:
     long: -95
   distance: 4004.352716988749
-  uri: app1.cloudlet-81.mobiledgex.net
+  uri: cloudlet-81.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-82
   gpslocation:
     long: -94
   distance: 4008.3560758237727
-  uri: app1.cloudlet-82.mobiledgex.net
+  uri: cloudlet-82.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-83
   gpslocation:
     long: -93
   distance: 4015.0193191760295
-  uri: app1.cloudlet-83.mobiledgex.net
+  uri: cloudlet-83.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-84
   gpslocation:
     long: -92
   distance: 4024.3290089401717
-  uri: app1.cloudlet-84.mobiledgex.net
+  uri: cloudlet-84.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-85
   gpslocation:
     long: -91
   distance: 4036.2665174405383
-  uri: app1.cloudlet-85.mobiledgex.net
+  uri: cloudlet-85.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-86
   gpslocation:
     long: -90
   distance: 4050.8082079802502
-  uri: app1.cloudlet-86.mobiledgex.net
+  uri: cloudlet-86.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-87
   gpslocation:
     long: -89
   distance: 4067.925659893704
-  uri: app1.cloudlet-87.mobiledgex.net
+  uri: cloudlet-87.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-88
   gpslocation:
     long: -88
   distance: 4087.585933187737
-  uri: app1.cloudlet-88.mobiledgex.net
+  uri: cloudlet-88.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-89
   gpslocation:
     long: -87
   distance: 4109.7518671744265
-  uri: app1.cloudlet-89.mobiledgex.net
+  uri: cloudlet-89.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-9
   gpslocation:
     long: -167
   distance: 8309.450274894869
-  uri: app1.cloudlet-9.mobiledgex.net
+  uri: cloudlet-9.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-90
   gpslocation:
     long: -86
   distance: 4134.382407021683
-  uri: app1.cloudlet-90.mobiledgex.net
+  uri: cloudlet-90.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-91
   gpslocation:
     long: -85
   distance: 4161.432951882301
-  uri: app1.cloudlet-91.mobiledgex.net
+  uri: cloudlet-91.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-92
   gpslocation:
     long: -84
   distance: 4190.855718202691
-  uri: app1.cloudlet-92.mobiledgex.net
+  uri: cloudlet-92.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-93
   gpslocation:
     long: -83
   distance: 4222.6001119444
-  uri: app1.cloudlet-93.mobiledgex.net
+  uri: cloudlet-93.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-94
   gpslocation:
     long: -82
   distance: 4256.613103752215
-  uri: app1.cloudlet-94.mobiledgex.net
+  uri: cloudlet-94.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-95
   gpslocation:
     long: -81
   distance: 4292.839601544164
-  uri: app1.cloudlet-95.mobiledgex.net
+  uri: cloudlet-95.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-96
   gpslocation:
     long: -80
   distance: 4331.222815549596
-  uri: app1.cloudlet-96.mobiledgex.net
+  uri: cloudlet-96.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-97
   gpslocation:
     long: -79
   distance: 4371.704611449468
-  uri: app1.cloudlet-97.mobiledgex.net
+  uri: cloudlet-97.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-98
   gpslocation:
     long: -78
   distance: 4414.2258479463635
-  uri: app1.cloudlet-98.mobiledgex.net
+  uri: cloudlet-98.OP1.mobiledgex.net
 - carriername: OP1
   cloudletname: cloudlet-99
   gpslocation:
     long: -77
   distance: 4458.726695781393
-  uri: app1.cloudlet-99.mobiledgex.net
+  uri: cloudlet-99.OP1.mobiledgex.net

@@ -63,8 +63,13 @@ func (x *ShowOperator) CheckFound(obj *edgeproto.Operator) bool {
 func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Operator %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Operator are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -155,14 +160,39 @@ func NewClientOperatorApi(api edgeproto.OperatorApiClient) *OperatorCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalOperatorCudTest(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
-	basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
+
+func InternalOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	switch test {
+	case "cud":
+		basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
+	case "show":
+		basicOperatorShowTest(t, NewInternalOperatorApi(api), testData)
+	}
 }
 
-func ClientOperatorCudTest(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
-	basicOperatorCudTest(t, NewClientOperatorApi(api), testData)
+func ClientOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+	switch test {
+	case "cud":
+		basicOperatorCudTest(t, NewClientOperatorApi(api), testData)
+	case "show":
+		basicOperatorShowTest(t, NewClientOperatorApi(api), testData)
+	}
 }
 
+func basicOperatorShowTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowOperator{}
+	show.Init()
+	filterNone := edgeproto.Operator{}
+	err = api.ShowOperator(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
 	ctx := context.TODO()
@@ -173,28 +203,21 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
-	}
+	createOperatorData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateOperator(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Operator")
 
 	// test show all items
-	show := ShowOperator{}
-	show.Init()
-	filterNone := edgeproto.Operator{}
-	err = api.ShowOperator(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicOperatorShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteOperator(ctx, &testData[0])
 	assert.Nil(t, err, "delete Operator %s", testData[0].Key.GetKeyString())
+	show := ShowOperator{}
 	show.Init()
+	filterNone := edgeproto.Operator{}
 	err = api.ShowOperator(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -211,4 +234,22 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	_, err = api.CreateOperator(ctx, &bad)
 	assert.NotNil(t, err, "Create Operator with no key info")
 
+}
+
+func InternalOperatorCreate(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	createOperatorData(t, NewInternalOperatorApi(api), testData)
+}
+
+func ClientOperatorCreate(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+	createOperatorData(t, NewClientOperatorApi(api), testData)
+}
+
+func createOperatorData(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateOperator(ctx, &obj)
+		assert.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
+	}
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
@@ -31,13 +29,14 @@ func (s *AppInstInfoApi) ShowAppInstInfo(in *edgeproto.AppInstInfo, cb edgeproto
 }
 
 func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, notifyId int64) {
-	if !appInstApi.HasKey(in.GetKey()) {
-		fmt.Printf("app inst not found %v\n", in.GetKey())
-		return
-	}
-	// for now assume all fields have been specified
-	in.Fields = edgeproto.AppInstInfoAllFields
-	s.store.Put(in, nil)
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !appInstApi.store.STMGet(stm, in.GetKey(), nil) {
+			return nil
+		}
+		in.Fields = nil
+		s.store.STMPut(stm, in)
+		return nil
+	})
 }
 
 func (s *AppInstInfoApi) internalDelete(stm concurrency.STM, key *edgeproto.AppInstKey) {

@@ -10,14 +10,17 @@ import (
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
-	Operators    []Operator    `yaml:"operators"`
-	Cloudlets    []Cloudlet    `yaml:"cloudlets"`
-	Flavors      []Flavor      `yaml:"flavors"`
-	Clusters     []Cluster     `yaml:"clusters"`
-	ClusterInsts []ClusterInst `yaml:"clusterinsts"`
-	Developers   []Developer   `yaml:"developers"`
-	Applications []App         `yaml:"apps"`
-	AppInstances []AppInst     `yaml:"appinstances"`
+	Operators      []Operator      `yaml:"operators"`
+	Cloudlets      []Cloudlet      `yaml:"cloudlets"`
+	Flavors        []Flavor        `yaml:"flavors"`
+	ClusterFlavors []ClusterFlavor `yaml:"clusterflavors"`
+	Clusters       []Cluster       `yaml:"clusters"`
+	ClusterInsts   []ClusterInst   `yaml:"clusterinsts"`
+	Developers     []Developer     `yaml:"developers"`
+	Applications   []App           `yaml:"apps"`
+	AppInstances   []AppInst       `yaml:"appinstances"`
+	CloudletInfos  []CloudletInfo  `yaml:"cloudletinfos"`
+	AppInstInfos   []AppInstInfo   `yaml:"appinstinfos"`
 }
 
 // sort each slice by key
@@ -46,10 +49,15 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.Flavors[:], func(i, j int) bool {
 		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
 	})
-	sort.Slice(a.Operators[:], func(i, j int) bool {
-		return a.Operators[i].Key.GetKeyString() < a.Operators[j].Key.GetKeyString()
+	sort.Slice(a.ClusterFlavors[:], func(i, j int) bool {
+		return a.ClusterFlavors[i].Key.GetKeyString() < a.ClusterFlavors[j].Key.GetKeyString()
 	})
-
+	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
+		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
+	})
+	sort.Slice(a.AppInstInfos[:], func(i, j int) bool {
+		return a.AppInstInfos[i].Key.GetKeyString() < a.AppInstInfos[j].Key.GetKeyString()
+	})
 }
 
 // Validate functions to validate user input
@@ -109,6 +117,17 @@ func (key *FlavorKey) Validate() error {
 }
 
 func (s *Flavor) Validate(fields map[string]struct{}) error {
+	return s.GetKey().Validate()
+}
+
+func (key *ClusterFlavorKey) Validate() error {
+	if !util.ValidName(key.Name) {
+		return errors.New("Invalid cluster flavor name")
+	}
+	return nil
+}
+
+func (s *ClusterFlavor) Validate(fields map[string]struct{}) error {
 	return s.GetKey().Validate()
 }
 
@@ -175,6 +194,14 @@ func (s *AppInstInfo) Validate(fields map[string]struct{}) error {
 }
 
 func (s *ClusterInstInfo) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (s *CloudletRefs) Validate(fields map[string]struct{}) error {
+	return nil
+}
+
+func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 

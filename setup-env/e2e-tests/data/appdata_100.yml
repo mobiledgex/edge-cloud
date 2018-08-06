@@ -14,6 +14,27 @@ flavors:
   disk: 2
 
 
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+
 operators:
 - key:
     name: OP1
@@ -26,6 +47,8 @@ cloudlets:
   location:
     lat: 0
     long: -175
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -36,6 +59,8 @@ cloudlets:
   location:
     lat: 0
     long: -174
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -46,6 +71,8 @@ cloudlets:
   location:
     lat: 0
     long: -173
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -56,6 +83,8 @@ cloudlets:
   location:
     lat: 0
     long: -172
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -66,6 +95,8 @@ cloudlets:
   location:
     lat: 0
     long: -171
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -76,6 +107,8 @@ cloudlets:
   location:
     lat: 0
     long: -170
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -86,6 +119,8 @@ cloudlets:
   location:
     lat: 0
     long: -169
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -96,6 +131,8 @@ cloudlets:
   location:
     lat: 0
     long: -168
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -106,6 +143,8 @@ cloudlets:
   location:
     lat: 0
     long: -167
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -116,6 +155,8 @@ cloudlets:
   location:
     lat: 0
     long: -166
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -126,6 +167,8 @@ cloudlets:
   location:
     lat: 0
     long: -165
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -136,6 +179,8 @@ cloudlets:
   location:
     lat: 0
     long: -164
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -146,6 +191,8 @@ cloudlets:
   location:
     lat: 0
     long: -163
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -156,6 +203,8 @@ cloudlets:
   location:
     lat: 0
     long: -162
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -166,6 +215,8 @@ cloudlets:
   location:
     lat: 0
     long: -161
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -176,6 +227,8 @@ cloudlets:
   location:
     lat: 0
     long: -160
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -186,6 +239,8 @@ cloudlets:
   location:
     lat: 0
     long: -159
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -196,6 +251,8 @@ cloudlets:
   location:
     lat: 0
     long: -158
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -206,6 +263,8 @@ cloudlets:
   location:
     lat: 0
     long: -157
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -216,6 +275,8 @@ cloudlets:
   location:
     lat: 0
     long: -156
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -226,6 +287,8 @@ cloudlets:
   location:
     lat: 0
     long: -155
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -236,6 +299,8 @@ cloudlets:
   location:
     lat: 0
     long: -154
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -246,6 +311,8 @@ cloudlets:
   location:
     lat: 0
     long: -153
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -256,6 +323,8 @@ cloudlets:
   location:
     lat: 0
     long: -152
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -266,6 +335,8 @@ cloudlets:
   location:
     lat: 0
     long: -151
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -276,6 +347,8 @@ cloudlets:
   location:
     lat: 0
     long: -150
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -286,6 +359,8 @@ cloudlets:
   location:
     lat: 0
     long: -149
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -296,6 +371,8 @@ cloudlets:
   location:
     lat: 0
     long: -148
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -306,6 +383,8 @@ cloudlets:
   location:
     lat: 0
     long: -147
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -316,6 +395,8 @@ cloudlets:
   location:
     lat: 0
     long: -146
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -326,6 +407,8 @@ cloudlets:
   location:
     lat: 0
     long: -145
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -336,6 +419,8 @@ cloudlets:
   location:
     lat: 0
     long: -144
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -346,6 +431,8 @@ cloudlets:
   location:
     lat: 0
     long: -143
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -356,6 +443,8 @@ cloudlets:
   location:
     lat: 0
     long: -142
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -366,6 +455,8 @@ cloudlets:
   location:
     lat: 0
     long: -141
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -376,6 +467,8 @@ cloudlets:
   location:
     lat: 0
     long: -140
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -386,6 +479,8 @@ cloudlets:
   location:
     lat: 0
     long: -139
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -396,6 +491,8 @@ cloudlets:
   location:
     lat: 0
     long: -138
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -406,6 +503,8 @@ cloudlets:
   location:
     lat: 0
     long: -137
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -416,6 +515,8 @@ cloudlets:
   location:
     lat: 0
     long: -136
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -426,6 +527,8 @@ cloudlets:
   location:
     lat: 0
     long: -135
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -436,6 +539,8 @@ cloudlets:
   location:
     lat: 0
     long: -134
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -446,6 +551,8 @@ cloudlets:
   location:
     lat: 0
     long: -133
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -456,6 +563,8 @@ cloudlets:
   location:
     lat: 0
     long: -132
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -466,6 +575,8 @@ cloudlets:
   location:
     lat: 0
     long: -131
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -476,6 +587,8 @@ cloudlets:
   location:
     lat: 0
     long: -130
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -486,6 +599,8 @@ cloudlets:
   location:
     lat: 0
     long: -129
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -496,6 +611,8 @@ cloudlets:
   location:
     lat: 0
     long: -128
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -506,6 +623,8 @@ cloudlets:
   location:
     lat: 0
     long: -127
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -516,6 +635,8 @@ cloudlets:
   location:
     lat: 0
     long: -126
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -526,6 +647,8 @@ cloudlets:
   location:
     lat: 0
     long: -125
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -536,6 +659,8 @@ cloudlets:
   location:
     lat: 0
     long: -124
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -546,6 +671,8 @@ cloudlets:
   location:
     lat: 0
     long: -123
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -556,6 +683,8 @@ cloudlets:
   location:
     lat: 0
     long: -122
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -566,6 +695,8 @@ cloudlets:
   location:
     lat: 0
     long: -121
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -576,6 +707,8 @@ cloudlets:
   location:
     lat: 0
     long: -120
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -586,6 +719,8 @@ cloudlets:
   location:
     lat: 0
     long: -119
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -596,6 +731,8 @@ cloudlets:
   location:
     lat: 0
     long: -118
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -606,6 +743,8 @@ cloudlets:
   location:
     lat: 0
     long: -117
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -616,6 +755,8 @@ cloudlets:
   location:
     lat: 0
     long: -116
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -626,6 +767,8 @@ cloudlets:
   location:
     lat: 0
     long: -115
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -636,6 +779,8 @@ cloudlets:
   location:
     lat: 0
     long: -114
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -646,6 +791,8 @@ cloudlets:
   location:
     lat: 0
     long: -113
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -656,6 +803,8 @@ cloudlets:
   location:
     lat: 0
     long: -112
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -666,6 +815,8 @@ cloudlets:
   location:
     lat: 0
     long: -111
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -676,6 +827,8 @@ cloudlets:
   location:
     lat: 0
     long: -110
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -686,6 +839,8 @@ cloudlets:
   location:
     lat: 0
     long: -109
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -696,6 +851,8 @@ cloudlets:
   location:
     lat: 0
     long: -108
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -706,6 +863,8 @@ cloudlets:
   location:
     lat: 0
     long: -107
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -716,6 +875,8 @@ cloudlets:
   location:
     lat: 0
     long: -106
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -726,6 +887,8 @@ cloudlets:
   location:
     lat: 0
     long: -105
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -736,6 +899,8 @@ cloudlets:
   location:
     lat: 0
     long: -104
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -746,6 +911,8 @@ cloudlets:
   location:
     lat: 0
     long: -103
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -756,6 +923,8 @@ cloudlets:
   location:
     lat: 0
     long: -102
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -766,6 +935,8 @@ cloudlets:
   location:
     lat: 0
     long: -101
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -776,6 +947,8 @@ cloudlets:
   location:
     lat: 0
     long: -100
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -786,6 +959,8 @@ cloudlets:
   location:
     lat: 0
     long: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -796,6 +971,8 @@ cloudlets:
   location:
     lat: 0
     long: -98
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -806,6 +983,8 @@ cloudlets:
   location:
     lat: 0
     long: -97
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -816,6 +995,8 @@ cloudlets:
   location:
     lat: 0
     long: -96
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -826,6 +1007,8 @@ cloudlets:
   location:
     lat: 0
     long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -836,6 +1019,8 @@ cloudlets:
   location:
     lat: 0
     long: -94
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -846,6 +1031,8 @@ cloudlets:
   location:
     lat: 0
     long: -93
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -856,6 +1043,8 @@ cloudlets:
   location:
     lat: 0
     long: -92
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -866,6 +1055,8 @@ cloudlets:
   location:
     lat: 0
     long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -876,6 +1067,8 @@ cloudlets:
   location:
     lat: 0
     long: -90
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -886,6 +1079,8 @@ cloudlets:
   location:
     lat: 0
     long: -89
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -896,6 +1091,8 @@ cloudlets:
   location:
     lat: 0
     long: -88
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -906,6 +1103,8 @@ cloudlets:
   location:
     lat: 0
     long: -87
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -916,6 +1115,8 @@ cloudlets:
   location:
     lat: 0
     long: -86
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -926,6 +1127,8 @@ cloudlets:
   location:
     lat: 0
     long: -85
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -936,6 +1139,8 @@ cloudlets:
   location:
     lat: 0
     long: -84
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -946,6 +1151,8 @@ cloudlets:
   location:
     lat: 0
     long: -83
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -956,6 +1163,8 @@ cloudlets:
   location:
     lat: 0
     long: -82
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -966,6 +1175,8 @@ cloudlets:
   location:
     lat: 0
     long: -81
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -976,6 +1187,8 @@ cloudlets:
   location:
     lat: 0
     long: -80
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -986,6 +1199,8 @@ cloudlets:
   location:
     lat: 0
     long: -79
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -996,6 +1211,8 @@ cloudlets:
   location:
     lat: 0
     long: -78
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -1006,6 +1223,8 @@ cloudlets:
   location:
     lat: 0
     long: -77
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 - key:
@@ -1016,6 +1235,1008 @@ cloudlets:
   location:
     lat: 0
     long: -76
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+cloudletinfos:
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-1
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-2
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-3
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-4
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-5
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-6
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-7
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-8
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-9
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-10
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-11
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-12
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-13
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-14
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-15
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-16
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-17
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-18
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-19
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-20
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-21
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-22
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-23
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-24
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-25
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-26
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-27
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-28
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-29
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-30
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-31
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-32
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-33
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-34
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-35
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-36
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-37
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-38
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-39
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-40
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-41
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-42
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-43
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-44
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-45
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-46
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-47
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-48
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-49
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-50
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-51
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-52
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-53
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-54
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-55
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-56
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-57
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-58
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-59
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-60
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-61
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-62
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-63
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-64
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-65
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-66
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-67
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-68
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-69
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-70
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-71
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-72
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-73
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-74
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-75
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-76
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-77
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-78
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-79
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-80
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-81
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-82
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-83
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-84
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-85
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-86
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-87
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-88
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-89
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-90
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-91
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-92
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-93
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-94
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-95
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-96
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-97
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-98
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-99
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+
+
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-100
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
 
 
 developers:
@@ -1033,7 +2254,7 @@ apps:
     name: app1
     version : "1.0"
   imagetype: ImageTypeDocker
-  flavor:
+  defaultflavor:
     name: x1.small
   accesslayer: AccessLayerL7
 
@@ -1043,7 +2264,7 @@ apps:
     name: app2
     version : "1.0"
   imagetype: ImageTypeDocker
-  flavor:
+  defaultflavor:
     name: x1.small
   accesslayer: AccessLayerL7
 
@@ -1062,8 +2283,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -175
-  uri: app1.cloudlet-1.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1080,8 +2299,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -175
-  uri: app2.cloudlet-1.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1098,8 +2315,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -174
-  uri: app1.cloudlet-2.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1116,8 +2331,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -174
-  uri: app2.cloudlet-2.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1134,8 +2347,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -173
-  uri: app1.cloudlet-3.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1152,8 +2363,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -173
-  uri: app2.cloudlet-3.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1170,8 +2379,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -172
-  uri: app1.cloudlet-4.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1188,8 +2395,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -172
-  uri: app2.cloudlet-4.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1206,8 +2411,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -171
-  uri: app1.cloudlet-5.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1224,8 +2427,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -171
-  uri: app2.cloudlet-5.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1242,8 +2443,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -170
-  uri: app1.cloudlet-6.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1260,8 +2459,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -170
-  uri: app2.cloudlet-6.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1278,8 +2475,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -169
-  uri: app1.cloudlet-7.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1296,8 +2491,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -169
-  uri: app2.cloudlet-7.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1314,8 +2507,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -168
-  uri: app1.cloudlet-8.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1332,8 +2523,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -168
-  uri: app2.cloudlet-8.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1350,8 +2539,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -167
-  uri: app1.cloudlet-9.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1368,8 +2555,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -167
-  uri: app2.cloudlet-9.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1386,8 +2571,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -166
-  uri: app1.cloudlet-10.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1404,8 +2587,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -166
-  uri: app2.cloudlet-10.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1422,8 +2603,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -165
-  uri: app1.cloudlet-11.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1440,8 +2619,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -165
-  uri: app2.cloudlet-11.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1458,8 +2635,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -164
-  uri: app1.cloudlet-12.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1476,8 +2651,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -164
-  uri: app2.cloudlet-12.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1494,8 +2667,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -163
-  uri: app1.cloudlet-13.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1512,8 +2683,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -163
-  uri: app2.cloudlet-13.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1530,8 +2699,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -162
-  uri: app1.cloudlet-14.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1548,8 +2715,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -162
-  uri: app2.cloudlet-14.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1566,8 +2731,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -161
-  uri: app1.cloudlet-15.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1584,8 +2747,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -161
-  uri: app2.cloudlet-15.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1602,8 +2763,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -160
-  uri: app1.cloudlet-16.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1620,8 +2779,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -160
-  uri: app2.cloudlet-16.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1638,8 +2795,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -159
-  uri: app1.cloudlet-17.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1656,8 +2811,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -159
-  uri: app2.cloudlet-17.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1674,8 +2827,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -158
-  uri: app1.cloudlet-18.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1692,8 +2843,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -158
-  uri: app2.cloudlet-18.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1710,8 +2859,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -157
-  uri: app1.cloudlet-19.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1728,8 +2875,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -157
-  uri: app2.cloudlet-19.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1746,8 +2891,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -156
-  uri: app1.cloudlet-20.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1764,8 +2907,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -156
-  uri: app2.cloudlet-20.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1782,8 +2923,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -155
-  uri: app1.cloudlet-21.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1800,8 +2939,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -155
-  uri: app2.cloudlet-21.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1818,8 +2955,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -154
-  uri: app1.cloudlet-22.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1836,8 +2971,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -154
-  uri: app2.cloudlet-22.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1854,8 +2987,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -153
-  uri: app1.cloudlet-23.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1872,8 +3003,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -153
-  uri: app2.cloudlet-23.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1890,8 +3019,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -152
-  uri: app1.cloudlet-24.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1908,8 +3035,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -152
-  uri: app2.cloudlet-24.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1926,8 +3051,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -151
-  uri: app1.cloudlet-25.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1944,8 +3067,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -151
-  uri: app2.cloudlet-25.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1962,8 +3083,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -150
-  uri: app1.cloudlet-26.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1980,8 +3099,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -150
-  uri: app2.cloudlet-26.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -1998,8 +3115,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -149
-  uri: app1.cloudlet-27.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2016,8 +3131,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -149
-  uri: app2.cloudlet-27.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2034,8 +3147,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -148
-  uri: app1.cloudlet-28.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2052,8 +3163,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -148
-  uri: app2.cloudlet-28.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2070,8 +3179,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -147
-  uri: app1.cloudlet-29.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2088,8 +3195,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -147
-  uri: app2.cloudlet-29.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2106,8 +3211,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -146
-  uri: app1.cloudlet-30.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2124,8 +3227,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -146
-  uri: app2.cloudlet-30.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2142,8 +3243,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -145
-  uri: app1.cloudlet-31.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2160,8 +3259,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -145
-  uri: app2.cloudlet-31.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2178,8 +3275,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -144
-  uri: app1.cloudlet-32.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2196,8 +3291,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -144
-  uri: app2.cloudlet-32.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2214,8 +3307,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -143
-  uri: app1.cloudlet-33.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2232,8 +3323,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -143
-  uri: app2.cloudlet-33.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2250,8 +3339,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -142
-  uri: app1.cloudlet-34.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2268,8 +3355,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -142
-  uri: app2.cloudlet-34.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2286,8 +3371,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -141
-  uri: app1.cloudlet-35.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2304,8 +3387,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -141
-  uri: app2.cloudlet-35.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2322,8 +3403,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -140
-  uri: app1.cloudlet-36.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2340,8 +3419,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -140
-  uri: app2.cloudlet-36.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2358,8 +3435,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -139
-  uri: app1.cloudlet-37.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2376,8 +3451,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -139
-  uri: app2.cloudlet-37.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2394,8 +3467,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -138
-  uri: app1.cloudlet-38.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2412,8 +3483,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -138
-  uri: app2.cloudlet-38.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2430,8 +3499,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -137
-  uri: app1.cloudlet-39.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2448,8 +3515,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -137
-  uri: app2.cloudlet-39.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2466,8 +3531,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -136
-  uri: app1.cloudlet-40.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2484,8 +3547,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -136
-  uri: app2.cloudlet-40.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2502,8 +3563,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -135
-  uri: app1.cloudlet-41.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2520,8 +3579,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -135
-  uri: app2.cloudlet-41.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2538,8 +3595,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -134
-  uri: app1.cloudlet-42.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2556,8 +3611,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -134
-  uri: app2.cloudlet-42.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2574,8 +3627,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -133
-  uri: app1.cloudlet-43.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2592,8 +3643,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -133
-  uri: app2.cloudlet-43.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2610,8 +3659,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -132
-  uri: app1.cloudlet-44.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2628,8 +3675,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -132
-  uri: app2.cloudlet-44.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2646,8 +3691,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -131
-  uri: app1.cloudlet-45.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2664,8 +3707,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -131
-  uri: app2.cloudlet-45.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2682,8 +3723,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -130
-  uri: app1.cloudlet-46.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2700,8 +3739,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -130
-  uri: app2.cloudlet-46.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2718,8 +3755,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -129
-  uri: app1.cloudlet-47.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2736,8 +3771,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -129
-  uri: app2.cloudlet-47.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2754,8 +3787,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -128
-  uri: app1.cloudlet-48.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2772,8 +3803,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -128
-  uri: app2.cloudlet-48.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2790,8 +3819,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -127
-  uri: app1.cloudlet-49.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2808,8 +3835,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -127
-  uri: app2.cloudlet-49.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2826,8 +3851,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -126
-  uri: app1.cloudlet-50.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2844,8 +3867,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -126
-  uri: app2.cloudlet-50.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2862,8 +3883,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -125
-  uri: app1.cloudlet-51.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2880,8 +3899,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -125
-  uri: app2.cloudlet-51.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2898,8 +3915,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -124
-  uri: app1.cloudlet-52.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2916,8 +3931,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -124
-  uri: app2.cloudlet-52.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2934,8 +3947,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -123
-  uri: app1.cloudlet-53.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2952,8 +3963,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -123
-  uri: app2.cloudlet-53.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2970,8 +3979,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -122
-  uri: app1.cloudlet-54.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -2988,8 +3995,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -122
-  uri: app2.cloudlet-54.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3006,8 +4011,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -121
-  uri: app1.cloudlet-55.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3024,8 +4027,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -121
-  uri: app2.cloudlet-55.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3042,8 +4043,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -120
-  uri: app1.cloudlet-56.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3060,8 +4059,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -120
-  uri: app2.cloudlet-56.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3078,8 +4075,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -119
-  uri: app1.cloudlet-57.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3096,8 +4091,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -119
-  uri: app2.cloudlet-57.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3114,8 +4107,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -118
-  uri: app1.cloudlet-58.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3132,8 +4123,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -118
-  uri: app2.cloudlet-58.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3150,8 +4139,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -117
-  uri: app1.cloudlet-59.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3168,8 +4155,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -117
-  uri: app2.cloudlet-59.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3186,8 +4171,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -116
-  uri: app1.cloudlet-60.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3204,8 +4187,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -116
-  uri: app2.cloudlet-60.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3222,8 +4203,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -115
-  uri: app1.cloudlet-61.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3240,8 +4219,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -115
-  uri: app2.cloudlet-61.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3258,8 +4235,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -114
-  uri: app1.cloudlet-62.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3276,8 +4251,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -114
-  uri: app2.cloudlet-62.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3294,8 +4267,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -113
-  uri: app1.cloudlet-63.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3312,8 +4283,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -113
-  uri: app2.cloudlet-63.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3330,8 +4299,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -112
-  uri: app1.cloudlet-64.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3348,8 +4315,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -112
-  uri: app2.cloudlet-64.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3366,8 +4331,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -111
-  uri: app1.cloudlet-65.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3384,8 +4347,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -111
-  uri: app2.cloudlet-65.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3402,8 +4363,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -110
-  uri: app1.cloudlet-66.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3420,8 +4379,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -110
-  uri: app2.cloudlet-66.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3438,8 +4395,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -109
-  uri: app1.cloudlet-67.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3456,8 +4411,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -109
-  uri: app2.cloudlet-67.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3474,8 +4427,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -108
-  uri: app1.cloudlet-68.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3492,8 +4443,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -108
-  uri: app2.cloudlet-68.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3510,8 +4459,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -107
-  uri: app1.cloudlet-69.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3528,8 +4475,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -107
-  uri: app2.cloudlet-69.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3546,8 +4491,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -106
-  uri: app1.cloudlet-70.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3564,8 +4507,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -106
-  uri: app2.cloudlet-70.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3582,8 +4523,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -105
-  uri: app1.cloudlet-71.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3600,8 +4539,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -105
-  uri: app2.cloudlet-71.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3618,8 +4555,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -104
-  uri: app1.cloudlet-72.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3636,8 +4571,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -104
-  uri: app2.cloudlet-72.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3654,8 +4587,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -103
-  uri: app1.cloudlet-73.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3672,8 +4603,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -103
-  uri: app2.cloudlet-73.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3690,8 +4619,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -102
-  uri: app1.cloudlet-74.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3708,8 +4635,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -102
-  uri: app2.cloudlet-74.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3726,8 +4651,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -101
-  uri: app1.cloudlet-75.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3744,8 +4667,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -101
-  uri: app2.cloudlet-75.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3762,8 +4683,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -100
-  uri: app1.cloudlet-76.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3780,8 +4699,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -100
-  uri: app2.cloudlet-76.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3798,8 +4715,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -99
-  uri: app1.cloudlet-77.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3816,8 +4731,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -99
-  uri: app2.cloudlet-77.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3834,8 +4747,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -98
-  uri: app1.cloudlet-78.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3852,8 +4763,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -98
-  uri: app2.cloudlet-78.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3870,8 +4779,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -97
-  uri: app1.cloudlet-79.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3888,8 +4795,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -97
-  uri: app2.cloudlet-79.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3906,8 +4811,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -96
-  uri: app1.cloudlet-80.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3924,8 +4827,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -96
-  uri: app2.cloudlet-80.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3942,8 +4843,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -95
-  uri: app1.cloudlet-81.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3960,8 +4859,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -95
-  uri: app2.cloudlet-81.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3978,8 +4875,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -94
-  uri: app1.cloudlet-82.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -3996,8 +4891,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -94
-  uri: app2.cloudlet-82.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4014,8 +4907,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -93
-  uri: app1.cloudlet-83.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4032,8 +4923,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -93
-  uri: app2.cloudlet-83.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4050,8 +4939,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -92
-  uri: app1.cloudlet-84.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4068,8 +4955,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -92
-  uri: app2.cloudlet-84.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4086,8 +4971,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -91
-  uri: app1.cloudlet-85.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4104,8 +4987,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -91
-  uri: app2.cloudlet-85.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4122,8 +5003,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -90
-  uri: app1.cloudlet-86.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4140,8 +5019,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -90
-  uri: app2.cloudlet-86.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4158,8 +5035,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -89
-  uri: app1.cloudlet-87.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4176,8 +5051,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -89
-  uri: app2.cloudlet-87.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4194,8 +5067,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -88
-  uri: app1.cloudlet-88.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4212,8 +5083,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -88
-  uri: app2.cloudlet-88.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4230,8 +5099,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -87
-  uri: app1.cloudlet-89.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4248,8 +5115,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -87
-  uri: app2.cloudlet-89.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4266,8 +5131,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -86
-  uri: app1.cloudlet-90.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4284,8 +5147,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -86
-  uri: app2.cloudlet-90.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4302,8 +5163,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -85
-  uri: app1.cloudlet-91.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4320,8 +5179,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -85
-  uri: app2.cloudlet-91.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4338,8 +5195,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -84
-  uri: app1.cloudlet-92.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4356,8 +5211,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -84
-  uri: app2.cloudlet-92.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4374,8 +5227,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -83
-  uri: app1.cloudlet-93.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4392,8 +5243,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -83
-  uri: app2.cloudlet-93.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4410,8 +5259,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -82
-  uri: app1.cloudlet-94.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4428,8 +5275,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -82
-  uri: app2.cloudlet-94.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4446,8 +5291,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -81
-  uri: app1.cloudlet-95.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4464,8 +5307,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -81
-  uri: app2.cloudlet-95.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4482,8 +5323,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -80
-  uri: app1.cloudlet-96.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4500,8 +5339,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -80
-  uri: app2.cloudlet-96.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4518,8 +5355,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -79
-  uri: app1.cloudlet-97.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4536,8 +5371,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -79
-  uri: app2.cloudlet-97.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4554,8 +5387,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -78
-  uri: app1.cloudlet-98.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4572,8 +5403,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -78
-  uri: app2.cloudlet-98.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4590,8 +5419,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -77
-  uri: app1.cloudlet-99.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4608,8 +5435,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -77
-  uri: app2.cloudlet-99.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4626,8 +5451,6 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -76
-  uri: app1.cloudlet-100.mobiledgex.net
-  liveness: 1
 
 
 - key:
@@ -4644,6 +5467,4 @@ appinstances:
   cloudletloc:
     lat: 0
     long: -76
-  uri: app2.cloudlet-100.mobiledgex.net
-  liveness: 1
 

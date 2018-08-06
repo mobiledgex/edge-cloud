@@ -18,7 +18,6 @@ type ClusterApi struct {
 var clusterApi = ClusterApi{}
 
 const ClusterAutoPrefix = "AutoCluster"
-const ClusterAutoNodes = 3
 
 var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	ClusterAutoPrefix)
@@ -30,11 +29,11 @@ func InitClusterApi(sync *Sync) {
 	sync.RegisterCache(&clusterApi.cache)
 }
 
-func (s *ClusterApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+func (s *ClusterApi) UsesClusterFlavor(key *edgeproto.ClusterFlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, cluster := range s.cache.Objs {
-		if cluster.Flavor.Matches(key) {
+		if cluster.DefaultFlavor.Matches(key) {
 			return true
 		}
 	}

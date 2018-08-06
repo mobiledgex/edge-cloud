@@ -9,6 +9,14 @@ clusterInstInfos:
         name: TMUS
       name: tmocloud1
   state: ClusterStateReady
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud2
+  state: ClusterStateReady
 
 appInstInfos:
 - key:
@@ -21,5 +29,17 @@ appInstInfos:
       operatorkey:
         name: TMUS
       name: tmocloud1
+    id: 123
+  state: AppStateReady
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud2
     id: 123
   state: AppStateReady

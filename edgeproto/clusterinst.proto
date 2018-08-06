@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "result.proto";
-import "flavor.proto";
+import "clusterflavor.proto";
 import "cluster.proto";
 import "cloudlet.proto";
 import "common.proto";
@@ -27,10 +27,8 @@ message ClusterInst {
   repeated string fields = 1;
   // Unique key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
-  // flavor (cached from cluster)
-  FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
-  // number of nodes in the cluster (cached from Cluster)
-  int32 nodes = 4 [(protogen.backend) = true];
+  // flavor
+  ClusterFlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Future: policy options on where this cluster can be created.
   // type of instance
   Liveness liveness = 9 [(protogen.backend) = true];
