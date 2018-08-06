@@ -30,24 +30,16 @@ func TestClusterInstApi(t *testing.T) {
 	}
 
 	// create support data
-	for _, obj := range testutil.OperatorData {
-		_, err := operatorApi.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create operator")
-	}
-	for _, obj := range testutil.CloudletData {
-		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
-		assert.Nil(t, err, "Create cloudlet")
-	}
-	for _, obj := range testutil.FlavorData {
-		_, err := flavorApi.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create flavor")
-	}
-	for _, obj := range testutil.ClusterData {
-		_, err := clusterApi.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create cluster")
-	}
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
+	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	insertCloudletInfo(testutil.CloudletInfoData)
+	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 
-	testutil.InternalClusterInstCudTest(t, &clusterInstApi, testutil.ClusterInstData)
+	testutil.InternalClusterInstTest(t, "cud", &clusterInstApi, testutil.ClusterInstData)
+	// after cluster insts create, check that cloudlet refs data is correct.
+	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 
 	dummy.Stop()
 }

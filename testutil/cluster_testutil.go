@@ -64,8 +64,13 @@ func (x *ShowCluster) CheckFound(obj *edgeproto.Cluster) bool {
 func (x *ShowCluster) AssertFound(t *testing.T, obj *edgeproto.Cluster) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Cluster %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Cluster are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -156,14 +161,39 @@ func NewClientClusterApi(api edgeproto.ClusterApiClient) *ClusterCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalClusterCudTest(t *testing.T, api edgeproto.ClusterApiServer, testData []edgeproto.Cluster) {
-	basicClusterCudTest(t, NewInternalClusterApi(api), testData)
+
+func InternalClusterTest(t *testing.T, test string, api edgeproto.ClusterApiServer, testData []edgeproto.Cluster) {
+	switch test {
+	case "cud":
+		basicClusterCudTest(t, NewInternalClusterApi(api), testData)
+	case "show":
+		basicClusterShowTest(t, NewInternalClusterApi(api), testData)
+	}
 }
 
-func ClientClusterCudTest(t *testing.T, api edgeproto.ClusterApiClient, testData []edgeproto.Cluster) {
-	basicClusterCudTest(t, NewClientClusterApi(api), testData)
+func ClientClusterTest(t *testing.T, test string, api edgeproto.ClusterApiClient, testData []edgeproto.Cluster) {
+	switch test {
+	case "cud":
+		basicClusterCudTest(t, NewClientClusterApi(api), testData)
+	case "show":
+		basicClusterShowTest(t, NewClientClusterApi(api), testData)
+	}
 }
 
+func basicClusterShowTest(t *testing.T, api *ClusterCommonApi, testData []edgeproto.Cluster) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCluster{}
+	show.Init()
+	filterNone := edgeproto.Cluster{}
+	err = api.ShowCluster(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgeproto.Cluster) {
 	var err error
 	ctx := context.TODO()
@@ -174,28 +204,21 @@ func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgepro
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create Cluster %s", obj.Key.GetKeyString())
-	}
+	createClusterData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateCluster(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Cluster")
 
 	// test show all items
-	show := ShowCluster{}
-	show.Init()
-	filterNone := edgeproto.Cluster{}
-	err = api.ShowCluster(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicClusterShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteCluster(ctx, &testData[0])
 	assert.Nil(t, err, "delete Cluster %s", testData[0].Key.GetKeyString())
+	show := ShowCluster{}
 	show.Init()
+	filterNone := edgeproto.Cluster{}
 	err = api.ShowCluster(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -212,4 +235,22 @@ func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgepro
 	_, err = api.CreateCluster(ctx, &bad)
 	assert.NotNil(t, err, "Create Cluster with no key info")
 
+}
+
+func InternalClusterCreate(t *testing.T, api edgeproto.ClusterApiServer, testData []edgeproto.Cluster) {
+	createClusterData(t, NewInternalClusterApi(api), testData)
+}
+
+func ClientClusterCreate(t *testing.T, api edgeproto.ClusterApiClient, testData []edgeproto.Cluster) {
+	createClusterData(t, NewClientClusterApi(api), testData)
+}
+
+func createClusterData(t *testing.T, api *ClusterCommonApi, testData []edgeproto.Cluster) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateCluster(ctx, &obj)
+		assert.Nil(t, err, "Create Cluster %s", obj.Key.GetKeyString())
+	}
 }

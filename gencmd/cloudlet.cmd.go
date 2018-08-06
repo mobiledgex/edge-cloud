@@ -39,6 +39,7 @@ var CloudletMetricsApiCmd edgeproto.CloudletMetricsApiClient
 var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
 var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
+var CloudletInIpSupport string
 var CloudletInfoIn edgeproto.CloudletInfo
 var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
 var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
@@ -68,7 +69,7 @@ func CloudletKeyHeaderSlicer() []string {
 }
 
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -88,11 +89,14 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	}
 	_Location_TimestampTime := time.Unix(in.Location.Timestamp.Seconds, int64(in.Location.Timestamp.Nanos))
 	s = append(s, _Location_TimestampTime.String())
+	s = append(s, edgeproto.IpSupport_name[int32(in.IpSupport)])
+	s = append(s, in.StaticIps)
+	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -105,6 +109,9 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Location-Course")
 	s = append(s, "Location-Speed")
 	s = append(s, "Location-Timestamp")
+	s = append(s, "IpSupport")
+	s = append(s, "StaticIps")
+	s = append(s, "NumDynamicIps")
 	return s
 }
 
@@ -162,6 +169,11 @@ var CreateCloudletCmd = &cobra.Command{
 			return
 		}
 		var err error
+		err = parseCloudletEnums()
+		if err != nil {
+			fmt.Println("CreateCloudlet: ", err)
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		objs, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
 		cancel()
@@ -208,6 +220,11 @@ var DeleteCloudletCmd = &cobra.Command{
 			return
 		}
 		var err error
+		err = parseCloudletEnums()
+		if err != nil {
+			fmt.Println("DeleteCloudlet: ", err)
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		objs, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
 		cancel()
@@ -254,6 +271,11 @@ var UpdateCloudletCmd = &cobra.Command{
 			return
 		}
 		var err error
+		err = parseCloudletEnums()
+		if err != nil {
+			fmt.Println("UpdateCloudlet: ", err)
+			return
+		}
 		CloudletSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		objs, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
@@ -301,6 +323,11 @@ var ShowCloudletCmd = &cobra.Command{
 			return
 		}
 		var err error
+		err = parseCloudletEnums()
+		if err != nil {
+			fmt.Println("ShowCloudlet: ", err)
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := CloudletApiCmd.ShowCloudlet(ctx, &CloudletIn)
@@ -431,8 +458,112 @@ var ShowCloudletInfoCmd = &cobra.Command{
 	},
 }
 
+var InjectCloudletInfoCmd = &cobra.Command{
+	Use: "InjectCloudletInfo",
+	Run: func(cmd *cobra.Command, args []string) {
+		if CloudletInfoApiCmd == nil {
+			fmt.Println("CloudletInfoApi client not initialized")
+			return
+		}
+		var err error
+		err = parseCloudletInfoEnums()
+		if err != nil {
+			fmt.Println("InjectCloudletInfo: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		objs, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
+		cancel()
+		if err != nil {
+			fmt.Println("InjectCloudletInfo failed: ", err)
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
+		}
+	},
+}
+
+var EvictCloudletInfoCmd = &cobra.Command{
+	Use: "EvictCloudletInfo",
+	Run: func(cmd *cobra.Command, args []string) {
+		if CloudletInfoApiCmd == nil {
+			fmt.Println("CloudletInfoApi client not initialized")
+			return
+		}
+		var err error
+		err = parseCloudletInfoEnums()
+		if err != nil {
+			fmt.Println("EvictCloudletInfo: ", err)
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		objs, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
+		cancel()
+		if err != nil {
+			fmt.Println("EvictCloudletInfo failed: ", err)
+			return
+		}
+		switch cmdsup.OutputFormat {
+		case cmdsup.OutputFormatYaml:
+			output, err := yaml.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Yaml failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Print(string(output))
+		case cmdsup.OutputFormatJson:
+			output, err := json.MarshalIndent(objs, "", "  ")
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatJsonCompact:
+			output, err := json.Marshal(objs)
+			if err != nil {
+				fmt.Printf("Json failed to marshal: %s\n", err)
+				return
+			}
+			fmt.Println(string(output))
+		case cmdsup.OutputFormatTable:
+			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
+			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
+			output.Flush()
+		}
+	},
+}
+
 var CloudletInfoApiCmds = []*cobra.Command{
 	ShowCloudletInfoCmd,
+	InjectCloudletInfoCmd,
+	EvictCloudletInfoCmd,
 }
 
 var ShowCloudletMetricsCmd = &cobra.Command{
@@ -516,6 +647,9 @@ func init() {
 	CloudletIn.Location.Timestamp = &google_protobuf.Timestamp{}
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.Location.Timestamp.Seconds, "location-timestamp-seconds", 0, "Location.Timestamp.Seconds")
 	CloudletNoConfigFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
+	CloudletFlagSet.StringVar(&CloudletInIpSupport, "ipsupport", "", "one of [IpSupportUnknown IpSupportStatic IpSupportDynamic]")
+	CloudletFlagSet.StringVar(&CloudletIn.StaticIps, "staticips", "", "StaticIps")
+	CloudletFlagSet.Int32Var(&CloudletIn.NumDynamicIps, "numdynamicips", 0, "NumDynamicIps")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline]")
@@ -523,14 +657,14 @@ func init() {
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
-	CloudletInfoIn.Errors = make([]string, 1)
-	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Errors[0], "errors", "", "Errors")
 	CloudletMetricsFlagSet.Uint64Var(&CloudletMetricsIn.Foo, "foo", 0, "Foo")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	UpdateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	ShowCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
+	InjectCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
+	EvictCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
 	ShowCloudletMetricsCmd.Flags().AddFlagSet(CloudletMetricsFlagSet)
 }
 
@@ -543,6 +677,8 @@ func CloudletApiAllowNoConfig() {
 
 func CloudletInfoApiAllowNoConfig() {
 	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+	InjectCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+	EvictCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
 }
 
 func CloudletMetricsApiAllowNoConfig() {
@@ -587,6 +723,15 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("location-timestamp-nanos").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
 	}
+	if CloudletFlagSet.Lookup("ipsupport").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "6")
+	}
+	if CloudletFlagSet.Lookup("staticips").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "7")
+	}
+	if CloudletFlagSet.Lookup("numdynamicips").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "8")
+	}
 }
 
 func CloudletInfoSetFields() {
@@ -615,6 +760,22 @@ func CloudletInfoSetFields() {
 	if CloudletInfoFlagSet.Lookup("errors").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "9")
 	}
+}
+
+func parseCloudletEnums() error {
+	if CloudletInIpSupport != "" {
+		switch CloudletInIpSupport {
+		case "IpSupportUnknown":
+			CloudletIn.IpSupport = edgeproto.IpSupport(0)
+		case "IpSupportStatic":
+			CloudletIn.IpSupport = edgeproto.IpSupport(1)
+		case "IpSupportDynamic":
+			CloudletIn.IpSupport = edgeproto.IpSupport(2)
+		default:
+			return errors.New("Invalid value for CloudletInIpSupport")
+		}
+	}
+	return nil
 }
 
 func parseCloudletInfoEnums() error {

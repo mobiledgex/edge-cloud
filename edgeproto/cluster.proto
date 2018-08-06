@@ -9,7 +9,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "result.proto";
 import "developer.proto";
-import "flavor.proto";
+import "clusterflavor.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 message ClusterKey {
@@ -29,10 +29,8 @@ message Cluster {
   repeated string fields = 1;
   // Unique key
   ClusterKey key = 2 [(gogoproto.nullable) = false];
-  // flavor of each node the cluster
-  FlavorKey flavor = 3 [(gogoproto.nullable) = false];
-  // number of nodes in the cluster
-  int32 nodes = 4;
+  // default flavor of the cluster, may be overridden on cluster inst
+  ClusterFlavorKey default_flavor = 3 [(gogoproto.nullable) = false];
   // auto set to true when automatically created by back-end
   bool auto = 5 [(protogen.backend) = true];
   // Future: policy options on where this cluster can be created.

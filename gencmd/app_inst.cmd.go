@@ -41,6 +41,7 @@ var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
 var AppInstInLiveness string
 var AppInstInImageType string
+var AppInstInMappedPortsProto string
 var AppInstInAccessLayer string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
@@ -80,6 +81,22 @@ func AppInstKeyHeaderSlicer() []string {
 	return s
 }
 
+func AppPortSlicer(in *edgeproto.AppPort) []string {
+	s := make([]string, 0, 3)
+	s = append(s, edgeproto.L4Proto_name[int32(in.Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
+	return s
+}
+
+func AppPortHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Proto")
+	s = append(s, "InternalPort")
+	s = append(s, "PublicPort")
+	return s
+}
+
 func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s := make([]string, 0, 13)
 	if in.Fields == nil {
@@ -111,7 +128,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	s = append(s, in.ImagePath)
 	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
-	s = append(s, in.MappedPorts)
+	if in.MappedPorts == nil {
+		in.MappedPorts = make([]edgeproto.AppPort, 1)
+	}
+	s = append(s, edgeproto.L4Proto_name[int32(in.MappedPorts[0].Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
 	s = append(s, in.MappedPath)
 	s = append(s, in.ConfigMap)
 	s = append(s, in.Flavor.Name)
@@ -143,7 +165,9 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Liveness")
 	s = append(s, "ImagePath")
 	s = append(s, "ImageType")
-	s = append(s, "MappedPorts")
+	s = append(s, "MappedPorts-Proto")
+	s = append(s, "MappedPorts-InternalPort")
+	s = append(s, "MappedPorts-PublicPort")
 	s = append(s, "MappedPath")
 	s = append(s, "ConfigMap")
 	s = append(s, "Flavor-Name")
@@ -197,6 +221,19 @@ func AppInstMetricsHeaderSlicer() []string {
 	s := make([]string, 0, 1)
 	s = append(s, "Something")
 	return s
+}
+
+func AppInstHideTags(in *edgeproto.AppInst) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Uri = ""
+	}
 }
 
 func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
@@ -396,6 +433,7 @@ var ShowAppInstCmd = &cobra.Command{
 				fmt.Println("ShowAppInst recv failed: ", err)
 				break
 			}
+			AppInstHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
@@ -599,13 +637,12 @@ func init() {
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
-	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ImagePath, "imagepath", "", "ImagePath")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPorts, "mappedports", "", "MappedPorts")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ConfigMap, "configmap", "", "ConfigMap")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
@@ -618,8 +655,6 @@ func init() {
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [AppStateUnknown AppStateBuilding AppStateReady AppStateErrors AppStateDeleting AppStateDeleted]")
-	AppInstInfoIn.Errors = make([]string, 1)
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Errors[0], "errors", "", "Errors")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -712,8 +747,14 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("imagetype").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "8")
 	}
-	if AppInstFlagSet.Lookup("mappedports").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "9")
+	if AppInstFlagSet.Lookup("mappedports-proto").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "9.1")
+	}
+	if AppInstFlagSet.Lookup("mappedports-internalport").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "9.2")
+	}
+	if AppInstFlagSet.Lookup("mappedports-publicport").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "9.3")
 	}
 	if AppInstFlagSet.Lookup("mappedpath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "10")
@@ -783,6 +824,18 @@ func parseAppInstEnums() error {
 			AppInstIn.ImageType = edgeproto.ImageType(2)
 		default:
 			return errors.New("Invalid value for AppInstInImageType")
+		}
+	}
+	if AppInstInMappedPortsProto != "" {
+		switch AppInstInMappedPortsProto {
+		case "L4ProtoUnknown":
+			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(0)
+		case "L4ProtoTCP":
+			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(1)
+		case "L4ProtoUDP":
+			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(2)
+		default:
+			return errors.New("Invalid value for AppInstInMappedPortsProto")
 		}
 	}
 	if AppInstInAccessLayer != "" {

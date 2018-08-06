@@ -19,6 +19,8 @@ func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
 	h.SendCloudletInfo = &cd.CloudletInfoCache
 	h.RecvCloudletInfo = &cd.CloudletInfoCache
 	h.RecvFlavor = &cd.FlavorCache
+	h.RecvClusterFlavor = &cd.ClusterFlavorCache // todo: auto-gen this
+	// or make it easier to add new caches/objects
 	h.RecvClusterInst = &cd.ClusterInstCache
 	return &h
 }

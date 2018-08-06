@@ -1,0 +1,71 @@
+// Cloudlet proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "cloudlet.proto";
+import "cluster.proto";
+import "clusterinst.proto";
+import "app.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// Refs track ref counts of used resources, ports, etc.
+// They are not part of the base Cloudlet/Cluster objects because
+// there's no way in GRPC to prevent certain fields from being sent/marshalled,
+// and we don't need these fields being sent via the notify protocol
+// to the CRM.
+
+// Track cluster insts created on a Cloudlet.
+// These are used to calculated used resources.
+// Note that since CloudletKey will be the same for all cluster insts,
+// we use the cluster key rather than the cluster inst key.
+message CloudletRefs {
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // cluster insts in the cloudlet
+  repeated ClusterKey clusters = 2 [(gogoproto.nullable) = false];
+  // allocated RAM in MB
+  uint64 used_ram = 4;
+  // allocated VCPU cores
+  uint64 used_vcores = 5;
+  // allocated disk in GB
+  uint64 used_disk = 6;
+  // used ports on root load balancer. Map key is public port, value is unused.
+  map<int32, int32> root_lb_ports = 8;
+  // TODO track used static ips
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+}
+
+// Track app insts created on a ClusterInst.
+// These are used to calculated used resources.
+// Note that since CloudletKey will be the same for all app insts,
+// we use the app key rather than the app inst key.
+message ClusterRefs {
+  ClusterInstKey key = 1 [(gogoproto.nullable) = false];
+  // apps insts in the cloudlet
+  repeated AppKey apps = 2 [(gogoproto.nullable) = false];
+  // allocated RAM in MB
+  uint64 used_ram = 4;
+  // allocated VCPU cores
+  uint64 used_vcores = 5;
+  // allocated disk in GB
+  uint64 used_disk = 6;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+}
+
+// This API should be admin-only
+service CloudletRefsApi {
+  rpc ShowCloudletRefs(CloudletRefs) returns (stream CloudletRefs) {}
+}
+
+service ClusterRefsApi {
+  rpc ShowClusterRefs(ClusterRefs) returns (stream ClusterRefs) {}
+}

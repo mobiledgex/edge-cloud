@@ -173,19 +173,19 @@ spec:
 `
 
 //MEXAddFlavorClusterInst uses template to fill in details for flavor add request and calls MEXAddFlavor
-func MEXAddFlavorClusterInst(flavor *edgeproto.Flavor) error {
+func MEXAddFlavorClusterInst(flavor *edgeproto.ClusterFlavor) error {
 	name := flavor.Key.Name
 	data := templateFill{
 		Name:          name,
 		Tags:          name + "-tag",
 		RootLB:        "mexlb.tdg.mobiledgex.net",
 		Kind:          "k8s-cluster-flavor",
-		NumMasters:    1,
-		NumNodes:      2,
+		NumMasters:    int(flavor.NumMasters),
+		NumNodes:      int(flavor.NumNodes),
 		NetworkScheme: "priv-subnet,mex-k8s-net-1,10.201.X0/24",
 		StorageSpec:   "default",
-		NodeFlavor:    "m4.large",
-		MasterFlavor:  "m4.large",
+		NodeFlavor:    "m4.large", // TODO: flavor.NodeFlavor.Name
+		MasterFlavor:  "m4.large", // TODO: flavor.MasterFlavor.Name
 		Topology:      "type-1",
 	}
 	mf, err := templateUnmarshal(&data, yamlMEXFlavor)
@@ -457,17 +457,22 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 	switch imageType {
 	case ImageTypeDocker: //XXX assume kubernetes
 		data = templateFill{
-			Kind:         "mex-app-kubernetes",
-			Name:         appInst.Key.AppKey.Name,
-			Tags:         appInst.Key.AppKey.Name + "-kubernetes-tag",
-			Key:          clusterInst.Key.ClusterKey.Name,
-			Tenant:       appInst.Key.AppKey.Name + "-tenant",
-			RootLB:       rootLB.Name,
-			Image:        appInst.ImagePath,
-			ImageType:    imageType,
-			ProxyPath:    appInst.Key.AppKey.Name,
-			AppURI:       appInst.Uri,
-			PortMap:      appInst.MappedPorts,
+			Kind:      "mex-app-kubernetes",
+			Name:      appInst.Key.AppKey.Name,
+			Tags:      appInst.Key.AppKey.Name + "-kubernetes-tag",
+			Key:       clusterInst.Key.ClusterKey.Name,
+			Tenant:    appInst.Key.AppKey.Name + "-tenant",
+			RootLB:    rootLB.Name,
+			Image:     appInst.ImagePath,
+			ImageType: imageType,
+			ProxyPath: appInst.Key.AppKey.Name,
+			AppURI:    appInst.Uri,
+			//Port map is now an array of edgeproto.AppPort,
+			//providing public to internal port mappings
+			//Note if the appinst IpSupport is dedicated, this
+			//should get its own LB, otherwise it uses the RootLB.
+			//XXX: please fix me
+			//PortMap:      appInst.MappedPorts,
 			PathMap:      appInst.MappedPath,
 			AccessLayer:  accessLayer,
 			KubeManifest: appInst.ConfigMap, // 'ConfigMap' not the same as Kubernetes ConfigMap. Here, used by controller to send kubemanifest
@@ -478,18 +483,19 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 		}
 	case ImageTypeQCOW:
 		data = templateFill{
-			Kind:          "mex-app-vm-qcow2",
-			Name:          appInst.Key.AppKey.Name,
-			Tags:          appInst.Key.AppKey.Name + "-qcow-tag",
-			Key:           clusterInst.Key.ClusterKey.Name,
-			Tenant:        appInst.Key.AppKey.Name + "-tenant",
-			RootLB:        rootLB.Name,
-			Image:         appInst.ImagePath,
-			ImageFlavor:   appInst.Flavor.Name,
-			ImageType:     imageType,
-			ProxyPath:     appInst.Key.AppKey.Name,
-			AppURI:        appInst.Uri,
-			PortMap:       appInst.MappedPorts,
+			Kind:        "mex-app-vm-qcow2",
+			Name:        appInst.Key.AppKey.Name,
+			Tags:        appInst.Key.AppKey.Name + "-qcow-tag",
+			Key:         clusterInst.Key.ClusterKey.Name,
+			Tenant:      appInst.Key.AppKey.Name + "-tenant",
+			RootLB:      rootLB.Name,
+			Image:       appInst.ImagePath,
+			ImageFlavor: appInst.Flavor.Name,
+			ImageType:   imageType,
+			ProxyPath:   appInst.Key.AppKey.Name,
+			AppURI:      appInst.Uri,
+			//XXX: please fix me
+			//PortMap:       appInst.MappedPorts,
 			PathMap:       appInst.MappedPath,
 			AccessLayer:   accessLayer,
 			NetworkScheme: "external-ip,external-network-shared",

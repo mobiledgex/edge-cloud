@@ -30,11 +30,8 @@ func TestCloudletApi(t *testing.T) {
 	}
 
 	// create operators
-	for _, obj := range testutil.OperatorData {
-		_, err := operatorApi.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create operator")
-	}
+	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 
-	testutil.InternalCloudletCudTest(t, &cloudletApi, testutil.CloudletData)
+	testutil.InternalCloudletTest(t, "cud", &cloudletApi, testutil.CloudletData)
 	dummy.Stop()
 }

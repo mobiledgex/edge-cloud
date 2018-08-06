@@ -67,7 +67,7 @@ func ClusterInstKeyHeaderSlicer() []string {
 }
 
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -76,20 +76,18 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, in.Flavor.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Nodes), 10))
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	s = append(s, strconv.FormatBool(in.Auto))
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Flavor-Name")
-	s = append(s, "Nodes")
 	s = append(s, "Liveness")
 	s = append(s, "Auto")
 	return s
@@ -445,7 +443,6 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	ClusterInstNoConfigFlagSet.Int32Var(&ClusterInstIn.Nodes, "nodes", 0, "Nodes")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
@@ -453,8 +450,6 @@ func init() {
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted]")
-	ClusterInstInfoIn.Errors = make([]string, 1)
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Errors[0], "errors", "", "Errors")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -486,9 +481,6 @@ func ClusterInstSetFields() {
 	}
 	if ClusterInstFlagSet.Lookup("flavor-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "3.1")
-	}
-	if ClusterInstFlagSet.Lookup("nodes").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "4")
 	}
 	if ClusterInstFlagSet.Lookup("liveness").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "9")

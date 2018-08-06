@@ -35,6 +35,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import _ "github.com/mobiledgex/edge-cloud/protogen"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -507,57 +508,7 @@ func init() {
 	TestGenIn.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.LocNonnull.Timestamp.Seconds, "locnonnull-timestamp-seconds", 0, "LocNonnull.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.LocNonnull.Timestamp.Nanos, "locnonnull-timestamp-nanos", 0, "LocNonnull.Timestamp.Nanos")
-	TestGenIn.RepeatedInt = make([]int64, 1)
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInt[0], "repeatedint", 0, "RepeatedInt")
 	TestGenFlagSet.BytesHexVar(&TestGenIn.Ip, "ip", nil, "Ip")
-	TestGenIn.Names = make([]string, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.Names[0], "names", "", "Names")
-	TestGenIn.RepeatedMsg = make([]*testgen.IncludeMessage, 1)
-	TestGenIn.RepeatedMsg[0] = &testgen.IncludeMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsg[0].Name, "repeatedmsg-name", "", "RepeatedMsg[0].Name")
-	TestGenFlagSet.Uint64Var(&TestGenIn.RepeatedMsg[0].Id, "repeatedmsg-id", 0, "RepeatedMsg[0].Id")
-	TestGenIn.RepeatedMsg[0].NestedMsg = &testgen.NestedMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsg[0].NestedMsg.Name, "repeatedmsg-nestedmsg-name", "", "RepeatedMsg[0].NestedMsg.Name")
-	TestGenIn.RepeatedMsgNonnull = make([]testgen.IncludeMessage, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsgNonnull[0].Name, "repeatedmsgnonnull-name", "", "RepeatedMsgNonnull[0].Name")
-	TestGenFlagSet.Uint64Var(&TestGenIn.RepeatedMsgNonnull[0].Id, "repeatedmsgnonnull-id", 0, "RepeatedMsgNonnull[0].Id")
-	TestGenIn.RepeatedMsgNonnull[0].NestedMsg = &testgen.NestedMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsgNonnull[0].NestedMsg.Name, "repeatedmsgnonnull-nestedmsg-name", "", "RepeatedMsgNonnull[0].NestedMsg.Name")
-	TestGenIn.RepeatedFields = make([]*testgen.IncludeFields, 1)
-	TestGenIn.RepeatedFields[0] = &testgen.IncludeFields{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedFields[0].Name, "repeatedfields-name", "", "RepeatedFields[0].Name")
-	TestGenIn.RepeatedFieldsNonnull = make([]testgen.IncludeFields, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedFieldsNonnull[0].Name, "repeatedfieldsnonnull-name", "", "RepeatedFieldsNonnull[0].Name")
-	TestGenIn.RepeatedInnerMsg = make([]*testgen.TestGen_InnerMessage, 1)
-	TestGenIn.RepeatedInnerMsg[0] = &testgen.TestGen_InnerMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedInnerMsg[0].Url, "repeatedinnermsg-url", "", "RepeatedInnerMsg[0].Url")
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInnerMsg[0].Id, "repeatedinnermsg-id", 0, "RepeatedInnerMsg[0].Id")
-	TestGenIn.RepeatedInnerMsgNonnull = make([]testgen.TestGen_InnerMessage, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedInnerMsgNonnull[0].Url, "repeatedinnermsgnonnull-url", "", "RepeatedInnerMsgNonnull[0].Url")
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInnerMsgNonnull[0].Id, "repeatedinnermsgnonnull-id", 0, "RepeatedInnerMsgNonnull[0].Id")
-	TestGenIn.RepeatedLoc = make([]*distributed_match_engine.Loc, 1)
-	TestGenIn.RepeatedLoc[0] = &distributed_match_engine.Loc{}
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Lat, "repeatedloc-lat", 0, "RepeatedLoc[0].Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Long, "repeatedloc-long", 0, "RepeatedLoc[0].Long")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].HorizontalAccuracy, "repeatedloc-horizontalaccuracy", 0, "RepeatedLoc[0].HorizontalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].VerticalAccuracy, "repeatedloc-verticalaccuracy", 0, "RepeatedLoc[0].VerticalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Altitude, "repeatedloc-altitude", 0, "RepeatedLoc[0].Altitude")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Course, "repeatedloc-course", 0, "RepeatedLoc[0].Course")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Speed, "repeatedloc-speed", 0, "RepeatedLoc[0].Speed")
-	TestGenIn.RepeatedLoc[0].Timestamp = &google_protobuf.Timestamp{}
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedLoc[0].Timestamp.Seconds, "repeatedloc-timestamp-seconds", 0, "RepeatedLoc[0].Timestamp.Seconds")
-	TestGenFlagSet.Int32Var(&TestGenIn.RepeatedLoc[0].Timestamp.Nanos, "repeatedloc-timestamp-nanos", 0, "RepeatedLoc[0].Timestamp.Nanos")
-	TestGenIn.RepeatedLocNonnull = make([]distributed_match_engine.Loc, 1)
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Lat, "repeatedlocnonnull-lat", 0, "RepeatedLocNonnull[0].Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Long, "repeatedlocnonnull-long", 0, "RepeatedLocNonnull[0].Long")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].HorizontalAccuracy, "repeatedlocnonnull-horizontalaccuracy", 0, "RepeatedLocNonnull[0].HorizontalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].VerticalAccuracy, "repeatedlocnonnull-verticalaccuracy", 0, "RepeatedLocNonnull[0].VerticalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Altitude, "repeatedlocnonnull-altitude", 0, "RepeatedLocNonnull[0].Altitude")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Course, "repeatedlocnonnull-course", 0, "RepeatedLocNonnull[0].Course")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Speed, "repeatedlocnonnull-speed", 0, "RepeatedLocNonnull[0].Speed")
-	TestGenIn.RepeatedLocNonnull[0].Timestamp = &google_protobuf.Timestamp{}
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedLocNonnull[0].Timestamp.Seconds, "repeatedlocnonnull-timestamp-seconds", 0, "RepeatedLocNonnull[0].Timestamp.Seconds")
-	TestGenFlagSet.Int32Var(&TestGenIn.RepeatedLocNonnull[0].Timestamp.Nanos, "repeatedlocnonnull-timestamp-nanos", 0, "RepeatedLocNonnull[0].Timestamp.Nanos")
 	RequestCmd.Flags().AddFlagSet(TestGenFlagSet)
 }
 

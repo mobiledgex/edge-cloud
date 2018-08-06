@@ -15,12 +15,34 @@ flavors:
   vcpus: 4
   disk: 4
 
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor: x1.tiny
+  masterflavor: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor: x1.small
+  masterflavor: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor: x1.medium
+  masterflavor: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
+
 clusters:
 - key:
     name: AutoClustersomeApplication
-  flavor:
-    name: x1.small
-  nodes: 3
+  defaultflavor:
+    name: c1.small
 
 clusterinsts:
 - key:
@@ -87,7 +109,7 @@ apps:
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
-  flavor:
+  defaultflavor:
     name: x1.small
   cluster:
     name: AutoClustersomeApplication

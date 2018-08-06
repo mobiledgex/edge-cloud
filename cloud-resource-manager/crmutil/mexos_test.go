@@ -15,11 +15,24 @@ var testMexDir = os.Getenv("HOME") + "/.mobiledgex"
 var FlavorData = []edgeproto.Flavor{
 	edgeproto.Flavor{
 		Key: edgeproto.FlavorKey{
-			Name: "x1.medium",
+			Name: "m4.medium",
 		},
 		Ram:   4096,
 		Vcpus: 4,
 		Disk:  4,
+	},
+}
+
+var ClusterFlavorData = []edgeproto.ClusterFlavor{
+	edgeproto.ClusterFlavor{
+		Key: edgeproto.ClusterFlavorKey{
+			Name: "x1.medium",
+		},
+		NodeFlavor:   FlavorData[0].Key,
+		MasterFlavor: FlavorData[0].Key,
+		NumNodes:     2,
+		MaxNodes:     2,
+		NumMasters:   1,
 	},
 }
 
@@ -28,8 +41,7 @@ var ClusterData = []edgeproto.Cluster{
 		Key: edgeproto.ClusterKey{
 			Name: "Pokemons",
 		},
-		Flavor: FlavorData[0].Key,
-		Nodes:  3,
+		DefaultFlavor: ClusterFlavorData[0].Key,
 	},
 }
 
@@ -39,8 +51,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor: ClusterData[0].Flavor,
-		Nodes:  ClusterData[0].Nodes,
+		Flavor: ClusterData[0].DefaultFlavor,
 	},
 }
 
@@ -61,11 +72,11 @@ var AppData = []edgeproto.App{ //nolint
 			Name:         "Pokemon Go!",
 			Version:      "1.0.0",
 		},
-		ImageType:   edgeproto.ImageType_ImageTypeDocker,
-		AccessLayer: edgeproto.AccessLayer_AccessLayerL7,
-		Flavor:      FlavorData[0].Key,
-		Cluster:     ClusterData[0].Key,
-		ImagePath:   "pokemon/go:1.0.0",
+		ImageType:     edgeproto.ImageType_ImageTypeDocker,
+		AccessLayer:   edgeproto.AccessLayer_AccessLayerL7,
+		DefaultFlavor: FlavorData[0].Key,
+		Cluster:       ClusterData[0].Key,
+		ImagePath:     "pokemon/go:1.0.0",
 	},
 }
 
@@ -85,6 +96,7 @@ var AppInstData = []edgeproto.AppInst{ //nolint
 		Uri:            "https://mexlb.tdg.mobiledgex.net/pokemon-go", //XXX
 		ImagePath:      AppData[0].ImagePath,
 		ImageType:      AppData[0].ImageType,
+		Flavor:         FlavorData[0].Key,
 	},
 }
 

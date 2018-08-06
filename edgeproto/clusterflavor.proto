@@ -1,0 +1,67 @@
+// A Flavor defines the resources assigned to a Kubernetes cluster.
+// Note that these are NOT openstack VM flavors, although some parts
+// of it may translate to openstack flavors.
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "result.proto";
+import "flavor.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message ClusterFlavorKey {
+  string name = 1;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message ClusterFlavor {
+  repeated string fields = 1;
+  // Unique key
+  ClusterFlavorKey key = 2 [(gogoproto.nullable) = false];
+  // Flavor of nodes
+  FlavorKey node_flavor = 3 [(gogoproto.nullable) = false];
+  // Flavor of master nodes
+  FlavorKey master_flavor = 4 [(gogoproto.nullable) = false];
+  // nodes is the number of nodes for a Cluster flavor type
+  uint32 num_nodes = 5;
+  // max nodes limits the amount of nodes that can be scaled up to.
+  uint32 max_nodes = 6;
+  // masters is the number of k8s masters for a Cluster flavor type
+  uint32 num_masters = 7;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cache) = true;
+}
+
+service ClusterFlavorApi {
+  rpc CreateClusterFlavor(ClusterFlavor) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/clusterflavor"
+      body: "*"
+    };
+  }
+  rpc DeleteClusterFlavor(ClusterFlavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/delete/clusterflavor"
+      body: "*"
+    };
+  }
+  rpc UpdateClusterFlavor(ClusterFlavor) returns (Result) {
+      option (google.api.http) = {
+      post: "/update/clusterflavor"
+      body: "*"
+    };
+  }
+  rpc ShowClusterFlavor(ClusterFlavor) returns (stream ClusterFlavor) {
+      option (google.api.http) = {
+      post: "/show/clusterflavor"
+      body: "*"
+    };
+  }
+}
