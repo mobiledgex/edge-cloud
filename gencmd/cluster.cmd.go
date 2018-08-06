@@ -48,24 +48,22 @@ func ClusterKeyHeaderSlicer() []string {
 }
 
 func ClusterSlicer(in *edgeproto.Cluster) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 4)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
-	s = append(s, in.Flavor.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Nodes), 10))
+	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, strconv.FormatBool(in.Auto))
 	return s
 }
 
 func ClusterHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 4)
 	s = append(s, "Fields")
 	s = append(s, "Key-Name")
-	s = append(s, "Flavor-Name")
-	s = append(s, "Nodes")
+	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Auto")
 	return s
 }
@@ -281,8 +279,7 @@ var ClusterApiCmds = []*cobra.Command{
 
 func init() {
 	ClusterFlagSet.StringVar(&ClusterIn.Key.Name, "key-name", "", "Key.Name")
-	ClusterFlagSet.StringVar(&ClusterIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	ClusterFlagSet.Int32Var(&ClusterIn.Nodes, "nodes", 0, "Nodes")
+	ClusterFlagSet.StringVar(&ClusterIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	ClusterNoConfigFlagSet.BoolVar(&ClusterIn.Auto, "auto", false, "Auto")
 	CreateClusterCmd.Flags().AddFlagSet(ClusterFlagSet)
 	DeleteClusterCmd.Flags().AddFlagSet(ClusterFlagSet)
@@ -302,11 +299,8 @@ func ClusterSetFields() {
 	if ClusterFlagSet.Lookup("key-name").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "2.1")
 	}
-	if ClusterFlagSet.Lookup("flavor-name").Changed {
+	if ClusterFlagSet.Lookup("defaultflavor-name").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "3.1")
-	}
-	if ClusterFlagSet.Lookup("nodes").Changed {
-		ClusterIn.Fields = append(ClusterIn.Fields, "4")
 	}
 	if ClusterFlagSet.Lookup("auto").Changed {
 		ClusterIn.Fields = append(ClusterIn.Fields, "5")

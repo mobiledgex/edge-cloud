@@ -30,21 +30,17 @@ func TestAppApi(t *testing.T) {
 		assert.NotNil(t, err, "Create app without developer")
 	}
 
-	// create developers
-	for _, obj := range testutil.DevData {
-		_, err := developerApi.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create developer")
-	}
-	for _, obj := range testutil.FlavorData {
-		_, err := flavorApi.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create flavor")
-	}
-	for _, obj := range testutil.ClusterData {
-		_, err := clusterApi.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create cluster")
-	}
+	// create support data
+	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
+	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 
-	testutil.InternalAppCudTest(t, &appApi, testutil.AppData)
+	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)
+
+	// check clusters created (includes explicit and auto)
+	testutil.InternalClusterTest(t, "show", &clusterApi,
+		append(testutil.ClusterData, testutil.ClusterAutoData...))
 
 	dummy.Stop()
 }
@@ -63,14 +59,9 @@ func TestAutoCluster(t *testing.T) {
 
 	// create developers
 	ctx := context.TODO()
-	for _, obj := range testutil.DevData {
-		_, err := developerApi.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create developer")
-	}
-	for _, obj := range testutil.FlavorData {
-		_, err := flavorApi.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create flavor")
-	}
+	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
 
 	// since clusters do not exist, should auto-create
 	// need to clear cluster name so it will auto-create

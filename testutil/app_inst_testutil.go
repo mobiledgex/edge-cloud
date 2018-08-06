@@ -65,8 +65,13 @@ func (x *ShowAppInst) CheckFound(obj *edgeproto.AppInst) bool {
 func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "AppInst are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -157,14 +162,39 @@ func NewClientAppInstApi(api edgeproto.AppInstApiClient) *AppInstCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalAppInstCudTest(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
-	basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
+
+func InternalAppInstTest(t *testing.T, test string, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+	switch test {
+	case "cud":
+		basicAppInstCudTest(t, NewInternalAppInstApi(api), testData)
+	case "show":
+		basicAppInstShowTest(t, NewInternalAppInstApi(api), testData)
+	}
 }
 
-func ClientAppInstCudTest(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
-	basicAppInstCudTest(t, NewClientAppInstApi(api), testData)
+func ClientAppInstTest(t *testing.T, test string, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
+	switch test {
+	case "cud":
+		basicAppInstCudTest(t, NewClientAppInstApi(api), testData)
+	case "show":
+		basicAppInstShowTest(t, NewClientAppInstApi(api), testData)
+	}
 }
 
+func basicAppInstShowTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowAppInst{}
+	show.Init()
+	filterNone := edgeproto.AppInst{}
+	err = api.ShowAppInst(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
 	ctx := context.TODO()
@@ -175,28 +205,21 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateAppInst(ctx, &obj)
-		assert.Nil(t, err, "Create AppInst %s", obj.Key.GetKeyString())
-	}
+	createAppInstData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateAppInst(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate AppInst")
 
 	// test show all items
-	show := ShowAppInst{}
-	show.Init()
-	filterNone := edgeproto.AppInst{}
-	err = api.ShowAppInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicAppInstShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteAppInst(ctx, &testData[0])
 	assert.Nil(t, err, "delete AppInst %s", testData[0].Key.GetKeyString())
+	show := ShowAppInst{}
 	show.Init()
+	filterNone := edgeproto.AppInst{}
 	err = api.ShowAppInst(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -213,6 +236,24 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	_, err = api.CreateAppInst(ctx, &bad)
 	assert.NotNil(t, err, "Create AppInst with no key info")
 
+}
+
+func InternalAppInstCreate(t *testing.T, api edgeproto.AppInstApiServer, testData []edgeproto.AppInst) {
+	createAppInstData(t, NewInternalAppInstApi(api), testData)
+}
+
+func ClientAppInstCreate(t *testing.T, api edgeproto.AppInstApiClient, testData []edgeproto.AppInst) {
+	createAppInstData(t, NewClientAppInstApi(api), testData)
+}
+
+func createAppInstData(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateAppInst(ctx, &obj)
+		assert.Nil(t, err, "Create AppInst %s", obj.Key.GetKeyString())
+	}
 }
 
 // Auto-generated code: DO NOT EDIT
@@ -256,8 +297,13 @@ func (x *ShowAppInstInfo) CheckFound(obj *edgeproto.AppInstInfo) bool {
 func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "AppInstInfo are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -323,4 +369,33 @@ func NewClientAppInstInfoApi(api edgeproto.AppInstInfoApiClient) *AppInstInfoCom
 	apiWrap := AppInstInfoCommonApi{}
 	apiWrap.client_api = api
 	return &apiWrap
+}
+
+func InternalAppInstInfoTest(t *testing.T, test string, api edgeproto.AppInstInfoApiServer, testData []edgeproto.AppInstInfo) {
+	switch test {
+	case "show":
+		basicAppInstInfoShowTest(t, NewInternalAppInstInfoApi(api), testData)
+	}
+}
+
+func ClientAppInstInfoTest(t *testing.T, test string, api edgeproto.AppInstInfoApiClient, testData []edgeproto.AppInstInfo) {
+	switch test {
+	case "show":
+		basicAppInstInfoShowTest(t, NewClientAppInstInfoApi(api), testData)
+	}
+}
+
+func basicAppInstInfoShowTest(t *testing.T, api *AppInstInfoCommonApi, testData []edgeproto.AppInstInfo) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowAppInstInfo{}
+	show.Init()
+	filterNone := edgeproto.AppInstInfo{}
+	err = api.ShowAppInstInfo(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
 }

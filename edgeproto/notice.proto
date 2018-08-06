@@ -8,6 +8,7 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "app_inst.proto";
 import "cloudlet.proto";
 import "flavor.proto";
+import "clusterflavor.proto";
 import "clusterinst.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
@@ -35,6 +36,7 @@ message NoticeReply {
     AppInst appInst = 4;
     Cloudlet cloudlet = 5;
     Flavor flavor = 6;
+    ClusterFlavor clusterFlavor = 8;
     ClusterInst clusterInst = 7;
   }
 }

@@ -10,18 +10,21 @@ It is generated from these files:
 	cloud-resource-manager.proto
 	cloudlet.proto
 	cluster.proto
+	clusterflavor.proto
 	clusterinst.proto
 	common.proto
 	developer.proto
 	flavor.proto
 	notice.proto
 	operator.proto
+	refs.proto
 	result.proto
 
 It has these top-level messages:
 	AppKey
 	App
 	AppInstKey
+	AppPort
 	AppInst
 	AppInstInfo
 	AppInstMetrics
@@ -34,6 +37,8 @@ It has these top-level messages:
 	CloudletMetrics
 	ClusterKey
 	Cluster
+	ClusterFlavorKey
+	ClusterFlavor
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
@@ -46,6 +51,8 @@ It has these top-level messages:
 	OperatorCode
 	OperatorKey
 	Operator
+	CloudletRefs
+	ClusterRefs
 	Result
 */
 package gencmd
@@ -126,7 +133,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
 	s = append(s, in.AccessPorts)
 	s = append(s, in.ConfigMap)
-	s = append(s, in.Flavor.Name)
+	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
 	return s
 }
@@ -142,7 +149,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "AccessLayer")
 	s = append(s, "AccessPorts")
 	s = append(s, "ConfigMap")
-	s = append(s, "Flavor-Name")
+	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
 	return s
 }
@@ -385,7 +392,7 @@ func init() {
 	AppFlagSet.StringVar(&AppInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
 	AppFlagSet.StringVar(&AppIn.ConfigMap, "configmap", "", "ConfigMap")
-	AppFlagSet.StringVar(&AppIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
+	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -426,7 +433,7 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("configmap").Changed {
 		AppIn.Fields = append(AppIn.Fields, "8")
 	}
-	if AppFlagSet.Lookup("flavor-name").Changed {
+	if AppFlagSet.Lookup("defaultflavor-name").Changed {
 		AppIn.Fields = append(AppIn.Fields, "9.1")
 	}
 	if AppFlagSet.Lookup("cluster-name").Changed {

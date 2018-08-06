@@ -31,37 +31,26 @@ func TestAppInstApi(t *testing.T) {
 	}
 
 	// create supporting data
-	for _, obj := range testutil.DevData {
-		_, err := developerApi.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create developer")
-	}
-	for _, obj := range testutil.FlavorData {
-		_, err := flavorApi.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create flavor")
-	}
-	for _, obj := range testutil.ClusterData {
-		_, err := clusterApi.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create cluster")
-	}
-	for _, obj := range testutil.AppData {
-		_, err := appApi.CreateApp(ctx, &obj)
-		assert.Nil(t, err, "Create app %v", obj)
-	}
-	for _, obj := range testutil.OperatorData {
-		_, err := operatorApi.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create operator")
-	}
-	for _, obj := range testutil.CloudletData {
-		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
-		assert.Nil(t, err, "Create cloudlet")
-	}
-	for _, obj := range testutil.ClusterInstData {
-		_, err := clusterInstApi.CreateClusterInst(ctx, &obj)
-		assert.Nil(t, err, "Create clusterInst")
-	}
+	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
+	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	insertCloudletInfo(testutil.CloudletInfoData)
+	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
+	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
+	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
+	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 
-	testutil.InternalAppInstCudTest(t, &appInstApi, testutil.AppInstData)
+	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
 	InternalAppInstCachedFieldsTest(t)
+	// check cluster insts created (includes explicit and auto)
+	testutil.InternalClusterInstTest(t, "show", &clusterInstApi,
+		append(testutil.ClusterInstData, testutil.ClusterInstAutoData...))
+
+	// after app insts create, check that cloudlet refs data is correct.
+	// Note this refs data is a second set after app insts were created.
+	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
 
 	dummy.Stop()
 }
@@ -140,30 +129,14 @@ func TestAutoClusterInst(t *testing.T) {
 
 	// create supporting data
 	ctx := context.TODO()
-	for _, obj := range testutil.DevData {
-		_, err := developerApi.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create developer")
-	}
-	for _, obj := range testutil.FlavorData {
-		_, err := flavorApi.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create flavor")
-	}
-	for _, obj := range testutil.ClusterData {
-		_, err := clusterApi.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create cluster")
-	}
-	for _, obj := range testutil.AppData {
-		_, err := appApi.CreateApp(ctx, &obj)
-		assert.Nil(t, err, "Create app")
-	}
-	for _, obj := range testutil.OperatorData {
-		_, err := operatorApi.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create operator")
-	}
-	for _, obj := range testutil.CloudletData {
-		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
-		assert.Nil(t, err, "Create cloudlet")
-	}
+	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
+	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
+	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
+	insertCloudletInfo(testutil.CloudletInfoData)
+	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
+	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created
 	_, err := appInstApi.CreateAppInst(ctx, &testutil.AppInstData[0])

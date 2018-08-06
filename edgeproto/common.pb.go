@@ -40,8 +40,63 @@ func (x Liveness) String() string {
 }
 func (Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
 
+// IpSupport indicates the types of IP support the Cloudlet has.
+// Static IP support indicates a set of static IPs are provided
+// to the controller, and the controller manages which IPs are
+// used where. Dynamic means that services must use DHCP to obtain
+// IP addresses and the controller has no control of which IPs are assigned.
+type IpSupport int32
+
+const (
+	IpSupport_IpSupportUnknown IpSupport = 0
+	IpSupport_IpSupportStatic  IpSupport = 1
+	IpSupport_IpSupportDynamic IpSupport = 2
+)
+
+var IpSupport_name = map[int32]string{
+	0: "IpSupportUnknown",
+	1: "IpSupportStatic",
+	2: "IpSupportDynamic",
+}
+var IpSupport_value = map[string]int32{
+	"IpSupportUnknown": 0,
+	"IpSupportStatic":  1,
+	"IpSupportDynamic": 2,
+}
+
+func (x IpSupport) String() string {
+	return proto.EnumName(IpSupport_name, int32(x))
+}
+func (IpSupport) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
+
+type L4Proto int32
+
+const (
+	L4Proto_L4ProtoUnknown L4Proto = 0
+	L4Proto_L4ProtoTCP     L4Proto = 1
+	L4Proto_L4ProtoUDP     L4Proto = 2
+)
+
+var L4Proto_name = map[int32]string{
+	0: "L4ProtoUnknown",
+	1: "L4ProtoTCP",
+	2: "L4ProtoUDP",
+}
+var L4Proto_value = map[string]int32{
+	"L4ProtoUnknown": 0,
+	"L4ProtoTCP":     1,
+	"L4ProtoUDP":     2,
+}
+
+func (x L4Proto) String() string {
+	return proto.EnumName(L4Proto_name, int32(x))
+}
+func (L4Proto) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{2} }
+
 func init() {
 	proto.RegisterEnum("edgeproto.Liveness", Liveness_name, Liveness_value)
+	proto.RegisterEnum("edgeproto.IpSupport", IpSupport_name, IpSupport_value)
+	proto.RegisterEnum("edgeproto.L4Proto", L4Proto_name, L4Proto_value)
 }
 
 var LivenessStrings = []string{
@@ -82,18 +137,98 @@ func (e Liveness) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+var IpSupportStrings = []string{
+	"IpSupportUnknown",
+	"IpSupportStatic",
+	"IpSupportDynamic",
+}
+
+const (
+	IpSupportIpSupportUnknown uint64 = 1 << 0
+	IpSupportIpSupportStatic  uint64 = 1 << 1
+	IpSupportIpSupportDynamic uint64 = 1 << 2
+)
+
+func (e *IpSupport) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := IpSupport_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = IpSupport_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = IpSupport(val)
+	return nil
+}
+
+func (e IpSupport) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var L4ProtoStrings = []string{
+	"L4ProtoUnknown",
+	"L4ProtoTCP",
+	"L4ProtoUDP",
+}
+
+const (
+	L4ProtoL4ProtoUnknown uint64 = 1 << 0
+	L4ProtoL4ProtoTCP     uint64 = 1 << 1
+	L4ProtoL4ProtoUDP     uint64 = 1 << 2
+)
+
+func (e *L4Proto) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := L4Proto_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = L4Proto_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = L4Proto(val)
+	return nil
+}
+
+func (e L4Proto) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
 func init() { proto.RegisterFile("common.proto", fileDescriptorCommon) }
 
 var fileDescriptorCommon = []byte{
-	// 146 bytes of a gzipped FileDescriptorProto
+	// 209 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x49, 0xce, 0xcf, 0xcd,
 	0xcd, 0xcf, 0xd3, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x4d, 0x49, 0x4f, 0x05, 0x33,
 	0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13, 0xf3, 0xf2,
 	0xf2, 0x4b, 0x12, 0x4b, 0x32, 0xf3, 0xf3, 0x8a, 0x21, 0x0a, 0xb5, 0x3c, 0xb8, 0x38, 0x7c, 0x32,
 	0xcb, 0x52, 0xf3, 0x52, 0x8b, 0x8b, 0x85, 0x84, 0xb9, 0xf8, 0x61, 0xec, 0xd0, 0xbc, 0xec, 0xbc,
 	0xfc, 0xf2, 0x3c, 0x01, 0x06, 0x21, 0x21, 0x2e, 0x3e, 0x98, 0x60, 0x30, 0x48, 0x6b, 0xb2, 0x00,
-	0x23, 0xb2, 0x42, 0x97, 0xca, 0xbc, 0xc4, 0xdc, 0xcc, 0x64, 0x01, 0x26, 0x27, 0x81, 0x13, 0x0f,
-	0xe5, 0x18, 0x4e, 0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x24,
-	0x36, 0xb0, 0x15, 0xc6, 0x80, 0x00, 0x00, 0x00, 0xff, 0xff, 0x18, 0xa0, 0xb4, 0xc8, 0x9b, 0x00,
-	0x00, 0x00,
+	0x23, 0xb2, 0x42, 0x97, 0xca, 0xbc, 0xc4, 0xdc, 0xcc, 0x64, 0x01, 0x26, 0x2d, 0x1f, 0x2e, 0x4e,
+	0xcf, 0x82, 0xe0, 0xd2, 0x82, 0x82, 0xfc, 0xa2, 0x12, 0x21, 0x11, 0x2e, 0x01, 0x38, 0x07, 0x61,
+	0x96, 0x30, 0x17, 0x3f, 0x5c, 0x14, 0x6e, 0x18, 0xb2, 0x52, 0x84, 0x69, 0xb6, 0x5c, 0xec, 0x3e,
+	0x26, 0x01, 0x60, 0xbf, 0x80, 0x5c, 0x00, 0x61, 0x22, 0x4c, 0xe2, 0xe3, 0xe2, 0x82, 0x8a, 0x85,
+	0x38, 0x07, 0x08, 0x30, 0x22, 0xf1, 0x43, 0x5d, 0x02, 0x04, 0x98, 0x9c, 0x04, 0x4e, 0x3c, 0x94,
+	0x63, 0x38, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x93, 0xd8,
+	0xc0, 0xfe, 0x35, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x5a, 0x15, 0x9e, 0x43, 0x28, 0x01, 0x00,
+	0x00,
 }

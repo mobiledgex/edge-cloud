@@ -23,6 +23,7 @@ var (
 	dataDir     *string
 	stopOnFail  *bool
 	verbose     *bool
+	notimestamp *bool
 	failedTests = make(map[string]int)
 )
 
@@ -36,7 +37,7 @@ func init() {
 	dataDir = flag.String("datadir", "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data", "directory where app data files exist")
 	stopOnFail = flag.Bool("stop", false, "stop on failures")
 	verbose = flag.Bool("verbose", false, "prints full output screen")
-
+	notimestamp = flag.Bool("notimestamp", false, "no timestamp on outputdir, logs will be overwritten by subsequent runs")
 }
 
 // a list of tests, which may include another file which has tests.  Looping can
@@ -213,7 +214,7 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 
 func main() {
 	validateArgs()
-	*outputDir = util.CreateOutputDir(true, *outputDir, commandName+".log")
+	*outputDir = util.CreateOutputDir(!*notimestamp, *outputDir, commandName+".log")
 
 	fmt.Printf("\n%-30s %-50s Result\n", "Testfile", "Test")
 	fmt.Printf("-------------------------------------------------------------------------------------------\n")

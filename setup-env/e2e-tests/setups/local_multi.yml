@@ -93,3 +93,10 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud1"}'
   hostname: "127.0.0.1"
+
+- crmlocal:
+    name: crm2
+    apiaddr: "0.0.0.0:55092"
+    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud2"}'
+  hostname: "127.0.0.1"

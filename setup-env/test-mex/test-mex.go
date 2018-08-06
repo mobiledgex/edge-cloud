@@ -61,7 +61,7 @@ var actionChoices = map[string]string{
 	"stop":          "procname",
 	"status":        "procname",
 	"ctrlapi":       "procname",
-        "ctrlinfo":      "procname",
+	"ctrlinfo":      "procname",
 	"dmeapi":        "procname",
 	"deploy":        "",
 	"cleanup":       "",

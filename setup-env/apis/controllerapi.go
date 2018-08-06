@@ -32,6 +32,7 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	errFound := false
 	var showCmds = []string{
 		"flavors: ShowFlavor",
+		"clusterflavors: ShowClusterFlavor",
 		"clusters: ShowCluster",
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
@@ -73,6 +74,26 @@ func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto
 			_, err = opAPI.UpdateFlavor(ctx, &o)
 		case "delete":
 			_, err = opAPI.DeleteFlavor(ctx, &o)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runClusterFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	opAPI := edgeproto.NewClusterFlavorApiClient(conn)
+	var err error = nil
+	for _, o := range appdata.ClusterFlavors {
+		log.Printf("API %v for cluster flavor: %v", mode, o.Key.Name)
+		switch mode {
+		case "create":
+			_, err = opAPI.CreateClusterFlavor(ctx, &o)
+		case "update":
+			_, err = opAPI.UpdateClusterFlavor(ctx, &o)
+		case "delete":
+			_, err = opAPI.DeleteClusterFlavor(ctx, &o)
 		}
 		if err != nil {
 			return err
@@ -133,6 +154,26 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 			_, err = clAPI.UpdateCloudlet(ctx, &c)
 		case "delete":
 			_, err = clAPI.DeleteCloudlet(ctx, &c)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func runCloudletInfoApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
+	var err error = nil
+	clAPI := edgeproto.NewCloudletInfoApiClient(conn)
+	for _, c := range appdata.CloudletInfos {
+		log.Printf("API %v for cloudletinfos: %v", mode, c.Key.Name)
+		switch mode {
+		case "create":
+			_, err = clAPI.InjectCloudletInfo(ctx, &c)
+		case "update":
+			// no-op
+		case "delete":
+			_, err = clAPI.EvictCloudletInfo(ctx, &c)
 		}
 		if err != nil {
 			return err
@@ -278,6 +319,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in cluster API %v\n", err)
 				rc = false
 			}
+			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cloudletInfo API %v\n", err)
+				rc = false
+			}
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
@@ -291,6 +337,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
+				rc = false
+			}
+			err = runClusterFlavorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cluster flavor API %v\n", err)
 				rc = false
 			}
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
@@ -303,7 +354,12 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 		case "update":
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
-				log.Printf("Error in operator API %v\n", err)
+				log.Printf("Error in flavor API %v\n", err)
+				rc = false
+			}
+			err = runClusterFlavorApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cluster flavor API %v\n", err)
 				rc = false
 			}
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
@@ -319,6 +375,11 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in cloudlet API %v\n", err)
+				rc = false
+			}
+			err = runCloudletInfoApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in cloudletInfo API %v\n", err)
 				rc = false
 			}
 			err = runClusterApi(ctrlapi, ctx, &appData, api)

@@ -182,7 +182,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		}
 		visited := make([]*generator.Descriptor, 0)
 		parentNoConfig := false
-		g.generateVarFlags(msgName, make([]string, 0), desc, noconfig, visited, parentNoConfig)
+		g.generateVarFlags(msgName, make([]string, 0), make([]string, 0), desc, noconfig, visited, parentNoConfig)
 	}
 	// Add per input struct flag sets to the commands.
 	initNoConfig := false
@@ -319,6 +319,8 @@ func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descrip
 				switch *field.Type {
 				case descriptor.FieldDescriptorProto_TYPE_BOOL:
 					val = "false"
+				case descriptor.FieldDescriptorProto_TYPE_STRING:
+					val = "\"\""
 				case descriptor.FieldDescriptorProto_TYPE_BYTES:
 					val = "nil"
 				}
@@ -357,7 +359,7 @@ func (g *GenCmd) generateInputVars() {
 		g.P("var ", flatType, "In ", g.FQTypeName(desc))
 		g.P("var ", flatType, "FlagSet = pflag.NewFlagSet(\"", flatType, "\", pflag.ExitOnError)")
 		g.P("var ", flatType, "NoConfigFlagSet = pflag.NewFlagSet(\"", flatType, "NoConfig\", pflag.ExitOnError)")
-		g.generateEnumVars(flatType, desc, make([]string, 0), make([]*generator.Descriptor, 0))
+		g.generateEnumVars(flatType, desc, make([]string, 0), make([]string, 0), make([]*generator.Descriptor, 0))
 	}
 }
 
@@ -374,7 +376,7 @@ func (g *GenCmd) generateEnumValSlice(desc *generator.EnumDescriptor) {
 	g.P()
 }
 
-func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
+func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents, enumParents []string, visited []*generator.Descriptor) {
 	if gensupport.WasVisited(desc, visited) {
 		return
 	}
@@ -386,9 +388,13 @@ func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, p
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			g.generateEnumVars(flatType, subDesc, append(parents, name), append(visited, desc))
+			idx := ""
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				idx = "[0]"
+			}
+			g.generateEnumVars(flatType, subDesc, append(parents, name+idx), append(parents, name), append(visited, desc))
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			inVar := flatType + "In" + strings.Join(append(parents, name), "")
+			inVar := flatType + "In" + strings.Join(append(enumParents, name), "")
 			repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 			g.P("var ", inVar, " string")
 			enumArg := EnumArg{
@@ -420,7 +426,7 @@ type fieldArgs struct {
 var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, {{.Usage}})
 `
 
-func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor, parentNoConfig bool) {
+func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor, parentNoConfig bool) {
 	if gensupport.WasVisited(desc, visited) {
 		// Break recursion. Googleapis HttpRule
 		// includes itself, so is a recursive
@@ -437,6 +443,16 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			// not supported
 			continue
 		}
+		// XXX repeated fields currently mess up show commands
+		// because if we create a size 1 array to hold a possible
+		// user input, the show command tries to match this size-1
+		// array against the back-end data. In reality we should not
+		// create any array (array should be nil) unless the user
+		// specifies some arg. For now just skip repeated fields.
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			continue
+		}
+
 		idx := ""
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			idx = "[0]"
@@ -477,7 +493,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			if _, found := noconfig[hierField]; found || parentNoConfig {
 				subNoConfig = true
 			}
-			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc), subNoConfig)
+			g.generateVarFlags(msgName, append(parents, name+idx), append(enumParents, name), subDesc, noconfig, append(visited, desc), subNoConfig)
 			continue
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
 			fallthrough
@@ -504,7 +520,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			fargs.Type = "Uint32"
 			fargs.DefValue = "0"
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			fargs.Field = msgName + "In" + strings.Join(append(parents, name), "")
+			fargs.Field = msgName + "In" + strings.Join(append(enumParents, name), "")
 			fargs.Ref = "&" + fargs.Field
 			enumDesc := g.GetEnumDesc(field.GetTypeName())
 			en := enumDesc.EnumDescriptorProto

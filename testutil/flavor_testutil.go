@@ -64,8 +64,13 @@ func (x *ShowFlavor) CheckFound(obj *edgeproto.Flavor) bool {
 func (x *ShowFlavor) AssertFound(t *testing.T, obj *edgeproto.Flavor) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Flavor %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Flavor are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -156,14 +161,39 @@ func NewClientFlavorApi(api edgeproto.FlavorApiClient) *FlavorCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalFlavorCudTest(t *testing.T, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
-	basicFlavorCudTest(t, NewInternalFlavorApi(api), testData)
+
+func InternalFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
+	switch test {
+	case "cud":
+		basicFlavorCudTest(t, NewInternalFlavorApi(api), testData)
+	case "show":
+		basicFlavorShowTest(t, NewInternalFlavorApi(api), testData)
+	}
 }
 
-func ClientFlavorCudTest(t *testing.T, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
-	basicFlavorCudTest(t, NewClientFlavorApi(api), testData)
+func ClientFlavorTest(t *testing.T, test string, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
+	switch test {
+	case "cud":
+		basicFlavorCudTest(t, NewClientFlavorApi(api), testData)
+	case "show":
+		basicFlavorShowTest(t, NewClientFlavorApi(api), testData)
+	}
 }
 
+func basicFlavorShowTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowFlavor{}
+	show.Init()
+	filterNone := edgeproto.Flavor{}
+	err = api.ShowFlavor(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
 	ctx := context.TODO()
@@ -174,28 +204,21 @@ func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateFlavor(ctx, &obj)
-		assert.Nil(t, err, "Create Flavor %s", obj.Key.GetKeyString())
-	}
+	createFlavorData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateFlavor(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Flavor")
 
 	// test show all items
-	show := ShowFlavor{}
-	show.Init()
-	filterNone := edgeproto.Flavor{}
-	err = api.ShowFlavor(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicFlavorShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteFlavor(ctx, &testData[0])
 	assert.Nil(t, err, "delete Flavor %s", testData[0].Key.GetKeyString())
+	show := ShowFlavor{}
 	show.Init()
+	filterNone := edgeproto.Flavor{}
 	err = api.ShowFlavor(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -212,4 +235,22 @@ func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto
 	_, err = api.CreateFlavor(ctx, &bad)
 	assert.NotNil(t, err, "Create Flavor with no key info")
 
+}
+
+func InternalFlavorCreate(t *testing.T, api edgeproto.FlavorApiServer, testData []edgeproto.Flavor) {
+	createFlavorData(t, NewInternalFlavorApi(api), testData)
+}
+
+func ClientFlavorCreate(t *testing.T, api edgeproto.FlavorApiClient, testData []edgeproto.Flavor) {
+	createFlavorData(t, NewClientFlavorApi(api), testData)
+}
+
+func createFlavorData(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateFlavor(ctx, &obj)
+		assert.Nil(t, err, "Create Flavor %s", obj.Key.GetKeyString())
+	}
 }

@@ -12,6 +12,7 @@ import (
 
 	//"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -27,7 +28,6 @@ var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var rootLBName = flag.String("rootlb", "mexlb.gddt.mobiledgex.net", "FQDN of root LB")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -47,6 +47,7 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	parseCloudletKey()
+	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
 
 	OSEnvValid = ValidateOSEnv()
 
@@ -66,13 +67,13 @@ func main() {
 		log.DebugLog(log.DebugLevelMexos, "OS env valid")
 		crmutil.MEXInit()
 		go func() {
-			log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", *rootLBName)
-			crmRootLB, cerr := crmutil.NewRootLB(*rootLBName)
+			log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", rootLBName)
+			crmRootLB, cerr := crmutil.NewRootLB(rootLBName)
 			if cerr != nil {
 				log.DebugLog(log.DebugLevelMexos, "Can't get crm mex rootlb", "error", cerr)
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", *rootLBName, "crmrootlb", crmRootLB)
+			log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
 			controllerData.CRMRootLB = crmRootLB
 			log.DebugLog(log.DebugLevelMexos, "init platform with key", "cloudletkeystr", *cloudletKeyStr)
 			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)

@@ -41,9 +41,10 @@ type Client struct {
 }
 
 type ClientRecvAllMaps struct {
-	AppInsts  map[edgeproto.AppInstKey]struct{}
-	Cloudlets map[edgeproto.CloudletKey]struct{}
-	Flavors   map[edgeproto.FlavorKey]struct{}
+	AppInsts       map[edgeproto.AppInstKey]struct{}
+	Cloudlets      map[edgeproto.CloudletKey]struct{}
+	Flavors        map[edgeproto.FlavorKey]struct{}
+	ClusterFlavors map[edgeproto.ClusterFlavorKey]struct{}
 }
 
 type SendAppInstInfoHandler interface {
@@ -79,6 +80,12 @@ type RecvFlavorHandler interface {
 	Prune(keys map[edgeproto.FlavorKey]struct{})
 }
 
+type RecvClusterFlavorHandler interface {
+	Update(in *edgeproto.ClusterFlavor, rev int64)
+	Delete(in *edgeproto.ClusterFlavor, rev int64)
+	Prune(keys map[edgeproto.ClusterFlavorKey]struct{})
+}
+
 type RecvClusterInstHandler interface {
 	Update(in *edgeproto.ClusterInst, rev int64)
 	Delete(in *edgeproto.ClusterInst, rev int64)
@@ -92,6 +99,7 @@ type ClientHandler interface {
 	RecvAppInstHandler() RecvAppInstHandler
 	RecvCloudletHandler() RecvCloudletHandler
 	RecvFlavorHandler() RecvFlavorHandler
+	RecvClusterFlavorHandler() RecvClusterFlavorHandler
 	RecvClusterInstHandler() RecvClusterInstHandler
 }
 
@@ -107,6 +115,7 @@ type ClientStats struct {
 	AppInstRecv          uint64
 	CloudletRecv         uint64
 	FlavorRecv           uint64
+	ClusterFlavorRecv    uint64
 	ClusterInstRecv      uint64
 	Recv                 uint64
 }
@@ -275,9 +284,11 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	allMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
 	allMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	allMaps.Flavors = make(map[edgeproto.FlavorKey]struct{})
+	allMaps.ClusterFlavors = make(map[edgeproto.ClusterFlavorKey]struct{})
 	recvAppInst := s.handler.RecvAppInstHandler()
 	recvCloudlet := s.handler.RecvCloudletHandler()
 	recvFlavor := s.handler.RecvFlavorHandler()
+	recvClusterFlavor := s.handler.RecvClusterFlavorHandler()
 	recvClusterInst := s.handler.RecvClusterInstHandler()
 	for !s.done {
 		reply, err := stream.Recv()
@@ -300,6 +311,10 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			if flavor != nil {
 				allMaps.Flavors[flavor.Key] = struct{}{}
 			}
+			clusterflavor := reply.GetClusterFlavor()
+			if clusterflavor != nil {
+				allMaps.ClusterFlavors[clusterflavor.Key] = struct{}{}
+			}
 		}
 		if reply.Action == edgeproto.NoticeAction_SENDALL_END {
 			if recvAppInst != nil {
@@ -310,6 +325,9 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			}
 			if recvFlavor != nil {
 				recvFlavor.Prune(allMaps.Flavors)
+			}
+			if recvClusterFlavor != nil {
+				recvClusterFlavor.Prune(allMaps.ClusterFlavors)
 			}
 			allMaps = nil
 			continue
@@ -336,6 +354,28 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 				recvFlavor.Delete(flavor, 0)
 			}
 			s.stats.FlavorRecv++
+			s.stats.Recv++
+		}
+		clusterflavor := reply.GetClusterFlavor()
+		if clusterflavor != nil {
+			log.DebugLog(log.DebugLevelNotify,
+				"client cluster flavor update",
+				"key", clusterflavor.Key.GetKeyString(),
+				"recv", recvClusterFlavor)
+		}
+		if recvClusterFlavor != nil && clusterflavor != nil {
+			if reply.Action == edgeproto.NoticeAction_UPDATE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client cluster flavor update",
+					"key", clusterflavor.Key.GetKeyString())
+				recvClusterFlavor.Update(clusterflavor, 0)
+			} else if reply.Action == edgeproto.NoticeAction_DELETE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client cluster flavor delete",
+					"key", clusterflavor.Key.GetKeyString())
+				recvClusterFlavor.Delete(clusterflavor, 0)
+			}
+			s.stats.ClusterFlavorRecv++
 			s.stats.Recv++
 		}
 		clusterInst := reply.GetClusterInst()

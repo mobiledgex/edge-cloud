@@ -1,6 +1,9 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/edgeproto"
+import (
+	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 type ClusterInstInfoApi struct {
 	sync  *Sync
@@ -26,12 +29,14 @@ func (s *ClusterInstInfoApi) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, 
 }
 
 func (s *ClusterInstInfoApi) Update(in *edgeproto.ClusterInstInfo, notifyId int64) {
-	if !clusterInstApi.HasKey(in.GetKey()) {
-		return
-	}
-	// for now assume all fields have been specified
-	in.Fields = edgeproto.ClusterInstInfoAllFields
-	s.store.Put(in, nil)
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !clusterInstApi.store.STMGet(stm, in.GetKey(), nil) {
+			return nil
+		}
+		in.Fields = nil
+		s.store.STMPut(stm, in)
+		return nil
+	})
 }
 
 func (s *ClusterInstInfoApi) internalDelete(key *edgeproto.ClusterInstKey, wait func(int64)) {

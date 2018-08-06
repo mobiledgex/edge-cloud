@@ -82,6 +82,7 @@ func main() {
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
+	edgeproto.RegisterClusterFlavorApiServer(server, &clusterFlavorApi)
 	edgeproto.RegisterClusterApiServer(server, &clusterApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
@@ -89,6 +90,7 @@ func main() {
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
 	edgeproto.RegisterAppInstInfoApiServer(server, &appInstInfoApi)
 	edgeproto.RegisterClusterInstInfoApiServer(server, &clusterInstInfoApi)
+	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -138,9 +140,11 @@ func InitApis(sync *Sync) {
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
+	InitClusterFlavorApi(sync)
 	InitClusterApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
+	InitCloudletRefsApi(sync)
 }

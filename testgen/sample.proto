@@ -5,6 +5,7 @@ package testgen;
 
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 
 enum OuterEnum {
   OUTER0 = 0;
@@ -77,6 +78,7 @@ message TestGen {
   repeated distributed_match_engine.Loc repeated_loc_nonnull = 36 [(gogoproto.nullable) = false];
   map<int32, int32> intMap = 37;
   map<int32, NestedMessage> msgMap = 38;
+  option (protogen.generate_matches) = true;
 }
 
 service TestApi {

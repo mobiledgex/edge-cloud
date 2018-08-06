@@ -380,22 +380,19 @@ func encodeVarintDeveloper(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *DeveloperKey) Matches(filter *DeveloperKey) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.Name != "" && filter.Name != m.Name {
+func (m *DeveloperKey) Matches(o *DeveloperKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	return true
-}
-
-func (m *DeveloperKey) MatchesIgnoreBackend(filter *DeveloperKey) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.Name != "" && filter.Name != m.Name {
-		return false
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
 	}
 	return true
 }
@@ -419,46 +416,37 @@ func DeveloperKeyStringParse(str string, key *DeveloperKey) {
 	}
 }
 
-func (m *Developer) Matches(filter *Developer) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.Matches(&filter.Key) {
+func (m *Developer) Matches(o *Developer, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.Username != "" && filter.Username != m.Username {
+	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if filter.Passhash != "" && filter.Passhash != m.Passhash {
-		return false
+	if !opts.Filter || o.Username != "" {
+		if o.Username != m.Username {
+			return false
+		}
 	}
-	if filter.Address != "" && filter.Address != m.Address {
-		return false
+	if !opts.Filter || o.Passhash != "" {
+		if o.Passhash != m.Passhash {
+			return false
+		}
 	}
-	if filter.Email != "" && filter.Email != m.Email {
-		return false
+	if !opts.Filter || o.Address != "" {
+		if o.Address != m.Address {
+			return false
+		}
 	}
-	return true
-}
-
-func (m *Developer) MatchesIgnoreBackend(filter *Developer) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
-		return false
-	}
-	if filter.Username != "" && filter.Username != m.Username {
-		return false
-	}
-	if filter.Passhash != "" && filter.Passhash != m.Passhash {
-		return false
-	}
-	if filter.Address != "" && filter.Address != m.Address {
-		return false
-	}
-	if filter.Email != "" && filter.Email != m.Email {
-		return false
+	if !opts.Filter || o.Email != "" {
+		if o.Email != m.Email {
+			return false
+		}
 	}
 	return true
 }
@@ -789,7 +777,7 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Developer", "obj", obj)

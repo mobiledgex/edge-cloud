@@ -15,6 +15,35 @@ flavors:
   vcpus: 4
   disk: 4
 
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor:
+    name: x1.medium
+  masterflavor:
+    name: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
+
 operators:
 - key:
     name: ATT
@@ -38,6 +67,8 @@ cloudlets:
   location:
     lat: 31
     long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 - key:
     operatorkey:
       name: DMUUS
@@ -46,6 +77,8 @@ cloudlets:
   location:
     lat: 35
     long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
 - key:
@@ -56,7 +89,7 @@ apps:
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
-  flavor:
+  defaultflavor:
     name: x1.small
 
 appinstances:

@@ -64,8 +64,13 @@ func (x *ShowClusterInst) CheckFound(obj *edgeproto.ClusterInst) bool {
 func (x *ShowClusterInst) AssertFound(t *testing.T, obj *edgeproto.ClusterInst) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find ClusterInst %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "ClusterInst are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -156,14 +161,39 @@ func NewClientClusterInstApi(api edgeproto.ClusterInstApiClient) *ClusterInstCom
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalClusterInstCudTest(t *testing.T, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
-	basicClusterInstCudTest(t, NewInternalClusterInstApi(api), testData)
+
+func InternalClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
+	switch test {
+	case "cud":
+		basicClusterInstCudTest(t, NewInternalClusterInstApi(api), testData)
+	case "show":
+		basicClusterInstShowTest(t, NewInternalClusterInstApi(api), testData)
+	}
 }
 
-func ClientClusterInstCudTest(t *testing.T, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
-	basicClusterInstCudTest(t, NewClientClusterInstApi(api), testData)
+func ClientClusterInstTest(t *testing.T, test string, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
+	switch test {
+	case "cud":
+		basicClusterInstCudTest(t, NewClientClusterInstApi(api), testData)
+	case "show":
+		basicClusterInstShowTest(t, NewClientClusterInstApi(api), testData)
+	}
 }
 
+func basicClusterInstShowTest(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterInst{}
+	show.Init()
+	filterNone := edgeproto.ClusterInst{}
+	err = api.ShowClusterInst(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
 	ctx := context.TODO()
@@ -174,28 +204,21 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateClusterInst(ctx, &obj)
-		assert.Nil(t, err, "Create ClusterInst %s", obj.Key.GetKeyString())
-	}
+	createClusterInstData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateClusterInst(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate ClusterInst")
 
 	// test show all items
-	show := ShowClusterInst{}
-	show.Init()
-	filterNone := edgeproto.ClusterInst{}
-	err = api.ShowClusterInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicClusterInstShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteClusterInst(ctx, &testData[0])
 	assert.Nil(t, err, "delete ClusterInst %s", testData[0].Key.GetKeyString())
+	show := ShowClusterInst{}
 	show.Init()
+	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -212,6 +235,24 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	_, err = api.CreateClusterInst(ctx, &bad)
 	assert.NotNil(t, err, "Create ClusterInst with no key info")
 
+}
+
+func InternalClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiServer, testData []edgeproto.ClusterInst) {
+	createClusterInstData(t, NewInternalClusterInstApi(api), testData)
+}
+
+func ClientClusterInstCreate(t *testing.T, api edgeproto.ClusterInstApiClient, testData []edgeproto.ClusterInst) {
+	createClusterInstData(t, NewClientClusterInstApi(api), testData)
+}
+
+func createClusterInstData(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateClusterInst(ctx, &obj)
+		assert.Nil(t, err, "Create ClusterInst %s", obj.Key.GetKeyString())
+	}
 }
 
 // Auto-generated code: DO NOT EDIT
@@ -255,8 +296,13 @@ func (x *ShowClusterInstInfo) CheckFound(obj *edgeproto.ClusterInstInfo) bool {
 func (x *ShowClusterInstInfo) AssertFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find ClusterInstInfo %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "ClusterInstInfo are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -322,4 +368,33 @@ func NewClientClusterInstInfoApi(api edgeproto.ClusterInstInfoApiClient) *Cluste
 	apiWrap := ClusterInstInfoCommonApi{}
 	apiWrap.client_api = api
 	return &apiWrap
+}
+
+func InternalClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiServer, testData []edgeproto.ClusterInstInfo) {
+	switch test {
+	case "show":
+		basicClusterInstInfoShowTest(t, NewInternalClusterInstInfoApi(api), testData)
+	}
+}
+
+func ClientClusterInstInfoTest(t *testing.T, test string, api edgeproto.ClusterInstInfoApiClient, testData []edgeproto.ClusterInstInfo) {
+	switch test {
+	case "show":
+		basicClusterInstInfoShowTest(t, NewClientClusterInstInfoApi(api), testData)
+	}
+}
+
+func basicClusterInstInfoShowTest(t *testing.T, api *ClusterInstInfoCommonApi, testData []edgeproto.ClusterInstInfo) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterInstInfo{}
+	show.Init()
+	filterNone := edgeproto.ClusterInstInfo{}
+	err = api.ShowClusterInstInfo(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
 }

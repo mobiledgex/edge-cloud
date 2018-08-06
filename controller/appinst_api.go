@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -18,6 +20,8 @@ type AppInstApi struct {
 	store edgeproto.AppInstStore
 	cache edgeproto.AppInstCache
 }
+
+const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
 
@@ -88,6 +92,17 @@ func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
 	return false
 }
 
+func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, app := range s.cache.Objs {
+		if app.Flavor.Matches(key) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *AppInstApi) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
 	return s.createAppInstInternal(in)
@@ -118,11 +133,10 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 			return errors.New("Specified app not found")
 		}
 
-		// CloudletKey is duplicated in both the ClusterInstKey and the
-		// AppInstKey. It's inconsistent to create an AppInst on a ClusterInst
-		// when the cloudlet keys don't match, so don't require the user to
-		// specify the CloudletKey in the cluster during AppInst create, just
-		// take it from the AppInst Key.
+		// ClusterInstKey is derived from App's Cluster and
+		// AppInst's Cloudlet. It is not specifiable by the user.
+		// It is kept here is a shortcut to make looking up the
+		// clusterinst object easier.
 		in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
 		in.ClusterInstKey.ClusterKey = app.Cluster
 
@@ -146,6 +160,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 				"Create auto-clusterinst",
 				"key", clusterInst.Key,
 				"appinst", in)
+			fmt.Printf("Creating auto cluster inst %v\n", clusterInst)
 		}
 		return nil
 	})
@@ -179,21 +194,61 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 		in.ImageType = app.ImageType
 		in.ConfigMap = app.ConfigMap
 		in.AccessLayer = app.AccessLayer
-		in.Flavor = app.Flavor
-
-		if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
-			return errors.New("Cluster instance does not exist for app")
+		if in.Flavor.Name == "" {
+			in.Flavor = app.DefaultFlavor
 		}
 
-		// set up URI for this instance
-		in.Uri = util.DNSSanitize(in.Key.AppKey.Name) + "." +
-			util.DNSSanitize(in.Key.CloudletKey.Name) + "." +
-			util.AppDNSRoot
-		// TODO:
-		// Allocate mapped ports and mapped path(s)
-		// Reserve resources
-		in.MappedPorts = app.AccessPorts
+		if !flavorApi.store.STMGet(stm, &in.Flavor, nil) {
+			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
+		}
+
+		clusterInst := edgeproto.ClusterInst{}
+		if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
+			return errors.New("Cluster instance does not exist for app")
+		}
+		fmt.Printf("Creating appinst with clusterinst %v/%v\n", clusterInst.Key, clusterInst)
+
+		var info edgeproto.CloudletInfo
+		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
+			return errors.New("Info for cloudlet not found")
+		}
+
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsChanged := false
+		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
+			initCloudletRefs(&cloudletRefs, &in.Key.CloudletKey)
+		}
+
+		ports, _ := parseAppPorts(app.AccessPorts)
+
+		// shared root load balancer
+		// dedicated load balancer not supported yet
+		in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
+		if len(ports) > 0 {
+			if cloudletRefs.RootLbPorts == nil {
+				cloudletRefs.RootLbPorts = make(map[int32]int32)
+			}
+			ii := 0
+			p := RootLBSharedPortBegin
+			for ; p < 65000 && ii < len(ports); p++ {
+				if _, found := cloudletRefs.RootLbPorts[p]; found {
+					continue
+				}
+				ports[ii].PublicPort = p
+				cloudletRefs.RootLbPorts[p] = 1
+				ii++
+				cloudletRefsChanged = true
+			}
+		}
 		in.MappedPath = util.DNSSanitize(app.Key.Name)
+		if len(ports) > 0 {
+			in.MappedPorts = ports
+		}
+
+		// TODO: Make sure resources are available
+		if cloudletRefsChanged {
+			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
+		}
 
 		s.store.STMPut(stm, in)
 		return nil
@@ -223,9 +278,23 @@ func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (
 			// already deleted
 			return nil
 		}
+		cloudletRefs := edgeproto.CloudletRefs{}
+		cloudletRefsChanged := false
+		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
+			// shared root load balancer
+			for ii, _ := range appinst.MappedPorts {
+				p := appinst.MappedPorts[ii].PublicPort
+				delete(cloudletRefs.RootLbPorts, p)
+				cloudletRefsChanged = true
+			}
+		}
+
 		clusterInstKey = appinst.ClusterInstKey
 		// delete associated info
 		appInstInfoApi.internalDelete(stm, in.GetKey())
+		if cloudletRefsChanged {
+			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
+		}
 		// delete app inst
 		s.store.STMDel(stm, in.GetKey())
 		return nil
@@ -238,16 +307,13 @@ func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (
 }
 
 func (s *AppInstApi) deleteClusterInstAuto(key *edgeproto.ClusterInstKey) {
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		clusterInst := edgeproto.ClusterInst{}
-		if clusterInstApi.store.STMGet(stm, key, &clusterInst) && clusterInst.Auto {
-			clusterInstApi.store.STMDel(stm, key)
+	clusterInst := edgeproto.ClusterInst{}
+	if clusterInstApi.Get(key, &clusterInst) && clusterInst.Auto {
+		_, err := clusterInstApi.deleteClusterInstInternal(&clusterInst)
+		if err != nil {
+			log.InfoLog("Failed to delete auto cluster inst",
+				"clusterInst", key, "err", err)
 		}
-		return nil
-	})
-	if err != nil {
-		log.InfoLog("Failed to delete auto cluster inst",
-			"clusterInst", key, "err", err)
 	}
 }
 

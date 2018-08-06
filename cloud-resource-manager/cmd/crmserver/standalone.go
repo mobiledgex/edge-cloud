@@ -103,6 +103,16 @@ func (s *standaloneServer) ShowFlavor(in *edgeproto.Flavor, cb edgeproto.FlavorA
 	return err
 }
 
+func (s *standaloneServer) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	s.data.CloudletInfoCache.Update(in, 0)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *standaloneServer) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	s.data.CloudletInfoCache.Delete(in, 0)
+	return &edgeproto.Result{}, nil
+}
+
 func (s *standaloneServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
 	err := s.data.CloudletInfoCache.Show(in, func(obj *edgeproto.CloudletInfo) error {
 		err := cb.Send(obj)

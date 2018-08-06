@@ -53,6 +53,11 @@ type SendFlavorHandler interface {
 	Get(key *edgeproto.FlavorKey, buf *edgeproto.Flavor) bool
 }
 
+type SendClusterFlavorHandler interface {
+	GetAllKeys(keys map[edgeproto.ClusterFlavorKey]struct{})
+	Get(key *edgeproto.ClusterFlavorKey, buf *edgeproto.ClusterFlavor) bool
+}
+
 type SendClusterInstHandler interface {
 	Get(key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterInst) bool
 	GetClusterInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{},
@@ -81,6 +86,7 @@ type ServerHandler interface {
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
 	SendFlavorHandler() SendFlavorHandler
+	SendClusterFlavorHandler() SendClusterFlavorHandler
 	SendClusterInstHandler() SendClusterInstHandler
 	RecvAppInstInfoHandler() RecvAppInstInfoHandler
 	RecvCloudletInfoHandler() RecvCloudletInfoHandler
@@ -88,13 +94,14 @@ type ServerHandler interface {
 }
 
 type ServerStats struct {
-	AppInstsSent     uint64
-	CloudletsSent    uint64
-	FlavorsSent      uint64
-	ClusterInstsSent uint64
-	NegotiateErrors  uint64
-	RecvErrors       uint64
-	SendErrors       uint64
+	AppInstsSent       uint64
+	CloudletsSent      uint64
+	FlavorsSent        uint64
+	ClusterFlavorsSent uint64
+	ClusterInstsSent   uint64
+	NegotiateErrors    uint64
+	RecvErrors         uint64
+	SendErrors         uint64
 }
 
 // Server is on the upstream side and sends data to downstream clients.
@@ -102,20 +109,21 @@ type ServerStats struct {
 // required by the client. After that it will send objects only when
 // they are changed.
 type Server struct {
-	peerAddr     string
-	appInsts     map[edgeproto.AppInstKey]struct{}
-	cloudlets    map[edgeproto.CloudletKey]struct{}
-	flavors      map[edgeproto.FlavorKey]struct{}
-	clusterInsts map[edgeproto.ClusterInstKey]struct{}
-	mux          util.Mutex
-	signal       chan bool
-	done         bool
-	handler      ServerHandler
-	stats        ServerStats
-	version      uint32
-	notifyId     int64
-	requestor    edgeproto.NoticeRequestor
-	running      chan struct{}
+	peerAddr       string
+	appInsts       map[edgeproto.AppInstKey]struct{}
+	cloudlets      map[edgeproto.CloudletKey]struct{}
+	flavors        map[edgeproto.FlavorKey]struct{}
+	clusterflavors map[edgeproto.ClusterFlavorKey]struct{}
+	clusterInsts   map[edgeproto.ClusterInstKey]struct{}
+	mux            util.Mutex
+	signal         chan bool
+	done           bool
+	handler        ServerHandler
+	stats          ServerStats
+	version        uint32
+	notifyId       int64
+	requestor      edgeproto.NoticeRequestor
+	running        chan struct{}
 	// tracked cloudlets are the set of keys received from the client
 	// for requestor type CRM. We only send data related to these
 	// cloudlet key(s)
@@ -185,6 +193,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server.appInsts = make(map[edgeproto.AppInstKey]struct{})
 	server.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	server.flavors = make(map[edgeproto.FlavorKey]struct{})
+	server.clusterflavors = make(map[edgeproto.ClusterFlavorKey]struct{})
 	server.clusterInsts = make(map[edgeproto.ClusterInstKey]struct{})
 	server.signal = make(chan bool, 1)
 	server.handler = mgr.handler
@@ -287,6 +296,17 @@ func (mgr *ServerMgr) UpdateFlavor(key *edgeproto.FlavorKey) {
 	}
 }
 
+func (mgr *ServerMgr) UpdateClusterFlavor(key *edgeproto.ClusterFlavorKey) {
+	mgr.mux.Lock()
+	defer mgr.mux.Unlock()
+	for _, server := range mgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+			continue
+		}
+		server.UpdateClusterFlavor(key)
+	}
+}
+
 func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
@@ -338,6 +358,13 @@ func (s *Server) UpdateFlavor(key *edgeproto.FlavorKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.flavors[*key] = struct{}{}
+	s.wakeup()
+}
+
+func (s *Server) UpdateClusterFlavor(key *edgeproto.ClusterFlavorKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.clusterflavors[*key] = struct{}{}
 	s.wakeup()
 }
 
@@ -399,20 +426,24 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	var noticeAppInst edgeproto.NoticeReply_AppInst
 	var noticeCloudlet edgeproto.NoticeReply_Cloudlet
 	var noticeFlavor edgeproto.NoticeReply_Flavor
+	var noticeClusterFlavor edgeproto.NoticeReply_ClusterFlavor
 	var noticeClusterInst edgeproto.NoticeReply_ClusterInst
 	var appInst edgeproto.AppInst
 	var cloudlet edgeproto.Cloudlet
 	var flavor edgeproto.Flavor
+	var clusterflavor edgeproto.ClusterFlavor
 	var clusterInst edgeproto.ClusterInst
 
 	noticeAppInst.AppInst = &appInst
 	noticeCloudlet.Cloudlet = &cloudlet
 	noticeFlavor.Flavor = &flavor
+	noticeClusterFlavor.ClusterFlavor = &clusterflavor
 	noticeClusterInst.ClusterInst = &clusterInst
 	sendAll := true
 	sendAppInst := s.handler.SendAppInstHandler()
 	sendCloudlet := s.handler.SendCloudletHandler()
 	sendFlavor := s.handler.SendFlavorHandler()
+	sendClusterFlavor := s.handler.SendClusterFlavorHandler()
 	sendClusterInst := s.handler.SendClusterInstHandler()
 	// trigger initial sendAll
 	s.wakeup()
@@ -432,7 +463,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		s.mux.Lock()
 		if len(s.appInsts) == 0 && len(s.cloudlets) == 0 &&
 			len(s.flavors) == 0 && len(s.clusterInsts) == 0 &&
-			!s.done &&
+			len(s.clusterflavors) == 0 && !s.done &&
 			!sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
@@ -440,10 +471,12 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
 		flavors := s.flavors
+		clusterflavors := s.clusterflavors
 		clusterInsts := s.clusterInsts
 		s.appInsts = make(map[edgeproto.AppInstKey]struct{})
 		s.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 		s.flavors = make(map[edgeproto.FlavorKey]struct{})
+		s.clusterflavors = make(map[edgeproto.ClusterFlavorKey]struct{})
 		s.clusterInsts = make(map[edgeproto.ClusterInstKey]struct{})
 		s.mux.Unlock()
 		if s.done {
@@ -456,6 +489,9 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM {
 				if sendFlavor != nil {
 					sendFlavor.GetAllKeys(flavors)
+				}
+				if sendClusterFlavor != nil {
+					sendClusterFlavor.GetAllKeys(clusterflavors)
 				}
 				// Cloudlet, AppInsts, CloudletInsts sends are
 				// triggered when registering a new CloudletInfo
@@ -488,6 +524,33 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 					break
 				}
 				s.stats.FlavorsSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
+		}
+
+		if sendClusterFlavor != nil {
+			// send cluster flavors
+			notice.Data = &noticeClusterFlavor
+			for key, _ := range clusterflavors {
+				found := sendClusterFlavor.Get(&key, &clusterflavor)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					clusterflavor.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send cluster flavor",
+					"client", s.peerAddr,
+					"action", notice.Action,
+					"key", clusterflavor.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.ClusterFlavorsSent++
 			}
 		}
 		if err != nil {
@@ -589,6 +652,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		appInsts = nil
 		cloudlets = nil
 		flavors = nil
+		clusterflavors = nil
 		clusterInsts = nil
 	}
 }
