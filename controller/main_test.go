@@ -70,6 +70,7 @@ func TestController(t *testing.T) {
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
 	flavorApi := edgeproto.NewFlavorApiClient(conn)
+	clusterFlavorApi := edgeproto.NewClusterFlavorApiClient(conn)
 	clusterApi := edgeproto.NewClusterApiClient(conn)
 	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
 	appInstInfoClient := edgeproto.NewAppInstInfoApiClient(conn)
@@ -78,20 +79,24 @@ func TestController(t *testing.T) {
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 
-	testutil.ClientDeveloperCudTest(t, devApi, testutil.DevData)
-	testutil.ClientFlavorCudTest(t, flavorApi, testutil.FlavorData)
-	testutil.ClientClusterCudTest(t, clusterApi, testutil.ClusterData)
-	testutil.ClientAppCudTest(t, appApi, testutil.AppData)
-	testutil.ClientOperatorCudTest(t, operApi, testutil.OperatorData)
-	testutil.ClientCloudletCudTest(t, cloudletApi, testutil.CloudletData)
-	testutil.ClientClusterInstCudTest(t, clusterInstApi, testutil.ClusterInstData)
-	testutil.ClientAppInstCudTest(t, appInstApi, testutil.AppInstData)
+	testutil.ClientDeveloperTest(t, "cud", devApi, testutil.DevData)
+	testutil.ClientFlavorTest(t, "cud", flavorApi, testutil.FlavorData)
+	testutil.ClientClusterFlavorTest(t, "cud", clusterFlavorApi, testutil.ClusterFlavorData)
+	testutil.ClientClusterTest(t, "cud", clusterApi, testutil.ClusterData)
+	testutil.ClientAppTest(t, "cud", appApi, testutil.AppData)
+	testutil.ClientOperatorTest(t, "cud", operApi, testutil.OperatorData)
+	testutil.ClientCloudletTest(t, "cud", cloudletApi, testutil.CloudletData)
+	insertCloudletInfo(testutil.CloudletInfoData)
+	testutil.ClientClusterInstTest(t, "cud", clusterInstApi, testutil.ClusterInstData)
+	testutil.ClientAppInstTest(t, "cud", appInstApi, testutil.AppInstData)
 
 	dmeNotify.WaitForAppInsts(5)
 	crmNotify.WaitForFlavors(3)
+	crmNotify.WaitForClusterFlavors(3)
 
 	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	assert.Equal(t, 3, len(crmNotify.FlavorCache.Objs), "num flavors")
+	assert.Equal(t, 3, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
 
 	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
 
@@ -133,6 +138,10 @@ func TestController(t *testing.T) {
 		_, err = appInstApi.DeleteAppInst(ctx, &inst)
 		assert.Nil(t, err)
 	}
+	for _, inst := range testutil.ClusterInstData {
+		_, err = clusterInstApi.DeleteClusterInst(ctx, &inst)
+		assert.Nil(t, err)
+	}
 	for _, obj := range testutil.AppData {
 		_, err = appApi.DeleteApp(ctx, &obj)
 		assert.Nil(t, err)
@@ -154,7 +163,7 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
 	assert.Equal(t, 0, len(appInstInfoApi.cache.Objs))
-	assert.Equal(t, 0, len(cloudletInfoApi.cache.Objs))
+	assert.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
@@ -195,6 +204,7 @@ func TestEdgeCloudBug26(t *testing.T) {
 	cloudletApi := edgeproto.NewCloudletApiClient(conn)
 	appInstApi := edgeproto.NewAppInstApiClient(conn)
 	flavorApi := edgeproto.NewFlavorApiClient(conn)
+	clusterFlavorApi := edgeproto.NewClusterFlavorApiClient(conn)
 
 	yamlData := `
 operators:
@@ -205,12 +215,24 @@ cloudlets:
     operatorkey:
       name: DMUUS
     name: cloud2
+  ipsupport: IpSupportDynamic
+  numdynamicips: 100
 flavors:
 - key:
-    name: x1.small
+    name: m1.small
   ram: 1024
   vcpus: 1
   disk: 1
+clusterflavors:
+- key:
+    name: x1.small
+  nodeflavor:
+    name: m1.small
+  masterflavor:
+    name: m1.small
+  numnodes: 2
+  maxnodes: 2
+  masternodes: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -220,8 +242,8 @@ apps:
       name: AcmeAppCo
     name: someApplication
     version: 1.0
-  flavor:
-    name: x1.small
+  defaultflavor:
+    name: m1.small
   imagetype: ImageTypeDocker
 appinstances:
 - key:
@@ -238,6 +260,17 @@ appinstances:
   liveness: 1
   port: 8080
   ip: [10,100,10,4]
+
+cloudletinfos:
+- key:
+    operatorkey:
+      name: DMUUS
+    name: cloud2
+  state: CloudletStateReady
+  osmaxram: 65536
+  osmaxvcores: 16
+  osmaxvolgb: 500
+  rootlbfqdn: mexlb.cloud2.dmuus.mobiledgex.net
 `
 	data := edgeproto.ApplicationData{}
 	err = yaml.Unmarshal([]byte(yamlData), &data)
@@ -248,12 +281,15 @@ appinstances:
 	assert.Nil(t, err, "create dev")
 	_, err = flavorApi.CreateFlavor(ctx, &data.Flavors[0])
 	assert.Nil(t, err, "create flavor")
+	_, err = clusterFlavorApi.CreateClusterFlavor(ctx, &data.ClusterFlavors[0])
+	assert.Nil(t, err, "create cluster flavor")
 	_, err = appApi.CreateApp(ctx, &data.Applications[0])
 	assert.Nil(t, err, "create app")
 	_, err = operApi.CreateOperator(ctx, &data.Operators[0])
 	assert.Nil(t, err, "create operator")
 	_, err = cloudletApi.CreateCloudlet(ctx, &data.Cloudlets[0])
 	assert.Nil(t, err, "create cloudlet")
+	insertCloudletInfo(data.CloudletInfos)
 
 	show := testutil.ShowApp{}
 	show.Init()

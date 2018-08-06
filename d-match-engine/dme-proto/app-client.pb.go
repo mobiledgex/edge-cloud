@@ -1703,6 +1703,42 @@ func (e DynamicLocGroupAdd_DlgCommType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+type MatchOptions struct {
+	// Filter will ignore 0 or nil fields on the passed in object
+	Filter bool
+	// IgnoreBackend will ignore fields that were marked backend in .proto
+	IgnoreBackend bool
+	// Sort repeated (arrays) of Key objects so matching does not
+	// fail due to order.
+	SortArrayedKeys bool
+}
+
+type MatchOpt func(*MatchOptions)
+
+func MatchFilter() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.Filter = true
+	}
+}
+
+func MatchIgnoreBackend() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.IgnoreBackend = true
+	}
+}
+
+func MatchSortArrayedKeys() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.SortArrayedKeys = true
+	}
+}
+
+func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
+	for _, f := range args {
+		f(opts)
+	}
+}
+
 func (m *Match_Engine_Request) Size() (n int) {
 	var l int
 	_ = l

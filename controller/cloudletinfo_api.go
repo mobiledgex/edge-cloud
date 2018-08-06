@@ -1,6 +1,10 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/edgeproto"
+import (
+	"context"
+
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+)
 
 type CloudletInfoApi struct {
 	sync  *Sync
@@ -15,6 +19,14 @@ func InitCloudletInfoApi(sync *Sync) {
 	cloudletInfoApi.store = edgeproto.NewCloudletInfoStore(sync.store)
 	edgeproto.InitCloudletInfoCache(&cloudletInfoApi.cache)
 	sync.RegisterCache(&cloudletInfoApi.cache)
+}
+
+func (s *CloudletInfoApi) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	return s.store.Put(in, s.sync.syncWait)
+}
+
+func (s *CloudletInfoApi) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	return s.store.Delete(in, s.sync.syncWait)
 }
 
 func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {

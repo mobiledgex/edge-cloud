@@ -392,28 +392,24 @@ func encodeVarintOperator(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *OperatorCode) Matches(filter *OperatorCode) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.MNC != "" && filter.MNC != m.MNC {
+func (m *OperatorCode) Matches(o *OperatorCode, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.MCC != "" && filter.MCC != m.MCC {
-		return false
+	if !opts.Filter || o.MNC != "" {
+		if o.MNC != m.MNC {
+			return false
+		}
 	}
-	return true
-}
-
-func (m *OperatorCode) MatchesIgnoreBackend(filter *OperatorCode) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.MNC != "" && filter.MNC != m.MNC {
-		return false
-	}
-	if filter.MCC != "" && filter.MCC != m.MCC {
-		return false
+	if !opts.Filter || o.MCC != "" {
+		if o.MCC != m.MCC {
+			return false
+		}
 	}
 	return true
 }
@@ -423,22 +419,19 @@ func (m *OperatorCode) CopyInFields(src *OperatorCode) {
 	m.MCC = src.MCC
 }
 
-func (m *OperatorKey) Matches(filter *OperatorKey) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.Name != "" && filter.Name != m.Name {
+func (m *OperatorKey) Matches(o *OperatorKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	return true
-}
-
-func (m *OperatorKey) MatchesIgnoreBackend(filter *OperatorKey) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.Name != "" && filter.Name != m.Name {
-		return false
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
 	}
 	return true
 }
@@ -462,21 +455,16 @@ func OperatorKeyStringParse(str string, key *OperatorKey) {
 	}
 }
 
-func (m *Operator) Matches(filter *Operator) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.Matches(&filter.Key) {
+func (m *Operator) Matches(o *Operator, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	return true
-}
-
-func (m *Operator) MatchesIgnoreBackend(filter *Operator) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.MatchesIgnoreBackend(&filter.Key) {
+	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
 	return true
@@ -772,7 +760,7 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 		log.DebugLog(log.DebugLevelApi, "Show Operator", "obj", obj)

@@ -5,6 +5,15 @@ flavors:
   vcpus: 2
   disk: 2
 
+clusterflavors:
+- key:
+    name: c1.small
+  nodeflavor: x1.small
+  masterflavor: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
 operators:
 - key:
     name: OP1
@@ -10025,7 +10034,7 @@ apps:
     name: App1
     version: "1.0"
   imagetype: ImageTypeDocker
-  flavor:
+  defaultflavor:
     name: x1.small
 
 appinstances:

@@ -20,7 +20,7 @@ func TestDeveloperApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalDeveloperCudTest(t, &developerApi, testutil.DevData)
+	testutil.InternalDeveloperTest(t, "cud", &developerApi, testutil.DevData)
 
 	dummy.Stop()
 }

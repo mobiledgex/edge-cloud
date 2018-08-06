@@ -14,6 +14,7 @@ type ControllerData struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
+	ClusterFlavorCache   edgeproto.ClusterFlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
@@ -29,10 +30,13 @@ func NewControllerData() *ControllerData {
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
+	edgeproto.InitClusterFlavorCache(&cd.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetNotifyCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetNotifyCb(cd.appInstChanged)
+	cd.FlavorCache.SetNotifyCb(cd.flavorChanged)
+	cd.ClusterFlavorCache.SetNotifyCb(cd.clusterFlavorChanged)
 	return cd
 }
 
@@ -67,6 +71,28 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 // the notify receive thread. If the actions done here not quick,
 // they should be done in a separate worker thread.
 
+func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey) {
+	flavor := edgeproto.Flavor{}
+	found := cd.FlavorCache.Get(key, &flavor)
+	if found {
+		// create (no updates allowed)
+		// CRM TODO: register flavor?
+	} else {
+		// CRM TODO: delete flavor?
+	}
+}
+
+func (cd *ControllerData) clusterFlavorChanged(key *edgeproto.ClusterFlavorKey) {
+	flavor := edgeproto.ClusterFlavor{}
+	found := cd.ClusterFlavorCache.Get(key, &flavor)
+	if found {
+		// create (no updates allowed)
+		// CRM TODO: register cluster flavor?
+	} else {
+		// CRM TODO: delete cluster flavor?
+	}
+}
+
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 	log.DebugLog(log.DebugLevelMexos, "clusterInstChange", "key", key)
 	clusterInst := edgeproto.ClusterInst{}
@@ -75,10 +101,10 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst changed", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
 		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
-		flavor := edgeproto.Flavor{}
+		flavor := edgeproto.ClusterFlavor{}
 
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
-		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
+		flavorFound := cd.ClusterFlavorCache.Get(&clusterInst.Flavor, &flavor)
 		if !flavorFound {
 			log.DebugLog(log.DebugLevelMexos, "did not find flavor", "flavor", flavor)
 			//XXX returning flavor not found error to InstInfoError?

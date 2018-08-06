@@ -53,6 +53,21 @@ func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 	if !operatorApi.HasOperator(&in.Key.OperatorKey) {
 		return &edgeproto.Result{}, errors.New("Specified cloudlet operator not found")
 	}
+	if in.IpSupport == edgeproto.IpSupport_IpSupportUnknown {
+		in.IpSupport = edgeproto.IpSupport_IpSupportDynamic
+	}
+	// TODO: support static IP assignment.
+	if in.IpSupport != edgeproto.IpSupport_IpSupportDynamic {
+		return &edgeproto.Result{}, errors.New("Only dynamic IPs are supported currently")
+	}
+	if in.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+		// TODO: Validate static ips
+	} else {
+		// dynamic
+		if in.NumDynamicIps < 1 {
+			return &edgeproto.Result{}, errors.New("Must specify at least one dynamic public IP available")
+		}
+	}
 	return s.store.Create(in, s.sync.syncWait)
 }
 
@@ -66,9 +81,16 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Application Instance")
 	}
+	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
+	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
+		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Cluster Instance")
+	}
 	res, err := s.store.Delete(in, s.sync.syncWait)
 	// also delete associated info
-	cloudletInfoApi.Del(&in.Key, s.sync.syncWait)
+	// Note: don't delete cloudletinfo, that will get deleted once CRM
+	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
+	// CRM connected the whole time, we will end up without cloudletInfo.
+	cloudletRefsApi.Delete(&in.Key, s.sync.syncWait)
 	// also delete dynamic instances
 	if len(dynInsts) > 0 {
 		// delete dynamic instances
@@ -78,7 +100,18 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
-					"err", derr)
+					"key", key, "err", derr)
+			}
+		}
+	}
+	if len(clDynInsts) > 0 {
+		for key, _ := range clDynInsts {
+			clInst := edgeproto.ClusterInst{Key: key}
+			_, derr := clusterInstApi.DeleteClusterInst(ctx, &clInst)
+			if derr != nil {
+				log.DebugLog(log.DebugLevelApi,
+					"Failed to delete dynamic cluster inst",
+					"key", key, "err", derr)
 			}
 		}
 	}

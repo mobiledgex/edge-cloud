@@ -9,8 +9,6 @@ import (
 	"strings"
 )
 
-var AppDNSRoot = "mobiledgex.net"
-
 // If new valid characters are added here, be sure to update
 // the Sanitize functions below to replace the new characters.
 var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")

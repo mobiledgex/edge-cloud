@@ -20,7 +20,7 @@ func TestClusterApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	testutil.InternalClusterCudTest(t, &clusterApi, testutil.ClusterData)
+	testutil.InternalClusterTest(t, "cud", &clusterApi, testutil.ClusterData)
 
 	dummy.Stop()
 }

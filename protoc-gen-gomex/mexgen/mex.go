@@ -2,6 +2,7 @@ package mexgen
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -31,6 +32,8 @@ type mex struct {
 	importStrings bool
 	importErrors  bool
 	importStrconv bool
+	importSort    bool
+	firstFile     string
 	support       gensupport.PluginSupport
 }
 
@@ -45,6 +48,16 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
 	m.support.Init(nil)
+	// Generator passes us all files (some of which are builtin
+	// like google/api/http). To determine the first file to generate
+	// one-off code, sort by request files which are the subset of
+	// files we will generate code for.
+	files := make([]string, len(gen.Request.FileToGenerate))
+	copy(files, gen.Request.FileToGenerate)
+	sort.Strings(files)
+	if len(files) > 0 {
+		m.firstFile = files[0]
+	}
 }
 
 // P forwards to g.gen.P
@@ -59,6 +72,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importStrings = false
 	m.importErrors = false
 	m.importStrconv = false
+	m.importSort = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -69,6 +83,9 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 		for _, service := range file.FileDescriptorProto.Service {
 			m.generateService(file, service)
 		}
+	}
+	if m.firstFile == *file.FileDescriptorProto.Name {
+		m.P(matchOptions)
 	}
 }
 
@@ -98,6 +115,9 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importStrconv {
 		m.gen.PrintImport("", "strconv")
+	}
+	if m.importSort {
+		m.gen.PrintImport("", "sort")
 	}
 	m.support.PrintUsedImports(m.gen)
 }
@@ -156,37 +176,138 @@ func (e {{.Name}}) MarshalYAML() (interface{}, error) {
 
 `
 
-func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto, ignoreBackend bool) {
+type MatchType int
+
+const (
+	FieldMatch MatchType = iota
+	ExactMatch
+	IgnoreBackendMatch
+)
+
+var matchOptions = `
+type MatchOptions struct {
+	// Filter will ignore 0 or nil fields on the passed in object
+	Filter bool
+	// IgnoreBackend will ignore fields that were marked backend in .proto
+	IgnoreBackend bool
+	// Sort repeated (arrays) of Key objects so matching does not
+	// fail due to order.
+	SortArrayedKeys bool
+}
+
+type MatchOpt func(*MatchOptions)
+
+func MatchFilter() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.Filter = true
+	}
+}
+
+func MatchIgnoreBackend() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.IgnoreBackend = true
+	}
+}
+
+func MatchSortArrayedKeys() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.SortArrayedKeys = true
+	}
+}
+
+func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
+	for _, f := range args {
+		f(opts)
+	}
+}
+
+`
+
+func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *descriptor.FieldDescriptorProto) {
 	if field.Type == nil {
 		return
 	}
-	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-		// TODO: matches support for repeated fields
-		return
+	backend := GetBackend(field)
+	if backend {
+		m.P("if !opts.IgnoreBackend {")
 	}
-	if ignoreBackend && GetBackend(field) {
-		return
-	}
-	defval := "0"
+
+	// ignore field if filter was specified and o.name is 0 or nil
+	nilval := "0"
+	nilCheck := true
 	name := generator.CamelCase(*field.Name)
+	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+		nilval = "nil"
+	} else {
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			if !gogoproto.IsNullable(field) {
+				nilCheck = false
+			}
+			nilval = "nil"
+		case descriptor.FieldDescriptorProto_TYPE_STRING:
+			nilval = "\"\""
+		case descriptor.FieldDescriptorProto_TYPE_BOOL:
+			nilval = "false"
+		}
+	}
+	if nilCheck {
+		m.P("if !opts.Filter || o.", name, " != ", nilval, " {")
+	}
+	if nilCheck && nilval == "nil" {
+		m.P("if m.", name, " == nil && o.", name, " != nil || m.", name, " != nil && o.", name, " == nil {")
+		m.P("return false")
+		m.P("} else if m.", name, " != nil && o.", name, "!= nil {")
+	}
+
+	mapType := m.support.GetMapType(m.gen, field)
+	repeated := false
+	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED ||
+		*field.Type == descriptor.FieldDescriptorProto_TYPE_BYTES {
+		m.P("if len(m.", name, ") != len(o.", name, ") {")
+		m.P("return false")
+		m.P("}")
+		if mapType == nil {
+			if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+				subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+				if GetObjKey(subDesc.DescriptorProto) {
+					m.P("if opts.SortArrayedKeys {")
+					m.P("sort.Slice(m.", name, ", func(i, j int) bool {")
+					m.P("return m.", name, "[i].GetKeyString() < m.", name, "[j].GetKeyString()")
+					m.P("})")
+					m.P("sort.Slice(o.", name, ", func(i, j int) bool {")
+					m.P("return o.", name, "[i].GetKeyString() < o.", name, "[j].GetKeyString()")
+					m.P("})")
+					m.P("}")
+					m.importSort = true
+				}
+			}
+			m.P("for i := 0; i < len(m.", name, "); i++ {")
+			name = name + "[i]"
+		} else {
+			m.P("for k, _ := range m.", name, " {")
+			m.P("_, ok := o.", name, "[k]")
+			m.P("if !ok {")
+			m.P("return false")
+			m.P("}")
+			name = name + "[k]"
+			field = mapType.ValField
+		}
+		repeated = true
+	}
 	switch *field.Type {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-		nullcheck := ""
 		ref := "&"
-		fname := "Matches"
-		if ignoreBackend {
-			fname = "MatchesIgnoreBackend"
-		}
 		if gogoproto.IsNullable(field) {
-			nullcheck = fmt.Sprintf("filter.%s != nil && m.%s != nil && ", name, name)
 			ref = ""
 		}
 		subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
 		printedCheck := true
 		if *field.TypeName == ".google.protobuf.Timestamp" {
-			m.P("if ", nullcheck, "(m.", name, ".Seconds != filter.", name, ".Seconds || m.", name, ".Nanos != filter.", name, ".Nanos) {")
+			m.P("if m.", name, ".Seconds != o.", name, ".Seconds || m.", name, ".Nanos != o.", name, ".Nanos {")
 		} else if GetGenerateMatches(subDesc.DescriptorProto) {
-			m.P("if ", nullcheck, "!m.", name, ".", fname, "(", ref, "filter.", name, ") {")
+			m.P("if !m.", name, ".Matches(", ref, "o.", name, ", fopts...) {")
 		} else {
 			printedCheck = false
 		}
@@ -196,18 +317,21 @@ func (m *mex) generateFieldMatches(message *descriptor.DescriptorProto, field *d
 		}
 	case descriptor.FieldDescriptorProto_TYPE_GROUP:
 		// deprecated in proto3
-	case descriptor.FieldDescriptorProto_TYPE_BYTES:
-		// TODO
-	case descriptor.FieldDescriptorProto_TYPE_STRING:
-		m.P("if filter.", name, " != \"\" && filter.", name, " != m.", name, "{")
+	default:
+		m.P("if o.", name, " != m.", name, "{")
 		m.P("return false")
 		m.P("}")
-	case descriptor.FieldDescriptorProto_TYPE_BOOL:
-		defval = "false"
-		fallthrough
-	default:
-		m.P("if filter.", name, " != ", defval, " && filter.", name, " != m.", name, "{")
-		m.P("return false")
+	}
+	if repeated {
+		m.P("}")
+	}
+	if nilCheck && nilval == "nil" {
+		m.P("}")
+	}
+	if nilCheck {
+		m.P("}")
+	}
+	if backend {
 		m.P("}")
 	}
 }
@@ -747,7 +871,7 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
 {{- if .CudCache}}
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
 {{- end}}
@@ -818,20 +942,18 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
-		ignoreBackend := false
-		m.P("func (m *", message.Name, ") Matches(filter *", message.Name, ") bool {")
-		m.P("if filter == nil { return true }")
-		for _, field := range message.Field {
-			m.generateFieldMatches(message, field, ignoreBackend)
-		}
-		m.P("return true")
+		m.P("func (m *", message.Name, ") Matches(o *", message.Name, ", fopts ...MatchOpt) bool {")
+		m.P("opts := MatchOptions{}")
+		m.P("applyMatchOptions(&opts, fopts...)")
+		m.P("if o == nil {")
+		m.P("if opts.Filter { return true }")
+		m.P("return false")
 		m.P("}")
-		m.P("")
-		ignoreBackend = true
-		m.P("func (m *", message.Name, ") MatchesIgnoreBackend(filter *", message.Name, ") bool {")
-		m.P("if filter == nil { return true }")
-		for _, field := range message.Field {
-			m.generateFieldMatches(message, field, ignoreBackend)
+		for ii, field := range message.Field {
+			if ii == 0 && *field.Name == "fields" {
+				continue
+			}
+			m.generateFieldMatches(message, field)
 		}
 		m.P("return true")
 		m.P("}")

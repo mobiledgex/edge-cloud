@@ -65,8 +65,13 @@ func (x *ShowCloudlet) CheckFound(obj *edgeproto.Cloudlet) bool {
 func (x *ShowCloudlet) AssertFound(t *testing.T, obj *edgeproto.Cloudlet) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Cloudlet %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Cloudlet are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -157,14 +162,39 @@ func NewClientCloudletApi(api edgeproto.CloudletApiClient) *CloudletCommonApi {
 	apiWrap.client_api = api
 	return &apiWrap
 }
-func InternalCloudletCudTest(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
-	basicCloudletCudTest(t, NewInternalCloudletApi(api), testData)
+
+func InternalCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+	switch test {
+	case "cud":
+		basicCloudletCudTest(t, NewInternalCloudletApi(api), testData)
+	case "show":
+		basicCloudletShowTest(t, NewInternalCloudletApi(api), testData)
+	}
 }
 
-func ClientCloudletCudTest(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
-	basicCloudletCudTest(t, NewClientCloudletApi(api), testData)
+func ClientCloudletTest(t *testing.T, test string, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
+	switch test {
+	case "cud":
+		basicCloudletCudTest(t, NewClientCloudletApi(api), testData)
+	case "show":
+		basicCloudletShowTest(t, NewClientCloudletApi(api), testData)
+	}
 }
 
+func basicCloudletShowTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCloudlet{}
+	show.Init()
+	filterNone := edgeproto.Cloudlet{}
+	err = api.ShowCloudlet(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
 	ctx := context.TODO()
@@ -175,28 +205,21 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateCloudlet(ctx, &obj)
-		assert.Nil(t, err, "Create Cloudlet %s", obj.Key.GetKeyString())
-	}
+	createCloudletData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateCloudlet(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Cloudlet")
 
 	// test show all items
-	show := ShowCloudlet{}
-	show.Init()
-	filterNone := edgeproto.Cloudlet{}
-	err = api.ShowCloudlet(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	basicCloudletShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteCloudlet(ctx, &testData[0])
 	assert.Nil(t, err, "delete Cloudlet %s", testData[0].Key.GetKeyString())
+	show := ShowCloudlet{}
 	show.Init()
+	filterNone := edgeproto.Cloudlet{}
 	err = api.ShowCloudlet(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
@@ -233,6 +256,24 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	updater.AccessUri = testData[0].AccessUri
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update back Cloudlet")
+}
+
+func InternalCloudletCreate(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {
+	createCloudletData(t, NewInternalCloudletApi(api), testData)
+}
+
+func ClientCloudletCreate(t *testing.T, api edgeproto.CloudletApiClient, testData []edgeproto.Cloudlet) {
+	createCloudletData(t, NewClientCloudletApi(api), testData)
+}
+
+func createCloudletData(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateCloudlet(ctx, &obj)
+		assert.Nil(t, err, "Create Cloudlet %s", obj.Key.GetKeyString())
+	}
 }
 
 // Auto-generated code: DO NOT EDIT
@@ -276,8 +317,13 @@ func (x *ShowCloudletInfo) CheckFound(obj *edgeproto.CloudletInfo) bool {
 func (x *ShowCloudletInfo) AssertFound(t *testing.T, obj *edgeproto.CloudletInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find CloudletInfo %s", obj.Key.GetKeyString())
-	if found && !check.MatchesIgnoreBackend(obj) {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "CloudletInfo are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
@@ -343,4 +389,33 @@ func NewClientCloudletInfoApi(api edgeproto.CloudletInfoApiClient) *CloudletInfo
 	apiWrap := CloudletInfoCommonApi{}
 	apiWrap.client_api = api
 	return &apiWrap
+}
+
+func InternalCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiServer, testData []edgeproto.CloudletInfo) {
+	switch test {
+	case "show":
+		basicCloudletInfoShowTest(t, NewInternalCloudletInfoApi(api), testData)
+	}
+}
+
+func ClientCloudletInfoTest(t *testing.T, test string, api edgeproto.CloudletInfoApiClient, testData []edgeproto.CloudletInfo) {
+	switch test {
+	case "show":
+		basicCloudletInfoShowTest(t, NewClientCloudletInfoApi(api), testData)
+	}
+}
+
+func basicCloudletInfoShowTest(t *testing.T, api *CloudletInfoCommonApi, testData []edgeproto.CloudletInfo) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCloudletInfo{}
+	show.Init()
+	filterNone := edgeproto.CloudletInfo{}
+	err = api.ShowCloudletInfo(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
 }
