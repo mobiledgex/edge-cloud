@@ -101,6 +101,18 @@ type SampleAppProcess struct {
 	Hostname string
 }
 
+type DnsRecord struct {
+	Name    string
+	Type    string
+	Content string
+}
+
+//cloudflare dns records
+type CloudflareDNS struct {
+	Zone    string
+	Records []DnsRecord
+}
+
 type DeploymentData struct {
 	GCloud        GoogleCloudInfo     `yaml:"gcloud"`
 	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
@@ -111,6 +123,7 @@ type DeploymentData struct {
 	Dmes          []DmeProcess        `yaml:"dmes"`
 	Crms          []CrmProcess        `yaml:"crms"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
+	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.

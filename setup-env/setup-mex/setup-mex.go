@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 
@@ -467,9 +468,111 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	return invfile.Name(), foundServer
 }
 
+func getCloudflareUserAndKey() (string, string) {
+	user := os.Getenv("CF_USER")
+	apikey := os.Getenv("CF_KEY")
+	return user, apikey
+}
+
+func createCloudfareRecords() error {
+	log.Printf("createCloudfareRecords\n")
+
+	ttl := 300
+	if util.Deployment.Cloudflare.Zone == "" {
+		return nil
+	}
+	user, apiKey := getCloudflareUserAndKey()
+	if user == "" || apiKey == "" {
+		log.Printf("Unable to get Cloudflare settings\n")
+		return fmt.Errorf("need to set CF_USER and CF_KEY for cloudflare")
+	}
+
+	api, err := cloudflare.New(apiKey, user)
+	if err != nil {
+		log.Printf("Error in getting Cloudflare API %v\n", err)
+		return err
+	}
+	zoneID, err := api.ZoneIDByName(util.Deployment.Cloudflare.Zone)
+	if err != nil {
+		log.Printf("Cloudflare zone error: %v\n", err)
+		return err
+	}
+	for _, r := range util.Deployment.Cloudflare.Records {
+		log.Printf("adding dns entry: %s content: %s \n", r.Name, r.Content)
+
+		record := cloudflare.DNSRecord{
+			Name:    strings.ToLower(r.Name),
+			Type:    strings.ToUpper(r.Type),
+			Content: r.Content,
+			TTL:     ttl,
+			Proxied: false,
+		}
+
+		resp, err := api.CreateDNSRecord(zoneID, record)
+		if err != nil {
+			log.Printf("Error, cannot create DNS record for zone %s, %v", zoneID, err)
+			return err
+		}
+		log.Printf("Cloudflare DNS Response %+v\n", resp)
+	}
+	return nil
+}
+
+func deleteCloudfareRecords() error {
+	log.Printf("deleteCloudfareRecords\n")
+
+	if util.Deployment.Cloudflare.Zone == "" {
+		return nil
+	}
+	user, apiKey := getCloudflareUserAndKey()
+	if user == "" || apiKey == "" {
+		log.Printf("Unable to get Cloudflare settings\n")
+		return fmt.Errorf("need to set CF_USER and CF_KEY for cloudflare")
+	}
+	api, err := cloudflare.New(apiKey, user)
+	if err != nil {
+		log.Printf("Error in getting Cloudflare API %v\n", err)
+		return err
+	}
+	zoneID, err := api.ZoneIDByName(util.Deployment.Cloudflare.Zone)
+	if err != nil {
+		log.Printf("Cloudflare zone error: %v\n", err)
+		return err
+	}
+
+	//make a hash of the records we are looking for so we don't have to iterate thru the
+	//list many times
+	recordsToClean := make(map[string]bool)
+	for _, d := range util.Deployment.Cloudflare.Records {
+		recordsToClean[strings.ToLower(d.Name+d.Type+d.Content)] = true
+		log.Printf("cloudflare recordsToClean: %v", d.Name+d.Type+d.Content)
+	}
+
+	//find all the records for the zone and delete ours.  Alternately we could apply a filter when doing the query
+	//but there could be multiple records and building that filter could be hard
+	records, err := api.DNSRecords(zoneID, cloudflare.DNSRecord{})
+	for _, r := range records {
+		_, exists := recordsToClean[strings.ToLower(r.Name+r.Type+r.Content)]
+		if exists {
+			log.Printf("Found a DNS record to delete %v\n", r)
+			err := api.DeleteDNSRecord(zoneID, r.ID)
+			if err != nil {
+				log.Printf("Error in deleting DNS record for %s - %v\n", r.Name, err)
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func DeployProcesses() bool {
 	if util.IsK8sDeployment() {
 		return true //nothing to do for k8s
+	}
+	err := createCloudfareRecords()
+	if err != nil {
+		return false
 	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_deploy.yml"
@@ -511,9 +614,14 @@ func StopRemoteProcesses(processName string) bool {
 }
 
 func CleanupRemoteProcesses() bool {
+	cfrc := true
+	err := deleteCloudfareRecords()
+	if err != nil {
+		cfrc = false
+	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_cleanup.yml"
-	return runPlaybook(playbook, []string{}, "")
+	return cfrc && runPlaybook(playbook, []string{}, "")
 }
 
 func FetchRemoteLogs(outputDir string) bool {
