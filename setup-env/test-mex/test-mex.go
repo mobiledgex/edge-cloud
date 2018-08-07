@@ -61,7 +61,7 @@ var actionChoices = map[string]string{
 	"stop":          "procname",
 	"status":        "procname",
 	"ctrlapi":       "procname",
-        "ctrlinfo":      "procname",
+	"ctrlinfo":      "procname",
 	"dmeapi":        "procname",
 	"deploy":        "",
 	"cleanup":       "",
@@ -277,16 +277,18 @@ func main() {
 			if util.Deployment.GCloud.Cluster != "" {
 				dir := path.Dir(*setupFile)
 				err := util.DeleteK8sServices(dir)
+
 				if err != nil {
 					errorsFound += 1
 					errors = append(errors, err.Error())
-				} else {
-					if !setupmex.CleanupRemoteProcesses() {
-						errorsFound += 1
-						errors = append(errors, "cleanup failed")
-					}
+				}
+			} else {
+				if !setupmex.CleanupRemoteProcesses() {
+					errorsFound += 1
+					errors = append(errors, "cleanup failed")
 				}
 			}
+
 		case "fetchlogs":
 			if !setupmex.FetchRemoteLogs(*outputDir) {
 				errorsFound += 1
