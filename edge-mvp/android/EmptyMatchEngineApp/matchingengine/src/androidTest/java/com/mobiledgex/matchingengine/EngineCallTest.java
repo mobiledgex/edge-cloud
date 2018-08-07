@@ -109,9 +109,12 @@ public class EngineCallTest {
                 registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
                 assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
                         registerResponse.getSessionCookie(), me.getSessionCookie());
-            } catch (IOException ioe) {
+            } catch (ExecutionException ee) {
+                Log.i(TAG, Log.getStackTraceString(ee));
+                assertTrue("ExecutionException registering client", false);
+            } catch (InterruptedException ioe) {
                 Log.i(TAG, Log.getStackTraceString(ioe));
-                assertTrue("IOException registering client", false);
+                assertTrue("InterruptedException registering client", false);
             }
 
     }
@@ -192,9 +195,6 @@ public class EngineCallTest {
             AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
             response = me.registerClient(request, GRPC_TIMEOUT_MS);
             assert (response != null);
-        } catch (IOException ioe) {
-            Log.i(TAG, Log.getStackTraceString(ioe));
-            assertFalse("registerClientTest: IOException!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
             assertFalse("registerClientTest: Execution Failed!", true);
@@ -298,7 +298,7 @@ public class EngineCallTest {
             } catch (MissingRequestException mre) {
                 // This is expected, request is missing.
                 Log.i(TAG, "Expected exception for registerClient. Mex Disabled.");
-            } catch (IOException ioe) {
+            } catch (InterruptedException ioe) {
                 Log.i(TAG, "Expected exception for registerClient. " + Log.getStackTraceString(ioe));
             }
             allRun = true;

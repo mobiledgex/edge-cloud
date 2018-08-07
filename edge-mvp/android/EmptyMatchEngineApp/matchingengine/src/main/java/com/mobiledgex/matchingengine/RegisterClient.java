@@ -1,20 +1,9 @@
 package com.mobiledgex.matchingengine;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkRequest;
 import android.util.Log;
 
-import com.mobiledgex.matchingengine.util.NetworkManager;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-
-import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
@@ -60,10 +49,12 @@ public class RegisterClient implements Callable {
 
     @Override
     public AppClient.Match_Engine_Status call() throws MissingRequestException,
-            StatusRuntimeException, IOException {
+            StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
+
+
 
         AppClient.Match_Engine_Status reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
@@ -75,8 +66,13 @@ public class RegisterClient implements Callable {
                     .build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
+            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm.switchToCellularInternetNetworkBlocking();
+
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .registerClient(mRequest);
+
+            nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();

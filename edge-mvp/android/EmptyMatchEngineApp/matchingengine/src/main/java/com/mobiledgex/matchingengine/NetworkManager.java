@@ -1,4 +1,4 @@
-package com.mobiledgex.matchingengine.util;
+package com.mobiledgex.matchingengine;
 
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
@@ -21,10 +21,10 @@ import static android.net.NetworkCapabilities.TRANSPORT_WIFI;
 
 public class NetworkManager {
     public static final String TAG = "NetworkManager";
+    public static NetworkManager mNetworkManager;
 
     private ConnectivityManager mConnectivityManager;
-    private volatile boolean mWaitingForLink = false;
-
+    private boolean mWaitingForLink = false;
     private final Object mWaitForActiveNetwork = new Object();
     private long mNetworkActiveTimeoutMilliseconds = 1000;
     private final Object mSyncObject = new Object();
@@ -35,14 +35,69 @@ public class NetworkManager {
 
     private ExecutorService mThreadPool;
 
-    public NetworkManager(ConnectivityManager connectivityManager) {
+    public enum NetworkType {
+        TRANSPORT_UNKNOWN,
+        TRANSPORT_BLUETOOTH,
+        TRANSPORT_WIFI,
+        TRANSPORT_ETHERNET,
+        TRANSPORT_CELL
+    }
+    NetworkType currentNetworkType;
+
+    public NetworkType getCurrentNetworkType() {
+        Network currentNetwork = mConnectivityManager.getActiveNetwork();
+        NetworkCapabilities capabilities = mConnectivityManager.getNetworkCapabilities(currentNetwork);
+
+        if (capabilities.hasCapability(TRANSPORT_WIFI)) {
+            return NetworkType.TRANSPORT_WIFI;
+        } else if (capabilities.hasCapability(TRANSPORT_ETHERNET)) {
+            return NetworkType.TRANSPORT_ETHERNET;
+        } else if (capabilities.hasCapability(TRANSPORT_CELLULAR)) {
+            return NetworkType.TRANSPORT_CELL;
+        } else if (capabilities.hasCapability(TRANSPORT_BLUETOOTH)) {
+            return NetworkType.TRANSPORT_BLUETOOTH;
+        } else {
+            return NetworkType.TRANSPORT_UNKNOWN;
+        }
+    }
+
+    /**
+     * Some network operations can only work on a single network type, and must wait for a suitable
+     * network. This serializes those calls. The app should create separate queues to manage
+     * usage otherwise if a particular parallel use pattern is needed.
+     * @param callable
+     * @param networkRequest
+     */
+    synchronized void runOnNetwork(Callable callable, NetworkRequest networkRequest)
+            throws InterruptedException, ExecutionException {
+        switchToNetworkBlocking(networkRequest);
+        Future<Callable> future = mThreadPool.submit(callable);
+        future.get();
+        resetNetworkToDefault();
+    }
+
+    public static NetworkManager getSingleton(ConnectivityManager connectivityManager) {
+        if (mNetworkManager == null) {
+            mNetworkManager = new NetworkManager(connectivityManager);
+        }
+        return mNetworkManager;
+    }
+
+    public static NetworkManager getSingleton(ConnectivityManager connectivityManager, ExecutorService executorService) {
+        if (mNetworkManager == null) {
+            mNetworkManager = new NetworkManager(connectivityManager, executorService);
+        }
+        return mNetworkManager;
+    }
+
+    private NetworkManager(ConnectivityManager connectivityManager) {
         this.mConnectivityManager = connectivityManager;
         mThreadPool = Executors.newSingleThreadExecutor();
     }
 
-    public NetworkManager(ConnectivityManager connectivityManager, ExecutorService threadPool) {
+    private NetworkManager(ConnectivityManager connectivityManager, ExecutorService executorService) {
         this.mConnectivityManager = connectivityManager;
-        mThreadPool = threadPool;
+        mThreadPool = executorService;
     }
 
     public void setTimeout(long timeoutInMilliseconds) {
@@ -128,7 +183,9 @@ public class NetworkManager {
                 }
             };
             try {
-                mWaitingForLink = true;
+                synchronized (mSyncObject) {
+                    mWaitingForLink = true;
+                }
 
                 mConnectivityManager.addDefaultNetworkActiveListener(activeListener);
                 mConnectivityManager.requestNetwork(mNetworkRequest, new ConnectivityManager.NetworkCallback() {
@@ -213,10 +270,10 @@ public class NetworkManager {
     /**
      * Wrapper function to switch, if possible, to a Cellular Data Network connection. This isn't instant. Callback interface.
      */
-    public boolean switchToCellularInternetNetwork(ConnectivityManager.NetworkCallback networkCallback) {
+    public void switchToCellularInternetNetwork(ConnectivityManager.NetworkCallback networkCallback) {
         boolean isCellularData = isCurrentNetworkInternetCellularDataCapable();
         if (isCellularData) {
-            return false; // Nothing to do, have cellular data
+            return; // Nothing to do, have cellular data
         }
 
         NetworkRequest networkRequest = new NetworkRequest.Builder()
@@ -224,7 +281,7 @@ public class NetworkManager {
                 .addCapability(NET_CAPABILITY_INTERNET)
                 .build();
 
-        return switchToNetwork(networkRequest, networkCallback);
+        switchToNetwork(networkRequest, networkCallback);
     }
 
     /**
@@ -239,8 +296,8 @@ public class NetworkManager {
 
         NetworkRequest request = getCellularNetworkRequest();
 
-        Network network = switchToNetworkBlocking(request);
-        return network;
+        mNetwork = switchToNetworkBlocking(request);
+        return mNetwork;
     }
 
     /**
@@ -289,11 +346,14 @@ public class NetworkManager {
      * @param networkCallback
      * @return
      */
-    public boolean switchToNetwork(NetworkRequest networkRequest, final ConnectivityManager.NetworkCallback networkCallback) {
+    public void switchToNetwork(NetworkRequest networkRequest, final ConnectivityManager.NetworkCallback networkCallback) {
+        boolean switched;
         mConnectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(Network network) {
                 Log.d(TAG, "requestNetwork onAvailable(), binding process to network.");
+
+                mNetwork = network;
                 mConnectivityManager.bindProcessToNetwork(network);
                 if (networkCallback == null) {
                     networkCallback.onAvailable(network);
@@ -340,7 +400,6 @@ public class NetworkManager {
                 }
             }
         });
-        return true;
     }
 
 }

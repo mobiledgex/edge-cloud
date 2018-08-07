@@ -135,9 +135,12 @@ public class LimitsTest {
             registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
             assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
                     registerResponse.getSessionCookie(), me.getSessionCookie());
-        } catch (IOException ioe) {
-            Log.i(TAG, Log.getStackTraceString(ioe));
-            assertTrue("IOException registering client", false);
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertTrue("ExecutionException registering client", false);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertTrue("InterruptedException registering client", false);
         }
 
     }
@@ -331,11 +334,11 @@ public class LimitsTest {
     /**
      * This test is set at some high values for GRPC API threads and parallel Application ASync
      * Tasks, and in debug mode, prints latency numbers. This is closer to a stress test, and not
-     * realistic development practices.
+     * realistic development practices. Can generate too many requests exceptions on system ConnectivityManager.
      */
     @Test
     public void parameterizedLatencyTest1() {
-        parameterizedLatencyTestConcurrent("parameterizedLatencyTest1", 20, 1100, 80 * 1000);
+        parameterizedLatencyTestConcurrent("parameterizedLatencyTest1", 20, 1100, 90 * 1000);
     }
 
     /**
@@ -404,8 +407,8 @@ public class LimitsTest {
             }
             // Nothing fancy, just check every so often until parallel thread Async Tasks returned a result.
             boolean done = false;
+            long count = 0;
             while (!done && error[0]==false && (System.currentTimeMillis() - start < timeoutMs)) {
-                long count = 0;
                 for (int i = 0; i < responses.length; i++) {
                     if (responses[i] != null) {
                         count++;

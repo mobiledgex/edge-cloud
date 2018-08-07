@@ -1,10 +1,7 @@
 package com.mobiledgex.matchingengine;
 
-import android.net.ConnectivityManager;
-import android.net.Network;
 import android.util.Log;
 
-import com.google.protobuf.ByteString;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
@@ -53,8 +50,6 @@ public class VerifyLocation implements Callable {
     private String getToken() throws InterruptedException, IOException, ExecutionException {
         String token;
 
-        Network newNetwork = mMatchingEngine.getNetworkManager().switchToCellularInternetNetworkBlocking();
-
         OkHttpClient httpClient = new OkHttpClient();
         httpClient.setFollowSslRedirects(false);
         httpClient.setFollowRedirects(false);
@@ -79,10 +74,6 @@ public class VerifyLocation implements Callable {
             }
         }
 
-        // Reset to whatever default network it was.
-        if (newNetwork != null) {
-            mMatchingEngine.getNetworkManager().resetNetworkToDefault();
-        }
         return token;
     }
 
@@ -117,6 +108,9 @@ public class VerifyLocation implements Callable {
         }
 
         // Make One time use of HTTP Request to Token Server:
+        NetworkManager nm = mMatchingEngine.getNetworkManager();
+        nm.switchToCellularInternetNetworkBlocking();
+
         String token = getToken(); // This token is short lived.
         mRequest = addTokenToRequest(token);
 
@@ -133,8 +127,10 @@ public class VerifyLocation implements Callable {
             if (channel != null) {
                 channel.shutdown();
             }
+            nm.resetNetworkToDefault();
         }
         mRequest = null;
+
         // FIXME: Reply TBD.
         int ver = -1;
         if (reply != null) {

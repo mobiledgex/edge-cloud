@@ -2,6 +2,7 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
 
@@ -41,7 +42,8 @@ public class FindCloudlet implements Callable {
     }
 
     @Override
-    public FindCloudletResponse call() throws MissingRequestException, StatusRuntimeException {
+    public FindCloudletResponse call()
+            throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: FindCloudlet does not have a request object to use MatchEngine!");
         }
@@ -55,8 +57,12 @@ public class FindCloudlet implements Callable {
             channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
+            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm.switchToCellularInternetNetworkBlocking();
+
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .findCloudlet(mRequest);
+            nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();

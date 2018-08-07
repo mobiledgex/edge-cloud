@@ -3,6 +3,7 @@ package com.mobiledgex.matchingengine;
 import android.util.Log;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
@@ -40,7 +41,8 @@ public class AddUserToGroup implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException {
+    public AppClient.Match_Engine_Status call()
+            throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null) {
             throw new MissingRequestException("Usage error: AddUserToGroup does not have a request object to use MatchEngine!");
         }
@@ -52,8 +54,13 @@ public class AddUserToGroup implements Callable {
             channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
+            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm.switchToCellularInternetNetworkBlocking();
+
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .addUserToGroup(mRequest);
+
+            nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();

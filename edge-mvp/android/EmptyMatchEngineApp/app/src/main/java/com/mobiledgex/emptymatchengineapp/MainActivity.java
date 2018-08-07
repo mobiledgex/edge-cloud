@@ -21,7 +21,7 @@ import android.content.Intent;
 // Matching Engine API:
 import com.mobiledgex.matchingengine.FindCloudletResponse;
 import com.mobiledgex.matchingengine.MatchingEngine;
-import com.mobiledgex.matchingengine.util.NetworkManager;
+import com.mobiledgex.matchingengine.NetworkManager;
 import com.mobiledgex.matchingengine.util.RequestPermissions;
 
 import distributed_match_engine.AppClient;

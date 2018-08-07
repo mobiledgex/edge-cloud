@@ -4,19 +4,13 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
-import android.net.LinkProperties;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.support.annotation.NonNull;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 
 import com.google.protobuf.ByteString;
-import com.mobiledgex.matchingengine.util.NetworkManager;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -32,9 +26,6 @@ import io.grpc.StatusRuntimeException;
 
 import android.content.pm.PackageInfo;
 import android.util.Log;
-
-import static android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET;
-import static android.net.NetworkCapabilities.TRANSPORT_CELLULAR;
 
 
 // TODO: GRPC (which needs http/2).
@@ -63,13 +54,13 @@ public class MatchingEngine {
     public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = new NetworkManager(connectivityManager);
+        mNetworkManager = NetworkManager.getSingleton(connectivityManager);
 
     }
     public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = new NetworkManager(connectivityManager, threadpool);
+        mNetworkManager = NetworkManager.getSingleton(connectivityManager, threadpool);
     }
 
     // Application state Bundle Key.
@@ -321,7 +312,7 @@ public class MatchingEngine {
      * @throws StatusRuntimeException
      */
     public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException, IOException {
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         RegisterClient registerClient = new RegisterClient(this);
         registerClient.setRequest(request, timeoutInMilliseconds);
         return registerClient.call();
@@ -346,7 +337,7 @@ public class MatchingEngine {
      * @throws StatusRuntimeException
      */
     public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException {
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         FindCloudlet findCloudlet = new FindCloudlet(this);
         findCloudlet.setRequest(request, timeoutInMilliseconds);
         return findCloudlet.call();
@@ -400,7 +391,7 @@ public class MatchingEngine {
      * @throws StatusRuntimeException
      */
     public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException {
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         GetLocation getLocation = new GetLocation(this);
         getLocation.setRequest(request, timeoutInMilliseconds);
         return getLocation.call();
@@ -424,7 +415,8 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Status addUserToGroup(AppClient.DynamicLocGroupAdd request, long timeoutInMilliseconds) {
+    public AppClient.Match_Engine_Status addUserToGroup(AppClient.DynamicLocGroupAdd request, long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
         AddUserToGroup addUserToGroup = new AddUserToGroup(this);
         addUserToGroup.setRequest(request, timeoutInMilliseconds);
         return addUserToGroup.call();
