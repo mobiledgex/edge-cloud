@@ -3,12 +3,6 @@ vars:
 - vm1_internal_ip: 10.10.0.11
 - vm1_external_ip: 35.199.188.102
 
-cloudflare:
-   zone: mobiledgex.net
-   records:
-   - name: MobiledgeXSDKDemo.tdgcloud1.mobiledgex.net
-     type: A
-     content: "{{vm1_external_ip}}"
 
 sampleapps:
 - sampleapplocal:
@@ -73,5 +67,5 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn Site"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
   hostname: "{{vm1_external_ip}}"
