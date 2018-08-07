@@ -61,6 +61,7 @@ dmes:
     apiaddr: "0.0.0.0:50051"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     locverurl: "http://{{vm1_internal_ip}}:8888"
+    toksrvurl: "{{toksrvurl}}"
     carrier: TDG
   hostname: "{{vm1_external_ip}}"
 
