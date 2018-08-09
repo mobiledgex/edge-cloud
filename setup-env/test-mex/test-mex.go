@@ -10,7 +10,9 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/apis"
 	setupmex "github.com/mobiledgex/edge-cloud/setup-env/setup-mex"
@@ -68,6 +70,7 @@ var actionChoices = map[string]string{
 	"fetchlogs":     "",
 	"createcluster": "",
 	"deletecluster": "",
+	"sleep":         "seconds",
 }
 
 func printUsage() {
@@ -181,7 +184,7 @@ func main() {
 			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
 				err := util.CreateGloudCluster()
 				if err != nil {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			}
@@ -189,7 +192,7 @@ func main() {
 			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
 				err := util.DeleteGloudCluster()
 				if err != nil {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			}
@@ -198,12 +201,12 @@ func main() {
 				dir := path.Dir(*setupFile)
 				err := util.DeployK8sServices(dir)
 				if err != nil {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			} else {
 				if !setupmex.DeployProcesses() {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, "deploy failed")
 				}
 			}
@@ -225,7 +228,7 @@ func main() {
 			if startFailed {
 				setupmex.StopProcesses(actionParam)
 				setupmex.StopRemoteProcesses(actionParam)
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "stop failed")
 				break
 
@@ -239,14 +242,14 @@ func main() {
 		case "status":
 			setupmex.UpdateApiAddrs()
 			if !setupmex.WaitForProcesses(actionParam) {
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "wait for process failed")
 
 			}
 		case "stop":
 			setupmex.StopProcesses(actionParam)
 			if !setupmex.StopRemoteProcesses(actionParam) {
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "stop failed")
 
 			}
@@ -254,14 +257,14 @@ func main() {
 			setupmex.UpdateApiAddrs()
 			if !apis.RunControllerAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
 				log.Printf("Unable to run api for %s\n", action)
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "controller api failed")
 			}
 		case "ctrlinfo":
 			setupmex.UpdateApiAddrs()
 			if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
 				log.Printf("Unable to run api for %s\n", action)
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "controller info api failed")
 
 			}
@@ -269,7 +272,7 @@ func main() {
 			setupmex.UpdateApiAddrs()
 			if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
 				log.Printf("Unable to run api for %s\n", action)
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "dme api failed")
 
 			}
@@ -279,20 +282,28 @@ func main() {
 				err := util.DeleteK8sServices(dir)
 
 				if err != nil {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			} else {
 				if !setupmex.CleanupRemoteProcesses() {
-					errorsFound += 1
+					errorsFound++
 					errors = append(errors, "cleanup failed")
 				}
 			}
 
 		case "fetchlogs":
 			if !setupmex.FetchRemoteLogs(*outputDir) {
-				errorsFound += 1
+				errorsFound++
 				errors = append(errors, "fetch failed")
+			}
+		case "sleep":
+			t, err := strconv.ParseUint(actionParam, 10, 32)
+			if err == nil {
+				time.Sleep(time.Second * time.Duration(t))
+			} else {
+				errorsFound++
+				errors = append(errors, "Error in parsing sleeptime")
 			}
 		default:
 			log.Fatal("unexpected action: " + action)
@@ -307,7 +318,7 @@ func main() {
 		fileType := s[2]
 
 		if !util.CompareYamlFiles(firstYamlFile, secondYamlFile, fileType) {
-			errorsFound += 1
+			errorsFound++
 			errors = append(errors, "compare yaml failed")
 		}
 
