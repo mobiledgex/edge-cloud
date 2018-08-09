@@ -1,5 +1,7 @@
 package main
 
+//very simple app which is similar to the example app, except this one supports HTTP GET
+
 import (
 	"bytes"
 	"flag"
@@ -27,7 +29,6 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	numbytes := uint32(0)
 	nb := r.URL.Query().Get("numbytes")
 
-	log.Printf("NB %v", nb)
 	if nb != "" {
 		u, err := strconv.ParseUint(nb, 10, 32)
 		if err == nil {

@@ -73,6 +73,7 @@ func showLocations(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Write(b)
 }
+
 func updateLocation(w http.ResponseWriter, r *http.Request) {
 	log.Println("doing updateLocation")
 	checkForLocUpdate()
@@ -108,7 +109,6 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("updateLocation addr: %s lat: %v long: %v\n", req.Ipaddress, req.Lat, req.Long)
-
 	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
 
 	ymlout, err := yaml.Marshal(locations)
@@ -123,7 +123,6 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Fprintf(ofile, string(ymlout))
 	}
-
 	w.Write([]byte("Location DB Updated OK for " + req.Ipaddress + "\n"))
 
 }
