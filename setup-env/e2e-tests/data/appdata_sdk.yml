@@ -1,5 +1,10 @@
 flavors:
 - key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
     name: x1.small
   ram: 2048
   vcpus: 2
@@ -9,18 +14,53 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
+
+clusterflavors:
 - key:
+    name: c1.tiny
+  nodeflavor:
     name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor:
+    name: x1.medium
+  masterflavor:
+    name: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
 
 clusters:
 - key:
     name: SmallCluster
+  defaultflavor:
+    name: c1.small
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud1
   flavor:
-    name: x1.small
-  nodes: 3
+    name: c1.small
+  liveness: LivenessStatic
 
 operators:
 - key:
@@ -43,19 +83,9 @@ cloudlets:
   location:
     lat: 50.7374
     long: -7.0982
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
-clusterinsts:
-- key:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud1
-  flavor:
-    name: x1.small
-  nodes: 3
-  liveness: LivenessStatic
 
 apps:
 - key:
@@ -66,7 +96,7 @@ apps:
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
-  flavor:
+  defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
@@ -86,7 +116,6 @@ appinstances:
   cloudletloc:
     lat: 50.7374
     long: -7.0982
-  uri: EmptyMatchEngineApp.tdgcloud1.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -100,4 +129,4 @@ appinstances:
   mappedpath: EmptyMatchEngineApp
   flavor:
     name: x1.small
-
+  accesslayer: AccessLayerL7

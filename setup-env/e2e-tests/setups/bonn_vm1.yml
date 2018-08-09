@@ -5,17 +5,20 @@ vars:
 - locverurl: "http://10.1.1.8:8888/verifyLocation"
 - toksrvurl: "http://37.50.143.110:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
+
+sampleapps:
+- sampleapplocal:
+    name: mexexample1
+    exename: mexexample
+    args: 
+     - "-debug"
+  hostname: "{{vm1_external_ip}}"
+
 locsims:
 - locapisimlocal:
     name: locsim1
     port: 8888
     locfile: "{{datadir}}/locsim.yml"
-  hostname: "{{vm1_external_ip}}"
-
-toksims:
-- toksrvsimlocal:
-    name: toksim1
-    port: 9999
   hostname: "{{vm1_external_ip}}"
 
 etcds:
@@ -56,9 +59,16 @@ dmes:
 - dmelocal:
     name: dme1
     apiaddr: "0.0.0.0:50051"
-    locverurl: "{{locverurl}}"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    locverurl: "http://{{vm1_internal_ip}}:8888"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
   hostname: "{{vm1_external_ip}}"
 
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: "0.0.0.0:55091"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+  hostname: "{{vm1_external_ip}}"
