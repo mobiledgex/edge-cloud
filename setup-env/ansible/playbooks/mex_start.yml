@@ -81,7 +81,7 @@
     failed_when: crm_stat.stat.exists == False
 
   - name: start up crmserver process
-    shell: "nohup {{ crm_remote_bin }} --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey \'{{ item.crmlocal.cloudletkey }}\' > {{ remote_log_path }}/{{ item.crmlocal.name }}.log 2>&1 &"
+    shell: "nohup {{ crm_remote_bin }} --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' --d api,notify,mexos > {{ remote_log_path }}/{{ item.crmlocal.name }}.log 2>&1 &"
     when: item.hostname == inventory_hostname
     with_items:
        -  "{{ crms }}"

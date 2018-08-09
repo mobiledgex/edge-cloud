@@ -3,7 +3,6 @@ package dmelocapi
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -65,20 +64,20 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 
 	respBytes, resperr := ioutil.ReadAll(resp.Body)
 	if resperr != nil {
-		log.WarnLog("Error read response body:", resperr)
+		log.WarnLog("Error read response body", "resperr", resperr)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 	var lrmResp LocationResponseMessage
 
 	err = json.Unmarshal(respBytes, &lrmResp)
 	if err != nil {
-		fmt.Printf("Error unmarshall response%v\n", err)
+		log.WarnLog("Error unmarshall response", "respByes", respBytes, "err", err)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 
 	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
 	if lrmResp.Error != "" {
-		log.WarnLog("Error received in token response", lrmResp.Error)
+		log.WarnLog("Error received in token response", "err", lrmResp.Error)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 
