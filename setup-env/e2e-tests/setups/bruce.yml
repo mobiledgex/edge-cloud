@@ -5,6 +5,14 @@ vars:
 - locverurl: "http://127.0.0.1:8888/verifyLocation"
 - toksrvurl: "http://107.170.0.14:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
+sampleapps:
+- sampleapplocal:
+    name: mexexample1
+    exename: mexexample
+    args: 
+     - "-debug"
+  hostname: "{{vm1_external_ip}}"
+
 locsims:
 - locapisimlocal:
     name: locsim1
@@ -17,7 +25,7 @@ toksims:
     name: toksim1
     port: 9999
   hostname: "{{vm1_external_ip}}"
-
+  
 etcds:
 - etcdlocal:
     name: etcd1
@@ -56,9 +64,34 @@ dmes:
 - dmelocal:
     name: dme1
     apiaddr: "0.0.0.0:50051"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
     notifyaddrs: "{{vm1_internal_ip}}:37001"
+    toksrvurl: "{{toksrvurl}}"
+    locverurl: "http://{{vm1_internal_ip}}:8888/verifyLocation"
+    carrier: TDG
   hostname: "{{vm1_external_ip}}"
 
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: "0.0.0.0:55091"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Saginaw1"}'
+  hostname: "{{vm1_external_ip}}"
+- crmlocal:
+    name: crm2
+    apiaddr: "0.0.0.0:55092"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Houston1"}'
+  hostname: "{{vm1_external_ip}}"
+- crmlocal:
+    name: crm3
+    apiaddr: "0.0.0.0:55093"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Austin1"}'
+  hostname: "{{vm1_external_ip}}"
+- crmlocal:
+    name: crm4
+    apiaddr: "0.0.0.0:55094"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Nacogdoches1"}'
+  hostname: "{{vm1_external_ip}}"

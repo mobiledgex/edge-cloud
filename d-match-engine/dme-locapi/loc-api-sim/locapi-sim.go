@@ -9,12 +9,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmelocapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	locutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
@@ -25,6 +27,7 @@ var (
 	indexpath   = "/"
 	verpath     = "/verifyLocation"
 	showlocpath = "/showLocations"
+	updatepath  = "/updateLocation"
 
 	locdbfile = flag.String("file", "/var/tmp/locapisim.yml", "file of IP to location mappings")
 )
@@ -39,6 +42,7 @@ func printUsage() {
 func showIndex(w http.ResponseWriter, r *http.Request) {
 	log.Println("doing showIndex")
 	rc := "/verifyLocation -- verifies the location of an token vs lat and long\n"
+	rc += "/updateLocation -- adds or replaces an IP->location entry\n"
 	rc += "/showLocations -- shows current locations\n"
 	w.Write([]byte(rc))
 }
@@ -47,6 +51,7 @@ func checkForLocUpdate() {
 	file, err := os.Stat(*locdbfile)
 	if err != nil {
 		fmt.Printf("Error in getting locdb file time %v", err)
+		locations = make(map[string]dme.Loc)
 		return
 	}
 
@@ -67,6 +72,60 @@ func showLocations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(b)
+}
+func updateLocation(w http.ResponseWriter, r *http.Request) {
+	log.Println("doing updateLocation")
+	checkForLocUpdate()
+
+	reqb, err := ioutil.ReadAll(r.Body)
+	log.Printf("updateLocation body: %v request %+v\n", string(reqb), r)
+
+	var req dmelocapi.LocationRequestMessage
+
+	err = json.Unmarshal(reqb, &req)
+	if err != nil {
+		log.Printf("json unmarshall error: %v\n", err)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	if req.Lat == 0 || req.Long == 0 {
+		log.Printf("missing field in request:  %+v\n", req)
+		http.Error(w, "improperly formatted request", 400)
+		return
+	}
+
+	// if no ip address provided, take it from the source
+	if req.Ipaddress == "" {
+		log.Printf("need to take address from %s", r.RemoteAddr)
+		remotess := strings.Split(r.RemoteAddr, ":")
+		if len(remotess) == 2 {
+			req.Ipaddress = remotess[0]
+		} else {
+			log.Printf("unable to get remote IP %s", r.RemoteAddr)
+			http.Error(w, "unable to get remote IP", 400)
+			return
+		}
+	}
+
+	log.Printf("updateLocation addr: %s lat: %v long: %v\n", req.Ipaddress, req.Lat, req.Long)
+
+	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
+
+	ymlout, err := yaml.Marshal(locations)
+	if err != nil {
+		log.Printf("Error in yaml marshal of location db: %v\n", err)
+		http.Error(w, err.Error(), 500)
+	} else {
+		ofile, err := os.OpenFile(*locdbfile, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0666)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to write to file: %s, err: %v\n", *locdbfile, err)
+		}
+		fmt.Fprintf(ofile, string(ymlout))
+	}
+
+	w.Write([]byte("Location DB Updated OK for " + req.Ipaddress + "\n"))
+
 }
 
 func verifyLocation(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +197,7 @@ func readLocationFile() {
 func run() {
 	http.HandleFunc(indexpath, showIndex)
 	http.HandleFunc(verpath, verifyLocation)
+	http.HandleFunc(updatepath, updateLocation)
 	http.HandleFunc(showlocpath, showLocations)
 
 	portstr := fmt.Sprintf(":%d", *locport)
