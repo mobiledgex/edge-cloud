@@ -218,16 +218,16 @@ public class LimitsTest {
 
         } catch (IOException ioe) {
             Log.i(TAG, Log.getStackTraceString(ioe));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: IOException!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         }  catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("basicLatencyTest: Execution Interrupted!", true);
+            assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -328,13 +328,13 @@ public class LimitsTest {
             }
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         }  catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("basicLatencyTest: Execution Interrupted!", true);
+            assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -445,13 +445,13 @@ public class LimitsTest {
 
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("basicLatencyTest: Execution Interrupted!", true);
+            assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }

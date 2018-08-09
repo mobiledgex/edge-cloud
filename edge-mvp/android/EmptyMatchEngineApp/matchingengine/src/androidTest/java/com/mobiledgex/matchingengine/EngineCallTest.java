@@ -36,7 +36,7 @@ import android.util.Log;
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
     public static final String TAG = "EngineCallTest";
-    public static final long GRPC_TIMEOUT_MS = 1000;
+    public static final long GRPC_TIMEOUT_MS = 15000;
 
     FusedLocationProviderClient fusedLocationClient;
 
@@ -204,13 +204,13 @@ public class EngineCallTest {
             assert (response != null);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("registerClientTest: Execution Failed!", true);
+            assertFalse("registerClientTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("registerClientTest: Execution Failed!", true);
+            assertFalse("registerClientTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("registerClientTest: Execution Interrupted!", true);
+            assertFalse("registerClientTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -248,10 +248,10 @@ public class EngineCallTest {
             assert(response != null);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("registerClientFutureTest: Execution Failed!", true);
+            assertFalse("registerClientFutureTest: ExecutionException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("registerClientFutureTest: Execution Interrupted!", true);
+            assertFalse("registerClientFutureTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -311,13 +311,13 @@ public class EngineCallTest {
             allRun = true;
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("FindCloudlet: Execution Failed!", true);
+            assertFalse("FindCloudlet: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("FindCloudlet: Execution Failed!", true);
+            assertFalse("FindCloudlet: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("FindCloudlet: Execution Interrupted!", true);
+            assertFalse("FindCloudlet: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -350,13 +350,13 @@ public class EngineCallTest {
 
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("FindCloudlet: Execution Failed!", true);
+            assertFalse("FindCloudlet: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("FindCloudlet: Execution Failed!", true);
+            assertFalse("FindCloudlet: StatusRunTimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("FindCloudlet: Execution Interrupted!", true);
+            assertFalse("FindCloudlet: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -394,10 +394,10 @@ public class EngineCallTest {
             result = response.get();
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("FindCloudletFuture: Execution Failed!", true);
+            assertFalse("FindCloudletFuture: ExecutionExecution!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("FindCloudletFuture: Execution Interrupted!", true);
+            assertFalse("FindCloudletFuture: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -431,16 +431,16 @@ public class EngineCallTest {
             assert (response != null);
         } catch (IOException ioe) {
             Log.e(TAG, Log.getStackTraceString(ioe));
-            assertFalse("VerifyLocation: IOException, Failed!", true);
+            assertFalse("VerifyLocation: IOException!", true);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("VerifyLocation: ExecutionExecution Failed!", true);
+            assertFalse("VerifyLocation: ExecutionExecution!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("VerifyLocation: Execution Failed!", true);
+            assertFalse("VerifyLocation: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("VerifyLocation: Execution Interrupted!", true);
+            assertFalse("VerifyLocation: InterruptedException!", true);
         } finally {
             enableMockLocation(context, false);
         }
@@ -477,10 +477,10 @@ public class EngineCallTest {
             response = locFuture.get();
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("verifyLocationFutureTest: Execution Failed!", true);
+            assertFalse("verifyLocationFutureTest: ExecutionException Failed!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("verifyLocationFutureTest: Execution Interrupted!", true);
+            assertFalse("verifyLocationFutureTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -523,13 +523,13 @@ public class EngineCallTest {
             assert(verifyLocationResult != null);
         } catch (IOException ioe) {
             Log.e(TAG, Log.getStackTraceString(ioe));
-            assertFalse("verifyMockedLocationTest_NorthPole: Network Error. Execution Failed!", true);
+            assertFalse("verifyMockedLocationTest_NorthPole: IOException!", true);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("verifyMockedLocationTest_NorthPole: Execution Failed!", true);
+            assertFalse("verifyMockedLocationTest_NorthPole: ExecutionException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("verifyMockedLocationTest_NorthPole: Execution Interrupted!", true);
+            assertFalse("verifyMockedLocationTest_NorthPole: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -568,13 +568,13 @@ public class EngineCallTest {
             assert(response != null);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("VerifyLocation: Execution Failed!", true);
+            assertFalse("getLocationTest: ExecutionExecution!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("VerifyLocation: Execution Failed!", true);
+            assertFalse("getLocationTest: StatusRuntimeException Failed!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("VerifyLocation: Execution Interrupted!", true);
+            assertFalse("getLocationTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -627,10 +627,10 @@ public class EngineCallTest {
             assert(response != null);
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("getLocationFutureTest: Execution Failed!", true);
+            assertFalse("getLocationFutureTest: ExecutionException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("getLocationFutureTest: Execution Interrupted!", true);
+            assertFalse("getLocationFutureTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -680,13 +680,13 @@ public class EngineCallTest {
 
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("dynamicLocationGroupAddTest: Execution Failed!", true);
+            assertFalse("dynamicLocationGroupAddTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("dynamicLocationGroupAddTest: Execution Failed!", true);
+            assertFalse("dynamicLocationGroupAddTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("dynamicLocationGroupAddTest: Execution Interrupted!", true);
+            assertFalse("dynamicLocationGroupAddTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
@@ -725,13 +725,13 @@ public class EngineCallTest {
             assertTrue("Group cookie result.", response.getGroupCookie().equals("")); // FIXME: This GroupCookie should have a value.
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("dynamicLocationGroupAddTest: Execution Failed!", true);
+            assertFalse("dynamicLocationGroupAddFutureTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("dynamicLocationGroupAddTest: Execution Failed!", true);
+            assertFalse("dynamicLocationGroupAddFutureTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("dynamicLocationGroupAddTest: Execution Interrupted!", true);
+            assertFalse("dynamicLocationGroupAddFutureTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
