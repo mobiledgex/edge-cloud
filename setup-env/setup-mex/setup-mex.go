@@ -469,8 +469,8 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 }
 
 func getCloudflareUserAndKey() (string, string) {
-	user := os.Getenv("CF_USER")
-	apikey := os.Getenv("CF_KEY")
+	user := os.Getenv("MEX_CF_USER")
+	apikey := os.Getenv("MEX_CF_KEY")
 	return user, apikey
 }
 
@@ -484,7 +484,7 @@ func createCloudfareRecords() error {
 	user, apiKey := getCloudflareUserAndKey()
 	if user == "" || apiKey == "" {
 		log.Printf("Unable to get Cloudflare settings\n")
-		return fmt.Errorf("need to set CF_USER and CF_KEY for cloudflare")
+		return fmt.Errorf("need to set MEX_CF_USER and MEX_CF_KEY for cloudflare")
 	}
 
 	api, err := cloudflare.New(apiKey, user)
@@ -678,7 +678,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if crm.Hostname == "localhost" || crm.Hostname == "127.0.0.1" {
 			log.Printf("Starting CRM %+v\n", crm)
 			logfile := getLogFile(crm.Name, outputDir)
-			err := crm.Start(logfile, process.WithDebug("api,notify"))
+			err := crm.Start(logfile, process.WithDebug("api,notify,mexos"))
 			if err != nil {
 				log.Printf("Error on CRM startup: %v", err)
 				return false
