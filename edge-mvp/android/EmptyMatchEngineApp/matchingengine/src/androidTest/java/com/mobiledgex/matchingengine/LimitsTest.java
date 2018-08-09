@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -98,7 +99,13 @@ public class LimitsTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(MatchingEngine me, Location location) {
+    public String getCarrierName(Context context) {
+        TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        String networkOperatorName = telManager.getNetworkOperatorName();
+        return networkOperatorName;
+    }
+
+    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(String carrierName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -112,7 +119,7 @@ public class LimitsTest {
                 .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
-                .setCarrierName("TMUS") // Mobile Network Carrier
+                .setCarrierName(carrierName) // Mobile Network Carrier
                 .setTower(0) // cid and lac (int)
                 .setGpsLocation(aLoc)
                 .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
@@ -128,9 +135,9 @@ public class LimitsTest {
     }
 
     // Every call needs registration to be called first.
-    public void registerClient(MatchingEngine me, Location location) {
+    public void registerClient(String carrierName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Status registerResponse;
-        AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
+        AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(carrierName, me, location);
         try {
             registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
             assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
@@ -171,8 +178,9 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum1 = 0, sum2 = 0;
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
             for (int i = 0; i < elapsed1.length; i++) {
                 start = System.currentTimeMillis();
                 response1 = me.verifyLocation(request, GRPC_TIMEOUT_MS);
@@ -187,7 +195,7 @@ public class LimitsTest {
             assert (response1 != null);
 
             // Future
-            request = createMockMatchingEngineRequest(me, location);
+            request = createMockMatchingEngineRequest(carrierName, me, location);
             AppClient.Match_Engine_Loc_Verify response2 = null;
             try {
                 for (int i = 0; i < elapsed2.length; i++) {
@@ -249,11 +257,12 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum2 = 0;
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            AppClient.Match_Engine_Request request;
 
             // Future
-            request = createMockMatchingEngineRequest(me, location);
+            request = createMockMatchingEngineRequest(carrierName, me, location);
             AppClient.Match_Engine_Loc_Verify response2 = null;
             try {
                 // Background launch all:
@@ -369,11 +378,12 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum = 0;
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            AppClient.Match_Engine_Request request;
 
             // Future
-            request = createMockMatchingEngineRequest(me, location);
+            request = createMockMatchingEngineRequest(carrierName, me, location);
 
             // Background launch all:
             for (int i = 0; i < elapsed.length; i++) {

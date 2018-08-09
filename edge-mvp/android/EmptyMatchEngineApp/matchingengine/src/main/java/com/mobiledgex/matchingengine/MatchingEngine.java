@@ -33,7 +33,7 @@ public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
     private final String mInitalDMEContactHost = "tdg.dme.mobiledgex.net";
     private String mCurrentNetworkOperatorName = "";
-    private String host = "tdg.dme.mobiledgex.net";
+    private String host = mInitalDMEContactHost;
     private NetworkManager mNetworkManager;
     private int port = 50051;
 
@@ -230,7 +230,7 @@ public class MatchingEngine {
 
 
         // This is the currently generated DME host.
-        updateDmeHostAddress(networkOperatorName);
+        //updateDmeHostAddress(networkOperatorName);
         return request;
     }
 

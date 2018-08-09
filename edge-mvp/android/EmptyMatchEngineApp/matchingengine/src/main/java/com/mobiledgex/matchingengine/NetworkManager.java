@@ -26,7 +26,7 @@ public class NetworkManager {
     private ConnectivityManager mConnectivityManager;
     private boolean mWaitingForLink = false;
     private final Object mWaitForActiveNetwork = new Object();
-    private long mNetworkActiveTimeoutMilliseconds = 1000;
+    private long mNetworkActiveTimeoutMilliseconds = 5000;
     private final Object mSyncObject = new Object();
     private long mTimeoutInMilliseconds = 5000;
 
@@ -168,6 +168,7 @@ public class NetworkManager {
 
     class NetworkSwitcherCallable implements Callable {
         NetworkRequest mNetworkRequest;
+        final long start = System.currentTimeMillis();
 
         NetworkSwitcherCallable(NetworkRequest networkRequest) {
             mNetworkRequest = networkRequest;
@@ -179,6 +180,8 @@ public class NetworkManager {
                 public void onNetworkActive() {
                     synchronized (mWaitForActiveNetwork) {
                         mWaitForActiveNetwork.notify();
+                        long elapsed = System.currentTimeMillis() - start;
+                        Log.d(TAG, "Network Switch Time Wait total: " + elapsed);
                     }
                 }
             };
@@ -187,12 +190,12 @@ public class NetworkManager {
                     mWaitingForLink = true;
                 }
 
-                mConnectivityManager.addDefaultNetworkActiveListener(activeListener);
                 mConnectivityManager.requestNetwork(mNetworkRequest, new ConnectivityManager.NetworkCallback() {
                     @Override
                     public void onAvailable(Network network) {
                         Log.d(TAG, "requestNetwork onAvailable(), binding process to network.");
                         mConnectivityManager.bindProcessToNetwork(network);
+                        mConnectivityManager.addDefaultNetworkActiveListener(activeListener);
                         mNetwork = network;
                     }
 
@@ -239,8 +242,10 @@ public class NetworkManager {
                     mNetworkRequest = null;
                 }
                 // Network is available, and link is up, but may not be active yet.
-                synchronized (mWaitForActiveNetwork) {
-                    mWaitForActiveNetwork.wait(mNetworkActiveTimeoutMilliseconds);
+                if (!mConnectivityManager.isDefaultNetworkActive()) {
+                    synchronized (mWaitForActiveNetwork) {
+                        mWaitForActiveNetwork.wait(mNetworkActiveTimeoutMilliseconds);
+                    }
                 }
             } finally {
                 if (activeListener != null) {
