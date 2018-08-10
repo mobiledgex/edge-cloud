@@ -23,6 +23,8 @@ build-linux:
 
 build-docker:
 	docker build -t mobiledgex/edge-cloud -f docker/Dockerfile.edge-cloud .
+	docker tag mobiledgex/edge-cloud registry.mobiledgex.net:5000/mobiledgex/edge-cloud
+	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud
 
 install:
 	go install ./...

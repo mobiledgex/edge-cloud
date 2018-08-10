@@ -4,19 +4,19 @@ kind: mex-openstack-kubernetes
 resource: kubernetes-application
 metadata:
   kind: mex-app-kubernetes
-  name: mexexample
-  tags: mexexample-kubernetes-tag
-  tenant: mexexample-tenant
+  name: testapp
+  tags: testapp-kubernetes-tag
+  tenant: testtenant
 spec:
   flags: none
-  key: testPoke
-  rootlb: mexlb.gddt.mobiledgex.net
+  key: testapp
+  rootlb: testcloudlet.testoperator.mobiledgex.net
   image: registry.mobiledgex.net:5000/mobiledgex/mexexample
   imagetype: ImageTypeDocker
-  proxypath: mexexample
+  proxypath: testapp
   portmap: 
   pathmap: /etc:/mexexample
   flavor: app-kubernetes-flavor
-  uri: https://mexexample.gddt.mobiledgex.net
+  uri: https://testapp.testcloudlet.testoperator.mobiledgex.net
   kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
   accesslayer: L7
