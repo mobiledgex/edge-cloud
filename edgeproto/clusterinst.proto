@@ -37,28 +37,32 @@ message ClusterInst {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protocmd.noconfig) = "Flavor,Nodes,Liveness,Auto";
 }
 
 service ClusterInstApi {
-  rpc CreateClusterInst(ClusterInst) returns (Result) {
+  rpc CreateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/clusterinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc DeleteClusterInst(ClusterInst) returns (Result) {
+  rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/clusterinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc UpdateClusterInst(ClusterInst) returns (Result) {
+  rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/clusterinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
     option (google.api.http) = {
@@ -75,6 +79,8 @@ enum ClusterState {
   ClusterStateErrors = 3;
   ClusterStateDeleting = 4;
   ClusterStateDeleted = 5;
+  ClusterStateChanging = 6;
+  ClusterStateNotPresent = 7;
 }
 
 message ClusterInstInfo {
@@ -91,6 +97,7 @@ message ClusterInstInfo {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.generate_wait_for_state) = "ClusterState";
   option (protogen.notify_cache) = true;
 }
 

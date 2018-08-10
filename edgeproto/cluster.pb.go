@@ -642,14 +642,19 @@ func (s *ClusterStore) STMDel(stm concurrency.STM, key *ClusterKey) {
 	stm.Del(keystr)
 }
 
+type ClusterKeyWatcher struct {
+	cb func()
+}
+
 // ClusterCache caches Cluster objects in memory in a hash table
 // and keeps them in sync with the database.
 type ClusterCache struct {
-	Objs      map[ClusterKey]*Cluster
-	Mux       util.Mutex
-	List      map[ClusterKey]struct{}
-	NotifyCb  func(obj *ClusterKey)
-	UpdatedCb func(old *Cluster, new *Cluster)
+	Objs        map[ClusterKey]*Cluster
+	Mux         util.Mutex
+	List        map[ClusterKey]struct{}
+	NotifyCb    func(obj *ClusterKey)
+	UpdatedCb   func(old *Cluster, new *Cluster)
+	KeyWatchers map[ClusterKey][]*ClusterKeyWatcher
 }
 
 func NewClusterCache() *ClusterCache {
@@ -660,6 +665,7 @@ func NewClusterCache() *ClusterCache {
 
 func InitClusterCache(cache *ClusterCache) {
 	cache.Objs = make(map[ClusterKey]*Cluster)
+	cache.KeyWatchers = make(map[ClusterKey][]*ClusterKeyWatcher)
 }
 
 func (c *ClusterCache) GetTypeString() string {
@@ -700,21 +706,23 @@ func (c *ClusterCache) Update(in *Cluster, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cluster", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterCache) Delete(in *Cluster, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Cluster", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterCache) Prune(validKeys map[ClusterKey]struct{}) {
@@ -729,10 +737,11 @@ func (c *ClusterCache) Prune(validKeys map[ClusterKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -765,6 +774,51 @@ func (c *ClusterCache) SetNotifyCb(fn func(obj *ClusterKey)) {
 
 func (c *ClusterCache) SetUpdatedCb(fn func(old *Cluster, new *Cluster)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterCache) WatchKey(key *ClusterKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*ClusterKeyWatcher, 0)
+	}
+	watcher := ClusterKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching Cluster", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *ClusterCache) TriggerKeyWatchers(key *ClusterKey) {
+	watchers := make([]*ClusterKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *ClusterCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Cluster{}
@@ -806,9 +860,11 @@ func (c *ClusterCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *Cluster) GetKey() *ClusterKey {
 	return &m.Key
 }

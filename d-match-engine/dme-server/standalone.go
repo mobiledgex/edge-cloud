@@ -1,26 +1,24 @@
 package main
 
 import (
-	"context"
-
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
 type standaloneServer struct{}
 
-func (s *standaloneServer) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	addApp(in)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	removeApp(in)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	addApp(in)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
 func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {

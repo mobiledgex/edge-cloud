@@ -5,8 +5,12 @@ package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import google_protobuf "github.com/gogo/protobuf/types"
+import "strings"
 import "time"
 import "strconv"
+import "os"
+import "text/tabwriter"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -48,5 +52,28 @@ func LocHeaderSlicer() []string {
 	return s
 }
 
+func LocWriteOutputArray(objs []*distributed_match_engine.Loc) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(LocHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(LocSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func LocWriteOutputOne(obj *distributed_match_engine.Loc) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(LocHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(LocSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func init() {
 }

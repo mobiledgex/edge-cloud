@@ -35,8 +35,6 @@ import "os"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -178,6 +176,29 @@ func Match_Engine_RequestHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_RequestWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Request) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_RequestHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_RequestSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_RequestWriteOutputOne(obj *distributed_match_engine.Match_Engine_Request) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_RequestHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_RequestSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) []string {
 	s := make([]string, 0, 7)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -229,6 +250,29 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_ReplyWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Reply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_ReplyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_ReplySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_ReplyWriteOutputOne(obj *distributed_match_engine.Match_Engine_Reply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_ReplyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_ReplySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func Match_Engine_Loc_VerifySlicer(in *distributed_match_engine.Match_Engine_Loc_Verify) []string {
 	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -247,6 +291,29 @@ func Match_Engine_Loc_VerifyHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_Loc_VerifyWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Loc_Verify) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_Loc_VerifyWriteOutputOne(obj *distributed_match_engine.Match_Engine_Loc_Verify) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func Match_Engine_LocSlicer(in *distributed_match_engine.Match_Engine_Loc) []string {
 	s := make([]string, 0, 6)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -290,6 +357,29 @@ func Match_Engine_LocHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_LocWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Loc) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_LocHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_LocSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_LocWriteOutputOne(obj *distributed_match_engine.Match_Engine_Loc) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_LocHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_LocSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func Match_Engine_StatusSlicer(in *distributed_match_engine.Match_Engine_Status) []string {
 	s := make([]string, 0, 6)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -312,6 +402,29 @@ func Match_Engine_StatusHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_StatusWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Status) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_StatusWriteOutputOne(obj *distributed_match_engine.Match_Engine_Status) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []string {
 	s := make([]string, 0, 5)
 	s = append(s, in.CarrierName)
@@ -353,6 +466,29 @@ func CloudletLocationHeaderSlicer() []string {
 	return s
 }
 
+func CloudletLocationWriteOutputArray(objs []*distributed_match_engine.CloudletLocation) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletLocationHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletLocationSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletLocationWriteOutputOne(obj *distributed_match_engine.CloudletLocation) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletLocationHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletLocationSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func Match_Engine_Cloudlet_ListSlicer(in *distributed_match_engine.Match_Engine_Cloudlet_List) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -404,6 +540,29 @@ func Match_Engine_Cloudlet_ListHeaderSlicer() []string {
 	return s
 }
 
+func Match_Engine_Cloudlet_ListWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Cloudlet_List) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func Match_Engine_Cloudlet_ListWriteOutputOne(obj *distributed_match_engine.Match_Engine_Cloudlet_List) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func DynamicLocGroupAddSlicer(in *distributed_match_engine.DynamicLocGroupAdd) []string {
 	s := make([]string, 0, 12)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -459,6 +618,30 @@ func DynamicLocGroupAddHeaderSlicer() []string {
 	return s
 }
 
+func DynamicLocGroupAddWriteOutputArray(objs []*distributed_match_engine.DynamicLocGroupAdd) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DynamicLocGroupAddHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DynamicLocGroupAddSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DynamicLocGroupAddWriteOutputOne(obj *distributed_match_engine.DynamicLocGroupAdd) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DynamicLocGroupAddHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DynamicLocGroupAddSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var FindCloudletCmd = &cobra.Command{
 	Use: "FindCloudlet",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -473,40 +656,13 @@ var FindCloudletCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
+		obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("FindCloudlet failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_ReplyHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_ReplySlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_ReplyWriteOutputOne(obj)
 	},
 }
 
@@ -524,40 +680,13 @@ var VerifyLocationCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
+		obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("VerifyLocation failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifyHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_Loc_VerifySlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_Loc_VerifyWriteOutputOne(obj)
 	},
 }
 
@@ -575,40 +704,13 @@ var GetLocationCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
+		obj, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("GetLocation failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_LocHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_LocSlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_LocWriteOutputOne(obj)
 	},
 }
 
@@ -626,40 +728,13 @@ var RegisterClientCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
+		obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("RegisterClient failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_StatusWriteOutputOne(obj)
 	},
 }
 
@@ -677,40 +752,13 @@ var AddUserToGroupCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
+		obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
 		cancel()
 		if err != nil {
 			fmt.Println("AddUserToGroup failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_StatusHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_StatusSlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_StatusWriteOutputOne(obj)
 	},
 }
 
@@ -728,40 +776,13 @@ var GetCloudletsCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
+		obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
 		cancel()
 		if err != nil {
 			fmt.Println("GetCloudlets failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(objs), "\t"))
-			output.Flush()
-		}
+		Match_Engine_Cloudlet_ListWriteOutputOne(obj)
 	},
 }
 

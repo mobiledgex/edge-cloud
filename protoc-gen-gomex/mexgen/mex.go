@@ -33,6 +33,7 @@ type mex struct {
 	importErrors  bool
 	importStrconv bool
 	importSort    bool
+	importTime    bool
 	firstFile     string
 	support       gensupport.PluginSupport
 }
@@ -47,7 +48,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
-	m.support.Init(nil)
+	m.support.Init(gen.Request)
 	// Generator passes us all files (some of which are builtin
 	// like google/api/http). To determine the first file to generate
 	// one-off code, sort by request files which are the subset of
@@ -73,6 +74,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importErrors = false
 	m.importStrconv = false
 	m.importSort = false
+	m.importTime = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -118,6 +120,9 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importSort {
 		m.gen.PrintImport("", "sort")
+	}
+	if m.importTime {
+		m.gen.PrintImport("", "time")
 	}
 	m.support.PrintUsedImports(m.gen)
 }
@@ -742,13 +747,18 @@ func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
 `
 
 type cacheTemplateArgs struct {
-	Name        string
-	KeyType     string
-	CudCache    bool
-	NotifyCache bool
+	Name         string
+	KeyType      string
+	CudCache     bool
+	NotifyCache  bool
+	WaitForState string
 }
 
 var cacheTemplateIn = `
+type {{.Name}}KeyWatcher struct {
+	cb func()
+}
+
 // {{.Name}}Cache caches {{.Name}} objects in memory in a hash table
 // and keeps them in sync with the database.
 type {{.Name}}Cache struct {
@@ -757,6 +767,7 @@ type {{.Name}}Cache struct {
 	List map[{{.KeyType}}]struct{}
 	NotifyCb func(obj *{{.KeyType}})
 	UpdatedCb func(old *{{.Name}}, new *{{.Name}})
+	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
 }
 
 func New{{.Name}}Cache() *{{.Name}}Cache {
@@ -767,6 +778,7 @@ func New{{.Name}}Cache() *{{.Name}}Cache {
 
 func Init{{.Name}}Cache(cache *{{.Name}}Cache) {
 	cache.Objs = make(map[{{.KeyType}}]*{{.Name}})
+	cache.KeyWatchers = make(map[{{.KeyType}}][]*{{.Name}}KeyWatcher)
 }
 
 func (c *{{.Name}}Cache) GetTypeString() string {
@@ -807,21 +819,23 @@ func (c *{{.Name}}Cache) Update(in *{{.Name}}, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *{{.Name}}Cache) Delete(in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
@@ -836,10 +850,11 @@ func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -851,15 +866,22 @@ func (c *{{.Name}}Cache) GetCount() int {
 
 {{- if .NotifyCache}}
 func (c *{{.Name}}Cache) Flush(notifyId int64) {
+	keys := make([]{{.KeyType}}, 0)
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
 		delete(c.Objs, key)
-		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+		keys = append(keys, key)
+	}
+	c.Mux.Unlock()
+	if len(keys) > 0 {
+		for _, key := range keys {
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
@@ -891,6 +913,50 @@ func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}})) {
 func (c *{{.Name}}Cache) SetUpdatedCb(fn func(old *{{.Name}}, new *{{.Name}})) {
 	c.UpdatedCb = fn
 }
+
+func (c *{{.Name}}Cache) WatchKey(key *{{.KeyType}}, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*{{.Name}}KeyWatcher, 0)
+	}
+	watcher := {{.Name}}KeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching {{.Name}}", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok { return }
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *{{.Name}}Cache) TriggerKeyWatchers(key *{{.KeyType}}) {
+	watchers := make([]*{{.Name}}KeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
+}
+
 
 {{- if .CudCache}}
 func (c *{{.Name}}Cache) SyncUpdate(key, val []byte, rev int64) {
@@ -933,10 +999,76 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
 {{- end}}
+
+{{if ne (.WaitForState) ("")}}
+func (c *{{.Name}}Cache) WaitForState(key *{{.KeyType}}, targetState {{.WaitForState}}, timeout time.Duration, send func(*Result) error) error {
+	curState := {{.WaitForState}}_{{.WaitForState}}Unknown
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	var err error
+
+	cancel := c.WatchKey(key, func() {
+		info := {{.Name}}{}
+		if c.Get(key, &info) {
+			curState = info.State
+		} else {
+			curState = {{.WaitForState}}_{{.WaitForState}}NotPresent
+		}
+		if send != nil {
+			msg := {{.WaitForState}}_name[int32(curState)]
+			send(&Result{Message: msg})
+		}
+		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_name[int32(curState)])
+		if curState == {{.WaitForState}}_{{.WaitForState}}Errors {
+			failed <- true
+		} else if curState == targetState {
+			done <- true
+		}
+	})
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	info := {{.Name}}{}
+	if c.Get(key, &info) {
+		curState = info.State
+	} else {
+		curState = {{.WaitForState}}_{{.WaitForState}}NotPresent
+	}
+	if curState == targetState {
+		done <- true
+	}
+
+	select {
+	case <-done:
+		err = nil
+	case <-failed:
+		if c.Get(key, &info) {
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else {
+			// this shouldn't happen, since only way to get here
+			// is if info state is set to Error
+			err = errors.New("Unknown failure")
+		}
+	case <-time.After(timeout):
+		if c.Get(key, &info) && info.State == {{.WaitForState}}_{{.WaitForState}}Errors {
+			// error may have been sent back before watch started
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else {
+			err = fmt.Errorf("Timed out; expected state %s but is %s",
+				{{.WaitForState}}_name[int32(targetState)],
+				{{.WaitForState}}_name[int32(curState)])
+		}
+	}
+	cancel()
+	// note: do not close done/failed, garbage collector will deal with it.
+	return err
+}
+{{- end}}
+
 `
 
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
@@ -1007,13 +1139,17 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
 		args := cacheTemplateArgs{
-			Name:        *message.Name,
-			KeyType:     m.support.GoType(m.gen, keyField),
-			CudCache:    GetGenerateCud(message),
-			NotifyCache: GetNotifyCache(message),
+			Name:         *message.Name,
+			KeyType:      m.support.GoType(m.gen, keyField),
+			CudCache:     GetGenerateCud(message),
+			NotifyCache:  GetNotifyCache(message),
+			WaitForState: GetGenerateWaitForState(message),
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
+		if args.WaitForState != "" {
+			m.importTime = true
+		}
 	}
 	if GetObjKey(message) {
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
@@ -1084,6 +1220,10 @@ func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 
 func GetGenerateCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
+}
+
+func GetGenerateWaitForState(message *descriptor.DescriptorProto) string {
+	return gensupport.GetStringExtension(message.Options, protogen.E_GenerateWaitForState, "")
 }
 
 func GetNotifyCache(message *descriptor.DescriptorProto) bool {

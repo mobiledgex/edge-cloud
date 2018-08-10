@@ -13,6 +13,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	"github.com/mobiledgex/edge-cloud/testutil"
 	"google.golang.org/grpc"
 )
 
@@ -227,14 +228,16 @@ func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edge
 	clusterinAPI := edgeproto.NewClusterInstApiClient(conn)
 	for _, a := range appdata.ClusterInsts {
 		log.Printf("API %v for clusterinst: %v", mode, a.Key.ClusterKey.Name)
+		var stream testutil.ClusterInstStream
 		switch mode {
 		case "create":
-			_, err = clusterinAPI.CreateClusterInst(ctx, &a)
+			stream, err = clusterinAPI.CreateClusterInst(ctx, &a)
 		case "update":
-			_, err = clusterinAPI.UpdateClusterInst(ctx, &a)
+			stream, err = clusterinAPI.UpdateClusterInst(ctx, &a)
 		case "delete":
-			_, err = clusterinAPI.DeleteClusterInst(ctx, &a)
+			stream, err = clusterinAPI.DeleteClusterInst(ctx, &a)
 		}
+		err = testutil.ClusterInstReadResultStream(stream, err)
 		if err != nil {
 			return err
 		}
@@ -248,14 +251,16 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 	appinAPI := edgeproto.NewAppInstApiClient(conn)
 	for _, a := range appdata.AppInstances {
 		log.Printf("API %v for appinstance: %v", mode, a.Key.AppKey.Name)
+		var stream testutil.AppInstStream
 		switch mode {
 		case "create":
-			_, err = appinAPI.CreateAppInst(ctx, &a)
+			stream, err = appinAPI.CreateAppInst(ctx, &a)
 		case "update":
-			_, err = appinAPI.UpdateAppInst(ctx, &a)
+			stream, err = appinAPI.UpdateAppInst(ctx, &a)
 		case "delete":
-			_, err = appinAPI.DeleteAppInst(ctx, &a)
+			stream, err = appinAPI.DeleteAppInst(ctx, &a)
 		}
+		err = testutil.AppInstReadResultStream(stream, err)
 		if err != nil {
 			return err
 		}
@@ -419,8 +424,8 @@ func RunControllerInfoAPI(api, ctrlname, apiFile, outputDir string) bool {
 	errFound := false
 
 	var showCmds = []string{
-		"clusterInstInfos: ShowClusterInstInfo",
-		"appInstInfos: ShowAppInstInfo",
+		"clusterinstinfos: ShowClusterInstInfo",
+		"appinstinfos: ShowAppInstInfo",
 	}
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]

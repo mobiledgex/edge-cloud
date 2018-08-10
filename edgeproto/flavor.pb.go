@@ -645,14 +645,19 @@ func (s *FlavorStore) STMDel(stm concurrency.STM, key *FlavorKey) {
 	stm.Del(keystr)
 }
 
+type FlavorKeyWatcher struct {
+	cb func()
+}
+
 // FlavorCache caches Flavor objects in memory in a hash table
 // and keeps them in sync with the database.
 type FlavorCache struct {
-	Objs      map[FlavorKey]*Flavor
-	Mux       util.Mutex
-	List      map[FlavorKey]struct{}
-	NotifyCb  func(obj *FlavorKey)
-	UpdatedCb func(old *Flavor, new *Flavor)
+	Objs        map[FlavorKey]*Flavor
+	Mux         util.Mutex
+	List        map[FlavorKey]struct{}
+	NotifyCb    func(obj *FlavorKey)
+	UpdatedCb   func(old *Flavor, new *Flavor)
+	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
 }
 
 func NewFlavorCache() *FlavorCache {
@@ -663,6 +668,7 @@ func NewFlavorCache() *FlavorCache {
 
 func InitFlavorCache(cache *FlavorCache) {
 	cache.Objs = make(map[FlavorKey]*Flavor)
+	cache.KeyWatchers = make(map[FlavorKey][]*FlavorKeyWatcher)
 }
 
 func (c *FlavorCache) GetTypeString() string {
@@ -703,21 +709,23 @@ func (c *FlavorCache) Update(in *Flavor, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *FlavorCache) Delete(in *Flavor, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Flavor", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
@@ -732,10 +740,11 @@ func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -768,6 +777,51 @@ func (c *FlavorCache) SetNotifyCb(fn func(obj *FlavorKey)) {
 
 func (c *FlavorCache) SetUpdatedCb(fn func(old *Flavor, new *Flavor)) {
 	c.UpdatedCb = fn
+}
+
+func (c *FlavorCache) WatchKey(key *FlavorKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*FlavorKeyWatcher, 0)
+	}
+	watcher := FlavorKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching Flavor", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *FlavorCache) TriggerKeyWatchers(key *FlavorKey) {
+	watchers := make([]*FlavorKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *FlavorCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Flavor{}
@@ -809,9 +863,11 @@ func (c *FlavorCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *Flavor) GetKey() *FlavorKey {
 	return &m.Key
 }

@@ -119,6 +119,12 @@ type SyncCbData struct {
 	Value []byte
 	// global revision of the data
 	Rev int64
+	// MoreEvents indicates there are more changes in the revision.
+	// With transactions, multiple changes can be done in the same
+	// revision, but each change is called back separately.
+	// MoreEvents is set to true if there are more changes to be
+	// called back for the current revision.
+	MoreEvents bool
 }
 
 func DbKeyString(typ string, key ObjKey) string {

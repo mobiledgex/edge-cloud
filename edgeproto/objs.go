@@ -10,17 +10,18 @@ import (
 
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
-	Operators      []Operator      `yaml:"operators"`
-	Cloudlets      []Cloudlet      `yaml:"cloudlets"`
-	Flavors        []Flavor        `yaml:"flavors"`
-	ClusterFlavors []ClusterFlavor `yaml:"clusterflavors"`
-	Clusters       []Cluster       `yaml:"clusters"`
-	ClusterInsts   []ClusterInst   `yaml:"clusterinsts"`
-	Developers     []Developer     `yaml:"developers"`
-	Applications   []App           `yaml:"apps"`
-	AppInstances   []AppInst       `yaml:"appinstances"`
-	CloudletInfos  []CloudletInfo  `yaml:"cloudletinfos"`
-	AppInstInfos   []AppInstInfo   `yaml:"appinstinfos"`
+	Operators        []Operator        `yaml:"operators"`
+	Cloudlets        []Cloudlet        `yaml:"cloudlets"`
+	Flavors          []Flavor          `yaml:"flavors"`
+	ClusterFlavors   []ClusterFlavor   `yaml:"clusterflavors"`
+	Clusters         []Cluster         `yaml:"clusters"`
+	ClusterInsts     []ClusterInst     `yaml:"clusterinsts"`
+	Developers       []Developer       `yaml:"developers"`
+	Applications     []App             `yaml:"apps"`
+	AppInstances     []AppInst         `yaml:"appinstances"`
+	CloudletInfos    []CloudletInfo    `yaml:"cloudletinfos"`
+	AppInstInfos     []AppInstInfo     `yaml:"appinstinfos"`
+	ClusterInstInfos []ClusterInstInfo `yaml:"clusterinstinfos"`
 }
 
 // sort each slice by key
@@ -57,6 +58,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.AppInstInfos[:], func(i, j int) bool {
 		return a.AppInstInfos[i].Key.GetKeyString() < a.AppInstInfos[j].Key.GetKeyString()
+	})
+	sort.Slice(a.ClusterInstInfos[:], func(i, j int) bool {
+		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
 	})
 }
 
@@ -226,29 +230,4 @@ func MakeFieldMap(fields []string) map[string]struct{} {
 func HasField(fmap map[string]struct{}, field string) bool {
 	_, ok := fmap[field]
 	return ok
-}
-
-// Extra funcs for caches for notify code
-
-// GetAppInstsForCloudlets finds all AppInsts associated with the given cloudlets
-func (s *AppInstCache) GetAppInstsForCloudlets(cloudlets map[CloudletKey]struct{}, appInsts map[AppInstKey]struct{}) {
-	s.Mux.Lock()
-	defer s.Mux.Unlock()
-	for k, v := range s.Objs {
-		if _, found := cloudlets[v.Key.CloudletKey]; found {
-			appInsts[k] = struct{}{}
-		}
-	}
-}
-
-// GetClusterInstsForCloudlets finds all ClusterInsts associated with the
-// given cloudlets
-func (s *ClusterInstCache) GetClusterInstsForCloudlets(cloudlets map[CloudletKey]struct{}, clusterInsts map[ClusterInstKey]struct{}) {
-	s.Mux.Lock()
-	defer s.Mux.Unlock()
-	for k, v := range s.Objs {
-		if _, found := cloudlets[v.Key.CloudletKey]; found {
-			clusterInsts[k] = struct{}{}
-		}
-	}
 }

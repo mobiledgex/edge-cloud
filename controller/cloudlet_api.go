@@ -96,7 +96,7 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 		// delete dynamic instances
 		for key, _ := range dynInsts {
 			appInst := edgeproto.AppInst{Key: key}
-			_, derr := appInstApi.DeleteAppInst(ctx, &appInst)
+			_, derr := appInstApi.DeleteNoWait(ctx, &appInst)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
@@ -107,7 +107,7 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 	if len(clDynInsts) > 0 {
 		for key, _ := range clDynInsts {
 			clInst := edgeproto.ClusterInst{Key: key}
-			_, derr := clusterInstApi.DeleteClusterInst(ctx, &clInst)
+			_, derr := clusterInstApi.DeleteNoWait(ctx, &clInst)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic cluster inst",

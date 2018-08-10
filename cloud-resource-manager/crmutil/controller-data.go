@@ -146,7 +146,8 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 			log.DebugLog(log.DebugLevelMexos, "cluster inst changed, deleted")
 			if !IsValidMEXOSEnv {
 				log.DebugLog(log.DebugLevelMexos, "invalid mexos env, fake cluster state deleted")
-				cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
+				info := edgeproto.ClusterInstInfo{Key: *key}
+				cd.ClusterInstInfoCache.Delete(&info, 0)
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "remove cluster inst", "clusterinst", clusterInst)
@@ -157,7 +158,10 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "set cluster inst deleted", "clusterinst", clusterInst)
-			cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleted)
+			// Deleting local info signals to controller that
+			// delete was successful.
+			info := edgeproto.ClusterInstInfo{Key: *key}
+			cd.ClusterInstInfoCache.Delete(&info, 0)
 		}()
 	}
 }
@@ -229,8 +233,12 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 		}()
 	} else {
 		// appInst was deleted
-		cd.appInstInfoError(key, "Delete not implemented yet")
 		// TODO: implement me
+
+		// Deleting local info signals to controller that
+		// delete was successful.
+		info := edgeproto.AppInstInfo{Key: *key}
+		cd.AppInstInfoCache.Delete(&info, 0)
 	}
 }
 
@@ -249,41 +257,17 @@ func convertImageType(imageType int) (string, error) {
 }
 
 func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, err string) {
-	info := edgeproto.ClusterInstInfo{}
-	if !cd.ClusterInstInfoCache.Get(key, &info) {
-		info.Key = *key
-	}
-	info.Errors = append(info.Errors, err)
-	info.State = edgeproto.ClusterState_ClusterStateErrors
-	cd.ClusterInstInfoCache.Update(&info, 0)
+	cd.ClusterInstInfoCache.SetError(key, err)
 }
 
 func (cd *ControllerData) clusterInstInfoState(key *edgeproto.ClusterInstKey, state edgeproto.ClusterState) {
-	info := edgeproto.ClusterInstInfo{}
-	if !cd.ClusterInstInfoCache.Get(key, &info) {
-		info.Key = *key
-	}
-	info.Errors = nil
-	info.State = state
-	cd.ClusterInstInfoCache.Update(&info, 0)
+	cd.ClusterInstInfoCache.SetState(key, state)
 }
 
 func (cd *ControllerData) appInstInfoError(key *edgeproto.AppInstKey, err string) {
-	info := edgeproto.AppInstInfo{}
-	if !cd.AppInstInfoCache.Get(key, &info) {
-		info.Key = *key
-	}
-	info.Errors = append(info.Errors, err)
-	info.State = edgeproto.AppState_AppStateErrors
-	cd.AppInstInfoCache.Update(&info, 0)
+	cd.AppInstInfoCache.SetError(key, err)
 }
 
 func (cd *ControllerData) appInstInfoState(key *edgeproto.AppInstKey, state edgeproto.AppState) {
-	info := edgeproto.AppInstInfo{}
-	if !cd.AppInstInfoCache.Get(key, &info) {
-		info.Key = *key
-	}
-	info.Errors = nil
-	info.State = state
-	cd.AppInstInfoCache.Update(&info, 0)
+	cd.AppInstInfoCache.SetState(key, state)
 }

@@ -672,14 +672,19 @@ func (s *DeveloperStore) STMDel(stm concurrency.STM, key *DeveloperKey) {
 	stm.Del(keystr)
 }
 
+type DeveloperKeyWatcher struct {
+	cb func()
+}
+
 // DeveloperCache caches Developer objects in memory in a hash table
 // and keeps them in sync with the database.
 type DeveloperCache struct {
-	Objs      map[DeveloperKey]*Developer
-	Mux       util.Mutex
-	List      map[DeveloperKey]struct{}
-	NotifyCb  func(obj *DeveloperKey)
-	UpdatedCb func(old *Developer, new *Developer)
+	Objs        map[DeveloperKey]*Developer
+	Mux         util.Mutex
+	List        map[DeveloperKey]struct{}
+	NotifyCb    func(obj *DeveloperKey)
+	UpdatedCb   func(old *Developer, new *Developer)
+	KeyWatchers map[DeveloperKey][]*DeveloperKeyWatcher
 }
 
 func NewDeveloperCache() *DeveloperCache {
@@ -690,6 +695,7 @@ func NewDeveloperCache() *DeveloperCache {
 
 func InitDeveloperCache(cache *DeveloperCache) {
 	cache.Objs = make(map[DeveloperKey]*Developer)
+	cache.KeyWatchers = make(map[DeveloperKey][]*DeveloperKeyWatcher)
 }
 
 func (c *DeveloperCache) GetTypeString() string {
@@ -730,21 +736,23 @@ func (c *DeveloperCache) Update(in *Developer, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Developer", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
@@ -759,10 +767,11 @@ func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -795,6 +804,51 @@ func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey)) {
 
 func (c *DeveloperCache) SetUpdatedCb(fn func(old *Developer, new *Developer)) {
 	c.UpdatedCb = fn
+}
+
+func (c *DeveloperCache) WatchKey(key *DeveloperKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*DeveloperKeyWatcher, 0)
+	}
+	watcher := DeveloperKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching Developer", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *DeveloperCache) TriggerKeyWatchers(key *DeveloperKey) {
+	watchers := make([]*DeveloperKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Developer{}
@@ -836,9 +890,11 @@ func (c *DeveloperCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *Developer) GetKey() *DeveloperKey {
 	return &m.Key
 }

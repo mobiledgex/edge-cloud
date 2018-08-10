@@ -24,6 +24,7 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "strconv"
+import "time"
 
 import io "io"
 
@@ -35,12 +36,14 @@ var _ = math.Inf
 type ClusterState int32
 
 const (
-	ClusterState_ClusterStateUnknown  ClusterState = 0
-	ClusterState_ClusterStateBuilding ClusterState = 1
-	ClusterState_ClusterStateReady    ClusterState = 2
-	ClusterState_ClusterStateErrors   ClusterState = 3
-	ClusterState_ClusterStateDeleting ClusterState = 4
-	ClusterState_ClusterStateDeleted  ClusterState = 5
+	ClusterState_ClusterStateUnknown    ClusterState = 0
+	ClusterState_ClusterStateBuilding   ClusterState = 1
+	ClusterState_ClusterStateReady      ClusterState = 2
+	ClusterState_ClusterStateErrors     ClusterState = 3
+	ClusterState_ClusterStateDeleting   ClusterState = 4
+	ClusterState_ClusterStateDeleted    ClusterState = 5
+	ClusterState_ClusterStateChanging   ClusterState = 6
+	ClusterState_ClusterStateNotPresent ClusterState = 7
 )
 
 var ClusterState_name = map[int32]string{
@@ -50,14 +53,18 @@ var ClusterState_name = map[int32]string{
 	3: "ClusterStateErrors",
 	4: "ClusterStateDeleting",
 	5: "ClusterStateDeleted",
+	6: "ClusterStateChanging",
+	7: "ClusterStateNotPresent",
 }
 var ClusterState_value = map[string]int32{
-	"ClusterStateUnknown":  0,
-	"ClusterStateBuilding": 1,
-	"ClusterStateReady":    2,
-	"ClusterStateErrors":   3,
-	"ClusterStateDeleting": 4,
-	"ClusterStateDeleted":  5,
+	"ClusterStateUnknown":    0,
+	"ClusterStateBuilding":   1,
+	"ClusterStateReady":      2,
+	"ClusterStateErrors":     3,
+	"ClusterStateDeleting":   4,
+	"ClusterStateDeleted":    5,
+	"ClusterStateChanging":   6,
+	"ClusterStateNotPresent": 7,
 }
 
 func (x ClusterState) String() string {
@@ -149,9 +156,9 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterInstApi service
 
 type ClusterInstApiClient interface {
-	CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error)
-	DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error)
-	UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error)
+	CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_CreateClusterInstClient, error)
+	DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_DeleteClusterInstClient, error)
+	UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_UpdateClusterInstClient, error)
 	ShowClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_ShowClusterInstClient, error)
 }
 
@@ -163,35 +170,104 @@ func NewClusterInstApiClient(cc *grpc.ClientConn) ClusterInstApiClient {
 	return &clusterInstApiClient{cc}
 }
 
-func (c *clusterInstApiClient) CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ClusterInstApi/CreateClusterInst", in, out, c.cc, opts...)
+func (c *clusterInstApiClient) CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_CreateClusterInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterInstApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ClusterInstApi/CreateClusterInst", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &clusterInstApiCreateClusterInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *clusterInstApiClient) DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ClusterInstApi/DeleteClusterInst", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+type ClusterInstApi_CreateClusterInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
 }
 
-func (c *clusterInstApiClient) UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.ClusterInstApi/UpdateClusterInst", in, out, c.cc, opts...)
+type clusterInstApiCreateClusterInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterInstApiCreateClusterInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *clusterInstApiClient) DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_DeleteClusterInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterInstApi_serviceDesc.Streams[1], c.cc, "/edgeproto.ClusterInstApi/DeleteClusterInst", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &clusterInstApiDeleteClusterInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterInstApi_DeleteClusterInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type clusterInstApiDeleteClusterInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterInstApiDeleteClusterInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *clusterInstApiClient) UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_UpdateClusterInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_ClusterInstApi_serviceDesc.Streams[2], c.cc, "/edgeproto.ClusterInstApi/UpdateClusterInst", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &clusterInstApiUpdateClusterInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ClusterInstApi_UpdateClusterInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type clusterInstApiUpdateClusterInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *clusterInstApiUpdateClusterInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *clusterInstApiClient) ShowClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_ShowClusterInstClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_ClusterInstApi_serviceDesc.Streams[0], c.cc, "/edgeproto.ClusterInstApi/ShowClusterInst", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_ClusterInstApi_serviceDesc.Streams[3], c.cc, "/edgeproto.ClusterInstApi/ShowClusterInst", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -225,9 +301,9 @@ func (x *clusterInstApiShowClusterInstClient) Recv() (*ClusterInst, error) {
 // Server API for ClusterInstApi service
 
 type ClusterInstApiServer interface {
-	CreateClusterInst(context.Context, *ClusterInst) (*Result, error)
-	DeleteClusterInst(context.Context, *ClusterInst) (*Result, error)
-	UpdateClusterInst(context.Context, *ClusterInst) (*Result, error)
+	CreateClusterInst(*ClusterInst, ClusterInstApi_CreateClusterInstServer) error
+	DeleteClusterInst(*ClusterInst, ClusterInstApi_DeleteClusterInstServer) error
+	UpdateClusterInst(*ClusterInst, ClusterInstApi_UpdateClusterInstServer) error
 	ShowClusterInst(*ClusterInst, ClusterInstApi_ShowClusterInstServer) error
 }
 
@@ -235,58 +311,67 @@ func RegisterClusterInstApiServer(s *grpc.Server, srv ClusterInstApiServer) {
 	s.RegisterService(&_ClusterInstApi_serviceDesc, srv)
 }
 
-func _ClusterInstApi_CreateClusterInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterInst)
-	if err := dec(in); err != nil {
-		return nil, err
+func _ClusterInstApi_CreateClusterInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClusterInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ClusterInstApiServer).CreateClusterInst(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.ClusterInstApi/CreateClusterInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterInstApiServer).CreateClusterInst(ctx, req.(*ClusterInst))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ClusterInstApiServer).CreateClusterInst(m, &clusterInstApiCreateClusterInstServer{stream})
 }
 
-func _ClusterInstApi_DeleteClusterInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterInst)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ClusterInstApiServer).DeleteClusterInst(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.ClusterInstApi/DeleteClusterInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterInstApiServer).DeleteClusterInst(ctx, req.(*ClusterInst))
-	}
-	return interceptor(ctx, in, info, handler)
+type ClusterInstApi_CreateClusterInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
 }
 
-func _ClusterInstApi_UpdateClusterInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClusterInst)
-	if err := dec(in); err != nil {
-		return nil, err
+type clusterInstApiCreateClusterInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterInstApiCreateClusterInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _ClusterInstApi_DeleteClusterInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClusterInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ClusterInstApiServer).UpdateClusterInst(ctx, in)
+	return srv.(ClusterInstApiServer).DeleteClusterInst(m, &clusterInstApiDeleteClusterInstServer{stream})
+}
+
+type ClusterInstApi_DeleteClusterInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type clusterInstApiDeleteClusterInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterInstApiDeleteClusterInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _ClusterInstApi_UpdateClusterInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ClusterInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.ClusterInstApi/UpdateClusterInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ClusterInstApiServer).UpdateClusterInst(ctx, req.(*ClusterInst))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ClusterInstApiServer).UpdateClusterInst(m, &clusterInstApiUpdateClusterInstServer{stream})
+}
+
+type ClusterInstApi_UpdateClusterInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type clusterInstApiUpdateClusterInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *clusterInstApiUpdateClusterInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _ClusterInstApi_ShowClusterInst_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -313,21 +398,23 @@ func (x *clusterInstApiShowClusterInstServer) Send(m *ClusterInst) error {
 var _ClusterInstApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.ClusterInstApi",
 	HandlerType: (*ClusterInstApiServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateClusterInst",
-			Handler:    _ClusterInstApi_CreateClusterInst_Handler,
-		},
-		{
-			MethodName: "DeleteClusterInst",
-			Handler:    _ClusterInstApi_DeleteClusterInst_Handler,
-		},
-		{
-			MethodName: "UpdateClusterInst",
-			Handler:    _ClusterInstApi_UpdateClusterInst_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateClusterInst",
+			Handler:       _ClusterInstApi_CreateClusterInst_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "DeleteClusterInst",
+			Handler:       _ClusterInstApi_DeleteClusterInst_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "UpdateClusterInst",
+			Handler:       _ClusterInstApi_UpdateClusterInst_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "ShowClusterInst",
 			Handler:       _ClusterInstApi_ShowClusterInst_Handler,
@@ -923,14 +1010,19 @@ func (s *ClusterInstStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
 	stm.Del(keystr)
 }
 
+type ClusterInstKeyWatcher struct {
+	cb func()
+}
+
 // ClusterInstCache caches ClusterInst objects in memory in a hash table
 // and keeps them in sync with the database.
 type ClusterInstCache struct {
-	Objs      map[ClusterInstKey]*ClusterInst
-	Mux       util.Mutex
-	List      map[ClusterInstKey]struct{}
-	NotifyCb  func(obj *ClusterInstKey)
-	UpdatedCb func(old *ClusterInst, new *ClusterInst)
+	Objs        map[ClusterInstKey]*ClusterInst
+	Mux         util.Mutex
+	List        map[ClusterInstKey]struct{}
+	NotifyCb    func(obj *ClusterInstKey)
+	UpdatedCb   func(old *ClusterInst, new *ClusterInst)
+	KeyWatchers map[ClusterInstKey][]*ClusterInstKeyWatcher
 }
 
 func NewClusterInstCache() *ClusterInstCache {
@@ -941,6 +1033,7 @@ func NewClusterInstCache() *ClusterInstCache {
 
 func InitClusterInstCache(cache *ClusterInstCache) {
 	cache.Objs = make(map[ClusterInstKey]*ClusterInst)
+	cache.KeyWatchers = make(map[ClusterInstKey][]*ClusterInstKeyWatcher)
 }
 
 func (c *ClusterInstCache) GetTypeString() string {
@@ -981,21 +1074,23 @@ func (c *ClusterInstCache) Update(in *ClusterInst, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInst", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterInstCache) Delete(in *ClusterInst, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInst", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterInstCache) Prune(validKeys map[ClusterInstKey]struct{}) {
@@ -1010,10 +1105,11 @@ func (c *ClusterInstCache) Prune(validKeys map[ClusterInstKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -1046,6 +1142,51 @@ func (c *ClusterInstCache) SetNotifyCb(fn func(obj *ClusterInstKey)) {
 
 func (c *ClusterInstCache) SetUpdatedCb(fn func(old *ClusterInst, new *ClusterInst)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstCache) WatchKey(key *ClusterInstKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*ClusterInstKeyWatcher, 0)
+	}
+	watcher := ClusterInstKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching ClusterInst", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *ClusterInstCache) TriggerKeyWatchers(key *ClusterInstKey) {
+	watchers := make([]*ClusterInstKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *ClusterInstCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := ClusterInst{}
@@ -1087,9 +1228,11 @@ func (c *ClusterInstCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *ClusterInst) GetKey() *ClusterInstKey {
 	return &m.Key
 }
@@ -1388,14 +1531,19 @@ func (s *ClusterInstInfoStore) STMDel(stm concurrency.STM, key *ClusterInstKey) 
 	stm.Del(keystr)
 }
 
+type ClusterInstInfoKeyWatcher struct {
+	cb func()
+}
+
 // ClusterInstInfoCache caches ClusterInstInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type ClusterInstInfoCache struct {
-	Objs      map[ClusterInstKey]*ClusterInstInfo
-	Mux       util.Mutex
-	List      map[ClusterInstKey]struct{}
-	NotifyCb  func(obj *ClusterInstKey)
-	UpdatedCb func(old *ClusterInstInfo, new *ClusterInstInfo)
+	Objs        map[ClusterInstKey]*ClusterInstInfo
+	Mux         util.Mutex
+	List        map[ClusterInstKey]struct{}
+	NotifyCb    func(obj *ClusterInstKey)
+	UpdatedCb   func(old *ClusterInstInfo, new *ClusterInstInfo)
+	KeyWatchers map[ClusterInstKey][]*ClusterInstInfoKeyWatcher
 }
 
 func NewClusterInstInfoCache() *ClusterInstInfoCache {
@@ -1406,6 +1554,7 @@ func NewClusterInstInfoCache() *ClusterInstInfoCache {
 
 func InitClusterInstInfoCache(cache *ClusterInstInfoCache) {
 	cache.Objs = make(map[ClusterInstKey]*ClusterInstInfo)
+	cache.KeyWatchers = make(map[ClusterInstKey][]*ClusterInstInfoKeyWatcher)
 }
 
 func (c *ClusterInstInfoCache) GetTypeString() string {
@@ -1446,21 +1595,23 @@ func (c *ClusterInstInfoCache) Update(in *ClusterInstInfo, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInstInfo", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterInstInfoCache) Delete(in *ClusterInstInfo, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterInstInfo", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterInstInfoCache) Prune(validKeys map[ClusterInstKey]struct{}) {
@@ -1475,10 +1626,11 @@ func (c *ClusterInstInfoCache) Prune(validKeys map[ClusterInstKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -1488,15 +1640,22 @@ func (c *ClusterInstInfoCache) GetCount() int {
 	return len(c.Objs)
 }
 func (c *ClusterInstInfoCache) Flush(notifyId int64) {
+	keys := make([]ClusterInstKey, 0)
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
 		delete(c.Objs, key)
-		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+		keys = append(keys, key)
+	}
+	c.Mux.Unlock()
+	if len(keys) > 0 {
+		for _, key := range keys {
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
@@ -1524,6 +1683,51 @@ func (c *ClusterInstInfoCache) SetNotifyCb(fn func(obj *ClusterInstKey)) {
 
 func (c *ClusterInstInfoCache) SetUpdatedCb(fn func(old *ClusterInstInfo, new *ClusterInstInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterInstInfoCache) WatchKey(key *ClusterInstKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*ClusterInstInfoKeyWatcher, 0)
+	}
+	watcher := ClusterInstInfoKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching ClusterInstInfo", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *ClusterInstInfoCache) TriggerKeyWatchers(key *ClusterInstKey) {
+	watchers := make([]*ClusterInstInfoKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *ClusterInstInfoCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := ClusterInstInfo{}
@@ -1565,9 +1769,73 @@ func (c *ClusterInstInfoCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
+func (c *ClusterInstInfoCache) WaitForState(key *ClusterInstKey, targetState ClusterState, timeout time.Duration, send func(*Result) error) error {
+	curState := ClusterState_ClusterStateUnknown
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	var err error
+
+	cancel := c.WatchKey(key, func() {
+		info := ClusterInstInfo{}
+		if c.Get(key, &info) {
+			curState = info.State
+		} else {
+			curState = ClusterState_ClusterStateNotPresent
+		}
+		if send != nil {
+			msg := ClusterState_name[int32(curState)]
+			send(&Result{Message: msg})
+		}
+		log.DebugLog(log.DebugLevelApi, "Watch event for ClusterInstInfo", "key", key, "state", ClusterState_name[int32(curState)])
+		if curState == ClusterState_ClusterStateErrors {
+			failed <- true
+		} else if curState == targetState {
+			done <- true
+		}
+	})
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	info := ClusterInstInfo{}
+	if c.Get(key, &info) {
+		curState = info.State
+	} else {
+		curState = ClusterState_ClusterStateNotPresent
+	}
+	if curState == targetState {
+		done <- true
+	}
+
+	select {
+	case <-done:
+		err = nil
+	case <-failed:
+		if c.Get(key, &info) {
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else {
+			// this shouldn't happen, since only way to get here
+			// is if info state is set to Error
+			err = errors.New("Unknown failure")
+		}
+	case <-time.After(timeout):
+		if c.Get(key, &info) && info.State == ClusterState_ClusterStateErrors {
+			// error may have been sent back before watch started
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else {
+			err = fmt.Errorf("Timed out; expected state %s but is %s",
+				ClusterState_name[int32(targetState)],
+				ClusterState_name[int32(curState)])
+		}
+	}
+	cancel()
+	// note: do not close done/failed, garbage collector will deal with it.
+	return err
+}
+
 func (m *ClusterInstInfo) GetKey() *ClusterInstKey {
 	return &m.Key
 }
@@ -1579,15 +1847,19 @@ var ClusterStateStrings = []string{
 	"ClusterStateErrors",
 	"ClusterStateDeleting",
 	"ClusterStateDeleted",
+	"ClusterStateChanging",
+	"ClusterStateNotPresent",
 }
 
 const (
-	ClusterStateClusterStateUnknown  uint64 = 1 << 0
-	ClusterStateClusterStateBuilding uint64 = 1 << 1
-	ClusterStateClusterStateReady    uint64 = 1 << 2
-	ClusterStateClusterStateErrors   uint64 = 1 << 3
-	ClusterStateClusterStateDeleting uint64 = 1 << 4
-	ClusterStateClusterStateDeleted  uint64 = 1 << 5
+	ClusterStateClusterStateUnknown    uint64 = 1 << 0
+	ClusterStateClusterStateBuilding   uint64 = 1 << 1
+	ClusterStateClusterStateReady      uint64 = 1 << 2
+	ClusterStateClusterStateErrors     uint64 = 1 << 3
+	ClusterStateClusterStateDeleting   uint64 = 1 << 4
+	ClusterStateClusterStateDeleted    uint64 = 1 << 5
+	ClusterStateClusterStateChanging   uint64 = 1 << 6
+	ClusterStateClusterStateNotPresent uint64 = 1 << 7
 )
 
 func (e *ClusterState) UnmarshalYAML(unmarshal func(interface{}) error) error {
@@ -2259,52 +2531,54 @@ var (
 func init() { proto.RegisterFile("clusterinst.proto", fileDescriptorClusterinst) }
 
 var fileDescriptorClusterinst = []byte{
-	// 744 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcb, 0x6b, 0x13, 0x41,
-	0x18, 0xef, 0xe4, 0x51, 0x92, 0x49, 0x6c, 0x93, 0x49, 0x9b, 0x4e, 0xd7, 0x92, 0x86, 0x3d, 0x48,
-	0x28, 0x4d, 0x56, 0x23, 0x82, 0x04, 0x45, 0x9a, 0xfa, 0xa0, 0x54, 0x3c, 0xa4, 0xf4, 0x6a, 0xd9,
-	0xec, 0x4e, 0xb6, 0x4b, 0x37, 0x33, 0x71, 0x1f, 0xad, 0xb9, 0x89, 0x17, 0xc1, 0x93, 0xd8, 0x4b,
-	0x2f, 0x42, 0xc1, 0x8b, 0x47, 0xe9, 0x5f, 0xd1, 0xa3, 0xe0, 0x5d, 0x6c, 0xf1, 0xe0, 0x51, 0x68,
-	0x0e, 0x1e, 0x65, 0x67, 0x27, 0xe9, 0x26, 0xa9, 0x52, 0xb0, 0x97, 0x30, 0xdf, 0xf7, 0xfb, 0x7e,
-	0x8f, 0xf9, 0x36, 0xbb, 0x30, 0xab, 0x59, 0x9e, 0xe3, 0x12, 0xdb, 0xa4, 0x8e, 0x5b, 0xe9, 0xd8,
-	0xcc, 0x65, 0x28, 0x49, 0x74, 0x83, 0xf0, 0xa3, 0xb4, 0x60, 0x30, 0x66, 0x58, 0x44, 0x51, 0x3b,
-	0xa6, 0xa2, 0x52, 0xca, 0x5c, 0xd5, 0x35, 0x19, 0x75, 0x82, 0x41, 0xe9, 0xae, 0x61, 0xba, 0xdb,
-	0x5e, 0xb3, 0xa2, 0xb1, 0xb6, 0xd2, 0x66, 0x4d, 0xd3, 0xf2, 0x89, 0x2f, 0x15, 0xff, 0xb7, 0xac,
-	0x59, 0xcc, 0xd3, 0x15, 0x3e, 0x67, 0x10, 0x3a, 0x38, 0x08, 0xe6, 0x93, 0xcb, 0x31, 0xb5, 0xb2,
-	0x41, 0x68, 0x59, 0x6b, 0xf7, 0xcb, 0xd0, 0x41, 0x08, 0xa5, 0x6d, 0xe2, 0x78, 0x96, 0x48, 0x2e,
-	0xe5, 0xc4, 0x65, 0x5a, 0x96, 0xba, 0xcb, 0x6c, 0xd1, 0xbc, 0x26, 0x9a, 0xa2, 0x9c, 0xe2, 0xfa,
-	0x16, 0xe9, 0x73, 0xd2, 0x1a, 0x6b, 0xb7, 0x59, 0x3f, 0x58, 0x39, 0x14, 0xcc, 0x60, 0x06, 0x0b,
-	0xfc, 0x9a, 0x5e, 0x8b, 0x57, 0xbc, 0xe0, 0xa7, 0x60, 0x5c, 0xfe, 0x00, 0xe0, 0xd4, 0x6a, 0x20,
-	0xbf, 0x46, 0x1d, 0x77, 0x9d, 0x74, 0xd1, 0x3d, 0x98, 0x12, 0x86, 0x5b, 0x3b, 0xa4, 0x8b, 0x41,
-	0x11, 0x94, 0x52, 0xd5, 0xd9, 0xca, 0x60, 0xa7, 0x15, 0x31, 0xbf, 0x4e, 0xba, 0xf5, 0xd8, 0xf1,
-	0xb7, 0xc5, 0x89, 0x06, 0xd4, 0x06, 0x1d, 0xf4, 0x00, 0xa6, 0xfb, 0xf9, 0x38, 0x3d, 0xc2, 0xe9,
-	0xf9, 0x21, 0x7a, 0x00, 0x9f, 0xf3, 0x53, 0xda, 0x79, 0xab, 0x96, 0xfe, 0x79, 0x86, 0xc1, 0xef,
-	0x33, 0x0c, 0x3e, 0x1f, 0x2e, 0x02, 0xf9, 0x20, 0x02, 0x53, 0xa1, 0x7c, 0x28, 0x0f, 0x27, 0x5b,
-	0x26, 0xb1, 0x74, 0x07, 0x83, 0x62, 0xb4, 0x94, 0x6c, 0x88, 0x0a, 0xdd, 0x82, 0xd1, 0x73, 0xb7,
-	0xf9, 0xf1, 0xb0, 0xe2, 0x72, 0xc2, 0xd0, 0x9f, 0x45, 0xf7, 0xe1, 0x64, 0xb0, 0x66, 0x1c, 0xe5,
-	0xac, 0xeb, 0xe3, 0xac, 0xc7, 0x1c, 0xf7, 0x79, 0x89, 0x4f, 0x3d, 0x0c, 0x38, 0x57, 0x90, 0xd0,
-	0x1d, 0x98, 0xb0, 0xcc, 0x5d, 0x42, 0x89, 0xe3, 0xe0, 0x64, 0x11, 0x94, 0xa6, 0xaa, 0xb9, 0x90,
-	0xc0, 0x53, 0x01, 0xd5, 0x63, 0x3e, 0xb1, 0x31, 0x18, 0x45, 0x18, 0xc6, 0x54, 0xcf, 0x65, 0x18,
-	0x16, 0x41, 0x29, 0x21, 0x50, 0xde, 0xa9, 0x55, 0xfc, 0x8b, 0xff, 0x3a, 0xc3, 0xe0, 0x55, 0x0f,
-	0x83, 0x83, 0x1e, 0x06, 0x6f, 0x8f, 0xe6, 0xa5, 0x20, 0xc1, 0xf2, 0x33, 0xa6, 0x13, 0x67, 0xb9,
-	0x2f, 0xba, 0xbc, 0xe2, 0xb9, 0x4c, 0x3e, 0x01, 0x70, 0x3a, 0x74, 0xbb, 0x35, 0xda, 0x62, 0x57,
-	0xb9, 0x9e, 0x1b, 0x30, 0x49, 0x99, 0x6b, 0xb6, 0xba, 0x5b, 0xa6, 0xce, 0x37, 0x14, 0xad, 0x27,
-	0xdf, 0x1f, 0xcd, 0xc7, 0x29, 0xd3, 0xda, 0x9d, 0x46, 0x22, 0xc0, 0xd6, 0x74, 0x54, 0x86, 0x71,
-	0xc7, 0x55, 0x5d, 0x82, 0x63, 0x7c, 0x09, 0x73, 0xe3, 0xe2, 0x1b, 0x3e, 0xdc, 0x08, 0xa6, 0xfc,
-	0x84, 0xc4, 0xb6, 0x99, 0xed, 0xe0, 0x78, 0x90, 0x30, 0xa8, 0x6a, 0x33, 0xe1, 0xdb, 0xbf, 0xeb,
-	0x61, 0x70, 0xd8, 0xc3, 0x60, 0xe9, 0x23, 0x80, 0xe9, 0xb0, 0x0a, 0x9a, 0x83, 0xb9, 0x70, 0xbd,
-	0x49, 0x77, 0x28, 0xdb, 0xa3, 0x99, 0x09, 0x84, 0xe1, 0x4c, 0x18, 0xa8, 0x7b, 0xa6, 0xa5, 0x9b,
-	0xd4, 0xc8, 0x00, 0x34, 0x0b, 0xb3, 0x43, 0x41, 0x88, 0xaa, 0x77, 0x33, 0x11, 0x94, 0x87, 0x28,
-	0xdc, 0x7e, 0xc4, 0x63, 0x64, 0xa2, 0xa3, 0x42, 0x0f, 0x89, 0x45, 0x5c, 0x5f, 0x28, 0x36, 0xea,
-	0xcd, 0x11, 0xa2, 0x67, 0xe2, 0xd5, 0xfd, 0xe8, 0xd0, 0x4b, 0xb4, 0xd2, 0x31, 0xd1, 0x73, 0x98,
-	0x5d, 0xb5, 0x89, 0xea, 0x92, 0xa1, 0x3f, 0xef, 0xc5, 0x8b, 0x97, 0xb2, 0xa1, 0x7e, 0x83, 0x7f,
-	0x0e, 0xe4, 0xc2, 0xeb, 0xaf, 0x3f, 0xf6, 0x23, 0x58, 0xce, 0x29, 0x1a, 0x97, 0x51, 0x42, 0x5f,
-	0xb9, 0x1a, 0x58, 0xf2, 0xf5, 0x03, 0xff, 0xff, 0xd6, 0xd7, 0xb9, 0xcc, 0x05, 0xfa, 0x9b, 0x1d,
-	0xfd, 0x2a, 0xf2, 0x7b, 0x5c, 0x66, 0x54, 0x5f, 0x85, 0xd3, 0x1b, 0xdb, 0x6c, 0xef, 0x32, 0xea,
-	0x7f, 0xe9, 0xcb, 0x0b, 0xdc, 0x22, 0x2f, 0x67, 0x15, 0x67, 0x9b, 0xed, 0x8d, 0x18, 0xdc, 0x04,
-	0xd5, 0x37, 0x60, 0xf0, 0x84, 0xfb, 0xef, 0x87, 0xff, 0x64, 0x5e, 0xc0, 0xdc, 0x88, 0x33, 0x7f,
-	0x73, 0xa4, 0x8b, 0x5d, 0x7c, 0x4c, 0xfa, 0x07, 0x26, 0x17, 0x79, 0x0a, 0x49, 0x9e, 0x1d, 0x4b,
-	0x61, 0xd2, 0x16, 0xe3, 0x49, 0xea, 0x99, 0xe3, 0x93, 0xc2, 0xc4, 0xf1, 0x69, 0x01, 0x7c, 0x39,
-	0x2d, 0x80, 0xef, 0xa7, 0x05, 0xd0, 0x9c, 0xe4, 0x62, 0xb7, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff,
-	0xed, 0x4f, 0x1c, 0x02, 0xbd, 0x06, 0x00, 0x00,
+	// 783 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcd, 0x6b, 0x13, 0x4d,
+	0x18, 0xef, 0xe4, 0xeb, 0x4d, 0x26, 0x79, 0xdb, 0x64, 0xf2, 0x36, 0x9d, 0xec, 0x5b, 0xd2, 0xb0,
+	0x88, 0x84, 0xd2, 0x64, 0x35, 0x22, 0x48, 0x50, 0xa4, 0xa9, 0x1f, 0x94, 0x4a, 0x91, 0x94, 0x9e,
+	0xcb, 0x66, 0x77, 0xb2, 0x59, 0xba, 0x99, 0x89, 0xfb, 0xd1, 0x9a, 0x9b, 0x78, 0x11, 0x3c, 0x89,
+	0x5e, 0x7a, 0x50, 0xe8, 0x45, 0xf0, 0x58, 0x7a, 0xf4, 0x2f, 0xe8, 0x51, 0xf0, 0xe4, 0x45, 0xb4,
+	0x78, 0xf0, 0xa8, 0x34, 0x07, 0x8f, 0xb2, 0xb3, 0x9b, 0x74, 0x93, 0x54, 0xe9, 0xa1, 0x97, 0x32,
+	0xcf, 0xf3, 0x7b, 0x7e, 0x1f, 0xf3, 0xa4, 0xb3, 0x30, 0xa3, 0x18, 0x8e, 0x65, 0x13, 0x53, 0xa7,
+	0x96, 0x5d, 0xe9, 0x9a, 0xcc, 0x66, 0x28, 0x41, 0x54, 0x8d, 0xf0, 0xa3, 0x30, 0xaf, 0x31, 0xa6,
+	0x19, 0x44, 0x92, 0xbb, 0xba, 0x24, 0x53, 0xca, 0x6c, 0xd9, 0xd6, 0x19, 0xb5, 0xbc, 0x41, 0xe1,
+	0x86, 0xa6, 0xdb, 0x6d, 0xa7, 0x59, 0x51, 0x58, 0x47, 0xea, 0xb0, 0xa6, 0x6e, 0xb8, 0xc4, 0xc7,
+	0x92, 0xfb, 0xb7, 0xac, 0x18, 0xcc, 0x51, 0x25, 0x3e, 0xa7, 0x11, 0x3a, 0x3c, 0xf8, 0xcc, 0xfb,
+	0xe7, 0x63, 0x2a, 0x65, 0x8d, 0xd0, 0xb2, 0xd2, 0x19, 0x94, 0x81, 0x83, 0x2f, 0x94, 0x32, 0x89,
+	0xe5, 0x18, 0x7e, 0x72, 0x21, 0xeb, 0x5f, 0xa6, 0x65, 0xc8, 0x3b, 0xcc, 0xf4, 0x9b, 0xff, 0xfa,
+	0x4d, 0xbf, 0x9c, 0xe6, 0xfa, 0x06, 0x19, 0x70, 0x52, 0x0a, 0xeb, 0x74, 0xd8, 0x20, 0x58, 0x39,
+	0x10, 0x4c, 0x63, 0x1a, 0xf3, 0xfc, 0x9a, 0x4e, 0x8b, 0x57, 0xbc, 0xe0, 0x27, 0x6f, 0x5c, 0x7c,
+	0x03, 0xe0, 0xf4, 0x8a, 0x27, 0xbf, 0x4a, 0x2d, 0x7b, 0x8d, 0xf4, 0xd0, 0x4d, 0x98, 0xf4, 0x0d,
+	0xb7, 0xb6, 0x49, 0x0f, 0x83, 0x22, 0x28, 0x25, 0xab, 0xb3, 0x95, 0xe1, 0x4e, 0x2b, 0xfe, 0xfc,
+	0x1a, 0xe9, 0xd5, 0x23, 0x47, 0x9f, 0x17, 0xa6, 0x1a, 0x50, 0x19, 0x76, 0xd0, 0x6d, 0x98, 0x1a,
+	0xe4, 0xe3, 0xf4, 0x10, 0xa7, 0xe7, 0x46, 0xe8, 0x1e, 0x7c, 0xca, 0x4f, 0x2a, 0xa7, 0xad, 0x5a,
+	0xea, 0xfb, 0x09, 0x06, 0xbf, 0x4e, 0x30, 0x38, 0xd8, 0x5f, 0x00, 0xe2, 0xeb, 0x10, 0x4c, 0x06,
+	0xf2, 0xa1, 0x1c, 0x8c, 0xb5, 0x74, 0x62, 0xa8, 0x16, 0x06, 0xc5, 0x70, 0x29, 0xd1, 0xf0, 0x2b,
+	0x74, 0x15, 0x86, 0x4f, 0xdd, 0xf2, 0x93, 0x61, 0xfd, 0xcb, 0xf9, 0x86, 0xee, 0x2c, 0xba, 0x05,
+	0x63, 0xde, 0x9a, 0x71, 0x98, 0xb3, 0xfe, 0x9f, 0x64, 0xdd, 0xe3, 0xb8, 0xcb, 0x8b, 0xbf, 0xeb,
+	0x63, 0xc0, 0xb9, 0x3e, 0x09, 0x5d, 0x87, 0x71, 0x43, 0xdf, 0x21, 0x94, 0x58, 0x16, 0x4e, 0x14,
+	0x41, 0x69, 0xba, 0x9a, 0x0d, 0x08, 0x3c, 0xf0, 0xa1, 0x7a, 0xc4, 0x25, 0x36, 0x86, 0xa3, 0x08,
+	0xc3, 0x88, 0xec, 0xd8, 0x0c, 0xc3, 0x22, 0x28, 0xc5, 0x7d, 0x94, 0x77, 0x6a, 0x55, 0xf7, 0xe2,
+	0x3f, 0x4e, 0x30, 0x78, 0xd2, 0xc7, 0x60, 0xaf, 0x8f, 0xc1, 0x41, 0x1f, 0x83, 0xe7, 0x87, 0x79,
+	0xc1, 0x4b, 0xb1, 0xb4, 0xce, 0x54, 0x62, 0x2d, 0x0d, 0x84, 0x97, 0x96, 0x1d, 0x9b, 0x89, 0x3f,
+	0x01, 0x9c, 0x09, 0xdc, 0x70, 0x95, 0xb6, 0xd8, 0x45, 0xae, 0xe8, 0x32, 0x4c, 0x50, 0x66, 0xeb,
+	0xad, 0xde, 0x96, 0xae, 0xf2, 0x2d, 0x85, 0xeb, 0x89, 0x97, 0x87, 0xf9, 0x28, 0x65, 0x4a, 0xa7,
+	0xdb, 0x88, 0x7b, 0xd8, 0xaa, 0x8a, 0xca, 0x30, 0x6a, 0xd9, 0xb2, 0x4d, 0x70, 0x84, 0x2f, 0x62,
+	0x6e, 0x52, 0x7c, 0xc3, 0x85, 0x1b, 0xde, 0x94, 0x9b, 0x90, 0x98, 0x26, 0x33, 0x2d, 0x1c, 0xf5,
+	0x12, 0x7a, 0x55, 0xed, 0x52, 0x70, 0x03, 0x2f, 0xfa, 0x18, 0xec, 0xf7, 0x31, 0x78, 0xdf, 0xc7,
+	0xa9, 0xa0, 0xc8, 0xe2, 0x27, 0x00, 0x47, 0x1a, 0x68, 0x0e, 0x66, 0x83, 0xf5, 0x26, 0xdd, 0xa6,
+	0x6c, 0x97, 0xa6, 0xa7, 0x10, 0x86, 0xff, 0x05, 0x81, 0xba, 0xa3, 0x1b, 0xaa, 0x4e, 0xb5, 0x34,
+	0x40, 0xb3, 0x30, 0x33, 0x12, 0x8c, 0xc8, 0x6a, 0x2f, 0x1d, 0x42, 0x39, 0x88, 0x82, 0xed, 0xbb,
+	0x3c, 0x56, 0x3a, 0x3c, 0x2e, 0x74, 0x87, 0x18, 0xc4, 0x76, 0x85, 0x22, 0xe3, 0xde, 0x1c, 0x21,
+	0x6a, 0x3a, 0x3a, 0x4e, 0x59, 0x69, 0xcb, 0x54, 0x73, 0x29, 0x31, 0x24, 0xc0, 0x5c, 0x10, 0x59,
+	0x67, 0xf6, 0x43, 0x93, 0x58, 0x84, 0xda, 0xe9, 0x7f, 0xaa, 0x6f, 0xc3, 0x23, 0xcf, 0x71, 0xb9,
+	0xab, 0x23, 0x15, 0x66, 0x56, 0x4c, 0xe2, 0x4a, 0x04, 0x9f, 0xc1, 0xd9, 0x3f, 0x9f, 0x90, 0x09,
+	0xf4, 0x1b, 0xfc, 0xc3, 0x22, 0x8a, 0x7b, 0x87, 0x79, 0xf0, 0xf4, 0xe3, 0xb7, 0x57, 0x21, 0x2c,
+	0x66, 0x25, 0x85, 0x4b, 0x49, 0x81, 0x6f, 0x66, 0x0d, 0x2c, 0x5e, 0x01, 0xae, 0x8b, 0x97, 0xfd,
+	0x42, 0x5c, 0x54, 0x2e, 0x75, 0xa6, 0xcb, 0x66, 0x57, 0xbd, 0xa8, 0xbb, 0x38, 0x5c, 0x6a, 0xd2,
+	0x45, 0x86, 0x33, 0x1b, 0x6d, 0xb6, 0x7b, 0x1e, 0x8f, 0x3f, 0xf4, 0xc5, 0x79, 0x6e, 0x92, 0x13,
+	0x33, 0x92, 0xd5, 0x66, 0xbb, 0x13, 0x16, 0xd5, 0x67, 0x60, 0xf8, 0x9f, 0x32, 0x78, 0x77, 0xee,
+	0x6f, 0xf5, 0x08, 0x66, 0xc7, 0x9c, 0xf9, 0x8b, 0x14, 0xce, 0x76, 0x71, 0x31, 0xe1, 0x2f, 0x98,
+	0x58, 0xe4, 0x29, 0x04, 0x71, 0x76, 0x22, 0x85, 0x4e, 0x5b, 0x8c, 0x27, 0xa9, 0xa7, 0x8f, 0xbe,
+	0x16, 0xa6, 0x8e, 0x8e, 0x0b, 0xe0, 0xc3, 0x71, 0x01, 0x7c, 0x39, 0x2e, 0x80, 0x66, 0x8c, 0x8b,
+	0x5d, 0xfb, 0x1d, 0x00, 0x00, 0xff, 0xff, 0x26, 0xb4, 0x5e, 0x4e, 0x19, 0x07, 0x00, 0x00,
 }
