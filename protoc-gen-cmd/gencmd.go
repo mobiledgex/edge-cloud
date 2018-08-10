@@ -822,17 +822,17 @@ type tmplArgs struct {
 var tmpl = `
 var {{.Method}}Cmd = &cobra.Command{
 	Use: "{{.Method}}",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if {{.Service}}Cmd == nil {
-			fmt.Println("{{.Service}} client not initialized")
-			return
+			return fmt.Errorf("{{.Service}} client not initialized")
 		}
 		var err error
 {{- if .HasEnums}}
 		err = parse{{.InType}}Enums()
 		if err != nil {
-			fmt.Println("{{.Method}}: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
 {{- end}}
 {{- if .SetFields}}
@@ -843,8 +843,7 @@ var {{.Method}}Cmd = &cobra.Command{
 		defer cancel()
 		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			fmt.Println("{{.Method}} failed: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
 
 	{{- if not .StreamOutIncremental}}
@@ -856,8 +855,7 @@ var {{.Method}}Cmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("{{.Method}} recv failed: ", err)
-				break
+				return fmt.Errorf("{{.Method}} recv failed: %s", err.Error())
 			}
 	{{- if .OutHideTags}}
 			{{.OutType}}HideTags(obj)
@@ -869,7 +867,7 @@ var {{.Method}}Cmd = &cobra.Command{
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		{{.OutType}}WriteOutputArray(objs)
 	{{- end}}
@@ -877,14 +875,14 @@ var {{.Method}}Cmd = &cobra.Command{
 		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		cancel()
 		if err != nil {
-			fmt.Println("{{.Method}} failed: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
 	{{- if .OutHideTags}}
 		{{.OutType}}HideTags(obj)
 	{{- end}}
 		{{.OutType}}WriteOutputOne(obj)
 {{- end}}
+		return nil
 	},
 }
 `

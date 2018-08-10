@@ -142,18 +142,18 @@ func ClusterRefsWriteOutputOne(obj *edgeproto.ClusterRefs) {
 
 var ShowCloudletRefsCmd = &cobra.Command{
 	Use: "ShowCloudletRefs",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudletRefsApiCmd == nil {
-			fmt.Println("CloudletRefsApi client not initialized")
-			return
+			return fmt.Errorf("CloudletRefsApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := CloudletRefsApiCmd.ShowCloudletRefs(ctx, &CloudletRefsIn)
 		if err != nil {
-			fmt.Println("ShowCloudletRefs failed: ", err)
-			return
+			return fmt.Errorf("ShowCloudletRefs failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.CloudletRefs, 0)
 		for {
@@ -162,15 +162,15 @@ var ShowCloudletRefsCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowCloudletRefs recv failed: ", err)
-				break
+				return fmt.Errorf("ShowCloudletRefs recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		CloudletRefsWriteOutputArray(objs)
+		return nil
 	},
 }
 
@@ -180,18 +180,18 @@ var CloudletRefsApiCmds = []*cobra.Command{
 
 var ShowClusterRefsCmd = &cobra.Command{
 	Use: "ShowClusterRefs",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if ClusterRefsApiCmd == nil {
-			fmt.Println("ClusterRefsApi client not initialized")
-			return
+			return fmt.Errorf("ClusterRefsApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, &ClusterRefsIn)
 		if err != nil {
-			fmt.Println("ShowClusterRefs failed: ", err)
-			return
+			return fmt.Errorf("ShowClusterRefs failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.ClusterRefs, 0)
 		for {
@@ -200,15 +200,15 @@ var ShowClusterRefsCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowClusterRefs recv failed: ", err)
-				break
+				return fmt.Errorf("ShowClusterRefs recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		ClusterRefsWriteOutputArray(objs)
+		return nil
 	},
 }
 

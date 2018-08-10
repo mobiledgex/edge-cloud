@@ -146,48 +146,51 @@ func OperatorWriteOutputOne(obj *edgeproto.Operator) {
 
 var CreateOperatorCmd = &cobra.Command{
 	Use: "CreateOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("CreateOperator failed: ", err)
-			return
+			return fmt.Errorf("CreateOperator failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteOperatorCmd = &cobra.Command{
 	Use: "DeleteOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DeleteOperator failed: ", err)
-			return
+			return fmt.Errorf("DeleteOperator failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateOperatorCmd = &cobra.Command{
 	Use: "UpdateOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
 		OperatorSetFields()
@@ -195,27 +198,27 @@ var UpdateOperatorCmd = &cobra.Command{
 		obj, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("UpdateOperator failed: ", err)
-			return
+			return fmt.Errorf("UpdateOperator failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowOperatorCmd = &cobra.Command{
 	Use: "ShowOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := OperatorApiCmd.ShowOperator(ctx, &OperatorIn)
 		if err != nil {
-			fmt.Println("ShowOperator failed: ", err)
-			return
+			return fmt.Errorf("ShowOperator failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Operator, 0)
 		for {
@@ -224,15 +227,15 @@ var ShowOperatorCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowOperator recv failed: ", err)
-				break
+				return fmt.Errorf("ShowOperator recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		OperatorWriteOutputArray(objs)
+		return nil
 	},
 }
 
