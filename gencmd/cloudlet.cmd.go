@@ -15,8 +15,6 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -68,6 +66,29 @@ func CloudletKeyHeaderSlicer() []string {
 	return s
 }
 
+func CloudletKeyWriteOutputArray(objs []*edgeproto.CloudletKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s := make([]string, 0, 7)
 	if in.Fields == nil {
@@ -115,6 +136,29 @@ func CloudletHeaderSlicer() []string {
 	return s
 }
 
+func CloudletWriteOutputArray(objs []*edgeproto.Cloudlet) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletWriteOutputOne(obj *edgeproto.Cloudlet) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s := make([]string, 0, 8)
 	if in.Fields == nil {
@@ -149,6 +193,29 @@ func CloudletInfoHeaderSlicer() []string {
 	return s
 }
 
+func CloudletInfoWriteOutputArray(objs []*edgeproto.CloudletInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletInfoWriteOutputOne(obj *edgeproto.CloudletInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletMetricsSlicer(in *edgeproto.CloudletMetrics) []string {
 	s := make([]string, 0, 1)
 	s = append(s, strconv.FormatUint(uint64(in.Foo), 10))
@@ -159,6 +226,30 @@ func CloudletMetricsHeaderSlicer() []string {
 	s := make([]string, 0, 1)
 	s = append(s, "Foo")
 	return s
+}
+
+func CloudletMetricsWriteOutputArray(objs []*edgeproto.CloudletMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletMetricsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletMetricsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletMetricsWriteOutputOne(obj *edgeproto.CloudletMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletMetricsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletMetricsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
 }
 
 var CreateCloudletCmd = &cobra.Command{
@@ -175,40 +266,13 @@ var CreateCloudletCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
+		obj, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
 		cancel()
 		if err != nil {
 			fmt.Println("CreateCloudlet failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -226,40 +290,13 @@ var DeleteCloudletCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
+		obj, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteCloudlet failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -278,40 +315,13 @@ var UpdateCloudletCmd = &cobra.Command{
 		}
 		CloudletSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
+		obj, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
 		cancel()
 		if err != nil {
 			fmt.Println("UpdateCloudlet failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -350,36 +360,7 @@ var ShowCloudletCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		CloudletWriteOutputArray(objs)
 	},
 }
 
@@ -425,36 +406,7 @@ var ShowCloudletInfoCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(CloudletInfoHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(CloudletInfoSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		CloudletInfoWriteOutputArray(objs)
 	},
 }
 
@@ -472,40 +424,13 @@ var InjectCloudletInfoCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
+		obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
 		cancel()
 		if err != nil {
 			fmt.Println("InjectCloudletInfo failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -523,40 +448,13 @@ var EvictCloudletInfoCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
+		obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
 		cancel()
 		if err != nil {
 			fmt.Println("EvictCloudletInfo failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -596,36 +494,7 @@ var ShowCloudletMetricsCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(CloudletMetricsHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(CloudletMetricsSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		CloudletMetricsWriteOutputArray(objs)
 	},
 }
 

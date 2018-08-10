@@ -13,8 +13,6 @@ import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -47,6 +45,29 @@ func FlavorKeyHeaderSlicer() []string {
 	return s
 }
 
+func FlavorKeyWriteOutputArray(objs []*edgeproto.FlavorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FlavorKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FlavorKeyWriteOutputOne(obj *edgeproto.FlavorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FlavorKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func FlavorSlicer(in *edgeproto.Flavor) []string {
 	s := make([]string, 0, 5)
 	if in.Fields == nil {
@@ -70,6 +91,30 @@ func FlavorHeaderSlicer() []string {
 	return s
 }
 
+func FlavorWriteOutputArray(objs []*edgeproto.Flavor) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FlavorSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FlavorWriteOutputOne(obj *edgeproto.Flavor) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FlavorSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var CreateFlavorCmd = &cobra.Command{
 	Use: "CreateFlavor",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -79,40 +124,13 @@ var CreateFlavorCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
+		obj, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("CreateFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -125,40 +143,13 @@ var DeleteFlavorCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
+		obj, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -172,40 +163,13 @@ var UpdateFlavorCmd = &cobra.Command{
 		var err error
 		FlavorSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
+		obj, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("UpdateFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -239,36 +203,7 @@ var ShowFlavorCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(FlavorHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(FlavorSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		FlavorWriteOutputArray(objs)
 	},
 }
 

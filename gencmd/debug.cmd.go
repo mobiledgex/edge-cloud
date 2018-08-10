@@ -23,8 +23,6 @@ import "os"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -66,6 +64,29 @@ func DebugLevelsHeaderSlicer() []string {
 	return s
 }
 
+func DebugLevelsWriteOutputArray(objs []*log.DebugLevels) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DebugLevelsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DebugLevelsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DebugLevelsWriteOutputOne(obj *log.DebugLevels) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DebugLevelsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DebugLevelsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func DebugResultSlicer(in *log.DebugResult) []string {
 	s := make([]string, 0, 2)
 	s = append(s, in.Status)
@@ -78,6 +99,30 @@ func DebugResultHeaderSlicer() []string {
 	s = append(s, "Status")
 	s = append(s, "Code")
 	return s
+}
+
+func DebugResultWriteOutputArray(objs []*log.DebugResult) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DebugResultSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DebugResultWriteOutputOne(obj *log.DebugResult) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DebugResultSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
 }
 
 var EnableDebugLevelsCmd = &cobra.Command{
@@ -94,40 +139,13 @@ var EnableDebugLevelsCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
+		obj, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
 			fmt.Println("EnableDebugLevels failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(DebugResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		DebugResultWriteOutputOne(obj)
 	},
 }
 
@@ -145,40 +163,13 @@ var DisableDebugLevelsCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
+		obj, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DisableDebugLevels failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(DebugResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(DebugResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		DebugResultWriteOutputOne(obj)
 	},
 }
 
@@ -196,40 +187,13 @@ var ShowDebugLevelsCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
+		obj, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
 			fmt.Println("ShowDebugLevels failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(DebugLevelsHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(DebugLevelsSlicer(objs), "\t"))
-			output.Flush()
-		}
+		DebugLevelsWriteOutputOne(obj)
 	},
 }
 

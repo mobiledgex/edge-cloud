@@ -7,6 +7,7 @@ import (
 	"text/template"
 
 	"github.com/gogo/protobuf/gogoproto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
@@ -29,6 +30,7 @@ type GenCmd struct {
 	support            gensupport.PluginSupport
 	packageName        string
 	tmpl               *template.Template
+	outTmpl            *template.Template
 	fieldTmpl          *template.Template
 	inMessages         map[string]*generator.Descriptor
 	enumArgs           map[string][]*EnumArg
@@ -56,6 +58,7 @@ func (g *GenCmd) Name() string {
 func (g *GenCmd) Init(gen *generator.Generator) {
 	g.Generator = gen
 	g.tmpl = template.Must(template.New("cmd").Parse(tmpl))
+	g.outTmpl = template.Must(template.New("out").Parse(outTmpl))
 	g.fieldTmpl = template.Must(template.New("field").Parse(fieldTmpl))
 }
 
@@ -96,8 +99,6 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if g.importOutputGen {
 		g.importCmdSup = true
-		g.PrintImport("", "encoding/json")
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml")
 	}
 	if g.importCmdSup {
 		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
@@ -126,6 +127,9 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.noconfigFields = make(map[string]struct{})
 	g.packageName = *file.FileDescriptorProto.Package
 	g.support.InitFile()
+	if !g.support.GenFile(*file.FileDescriptorProto.Name) {
+		return
+	}
 
 	g.P(gensupport.AutoGenComment)
 
@@ -148,6 +152,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		g.generateSlicer(desc)
+		g.generateWriteOutput(desc)
 	}
 
 	// Generate hidetags functions
@@ -802,19 +807,19 @@ func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, servic
 }
 
 type tmplArgs struct {
-	Service      string
-	Method       string
-	InType       string
-	OutType      string
-	FQOutType    string
-	ServerStream bool
-	HasEnums     bool
-	SetFields    bool
-	OutHideTags  bool
+	Service              string
+	Method               string
+	InType               string
+	OutType              string
+	FQOutType            string
+	ServerStream         bool
+	HasEnums             bool
+	SetFields            bool
+	OutHideTags          bool
+	StreamOutIncremental bool
 }
 
 var tmpl = `
-
 var {{.Method}}Cmd = &cobra.Command{
 	Use: "{{.Method}}",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -841,7 +846,10 @@ var {{.Method}}Cmd = &cobra.Command{
 			fmt.Println("{{.Method}} failed: ", err)
 			return
 		}
+
+	{{- if not .StreamOutIncremental}}
 		objs := make([]*{{.FQOutType}}, 0)
+	{{- end}}
 		for {
 			obj, err := stream.Recv()
 			if err == io.EOF {
@@ -851,62 +859,87 @@ var {{.Method}}Cmd = &cobra.Command{
 				fmt.Println("{{.Method}} recv failed: ", err)
 				break
 			}
-{{- if .OutHideTags}}
+	{{- if .OutHideTags}}
 			{{.OutType}}HideTags(obj)
-{{- end}}
+	{{- end}}
+	{{- if .StreamOutIncremental}}
+			{{.OutType}}WriteOutputOne(obj)
+		}
+	{{- else}}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
 			return
 		}
+		{{.OutType}}WriteOutputArray(objs)
+	{{- end}}
 {{- else}}
-		objs, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
+		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		cancel()
 		if err != nil {
 			fmt.Println("{{.Method}} failed: ", err)
 			return
 		}
-{{- if .OutHideTags}}
-		{{.OutType}}HideTags(objs)
+	{{- if .OutHideTags}}
+		{{.OutType}}HideTags(obj)
+	{{- end}}
+		{{.OutType}}WriteOutputOne(obj)
 {{- end}}
-{{- end}}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
-{{- if .ServerStream}}
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
-			}
-{{- else}}
-			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(objs), "\t"))
-{{- end}}
-			output.Flush()
-		}
 	},
 }
 `
+
+type outTmplArgs struct {
+	Name      string
+	OutType   string
+	FQOutType string
+}
+
+var outTmpl = `
+func {{.Name}}WriteOutputArray(objs []*{{.FQOutType}}) {
+	if (cmdsup.OutputFormat == cmdsup.OutputFormatTable) {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func {{.Name}}WriteOutputOne(obj *{{.FQOutType}}) {
+	if (cmdsup.OutputFormat == cmdsup.OutputFormatTable) {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+`
+
+func (g *GenCmd) generateWriteOutput(desc *generator.Descriptor) {
+	if desc.GetOptions().GetMapEntry() {
+		return
+	}
+	message := desc.DescriptorProto
+	args := outTmplArgs{
+		Name:      *message.Name,
+		OutType:   gensupport.GetMsgName(desc),
+		FQOutType: g.FQTypeName(desc),
+	}
+	err := g.outTmpl.Execute(g, &args)
+	if err != nil {
+		g.Fail("Failed to execute out template for ", *message.Name, ": ", err.Error(), "\n")
+	}
+	g.importCmdSup = true
+	g.importTabwriter = true
+	g.importStrings = true
+	g.importOS = true
+}
 
 func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) bool {
 	in := g.GetDesc(method.GetInputType())
@@ -919,19 +952,17 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	g.importCobra = true
 	g.importContext = true
 	g.importTime = true
-	g.importTabwriter = true
-	g.importOS = true
-	g.importStrings = true
 	g.importOutputGen = true
 	_, hasEnums := g.enumArgs[*in.DescriptorProto.Name]
 	cmd := &tmplArgs{
-		Service:      *service.Name,
-		Method:       *method.Name,
-		InType:       g.flatTypeName(*method.InputType),
-		OutType:      g.flatTypeName(*method.OutputType),
-		FQOutType:    g.FQTypeName(out),
-		ServerStream: serverStreaming(method),
-		HasEnums:     hasEnums,
+		Service:              *service.Name,
+		Method:               *method.Name,
+		InType:               g.flatTypeName(*method.InputType),
+		OutType:              g.flatTypeName(*method.OutputType),
+		FQOutType:            g.FQTypeName(out),
+		ServerStream:         serverStreaming(method),
+		HasEnums:             hasEnums,
+		StreamOutIncremental: GetStreamOutIncremental(method),
 	}
 	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && HasGrpcFields(in.DescriptorProto) {
 		cmd.SetFields = true
@@ -1067,4 +1098,8 @@ func GetNoConfig(message *descriptor.DescriptorProto) string {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
+}
+
+func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protocmd.E_StreamOutIncremental, false)
 }

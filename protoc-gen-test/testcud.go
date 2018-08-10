@@ -28,6 +28,14 @@ func (t *TestCud) Init(g *generator.Generator) {
 	t.cudTmpl = template.Must(template.New("cud").Parse(tmpl))
 }
 
+type cudFunc struct {
+	Func      string
+	Pkg       string
+	Name      string
+	KeyName   string
+	Streamout bool
+}
+
 type tmplArgs struct {
 	Pkg         string
 	Name        string
@@ -35,6 +43,8 @@ type tmplArgs struct {
 	UpdateField string
 	UpdateValue string
 	ShowOnly    bool
+	Streamout   bool
+	CudFuncs    []cudFunc
 }
 
 var tmpl = `
@@ -52,6 +62,41 @@ func (x *Show{{.Name}}) Send(m *{{.Pkg}}.{{.Name}}) error {
 	return nil
 }
 
+{{- if .Streamout}}
+type CudStreamout{{.Name}} struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamout{{.Name}}) Send(res *{{.Pkg}}.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamout{{.Name}}) Context() context.Context {
+	return context.TODO()
+}
+
+type {{.Name}}Stream interface {
+	Recv() (*{{.Pkg}}.Result, error)
+}
+
+func {{.Name}}ReadResultStream(stream {{.Name}}Stream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
+{{- end}}
+
 func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Client, err error) {
 	x.Data = make(map[string]{{.Pkg}}.{{.Name}})
 	if err != nil {
@@ -59,7 +104,7 @@ func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Cli
 	}
 	for {
 		obj, err := stream.Recv()
-		if (err == io.EOF) {
+		if err == io.EOF {
 			break
 		}
 		if err != nil {
@@ -130,29 +175,26 @@ type {{.Name}}CommonApi struct {
 }
 
 {{- if not .ShowOnly}}
-func (x *{{.Name}}CommonApi) Create{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{range .CudFuncs}}
+func (x *{{.Name}}CommonApi) {{.Func}}{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{- if .Streamout}}
 	if x.internal_api != nil {
-		return x.internal_api.Create{{.Name}}(ctx, in)
+		err := x.internal_api.{{.Func}}{{.Name}}(in, &CudStreamout{{.Name}}{})
+		return &{{.Pkg}}.Result{}, err
 	} else {
-		return x.client_api.Create{{.Name}}(ctx, in)
+		stream, err := x.client_api.{{.Func}}{{.Name}}(ctx, in)
+		err = {{.Name}}ReadResultStream(stream, err)
+		return &{{.Pkg}}.Result{}, err
 	}
-}
-
-func (x *{{.Name}}CommonApi) Update{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{- else}}
 	if x.internal_api != nil {
-		return x.internal_api.Update{{.Name}}(ctx, in)
+		return x.internal_api.{{.Func}}{{.Name}}(ctx, in)
 	} else {
-		return x.client_api.Update{{.Name}}(ctx, in)
+		return x.client_api.{{.Func}}{{.Name}}(ctx, in)
 	}
+{{- end}}
 }
-
-func (x *{{.Name}}CommonApi) Delete{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
-	if x.internal_api != nil {
-		return x.internal_api.Delete{{.Name}}(ctx, in)
-	} else {
-		return x.client_api.Delete{{.Name}}(ctx, in)
-	}
-}
+{{end}}
 {{- end}}
 
 func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}.{{.Name}}, showData *Show{{.Name}}) error {
@@ -342,11 +384,25 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 
 func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 	args := tmplArgs{
-		Pkg:      edgeproto,
-		Name:     *message.Name,
-		KeyName:  *message.Name + "Key",
-		ShowOnly: GetGenerateShowTest(message),
+		Pkg:       edgeproto,
+		Name:      *message.Name,
+		KeyName:   *message.Name + "Key",
+		ShowOnly:  GetGenerateShowTest(message),
+		Streamout: GetGenerateCudStreamout(message),
 	}
+	cudFuncs := make([]cudFunc, 0)
+	for _, str := range []string{"Create", "Update", "Delete"} {
+		cf := cudFunc{
+			Func:      str,
+			Pkg:       args.Pkg,
+			Name:      args.Name,
+			KeyName:   args.KeyName,
+			Streamout: args.Streamout,
+		}
+		cudFuncs = append(cudFuncs, cf)
+	}
+	args.CudFuncs = cudFuncs
+
 	for _, field := range message.Field {
 		if GetTestUpdate(field) {
 			args.UpdateField = generator.CamelCase(*field.Name)
@@ -366,6 +422,10 @@ func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 
 func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTest, false)
+}
+
+func GetGenerateCudStreamout(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudStreamout, false)
 }
 
 func GetGenerateShowTest(message *descriptor.DescriptorProto) bool {

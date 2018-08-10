@@ -253,7 +253,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				err = resp.Err()
 				break
 			}
-			for _, event := range resp.Events {
+			for ii, event := range resp.Events {
 				if event.Type == mvccpb.PUT {
 					data.Action = objstore.SyncUpdate
 				} else {
@@ -263,7 +263,12 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Value = event.Kv.Value
 				data.Rev = resp.Header.Revision
 				watchRev = resp.Header.Revision
-				log.DebugLog(log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
+				if ii == len(resp.Events)-1 {
+					data.MoreEvents = false
+				} else {
+					data.MoreEvents = true
+				}
+				log.DebugLog(log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev, "more-events", data.MoreEvents)
 				cb(&data)
 			}
 		}

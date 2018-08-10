@@ -72,6 +72,7 @@ message AppInst {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Flavor,Uri,Liveness,ClusterInstKey,PublicIp";
 }
@@ -80,23 +81,26 @@ message AppInst {
 // The long term goal is that most app instance creation/deletion
 // will be dynamic based on load.
 service AppInstApi {
-  rpc CreateAppInst(AppInst) returns (Result) {
+  rpc CreateAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc DeleteAppInst(AppInst) returns (Result) {
+  rpc DeleteAppInst(AppInst) returns (stream Result) {
    option (google.api.http) = {
       post: "/delete/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc UpdateAppInst(AppInst) returns (Result) {
+  rpc UpdateAppInst(AppInst) returns (stream Result) {
    option (google.api.http) = {
       post: "/update/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
    option (google.api.http) = {
@@ -113,6 +117,8 @@ enum AppState {
   AppStateErrors = 3;
   AppStateDeleting = 4;
   AppStateDeleted = 5;
+  AppStateChanging = 6;
+  AppStateNotPresent = 7;
 }
 
 // AppInstInfo contains static data collected by the CRM to be sent
@@ -131,6 +137,7 @@ message AppInstInfo {
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
+  option (protogen.generate_wait_for_state) = "AppState";
   option (protogen.notify_cache) = true;
 }
 

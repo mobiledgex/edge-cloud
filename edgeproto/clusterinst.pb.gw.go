@@ -28,7 +28,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_ClusterInstApi_CreateClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ClusterInstApi_CreateClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (ClusterInstApi_CreateClusterInstClient, runtime.ServerMetadata, error) {
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
@@ -36,12 +36,20 @@ func request_ClusterInstApi_CreateClusterInst_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateClusterInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreateClusterInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_ClusterInstApi_DeleteClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ClusterInstApi_DeleteClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (ClusterInstApi_DeleteClusterInstClient, runtime.ServerMetadata, error) {
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
@@ -49,12 +57,20 @@ func request_ClusterInstApi_DeleteClusterInst_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteClusterInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.DeleteClusterInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_ClusterInstApi_UpdateClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_ClusterInstApi_UpdateClusterInst_0(ctx context.Context, marshaler runtime.Marshaler, client ClusterInstApiClient, req *http.Request, pathParams map[string]string) (ClusterInstApi_UpdateClusterInstClient, runtime.ServerMetadata, error) {
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
@@ -62,8 +78,16 @@ func request_ClusterInstApi_UpdateClusterInst_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateClusterInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.UpdateClusterInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -172,7 +196,7 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ClusterInstApi_CreateClusterInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ClusterInstApi_CreateClusterInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -201,7 +225,7 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ClusterInstApi_DeleteClusterInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ClusterInstApi_DeleteClusterInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -230,7 +254,7 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 			return
 		}
 
-		forward_ClusterInstApi_UpdateClusterInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_ClusterInstApi_UpdateClusterInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -277,11 +301,11 @@ var (
 )
 
 var (
-	forward_ClusterInstApi_CreateClusterInst_0 = runtime.ForwardResponseMessage
+	forward_ClusterInstApi_CreateClusterInst_0 = runtime.ForwardResponseStream
 
-	forward_ClusterInstApi_DeleteClusterInst_0 = runtime.ForwardResponseMessage
+	forward_ClusterInstApi_DeleteClusterInst_0 = runtime.ForwardResponseStream
 
-	forward_ClusterInstApi_UpdateClusterInst_0 = runtime.ForwardResponseMessage
+	forward_ClusterInstApi_UpdateClusterInst_0 = runtime.ForwardResponseStream
 
 	forward_ClusterInstApi_ShowClusterInst_0 = runtime.ForwardResponseStream
 )

@@ -12,8 +12,6 @@ import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -45,6 +43,29 @@ func DeveloperKeyHeaderSlicer() []string {
 	return s
 }
 
+func DeveloperKeyWriteOutputArray(objs []*edgeproto.DeveloperKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DeveloperKeyWriteOutputOne(obj *edgeproto.DeveloperKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func DeveloperSlicer(in *edgeproto.Developer) []string {
 	s := make([]string, 0, 6)
 	if in.Fields == nil {
@@ -70,6 +91,30 @@ func DeveloperHeaderSlicer() []string {
 	return s
 }
 
+func DeveloperWriteOutputArray(objs []*edgeproto.Developer) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DeveloperWriteOutputOne(obj *edgeproto.Developer) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var CreateDeveloperCmd = &cobra.Command{
 	Use: "CreateDeveloper",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -79,40 +124,13 @@ var CreateDeveloperCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
+		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
 			fmt.Println("CreateDeveloper failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -125,40 +143,13 @@ var DeleteDeveloperCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
+		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteDeveloper failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -172,40 +163,13 @@ var UpdateDeveloperCmd = &cobra.Command{
 		var err error
 		DeveloperSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
+		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
 			fmt.Println("UpdateDeveloper failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -239,36 +203,7 @@ var ShowDeveloperCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		DeveloperWriteOutputArray(objs)
 	},
 }
 

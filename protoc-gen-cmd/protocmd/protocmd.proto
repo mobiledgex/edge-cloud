@@ -19,3 +19,10 @@ extend google.protobuf.FieldOptions {
   // hides it (for json and our custom yaml)
   string hidetag = 52002;
 }
+
+extend google.protobuf.MethodOptions {
+  // show stream output objects incrementally as they come, rather than
+  // collecting them into one output format. Only applies to commands
+  // that return a stream.
+  bool stream_out_incremental = 52003;
+}

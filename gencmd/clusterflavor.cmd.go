@@ -13,8 +13,6 @@ import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -47,6 +45,29 @@ func ClusterFlavorKeyHeaderSlicer() []string {
 	return s
 }
 
+func ClusterFlavorKeyWriteOutputArray(objs []*edgeproto.ClusterFlavorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterFlavorKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ClusterFlavorKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ClusterFlavorKeyWriteOutputOne(obj *edgeproto.ClusterFlavorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterFlavorKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ClusterFlavorKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func ClusterFlavorSlicer(in *edgeproto.ClusterFlavor) []string {
 	s := make([]string, 0, 7)
 	if in.Fields == nil {
@@ -74,6 +95,30 @@ func ClusterFlavorHeaderSlicer() []string {
 	return s
 }
 
+func ClusterFlavorWriteOutputArray(objs []*edgeproto.ClusterFlavor) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterFlavorHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ClusterFlavorSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ClusterFlavorWriteOutputOne(obj *edgeproto.ClusterFlavor) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterFlavorHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ClusterFlavorSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var CreateClusterFlavorCmd = &cobra.Command{
 	Use: "CreateClusterFlavor",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -83,40 +128,13 @@ var CreateClusterFlavorCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
+		obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("CreateClusterFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -129,40 +147,13 @@ var DeleteClusterFlavorCmd = &cobra.Command{
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
+		obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("DeleteClusterFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -176,40 +167,13 @@ var UpdateClusterFlavorCmd = &cobra.Command{
 		var err error
 		ClusterFlavorSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
+		obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
 			fmt.Println("UpdateClusterFlavor failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
 	},
 }
 
@@ -243,36 +207,7 @@ var ShowClusterFlavorCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ClusterFlavorHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(ClusterFlavorSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		ClusterFlavorWriteOutputArray(objs)
 	},
 }
 

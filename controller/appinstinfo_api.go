@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -29,25 +28,17 @@ func (s *AppInstInfoApi) ShowAppInstInfo(in *edgeproto.AppInstInfo, cb edgeproto
 }
 
 func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, notifyId int64) {
-	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !appInstApi.store.STMGet(stm, in.GetKey(), nil) {
-			return nil
-		}
-		in.Fields = nil
-		s.store.STMPut(stm, in)
-		return nil
-	})
+	// note: must be applied even if appinst doesn't exist, since this
+	// will get called on error on delete.
+	in.Fields = edgeproto.AppInstInfoAllFields
+	s.store.Put(in, s.sync.syncWait)
 }
 
-func (s *AppInstInfoApi) internalDelete(stm concurrency.STM, key *edgeproto.AppInstKey) {
-	s.store.STMDel(stm, key)
-}
-
-// Delete for notify never actually deletes the data
 func (s *AppInstInfoApi) Delete(in *edgeproto.AppInstInfo, notifyId int64) {
-	// no-op
+	s.store.Delete(in, s.sync.syncWait)
 }
 
 func (s *AppInstInfoApi) Flush(notifyId int64) {
+	// XXX Set all states to NotConnected? Need to store notifyId in cache.
 	// no-op
 }
