@@ -27,8 +27,6 @@ import "os"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -75,6 +73,29 @@ func NestedMessageHeaderSlicer() []string {
 	return s
 }
 
+func NestedMessageWriteOutputArray(objs []*testgen.NestedMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NestedMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(NestedMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func NestedMessageWriteOutputOne(obj *testgen.NestedMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NestedMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NestedMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func IncludeMessageSlicer(in *testgen.IncludeMessage) []string {
 	s := make([]string, 0, 3)
 	s = append(s, in.Name)
@@ -94,6 +115,29 @@ func IncludeMessageHeaderSlicer() []string {
 	return s
 }
 
+func IncludeMessageWriteOutputArray(objs []*testgen.IncludeMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(IncludeMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func IncludeMessageWriteOutputOne(obj *testgen.IncludeMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(IncludeMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func IncludeFieldsSlicer(in *testgen.IncludeFields) []string {
 	s := make([]string, 0, 2)
 	s = append(s, "")
@@ -111,6 +155,29 @@ func IncludeFieldsHeaderSlicer() []string {
 	return s
 }
 
+func IncludeFieldsWriteOutputArray(objs []*testgen.IncludeFields) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeFieldsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(IncludeFieldsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func IncludeFieldsWriteOutputOne(obj *testgen.IncludeFields) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeFieldsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(IncludeFieldsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func TestGenSlicer(in *testgen.TestGen) []string {
 	s := make([]string, 0, 38)
 	if in.Fields == nil {
@@ -384,6 +451,29 @@ func TestGenHeaderSlicer() []string {
 	return s
 }
 
+func TestGenWriteOutputArray(objs []*testgen.TestGen) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(TestGenSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func TestGenWriteOutputOne(obj *testgen.TestGen) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(TestGenSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func TestGen_InnerMessageSlicer(in *testgen.TestGen_InnerMessage) []string {
 	s := make([]string, 0, 2)
 	s = append(s, in.Url)
@@ -396,6 +486,30 @@ func TestGen_InnerMessageHeaderSlicer() []string {
 	s = append(s, "Url")
 	s = append(s, "Id")
 	return s
+}
+
+func InnerMessageWriteOutputArray(objs []*testgen.TestGen_InnerMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(TestGen_InnerMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func InnerMessageWriteOutputOne(obj *testgen.TestGen_InnerMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
 }
 
 var RequestCmd = &cobra.Command{
@@ -412,40 +526,13 @@ var RequestCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := TestApiCmd.Request(ctx, &TestGenIn)
+		obj, err := TestApiCmd.Request(ctx, &TestGenIn)
 		cancel()
 		if err != nil {
 			fmt.Println("Request failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(TestGenSlicer(objs), "\t"))
-			output.Flush()
-		}
+		TestGenWriteOutputOne(obj)
 	},
 }
 

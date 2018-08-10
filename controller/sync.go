@@ -115,12 +115,16 @@ func (s *Sync) syncCb(data *objstore.SyncCbData) {
 		if cache, found := s.GetCache(data.Key); found {
 			cache.SyncUpdate(data.Key, data.Value, data.Rev)
 		}
-		s.rev = data.Rev
+		if !data.MoreEvents {
+			s.rev = data.Rev
+		}
 	case objstore.SyncDelete:
 		if cache, found := s.GetCache(data.Key); found {
 			cache.SyncDelete(data.Key, data.Rev)
 		}
-		s.rev = data.Rev
+		if !data.MoreEvents {
+			s.rev = data.Rev
+		}
 	}
 
 	// notify any threads waiting on cache update to finish

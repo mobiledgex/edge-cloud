@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -19,6 +20,10 @@ type ClusterInstApi struct {
 }
 
 var clusterInstApi = ClusterInstApi{}
+
+var CreateClusterInstTimeout = 60 * time.Second
+var UpdateClusterInstTimeout = 30 * time.Second
+var DeleteClusterInstTimeout = 30 * time.Second
 
 func InitClusterInstApi(sync *Sync) {
 	clusterInstApi.sync = sync
@@ -67,7 +72,7 @@ func (s *ClusterInstApi) GetClusterInstsForCloudlets(cloudlets map[edgeproto.Clo
 	s.cache.GetClusterInstsForCloudlets(cloudlets, clusterInsts)
 }
 
-func (s *ClusterInstApi) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *ClusterInstApi) CreateNoWait(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
 	in.Auto = false
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
@@ -140,18 +145,19 @@ func (s *ClusterInstApi) createClusterInstInternal(stm concurrency.STM, in *edge
 	}
 	refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
 	cloudletRefsApi.store.STMPut(stm, &refs)
-	fmt.Printf("*** Created cluster inst %v\n", in)
 	s.store.STMPut(stm, in)
 	return nil
 }
 
-func (s *ClusterInstApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *ClusterInstApi) UpdateNoWait(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	// Unsupported for now
 	return &edgeproto.Result{}, errors.New("Update cluster instance not supported")
+	// TODO: Set info state to "changing" so update waits for CRM to
+	// set state to "ready".
 	//return s.store.Update(in, s.sync.syncWait)
 }
 
-func (s *ClusterInstApi) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *ClusterInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	return s.deleteClusterInstInternal(in)
 }
 
@@ -160,25 +166,24 @@ func (s *ClusterInstApi) deleteClusterInstInternal(in *edgeproto.ClusterInst) (*
 		return &edgeproto.Result{}, errors.New("ClusterInst in use by Application Instance")
 	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		clusterInst := edgeproto.ClusterInst{}
-		if !s.store.STMGet(stm, &in.Key, &clusterInst) {
+		if !s.store.STMGet(stm, &in.Key, in) {
 			return nil
 		}
 
 		clusterFlavor := edgeproto.ClusterFlavor{}
 		nodeFlavor := edgeproto.Flavor{}
 		if !clusterFlavorApi.store.STMGet(stm, &in.Flavor, &clusterFlavor) {
-			log.WarnLog("Delete cluster info, cluster flavor not found",
+			log.WarnLog("Delete cluster inst: cluster flavor not found",
 				"clusterflavor", in.Flavor.Name)
 		} else {
 			if !flavorApi.store.STMGet(stm, &clusterFlavor.NodeFlavor, &nodeFlavor) {
-				log.WarnLog("Delete cluster info, node flavor not found",
+				log.WarnLog("Delete cluster inst: node flavor not found",
 					"flavor", clusterFlavor.NodeFlavor.Name)
 			}
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
-			log.WarnLog("Delete cluster info, cloudlet not found",
+			log.WarnLog("Delete cluster inst: cloudlet not found",
 				"cloudlet", in.Key.CloudletKey)
 		}
 		refs := edgeproto.CloudletRefs{}
@@ -206,10 +211,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(in *edgeproto.ClusterInst) (*
 		s.store.STMDel(stm, &in.Key)
 		return nil
 	})
-	if err == nil {
-		// also delete associated info
-		clusterInstInfoApi.internalDelete(&in.Key, s.sync.syncWait)
-	}
 	return &edgeproto.Result{}, err
 }
 
@@ -218,5 +219,67 @@ func (s *ClusterInstApi) ShowClusterInst(in *edgeproto.ClusterInst, cb edgeproto
 		err := cb.Send(obj)
 		return err
 	})
+	return err
+}
+
+func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
+	_, err := s.CreateNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTimeout, cb.Send)
+	if err != nil {
+		// XXX should probably track mod revision ID and only undo
+		// if no other changes were made to appInst in the meantime.
+		// crm failed or some other err, undo
+		_, undoErr := s.DeleteNoWait(cb.Context(), in)
+		if undoErr != nil {
+			log.InfoLog("Undo create clusterinst", "undoErr", undoErr)
+		} else {
+			undoErr = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTimeout, nil)
+			if undoErr != nil {
+				log.InfoLog("Undo create clusterinst", "undoErr", undoErr)
+			}
+		}
+		log.DebugLog(log.DebugLevelApi, "Create cluster inst failed",
+			"in", in, "err", err)
+	}
+	return err
+}
+
+func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+	_, err := s.DeleteNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTimeout, cb.Send)
+	if err != nil {
+		// crm failed or some other err, undo
+		_, undoErr := s.CreateNoWait(cb.Context(), in)
+		if undoErr != nil {
+			log.InfoLog("Undo delete clusterinst", "undoErr", undoErr)
+		} else {
+			undoErr = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTimeout, nil)
+			if undoErr != nil {
+				log.InfoLog("Undo delete clusterinst", "undoErr", undoErr)
+			}
+		}
+		log.DebugLog(log.DebugLevelApi, "Delete cluster inst failed",
+			"in", in, "err", err)
+	}
+	return err
+}
+
+func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
+	_, err := s.UpdateNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, UpdateClusterInstTimeout, cb.Send)
+	if err != nil {
+		// TODO: undo.
+		// Currently update is not supported. To undo we'd need to get
+		// a copy of the data before the change to undo the change.
+	}
 	return err
 }

@@ -39,6 +39,38 @@ func (x *ShowClusterInst) Send(m *edgeproto.ClusterInst) error {
 	return nil
 }
 
+type CudStreamoutClusterInst struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamoutClusterInst) Send(res *edgeproto.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamoutClusterInst) Context() context.Context {
+	return context.TODO()
+}
+
+type ClusterInstStream interface {
+	Recv() (*edgeproto.Result, error)
+}
+
+func ClusterInstReadResultStream(stream ClusterInstStream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
 func (x *ShowClusterInst) ReadStream(stream edgeproto.ClusterInstApi_ShowClusterInstClient, err error) {
 	x.Data = make(map[string]edgeproto.ClusterInst)
 	if err != nil {
@@ -118,25 +150,34 @@ type ClusterInstCommonApi struct {
 
 func (x *ClusterInstCommonApi) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.CreateClusterInst(ctx, in)
+		err := x.internal_api.CreateClusterInst(in, &CudStreamoutClusterInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.CreateClusterInst(ctx, in)
+		stream, err := x.client_api.CreateClusterInst(ctx, in)
+		err = ClusterInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *ClusterInstCommonApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.UpdateClusterInst(ctx, in)
+		err := x.internal_api.UpdateClusterInst(in, &CudStreamoutClusterInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.UpdateClusterInst(ctx, in)
+		stream, err := x.client_api.UpdateClusterInst(ctx, in)
+		err = ClusterInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *ClusterInstCommonApi) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.DeleteClusterInst(ctx, in)
+		err := x.internal_api.DeleteClusterInst(in, &CudStreamoutClusterInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.DeleteClusterInst(ctx, in)
+		stream, err := x.client_api.DeleteClusterInst(ctx, in)
+		err = ClusterInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 

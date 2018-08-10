@@ -1,6 +1,7 @@
 package notify
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -110,6 +111,7 @@ func TestNotifyTree(t *testing.T) {
 	// Check flush functionality
 	// Disconnecting one of the low nodes should flush both mid and top
 	// nodes of infos associated with the disconnected low node.
+	fmt.Println("========== stopping client")
 	low21.stopClient()
 	mid2.handler.WaitForAppInstInfo(1)
 	mid1.handler.WaitForCloudletInfo(1)
@@ -121,13 +123,14 @@ func TestNotifyTree(t *testing.T) {
 	assert.False(t, found, "disconnected CloudletInfo")
 
 	top.handler.WaitForAppInstInfo(3)
-	top.handler.WaitForCloudletInfo(3)
+	top.handler.WaitForCloudletInfo(1)
 	assert.Equal(t, 3, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
 	assert.Equal(t, 1, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
 	_, found = top.handler.AppInstInfoCache.Objs[testutil.AppInstInfoData[2].Key]
 	assert.False(t, found, "disconnected AppInstInfo")
 	_, found = top.handler.CloudletInfoCache.Objs[testutil.CloudletInfoData[0].Key]
 	assert.False(t, found, "disconnected CloudletInfo")
+	fmt.Println("========== done")
 
 	for _, n := range clients {
 		n.stopClient()
