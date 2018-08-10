@@ -22,7 +22,7 @@ RUN make clean
 ENV CGO_ENABLED=0
 RUN make
 
-FROM alpine:latest
+FROM mobiledgex/openstack-kubectl
 
 COPY --from=build /go/bin/controller /usr/local/bin
 COPY --from=build /go/bin/crmctl /usr/local/bin
@@ -32,9 +32,12 @@ COPY --from=build /go/bin/edgectl /usr/local/bin
 COPY --from=build /go/bin/tok-srv-sim /usr/local/bin
 COPY --from=build /go/bin/loc-api-sim /usr/local/bin
 
-
+ADD docker/mex-docker.env /root/mex-docker.env
 ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
-RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh
+ADD docker/test-edgectl.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh /usr/local/bin/test-edgectl.sh
+RUN apt -y install openssh-server
 
 ENTRYPOINT [ "edge-cloud-entrypoint.sh" ]
 CMD []
+

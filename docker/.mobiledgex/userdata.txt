@@ -1,0 +1,13 @@
+#cloud-config
+bootcmd:
+ - echo MOBILEDGEX CLOUD CONFIG START
+#hostname: master-node-1
+password: mobiledgex
+ssh_authorized_keys:
+ - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZiZ16uwmHOuafD6a9AmZ5kYF9LqtfyrUOIVMF1eoRJCMALQrWbzNz/NOnqi5h5dwhPn+49oWMU16BKDkEgDik2jgNUOSZ69oZM4/ovPsB8yL55qdNBTx32kov5O8NkSwMEDter2mAPi9czCEv18MRC1qkiZCUxmfFs0BBgXtNfE42Utr97YcKFtvutLDGA1hoFVjon0Yk7wSMNZfwkBznVoShRISCzMvG5uVtf6miJwIIA9+SiwA/aa2OjCRQaiPCKJrPzHMcuLg4oZcs0ltd1CaIVLtMGaqpEoIvDumXEpuk0TSBJwxWUDAEgO5ILmVxi2fSLKa0yuLala6bcfwJ stack@sv1.mobiledgex.com
+chpasswd: { expire: False }
+ssh_pwauth: True
+timezone: US/Pacific
+runcmd:
+ - [ echo, MOBILEDGEX, doing, ifconfig ]
+ - [ ifconfig, -a ]

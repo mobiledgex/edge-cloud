@@ -17,6 +17,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
+
 	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
@@ -970,16 +971,36 @@ func downloadFile(url, fname string) error {
 	return nil
 }
 
+func checkPEMFile(fn string) error {
+	content, err := ioutil.ReadFile(fn)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "can't read downloaded pem file", "name", fn, "error", err)
+		return fmt.Errorf("can't read downloaded pem file %s, %v", fn, err)
+	}
+	contstr := string(content)
+	if strings.Contains(contstr, "404 Not Found") {
+		log.DebugLog(log.DebugLevelMexos, "404 not found in pem file", "name", fn)
+		return fmt.Errorf("registry does not have the pem file %s", fn)
+	}
+	if !strings.HasPrefix(contstr, "-----BEGIN") {
+		log.DebugLog(log.DebugLevelMexos, "does not look like pem file", "name", fn)
+		return fmt.Errorf("does not look like pem file %s", fn)
+	}
+	return nil
+}
+
 //AcquireCertificates obtains certficates from Letsencrypt over ACME. It should be used carefully. The API calls have quota.
 func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	log.DebugLog(log.DebugLevelMexos, "acquiring certificates for FQDN", "FQDN", fqdn)
 	certRegistryURL := "http://registry.mobiledgex.net:8080/certs/" + fqdn //XXX parameterize this
 	url := certRegistryURL + "/fullchain.cer"                              // some clients require fullchain cert
-	err := downloadFile(url, "cert.pem")                                   //XXX better file location
-	if err == nil {
+	certfile := "cert.pem"                                                 //XXX better file location
+	keyfile := "key.pem"                                                   //XXX better location
+	err := downloadFile(url, certfile)
+	if err == nil && checkPEMFile(certfile) == nil {
 		url = certRegistryURL + "/" + fqdn + ".key"
-		err = downloadFile(url, "key.pem")
-		if err == nil {
+		err = downloadFile(url, keyfile)
+		if err == nil && checkPEMFile(keyfile) == nil {
 			//because Letsencrypt complains if we get certs repeated for the same fqdn
 			log.DebugLog(log.DebugLevelMexos, "got cached certs from registry", "FQDN", fqdn)
 			addr, ierr := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, fqdn) //XXX should just use fqdn but paranoid
@@ -988,11 +1009,11 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 				return ierr
 			}
 			kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
-			out, oerr := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, "cert.pem", "root@"+addr+":").Output()
+			out, oerr := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, certfile, "root@"+addr+":").Output()
 			if oerr != nil {
 				return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, oerr)
 			}
-			out, err = sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, "key.pem", "root@"+addr+":").Output()
+			out, err = sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, keyfile, "root@"+addr+":").Output()
 			if err != nil {
 				return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
 			}
@@ -1019,7 +1040,6 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 		return nil
 	}
 	cmd = fmt.Sprintf("docker run --rm -e CF_Key=%s -e CF_Email=%s -v `pwd`:/acme.sh --net=host neilpang/acme.sh --issue -d %s --dns dns_cf", mexEnv["MEX_CF_KEY"], mexEnv["MEX_CF_USER"], fqdn)
-
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error running acme.sh docker, %s, %v", out, err)
@@ -1038,17 +1058,22 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if !success {
 		return fmt.Errorf("timeout waiting for ACME")
 	}
-	cmd = fmt.Sprintf("cp %s cert.pem", fullchain)
+	cmd = fmt.Sprintf("cp %s %s", fullchain, certfile)
 	out, err = client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("can't copy to cert.pem on %s, %s, %v", fqdn, out, err)
+		return fmt.Errorf("can't copy to %s on %s, %s, %v", certfile, fqdn, out, err)
 	}
-	cmd = fmt.Sprintf("cp %s/%s.key key.pem", fqdn, fqdn)
+	cmd = fmt.Sprintf("cp %s/%s.key %s", fqdn, fqdn, keyfile)
 	out, err = client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("can't copy to key.pem on %s, %s, %v", fqdn, out, err)
+		return fmt.Errorf("can't copy to %s on %s, %s, %v", keyfile, fqdn, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "copied over cert and key", "FQDN", fqdn)
+	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s -r %s bob@registry.mobiledgex.net:bob/files-repo/certs", mexEnv["MEX_SSH_KEY"], fqdn) // XXX
+	out, err = client.Output(cmd)
+	if err != nil {
+		log.InfoLog("error: need fixing manually; can't scp %s to registry, %s, %v", fqdn, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "acquired cert and key", "FQDN", fqdn)
 	return nil
 }
 
