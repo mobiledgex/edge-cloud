@@ -37,16 +37,25 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// AppState defines the state of the AppInst. This state is defined both by the state on the Controller, and the state on the Cloudlet where the AppInst is instantiated. Some of the states are intermediate states to denote a change in progress.
 type AppState int32
 
 const (
-	AppState_AppStateUnknown    AppState = 0
-	AppState_AppStateBuilding   AppState = 1
-	AppState_AppStateReady      AppState = 2
-	AppState_AppStateErrors     AppState = 3
-	AppState_AppStateDeleting   AppState = 4
-	AppState_AppStateDeleted    AppState = 5
-	AppState_AppStateChanging   AppState = 6
+	// AppInst state unknown
+	AppState_AppStateUnknown AppState = 0
+	// AppInst state in the process of being created
+	AppState_AppStateBuilding AppState = 1
+	// AppInst state created and ready
+	AppState_AppStateReady AppState = 2
+	// AppInst change encountered errors, see Errors field of AppInstInfo
+	AppState_AppStateErrors AppState = 3
+	// AppInst in the process of being deleted
+	AppState_AppStateDeleting AppState = 4
+	// AppInst was deleted
+	AppState_AppStateDeleted AppState = 5
+	// AppInst in the process of being updated
+	AppState_AppStateChanging AppState = 6
+	// AppInst is not present
 	AppState_AppStateNotPresent AppState = 7
 )
 
@@ -76,12 +85,13 @@ func (x AppState) String() string {
 }
 func (AppState) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{0} }
 
+// AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 type AppInstKey struct {
 	// App key
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
-	// Cloudlet it's on
+	// Cloudlet on which the App is instantiated
 	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
-	// inst id
+	// Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet)
 	Id uint64 `protobuf:"fixed64,3,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -90,13 +100,13 @@ func (m *AppInstKey) String() string            { return proto.CompactTextString
 func (*AppInstKey) ProtoMessage()               {}
 func (*AppInstKey) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{0} }
 
-// AppPort describes an L4 public access port.
+// AppPort describes an L4 public access port mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy.
 type AppPort struct {
-	// tcp or udp proto
+	// TCP or UDP protocol
 	Proto L4Proto `protobuf:"varint,1,opt,name=proto,proto3,enum=edgeproto.L4Proto" json:"proto,omitempty"`
-	// container port
+	// Container port
 	InternalPort int32 `protobuf:"varint,2,opt,name=internal_port,json=internalPort,proto3" json:"internal_port,omitempty"`
-	// public facing port (may be mapped on shared LB reverse proxy)
+	// Public facing port (may be mapped on shared LB reverse proxy)
 	PublicPort int32 `protobuf:"varint,3,opt,name=public_port,json=publicPort,proto3" json:"public_port,omitempty"`
 }
 
@@ -105,34 +115,36 @@ func (m *AppPort) String() string            { return proto.CompactTextString(m)
 func (*AppPort) ProtoMessage()               {}
 func (*AppPort) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1} }
 
-// AppInsts are instances of an application instantiated
-// on a cloudlet, like a docker or VM instance.
+// AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
+// When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
 type AppInst struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Cache the location of the cloudlet
+	// Cached location of the cloudlet
 	CloudletLoc distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
 	// URI to connect to this instance
 	Uri string `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
-	// cluster instance on which this is instatiated (not specifiable by user)
+	// Cluster instance on which this is instatiated (not specifiable by user)
 	ClusterInstKey ClusterInstKey `protobuf:"bytes,5,opt,name=cluster_inst_key,json=clusterInstKey" json:"cluster_inst_key"`
-	// type of instance
+	// Liveness of instance (see Liveness)
 	Liveness Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
-	// cache data from app
-	// image path
+	// Path to image to be able to download image
 	ImagePath string `protobuf:"bytes,7,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
-	// image type
+	// Image type (see ImageType)
 	ImageType ImageType `protobuf:"varint,8,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
-	// mapped ports that are publicly accessible; correspond to
-	// ports on App. Only valid for L4 access types.
+	// For instances accessible via a shared load balancer, defines the external
+	// ports on the shared load balancer that map to the internal ports
+	// External ports should be appended to the Uri for L4 access.
 	MappedPorts []AppPort `protobuf:"bytes,9,rep,name=mapped_ports,json=mappedPorts" json:"mapped_ports"`
-	// mapped path to append to hostname for public access.
+	// Mapped path to append to Uri for public access.
 	// Only valid for L7 access types.
 	MappedPath string `protobuf:"bytes,10,opt,name=mapped_path,json=mappedPath,proto3" json:"mapped_path,omitempty"`
-	// initial config passed to docker
+	// Initial config passed to docker
 	ConfigMap string `protobuf:"bytes,11,opt,name=config_map,json=configMap,proto3" json:"config_map,omitempty"`
-	// flavor defining resource requirements
+	// Flavor defining resource requirements
 	Flavor FlavorKey `protobuf:"bytes,12,opt,name=flavor" json:"flavor"`
 	// Access layer(s)
 	AccessLayer AccessLayer `protobuf:"varint,13,opt,name=access_layer,json=accessLayer,proto3,enum=edgeproto.AccessLayer" json:"access_layer,omitempty"`
@@ -143,17 +155,17 @@ func (m *AppInst) String() string            { return proto.CompactTextString(m)
 func (*AppInst) ProtoMessage()               {}
 func (*AppInst) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{2} }
 
-// AppInstInfo contains static data collected by the CRM to be sent
-// to the connected controller. It is put into etcd or equivalent.
+// AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
 type AppInstInfo struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Id of client assigned by server
+	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
-	// state
+	// Current state of the AppInst on the Cloudlet
 	State AppState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.AppState" json:"state,omitempty"`
-	// errors
+	// Any errors trying to create, update, or delete the AppInst on the Cloudlet
 	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
 }
 
@@ -162,9 +174,7 @@ func (m *AppInstInfo) String() string            { return proto.CompactTextStrin
 func (*AppInstInfo) ProtoMessage()               {}
 func (*AppInstInfo) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{3} }
 
-// AppInstMetrics are metrics produced by the DME to pass up to
-// an analytics or storage node (not the controller). These are not
-// stored in etcd, but probably logged as time series to disk (TBD)
+// (TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
 type AppInstMetrics struct {
 	// what goes here?
 	// Note that metrics for grpc calls can be done by a prometheus
@@ -218,9 +228,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppInstApi service
 
 type AppInstApiClient interface {
+	// Create an application instance
 	CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_CreateAppInstClient, error)
+	// Delete an application instance
 	DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_DeleteAppInstClient, error)
+	// Update an application instance
 	UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_UpdateAppInstClient, error)
+	// Show application instances. Any fields specified will be used to filter results.
 	ShowAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_ShowAppInstClient, error)
 }
 
@@ -363,9 +377,13 @@ func (x *appInstApiShowAppInstClient) Recv() (*AppInst, error) {
 // Server API for AppInstApi service
 
 type AppInstApiServer interface {
+	// Create an application instance
 	CreateAppInst(*AppInst, AppInstApi_CreateAppInstServer) error
+	// Delete an application instance
 	DeleteAppInst(*AppInst, AppInstApi_DeleteAppInstServer) error
+	// Update an application instance
 	UpdateAppInst(*AppInst, AppInstApi_UpdateAppInstServer) error
+	// Show application instances. Any fields specified will be used to filter results.
 	ShowAppInst(*AppInst, AppInstApi_ShowAppInstServer) error
 }
 
@@ -489,6 +507,7 @@ var _AppInstApi_serviceDesc = grpc.ServiceDesc{
 // Client API for AppInstInfoApi service
 
 type AppInstInfoApiClient interface {
+	// Show application instances state.
 	ShowAppInstInfo(ctx context.Context, in *AppInstInfo, opts ...grpc.CallOption) (AppInstInfoApi_ShowAppInstInfoClient, error)
 }
 
@@ -535,6 +554,7 @@ func (x *appInstInfoApiShowAppInstInfoClient) Recv() (*AppInstInfo, error) {
 // Server API for AppInstInfoApi service
 
 type AppInstInfoApiServer interface {
+	// Show application instances state.
 	ShowAppInstInfo(*AppInstInfo, AppInstInfoApi_ShowAppInstInfoServer) error
 }
 
@@ -580,6 +600,7 @@ var _AppInstInfoApi_serviceDesc = grpc.ServiceDesc{
 // Client API for AppInstMetricsApi service
 
 type AppInstMetricsApiClient interface {
+	// Show application instance metrics.
 	ShowAppInstMetrics(ctx context.Context, in *AppInstMetrics, opts ...grpc.CallOption) (AppInstMetricsApi_ShowAppInstMetricsClient, error)
 }
 
@@ -626,6 +647,7 @@ func (x *appInstMetricsApiShowAppInstMetricsClient) Recv() (*AppInstMetrics, err
 // Server API for AppInstMetricsApi service
 
 type AppInstMetricsApiServer interface {
+	// Show application instance metrics.
 	ShowAppInstMetrics(*AppInstMetrics, AppInstMetricsApi_ShowAppInstMetricsServer) error
 }
 

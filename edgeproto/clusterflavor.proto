@@ -12,6 +12,7 @@ import "result.proto";
 import "flavor.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// ClusterFlavorKey uniquely identifies a Cluster Flavor.
 message ClusterFlavorKey {
   string name = 1;
   option (protogen.generate_matches) = true;
@@ -19,19 +20,21 @@ message ClusterFlavorKey {
   option (gogoproto.gostring) = true;
 }
 
+// ClusterFlavor defines a set of resources for a Cluster. ClusterFlavors should be fairly static objects that are almost never changed, and are only modified by Mobiledgex administrators.
 message ClusterFlavor {
+  // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique key
   ClusterFlavorKey key = 2 [(gogoproto.nullable) = false];
-  // Flavor of nodes
+  // Flavor of each node in the Cluster
   FlavorKey node_flavor = 3 [(gogoproto.nullable) = false];
-  // Flavor of master nodes
+  // Flavor of each master node in the Cluster
   FlavorKey master_flavor = 4 [(gogoproto.nullable) = false];
-  // nodes is the number of nodes for a Cluster flavor type
+  // Initial number of nodes in the Cluster
   uint32 num_nodes = 5;
-  // max nodes limits the amount of nodes that can be scaled up to.
+  // Maximum number of nodes allowed in the Cluster (for auto-scaling)
   uint32 max_nodes = 6;
-  // masters is the number of k8s masters for a Cluster flavor type
+  // Number of master nodes in the Cluster
   uint32 num_masters = 7;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -40,24 +43,28 @@ message ClusterFlavor {
 }
 
 service ClusterFlavorApi {
+  // Create a ClusterFlavor
   rpc CreateClusterFlavor(ClusterFlavor) returns (Result) {
     option (google.api.http) = {
       post: "/create/clusterflavor"
       body: "*"
     };
   }
+  // Delete a ClusterFlavor
   rpc DeleteClusterFlavor(ClusterFlavor) returns (Result) {
       option (google.api.http) = {
       post: "/delete/clusterflavor"
       body: "*"
     };
   }
+  // Update a ClusterFlavor
   rpc UpdateClusterFlavor(ClusterFlavor) returns (Result) {
       option (google.api.http) = {
       post: "/update/clusterflavor"
       body: "*"
     };
   }
+  // Show ClusterFlavors
   rpc ShowClusterFlavor(ClusterFlavor) returns (stream ClusterFlavor) {
       option (google.api.http) = {
       post: "/show/clusterflavor"

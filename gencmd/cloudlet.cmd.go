@@ -50,6 +50,7 @@ var CloudletStateStrings = []string{
 	"CloudletStateErrors",
 	"CloudletStateReady",
 	"CloudletStateOffline",
+	"CloudletStateNotPresent",
 }
 
 func CloudletKeySlicer(in *edgeproto.CloudletKey) []string {
@@ -521,7 +522,7 @@ func init() {
 	CloudletFlagSet.Int32Var(&CloudletIn.NumDynamicIps, "numdynamicips", 0, "NumDynamicIps")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline]")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
 	CloudletInfoFlagSet.Int64Var(&CloudletInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
@@ -658,6 +659,8 @@ func parseCloudletInfoEnums() error {
 			CloudletInfoIn.State = edgeproto.CloudletState(2)
 		case "CloudletStateOffline":
 			CloudletInfoIn.State = edgeproto.CloudletState(3)
+		case "CloudletStateNotPresent":
+			CloudletInfoIn.State = edgeproto.CloudletState(4)
 		default:
 			return errors.New("Invalid value for CloudletInfoInState")
 		}

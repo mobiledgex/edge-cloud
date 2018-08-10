@@ -48,7 +48,6 @@
 		Flavor
 		NoticeReply
 		NoticeRequest
-		OperatorCode
 		OperatorKey
 		Operator
 		CloudletRefs
@@ -92,13 +91,16 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// ImageType specifies the image type
+// ImageType specifies the image type of the application.
 type ImageType int32
 
 const (
+	// Unknown image type
 	ImageType_ImageTypeUnknown ImageType = 0
-	ImageType_ImageTypeDocker  ImageType = 1
-	ImageType_ImageTypeQCOW    ImageType = 2
+	// Docker container image type
+	ImageType_ImageTypeDocker ImageType = 1
+	// QCOW2 virtual machine image type
+	ImageType_ImageTypeQCOW ImageType = 2
 )
 
 var ImageType_name = map[int32]string{
@@ -117,14 +119,18 @@ func (x ImageType) String() string {
 }
 func (ImageType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
 
-// AccessLayer defines what layers must be exposed
+// AccessLayer defines what layers are exposed for the application.
 type AccessLayer int32
 
 const (
+	// No external access for the application
 	AccessLayer_AccessLayerUnknown AccessLayer = 0
-	AccessLayer_AccessLayerL4      AccessLayer = 1
-	AccessLayer_AccessLayerL7      AccessLayer = 2
-	AccessLayer_AccessLayerL4L7    AccessLayer = 3
+	// Layer 4 (tcp/udp) access
+	AccessLayer_AccessLayerL4 AccessLayer = 1
+	// Layer 7 (https path) access
+	AccessLayer_AccessLayerL7 AccessLayer = 2
+	// Both layer 4 and layer 4 access
+	AccessLayer_AccessLayerL4L7 AccessLayer = 3
 )
 
 var AccessLayer_name = map[int32]string{
@@ -145,16 +151,13 @@ func (x AccessLayer) String() string {
 }
 func (AccessLayer) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 
-// key that uniquely identifies an application
-// It is important that embedded structs are not referenced by a
-// pointer, otherwise the enclosing struct cannot properly function
-// as the key to a hash table. Thus embedded structs have nullable false.
+// AppKey uniquely identifies an Application.
 type AppKey struct {
-	// developer key
+	// Developer key
 	DeveloperKey DeveloperKey `protobuf:"bytes,1,opt,name=developer_key,json=developerKey" json:"developer_key"`
-	// application name
+	// Application name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// version of the app
+	// Version of the app
 	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 }
 
@@ -163,31 +166,33 @@ func (m *AppKey) String() string            { return proto.CompactTextString(m) 
 func (*AppKey) ProtoMessage()               {}
 func (*AppKey) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
 
-// Applications are created and uploaded by developers
-// Only registered applications can access location and cloudlet services
+// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
+// An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
 type App struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Path to the application container or VM on image repo
 	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
-	// Image type
+	// Image type (see ImageType)
 	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
-	// Access layer(s)
+	// Access layer(s) (see AccessLayer)
 	AccessLayer AccessLayer `protobuf:"varint,6,opt,name=access_layer,json=accessLayer,proto3,enum=edgeproto.AccessLayer" json:"access_layer,omitempty"`
 	// For Layer4 access, the ports the app listens on.
 	// This is a comma separated list of protocol:port pairs, i.e.
 	// tcp:80,tcp:443,udp:10002.
 	// Only tcp and udp protocols are supported.
 	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
-	// initial config passed to image (docker only)?
+	// Initial config passed to image (docker only?).
 	// is this a string format of the file or a pointer to the
 	// file stored elsewhere?
 	ConfigMap string `protobuf:"bytes,8,opt,name=config_map,json=configMap,proto3" json:"config_map,omitempty"`
-	// default flavor for the app, may be overridden on app inst
+	// Default flavor for the App, may be overridden by the AppInst
 	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
-	// Cluster on which the app can be instantiated.
+	// Cluster on which the App can be instantiated.
 	// If not specified during create, a cluster will be automatically created.
+	// If specified, it must exist.
 	Cluster ClusterKey `protobuf:"bytes,10,opt,name=cluster" json:"cluster"`
 }
 
@@ -234,9 +239,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppApi service
 
 type AppApiClient interface {
+	// Create an application
 	CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Delete an application
 	DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Update an application
 	UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Show applications. Any fields specified will be used to filter results.
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
 }
 
@@ -310,9 +319,13 @@ func (x *appApiShowAppClient) Recv() (*App, error) {
 // Server API for AppApi service
 
 type AppApiServer interface {
+	// Create an application
 	CreateApp(context.Context, *App) (*Result, error)
+	// Delete an application
 	DeleteApp(context.Context, *App) (*Result, error)
+	// Update an application
 	UpdateApp(context.Context, *App) (*Result, error)
+	// Show applications. Any fields specified will be used to filter results.
 	ShowApp(*App, AppApi_ShowAppServer) error
 }
 

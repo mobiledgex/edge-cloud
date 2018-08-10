@@ -23,13 +23,19 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// NoticeAction denotes what kind of action this notification is for.
 type NoticeAction int32
 
 const (
-	NoticeAction_NONE        NoticeAction = 0
-	NoticeAction_UPDATE      NoticeAction = 1
-	NoticeAction_DELETE      NoticeAction = 2
-	NoticeAction_VERSION     NoticeAction = 3
+	// No action
+	NoticeAction_NONE NoticeAction = 0
+	// Update the object
+	NoticeAction_UPDATE NoticeAction = 1
+	// Delete the object
+	NoticeAction_DELETE NoticeAction = 2
+	// Version exchange negotitation message
+	NoticeAction_VERSION NoticeAction = 3
+	// Initial send all finished message
 	NoticeAction_SENDALL_END NoticeAction = 4
 )
 
@@ -53,12 +59,16 @@ func (x NoticeAction) String() string {
 }
 func (NoticeAction) EnumDescriptor() ([]byte, []int) { return fileDescriptorNotice, []int{0} }
 
+// NoticeRequestor indicates which type of service the client is.
 type NoticeRequestor int32
 
 const (
+	// Invalid
 	NoticeRequestor_NoticeRequestorNone NoticeRequestor = 0
-	NoticeRequestor_NoticeRequestorDME  NoticeRequestor = 1
-	NoticeRequestor_NoticeRequestorCRM  NoticeRequestor = 2
+	// Distributed Matching Engine
+	NoticeRequestor_NoticeRequestorDME NoticeRequestor = 1
+	// Cloudlet Resource Manager
+	NoticeRequestor_NoticeRequestorCRM NoticeRequestor = 2
 )
 
 var NoticeRequestor_name = map[int32]string{
@@ -77,12 +87,13 @@ func (x NoticeRequestor) String() string {
 }
 func (NoticeRequestor) EnumDescriptor() ([]byte, []int) { return fileDescriptorNotice, []int{1} }
 
+// NoticyReply is sent from server to client.
 type NoticeReply struct {
-	// action to perform
+	// Action to perform
 	Action NoticeAction `protobuf:"varint,1,opt,name=action,proto3,enum=edgeproto.NoticeAction" json:"action,omitempty"`
-	// protocol version supported by sender
+	// Protocol version supported by sender
 	Version uint32 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
-	// data included (for UPDATE and DELETE)
+	// Data included (for UPDATE and DELETE)
 	//
 	// Types that are valid to be assigned to Data:
 	//	*NoticeReply_AppInst
@@ -299,16 +310,17 @@ func _NoticeReply_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
+// NoticeRequest is sent from client to server.
 type NoticeRequest struct {
-	// action
+	// Action to perform
 	Action NoticeAction `protobuf:"varint,1,opt,name=action,proto3,enum=edgeproto.NoticeAction" json:"action,omitempty"`
-	// protocol version supported by receiver
+	// Protocol version supported by receiver
 	Version uint32 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
-	// client requestor type
+	// Client requestor type
 	Requestor NoticeRequestor `protobuf:"varint,3,opt,name=requestor,proto3,enum=edgeproto.NoticeRequestor" json:"requestor,omitempty"`
-	// revision of database
+	// Revision of database
 	Revision uint64 `protobuf:"varint,4,opt,name=revision,proto3" json:"revision,omitempty"`
-	// data included (UPDATE)
+	// Data included (UPDATE)
 	//
 	// Types that are valid to be assigned to Data:
 	//	*NoticeRequest_CloudletInfo
@@ -481,7 +493,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for NotifyApi service
 
 type NotifyApiClient interface {
-	// Bidrectional stream for exchanging data between controller and dme/crm
+	// Bidrectional stream for exchanging data between controller and DME/CRM
 	StreamNotice(ctx context.Context, opts ...grpc.CallOption) (NotifyApi_StreamNoticeClient, error)
 }
 
@@ -527,7 +539,7 @@ func (x *notifyApiStreamNoticeClient) Recv() (*NoticeReply, error) {
 // Server API for NotifyApi service
 
 type NotifyApiServer interface {
-	// Bidrectional stream for exchanging data between controller and dme/crm
+	// Bidrectional stream for exchanging data between controller and DME/CRM
 	StreamNotice(NotifyApi_StreamNoticeServer) error
 }
 

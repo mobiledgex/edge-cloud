@@ -48,7 +48,6 @@ It has these top-level messages:
 	Flavor
 	NoticeReply
 	NoticeRequest
-	OperatorCode
 	OperatorKey
 	Operator
 	CloudletRefs

@@ -30,8 +30,9 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ClusterKey uniquely identifies a Cluster.
 type ClusterKey struct {
-	// cluster name
+	// Cluster name
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
 
@@ -40,18 +41,17 @@ func (m *ClusterKey) String() string            { return proto.CompactTextString
 func (*ClusterKey) ProtoMessage()               {}
 func (*ClusterKey) Descriptor() ([]byte, []int) { return fileDescriptorCluster, []int{0} }
 
-// Developer creates a cluster so that apps can be assigned to it.
-// Clusters are not location specific. They may be instantiated on
-// 0 or more Cloudlets. When the controller (or the user) decides
-// create an AppInst (create an App on a Cloudlet), it sends the
-// Cluster to the CRM to create the cluster.
+// Clusters define a set of resources that are provided to one or more Apps tied to the cluster. The set of resources is defined by the Cluster flavor. The Cluster definition here is analogous to a Kubernetes cluster.
+// Like Apps, a Cluster is merely a definition, but is not instantiated on any Cloudlets. ClusterInsts are Clusters instantiated on a particular Cloudlet.
+// In comparison to ClusterFlavors which are fairly static and controller by administrators, Clusters are much more dynamic and created and deleted by the user.
 type Cluster struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique key
 	Key ClusterKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// default flavor of the cluster, may be overridden on cluster inst
+	// Default flavor of the Cluster, may be overridden on the ClusterInst
 	DefaultFlavor ClusterFlavorKey `protobuf:"bytes,3,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
-	// auto set to true when automatically created by back-end
+	// Auto is set to true when automatically created by back-end (internal use only)
 	Auto bool `protobuf:"varint,5,opt,name=auto,proto3" json:"auto,omitempty"`
 }
 
@@ -94,9 +94,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterApi service
 
 type ClusterApiClient interface {
+	// Create a Cluster
 	CreateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Result, error)
+	// Delete a Cluster
 	DeleteCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Result, error)
+	// Update a Cluster
 	UpdateCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (*Result, error)
+	// Show Clusters
 	ShowCluster(ctx context.Context, in *Cluster, opts ...grpc.CallOption) (ClusterApi_ShowClusterClient, error)
 }
 
@@ -170,9 +174,13 @@ func (x *clusterApiShowClusterClient) Recv() (*Cluster, error) {
 // Server API for ClusterApi service
 
 type ClusterApiServer interface {
+	// Create a Cluster
 	CreateCluster(context.Context, *Cluster) (*Result, error)
+	// Delete a Cluster
 	DeleteCluster(context.Context, *Cluster) (*Result, error)
+	// Update a Cluster
 	UpdateCluster(context.Context, *Cluster) (*Result, error)
+	// Show Clusters
 	ShowCluster(*Cluster, ClusterApi_ShowClusterServer) error
 }
 

@@ -28,21 +28,19 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Track cluster insts created on a Cloudlet.
-// These are used to calculated used resources.
-// Note that since CloudletKey will be the same for all cluster insts,
-// we use the cluster key rather than the cluster inst key.
+// CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
 type CloudletRefs struct {
+	// Cloudlet key
 	Key CloudletKey `protobuf:"bytes,1,opt,name=key" json:"key"`
-	// cluster insts in the cloudlet
+	// Clusters instantiated on the Cloudlet
 	Clusters []ClusterKey `protobuf:"bytes,2,rep,name=clusters" json:"clusters"`
-	// allocated RAM in MB
+	// Used RAM in MB
 	UsedRam uint64 `protobuf:"varint,4,opt,name=used_ram,json=usedRam,proto3" json:"used_ram,omitempty"`
-	// allocated VCPU cores
+	// Used VCPU cores
 	UsedVcores uint64 `protobuf:"varint,5,opt,name=used_vcores,json=usedVcores,proto3" json:"used_vcores,omitempty"`
-	// allocated disk in GB
+	// Used disk in GB
 	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
-	// used ports on root load balancer. Map key is public port, value is unused.
+	// Used ports on root load balancer. Map key is public port, value is unused.
 	RootLbPorts map[int32]int32 `protobuf:"bytes,8,rep,name=root_lb_ports,json=rootLbPorts" json:"root_lb_ports,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 }
 
@@ -51,19 +49,17 @@ func (m *CloudletRefs) String() string            { return proto.CompactTextStri
 func (*CloudletRefs) ProtoMessage()               {}
 func (*CloudletRefs) Descriptor() ([]byte, []int) { return fileDescriptorRefs, []int{0} }
 
-// Track app insts created on a ClusterInst.
-// These are used to calculated used resources.
-// Note that since CloudletKey will be the same for all app insts,
-// we use the app key rather than the app inst key.
+// ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.
 type ClusterRefs struct {
+	// Cluster Instance key
 	Key ClusterInstKey `protobuf:"bytes,1,opt,name=key" json:"key"`
-	// apps insts in the cloudlet
+	// Apps instances in the Cluster Instance
 	Apps []AppKey `protobuf:"bytes,2,rep,name=apps" json:"apps"`
-	// allocated RAM in MB
+	// Used RAM in MB
 	UsedRam uint64 `protobuf:"varint,4,opt,name=used_ram,json=usedRam,proto3" json:"used_ram,omitempty"`
-	// allocated VCPU cores
+	// Used VCPU cores
 	UsedVcores uint64 `protobuf:"varint,5,opt,name=used_vcores,json=usedVcores,proto3" json:"used_vcores,omitempty"`
-	// allocated disk in GB
+	// Used disk in GB
 	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
 }
 
@@ -88,6 +84,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for CloudletRefsApi service
 
 type CloudletRefsApiClient interface {
+	// Show CloudletRefs (debug only)
 	ShowCloudletRefs(ctx context.Context, in *CloudletRefs, opts ...grpc.CallOption) (CloudletRefsApi_ShowCloudletRefsClient, error)
 }
 
@@ -134,6 +131,7 @@ func (x *cloudletRefsApiShowCloudletRefsClient) Recv() (*CloudletRefs, error) {
 // Server API for CloudletRefsApi service
 
 type CloudletRefsApiServer interface {
+	// Show CloudletRefs (debug only)
 	ShowCloudletRefs(*CloudletRefs, CloudletRefsApi_ShowCloudletRefsServer) error
 }
 
@@ -179,6 +177,7 @@ var _CloudletRefsApi_serviceDesc = grpc.ServiceDesc{
 // Client API for ClusterRefsApi service
 
 type ClusterRefsApiClient interface {
+	// Show ClusterRefs (debug only)
 	ShowClusterRefs(ctx context.Context, in *ClusterRefs, opts ...grpc.CallOption) (ClusterRefsApi_ShowClusterRefsClient, error)
 }
 
@@ -225,6 +224,7 @@ func (x *clusterRefsApiShowClusterRefsClient) Recv() (*ClusterRefs, error) {
 // Server API for ClusterRefsApi service
 
 type ClusterRefsApiServer interface {
+	// Show ClusterRefs (debug only)
 	ShowClusterRefs(*ClusterRefs, ClusterRefsApi_ShowClusterRefsServer) error
 }
 

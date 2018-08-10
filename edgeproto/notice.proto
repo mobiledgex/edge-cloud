@@ -1,5 +1,5 @@
-// Send updates to distributed matching engine when things change
-
+// Notice is the message used by the notify protocol to communicate and coordinate internally between different Mobiledgex services. For details on the notify protocol, see the "MEX Cloud Service Interactions" confluence article.
+// In general, the protocol is used to synchronize state from one service to another. The protocol is fairly symmetric, with different state being synchronized both from server to client and client to server.
 syntax = "proto3";
 package edgeproto;
 
@@ -12,26 +12,37 @@ import "clusterflavor.proto";
 import "clusterinst.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// NoticeAction denotes what kind of action this notification is for.
 enum NoticeAction {
+  // No action
   NONE = 0;
+  // Update the object  
   UPDATE = 1;
+  // Delete the object
   DELETE = 2;
+  // Version exchange negotitation message
   VERSION = 3;
+  // Initial send all finished message
   SENDALL_END = 4;
 }
 
+// NoticeRequestor indicates which type of service the client is.
 enum NoticeRequestor {
+  // Invalid
   NoticeRequestorNone = 0;
+  // Distributed Matching Engine
   NoticeRequestorDME = 1;
+  // Cloudlet Resource Manager
   NoticeRequestorCRM = 2;
 }
 
+// NoticyReply is sent from server to client.
 message NoticeReply {
-  // action to perform
+  // Action to perform
   NoticeAction action = 1;
-  // protocol version supported by sender
+  // Protocol version supported by sender
   uint32 version = 3;
-  // data included (for UPDATE and DELETE)
+  // Data included (for UPDATE and DELETE)
   oneof data {
     AppInst appInst = 4;
     Cloudlet cloudlet = 5;
@@ -41,16 +52,17 @@ message NoticeReply {
   }
 }
 
+// NoticeRequest is sent from client to server.
 message NoticeRequest {
-  // action
+  // Action to perform
   NoticeAction action = 1;
-  // protocol version supported by receiver
+  // Protocol version supported by receiver
   uint32 version = 2;
-  // client requestor type
+  // Client requestor type
   NoticeRequestor requestor = 3;
-  // revision of database
+  // Revision of database
   uint64 revision = 4;
-  // data included (UPDATE)
+  // Data included (UPDATE)
   oneof data {
     CloudletInfo cloudletInfo = 5;
     AppInstInfo appInstInfo = 6;
@@ -59,6 +71,6 @@ message NoticeRequest {
 }
 
 service NotifyApi {
-  // Bidrectional stream for exchanging data between controller and dme/crm
+  // Bidrectional stream for exchanging data between controller and DME/CRM
   rpc StreamNotice(stream NoticeRequest) returns (stream NoticeReply) {}
 }

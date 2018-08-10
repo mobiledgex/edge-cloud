@@ -31,43 +31,6 @@ var OperatorIn edgeproto.Operator
 var OperatorFlagSet = pflag.NewFlagSet("Operator", pflag.ExitOnError)
 var OperatorNoConfigFlagSet = pflag.NewFlagSet("OperatorNoConfig", pflag.ExitOnError)
 
-func OperatorCodeSlicer(in *edgeproto.OperatorCode) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.MNC)
-	s = append(s, in.MCC)
-	return s
-}
-
-func OperatorCodeHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "MNC")
-	s = append(s, "MCC")
-	return s
-}
-
-func OperatorCodeWriteOutputArray(objs []*edgeproto.OperatorCode) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorCodeHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(OperatorCodeSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func OperatorCodeWriteOutputOne(obj *edgeproto.OperatorCode) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(OperatorCodeHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(OperatorCodeSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func OperatorKeySlicer(in *edgeproto.OperatorKey) []string {
 	s := make([]string, 0, 1)
 	s = append(s, in.Name)

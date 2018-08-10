@@ -16,11 +16,15 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
 type Liveness int32
 
 const (
+	// Unknown liveness
 	Liveness_LivenessUnknown Liveness = 0
-	Liveness_LivenessStatic  Liveness = 1
+	// Object managed by external entity
+	Liveness_LivenessStatic Liveness = 1
+	// Object managed internally
 	Liveness_LivenessDynamic Liveness = 2
 )
 
@@ -40,16 +44,15 @@ func (x Liveness) String() string {
 }
 func (Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{0} }
 
-// IpSupport indicates the types of IP support the Cloudlet has.
-// Static IP support indicates a set of static IPs are provided
-// to the controller, and the controller manages which IPs are
-// used where. Dynamic means that services must use DHCP to obtain
-// IP addresses and the controller has no control of which IPs are assigned.
+// IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
 type IpSupport int32
 
 const (
+	// Unknown IP support
 	IpSupport_IpSupportUnknown IpSupport = 0
-	IpSupport_IpSupportStatic  IpSupport = 1
+	// Static IP addresses are provided to and managed by Controller
+	IpSupport_IpSupportStatic IpSupport = 1
+	// IP addresses are dynamically provided by an Operator's DHCP server
 	IpSupport_IpSupportDynamic IpSupport = 2
 )
 
@@ -69,12 +72,16 @@ func (x IpSupport) String() string {
 }
 func (IpSupport) EnumDescriptor() ([]byte, []int) { return fileDescriptorCommon, []int{1} }
 
+// L4Proto indicates which L4 protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.
 type L4Proto int32
 
 const (
+	// Unknown protocol
 	L4Proto_L4ProtoUnknown L4Proto = 0
-	L4Proto_L4ProtoTCP     L4Proto = 1
-	L4Proto_L4ProtoUDP     L4Proto = 2
+	// TCP protocol
+	L4Proto_L4ProtoTCP L4Proto = 1
+	// UDP protocol
+	L4Proto_L4ProtoUDP L4Proto = 2
 )
 
 var L4Proto_name = map[int32]string{
