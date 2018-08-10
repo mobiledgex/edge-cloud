@@ -40,6 +40,38 @@ func (x *ShowAppInst) Send(m *edgeproto.AppInst) error {
 	return nil
 }
 
+type CudStreamoutAppInst struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamoutAppInst) Send(res *edgeproto.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamoutAppInst) Context() context.Context {
+	return context.TODO()
+}
+
+type AppInstStream interface {
+	Recv() (*edgeproto.Result, error)
+}
+
+func AppInstReadResultStream(stream AppInstStream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
 func (x *ShowAppInst) ReadStream(stream edgeproto.AppInstApi_ShowAppInstClient, err error) {
 	x.Data = make(map[string]edgeproto.AppInst)
 	if err != nil {
@@ -119,25 +151,34 @@ type AppInstCommonApi struct {
 
 func (x *AppInstCommonApi) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.CreateAppInst(ctx, in)
+		err := x.internal_api.CreateAppInst(in, &CudStreamoutAppInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.CreateAppInst(ctx, in)
+		stream, err := x.client_api.CreateAppInst(ctx, in)
+		err = AppInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *AppInstCommonApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.UpdateAppInst(ctx, in)
+		err := x.internal_api.UpdateAppInst(in, &CudStreamoutAppInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.UpdateAppInst(ctx, in)
+		stream, err := x.client_api.UpdateAppInst(ctx, in)
+		err = AppInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *AppInstCommonApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.DeleteAppInst(ctx, in)
+		err := x.internal_api.DeleteAppInst(in, &CudStreamoutAppInst{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.DeleteAppInst(ctx, in)
+		stream, err := x.client_api.DeleteAppInst(ctx, in)
+		err = AppInstReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 

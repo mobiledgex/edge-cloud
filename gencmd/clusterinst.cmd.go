@@ -14,8 +14,6 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -48,6 +46,8 @@ var ClusterStateStrings = []string{
 	"ClusterStateErrors",
 	"ClusterStateDeleting",
 	"ClusterStateDeleted",
+	"ClusterStateChanging",
+	"ClusterStateNotPresent",
 }
 
 func ClusterInstKeySlicer(in *edgeproto.ClusterInstKey) []string {
@@ -66,6 +66,29 @@ func ClusterInstKeyHeaderSlicer() []string {
 	return s
 }
 
+func ClusterInstKeyWriteOutputArray(objs []*edgeproto.ClusterInstKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ClusterInstKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ClusterInstKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s := make([]string, 0, 5)
 	if in.Fields == nil {
@@ -93,6 +116,29 @@ func ClusterInstHeaderSlicer() []string {
 	return s
 }
 
+func ClusterInstWriteOutputArray(objs []*edgeproto.ClusterInst) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ClusterInstSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ClusterInstWriteOutputOne(obj *edgeproto.ClusterInst) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ClusterInstSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s := make([]string, 0, 5)
 	if in.Fields == nil {
@@ -123,6 +169,29 @@ func ClusterInstInfoHeaderSlicer() []string {
 	return s
 }
 
+func ClusterInstInfoWriteOutputArray(objs []*edgeproto.ClusterInstInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ClusterInstInfoWriteOutputOne(obj *edgeproto.ClusterInstInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	if cmdsup.HideTags == "" {
 		return
@@ -150,39 +219,22 @@ var CreateClusterInstCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterInstApiCmd.CreateClusterInst(ctx, &ClusterInstIn)
-		cancel()
+		defer cancel()
+		stream, err := ClusterInstApiCmd.CreateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			fmt.Println("CreateClusterInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("CreateClusterInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -201,39 +253,22 @@ var DeleteClusterInstCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterInstApiCmd.DeleteClusterInst(ctx, &ClusterInstIn)
-		cancel()
+		defer cancel()
+		stream, err := ClusterInstApiCmd.DeleteClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			fmt.Println("DeleteClusterInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("DeleteClusterInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -253,39 +288,22 @@ var UpdateClusterInstCmd = &cobra.Command{
 		}
 		ClusterInstSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := ClusterInstApiCmd.UpdateClusterInst(ctx, &ClusterInstIn)
-		cancel()
+		defer cancel()
+		stream, err := ClusterInstApiCmd.UpdateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			fmt.Println("UpdateClusterInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("UpdateClusterInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -325,36 +343,7 @@ var ShowClusterInstCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ClusterInstHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(ClusterInstSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		ClusterInstWriteOutputArray(objs)
 	},
 }
 
@@ -401,36 +390,7 @@ var ShowClusterInstInfoCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ClusterInstInfoHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(ClusterInstInfoSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		ClusterInstInfoWriteOutputArray(objs)
 	},
 }
 
@@ -449,7 +409,7 @@ func init() {
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted]")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted ClusterStateChanging ClusterStateNotPresent]")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -543,6 +503,10 @@ func parseClusterInstInfoEnums() error {
 			ClusterInstInfoIn.State = edgeproto.ClusterState(4)
 		case "ClusterStateDeleted":
 			ClusterInstInfoIn.State = edgeproto.ClusterState(5)
+		case "ClusterStateChanging":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(6)
+		case "ClusterStateNotPresent":
+			ClusterInstInfoIn.State = edgeproto.ClusterState(7)
 		default:
 			return errors.New("Invalid value for ClusterInstInfoInState")
 		}

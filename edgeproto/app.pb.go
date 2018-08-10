@@ -930,14 +930,19 @@ func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
 	stm.Del(keystr)
 }
 
+type AppKeyWatcher struct {
+	cb func()
+}
+
 // AppCache caches App objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppCache struct {
-	Objs      map[AppKey]*App
-	Mux       util.Mutex
-	List      map[AppKey]struct{}
-	NotifyCb  func(obj *AppKey)
-	UpdatedCb func(old *App, new *App)
+	Objs        map[AppKey]*App
+	Mux         util.Mutex
+	List        map[AppKey]struct{}
+	NotifyCb    func(obj *AppKey)
+	UpdatedCb   func(old *App, new *App)
+	KeyWatchers map[AppKey][]*AppKeyWatcher
 }
 
 func NewAppCache() *AppCache {
@@ -948,6 +953,7 @@ func NewAppCache() *AppCache {
 
 func InitAppCache(cache *AppCache) {
 	cache.Objs = make(map[AppKey]*App)
+	cache.KeyWatchers = make(map[AppKey][]*AppKeyWatcher)
 }
 
 func (c *AppCache) GetTypeString() string {
@@ -988,21 +994,23 @@ func (c *AppCache) Update(in *App, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppCache) Delete(in *App, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
@@ -1017,10 +1025,11 @@ func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -1053,6 +1062,51 @@ func (c *AppCache) SetNotifyCb(fn func(obj *AppKey)) {
 
 func (c *AppCache) SetUpdatedCb(fn func(old *App, new *App)) {
 	c.UpdatedCb = fn
+}
+
+func (c *AppCache) WatchKey(key *AppKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppKeyWatcher, 0)
+	}
+	watcher := AppKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching App", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppCache) TriggerKeyWatchers(key *AppKey) {
+	watchers := make([]*AppKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := App{}
@@ -1094,9 +1148,11 @@ func (c *AppCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *App) GetKey() *AppKey {
 	return &m.Key
 }

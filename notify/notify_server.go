@@ -236,6 +236,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// The same client may reconnect, or the same objects may be resent
 	// via a different intermediate node, but if they are updated, they
 	// will have a new NotifyId, so will not be flushed.
+	log.DebugLog(log.DebugLevelNotify, "Flush", "notifyId", server.notifyId)
 	recvAppInstInfo := server.handler.RecvAppInstInfoHandler()
 	if recvAppInstInfo != nil {
 		recvAppInstInfo.Flush(server.notifyId)
@@ -681,6 +682,10 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		appInstInfo := req.GetAppInstInfo()
 		if recvAppInstInfo != nil && appInstInfo != nil {
 			appInstInfo.NotifyId = s.notifyId
+			log.DebugLog(log.DebugLevelNotify, "Recv app inst info",
+				"client", s.peerAddr,
+				"action", req.Action,
+				"info", appInstInfo)
 			if req.Action == edgeproto.NoticeAction_UPDATE {
 				recvAppInstInfo.Update(appInstInfo, s.notifyId)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
@@ -690,6 +695,10 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		clusterInstInfo := req.GetClusterInstInfo()
 		if recvClusterInstInfo != nil && clusterInstInfo != nil {
 			clusterInstInfo.NotifyId = s.notifyId
+			log.DebugLog(log.DebugLevelNotify, "Recv cluster inst info",
+				"client", s.peerAddr,
+				"action", req.Action,
+				"info", clusterInstInfo)
 			if req.Action == edgeproto.NoticeAction_UPDATE {
 				recvClusterInstInfo.Update(clusterInstInfo, s.notifyId)
 			} else if req.Action == edgeproto.NoticeAction_DELETE {
@@ -699,6 +708,10 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		cloudletInfo := req.GetCloudletInfo()
 		if recvCloudletInfo != nil && cloudletInfo != nil {
 			cloudletInfo.NotifyId = s.notifyId
+			log.DebugLog(log.DebugLevelNotify, "Recv cloudlet info",
+				"client", s.peerAddr,
+				"action", req.Action,
+				"info", cloudletInfo)
 			if req.Action == edgeproto.NoticeAction_UPDATE {
 				recvCloudletInfo.Update(cloudletInfo, s.notifyId)
 				s.updateTrackedCloudlets(&cloudletInfo.Key, register)

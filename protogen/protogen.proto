@@ -22,6 +22,8 @@ extend google.protobuf.MessageOptions {
   bool notify_cache = 51010;
   bool generate_cud_test = 51011;
   bool generate_show_test = 51012;
+  bool generate_cud_streamout = 51014;
+  string generate_wait_for_state = 51015;
 }
 
 extend google.protobuf.FieldOptions {

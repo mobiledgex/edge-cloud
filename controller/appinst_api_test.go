@@ -14,6 +14,7 @@ import (
 func TestAppInstApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
+	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -22,11 +23,12 @@ func TestAppInstApi(t *testing.T) {
 	InitApis(sync)
 	sync.Start()
 	defer sync.Done()
+	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
+		&appInstInfoApi.cache, &clusterInstInfoApi.cache)
 
 	// cannote create instances without apps and cloudlets
-	ctx := context.TODO()
 	for _, obj := range testutil.AppInstData {
-		_, err := appInstApi.CreateAppInst(ctx, &obj)
+		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 		assert.NotNil(t, err, "Create app inst without apps/cloudlets")
 	}
 
@@ -41,6 +43,18 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
+
+	// Set responder to fail. This should clean up the object after
+	// the fake crm returns a failure. If it doesn't, the next test to
+	// create all the app insts will fail.
+	responder.SetSimulateFailure(true)
+	for _, obj := range testutil.AppInstData {
+		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+		assert.NotNil(t, err, "Create app inst responder failures")
+		// make sure error matches responder
+		assert.Equal(t, "Encountered failures: [crm create app inst failed]", err.Error())
+	}
+	responder.SetSimulateFailure(false)
 
 	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
 	InternalAppInstCachedFieldsTest(t)
@@ -118,6 +132,7 @@ func ClientAppInstCachedFieldsTest(t *testing.T, appApi edgeproto.AppApiClient, 
 func TestAutoClusterInst(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
+	reduceInfoTimeouts()
 
 	dummy := dummyEtcd{}
 	dummy.Start()
@@ -126,9 +141,10 @@ func TestAutoClusterInst(t *testing.T) {
 	InitApis(sync)
 	sync.Start()
 	defer sync.Done()
+	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
+		&appInstInfoApi.cache, &clusterInstInfoApi.cache)
 
 	// create supporting data
-	ctx := context.TODO()
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
 	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
@@ -139,14 +155,14 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created
-	_, err := appInstApi.CreateAppInst(ctx, &testutil.AppInstData[0])
+	err := appInstApi.CreateAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
 	found := clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
 	assert.True(t, found, "get auto-clusterinst")
 	assert.True(t, clusterInst.Auto, "clusterinst is auto")
 	// delete appinst should also delete clusterinst
-	_, err = appInstApi.DeleteAppInst(ctx, &testutil.AppInstData[0])
+	err = appInstApi.DeleteAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "delete app inst")
 	found = clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
 	assert.False(t, found, "get auto-clusterinst")

@@ -1,7 +1,7 @@
 tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
-  - includefile: get_cloudlets.yml 
+#  - includefile: get_cloudlets.yml # Need Crm process per cloudlet
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: verify_loc.yml

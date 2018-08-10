@@ -28,7 +28,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_AppInstApi_CreateAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AppInstApi_CreateAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (AppInstApi_CreateAppInstClient, runtime.ServerMetadata, error) {
 	var protoReq AppInst
 	var metadata runtime.ServerMetadata
 
@@ -36,12 +36,20 @@ func request_AppInstApi_CreateAppInst_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateAppInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreateAppInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_AppInstApi_DeleteAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AppInstApi_DeleteAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (AppInstApi_DeleteAppInstClient, runtime.ServerMetadata, error) {
 	var protoReq AppInst
 	var metadata runtime.ServerMetadata
 
@@ -49,12 +57,20 @@ func request_AppInstApi_DeleteAppInst_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteAppInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.DeleteAppInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_AppInstApi_UpdateAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_AppInstApi_UpdateAppInst_0(ctx context.Context, marshaler runtime.Marshaler, client AppInstApiClient, req *http.Request, pathParams map[string]string) (AppInstApi_UpdateAppInstClient, runtime.ServerMetadata, error) {
 	var protoReq AppInst
 	var metadata runtime.ServerMetadata
 
@@ -62,8 +78,16 @@ func request_AppInstApi_UpdateAppInst_0(ctx context.Context, marshaler runtime.M
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateAppInst(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.UpdateAppInst(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -193,7 +217,7 @@ func RegisterAppInstApiHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 			return
 		}
 
-		forward_AppInstApi_CreateAppInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppInstApi_CreateAppInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -222,7 +246,7 @@ func RegisterAppInstApiHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 			return
 		}
 
-		forward_AppInstApi_DeleteAppInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppInstApi_DeleteAppInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -251,7 +275,7 @@ func RegisterAppInstApiHandlerClient(ctx context.Context, mux *runtime.ServeMux,
 			return
 		}
 
-		forward_AppInstApi_UpdateAppInst_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_AppInstApi_UpdateAppInst_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -298,11 +322,11 @@ var (
 )
 
 var (
-	forward_AppInstApi_CreateAppInst_0 = runtime.ForwardResponseMessage
+	forward_AppInstApi_CreateAppInst_0 = runtime.ForwardResponseStream
 
-	forward_AppInstApi_DeleteAppInst_0 = runtime.ForwardResponseMessage
+	forward_AppInstApi_DeleteAppInst_0 = runtime.ForwardResponseStream
 
-	forward_AppInstApi_UpdateAppInst_0 = runtime.ForwardResponseMessage
+	forward_AppInstApi_UpdateAppInst_0 = runtime.ForwardResponseStream
 
 	forward_AppInstApi_ShowAppInst_0 = runtime.ForwardResponseStream
 )

@@ -33,6 +33,9 @@ type PluginSupport struct {
 	// ProtoFiles are all of the proto files that support or possibly
 	// are dependencies of the proto file being generated
 	ProtoFiles []*descriptor.FileDescriptorProto
+	// ProtoFilesGen are all of the proto files in the request to
+	// generate.
+	ProtoFilesGen map[string]struct{}
 	// Map of all packages used from calls to FQTypeName
 	// Can be used to generate imports.
 	UsedPkgs map[string]*descriptor.FileDescriptorProto
@@ -55,9 +58,13 @@ func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
 	}
 
 	s.ProtoFiles = make([]*descriptor.FileDescriptorProto, 0)
+	s.ProtoFilesGen = make(map[string]struct{})
 	if req != nil {
 		for _, protofile := range req.ProtoFile {
 			s.ProtoFiles = append(s.ProtoFiles, protofile)
+		}
+		for _, filename := range req.FileToGenerate {
+			s.ProtoFilesGen[filename] = struct{}{}
 		}
 	}
 }
@@ -66,6 +73,11 @@ func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
 // generated.
 func (s *PluginSupport) InitFile() {
 	s.UsedPkgs = make(map[string]*descriptor.FileDescriptorProto)
+}
+
+func (s *PluginSupport) GenFile(filename string) bool {
+	_, found := s.ProtoFilesGen[filename]
+	return found
 }
 
 // RegisterUsedPkg adds the package to the list
