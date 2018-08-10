@@ -4,21 +4,21 @@ kind: mex-openstack-kubernetes
 resource: openstack-application
 metadata:
   kind: mex-app-qcow2
-  name: mexvmexample-qcow2
-  tags: mexvmexample-qcow2-tag
-  tenant: mexvmexample-tenant
+  name: testapp-vm
+  tags: testapp-vm-tag
+  tenant: testtenant
 spec:
   flags: force
-  key: testPokeVM
-  rootlb: mexlb.tdg.mobiledgex.net
+  key: testapp-vm
+  rootlb: testcluster.testoperator.mobiledgex.net
   image: http://registry.mobiledgex.net:8080/mobiledgex/cirros-0.4.0-x86_64-disk.img
   imageflavor: m1.tiny
   imagetype: ImageTypeQCOW
-  proxypath: mexvmexample
+  proxypath: testapp-vm
   portmap: 
-  pathmap: /etc:/mexvmexample
+  pathmap: /etc:/testapp
   flavor: app-qcow2-flavor
-  uri: https://mexvmexample.tdg.mobiledgex.net
+  uri: https://testapp.testcloudlet.testoperator.mobiledgex.net
   networkscheme: external-ip,external-network-shared,dhcp
   kubemanifest: 
   accesslayer: L7

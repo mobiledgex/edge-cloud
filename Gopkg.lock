@@ -14,12 +14,6 @@
   version = "v9"
 
 [[projects]]
-  name = "github.com/bobbae/logrus"
-  packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
-
-[[projects]]
   name = "github.com/cloudflare/cloudflare-go"
   packages = ["."]
   revision = "1f9007fbecae20711133c60519338c41cef1ffb4"
@@ -275,7 +269,7 @@
     "openstack-prov/oscliapi",
     "openstack-tenant/agent/cloudflare"
   ]
-  revision = "ba2ba5025715edea709f6ee9027efb60e72efc23"
+  revision = "d868bf06179487c464c57b9bd7d251fb2827d104"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -357,12 +351,6 @@
   ]
   revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
   version = "v1.2.1"
-
-[[projects]]
-  name = "gitlab.com/bobbae/logrus"
-  packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
 
 [[projects]]
   name = "go.uber.org/atomic"
