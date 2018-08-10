@@ -697,14 +697,19 @@ func (s *ClusterFlavorStore) STMDel(stm concurrency.STM, key *ClusterFlavorKey) 
 	stm.Del(keystr)
 }
 
+type ClusterFlavorKeyWatcher struct {
+	cb func()
+}
+
 // ClusterFlavorCache caches ClusterFlavor objects in memory in a hash table
 // and keeps them in sync with the database.
 type ClusterFlavorCache struct {
-	Objs      map[ClusterFlavorKey]*ClusterFlavor
-	Mux       util.Mutex
-	List      map[ClusterFlavorKey]struct{}
-	NotifyCb  func(obj *ClusterFlavorKey)
-	UpdatedCb func(old *ClusterFlavor, new *ClusterFlavor)
+	Objs        map[ClusterFlavorKey]*ClusterFlavor
+	Mux         util.Mutex
+	List        map[ClusterFlavorKey]struct{}
+	NotifyCb    func(obj *ClusterFlavorKey)
+	UpdatedCb   func(old *ClusterFlavor, new *ClusterFlavor)
+	KeyWatchers map[ClusterFlavorKey][]*ClusterFlavorKeyWatcher
 }
 
 func NewClusterFlavorCache() *ClusterFlavorCache {
@@ -715,6 +720,7 @@ func NewClusterFlavorCache() *ClusterFlavorCache {
 
 func InitClusterFlavorCache(cache *ClusterFlavorCache) {
 	cache.Objs = make(map[ClusterFlavorKey]*ClusterFlavor)
+	cache.KeyWatchers = make(map[ClusterFlavorKey][]*ClusterFlavorKeyWatcher)
 }
 
 func (c *ClusterFlavorCache) GetTypeString() string {
@@ -755,21 +761,23 @@ func (c *ClusterFlavorCache) Update(in *ClusterFlavor, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterFlavor", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterFlavorCache) Delete(in *ClusterFlavor, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete ClusterFlavor", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterFlavorCache) Prune(validKeys map[ClusterFlavorKey]struct{}) {
@@ -784,10 +792,11 @@ func (c *ClusterFlavorCache) Prune(validKeys map[ClusterFlavorKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -820,6 +829,51 @@ func (c *ClusterFlavorCache) SetNotifyCb(fn func(obj *ClusterFlavorKey)) {
 
 func (c *ClusterFlavorCache) SetUpdatedCb(fn func(old *ClusterFlavor, new *ClusterFlavor)) {
 	c.UpdatedCb = fn
+}
+
+func (c *ClusterFlavorCache) WatchKey(key *ClusterFlavorKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*ClusterFlavorKeyWatcher, 0)
+	}
+	watcher := ClusterFlavorKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching ClusterFlavor", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *ClusterFlavorCache) TriggerKeyWatchers(key *ClusterFlavorKey) {
+	watchers := make([]*ClusterFlavorKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *ClusterFlavorCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := ClusterFlavor{}
@@ -861,9 +915,11 @@ func (c *ClusterFlavorCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *ClusterFlavor) GetKey() *ClusterFlavorKey {
 	return &m.Key
 }

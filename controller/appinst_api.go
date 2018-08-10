@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -24,6 +25,10 @@ type AppInstApi struct {
 const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
+
+var CreateAppInstTimeout = 30 * time.Second
+var UpdateAppInstTimeout = 20 * time.Second
+var DeleteAppInstTimeout = 20 * time.Second
 
 func InitAppInstApi(sync *Sync) {
 	appInstApi.sync = sync
@@ -103,7 +108,7 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
-func (s *AppInstApi) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) CreateNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
 	return s.createAppInstInternal(in)
 }
@@ -256,7 +261,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) UpdateNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	// don't allow updates to cached fields
 	if in.Fields != nil {
 		for _, field := range in.Fields {
@@ -270,11 +275,10 @@ func (s *AppInstApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (
 	return s.store.Update(in, s.sync.syncWait)
 }
 
-func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		appinst := edgeproto.AppInst{}
-		if !s.store.STMGet(stm, in.GetKey(), &appinst) {
+		if !s.store.STMGet(stm, in.GetKey(), in) {
 			// already deleted
 			return nil
 		}
@@ -282,16 +286,14 @@ func (s *AppInstApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (
 		cloudletRefsChanged := false
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
 			// shared root load balancer
-			for ii, _ := range appinst.MappedPorts {
-				p := appinst.MappedPorts[ii].PublicPort
+			for ii, _ := range in.MappedPorts {
+				p := in.MappedPorts[ii].PublicPort
 				delete(cloudletRefs.RootLbPorts, p)
 				cloudletRefsChanged = true
 			}
 		}
 
-		clusterInstKey = appinst.ClusterInstKey
-		// delete associated info
-		appInstInfoApi.internalDelete(stm, in.GetKey())
+		clusterInstKey = in.ClusterInstKey
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
@@ -322,5 +324,65 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 		err := cb.Send(obj)
 		return err
 	})
+	return err
+}
+
+func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
+	_, err := s.CreateNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTimeout, cb.Send)
+	if err != nil {
+		// XXX should probably track mod revision ID and only undo
+		// if no other changes were made to appInst in the meantime.
+		// crm failed or some other err, undo
+		_, undoErr := s.DeleteNoWait(cb.Context(), in)
+		if undoErr != nil {
+			log.InfoLog("Undo create appinst", "undoErr", undoErr)
+		} else {
+			undoErr = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTimeout, nil)
+			if undoErr != nil {
+				log.InfoLog("Undo create appinst", "undoErr", undoErr)
+			}
+		}
+		log.DebugLog(log.DebugLevelApi, "Create app inst failed",
+			"in", in, "err", err)
+	}
+	return err
+}
+
+func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
+	_, err := s.DeleteNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTimeout, cb.Send)
+	if err != nil {
+		// crm failed or some other err, undo
+		_, undoErr := s.CreateNoWait(cb.Context(), in)
+		if undoErr != nil {
+			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
+		} else {
+			undoErr = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTimeout, nil)
+			if undoErr != nil {
+				log.InfoLog("Undo delete appinst", "undoErr", undoErr)
+			}
+		}
+		log.DebugLog(log.DebugLevelApi, "Delete app inst failed",
+			"in", in, "err", err)
+	}
+	return err
+}
+
+func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+	_, err := s.UpdateNoWait(cb.Context(), in)
+	if err != nil {
+		return err
+	}
+	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, UpdateAppInstTimeout, cb.Send)
+	if err != nil {
+		// TODO: undo and mod rev checking.
+	}
 	return err
 }

@@ -36,6 +36,7 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+	reduceInfoTimeouts()
 	return conn, mainDone, nil
 }
 
@@ -56,6 +57,11 @@ func TestController(t *testing.T) {
 	crmNotify := notify.NewDummyHandler()
 	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
 	crmNotify.SetClientCb(crmClient)
+	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
+		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
+	for ii, _ := range testutil.CloudletInfoData {
+		crmNotify.CloudletInfoCache.Update(&testutil.CloudletInfoData[ii], 0)
+	}
 	go crmClient.Start()
 	defer crmClient.Stop()
 	dmeNotify := notify.NewDummyHandler()
@@ -64,31 +70,30 @@ func TestController(t *testing.T) {
 	go dmeClient.Start()
 	defer dmeClient.Stop()
 
-	devApi := edgeproto.NewDeveloperApiClient(conn)
-	appApi := edgeproto.NewAppApiClient(conn)
-	operApi := edgeproto.NewOperatorApiClient(conn)
-	cloudletApi := edgeproto.NewCloudletApiClient(conn)
-	appInstApi := edgeproto.NewAppInstApiClient(conn)
-	flavorApi := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorApi := edgeproto.NewClusterFlavorApiClient(conn)
-	clusterApi := edgeproto.NewClusterApiClient(conn)
-	clusterInstApi := edgeproto.NewClusterInstApiClient(conn)
+	devClient := edgeproto.NewDeveloperApiClient(conn)
+	appClient := edgeproto.NewAppApiClient(conn)
+	operClient := edgeproto.NewOperatorApiClient(conn)
+	cloudletClient := edgeproto.NewCloudletApiClient(conn)
+	appInstClient := edgeproto.NewAppInstApiClient(conn)
+	flavorClient := edgeproto.NewFlavorApiClient(conn)
+	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
+	clusterClient := edgeproto.NewClusterApiClient(conn)
+	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	appInstInfoClient := edgeproto.NewAppInstInfoApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 
 	crmClient.WaitForConnect(1)
 	dmeClient.WaitForConnect(1)
 
-	testutil.ClientDeveloperTest(t, "cud", devApi, testutil.DevData)
-	testutil.ClientFlavorTest(t, "cud", flavorApi, testutil.FlavorData)
-	testutil.ClientClusterFlavorTest(t, "cud", clusterFlavorApi, testutil.ClusterFlavorData)
-	testutil.ClientClusterTest(t, "cud", clusterApi, testutil.ClusterData)
-	testutil.ClientAppTest(t, "cud", appApi, testutil.AppData)
-	testutil.ClientOperatorTest(t, "cud", operApi, testutil.OperatorData)
-	testutil.ClientCloudletTest(t, "cud", cloudletApi, testutil.CloudletData)
-	insertCloudletInfo(testutil.CloudletInfoData)
-	testutil.ClientClusterInstTest(t, "cud", clusterInstApi, testutil.ClusterInstData)
-	testutil.ClientAppInstTest(t, "cud", appInstApi, testutil.AppInstData)
+	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
+	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
+	testutil.ClientClusterFlavorTest(t, "cud", clusterFlavorClient, testutil.ClusterFlavorData)
+	testutil.ClientClusterTest(t, "cud", clusterClient, testutil.ClusterData)
+	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
+	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
+	testutil.ClientCloudletTest(t, "cud", cloudletClient, testutil.CloudletData)
+	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
+	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
 
 	dmeNotify.WaitForAppInsts(5)
 	crmNotify.WaitForFlavors(3)
@@ -97,22 +102,17 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	assert.Equal(t, 3, len(crmNotify.FlavorCache.Objs), "num flavors")
 	assert.Equal(t, 3, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
+	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
+	assert.Equal(t, 5, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
+	assert.Equal(t, 9, len(clusterInstInfoApi.cache.Objs), "server cluster inst infos")
+	assert.Equal(t, 5, len(appInstInfoApi.cache.Objs), "server app inst infos")
 
-	ClientAppInstCachedFieldsTest(t, appApi, cloudletApi, appInstApi)
-
-	// test info to persistent db
-	for ii := range testutil.AppInstInfoData {
-		dmeNotify.AppInstInfoCache.Update(&testutil.AppInstInfoData[ii], 0)
-	}
-	for ii := range testutil.CloudletInfoData {
-		crmNotify.CloudletInfoCache.Update(&testutil.CloudletInfoData[ii], 0)
-	}
+	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
 
 	WaitForAppInstInfo(len(testutil.AppInstInfoData))
 	WaitForCloudletInfo(len(testutil.CloudletInfoData))
 	assert.Equal(t, len(testutil.AppInstInfoData), len(appInstInfoApi.cache.Objs))
 	assert.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
-	assert.Equal(t, len(dmeNotify.AppInstInfoCache.Objs), len(appInstInfoApi.cache.Objs))
 	assert.Equal(t, len(crmNotify.CloudletInfoCache.Objs), len(cloudletInfoApi.cache.Objs))
 
 	// test show api for info structs
@@ -125,37 +125,39 @@ func TestController(t *testing.T) {
 
 	// test that delete checks disallow deletes of dependent objects
 	ctx := context.TODO()
-	_, err = devApi.DeleteDeveloper(ctx, &testutil.DevData[0])
+	_, err = devClient.DeleteDeveloper(ctx, &testutil.DevData[0])
 	assert.NotNil(t, err)
-	_, err = operApi.DeleteOperator(ctx, &testutil.OperatorData[0])
+	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
 	assert.NotNil(t, err)
-	_, err = cloudletApi.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	_, err = cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
 	assert.NotNil(t, err)
-	_, err = appApi.DeleteApp(ctx, &testutil.AppData[0])
+	_, err = appClient.DeleteApp(ctx, &testutil.AppData[0])
 	assert.NotNil(t, err)
 	// test that delete works after removing dependencies
 	for _, inst := range testutil.AppInstData {
-		_, err = appInstApi.DeleteAppInst(ctx, &inst)
+		stream, err := appInstClient.DeleteAppInst(ctx, &inst)
+		err = testutil.AppInstReadResultStream(stream, err)
 		assert.Nil(t, err)
 	}
 	for _, inst := range testutil.ClusterInstData {
-		_, err = clusterInstApi.DeleteClusterInst(ctx, &inst)
+		stream, err := clusterInstClient.DeleteClusterInst(ctx, &inst)
+		err = testutil.ClusterInstReadResultStream(stream, err)
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.AppData {
-		_, err = appApi.DeleteApp(ctx, &obj)
+		_, err = appClient.DeleteApp(ctx, &obj)
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.CloudletData {
-		_, err = cloudletApi.DeleteCloudlet(ctx, &obj)
+		_, err = cloudletClient.DeleteCloudlet(ctx, &obj)
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.DevData {
-		_, err = devApi.DeleteDeveloper(ctx, &obj)
+		_, err = devClient.DeleteDeveloper(ctx, &obj)
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.OperatorData {
-		_, err = operApi.DeleteOperator(ctx, &obj)
+		_, err = operClient.DeleteOperator(ctx, &obj)
 		assert.Nil(t, err)
 	}
 	// make sure dynamic app insts were deleted along with Apps
@@ -163,7 +165,10 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
 	assert.Equal(t, 0, len(appInstInfoApi.cache.Objs))
+	assert.Equal(t, 0, len(clusterInstInfoApi.cache.Objs))
 	assert.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
+	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
+	assert.Equal(t, 0, len(appInstApi.cache.Objs))
 
 	// closing the signal channel triggers main to exit
 	close(sigChan)
@@ -198,13 +203,13 @@ func TestEdgeCloudBug26(t *testing.T) {
 	}
 	defer conn.Close()
 
-	devApi := edgeproto.NewDeveloperApiClient(conn)
-	appApi := edgeproto.NewAppApiClient(conn)
-	operApi := edgeproto.NewOperatorApiClient(conn)
-	cloudletApi := edgeproto.NewCloudletApiClient(conn)
-	appInstApi := edgeproto.NewAppInstApiClient(conn)
-	flavorApi := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorApi := edgeproto.NewClusterFlavorApiClient(conn)
+	devClient := edgeproto.NewDeveloperApiClient(conn)
+	appClient := edgeproto.NewAppApiClient(conn)
+	operClient := edgeproto.NewOperatorApiClient(conn)
+	cloudletClient := edgeproto.NewCloudletApiClient(conn)
+	appInstClient := edgeproto.NewAppInstApiClient(conn)
+	flavorClient := edgeproto.NewFlavorApiClient(conn)
+	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 
 	yamlData := `
 operators:
@@ -277,33 +282,33 @@ cloudletinfos:
 	require.Nil(t, err, "unmarshal data")
 
 	ctx := context.TODO()
-	_, err = devApi.CreateDeveloper(ctx, &data.Developers[0])
+	_, err = devClient.CreateDeveloper(ctx, &data.Developers[0])
 	assert.Nil(t, err, "create dev")
-	_, err = flavorApi.CreateFlavor(ctx, &data.Flavors[0])
+	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
 	assert.Nil(t, err, "create flavor")
-	_, err = clusterFlavorApi.CreateClusterFlavor(ctx, &data.ClusterFlavors[0])
+	_, err = clusterFlavorClient.CreateClusterFlavor(ctx, &data.ClusterFlavors[0])
 	assert.Nil(t, err, "create cluster flavor")
-	_, err = appApi.CreateApp(ctx, &data.Applications[0])
+	_, err = appClient.CreateApp(ctx, &data.Applications[0])
 	assert.Nil(t, err, "create app")
-	_, err = operApi.CreateOperator(ctx, &data.Operators[0])
+	_, err = operClient.CreateOperator(ctx, &data.Operators[0])
 	assert.Nil(t, err, "create operator")
-	_, err = cloudletApi.CreateCloudlet(ctx, &data.Cloudlets[0])
+	_, err = cloudletClient.CreateCloudlet(ctx, &data.Cloudlets[0])
 	assert.Nil(t, err, "create cloudlet")
 	insertCloudletInfo(data.CloudletInfos)
 
 	show := testutil.ShowApp{}
 	show.Init()
 	filterNone := edgeproto.App{}
-	stream, err := appApi.ShowApp(ctx, &filterNone)
+	stream, err := appClient.ShowApp(ctx, &filterNone)
 	show.ReadStream(stream, err)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, 1, len(show.Data), "show app count")
 
-	_, err = appInstApi.CreateAppInst(ctx, &data.AppInstances[0])
+	_, err = appInstClient.CreateAppInst(ctx, &data.AppInstances[0])
 	assert.Nil(t, err, "create app inst")
 
 	show.Init()
-	stream, err = appApi.ShowApp(ctx, &filterNone)
+	stream, err = appClient.ShowApp(ctx, &filterNone)
 	show.ReadStream(stream, err)
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, 1, len(show.Data), "show app count after creating app inst")

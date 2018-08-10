@@ -1239,14 +1239,19 @@ func (s *CloudletStore) STMDel(stm concurrency.STM, key *CloudletKey) {
 	stm.Del(keystr)
 }
 
+type CloudletKeyWatcher struct {
+	cb func()
+}
+
 // CloudletCache caches Cloudlet objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletCache struct {
-	Objs      map[CloudletKey]*Cloudlet
-	Mux       util.Mutex
-	List      map[CloudletKey]struct{}
-	NotifyCb  func(obj *CloudletKey)
-	UpdatedCb func(old *Cloudlet, new *Cloudlet)
+	Objs        map[CloudletKey]*Cloudlet
+	Mux         util.Mutex
+	List        map[CloudletKey]struct{}
+	NotifyCb    func(obj *CloudletKey)
+	UpdatedCb   func(old *Cloudlet, new *Cloudlet)
+	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
 }
 
 func NewCloudletCache() *CloudletCache {
@@ -1257,6 +1262,7 @@ func NewCloudletCache() *CloudletCache {
 
 func InitCloudletCache(cache *CloudletCache) {
 	cache.Objs = make(map[CloudletKey]*Cloudlet)
+	cache.KeyWatchers = make(map[CloudletKey][]*CloudletKeyWatcher)
 }
 
 func (c *CloudletCache) GetTypeString() string {
@@ -1297,21 +1303,23 @@ func (c *CloudletCache) Update(in *Cloudlet, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletCache) Delete(in *Cloudlet, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletCache) Prune(validKeys map[CloudletKey]struct{}) {
@@ -1326,10 +1334,11 @@ func (c *CloudletCache) Prune(validKeys map[CloudletKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -1362,6 +1371,51 @@ func (c *CloudletCache) SetNotifyCb(fn func(obj *CloudletKey)) {
 
 func (c *CloudletCache) SetUpdatedCb(fn func(old *Cloudlet, new *Cloudlet)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletCache) WatchKey(key *CloudletKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*CloudletKeyWatcher, 0)
+	}
+	watcher := CloudletKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching Cloudlet", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *CloudletCache) TriggerKeyWatchers(key *CloudletKey) {
+	watchers := make([]*CloudletKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *CloudletCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := Cloudlet{}
@@ -1403,9 +1457,11 @@ func (c *CloudletCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *Cloudlet) GetKey() *CloudletKey {
 	return &m.Key
 }
@@ -1727,14 +1783,19 @@ func (s *CloudletInfoStore) STMDel(stm concurrency.STM, key *CloudletKey) {
 	stm.Del(keystr)
 }
 
+type CloudletInfoKeyWatcher struct {
+	cb func()
+}
+
 // CloudletInfoCache caches CloudletInfo objects in memory in a hash table
 // and keeps them in sync with the database.
 type CloudletInfoCache struct {
-	Objs      map[CloudletKey]*CloudletInfo
-	Mux       util.Mutex
-	List      map[CloudletKey]struct{}
-	NotifyCb  func(obj *CloudletKey)
-	UpdatedCb func(old *CloudletInfo, new *CloudletInfo)
+	Objs        map[CloudletKey]*CloudletInfo
+	Mux         util.Mutex
+	List        map[CloudletKey]struct{}
+	NotifyCb    func(obj *CloudletKey)
+	UpdatedCb   func(old *CloudletInfo, new *CloudletInfo)
+	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
 }
 
 func NewCloudletInfoCache() *CloudletInfoCache {
@@ -1745,6 +1806,7 @@ func NewCloudletInfoCache() *CloudletInfoCache {
 
 func InitCloudletInfoCache(cache *CloudletInfoCache) {
 	cache.Objs = make(map[CloudletKey]*CloudletInfo)
+	cache.KeyWatchers = make(map[CloudletKey][]*CloudletInfoKeyWatcher)
 }
 
 func (c *CloudletInfoCache) GetTypeString() string {
@@ -1785,21 +1847,23 @@ func (c *CloudletInfoCache) Update(in *CloudletInfo, rev int64) {
 		defer c.UpdatedCb(old, new)
 	}
 	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", in, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletInfoCache) Delete(in *CloudletInfo, rev int64) {
 	c.Mux.Lock()
 	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate", "key", in.Key, "rev", rev)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
 		c.NotifyCb(&in.Key)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletInfoCache) Prune(validKeys map[CloudletKey]struct{}) {
@@ -1814,10 +1878,11 @@ func (c *CloudletInfoCache) Prune(validKeys map[CloudletKey]struct{}) {
 		}
 	}
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, _ := range notify {
+	for key, _ := range notify {
+		if c.NotifyCb != nil {
 			c.NotifyCb(&key)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
@@ -1827,15 +1892,22 @@ func (c *CloudletInfoCache) GetCount() int {
 	return len(c.Objs)
 }
 func (c *CloudletInfoCache) Flush(notifyId int64) {
+	keys := make([]CloudletKey, 0)
 	c.Mux.Lock()
-	defer c.Mux.Unlock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
 		delete(c.Objs, key)
-		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+		keys = append(keys, key)
+	}
+	c.Mux.Unlock()
+	if len(keys) > 0 {
+		for _, key := range keys {
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key)
+			}
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
@@ -1863,6 +1935,51 @@ func (c *CloudletInfoCache) SetNotifyCb(fn func(obj *CloudletKey)) {
 
 func (c *CloudletInfoCache) SetUpdatedCb(fn func(old *CloudletInfo, new *CloudletInfo)) {
 	c.UpdatedCb = fn
+}
+
+func (c *CloudletInfoCache) WatchKey(key *CloudletKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*CloudletInfoKeyWatcher, 0)
+	}
+	watcher := CloudletInfoKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching CloudletInfo", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *CloudletInfoCache) TriggerKeyWatchers(key *CloudletKey) {
+	watchers := make([]*CloudletInfoKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
 }
 func (c *CloudletInfoCache) SyncUpdate(key, val []byte, rev int64) {
 	obj := CloudletInfo{}
@@ -1904,9 +2021,11 @@ func (c *CloudletInfoCache) SyncListEnd() {
 	if c.NotifyCb != nil {
 		for key, _ := range deleted {
 			c.NotifyCb(&key)
+			c.TriggerKeyWatchers(&key)
 		}
 	}
 }
+
 func (m *CloudletInfo) GetKey() *CloudletKey {
 	return &m.Key
 }

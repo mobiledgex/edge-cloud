@@ -1,8 +1,10 @@
 package cmdsup
 
 import (
+	"encoding/json"
 	"fmt"
 
+	yaml "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/spf13/pflag"
 )
 
@@ -36,4 +38,30 @@ var HideTags string
 
 func AddHideTagsFormatFlag(flagSet *pflag.FlagSet) {
 	flagSet.StringVar(&HideTags, "hidetags", "", "comma separated list of hide tags")
+}
+
+func WriteOutputGeneric(objs interface{}) {
+	switch OutputFormat {
+	case OutputFormatYaml:
+		output, err := yaml.Marshal(objs)
+		if err != nil {
+			fmt.Printf("Yaml failed to marshal: %s\n", err)
+			return
+		}
+		fmt.Print(string(output))
+	case OutputFormatJson:
+		output, err := json.MarshalIndent(objs, "", "  ")
+		if err != nil {
+			fmt.Printf("Json failed to marshal: %s\n", err)
+			return
+		}
+		fmt.Println(string(output))
+	case OutputFormatJsonCompact:
+		output, err := json.Marshal(objs)
+		if err != nil {
+			fmt.Printf("Json failed to marshal: %s\n", err)
+			return
+		}
+		fmt.Println(string(output))
+	}
 }

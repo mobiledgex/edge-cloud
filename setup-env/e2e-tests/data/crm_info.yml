@@ -1,6 +1,6 @@
 # expected data - notifyid needs to be ignored
 
-clusterInstInfos:
+clusterinstinfos:
 - key:
     clusterkey:
       name: AutoClustersomeApplication
@@ -18,7 +18,7 @@ clusterInstInfos:
       name: tmocloud2
   state: ClusterStateReady
 
-appInstInfos:
+appinstinfos:
 - key:
     appkey:
       developerkey:

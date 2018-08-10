@@ -15,8 +15,6 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
@@ -57,6 +55,8 @@ var AppStateStrings = []string{
 	"AppStateErrors",
 	"AppStateDeleting",
 	"AppStateDeleted",
+	"AppStateChanging",
+	"AppStateNotPresent",
 }
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
@@ -81,6 +81,29 @@ func AppInstKeyHeaderSlicer() []string {
 	return s
 }
 
+func AppInstKeyWriteOutputArray(objs []*edgeproto.AppInstKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppPortSlicer(in *edgeproto.AppPort) []string {
 	s := make([]string, 0, 3)
 	s = append(s, edgeproto.L4Proto_name[int32(in.Proto)])
@@ -97,6 +120,29 @@ func AppPortHeaderSlicer() []string {
 	return s
 }
 
+func AppPortWriteOutputArray(objs []*edgeproto.AppPort) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppPortWriteOutputOne(obj *edgeproto.AppPort) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s := make([]string, 0, 13)
 	if in.Fields == nil {
@@ -175,6 +221,29 @@ func AppInstHeaderSlicer() []string {
 	return s
 }
 
+func AppInstWriteOutputArray(objs []*edgeproto.AppInst) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstWriteOutputOne(obj *edgeproto.AppInst) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s := make([]string, 0, 5)
 	if in.Fields == nil {
@@ -211,6 +280,29 @@ func AppInstInfoHeaderSlicer() []string {
 	return s
 }
 
+func AppInstInfoWriteOutputArray(objs []*edgeproto.AppInstInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstInfoWriteOutputOne(obj *edgeproto.AppInstInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstMetricsSlicer(in *edgeproto.AppInstMetrics) []string {
 	s := make([]string, 0, 1)
 	s = append(s, strconv.FormatUint(uint64(in.Something), 10))
@@ -223,6 +315,29 @@ func AppInstMetricsHeaderSlicer() []string {
 	return s
 }
 
+func AppInstMetricsWriteOutputArray(objs []*edgeproto.AppInstMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstMetricsWriteOutputOne(obj *edgeproto.AppInstMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstHideTags(in *edgeproto.AppInst) {
 	if cmdsup.HideTags == "" {
 		return
@@ -263,39 +378,22 @@ var CreateAppInstCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
-		cancel()
+		defer cancel()
+		stream, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
 		if err != nil {
 			fmt.Println("CreateAppInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("CreateAppInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -314,39 +412,22 @@ var DeleteAppInstCmd = &cobra.Command{
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
-		cancel()
+		defer cancel()
+		stream, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
 		if err != nil {
 			fmt.Println("DeleteAppInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("DeleteAppInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -366,39 +447,22 @@ var UpdateAppInstCmd = &cobra.Command{
 		}
 		AppInstSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
-		cancel()
+		defer cancel()
+		stream, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
 		if err != nil {
 			fmt.Println("UpdateAppInst failed: ", err)
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
 			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
 			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
+				fmt.Println("UpdateAppInst recv failed: ", err)
+				break
 			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+			ResultWriteOutputOne(obj)
 		}
 	},
 }
@@ -439,36 +503,7 @@ var ShowAppInstCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(AppInstHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(AppInstSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		AppInstWriteOutputArray(objs)
 	},
 }
 
@@ -515,36 +550,7 @@ var ShowAppInstInfoCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(AppInstInfoHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(AppInstInfoSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		AppInstInfoWriteOutputArray(objs)
 	},
 }
 
@@ -582,36 +588,7 @@ var ShowAppInstMetricsCmd = &cobra.Command{
 		if len(objs) == 0 {
 			return
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(AppInstMetricsHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(AppInstMetricsSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		AppInstMetricsWriteOutputArray(objs)
 	},
 }
 
@@ -654,7 +631,7 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [AppStateUnknown AppStateBuilding AppStateReady AppStateErrors AppStateDeleting AppStateDeleted]")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [AppStateUnknown AppStateBuilding AppStateReady AppStateErrors AppStateDeleting AppStateDeleted AppStateChanging AppStateNotPresent]")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -870,6 +847,10 @@ func parseAppInstInfoEnums() error {
 			AppInstInfoIn.State = edgeproto.AppState(4)
 		case "AppStateDeleted":
 			AppInstInfoIn.State = edgeproto.AppState(5)
+		case "AppStateChanging":
+			AppInstInfoIn.State = edgeproto.AppState(6)
+		case "AppStateNotPresent":
+			AppInstInfoIn.State = edgeproto.AppState(7)
 		default:
 			return errors.New("Invalid value for AppInstInfoInState")
 		}

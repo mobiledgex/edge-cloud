@@ -11,19 +11,19 @@ type standaloneServer struct {
 	data *crmutil.ControllerData
 }
 
-func (s *standaloneServer) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	s.data.AppInstCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	s.data.AppInstCache.Delete(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	s.data.AppInstCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
 func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
@@ -34,19 +34,19 @@ func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppIn
 	return err
 }
 
-func (s *standaloneServer) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	s.data.ClusterInstCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	s.data.ClusterInstCache.Delete(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+func (s *standaloneServer) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
 	s.data.ClusterInstCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
 func (s *standaloneServer) ShowClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_ShowClusterInstServer) error {
