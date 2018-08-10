@@ -3,8 +3,8 @@ apiVersion: v1
 kind: azure-aks
 resource: kubernetes-cluster
 metadata:
-  name: testpoke
-  tags: testpoketag
-  tenant: ninc
+  name: testcluster
+  tags: testcluster-tag
+  tenant: testtenant
   location: centralus
-  resourcegroup: testpokegroup
+  resourcegroup: testclustergroup

@@ -1,0 +1,6 @@
+export OS_AUTH_URL=https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
+export OS_CACERT=$HOME/edgecloud/haproxy-ca.crt
+export OS_USERNAME=mexadmin
+export OS_PASSWORD=MEX\$Admin12345
+export OS_REGION_NAME=RegionOne
+export OS_TENANT_NAME=MEX

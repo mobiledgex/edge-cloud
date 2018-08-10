@@ -4,20 +4,20 @@ kind: mex-openstack-kubernetes
 resource: openstack-platform
 metadata:
   kind: mex-tdg-openstack-kubernetes
-  name: mexlb.tdg.mobiledgex.net
-  tags: tdg-bonn
-  tenant: Ninc
+  name: testcloudlet.testoperator.mobiledgex.net
+  tags: testoperator-testlocation
+  tenant: testtenant
   region: eu-central-1
   zone: eu-central-1c
-  location: bonn
+  location: testlocation
   openrc: ~/.mobiledgex/openrc
   dnszone: mobiledgex.net
-  operator: tmobile
+  operator: testoperator
 spec:
   flags: force
   flavor: x1.medium
-  rootlb: mexlb.tdg.mobiledgex.net
-  key: testPoke
+  rootlb: testcloudlet.testoperator.mobiledgex.net
+  key: testcloudlet
   dockerregistry: registry.mobiledgex.net:5000
   externalnetwork: external-network-shared
   networkscheme: priv-subnet,mex-k8s-net-1,10.101.X.0/24
