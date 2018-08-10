@@ -1,6 +1,7 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
+source /root/mex-docker.env
 
 if [ $# -le 0 ]; then
 	echo "which program? argument required"
@@ -35,6 +36,10 @@ case "$1" in
 	tok-srv-sim)
 		shift
 		tok-srv-sim $*
+		;;
+	test-edgectl)
+		shift
+		test-edgectl.sh $*
 		;;
 	*)
 		echo invalid program $1

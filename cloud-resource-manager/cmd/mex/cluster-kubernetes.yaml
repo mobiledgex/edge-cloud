@@ -3,15 +3,15 @@ apiVersion: v1
 kind: mex-openstack-kubernetes
 resource: kubernetes-cluster
 metadata:
-  name: testPoke
-  tags: testPokeTag
-  tenant: Ninc
+  name: testcluster
+  tags: testcluster-tag
+  tenant: testtenant
   region: eu-central-1
   zone: eu-central-1c
-  location: buckhorn
+  location: testlocation
 spec:
   flags: force
-  key: testPoke
+  key: testcluster
   flavor: x1.medium
-  rootlb: mexlb.gddt.mobiledgex.net
+  rootlb: testcloudlet.testoperator.mobiledgex.net
   networkscheme: priv-subnet,mex-k8s-net-1,10.101.X.0/24
