@@ -443,17 +443,35 @@ spec:
 //MEXCreateAppInst calls MEXCreateApp with templated manifest
 func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "mex create app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
-	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
-	if !ok {
-		return fmt.Errorf("cannot find imagetype in map")
+	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	if err != nil {
+		return err
 	}
-	accessLayer, aok := edgeproto.AccessLayer_name[int32(appInst.AccessLayer)]
-	if !aok {
-		return fmt.Errorf("cannot find accesslayer in map")
+	return MEXCreateAppManifest(mf)
+}
+
+//MEXCreateAppInst calls MEXCreateApp with templated manifest
+func MEXDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
+	log.DebugLog(log.DebugLevelMexos, "mex delete app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
+	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	if err != nil {
+		return err
 	}
+	return MEXKillAppManifest(mf)
+}
+
+func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
 	var data templateFill
 	var err error
 	var mf *Manifest
+	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
+	if !ok {
+		return nil, fmt.Errorf("cannot find imagetype in map")
+	}
+	accessLayer, aok := edgeproto.AccessLayer_name[int32(appInst.AccessLayer)]
+	if !aok {
+		return nil, fmt.Errorf("cannot find accesslayer in map")
+	}
 	switch imageType {
 	case ImageTypeDocker: //XXX assume kubernetes
 		data = templateFill{
@@ -479,7 +497,7 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	case ImageTypeQCOW:
 		data = templateFill{
@@ -502,12 +520,12 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppQcow2)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	default:
-		return fmt.Errorf("unknown image type %s", imageType)
+		return nil, fmt.Errorf("unknown image type %s", imageType)
 	}
-	return MEXCreateAppManifest(mf)
+	return mf, nil
 }
 
 //MEXCreateAppManifest creates app instances on the cluster platform
