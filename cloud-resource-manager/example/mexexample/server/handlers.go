@@ -80,9 +80,14 @@ func GetOutboundIP() string {
 func GetRealOutboundIP() string {
 	resp, err := http.Get("http://api.ipify.org")
 	if err != nil {
-		// handle err
+		fmt.Println("error getting real outbound ip")
+		return "unavailable"
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("error reading resp body", err)
+		return "unavailable"
+	}
 	return fmt.Sprintf("%s", body)
 }
