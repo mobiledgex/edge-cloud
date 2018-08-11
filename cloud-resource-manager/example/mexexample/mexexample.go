@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
-	"syscall"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/example/mexexample/server"
 )
@@ -64,6 +65,7 @@ func frontpage(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "outbound ip %v", localAddr.IP)
 	}
 	conn.Close() // nolint
+	fmt.Fprintf(w, "real outbound ip %s", server.GetRealOutboundIP())
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, intf := range interfaces {
