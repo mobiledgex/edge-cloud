@@ -177,6 +177,9 @@
         "hostname": {
           "type": "string"
         },
+        "realoutbound": {
+          "type": "string"
+        },
         "interfaces": {
           "type": "array",
           "items": {
