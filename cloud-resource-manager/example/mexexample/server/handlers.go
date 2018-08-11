@@ -3,7 +3,9 @@ package server
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/example/mexexample/api"
@@ -38,9 +40,10 @@ func (srv *Server) Status(ctx context.Context, req *api.StatusRequest) (res *api
 
 func (srv *Server) Info(ctx context.Context, req *api.InfoRequest) (res *api.InfoResponse, err error) {
 	res = &api.InfoResponse{
-		Message:    req.Message,
-		Outbound:   GetOutboundIP(),
-		Interfaces: []*api.Interface{},
+		Message:      req.Message,
+		Outbound:     GetOutboundIP(),
+		Realoutbound: GetRealOutboundIP(),
+		Interfaces:   []*api.Interface{},
 	}
 	hn, err := os.Hostname()
 	if err != nil {
@@ -72,4 +75,14 @@ func GetOutboundIP() string {
 	defer conn.Close() // no lint
 	localAddr := conn.LocalAddr().(*net.UDPAddr)
 	return fmt.Sprintf("%v", localAddr.IP)
+}
+
+func GetRealOutboundIP() string {
+	resp, err := http.Get("http://api.ipify.org")
+	if err != nil {
+		// handle err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	return fmt.Sprintf("%s", body)
 }
