@@ -122,25 +122,25 @@ func DlgReplyWriteOutputOne(obj *distributed_match_engine.DlgReply) {
 
 var SendToGroupCmd = &cobra.Command{
 	Use: "SendToGroup",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DynamicLocGroupApiCmd == nil {
-			fmt.Println("DynamicLocGroupApi client not initialized")
-			return
+			return fmt.Errorf("DynamicLocGroupApi client not initialized")
 		}
 		var err error
 		err = parseDlgMessageEnums()
 		if err != nil {
-			fmt.Println("SendToGroup: ", err)
-			return
+			return fmt.Errorf("SendToGroup failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DynamicLocGroupApiCmd.SendToGroup(ctx, &DlgMessageIn)
 		cancel()
 		if err != nil {
-			fmt.Println("SendToGroup failed: ", err)
-			return
+			return fmt.Errorf("SendToGroup failed: %s", err.Error())
 		}
 		DlgReplyWriteOutputOne(obj)
+		return nil
 	},
 }
 
