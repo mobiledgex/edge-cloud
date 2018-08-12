@@ -17,9 +17,9 @@ var addr string
 var conn *grpc.ClientConn
 
 var rootCmd = &cobra.Command{
-	Use:               "edgectl",
-	PersistentPreRun:  connect,
-	PersistentPostRun: close,
+	Use:                "edgectl",
+	PersistentPreRunE:  connect,
+	PersistentPostRunE: close,
 }
 var controllerCmd = &cobra.Command{
 	Use: "controller",
@@ -34,26 +34,26 @@ var crmCmd = &cobra.Command{
 var completionCmd = &cobra.Command{
 	Use:   "completion-script",
 	Short: "Generates bash completion script",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		filename := "edgectl-completion.bash"
 		outfile, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			fmt.Printf("Unable to open file %s in current dir for write: %s\n", filename, err)
-			return
+			return fmt.Errorf("Unable to open file %s in current dir for write: %s", filename, err.Error())
 		}
 		rootCmd.GenBashCompletion(outfile)
 		fmt.Printf("Wrote file %s in current dir. Move it to /usr/local/etc/bash_completion.d/ (OSX) or /etc/bash_completion.d/ (linux)\n", filename)
 		fmt.Println("On OSX, make sure bash completion is installed:")
 		fmt.Println("  brew install bash-completion")
 		outfile.Close()
+		return nil
 	},
 }
 
-func connect(cmd *cobra.Command, args []string) {
+func connect(cmd *cobra.Command, args []string) error {
 	var err error
 	conn, err = grpc.Dial(addr, grpc.WithInsecure())
 	if err != nil {
-		log.FatalLog("Connect to server failed", "addr", addr, "err", err)
+		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
 	}
 	gencmd.DeveloperApiCmd = edgeproto.NewDeveloperApiClient(conn)
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
@@ -70,10 +70,12 @@ func connect(cmd *cobra.Command, args []string) {
 	gencmd.Match_Engine_ApiCmd = dme.NewMatch_Engine_ApiClient(conn)
 	gencmd.CloudResourceManagerCmd = edgeproto.NewCloudResourceManagerClient(conn)
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
+	return nil
 }
 
-func close(cmd *cobra.Command, args []string) {
+func close(cmd *cobra.Command, args []string) error {
 	conn.Close()
+	return nil
 }
 
 func main() {
@@ -113,7 +115,11 @@ func main() {
 	crmCmd.AddCommand(gencmd.CloudResourceManagerCmds...)
 	crmCmd.AddCommand(gencmd.DebugApiCmds...)
 
-	rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		// note: error is already printed by cobra code.
+		os.Exit(1)
+	}
 }
 
 func allowNoConfig() {

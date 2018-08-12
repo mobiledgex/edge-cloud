@@ -514,25 +514,25 @@ func InnerMessageWriteOutputOne(obj *testgen.TestGen_InnerMessage) {
 
 var RequestCmd = &cobra.Command{
 	Use: "Request",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if TestApiCmd == nil {
-			fmt.Println("TestApi client not initialized")
-			return
+			return fmt.Errorf("TestApi client not initialized")
 		}
 		var err error
 		err = parseTestGenEnums()
 		if err != nil {
-			fmt.Println("Request: ", err)
-			return
+			return fmt.Errorf("Request failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := TestApiCmd.Request(ctx, &TestGenIn)
 		cancel()
 		if err != nil {
-			fmt.Println("Request failed: ", err)
-			return
+			return fmt.Errorf("Request failed: %s", err.Error())
 		}
 		TestGenWriteOutputOne(obj)
+		return nil
 	},
 }
 
