@@ -366,23 +366,22 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 
 var CreateAppInstCmd = &cobra.Command{
 	Use: "CreateAppInst",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstApiCmd == nil {
-			fmt.Println("AppInstApi client not initialized")
-			return
+			return fmt.Errorf("AppInstApi client not initialized")
 		}
 		var err error
 		err = parseAppInstEnums()
 		if err != nil {
-			fmt.Println("CreateAppInst: ", err)
-			return
+			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
 		if err != nil {
-			fmt.Println("CreateAppInst failed: ", err)
-			return
+			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
 		}
 		for {
 			obj, err := stream.Recv()
@@ -390,33 +389,32 @@ var CreateAppInstCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("CreateAppInst recv failed: ", err)
-				break
+				return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
 			}
 			ResultWriteOutputOne(obj)
 		}
+		return nil
 	},
 }
 
 var DeleteAppInstCmd = &cobra.Command{
 	Use: "DeleteAppInst",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstApiCmd == nil {
-			fmt.Println("AppInstApi client not initialized")
-			return
+			return fmt.Errorf("AppInstApi client not initialized")
 		}
 		var err error
 		err = parseAppInstEnums()
 		if err != nil {
-			fmt.Println("DeleteAppInst: ", err)
-			return
+			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
 		if err != nil {
-			fmt.Println("DeleteAppInst failed: ", err)
-			return
+			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
 		}
 		for {
 			obj, err := stream.Recv()
@@ -424,34 +422,33 @@ var DeleteAppInstCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("DeleteAppInst recv failed: ", err)
-				break
+				return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
 			}
 			ResultWriteOutputOne(obj)
 		}
+		return nil
 	},
 }
 
 var UpdateAppInstCmd = &cobra.Command{
 	Use: "UpdateAppInst",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstApiCmd == nil {
-			fmt.Println("AppInstApi client not initialized")
-			return
+			return fmt.Errorf("AppInstApi client not initialized")
 		}
 		var err error
 		err = parseAppInstEnums()
 		if err != nil {
-			fmt.Println("UpdateAppInst: ", err)
-			return
+			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
 		}
 		AppInstSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
 		if err != nil {
-			fmt.Println("UpdateAppInst failed: ", err)
-			return
+			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
 		}
 		for {
 			obj, err := stream.Recv()
@@ -459,33 +456,32 @@ var UpdateAppInstCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("UpdateAppInst recv failed: ", err)
-				break
+				return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
 			}
 			ResultWriteOutputOne(obj)
 		}
+		return nil
 	},
 }
 
 var ShowAppInstCmd = &cobra.Command{
 	Use: "ShowAppInst",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstApiCmd == nil {
-			fmt.Println("AppInstApi client not initialized")
-			return
+			return fmt.Errorf("AppInstApi client not initialized")
 		}
 		var err error
 		err = parseAppInstEnums()
 		if err != nil {
-			fmt.Println("ShowAppInst: ", err)
-			return
+			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstApiCmd.ShowAppInst(ctx, &AppInstIn)
 		if err != nil {
-			fmt.Println("ShowAppInst failed: ", err)
-			return
+			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.AppInst, 0)
 		for {
@@ -494,16 +490,16 @@ var ShowAppInstCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowAppInst recv failed: ", err)
-				break
+				return fmt.Errorf("ShowAppInst recv failed: %s", err.Error())
 			}
 			AppInstHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		AppInstWriteOutputArray(objs)
+		return nil
 	},
 }
 
@@ -516,23 +512,22 @@ var AppInstApiCmds = []*cobra.Command{
 
 var ShowAppInstInfoCmd = &cobra.Command{
 	Use: "ShowAppInstInfo",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstInfoApiCmd == nil {
-			fmt.Println("AppInstInfoApi client not initialized")
-			return
+			return fmt.Errorf("AppInstInfoApi client not initialized")
 		}
 		var err error
 		err = parseAppInstInfoEnums()
 		if err != nil {
-			fmt.Println("ShowAppInstInfo: ", err)
-			return
+			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
 		if err != nil {
-			fmt.Println("ShowAppInstInfo failed: ", err)
-			return
+			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.AppInstInfo, 0)
 		for {
@@ -541,16 +536,16 @@ var ShowAppInstInfoCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowAppInstInfo recv failed: ", err)
-				break
+				return fmt.Errorf("ShowAppInstInfo recv failed: %s", err.Error())
 			}
 			AppInstInfoHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		AppInstInfoWriteOutputArray(objs)
+		return nil
 	},
 }
 
@@ -560,18 +555,18 @@ var AppInstInfoApiCmds = []*cobra.Command{
 
 var ShowAppInstMetricsCmd = &cobra.Command{
 	Use: "ShowAppInstMetrics",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppInstMetricsApiCmd == nil {
-			fmt.Println("AppInstMetricsApi client not initialized")
-			return
+			return fmt.Errorf("AppInstMetricsApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, &AppInstMetricsIn)
 		if err != nil {
-			fmt.Println("ShowAppInstMetrics failed: ", err)
-			return
+			return fmt.Errorf("ShowAppInstMetrics failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.AppInstMetrics, 0)
 		for {
@@ -580,15 +575,15 @@ var ShowAppInstMetricsCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowAppInstMetrics recv failed: ", err)
-				break
+				return fmt.Errorf("ShowAppInstMetrics recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		AppInstMetricsWriteOutputArray(objs)
+		return nil
 	},
 }
 

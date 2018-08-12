@@ -121,48 +121,51 @@ func ClusterFlavorWriteOutputOne(obj *edgeproto.ClusterFlavor) {
 
 var CreateClusterFlavorCmd = &cobra.Command{
 	Use: "CreateClusterFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if ClusterFlavorApiCmd == nil {
-			fmt.Println("ClusterFlavorApi client not initialized")
-			return
+			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("CreateClusterFlavor failed: ", err)
-			return
+			return fmt.Errorf("CreateClusterFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteClusterFlavorCmd = &cobra.Command{
 	Use: "DeleteClusterFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if ClusterFlavorApiCmd == nil {
-			fmt.Println("ClusterFlavorApi client not initialized")
-			return
+			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DeleteClusterFlavor failed: ", err)
-			return
+			return fmt.Errorf("DeleteClusterFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateClusterFlavorCmd = &cobra.Command{
 	Use: "UpdateClusterFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if ClusterFlavorApiCmd == nil {
-			fmt.Println("ClusterFlavorApi client not initialized")
-			return
+			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
 		ClusterFlavorSetFields()
@@ -170,27 +173,27 @@ var UpdateClusterFlavorCmd = &cobra.Command{
 		obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("UpdateClusterFlavor failed: ", err)
-			return
+			return fmt.Errorf("UpdateClusterFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowClusterFlavorCmd = &cobra.Command{
 	Use: "ShowClusterFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if ClusterFlavorApiCmd == nil {
-			fmt.Println("ClusterFlavorApi client not initialized")
-			return
+			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := ClusterFlavorApiCmd.ShowClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
-			fmt.Println("ShowClusterFlavor failed: ", err)
-			return
+			return fmt.Errorf("ShowClusterFlavor failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.ClusterFlavor, 0)
 		for {
@@ -199,15 +202,15 @@ var ShowClusterFlavorCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowClusterFlavor recv failed: ", err)
-				break
+				return fmt.Errorf("ShowClusterFlavor recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		ClusterFlavorWriteOutputArray(objs)
+		return nil
 	},
 }
 
