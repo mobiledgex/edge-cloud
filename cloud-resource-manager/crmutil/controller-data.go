@@ -219,7 +219,8 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 		go func() {
 			if !IsValidMEXOSEnv {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
-				cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
+				info := edgeproto.AppInstInfo{Key: *key}
+				cd.AppInstInfoCache.Delete(&info, 0)
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
