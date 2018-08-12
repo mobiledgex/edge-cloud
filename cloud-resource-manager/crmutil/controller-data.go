@@ -189,71 +189,55 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 			cd.appInstInfoError(key, str)
 			return
 		}
-
 		go func() {
 			if !IsValidMEXOSEnv {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
 				cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
 				return
 			}
-			imagetype, err := convertImageType(int(appInst.ImageType))
+			log.DebugLog(log.DebugLevelMexos, "create app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
+			err := MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 			if err != nil {
-				str := fmt.Sprintf("Invalid image type: %s", err)
-				cd.appInstInfoError(key, str)
-				log.DebugLog(log.DebugLevelMexos, "can't decode imagetype", "error", str, "imagetype", imagetype, "key", key)
+				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
+				cd.appInstInfoError(key, errstr)
+				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
 				return
 			}
-			switch imagetype {
-			case "docker":
-				log.DebugLog(log.DebugLevelMexos, "docker image type, create app inst", "appinst", appInst, "clusterinst", clusterInst)
-				err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
-				if err != nil {
-					errstr := fmt.Sprintf("Create failed: %s", err)
-					cd.appInstInfoError(key, errstr)
-					log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key, "imagetype", imagetype)
-					return
-				}
-				log.DebugLog(log.DebugLevelMexos, "created docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
-			case "qcow2":
-				log.DebugLog(log.DebugLevelMexos, "qcow2 image type, create app inst", "appinst", appInst, "clusterinst", clusterInst)
-				err = MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
-				if err != nil {
-					errstr := fmt.Sprintf("Create failed: %s", err)
-					cd.appInstInfoError(key, errstr)
-					log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key, "imagetype", imagetype)
-					return
-				}
-				log.DebugLog(log.DebugLevelMexos, "created qcow2 app inst", "appinst", appInst, "clusterinst", clusterInst)
-			default:
-				cd.appInstInfoError(key, "Unsupported image type")
-				return
-			}
-			log.DebugLog(log.DebugLevelMexos, "update appinst state ready")
+			log.DebugLog(log.DebugLevelMexos, "created docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
 			cd.appInstInfoState(key, edgeproto.AppState_AppStateReady)
 		}()
 	} else {
+		clusterInst := edgeproto.ClusterInst{}
+		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+		if !clusterInstFound {
+			str := fmt.Sprintf("Cluster instance %s not found",
+				appInst.ClusterInstKey.ClusterKey.Name)
+			cd.appInstInfoError(key, str)
+			return
+		}
 		// appInst was deleted
-		// TODO: implement me
-
-		// Deleting local info signals to controller that
-		// delete was successful.
-		info := edgeproto.AppInstInfo{Key: *key}
-		cd.AppInstInfoCache.Delete(&info, 0)
+		go func() {
+			if !IsValidMEXOSEnv {
+				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
+				info := edgeproto.AppInstInfo{Key: *key}
+				cd.AppInstInfoCache.Delete(&info, 0)
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
+			err := MEXDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			if err != nil {
+				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
+				cd.appInstInfoError(key, errstr)
+				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "deleted docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
+			// Deleting local info signals to controller that
+			// delete was successful.
+			info := edgeproto.AppInstInfo{Key: *key}
+			cd.AppInstInfoCache.Delete(&info, 0)
+		}()
 	}
-}
-
-func convertImageType(imageType int) (string, error) {
-	switch imageType {
-	case int(edgeproto.ImageType_ImageTypeUnknown):
-		return "", fmt.Errorf("unknown image type")
-	case int(edgeproto.ImageType_ImageTypeDocker):
-		return "docker", nil
-	case int(edgeproto.ImageType_ImageTypeQCOW):
-		return "qcow2", fmt.Errorf("unsupported qcow2") //XXX not yet
-	}
-	//XXX no kubernetes types, deployment, rc, rs, svc, po
-
-	return "", fmt.Errorf("unknown")
 }
 
 func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, err string) {
