@@ -201,96 +201,95 @@ func AppWriteOutputOne(obj *edgeproto.App) {
 
 var CreateAppCmd = &cobra.Command{
 	Use: "CreateApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
 		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("CreateApp: ", err)
-			return
+			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := AppApiCmd.CreateApp(ctx, &AppIn)
 		cancel()
 		if err != nil {
-			fmt.Println("CreateApp failed: ", err)
-			return
+			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteAppCmd = &cobra.Command{
 	Use: "DeleteApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
 		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("DeleteApp: ", err)
-			return
+			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := AppApiCmd.DeleteApp(ctx, &AppIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DeleteApp failed: ", err)
-			return
+			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateAppCmd = &cobra.Command{
 	Use: "UpdateApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
 		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("UpdateApp: ", err)
-			return
+			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
 		AppSetFields()
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := AppApiCmd.UpdateApp(ctx, &AppIn)
 		cancel()
 		if err != nil {
-			fmt.Println("UpdateApp failed: ", err)
-			return
+			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowAppCmd = &cobra.Command{
 	Use: "ShowApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
 		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("ShowApp: ", err)
-			return
+			return fmt.Errorf("ShowApp failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := AppApiCmd.ShowApp(ctx, &AppIn)
 		if err != nil {
-			fmt.Println("ShowApp failed: ", err)
-			return
+			return fmt.Errorf("ShowApp failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.App, 0)
 		for {
@@ -299,15 +298,15 @@ var ShowAppCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowApp recv failed: ", err)
-				break
+				return fmt.Errorf("ShowApp recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		AppWriteOutputArray(objs)
+		return nil
 	},
 }
 

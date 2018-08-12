@@ -117,48 +117,51 @@ func FlavorWriteOutputOne(obj *edgeproto.Flavor) {
 
 var CreateFlavorCmd = &cobra.Command{
 	Use: "CreateFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if FlavorApiCmd == nil {
-			fmt.Println("FlavorApi client not initialized")
-			return
+			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("CreateFlavor failed: ", err)
-			return
+			return fmt.Errorf("CreateFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteFlavorCmd = &cobra.Command{
 	Use: "DeleteFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if FlavorApiCmd == nil {
-			fmt.Println("FlavorApi client not initialized")
-			return
+			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DeleteFlavor failed: ", err)
-			return
+			return fmt.Errorf("DeleteFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateFlavorCmd = &cobra.Command{
 	Use: "UpdateFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if FlavorApiCmd == nil {
-			fmt.Println("FlavorApi client not initialized")
-			return
+			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
 		FlavorSetFields()
@@ -166,27 +169,27 @@ var UpdateFlavorCmd = &cobra.Command{
 		obj, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
 		cancel()
 		if err != nil {
-			fmt.Println("UpdateFlavor failed: ", err)
-			return
+			return fmt.Errorf("UpdateFlavor failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowFlavorCmd = &cobra.Command{
 	Use: "ShowFlavor",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if FlavorApiCmd == nil {
-			fmt.Println("FlavorApi client not initialized")
-			return
+			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := FlavorApiCmd.ShowFlavor(ctx, &FlavorIn)
 		if err != nil {
-			fmt.Println("ShowFlavor failed: ", err)
-			return
+			return fmt.Errorf("ShowFlavor failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Flavor, 0)
 		for {
@@ -195,15 +198,15 @@ var ShowFlavorCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowFlavor recv failed: ", err)
-				break
+				return fmt.Errorf("ShowFlavor recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		FlavorWriteOutputArray(objs)
+		return nil
 	},
 }
 
