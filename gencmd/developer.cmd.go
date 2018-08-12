@@ -117,48 +117,51 @@ func DeveloperWriteOutputOne(obj *edgeproto.Developer) {
 
 var CreateDeveloperCmd = &cobra.Command{
 	Use: "CreateDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
-			fmt.Println("CreateDeveloper failed: ", err)
-			return
+			return fmt.Errorf("CreateDeveloper failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteDeveloperCmd = &cobra.Command{
 	Use: "DeleteDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DeleteDeveloper failed: ", err)
-			return
+			return fmt.Errorf("DeleteDeveloper failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateDeveloperCmd = &cobra.Command{
 	Use: "UpdateDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
 		DeveloperSetFields()
@@ -166,27 +169,27 @@ var UpdateDeveloperCmd = &cobra.Command{
 		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
 		cancel()
 		if err != nil {
-			fmt.Println("UpdateDeveloper failed: ", err)
-			return
+			return fmt.Errorf("UpdateDeveloper failed: %s", err.Error())
 		}
 		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowDeveloperCmd = &cobra.Command{
 	Use: "ShowDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 		stream, err := DeveloperApiCmd.ShowDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			fmt.Println("ShowDeveloper failed: ", err)
-			return
+			return fmt.Errorf("ShowDeveloper failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Developer, 0)
 		for {
@@ -195,15 +198,15 @@ var ShowDeveloperCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowDeveloper recv failed: ", err)
-				break
+				return fmt.Errorf("ShowDeveloper recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
 		DeveloperWriteOutputArray(objs)
+		return nil
 	},
 }
 

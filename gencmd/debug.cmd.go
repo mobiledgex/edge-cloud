@@ -127,73 +127,73 @@ func DebugResultWriteOutputOne(obj *log.DebugResult) {
 
 var EnableDebugLevelsCmd = &cobra.Command{
 	Use: "EnableDebugLevels",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DebugApiCmd == nil {
-			fmt.Println("DebugApi client not initialized")
-			return
+			return fmt.Errorf("DebugApi client not initialized")
 		}
 		var err error
 		err = parseDebugLevelsEnums()
 		if err != nil {
-			fmt.Println("EnableDebugLevels: ", err)
-			return
+			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
-			fmt.Println("EnableDebugLevels failed: ", err)
-			return
+			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
 		}
 		DebugResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DisableDebugLevelsCmd = &cobra.Command{
 	Use: "DisableDebugLevels",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DebugApiCmd == nil {
-			fmt.Println("DebugApi client not initialized")
-			return
+			return fmt.Errorf("DebugApi client not initialized")
 		}
 		var err error
 		err = parseDebugLevelsEnums()
 		if err != nil {
-			fmt.Println("DisableDebugLevels: ", err)
-			return
+			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
-			fmt.Println("DisableDebugLevels failed: ", err)
-			return
+			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
 		}
 		DebugResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowDebugLevelsCmd = &cobra.Command{
 	Use: "ShowDebugLevels",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DebugApiCmd == nil {
-			fmt.Println("DebugApi client not initialized")
-			return
+			return fmt.Errorf("DebugApi client not initialized")
 		}
 		var err error
 		err = parseDebugLevelsEnums()
 		if err != nil {
-			fmt.Println("ShowDebugLevels: ", err)
-			return
+			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		obj, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
 		cancel()
 		if err != nil {
-			fmt.Println("ShowDebugLevels failed: ", err)
-			return
+			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
 		}
 		DebugLevelsWriteOutputOne(obj)
+		return nil
 	},
 }
 
