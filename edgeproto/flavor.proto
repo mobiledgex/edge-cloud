@@ -11,6 +11,7 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 import "result.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// FlavorKey uniquely identifies a Flavor.
 message FlavorKey {
   string name = 1;
   option (protogen.generate_matches) = true;
@@ -18,7 +19,9 @@ message FlavorKey {
   option (gogoproto.gostring) = true;
 }
 
+// A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
 message Flavor {
+  // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique key
   FlavorKey key = 2 [(gogoproto.nullable) = false];
@@ -26,7 +29,7 @@ message Flavor {
   uint64 ram = 3;
   // VCPU cores
   uint64 vcpus = 4;
-  // amount of disk in GB
+  // Amount of disk in GB
   uint64 disk = 5;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
@@ -35,24 +38,28 @@ message Flavor {
 }
 
 service FlavorApi {
+  // Create a Flavor
   rpc CreateFlavor(Flavor) returns (Result) {
     option (google.api.http) = {
       post: "/create/flavor"
       body: "*"
     };
   }
+  // Delete a Flavor
   rpc DeleteFlavor(Flavor) returns (Result) {
       option (google.api.http) = {
       post: "/delete/flavor"
       body: "*"
     };
   }
+  // Update a Flavor
   rpc UpdateFlavor(Flavor) returns (Result) {
       option (google.api.http) = {
       post: "/update/flavor"
       body: "*"
     };
   }
+  // Show Flavors
   rpc ShowFlavor(Flavor) returns (stream Flavor) {
       option (google.api.http) = {
       post: "/show/flavor"

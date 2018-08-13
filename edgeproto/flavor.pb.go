@@ -30,6 +30,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// FlavorKey uniquely identifies a Flavor.
 type FlavorKey struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -39,7 +40,9 @@ func (m *FlavorKey) String() string            { return proto.CompactTextString(
 func (*FlavorKey) ProtoMessage()               {}
 func (*FlavorKey) Descriptor() ([]byte, []int) { return fileDescriptorFlavor, []int{0} }
 
+// A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.
 type Flavor struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique key
 	Key FlavorKey `protobuf:"bytes,2,opt,name=key" json:"key"`
@@ -47,7 +50,7 @@ type Flavor struct {
 	Ram uint64 `protobuf:"varint,3,opt,name=ram,proto3" json:"ram,omitempty"`
 	// VCPU cores
 	Vcpus uint64 `protobuf:"varint,4,opt,name=vcpus,proto3" json:"vcpus,omitempty"`
-	// amount of disk in GB
+	// Amount of disk in GB
 	Disk uint64 `protobuf:"varint,5,opt,name=disk,proto3" json:"disk,omitempty"`
 }
 
@@ -90,9 +93,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for FlavorApi service
 
 type FlavorApiClient interface {
+	// Create a Flavor
 	CreateFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error)
+	// Delete a Flavor
 	DeleteFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error)
+	// Update a Flavor
 	UpdateFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (*Result, error)
+	// Show Flavors
 	ShowFlavor(ctx context.Context, in *Flavor, opts ...grpc.CallOption) (FlavorApi_ShowFlavorClient, error)
 }
 
@@ -166,9 +173,13 @@ func (x *flavorApiShowFlavorClient) Recv() (*Flavor, error) {
 // Server API for FlavorApi service
 
 type FlavorApiServer interface {
+	// Create a Flavor
 	CreateFlavor(context.Context, *Flavor) (*Result, error)
+	// Delete a Flavor
 	DeleteFlavor(context.Context, *Flavor) (*Result, error)
+	// Update a Flavor
 	UpdateFlavor(context.Context, *Flavor) (*Result, error)
+	// Show Flavors
 	ShowFlavor(*Flavor, FlavorApi_ShowFlavorServer) error
 }
 

@@ -33,16 +33,25 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ClusterState defines the state of the ClusterInst. This state is defined both by the state on the Controller, and the state on the Cloudlet where the ClusterInst is instantiated. Some of the states are intermediate states to denote a change in progress.
 type ClusterState int32
 
 const (
-	ClusterState_ClusterStateUnknown    ClusterState = 0
-	ClusterState_ClusterStateBuilding   ClusterState = 1
-	ClusterState_ClusterStateReady      ClusterState = 2
-	ClusterState_ClusterStateErrors     ClusterState = 3
-	ClusterState_ClusterStateDeleting   ClusterState = 4
-	ClusterState_ClusterStateDeleted    ClusterState = 5
-	ClusterState_ClusterStateChanging   ClusterState = 6
+	// ClusterInst state unknown
+	ClusterState_ClusterStateUnknown ClusterState = 0
+	// ClusterInst state in the process of being created
+	ClusterState_ClusterStateBuilding ClusterState = 1
+	// ClusterInst state created and ready
+	ClusterState_ClusterStateReady ClusterState = 2
+	// ClusterInst change encountered errors, see Errors field of ClusterInstInfo
+	ClusterState_ClusterStateErrors ClusterState = 3
+	// ClusterInst in the process of being deleted
+	ClusterState_ClusterStateDeleting ClusterState = 4
+	// ClusterInst was deleted
+	ClusterState_ClusterStateDeleted ClusterState = 5
+	// ClusterInst in the process of being updated
+	ClusterState_ClusterStateChanging ClusterState = 6
+	// ClusterInst is not present
 	ClusterState_ClusterStateNotPresent ClusterState = 7
 )
 
@@ -72,10 +81,11 @@ func (x ClusterState) String() string {
 }
 func (ClusterState) EnumDescriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{0} }
 
+// ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 type ClusterInstKey struct {
-	// cluster key
+	// Cluster key
 	ClusterKey ClusterKey `protobuf:"bytes,1,opt,name=cluster_key,json=clusterKey" json:"cluster_key"`
-	// cloudlet it's on
+	// Cloudlet on which the Cluster is instantiated
 	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
 }
 
@@ -84,16 +94,18 @@ func (m *ClusterInstKey) String() string            { return proto.CompactTextSt
 func (*ClusterInstKey) ProtoMessage()               {}
 func (*ClusterInstKey) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{0} }
 
+// ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
+// When a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
 type ClusterInst struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique key
 	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// flavor
+	// ClusterFlavor of the Cluster
 	Flavor ClusterFlavorKey `protobuf:"bytes,3,opt,name=flavor" json:"flavor"`
-	// Future: policy options on where this cluster can be created.
-	// type of instance
+	// Liveness of instance (see Liveness)
 	Liveness Liveness `protobuf:"varint,9,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
-	// if auto-created
+	// Auto is set to true when automatically created by back-end (internal use only)
 	Auto bool `protobuf:"varint,10,opt,name=auto,proto3" json:"auto,omitempty"`
 }
 
@@ -102,15 +114,17 @@ func (m *ClusterInst) String() string            { return proto.CompactTextStrin
 func (*ClusterInst) ProtoMessage()               {}
 func (*ClusterInst) Descriptor() ([]byte, []int) { return fileDescriptorClusterinst, []int{1} }
 
+// ClusterInstInfo provides information from the Cloudlet Resource Manager about the state of the ClusterInst on the Cloudlet. Whereas the ClusterInst defines the intent of instantiating a Cluster on a Cloudlet, the ClusterInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
 type ClusterInstInfo struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
-	// unique identifier key
+	// Unique identifier key
 	Key ClusterInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Id of client assigned by server
+	// Id of client assigned by server (internal use only)
 	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
-	// state of the cluster
+	// State of the cluster
 	State ClusterState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.ClusterState" json:"state,omitempty"`
-	// error messages
+	// Any errors trying to create, update, or delete the ClusterInst on the Cloudlet.
 	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
 }
 
@@ -156,9 +170,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterInstApi service
 
 type ClusterInstApiClient interface {
+	// Create a Cluster instance
 	CreateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_CreateClusterInstClient, error)
+	// Delete a Cluster instance
 	DeleteClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_DeleteClusterInstClient, error)
+	// Update a Cluster instance
 	UpdateClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_UpdateClusterInstClient, error)
+	// Show Cluster instances
 	ShowClusterInst(ctx context.Context, in *ClusterInst, opts ...grpc.CallOption) (ClusterInstApi_ShowClusterInstClient, error)
 }
 
@@ -301,9 +319,13 @@ func (x *clusterInstApiShowClusterInstClient) Recv() (*ClusterInst, error) {
 // Server API for ClusterInstApi service
 
 type ClusterInstApiServer interface {
+	// Create a Cluster instance
 	CreateClusterInst(*ClusterInst, ClusterInstApi_CreateClusterInstServer) error
+	// Delete a Cluster instance
 	DeleteClusterInst(*ClusterInst, ClusterInstApi_DeleteClusterInstServer) error
+	// Update a Cluster instance
 	UpdateClusterInst(*ClusterInst, ClusterInstApi_UpdateClusterInstServer) error
+	// Show Cluster instances
 	ShowClusterInst(*ClusterInst, ClusterInstApi_ShowClusterInstServer) error
 }
 
@@ -427,6 +449,7 @@ var _ClusterInstApi_serviceDesc = grpc.ServiceDesc{
 // Client API for ClusterInstInfoApi service
 
 type ClusterInstInfoApiClient interface {
+	// Show Cluster instances state.
 	ShowClusterInstInfo(ctx context.Context, in *ClusterInstInfo, opts ...grpc.CallOption) (ClusterInstInfoApi_ShowClusterInstInfoClient, error)
 }
 
@@ -473,6 +496,7 @@ func (x *clusterInstInfoApiShowClusterInstInfoClient) Recv() (*ClusterInstInfo, 
 // Server API for ClusterInstInfoApi service
 
 type ClusterInstInfoApiServer interface {
+	// Show Cluster instances state.
 	ShowClusterInstInfo(*ClusterInstInfo, ClusterInstInfoApi_ShowClusterInstInfoServer) error
 }
 

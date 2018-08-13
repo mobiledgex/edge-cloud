@@ -30,6 +30,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ClusterFlavorKey uniquely identifies a Cluster Flavor.
 type ClusterFlavorKey struct {
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -39,19 +40,21 @@ func (m *ClusterFlavorKey) String() string            { return proto.CompactText
 func (*ClusterFlavorKey) ProtoMessage()               {}
 func (*ClusterFlavorKey) Descriptor() ([]byte, []int) { return fileDescriptorClusterflavor, []int{0} }
 
+// ClusterFlavor defines a set of resources for a Cluster. ClusterFlavors should be fairly static objects that are almost never changed, and are only modified by Mobiledgex administrators.
 type ClusterFlavor struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique key
 	Key ClusterFlavorKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Flavor of nodes
+	// Flavor of each node in the Cluster
 	NodeFlavor FlavorKey `protobuf:"bytes,3,opt,name=node_flavor,json=nodeFlavor" json:"node_flavor"`
-	// Flavor of master nodes
+	// Flavor of each master node in the Cluster
 	MasterFlavor FlavorKey `protobuf:"bytes,4,opt,name=master_flavor,json=masterFlavor" json:"master_flavor"`
-	// nodes is the number of nodes for a Cluster flavor type
+	// Initial number of nodes in the Cluster
 	NumNodes uint32 `protobuf:"varint,5,opt,name=num_nodes,json=numNodes,proto3" json:"num_nodes,omitempty"`
-	// max nodes limits the amount of nodes that can be scaled up to.
+	// Maximum number of nodes allowed in the Cluster (for auto-scaling)
 	MaxNodes uint32 `protobuf:"varint,6,opt,name=max_nodes,json=maxNodes,proto3" json:"max_nodes,omitempty"`
-	// masters is the number of k8s masters for a Cluster flavor type
+	// Number of master nodes in the Cluster
 	NumMasters uint32 `protobuf:"varint,7,opt,name=num_masters,json=numMasters,proto3" json:"num_masters,omitempty"`
 }
 
@@ -94,9 +97,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ClusterFlavorApi service
 
 type ClusterFlavorApiClient interface {
+	// Create a ClusterFlavor
 	CreateClusterFlavor(ctx context.Context, in *ClusterFlavor, opts ...grpc.CallOption) (*Result, error)
+	// Delete a ClusterFlavor
 	DeleteClusterFlavor(ctx context.Context, in *ClusterFlavor, opts ...grpc.CallOption) (*Result, error)
+	// Update a ClusterFlavor
 	UpdateClusterFlavor(ctx context.Context, in *ClusterFlavor, opts ...grpc.CallOption) (*Result, error)
+	// Show ClusterFlavors
 	ShowClusterFlavor(ctx context.Context, in *ClusterFlavor, opts ...grpc.CallOption) (ClusterFlavorApi_ShowClusterFlavorClient, error)
 }
 
@@ -170,9 +177,13 @@ func (x *clusterFlavorApiShowClusterFlavorClient) Recv() (*ClusterFlavor, error)
 // Server API for ClusterFlavorApi service
 
 type ClusterFlavorApiServer interface {
+	// Create a ClusterFlavor
 	CreateClusterFlavor(context.Context, *ClusterFlavor) (*Result, error)
+	// Delete a ClusterFlavor
 	DeleteClusterFlavor(context.Context, *ClusterFlavor) (*Result, error)
+	// Update a ClusterFlavor
 	UpdateClusterFlavor(context.Context, *ClusterFlavor) (*Result, error)
+	// Show ClusterFlavors
 	ShowClusterFlavor(*ClusterFlavor, ClusterFlavorApi_ShowClusterFlavorServer) error
 }
 

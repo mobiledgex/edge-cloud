@@ -197,7 +197,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 		}
 		in.ImagePath = app.ImagePath
 		in.ImageType = app.ImageType
-		in.ConfigMap = app.ConfigMap
+		in.Config = app.Config
 		in.AccessLayer = app.AccessLayer
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
