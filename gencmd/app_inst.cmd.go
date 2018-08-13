@@ -181,7 +181,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
 	s = append(s, in.MappedPath)
-	s = append(s, in.ConfigMap)
+	s = append(s, in.Config)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
 	return s
@@ -215,7 +215,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
 	s = append(s, "MappedPath")
-	s = append(s, "ConfigMap")
+	s = append(s, "Config")
 	s = append(s, "Flavor-Name")
 	s = append(s, "AccessLayer")
 	return s
@@ -621,7 +621,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ImagePath, "imagepath", "", "ImagePath")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ConfigMap, "configmap", "", "ConfigMap")
+	AppInstFlagSet.StringVar(&AppInstIn.Config, "config", "", "Config")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
@@ -736,7 +736,7 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("mappedpath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "10")
 	}
-	if AppInstNoConfigFlagSet.Lookup("configmap").Changed {
+	if AppInstFlagSet.Lookup("config").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "11")
 	}
 	if AppInstNoConfigFlagSet.Lookup("flavor-name").Changed {

@@ -54,7 +54,7 @@ message AppInst {
   ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 6 [(protogen.backend) = true];
-  // Path to image to be able to download image
+  // URI from which to download image
   string image_path = 7 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 8 [(protogen.backend) = true];
@@ -65,8 +65,8 @@ message AppInst {
   // Mapped path to append to Uri for public access.
   // Only valid for L7 access types.
   string mapped_path = 10 [(protogen.backend) = true];
-  // Initial config passed to docker
-  string config_map = 11 [(protogen.backend) = true];
+  // URI of resource to be used to establish config for App.
+  string config = 11 [(protogen.backend) = true];
   // Flavor defining resource requirements
   FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Access layer(s)

@@ -475,7 +475,7 @@ func MEXCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, app
 			//PortMap:      appInst.MappedPorts,
 			PathMap:      appInst.MappedPath,
 			AccessLayer:  accessLayer,
-			KubeManifest: appInst.ConfigMap, // 'ConfigMap' not the same as Kubernetes ConfigMap. Here, used by controller to send kubemanifest
+			KubeManifest: appInst.Config, // 'Config' not the same as Kubernetes ConfigMap. Here, used by controller to send kubemanifest
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {

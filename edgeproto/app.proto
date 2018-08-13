@@ -33,7 +33,7 @@ message AppKey {
 enum ImageType {
   // Unknown image type
   ImageTypeUnknown = 0;
-  // Docker container image type
+  // Docker container image type compatible with Kubernetes
   ImageTypeDocker= 1;
   // QCOW2 virtual machine image type
   ImageTypeQCOW = 2;
@@ -47,7 +47,7 @@ enum AccessLayer {
   AccessLayerL4 = 1;
   // Layer 7 (https path) access
   AccessLayerL7 = 2;
-  // Both layer 4 and layer 4 access
+  // Both layer 4 and layer 7 access
   AccessLayerL4L7 = 3;
 }
 
@@ -58,7 +58,7 @@ message App {
   repeated string fields = 1;
   // Unique identifier key
   AppKey key = 2 [(gogoproto.nullable) = false];
-  // Path to the application container or VM on image repo
+  // URI from which to download image
   string image_path = 4 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 5;
@@ -69,10 +69,8 @@ message App {
   // tcp:80,tcp:443,udp:10002.
   // Only tcp and udp protocols are supported.
   string access_ports = 7;
-  // Initial config passed to image (docker only?).
-  // is this a string format of the file or a pointer to the
-  // file stored elsewhere?
-  string config_map = 8;
+  // URI of resource to be used to establish config for App.
+  string config = 8;
   // Default flavor for the App, may be overridden by the AppInst
   FlavorKey default_flavor = 9 [(gogoproto.nullable) = false];
   // Cluster on which the App can be instantiated.
