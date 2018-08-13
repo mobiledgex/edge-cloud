@@ -127,14 +127,19 @@ message Match_Engine_Status {
   string TokenServerURI = 6;
 }
 
+message Appinstance{
+  string Appname = 1;
+  string Appversion = 2;
+  string Uri = 3;
+}
+
 message CloudletLocation {
      string CarrierName = 1;
      string CloudletName = 2;
      Loc GpsLocation = 3;
      //distance of cloudlet vs loc in request
      double Distance = 4;
-     // application uri, if an app was provided in the request
-     string Uri = 5;
+     repeated Appinstance Appinstances = 5;
 }
 
 message Match_Engine_Cloudlet_List {
