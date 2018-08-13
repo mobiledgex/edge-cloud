@@ -235,9 +235,12 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
 	var tbl *carrierApps
 	tbl = carrierAppTbl
-	foundCloudlets := make(map[string]bool)
+	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
 
 	tbl.RLock()
+
+	// find all the unique cloudlets, and the app instances for each.  the data is
+	//stored as appinst->cloudlet and we need the opposite mapping.
 	for _, a := range tbl.apps {
 		//if the carrier name was provided, only look for cloudlets for that carrier
 		if mreq.CarrierName != "" && mreq.CarrierName != a.key.carrierName {
@@ -249,24 +252,25 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 			continue
 		}
 		for _, i := range a.insts {
-			d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
-			cloc := dme.CloudletLocation{}
-			cloc.GpsLocation = &i.location
-			cloc.CarrierName = i.carrierName
-			cloc.CloudletName = i.cloudletKey.Name
-			cloc.Distance = d
-			// if the app was provided in the request, return the uri
-			if mreq.AppName != "" {
-				cloc.Uri = i.uri
-			}
-			//the same cloudlet could show for more than one app instance.  Just return it once
-			hashkey := cloc.CarrierName + cloc.CloudletName
-			_, exists := foundCloudlets[hashkey]
+			cloc, exists := foundCloudlets[i.cloudletKey]
 			if !exists {
-				clist.Cloudlets = append(clist.Cloudlets, &cloc)
-				foundCloudlets[hashkey] = true
+				cloc = new(dme.CloudletLocation)
+				d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+				cloc.GpsLocation = &i.location
+				cloc.CarrierName = i.carrierName
+				cloc.CloudletName = i.cloudletKey.Name
+				cloc.Distance = d
 			}
+			ai := dme.Appinstance{}
+			ai.Appname = a.key.appKey.Name
+			ai.Appversion = a.key.appKey.Version
+			ai.Uri = i.uri
+			cloc.Appinstances = append(cloc.Appinstances, &ai)
+			foundCloudlets[i.cloudletKey] = cloc
 		}
+	}
+	for _, c := range foundCloudlets {
+		clist.Cloudlets = append(clist.Cloudlets, c)
 	}
 	tbl.RUnlock()
 }
