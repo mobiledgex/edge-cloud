@@ -235,7 +235,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
 	var tbl *carrierApps
 	tbl = carrierAppTbl
-	foundCloudlets := make(map[string]*dme.CloudletLocation)
+	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
 
 	tbl.RLock()
 
@@ -252,8 +252,7 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 			continue
 		}
 		for _, i := range a.insts {
-			cloudletHashKey := i.carrierName + i.cloudletKey.Name
-			cloc, exists := foundCloudlets[cloudletHashKey]
+			cloc, exists := foundCloudlets[i.cloudletKey]
 			if !exists {
 				cloc = new(dme.CloudletLocation)
 				d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
@@ -267,7 +266,7 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 			ai.Appversion = a.key.appKey.Version
 			ai.Uri = i.uri
 			cloc.Appinstances = append(cloc.Appinstances, &ai)
-			foundCloudlets[cloudletHashKey] = cloc
+			foundCloudlets[i.cloudletKey] = cloc
 		}
 	}
 	for _, c := range foundCloudlets {
