@@ -5,7 +5,7 @@ description: Deploys and starts a system, adds provisioning. Does not stop or cl
 tests:
 
 - name: deploy and start services 
-  actions: [deploy,start,sleep=5]
+  actions: [deploy,start,sleep=1]
 
 - name: verify services are running
   actions: [status]

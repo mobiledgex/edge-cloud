@@ -5,7 +5,7 @@ description: Deploys and starts a system. Does not stop or cleanup
 tests:
 
 - name: deploy and start services 
-  actions: [deploy,start,sleep=5]
+  actions: [deploy,start,sleep=1]
 
 - name: verify services are running
   actions: [status]
