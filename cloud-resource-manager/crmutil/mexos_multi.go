@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 	"text/template"
 
+	"github.com/codeskyblue/go-sh"
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
@@ -119,7 +122,28 @@ func azureCreateAKS(mf *Manifest) error {
 	if err = azure.CreateAKSCluster(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 		return err
 	}
+	saveKubeconfig()
 	if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
+		return err
+	}
+	if err = copy(defaultKubeconfig(), getKconf(mf)); err != nil {
+		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "created aks", "name", mf.Spec.Key)
+	return nil
+}
+
+func defaultKubeconfig() string {
+	return os.Getenv("HOME") + "/.kube/config"
+}
+
+func copy(src string, dst string) error {
+	data, err := ioutil.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(dst, data, 0644)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -136,10 +160,22 @@ func gcloudCreateGKE(mf *Manifest) error {
 	if err = gcloud.CreateGKECluster(mf.Metadata.Name); err != nil {
 		return err
 	}
+	saveKubeconfig()
 	if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
 		return err
 	}
+	if err = copy(defaultKubeconfig(), getKconf(mf)); err != nil {
+		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "created gke", "name", mf.Spec.Key)
 	return nil
+}
+
+func saveKubeconfig() {
+	kc := defaultKubeconfig()
+	if err := os.Rename(kc, kc+".save"); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "can't rename", "name", kc, "error", err)
+	}
 }
 
 //MEXClusterRemoveClustInst calls MEXClusterRemove with a manifest created from the template
@@ -536,18 +572,47 @@ func MEXCreateAppManifest(mf *Manifest) error {
 		if mf.Spec.ImageType == ImageTypeDocker {
 			return CreateKubernetesAppManifest(mf)
 		} else if mf.Spec.ImageType == ImageTypeQCOW {
-			//TODO
 			return CreateQCOW2AppManifest(mf)
 		} else {
 			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
 	case gcloudGKE:
-		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+		if mf.Spec.ImageType == ImageTypeDocker {
+			return runKubectlCreateApp(mf)
+		} else if mf.Spec.ImageType == ImageTypeQCOW { // gcp requires raw
+			return fmt.Errorf("not yet supported")
+		} else {
+			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
+		}
 	case azureAKS:
-		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+		if mf.Spec.ImageType == ImageTypeDocker {
+			return runKubectlCreateApp(mf)
+		} else if mf.Spec.ImageType == ImageTypeQCOW { // azure requires vhd
+			return fmt.Errorf("not yet supported")
+		} else {
+			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
+		}
 	default:
 		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
+}
+
+func getKconf(mf *Manifest) string {
+	return mexEnv["MEX_DIR"] + "/" + mf.Kind + mf.Spec.Key + ".kubeconfig"
+}
+
+func runKubectlCreateApp(mf *Manifest) error {
+	out, err := sh.Command("kubectl", "create", "secret", "docker-registry", "mexregistrysecret", "--docker-server="+mexEnv["MEX_DOCKER_REGISTRY"], "--docker-username=mobiledgex", "--docker-password="+mexEnv["MEX_DOCKER_REG_PASS"], "--docker-email=docker@mobiledgex.com", "--kubeconfig="+getKconf(mf)).Output()
+	if err != nil {
+		if !strings.Contains(string(out), "AlreadyExists") {
+			return fmt.Errorf("can't add docker registry secret, %s, %v", out, err)
+		}
+	}
+	out, err = sh.Command("kubectl", "create", "-f", mf.Spec.KubeManifest, "--kubeconfig="+getKconf(mf)).Output()
+	if err != nil {
+		return fmt.Errorf("error creating app, %s, %v, %v", out, mf, err)
+	}
+	return nil
 }
 
 //MEXKillAppManifest kills app
@@ -559,14 +624,33 @@ func MEXKillAppManifest(mf *Manifest) error {
 			return DestroyKubernetesAppManifest(mf)
 		} else if mf.Spec.ImageType == ImageTypeQCOW {
 			return DestroyQCOW2AppManifest(mf)
+		}
+		return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
+	case gcloudGKE:
+		if mf.Spec.ImageType == ImageTypeDocker {
+			return runKubectlDeleteApp(mf)
+		} else if mf.Spec.ImageType == ImageTypeQCOW {
+			return fmt.Errorf("not yet supported")
 		} else {
 			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
-	case gcloudGKE:
-		return fmt.Errorf("not yet supported, type %s", mf.Kind)
 	case azureAKS:
-		return fmt.Errorf("not yet supported, type %s", mf.Kind)
+		if mf.Spec.ImageType == ImageTypeDocker {
+			return runKubectlDeleteApp(mf)
+		} else if mf.Spec.ImageType == ImageTypeQCOW {
+			return fmt.Errorf("not yet supported")
+		} else {
+			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
+		}
 	default:
 		return fmt.Errorf("unknown type %s", mf.Kind)
 	}
+}
+
+func runKubectlDeleteApp(mf *Manifest) error {
+	out, err := sh.Command("kubectl", "delete", "-f", mf.Spec.KubeManifest, "--kubeconfig="+getKconf(mf)).Output()
+	if err != nil {
+		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
+	}
+	return nil
 }
