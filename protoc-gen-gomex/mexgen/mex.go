@@ -765,7 +765,7 @@ type {{.Name}}Cache struct {
 	Objs map[{{.KeyType}}]*{{.Name}}
 	Mux util.Mutex
 	List map[{{.KeyType}}]struct{}
-	NotifyCb func(obj *{{.KeyType}})
+	NotifyCb func(obj *{{.KeyType}}, old *{{.Name}})
 	UpdatedCb func(old *{{.Name}}, new *{{.Name}})
 	KeyWatchers map[{{.KeyType}}][]*{{.Name}}KeyWatcher
 }
@@ -812,47 +812,50 @@ func (c *{{.Name}}Cache) GetAllKeys(keys map[{{.KeyType}}]struct{}) {
 
 func (c *{{.Name}}Cache) Update(in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &{{.Name}}{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &{{.Name}}{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate {{.Name}}", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *{{.Name}}Cache) Delete(in *{{.Name}}, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete {{.Name}}", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *{{.Name}}Cache) Prune(validKeys map[{{.KeyType}}]struct{}) {
-	notify := make(map[{{.KeyType}}]struct{})
+	notify := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -866,20 +869,20 @@ func (c *{{.Name}}Cache) GetCount() int {
 
 {{- if .NotifyCache}}
 func (c *{{.Name}}Cache) Flush(notifyId int64) {
-	keys := make([]{{.KeyType}}, 0)
+	flushed := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
+		flushed[key] = c.Objs[key]
 		delete(c.Objs, key)
-		keys = append(keys, key)
 	}
 	c.Mux.Unlock()
-	if len(keys) > 0 {
-		for _, key := range keys {
+	if len(flushed) > 0 {
+		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				c.NotifyCb(&key, old)
 			}
 			c.TriggerKeyWatchers(&key)
 		}
@@ -906,7 +909,7 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	return nil
 }
 
-func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}})) {
+func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}}, old *{{.Name}})) {
 	c.NotifyCb = fn
 }
 
@@ -986,19 +989,19 @@ func (c *{{.Name}}Cache) SyncListStart() {
 }
 
 func (c *{{.Name}}Cache) SyncListEnd() {
-	deleted := make(map[{{.KeyType}}]struct{})
+	deleted := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}

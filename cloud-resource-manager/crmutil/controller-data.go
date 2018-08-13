@@ -71,7 +71,7 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 // the notify receive thread. If the actions done here not quick,
 // they should be done in a separate worker thread.
 
-func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey) {
+func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey, old *edgeproto.Flavor) {
 	flavor := edgeproto.Flavor{}
 	found := cd.FlavorCache.Get(key, &flavor)
 	if found {
@@ -82,7 +82,7 @@ func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey) {
 	}
 }
 
-func (cd *ControllerData) clusterFlavorChanged(key *edgeproto.ClusterFlavorKey) {
+func (cd *ControllerData) clusterFlavorChanged(key *edgeproto.ClusterFlavorKey, old *edgeproto.ClusterFlavor) {
 	flavor := edgeproto.ClusterFlavor{}
 	found := cd.ClusterFlavorCache.Get(key, &flavor)
 	if found {
@@ -93,7 +93,7 @@ func (cd *ControllerData) clusterFlavorChanged(key *edgeproto.ClusterFlavorKey) 
 	}
 }
 
-func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
+func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
 	log.DebugLog(log.DebugLevelMexos, "clusterInstChange", "key", key)
 	clusterInst := edgeproto.ClusterInst{}
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
@@ -166,7 +166,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 	}
 }
 
-func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
+func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
 	log.DebugLog(log.DebugLevelMexos, "app inst changed", "key", key)
 	appInst := edgeproto.AppInst{}
 	found := cd.AppInstCache.Get(key, &appInst)
@@ -208,7 +208,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey) {
 		}()
 	} else {
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+		clusterInstFound := cd.ClusterInstCache.Get(&old.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
 			str := fmt.Sprintf("Cluster instance %s not found",
 				appInst.ClusterInstKey.ClusterKey.Name)

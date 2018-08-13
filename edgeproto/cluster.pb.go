@@ -660,7 +660,7 @@ type ClusterCache struct {
 	Objs        map[ClusterKey]*Cluster
 	Mux         util.Mutex
 	List        map[ClusterKey]struct{}
-	NotifyCb    func(obj *ClusterKey)
+	NotifyCb    func(obj *ClusterKey, old *Cluster)
 	UpdatedCb   func(old *Cluster, new *Cluster)
 	KeyWatchers map[ClusterKey][]*ClusterKeyWatcher
 }
@@ -707,47 +707,50 @@ func (c *ClusterCache) GetAllKeys(keys map[ClusterKey]struct{}) {
 
 func (c *ClusterCache) Update(in *Cluster, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &Cluster{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &Cluster{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cluster", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterCache) Delete(in *Cluster, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Cluster", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *ClusterCache) Prune(validKeys map[ClusterKey]struct{}) {
-	notify := make(map[ClusterKey]struct{})
+	notify := make(map[ClusterKey]*Cluster)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -776,7 +779,7 @@ func (c *ClusterCache) Show(filter *Cluster, cb func(ret *Cluster) error) error 
 	return nil
 }
 
-func (c *ClusterCache) SetNotifyCb(fn func(obj *ClusterKey)) {
+func (c *ClusterCache) SetNotifyCb(fn func(obj *ClusterKey, old *Cluster)) {
 	c.NotifyCb = fn
 }
 
@@ -855,19 +858,19 @@ func (c *ClusterCache) SyncListStart() {
 }
 
 func (c *ClusterCache) SyncListEnd() {
-	deleted := make(map[ClusterKey]struct{})
+	deleted := make(map[ClusterKey]*Cluster)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}
