@@ -1646,7 +1646,7 @@ type AppInstCache struct {
 	Objs        map[AppInstKey]*AppInst
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
-	NotifyCb    func(obj *AppInstKey)
+	NotifyCb    func(obj *AppInstKey, old *AppInst)
 	UpdatedCb   func(old *AppInst, new *AppInst)
 	KeyWatchers map[AppInstKey][]*AppInstKeyWatcher
 }
@@ -1693,47 +1693,50 @@ func (c *AppInstCache) GetAllKeys(keys map[AppInstKey]struct{}) {
 
 func (c *AppInstCache) Update(in *AppInst, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &AppInst{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &AppInst{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppInstCache) Delete(in *AppInst, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppInstCache) Prune(validKeys map[AppInstKey]struct{}) {
-	notify := make(map[AppInstKey]struct{})
+	notify := make(map[AppInstKey]*AppInst)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -1762,7 +1765,7 @@ func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error 
 	return nil
 }
 
-func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey)) {
+func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInst)) {
 	c.NotifyCb = fn
 }
 
@@ -1841,19 +1844,19 @@ func (c *AppInstCache) SyncListStart() {
 }
 
 func (c *AppInstCache) SyncListEnd() {
-	deleted := make(map[AppInstKey]struct{})
+	deleted := make(map[AppInstKey]*AppInst)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}
@@ -2203,7 +2206,7 @@ type AppInstInfoCache struct {
 	Objs        map[AppInstKey]*AppInstInfo
 	Mux         util.Mutex
 	List        map[AppInstKey]struct{}
-	NotifyCb    func(obj *AppInstKey)
+	NotifyCb    func(obj *AppInstKey, old *AppInstInfo)
 	UpdatedCb   func(old *AppInstInfo, new *AppInstInfo)
 	KeyWatchers map[AppInstKey][]*AppInstInfoKeyWatcher
 }
@@ -2250,47 +2253,50 @@ func (c *AppInstInfoCache) GetAllKeys(keys map[AppInstKey]struct{}) {
 
 func (c *AppInstInfoCache) Update(in *AppInstInfo, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &AppInstInfo{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &AppInstInfo{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppInstInfoCache) Delete(in *AppInstInfo, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppInstInfoCache) Prune(validKeys map[AppInstKey]struct{}) {
-	notify := make(map[AppInstKey]struct{})
+	notify := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -2302,20 +2308,20 @@ func (c *AppInstInfoCache) GetCount() int {
 	return len(c.Objs)
 }
 func (c *AppInstInfoCache) Flush(notifyId int64) {
-	keys := make([]AppInstKey, 0)
+	flushed := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
+		flushed[key] = c.Objs[key]
 		delete(c.Objs, key)
-		keys = append(keys, key)
 	}
 	c.Mux.Unlock()
-	if len(keys) > 0 {
-		for _, key := range keys {
+	if len(flushed) > 0 {
+		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				c.NotifyCb(&key, old)
 			}
 			c.TriggerKeyWatchers(&key)
 		}
@@ -2339,7 +2345,7 @@ func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) e
 	return nil
 }
 
-func (c *AppInstInfoCache) SetNotifyCb(fn func(obj *AppInstKey)) {
+func (c *AppInstInfoCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInstInfo)) {
 	c.NotifyCb = fn
 }
 
@@ -2418,19 +2424,19 @@ func (c *AppInstInfoCache) SyncListStart() {
 }
 
 func (c *AppInstInfoCache) SyncListEnd() {
-	deleted := make(map[AppInstKey]struct{})
+	deleted := make(map[AppInstKey]*AppInstInfo)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}

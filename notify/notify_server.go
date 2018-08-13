@@ -267,7 +267,7 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *ServerStats {
 	return stats
 }
 
-func (mgr *ServerMgr) UpdateAppInst(key *edgeproto.AppInstKey) {
+func (mgr *ServerMgr) UpdateAppInst(key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
@@ -275,7 +275,7 @@ func (mgr *ServerMgr) UpdateAppInst(key *edgeproto.AppInstKey) {
 	}
 }
 
-func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey) {
+func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey, old *edgeproto.Cloudlet) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
@@ -286,7 +286,7 @@ func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey) {
 	}
 }
 
-func (mgr *ServerMgr) UpdateFlavor(key *edgeproto.FlavorKey) {
+func (mgr *ServerMgr) UpdateFlavor(key *edgeproto.FlavorKey, old *edgeproto.Flavor) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
@@ -297,7 +297,7 @@ func (mgr *ServerMgr) UpdateFlavor(key *edgeproto.FlavorKey) {
 	}
 }
 
-func (mgr *ServerMgr) UpdateClusterFlavor(key *edgeproto.ClusterFlavorKey) {
+func (mgr *ServerMgr) UpdateClusterFlavor(key *edgeproto.ClusterFlavorKey, old *edgeproto.ClusterFlavor) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
@@ -308,7 +308,7 @@ func (mgr *ServerMgr) UpdateClusterFlavor(key *edgeproto.ClusterFlavorKey) {
 	}
 }
 
-func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey) {
+func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {

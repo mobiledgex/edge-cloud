@@ -137,9 +137,10 @@ func (s *CloudletApi) UpdatedCb(old *edgeproto.Cloudlet, new *edgeproto.Cloudlet
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
 			if inst.Key.CloudletKey.Matches(&new.Key) {
+				old := inst
 				inst.CloudletLoc = new.Location
 				if appInstApi.cache.NotifyCb != nil {
-					appInstApi.cache.NotifyCb(inst.GetKey())
+					appInstApi.cache.NotifyCb(inst.GetKey(), old)
 				}
 			}
 		}

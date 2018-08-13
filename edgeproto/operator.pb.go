@@ -603,7 +603,7 @@ type OperatorCache struct {
 	Objs        map[OperatorKey]*Operator
 	Mux         util.Mutex
 	List        map[OperatorKey]struct{}
-	NotifyCb    func(obj *OperatorKey)
+	NotifyCb    func(obj *OperatorKey, old *Operator)
 	UpdatedCb   func(old *Operator, new *Operator)
 	KeyWatchers map[OperatorKey][]*OperatorKeyWatcher
 }
@@ -650,47 +650,50 @@ func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
 
 func (c *OperatorCache) Update(in *Operator, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &Operator{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &Operator{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Operator", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *OperatorCache) Delete(in *Operator, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Operator", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
-	notify := make(map[OperatorKey]struct{})
+	notify := make(map[OperatorKey]*Operator)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -719,7 +722,7 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 	return nil
 }
 
-func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey)) {
+func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey, old *Operator)) {
 	c.NotifyCb = fn
 }
 
@@ -798,19 +801,19 @@ func (c *OperatorCache) SyncListStart() {
 }
 
 func (c *OperatorCache) SyncListEnd() {
-	deleted := make(map[OperatorKey]struct{})
+	deleted := make(map[OperatorKey]*Operator)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}

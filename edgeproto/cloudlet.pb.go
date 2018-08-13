@@ -1269,7 +1269,7 @@ type CloudletCache struct {
 	Objs        map[CloudletKey]*Cloudlet
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
-	NotifyCb    func(obj *CloudletKey)
+	NotifyCb    func(obj *CloudletKey, old *Cloudlet)
 	UpdatedCb   func(old *Cloudlet, new *Cloudlet)
 	KeyWatchers map[CloudletKey][]*CloudletKeyWatcher
 }
@@ -1316,47 +1316,50 @@ func (c *CloudletCache) GetAllKeys(keys map[CloudletKey]struct{}) {
 
 func (c *CloudletCache) Update(in *Cloudlet, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &Cloudlet{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &Cloudlet{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletCache) Delete(in *Cloudlet, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Cloudlet", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletCache) Prune(validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]struct{})
+	notify := make(map[CloudletKey]*Cloudlet)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -1385,7 +1388,7 @@ func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) err
 	return nil
 }
 
-func (c *CloudletCache) SetNotifyCb(fn func(obj *CloudletKey)) {
+func (c *CloudletCache) SetNotifyCb(fn func(obj *CloudletKey, old *Cloudlet)) {
 	c.NotifyCb = fn
 }
 
@@ -1464,19 +1467,19 @@ func (c *CloudletCache) SyncListStart() {
 }
 
 func (c *CloudletCache) SyncListEnd() {
-	deleted := make(map[CloudletKey]struct{})
+	deleted := make(map[CloudletKey]*Cloudlet)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}
@@ -1813,7 +1816,7 @@ type CloudletInfoCache struct {
 	Objs        map[CloudletKey]*CloudletInfo
 	Mux         util.Mutex
 	List        map[CloudletKey]struct{}
-	NotifyCb    func(obj *CloudletKey)
+	NotifyCb    func(obj *CloudletKey, old *CloudletInfo)
 	UpdatedCb   func(old *CloudletInfo, new *CloudletInfo)
 	KeyWatchers map[CloudletKey][]*CloudletInfoKeyWatcher
 }
@@ -1860,47 +1863,50 @@ func (c *CloudletInfoCache) GetAllKeys(keys map[CloudletKey]struct{}) {
 
 func (c *CloudletInfoCache) Update(in *CloudletInfo, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &CloudletInfo{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &CloudletInfo{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletInfoCache) Delete(in *CloudletInfo, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete CloudletInfo", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *CloudletInfoCache) Prune(validKeys map[CloudletKey]struct{}) {
-	notify := make(map[CloudletKey]struct{})
+	notify := make(map[CloudletKey]*CloudletInfo)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -1912,20 +1918,20 @@ func (c *CloudletInfoCache) GetCount() int {
 	return len(c.Objs)
 }
 func (c *CloudletInfoCache) Flush(notifyId int64) {
-	keys := make([]CloudletKey, 0)
+	flushed := make(map[CloudletKey]*CloudletInfo)
 	c.Mux.Lock()
 	for key, val := range c.Objs {
 		if val.NotifyId != notifyId {
 			continue
 		}
+		flushed[key] = c.Objs[key]
 		delete(c.Objs, key)
-		keys = append(keys, key)
 	}
 	c.Mux.Unlock()
-	if len(keys) > 0 {
-		for _, key := range keys {
+	if len(flushed) > 0 {
+		for key, old := range flushed {
 			if c.NotifyCb != nil {
-				c.NotifyCb(&key)
+				c.NotifyCb(&key, old)
 			}
 			c.TriggerKeyWatchers(&key)
 		}
@@ -1949,7 +1955,7 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	return nil
 }
 
-func (c *CloudletInfoCache) SetNotifyCb(fn func(obj *CloudletKey)) {
+func (c *CloudletInfoCache) SetNotifyCb(fn func(obj *CloudletKey, old *CloudletInfo)) {
 	c.NotifyCb = fn
 }
 
@@ -2028,19 +2034,19 @@ func (c *CloudletInfoCache) SyncListStart() {
 }
 
 func (c *CloudletInfoCache) SyncListEnd() {
-	deleted := make(map[CloudletKey]struct{})
+	deleted := make(map[CloudletKey]*CloudletInfo)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}
