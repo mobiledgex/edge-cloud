@@ -511,16 +511,17 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	switch imageType {
 	case ImageTypeDocker: //XXX assume kubernetes
 		data = templateFill{
-			Kind:      "mex-app-kubernetes",
-			Name:      appInst.Key.AppKey.Name,
-			Tags:      appInst.Key.AppKey.Name + "-kubernetes-tag",
-			Key:       clusterInst.Key.ClusterKey.Name,
-			Tenant:    appInst.Key.AppKey.Name + "-tenant",
-			RootLB:    rootLB.Name,
-			Image:     appInst.ImagePath,
-			ImageType: imageType,
-			ProxyPath: appInst.Key.AppKey.Name,
-			AppURI:    appInst.Uri,
+			Kind:        "mex-app-kubernetes",
+			Name:        appInst.Key.AppKey.Name,
+			Tags:        appInst.Key.AppKey.Name + "-kubernetes-tag",
+			Key:         clusterInst.Key.ClusterKey.Name,
+			Tenant:      appInst.Key.AppKey.Name + "-tenant",
+			RootLB:      rootLB.Name,
+			Image:       appInst.ImagePath,
+			ImageType:   imageType,
+			ImageFlavor: appInst.Flavor.Name,
+			ProxyPath:   appInst.Key.AppKey.Name,
+			AppURI:      appInst.Uri,
 			//Port map is now an array of edgeproto.AppPort,
 			//providing public to internal port mappings
 			//Note if the appinst IpSupport is dedicated, this
