@@ -77,9 +77,9 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	updater := edgeproto.App{}
 	updater.Key = testutil.AppData[0].Key
 	newPath := "a new config"
-	updater.ConfigMap = newPath
+	updater.Config = newPath
 	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.AppFieldConfigMap)
+	updater.Fields = append(updater.Fields, edgeproto.AppFieldConfig)
 	_, err := cAppApi.UpdateApp(ctx, &updater)
 	assert.Nil(t, err, "Update app")
 
@@ -90,7 +90,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	assert.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
-		assert.Equal(t, newPath, inst.ConfigMap, "check app inst")
+		assert.Equal(t, newPath, inst.Config, "check app inst")
 	}
 	assert.True(t, len(show.Data) > 0, "number of matching app insts")
 
