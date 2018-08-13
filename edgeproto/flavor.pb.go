@@ -666,7 +666,7 @@ type FlavorCache struct {
 	Objs        map[FlavorKey]*Flavor
 	Mux         util.Mutex
 	List        map[FlavorKey]struct{}
-	NotifyCb    func(obj *FlavorKey)
+	NotifyCb    func(obj *FlavorKey, old *Flavor)
 	UpdatedCb   func(old *Flavor, new *Flavor)
 	KeyWatchers map[FlavorKey][]*FlavorKeyWatcher
 }
@@ -713,47 +713,50 @@ func (c *FlavorCache) GetAllKeys(keys map[FlavorKey]struct{}) {
 
 func (c *FlavorCache) Update(in *Flavor, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &Flavor{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &Flavor{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *FlavorCache) Delete(in *Flavor, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Flavor", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *FlavorCache) Prune(validKeys map[FlavorKey]struct{}) {
-	notify := make(map[FlavorKey]struct{})
+	notify := make(map[FlavorKey]*Flavor)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -782,7 +785,7 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	return nil
 }
 
-func (c *FlavorCache) SetNotifyCb(fn func(obj *FlavorKey)) {
+func (c *FlavorCache) SetNotifyCb(fn func(obj *FlavorKey, old *Flavor)) {
 	c.NotifyCb = fn
 }
 
@@ -861,19 +864,19 @@ func (c *FlavorCache) SyncListStart() {
 }
 
 func (c *FlavorCache) SyncListEnd() {
-	deleted := make(map[FlavorKey]struct{})
+	deleted := make(map[FlavorKey]*Flavor)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}

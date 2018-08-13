@@ -39,11 +39,11 @@ func (d *DummyInfoResponder) SetSimulateFailure(state bool) {
 	d.simulateFailure = state
 }
 
-func (d *DummyInfoResponder) runClusterInstChanged(key *edgeproto.ClusterInstKey) {
+func (d *DummyInfoResponder) runClusterInstChanged(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
 	go d.clusterInstChanged(key)
 }
 
-func (d *DummyInfoResponder) runAppInstChanged(key *edgeproto.AppInstKey) {
+func (d *DummyInfoResponder) runAppInstChanged(key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
 	go d.appInstChanged(key)
 }
 

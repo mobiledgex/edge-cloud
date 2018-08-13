@@ -951,7 +951,7 @@ type AppCache struct {
 	Objs        map[AppKey]*App
 	Mux         util.Mutex
 	List        map[AppKey]struct{}
-	NotifyCb    func(obj *AppKey)
+	NotifyCb    func(obj *AppKey, old *App)
 	UpdatedCb   func(old *App, new *App)
 	KeyWatchers map[AppKey][]*AppKeyWatcher
 }
@@ -998,47 +998,50 @@ func (c *AppCache) GetAllKeys(keys map[AppKey]struct{}) {
 
 func (c *AppCache) Update(in *App, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &App{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &App{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppCache) Delete(in *App, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
-	notify := make(map[AppKey]struct{})
+	notify := make(map[AppKey]*App)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -1067,7 +1070,7 @@ func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
 	return nil
 }
 
-func (c *AppCache) SetNotifyCb(fn func(obj *AppKey)) {
+func (c *AppCache) SetNotifyCb(fn func(obj *AppKey, old *App)) {
 	c.NotifyCb = fn
 }
 
@@ -1146,19 +1149,19 @@ func (c *AppCache) SyncListStart() {
 }
 
 func (c *AppCache) SyncListEnd() {
-	deleted := make(map[AppKey]struct{})
+	deleted := make(map[AppKey]*App)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}

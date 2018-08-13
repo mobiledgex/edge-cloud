@@ -588,21 +588,21 @@ func (s *Client) logDisconnect(err error) {
 	}
 }
 
-func (s *Client) UpdateAppInstInfo(key *edgeproto.AppInstKey) {
+func (s *Client) UpdateAppInstInfo(key *edgeproto.AppInstKey, old *edgeproto.AppInstInfo) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.appInstInfos[*key] = struct{}{}
 	s.wakeupSend()
 }
 
-func (s *Client) UpdateClusterInstInfo(key *edgeproto.ClusterInstKey) {
+func (s *Client) UpdateClusterInstInfo(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInstInfo) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.clusterInstInfos[*key] = struct{}{}
 	s.wakeupSend()
 }
 
-func (s *Client) UpdateCloudletInfo(key *edgeproto.CloudletKey) {
+func (s *Client) UpdateCloudletInfo(key *edgeproto.CloudletKey, old *edgeproto.CloudletInfo) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cloudletInfos[*key] = struct{}{}

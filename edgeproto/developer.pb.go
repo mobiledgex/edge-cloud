@@ -693,7 +693,7 @@ type DeveloperCache struct {
 	Objs        map[DeveloperKey]*Developer
 	Mux         util.Mutex
 	List        map[DeveloperKey]struct{}
-	NotifyCb    func(obj *DeveloperKey)
+	NotifyCb    func(obj *DeveloperKey, old *Developer)
 	UpdatedCb   func(old *Developer, new *Developer)
 	KeyWatchers map[DeveloperKey][]*DeveloperKeyWatcher
 }
@@ -740,47 +740,50 @@ func (c *DeveloperCache) GetAllKeys(keys map[DeveloperKey]struct{}) {
 
 func (c *DeveloperCache) Update(in *Developer, rev int64) {
 	c.Mux.Lock()
-	if c.UpdatedCb != nil {
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
 		old := c.Objs[in.Key]
-		new := &Developer{}
-		*new = *in
-		defer c.UpdatedCb(old, new)
+		if c.UpdatedCb != nil {
+			new := &Developer{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
 	c.Objs[in.Key] = in
 	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", in, "rev", rev)
 	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
-	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 	c.Mux.Lock()
+	old := c.Objs[in.Key]
 	delete(c.Objs, in.Key)
 	log.DebugLog(log.DebugLevelApi, "SyncDelete Developer", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key)
+		c.NotifyCb(&in.Key, old)
 	}
 	c.TriggerKeyWatchers(&in.Key)
 }
 
 func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
-	notify := make(map[DeveloperKey]struct{})
+	notify := make(map[DeveloperKey]*Developer)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
 		if _, ok := validKeys[key]; !ok {
-			delete(c.Objs, key)
 			if c.NotifyCb != nil {
-				notify[key] = struct{}{}
+				notify[key] = c.Objs[key]
 			}
+			delete(c.Objs, key)
 		}
 	}
 	c.Mux.Unlock()
-	for key, _ := range notify {
+	for key, old := range notify {
 		if c.NotifyCb != nil {
-			c.NotifyCb(&key)
+			c.NotifyCb(&key, old)
 		}
 		c.TriggerKeyWatchers(&key)
 	}
@@ -809,7 +812,7 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	return nil
 }
 
-func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey)) {
+func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey, old *Developer)) {
 	c.NotifyCb = fn
 }
 
@@ -888,19 +891,19 @@ func (c *DeveloperCache) SyncListStart() {
 }
 
 func (c *DeveloperCache) SyncListEnd() {
-	deleted := make(map[DeveloperKey]struct{})
+	deleted := make(map[DeveloperKey]*Developer)
 	c.Mux.Lock()
-	for key, _ := range c.Objs {
+	for key, val := range c.Objs {
 		if _, found := c.List[key]; !found {
+			deleted[key] = val
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
 	}
 	c.List = nil
 	c.Mux.Unlock()
 	if c.NotifyCb != nil {
-		for key, _ := range deleted {
-			c.NotifyCb(&key)
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
 			c.TriggerKeyWatchers(&key)
 		}
 	}
