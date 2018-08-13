@@ -224,7 +224,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
-			err := MEXDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			err := MEXDeleteAppInst(cd.CRMRootLB, &clusterInst, old)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, errstr)

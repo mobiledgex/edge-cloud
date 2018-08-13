@@ -1663,9 +1663,9 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name for kubernetes deployment")
 	}
-	if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
-		return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
-	}
+	//if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
+	//	return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
+	//}
 	if mf.Spec.Key == "" {
 		return fmt.Errorf("empty kubernetes cluster name")
 	}
