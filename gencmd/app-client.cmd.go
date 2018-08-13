@@ -15,6 +15,7 @@ It has these top-level messages:
 	Match_Engine_Loc_Verify
 	Match_Engine_Loc
 	Match_Engine_Status
+	Appinstance
 	CloudletLocation
 	Match_Engine_Cloudlet_List
 	DynamicLocGroupAdd
@@ -425,6 +426,45 @@ func Match_Engine_StatusWriteOutputOne(obj *distributed_match_engine.Match_Engin
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func AppinstanceSlicer(in *distributed_match_engine.Appinstance) []string {
+	s := make([]string, 0, 3)
+	s = append(s, in.Appname)
+	s = append(s, in.Appversion)
+	s = append(s, in.Uri)
+	return s
+}
+
+func AppinstanceHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Appname")
+	s = append(s, "Appversion")
+	s = append(s, "Uri")
+	return s
+}
+
+func AppinstanceWriteOutputArray(objs []*distributed_match_engine.Appinstance) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppinstanceHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppinstanceSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppinstanceWriteOutputOne(obj *distributed_match_engine.Appinstance) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppinstanceHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppinstanceSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []string {
 	s := make([]string, 0, 5)
 	s = append(s, in.CarrierName)
@@ -445,7 +485,15 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
 	s = append(s, _GpsLocation_TimestampTime.String())
 	s = append(s, strconv.FormatFloat(float64(in.Distance), 'e', -1, 32))
-	s = append(s, in.Uri)
+	if in.Appinstances == nil {
+		in.Appinstances = make([]*distributed_match_engine.Appinstance, 1)
+	}
+	if in.Appinstances[0] == nil {
+		in.Appinstances[0] = &distributed_match_engine.Appinstance{}
+	}
+	s = append(s, in.Appinstances[0].Appname)
+	s = append(s, in.Appinstances[0].Appversion)
+	s = append(s, in.Appinstances[0].Uri)
 	return s
 }
 
@@ -462,7 +510,9 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Speed")
 	s = append(s, "GpsLocation-Timestamp")
 	s = append(s, "Distance")
-	s = append(s, "Uri")
+	s = append(s, "Appinstances-Appname")
+	s = append(s, "Appinstances-Appversion")
+	s = append(s, "Appinstances-Uri")
 	return s
 }
 
@@ -517,7 +567,15 @@ func Match_Engine_Cloudlet_ListSlicer(in *distributed_match_engine.Match_Engine_
 	_Cloudlets_0__GpsLocation_TimestampTime := time.Unix(in.Cloudlets[0].GpsLocation.Timestamp.Seconds, int64(in.Cloudlets[0].GpsLocation.Timestamp.Nanos))
 	s = append(s, _Cloudlets_0__GpsLocation_TimestampTime.String())
 	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].Distance), 'e', -1, 32))
-	s = append(s, in.Cloudlets[0].Uri)
+	if in.Cloudlets[0].Appinstances == nil {
+		in.Cloudlets[0].Appinstances = make([]*distributed_match_engine.Appinstance, 1)
+	}
+	if in.Cloudlets[0].Appinstances[0] == nil {
+		in.Cloudlets[0].Appinstances[0] = &distributed_match_engine.Appinstance{}
+	}
+	s = append(s, in.Cloudlets[0].Appinstances[0].Appname)
+	s = append(s, in.Cloudlets[0].Appinstances[0].Appversion)
+	s = append(s, in.Cloudlets[0].Appinstances[0].Uri)
 	return s
 }
 
@@ -536,7 +594,9 @@ func Match_Engine_Cloudlet_ListHeaderSlicer() []string {
 	s = append(s, "Cloudlets-GpsLocation-Speed")
 	s = append(s, "Cloudlets-GpsLocation-Timestamp")
 	s = append(s, "Cloudlets-Distance")
-	s = append(s, "Cloudlets-Uri")
+	s = append(s, "Cloudlets-Appinstances-Appname")
+	s = append(s, "Cloudlets-Appinstances-Appversion")
+	s = append(s, "Cloudlets-Appinstances-Uri")
 	return s
 }
 
