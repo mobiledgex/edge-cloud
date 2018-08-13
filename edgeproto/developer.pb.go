@@ -29,8 +29,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 type DeveloperKey struct {
-	// bytes fields = 1;
 	// Organization or Company Name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -40,16 +40,19 @@ func (m *DeveloperKey) String() string            { return proto.CompactTextStri
 func (*DeveloperKey) ProtoMessage()               {}
 func (*DeveloperKey) Descriptor() ([]byte, []int) { return fileDescriptorDeveloper, []int{0} }
 
+// A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
+// Creating a developer identity is likely the first step of (self-)registering a new customer.
+// TODO: user management, auth, etc is not implemented yet.
 type Developer struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key DeveloperKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// auth scheme plus generic hash instead of user/pass
-	// Login name
+	// Login name (TODO)
 	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	// encrypted password
+	// Encrypted password (TODO)
 	Passhash string `protobuf:"bytes,4,opt,name=passhash,proto3" json:"passhash,omitempty"`
-	// Address
+	// Physical address
 	Address string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
 	// Contact email
 	Email string `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`
@@ -94,9 +97,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DeveloperApi service
 
 type DeveloperApiClient interface {
+	// Create a Developer
 	CreateDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Delete a Developer
 	DeleteDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Update a Developer
 	UpdateDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Show Developers
 	ShowDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (DeveloperApi_ShowDeveloperClient, error)
 }
 
@@ -170,9 +177,13 @@ func (x *developerApiShowDeveloperClient) Recv() (*Developer, error) {
 // Server API for DeveloperApi service
 
 type DeveloperApiServer interface {
+	// Create a Developer
 	CreateDeveloper(context.Context, *Developer) (*Result, error)
+	// Delete a Developer
 	DeleteDeveloper(context.Context, *Developer) (*Result, error)
+	// Update a Developer
 	UpdateDeveloper(context.Context, *Developer) (*Result, error)
+	// Show Developers
 	ShowDeveloper(*Developer, DeveloperApi_ShowDeveloperServer) error
 }
 
