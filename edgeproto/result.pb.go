@@ -15,9 +15,12 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead.
 type Result struct {
+	// Message, may be success or failure message
 	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	Code    int32  `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
+	// Error code, 0 indicates success, non-zero indicates failure (not implemented)
+	Code int32 `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
 }
 
 func (m *Result) Reset()                    { *m = Result{} }

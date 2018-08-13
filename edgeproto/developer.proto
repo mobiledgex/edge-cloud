@@ -8,8 +8,8 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 message DeveloperKey {
-  //bytes fields = 1;
   // Organization or Company Name
   string name = 2;
   option (protogen.generate_matches) = true;
@@ -17,16 +17,19 @@ message DeveloperKey {
   option (gogoproto.gostring) = true;
 }
 
+// A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
+// Creating a developer identity is likely the first step of (self-)registering a new customer.
+// TODO: user management, auth, etc is not implemented yet.
 message Developer {
+  // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
   DeveloperKey key = 2 [(gogoproto.nullable) = false];
-  // auth scheme plus generic hash instead of user/pass
-  // Login name
+  // Login name (TODO)
   string username = 3;
-  // encrypted password
+  // Encrypted password (TODO)
   string passhash = 4;
-  // Address
+  // Physical address
   string address = 5;
   // Contact email
   string email = 6 [(protogen.test_update) = true];
@@ -38,24 +41,28 @@ message Developer {
 }
 
 service DeveloperApi {
+  // Create a Developer
   rpc CreateDeveloper(Developer) returns (Result) {
     option (google.api.http) = {
       post: "/create/developer"
       body: "*"
     };
   }
+  // Delete a Developer
   rpc DeleteDeveloper(Developer) returns (Result) {
     option (google.api.http) = {
       post: "/delete/developer"
       body: "*"
     };
   }
+  // Update a Developer
   rpc UpdateDeveloper(Developer) returns (Result) {
     option (google.api.http) = {
       post: "/update/developer"
       body: "*"
     };
   }
+  // Show Developers
   rpc ShowDeveloper(Developer) returns (stream Developer) {
     option (google.api.http) = {
       post: "/show/developer"

@@ -231,14 +231,14 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.ImagePath != new.ImagePath || old.ImageType != new.ImageType ||
-		old.ConfigMap != new.ConfigMap {
+		old.Config != new.Config {
 		log.DebugLog(log.DebugLevelApi, "updating image path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
 			if inst.Key.AppKey.Matches(&new.Key) {
 				inst.ImagePath = new.ImagePath
 				inst.ImageType = new.ImageType
-				inst.ConfigMap = new.ConfigMap
+				inst.Config = new.Config
 				// TODO: update mapped ports if needed
 				if appInstApi.cache.NotifyCb != nil {
 					appInstApi.cache.NotifyCb(inst.GetKey())

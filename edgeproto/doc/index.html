@@ -1,0 +1,3521 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Protocol Documentation</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <style>
+      body {
+        width: 60em;
+        margin: 1em auto;
+        color: #222;
+        font-family: "Ubuntu", sans-serif;
+        padding-bottom: 4em;
+      }
+
+      h1 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      h2 {
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+        margin: 1.5em 0;
+      }
+
+      h3 {
+        font-weight: normal;
+        border-bottom: 1px solid #aaa;
+        padding-bottom: 0.5ex;
+      }
+
+      a {
+        text-decoration: none;
+        color: #567e25;
+      }
+
+      table {
+        width: 100%;
+        font-size: 80%;
+        border-collapse: collapse;
+      }
+
+      thead {
+        font-weight: 700;
+        background-color: #dcdcdc;
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: #fbfbfb;
+      }
+
+      td {
+        border: 1px solid #ccc;
+        padding: 0.5ex 2ex;
+      }
+
+      td p {
+        text-indent: 1em;
+        margin: 0;
+      }
+
+      td p:nth-child(1) {
+        text-indent: 0;  
+      }
+
+       
+      .field-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .field-table td:nth-child(3) {  
+        width: 6em;
+      }
+      .field-table td:nth-child(4) {  
+        width: auto;
+      }
+
+       
+      .extension-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(3) {  
+        width: 10em;
+      }
+      .extension-table td:nth-child(4) {  
+        width: 5em;
+      }
+      .extension-table td:nth-child(5) {  
+        width: auto;
+      }
+
+       
+      .enum-table td:nth-child(1) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(2) {  
+        width: 10em;
+      }
+      .enum-table td:nth-child(3) {  
+        width: auto;
+      }
+
+       
+      .scalar-value-types-table tr {
+        height: 3em;
+      }
+
+       
+      #toc-container ul {
+        list-style-type: none;
+        padding-left: 1em;
+        line-height: 180%;
+        margin: 0;
+      }
+      #toc > li > a {
+        font-weight: bold;
+      }
+
+       
+      .file-heading {
+        width: 100%;
+        display: table;
+        border-bottom: 1px solid #aaa;
+        margin: 4em 0 1.5em 0;
+      }
+      .file-heading h2 {
+        border: none;
+        display: table-cell;
+      }
+      .file-heading a {
+        text-align: right;
+        display: table-cell;
+      }
+
+       
+      .badge {
+        width: 1.6em;
+        height: 1.6em;
+        display: inline-block;
+
+        line-height: 1.6em;
+        text-align: center;
+        font-weight: bold;
+        font-size: 60%;
+
+        color: #89ba48;
+        background-color: #dff0c8;
+
+        margin: 0.5ex 1em 0.5ex -1em;
+        border: 1px solid #fbfbfb;
+        border-radius: 1ex;
+      }
+    </style>
+
+    
+    <link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+  </head>
+
+  <body>
+
+    <h1 id="title">Protocol Documentation</h1>
+
+    <h2>Table of Contents</h2>
+
+    <div id="toc-container">
+      <ul id="toc">
+        
+          
+          <li>
+            <a href="#app.proto">app.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.App"><span class="badge">M</span>App</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppKey"><span class="badge">M</span>AppKey</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.AccessLayer"><span class="badge">E</span>AccessLayer</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ImageType"><span class="badge">E</span>ImageType</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.AppApi"><span class="badge">S</span>AppApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#app_inst.proto">app_inst.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.AppInst"><span class="badge">M</span>AppInst</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppInstInfo"><span class="badge">M</span>AppInstInfo</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppInstKey"><span class="badge">M</span>AppInstKey</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppInstMetrics"><span class="badge">M</span>AppInstMetrics</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppPort"><span class="badge">M</span>AppPort</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.AppState"><span class="badge">E</span>AppState</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.AppInstApi"><span class="badge">S</span>AppInstApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppInstInfoApi"><span class="badge">S</span>AppInstInfoApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.AppInstMetricsApi"><span class="badge">S</span>AppInstMetricsApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#cloud-resource-manager.proto">cloud-resource-manager.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.CloudResource"><span class="badge">M</span>CloudResource</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.EdgeCloudApp"><span class="badge">M</span>EdgeCloudApp</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.EdgeCloudApplication"><span class="badge">M</span>EdgeCloudApplication</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.CloudResourceCategory"><span class="badge">E</span>CloudResourceCategory</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.CloudResourceManager"><span class="badge">S</span>CloudResourceManager</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#cloudlet.proto">cloudlet.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Cloudlet"><span class="badge">M</span>Cloudlet</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletInfo"><span class="badge">M</span>CloudletInfo</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletKey"><span class="badge">M</span>CloudletKey</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletMetrics"><span class="badge">M</span>CloudletMetrics</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.CloudletState"><span class="badge">E</span>CloudletState</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.CloudletApi"><span class="badge">S</span>CloudletApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletInfoApi"><span class="badge">S</span>CloudletInfoApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletMetricsApi"><span class="badge">S</span>CloudletMetricsApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#cluster.proto">cluster.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Cluster"><span class="badge">M</span>Cluster</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterKey"><span class="badge">M</span>ClusterKey</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.ClusterApi"><span class="badge">S</span>ClusterApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#clusterflavor.proto">clusterflavor.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.ClusterFlavor"><span class="badge">M</span>ClusterFlavor</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterFlavorKey"><span class="badge">M</span>ClusterFlavorKey</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.ClusterFlavorApi"><span class="badge">S</span>ClusterFlavorApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#clusterinst.proto">clusterinst.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.ClusterInst"><span class="badge">M</span>ClusterInst</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterInstInfo"><span class="badge">M</span>ClusterInstInfo</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterInstKey"><span class="badge">M</span>ClusterInstKey</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.ClusterState"><span class="badge">E</span>ClusterState</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.ClusterInstApi"><span class="badge">S</span>ClusterInstApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterInstInfoApi"><span class="badge">S</span>ClusterInstInfoApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#common.proto">common.proto</a>
+            <ul>
+              
+              
+                <li>
+                  <a href="#edgeproto.IpSupport"><span class="badge">E</span>IpSupport</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.L4Proto"><span class="badge">E</span>L4Proto</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.Liveness"><span class="badge">E</span>Liveness</a>
+                </li>
+              
+              
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#developer.proto">developer.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Developer"><span class="badge">M</span>Developer</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.DeveloperKey"><span class="badge">M</span>DeveloperKey</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.DeveloperApi"><span class="badge">S</span>DeveloperApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#flavor.proto">flavor.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Flavor"><span class="badge">M</span>Flavor</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.FlavorKey"><span class="badge">M</span>FlavorKey</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.FlavorApi"><span class="badge">S</span>FlavorApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#notice.proto">notice.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.NoticeReply"><span class="badge">M</span>NoticeReply</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.NoticeRequest"><span class="badge">M</span>NoticeRequest</a>
+                </li>
+              
+              
+                <li>
+                  <a href="#edgeproto.NoticeAction"><span class="badge">E</span>NoticeAction</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.NoticeRequestor"><span class="badge">E</span>NoticeRequestor</a>
+                </li>
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.NotifyApi"><span class="badge">S</span>NotifyApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#operator.proto">operator.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Operator"><span class="badge">M</span>Operator</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.OperatorKey"><span class="badge">M</span>OperatorKey</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.OperatorApi"><span class="badge">S</span>OperatorApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#refs.proto">refs.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.CloudletRefs"><span class="badge">M</span>CloudletRefs</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.CloudletRefs.RootLbPortsEntry"><span class="badge">M</span>CloudletRefs.RootLbPortsEntry</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterRefs"><span class="badge">M</span>ClusterRefs</a>
+                </li>
+              
+              
+              
+              
+                <li>
+                  <a href="#edgeproto.CloudletRefsApi"><span class="badge">S</span>CloudletRefsApi</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.ClusterRefsApi"><span class="badge">S</span>ClusterRefsApi</a>
+                </li>
+              
+            </ul>
+          </li>
+        
+          
+          <li>
+            <a href="#result.proto">result.proto</a>
+            <ul>
+              
+                <li>
+                  <a href="#edgeproto.Result"><span class="badge">M</span>Result</a>
+                </li>
+              
+              
+              
+              
+            </ul>
+          </li>
+        
+        <li><a href="#scalar-value-types">Scalar Value Types</a></li>
+      </ul>
+    </div>
+
+    
+      
+      <div class="file-heading">
+        <h2 id="app.proto">app.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.App">App</h3>
+        <p>Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.</p><p>An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.AppKey">AppKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>image_path</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Path to the application container or VM on image repo </p></td>
+                </tr>
+              
+                <tr>
+                  <td>image_type</td>
+                  <td><a href="#edgeproto.ImageType">ImageType</a></td>
+                  <td></td>
+                  <td><p>Image type (see ImageType) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>access_layer</td>
+                  <td><a href="#edgeproto.AccessLayer">AccessLayer</a></td>
+                  <td></td>
+                  <td><p>Access layer(s) (see AccessLayer) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>access_ports</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>For Layer4 access, the ports the app listens on.
+This is a comma separated list of protocol:port pairs, i.e.
+tcp:80,tcp:443,udp:10002.
+Only tcp and udp protocols are supported. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>config_map</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Initial config passed to image (docker only?).
+is this a string format of the file or a pointer to the
+file stored elsewhere? </p></td>
+                </tr>
+              
+                <tr>
+                  <td>default_flavor</td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
+                  <td></td>
+                  <td><p>Default flavor for the App, may be overridden by the AppInst </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cluster</td>
+                  <td><a href="#edgeproto.ClusterKey">ClusterKey</a></td>
+                  <td></td>
+                  <td><p>Cluster on which the App can be instantiated.
+If not specified during create, a cluster will be automatically created.
+If specified, it must exist. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppKey">AppKey</h3>
+        <p>AppKey uniquely identifies an Application.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>developer_key</td>
+                  <td><a href="#edgeproto.DeveloperKey">DeveloperKey</a></td>
+                  <td></td>
+                  <td><p>Developer key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Application name </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Version of the app </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.AccessLayer">AccessLayer</h3>
+        <p>AccessLayer defines what layers are exposed for the application.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>AccessLayerUnknown</td>
+                <td>0</td>
+                <td><p>No external access for the application</p></td>
+              </tr>
+            
+              <tr>
+                <td>AccessLayerL4</td>
+                <td>1</td>
+                <td><p>Layer 4 (tcp/udp) access</p></td>
+              </tr>
+            
+              <tr>
+                <td>AccessLayerL7</td>
+                <td>2</td>
+                <td><p>Layer 7 (https path) access</p></td>
+              </tr>
+            
+              <tr>
+                <td>AccessLayerL4L7</td>
+                <td>3</td>
+                <td><p>Both layer 4 and layer 4 access</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.ImageType">ImageType</h3>
+        <p>ImageType specifies the image type of the application.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ImageTypeUnknown</td>
+                <td>0</td>
+                <td><p>Unknown image type</p></td>
+              </tr>
+            
+              <tr>
+                <td>ImageTypeDocker</td>
+                <td>1</td>
+                <td><p>Docker container image type</p></td>
+              </tr>
+            
+              <tr>
+                <td>ImageTypeQCOW</td>
+                <td>2</td>
+                <td><p>QCOW2 virtual machine image type</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.AppApi">AppApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateApp</td>
+                <td><a href="#edgeproto.App">App</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create an application</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteApp</td>
+                <td><a href="#edgeproto.App">App</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete an application</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateApp</td>
+                <td><a href="#edgeproto.App">App</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update an application</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowApp</td>
+                <td><a href="#edgeproto.App">App</a></td>
+                <td><a href="#edgeproto.App">App</a></td>
+                <td><p>Show applications. Any fields specified will be used to filter results.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="app_inst.proto">app_inst.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.AppInst">AppInst</h3>
+        <p>AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.</p><p>When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.</p><p>Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudlet_loc</td>
+                  <td><a href="#distributed_match_engine.Loc">distributed_match_engine.Loc</a></td>
+                  <td></td>
+                  <td><p>Cached location of the cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>uri</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>URI to connect to this instance </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cluster_inst_key</td>
+                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
+                  <td></td>
+                  <td><p>Cluster instance on which this is instatiated (not specifiable by user) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>liveness</td>
+                  <td><a href="#edgeproto.Liveness">Liveness</a></td>
+                  <td></td>
+                  <td><p>Liveness of instance (see Liveness) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>image_path</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Path to image to be able to download image </p></td>
+                </tr>
+              
+                <tr>
+                  <td>image_type</td>
+                  <td><a href="#edgeproto.ImageType">ImageType</a></td>
+                  <td></td>
+                  <td><p>Image type (see ImageType) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>mapped_ports</td>
+                  <td><a href="#edgeproto.AppPort">AppPort</a></td>
+                  <td>repeated</td>
+                  <td><p>For instances accessible via a shared load balancer, defines the external
+ports on the shared load balancer that map to the internal ports
+External ports should be appended to the Uri for L4 access. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>mapped_path</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Mapped path to append to Uri for public access.
+Only valid for L7 access types. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>config_map</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Initial config passed to docker </p></td>
+                </tr>
+              
+                <tr>
+                  <td>flavor</td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
+                  <td></td>
+                  <td><p>Flavor defining resource requirements </p></td>
+                </tr>
+              
+                <tr>
+                  <td>access_layer</td>
+                  <td><a href="#edgeproto.AccessLayer">AccessLayer</a></td>
+                  <td></td>
+                  <td><p>Access layer(s) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppInstInfo">AppInstInfo</h3>
+        <p>AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>notify_id</td>
+                  <td><a href="#int64">int64</a></td>
+                  <td></td>
+                  <td><p>Id of client assigned by server (internal use only) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>state</td>
+                  <td><a href="#edgeproto.AppState">AppState</a></td>
+                  <td></td>
+                  <td><p>Current state of the AppInst on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>errors</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Any errors trying to create, update, or delete the AppInst on the Cloudlet </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppInstKey">AppInstKey</h3>
+        <p>AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>app_key</td>
+                  <td><a href="#edgeproto.AppKey">AppKey</a></td>
+                  <td></td>
+                  <td><p>App key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudlet_key</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p>Cloudlet on which the App is instantiated </p></td>
+                </tr>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#fixed64">fixed64</a></td>
+                  <td></td>
+                  <td><p>Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppInstMetrics">AppInstMetrics</h3>
+        <p>(TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>something</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>what goes here?
+Note that metrics for grpc calls can be done by a prometheus
+interceptor in grpc, so adding call metrics here may be
+redundant unless they&#39;re needed for billing. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppPort">AppPort</h3>
+        <p>AppPort describes an L4 public access port mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>proto</td>
+                  <td><a href="#edgeproto.L4Proto">L4Proto</a></td>
+                  <td></td>
+                  <td><p>TCP or UDP protocol </p></td>
+                </tr>
+              
+                <tr>
+                  <td>internal_port</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>Container port </p></td>
+                </tr>
+              
+                <tr>
+                  <td>public_port</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>Public facing port (may be mapped on shared LB reverse proxy) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.AppState">AppState</h3>
+        <p>AppState defines the state of the AppInst. This state is defined both by the state on the Controller, and the state on the Cloudlet where the AppInst is instantiated. Some of the states are intermediate states to denote a change in progress.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>AppStateUnknown</td>
+                <td>0</td>
+                <td><p>AppInst state unknown</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateBuilding</td>
+                <td>1</td>
+                <td><p>AppInst state in the process of being created</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateReady</td>
+                <td>2</td>
+                <td><p>AppInst state created and ready</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateErrors</td>
+                <td>3</td>
+                <td><p>AppInst change encountered errors, see Errors field of AppInstInfo</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateDeleting</td>
+                <td>4</td>
+                <td><p>AppInst in the process of being deleted</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateDeleted</td>
+                <td>5</td>
+                <td><p>AppInst was deleted</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateChanging</td>
+                <td>6</td>
+                <td><p>AppInst in the process of being updated</p></td>
+              </tr>
+            
+              <tr>
+                <td>AppStateNotPresent</td>
+                <td>7</td>
+                <td><p>AppInst is not present</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.AppInstApi">AppInstApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateAppInst</td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create an application instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteAppInst</td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete an application instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateAppInst</td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update an application instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowAppInst</td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><p>Show application instances. Any fields specified will be used to filter results.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.AppInstInfoApi">AppInstInfoApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowAppInstInfo</td>
+                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
+                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
+                <td><p>Show application instances state.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.AppInstMetricsApi">AppInstMetricsApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowAppInstMetrics</td>
+                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
+                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
+                <td><p>Show application instance metrics.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="cloud-resource-manager.proto">cloud-resource-manager.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.CloudResource">CloudResource</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>category</td>
+                  <td><a href="#edgeproto.CloudResourceCategory">CloudResourceCategory</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudletKey</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>active</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>id</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>access_ip</td>
+                  <td><a href="#bytes">bytes</a></td>
+                  <td></td>
+                  <td><p>AccessIp should come from the cloudlet, but for testing it
+is configurable here. This will need to be removed later. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.EdgeCloudApp">EdgeCloudApp</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>repository</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>image</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cpu</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>memory</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>limitfactor</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>exposure</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>replicas</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>context</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>namespace</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>region</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>flavor</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>network</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>appInstKey</td>
+                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.EdgeCloudApplication">EdgeCloudApplication</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>manifest</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>kind</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>apps</td>
+                  <td><a href="#edgeproto.EdgeCloudApp">EdgeCloudApp</a></td>
+                  <td>repeated</td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.CloudResourceCategory">CloudResourceCategory</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>AllCloudResources</td>
+                <td>0</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>Kubernetes</td>
+                <td>200</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>k8s</td>
+                <td>200</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>Mesos</td>
+                <td>201</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>AWS</td>
+                <td>202</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>GCP</td>
+                <td>203</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>Azure</td>
+                <td>204</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>DigitalOcean</td>
+                <td>205</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>PacketNet</td>
+                <td>206</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>OpenStack</td>
+                <td>300</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>Docker</td>
+                <td>301</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>EKS</td>
+                <td>400</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>AKS</td>
+                <td>402</td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>GKS</td>
+                <td>403</td>
+                <td><p></p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.CloudResourceManager">CloudResourceManager</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ListCloudResource</td>
+                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
+                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>AddCloudResource</td>
+                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteCloudResource</td>
+                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>DeployApplication</td>
+                <td><a href="#edgeproto.EdgeCloudApplication">EdgeCloudApplication</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p></p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteApplication</td>
+                <td><a href="#edgeproto.EdgeCloudApplication">EdgeCloudApplication</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p></p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="cloudlet.proto">cloudlet.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Cloudlet">Cloudlet</h3>
+        <p>A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.</p><p>A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>access_uri</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>URI to use to connect to and create and administer the Cloudlet. This is not the URI for applications clients to access their back-end instances. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>location</td>
+                  <td><a href="#distributed_match_engine.Loc">distributed_match_engine.Loc</a></td>
+                  <td></td>
+                  <td><p>Location of the Cloudlet site </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ip_support</td>
+                  <td><a href="#edgeproto.IpSupport">IpSupport</a></td>
+                  <td></td>
+                  <td><p>Type of IP support provided by Cloudlet (see IpSupport) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>static_ips</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>List of static IPs for static IP support </p></td>
+                </tr>
+              
+                <tr>
+                  <td>num_dynamic_ips</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>Number of dynamic IPs available for dynamic IP support
+
+Certs for accessing cloudlet site </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.CloudletInfo">CloudletInfo</h3>
+        <p>CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>state</td>
+                  <td><a href="#edgeproto.CloudletState">CloudletState</a></td>
+                  <td></td>
+                  <td><p>State of cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>notify_id</td>
+                  <td><a href="#int64">int64</a></td>
+                  <td></td>
+                  <td><p>Id of client assigned by server (internal use only) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>os_max_ram</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Maximum Ram in MB on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>os_max_vcores</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Maximum number of VCPU cores on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>os_max_vol_gb</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Maximum amount of disk in GB on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>errors</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Any errors encountered while making changes to the Cloudlet </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.CloudletKey">CloudletKey</h3>
+        <p>CloudletKey uniquely identifies a Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>operator_key</td>
+                  <td><a href="#edgeproto.OperatorKey">OperatorKey</a></td>
+                  <td></td>
+                  <td><p>Operator of the cloudlet site </p></td>
+                </tr>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Name of the cloudlet </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.CloudletMetrics">CloudletMetrics</h3>
+        <p>(TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>foo</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>what goes here? </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.CloudletState">CloudletState</h3>
+        <p>CloudletState is the state of the Cloudlet.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CloudletStateUnknown</td>
+                <td>0</td>
+                <td><p>Unknown</p></td>
+              </tr>
+            
+              <tr>
+                <td>CloudletStateErrors</td>
+                <td>1</td>
+                <td><p>Create/Delete/Update encountered errors (see Errors field of CloudletInfo)</p></td>
+              </tr>
+            
+              <tr>
+                <td>CloudletStateReady</td>
+                <td>2</td>
+                <td><p>Cloudlet is created and ready</p></td>
+              </tr>
+            
+              <tr>
+                <td>CloudletStateOffline</td>
+                <td>3</td>
+                <td><p>Cloudlet is offline (unreachable)</p></td>
+              </tr>
+            
+              <tr>
+                <td>CloudletStateNotPresent</td>
+                <td>4</td>
+                <td><p>Cloudlet is not present</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.CloudletApi">CloudletApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateCloudlet</td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a Cloudlet</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteCloudlet</td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a Cloudlet</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateCloudlet</td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a Cloudlet</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowCloudlet</td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><p>Show Cloudlets</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.CloudletInfoApi">CloudletInfoApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowCloudletInfo</td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                <td><p>Show CloudletInfos</p></td>
+              </tr>
+            
+              <tr>
+                <td>InjectCloudletInfo</td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Inject (create) a CloudletInfo for regression testing</p></td>
+              </tr>
+            
+              <tr>
+                <td>EvictCloudletInfo</td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Evict (delete) a CloudletInfo for regression testing</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.CloudletMetricsApi">CloudletMetricsApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowCloudletMetrics</td>
+                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
+                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
+                <td><p>Show Cloudlet metrics</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="cluster.proto">cluster.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Cluster">Cluster</h3>
+        <p>Clusters define a set of resources that are provided to one or more Apps tied to the cluster. The set of resources is defined by the Cluster flavor. The Cluster definition here is analogous to a Kubernetes cluster.</p><p>Like Apps, a Cluster is merely a definition, but is not instantiated on any Cloudlets. ClusterInsts are Clusters instantiated on a particular Cloudlet.</p><p>In comparison to ClusterFlavors which are fairly static and controller by administrators, Clusters are much more dynamic and created and deleted by the user.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.ClusterKey">ClusterKey</a></td>
+                  <td></td>
+                  <td><p>Unique key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>default_flavor</td>
+                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
+                  <td></td>
+                  <td><p>Default flavor of the Cluster, may be overridden on the ClusterInst </p></td>
+                </tr>
+              
+                <tr>
+                  <td>auto</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>Auto is set to true when automatically created by back-end (internal use only) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ClusterKey">ClusterKey</h3>
+        <p>ClusterKey uniquely identifies a Cluster.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Cluster name </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.ClusterApi">ClusterApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateCluster</td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a Cluster</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteCluster</td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a Cluster</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateCluster</td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a Cluster</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowCluster</td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><p>Show Clusters</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="clusterflavor.proto">clusterflavor.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.ClusterFlavor">ClusterFlavor</h3>
+        <p>ClusterFlavor defines a set of resources for a Cluster. ClusterFlavors should be fairly static objects that are almost never changed, and are only modified by Mobiledgex administrators.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
+                  <td></td>
+                  <td><p>Unique key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>node_flavor</td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
+                  <td></td>
+                  <td><p>Flavor of each node in the Cluster </p></td>
+                </tr>
+              
+                <tr>
+                  <td>master_flavor</td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
+                  <td></td>
+                  <td><p>Flavor of each master node in the Cluster </p></td>
+                </tr>
+              
+                <tr>
+                  <td>num_nodes</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Initial number of nodes in the Cluster </p></td>
+                </tr>
+              
+                <tr>
+                  <td>max_nodes</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Maximum number of nodes allowed in the Cluster (for auto-scaling) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>num_masters</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Number of master nodes in the Cluster </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ClusterFlavorKey">ClusterFlavorKey</h3>
+        <p>ClusterFlavorKey uniquely identifies a Cluster Flavor.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.ClusterFlavorApi">ClusterFlavorApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateClusterFlavor</td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a ClusterFlavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteClusterFlavor</td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a ClusterFlavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateClusterFlavor</td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a ClusterFlavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowClusterFlavor</td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><p>Show ClusterFlavors</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="clusterinst.proto">clusterinst.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.ClusterInst">ClusterInst</h3>
+        <p>ClusterInst is an instance of a Cluster on a Cloudlet. It is defined by a Cluster plus a Cloudlet key. This separation of the definition of the Cluster versus its instance is unique to Mobiledgex, and allows the Developer to provide the Cluster definition, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.</p><p>When a Cluster is instantiated on a Cloudlet, the user may override the default ClusterFlavor of the Cluster. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
+                  <td></td>
+                  <td><p>Unique key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>flavor</td>
+                  <td><a href="#edgeproto.ClusterFlavorKey">ClusterFlavorKey</a></td>
+                  <td></td>
+                  <td><p>ClusterFlavor of the Cluster </p></td>
+                </tr>
+              
+                <tr>
+                  <td>liveness</td>
+                  <td><a href="#edgeproto.Liveness">Liveness</a></td>
+                  <td></td>
+                  <td><p>Liveness of instance (see Liveness) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>auto</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>Auto is set to true when automatically created by back-end (internal use only) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ClusterInstInfo">ClusterInstInfo</h3>
+        <p>ClusterInstInfo provides information from the Cloudlet Resource Manager about the state of the ClusterInst on the Cloudlet. Whereas the ClusterInst defines the intent of instantiating a Cluster on a Cloudlet, the ClusterInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>notify_id</td>
+                  <td><a href="#int64">int64</a></td>
+                  <td></td>
+                  <td><p>Id of client assigned by server (internal use only) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>state</td>
+                  <td><a href="#edgeproto.ClusterState">ClusterState</a></td>
+                  <td></td>
+                  <td><p>State of the cluster </p></td>
+                </tr>
+              
+                <tr>
+                  <td>errors</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Any errors trying to create, update, or delete the ClusterInst on the Cloudlet. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ClusterInstKey">ClusterInstKey</h3>
+        <p>ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>cluster_key</td>
+                  <td><a href="#edgeproto.ClusterKey">ClusterKey</a></td>
+                  <td></td>
+                  <td><p>Cluster key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudlet_key</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p>Cloudlet on which the Cluster is instantiated </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.ClusterState">ClusterState</h3>
+        <p>ClusterState defines the state of the ClusterInst. This state is defined both by the state on the Controller, and the state on the Cloudlet where the ClusterInst is instantiated. Some of the states are intermediate states to denote a change in progress.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ClusterStateUnknown</td>
+                <td>0</td>
+                <td><p>ClusterInst state unknown</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateBuilding</td>
+                <td>1</td>
+                <td><p>ClusterInst state in the process of being created</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateReady</td>
+                <td>2</td>
+                <td><p>ClusterInst state created and ready</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateErrors</td>
+                <td>3</td>
+                <td><p>ClusterInst change encountered errors, see Errors field of ClusterInstInfo</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateDeleting</td>
+                <td>4</td>
+                <td><p>ClusterInst in the process of being deleted</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateDeleted</td>
+                <td>5</td>
+                <td><p>ClusterInst was deleted</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateChanging</td>
+                <td>6</td>
+                <td><p>ClusterInst in the process of being updated</p></td>
+              </tr>
+            
+              <tr>
+                <td>ClusterStateNotPresent</td>
+                <td>7</td>
+                <td><p>ClusterInst is not present</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.ClusterInstApi">ClusterInstApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateClusterInst</td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a Cluster instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteClusterInst</td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a Cluster instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateClusterInst</td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a Cluster instance</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowClusterInst</td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><p>Show Cluster instances</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.ClusterInstInfoApi">ClusterInstInfoApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowClusterInstInfo</td>
+                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
+                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
+                <td><p>Show Cluster instances state.</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="common.proto">common.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+
+      
+        <h3 id="edgeproto.IpSupport">IpSupport</h3>
+        <p>IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>IpSupportUnknown</td>
+                <td>0</td>
+                <td><p>Unknown IP support</p></td>
+              </tr>
+            
+              <tr>
+                <td>IpSupportStatic</td>
+                <td>1</td>
+                <td><p>Static IP addresses are provided to and managed by Controller</p></td>
+              </tr>
+            
+              <tr>
+                <td>IpSupportDynamic</td>
+                <td>2</td>
+                <td><p>IP addresses are dynamically provided by an Operator&#39;s DHCP server</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.L4Proto">L4Proto</h3>
+        <p>L4Proto indicates which L4 protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>L4ProtoUnknown</td>
+                <td>0</td>
+                <td><p>Unknown protocol</p></td>
+              </tr>
+            
+              <tr>
+                <td>L4ProtoTCP</td>
+                <td>1</td>
+                <td><p>TCP protocol</p></td>
+              </tr>
+            
+              <tr>
+                <td>L4ProtoUDP</td>
+                <td>2</td>
+                <td><p>UDP protocol</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.Liveness">Liveness</h3>
+        <p>Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>LivenessUnknown</td>
+                <td>0</td>
+                <td><p>Unknown liveness</p></td>
+              </tr>
+            
+              <tr>
+                <td>LivenessStatic</td>
+                <td>1</td>
+                <td><p>Object managed by external entity</p></td>
+              </tr>
+            
+              <tr>
+                <td>LivenessDynamic</td>
+                <td>2</td>
+                <td><p>Object managed internally</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="developer.proto">developer.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Developer">Developer</h3>
+        <p>A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.</p><p>Creating a developer identity is likely the first step of (self-)registering a new customer.</p><p>TODO: user management, auth, etc is not implemented yet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.DeveloperKey">DeveloperKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>username</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Login name (TODO) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>passhash</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Encrypted password (TODO) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>address</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Physical address </p></td>
+                </tr>
+              
+                <tr>
+                  <td>email</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Contact email </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.DeveloperKey">DeveloperKey</h3>
+        <p>DeveloperKey uniquely identifies a Developer (Mobiledgex customer)</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Organization or Company Name </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.DeveloperApi">DeveloperApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateDeveloper</td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a Developer</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteDeveloper</td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a Developer</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateDeveloper</td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a Developer</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowDeveloper</td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><p>Show Developers</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="flavor.proto">flavor.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Flavor">Flavor</h3>
+        <p>A Flavor identifies the Cpu, Ram, and Disk resources required for either a node in a Cluster, or an application instance. For a node in a cluster, these are the physical resources provided by that node. For an application instance, this defines the resources (per node) that should be allocated to the instance from the Cluster.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.FlavorKey">FlavorKey</a></td>
+                  <td></td>
+                  <td><p>Unique key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>ram</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>RAM in MB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>vcpus</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>VCPU cores </p></td>
+                </tr>
+              
+                <tr>
+                  <td>disk</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Amount of disk in GB </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.FlavorKey">FlavorKey</h3>
+        <p>FlavorKey uniquely identifies a Flavor.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.FlavorApi">FlavorApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateFlavor</td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create a Flavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteFlavor</td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete a Flavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateFlavor</td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update a Flavor</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowFlavor</td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><p>Show Flavors</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="notice.proto">notice.proto</h2><a href="#title">Top</a>
+      </div>
+      <p>Notice is the message used by the notify protocol to communicate and coordinate internally between different Mobiledgex services. For details on the notify protocol, see the "MEX Cloud Service Interactions" confluence article.</p><p>In general, the protocol is used to synchronize state from one service to another. The protocol is fairly symmetric, with different state being synchronized both from server to client and client to server.</p>
+
+      
+        <h3 id="edgeproto.NoticeReply">NoticeReply</h3>
+        <p>NoticyReply is sent from server to client.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>action</td>
+                  <td><a href="#edgeproto.NoticeAction">NoticeAction</a></td>
+                  <td></td>
+                  <td><p>Action to perform </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Protocol version supported by sender </p></td>
+                </tr>
+              
+                <tr>
+                  <td>appInst</td>
+                  <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudlet</td>
+                  <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>flavor</td>
+                  <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clusterFlavor</td>
+                  <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clusterInst</td>
+                  <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.NoticeRequest">NoticeRequest</h3>
+        <p>NoticeRequest is sent from client to server.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>action</td>
+                  <td><a href="#edgeproto.NoticeAction">NoticeAction</a></td>
+                  <td></td>
+                  <td><p>Action to perform </p></td>
+                </tr>
+              
+                <tr>
+                  <td>version</td>
+                  <td><a href="#uint32">uint32</a></td>
+                  <td></td>
+                  <td><p>Protocol version supported by receiver </p></td>
+                </tr>
+              
+                <tr>
+                  <td>requestor</td>
+                  <td><a href="#edgeproto.NoticeRequestor">NoticeRequestor</a></td>
+                  <td></td>
+                  <td><p>Client requestor type </p></td>
+                </tr>
+              
+                <tr>
+                  <td>revision</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Revision of database </p></td>
+                </tr>
+              
+                <tr>
+                  <td>cloudletInfo</td>
+                  <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>appInstInfo</td>
+                  <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clusterInstInfo</td>
+                  <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+        <h3 id="edgeproto.NoticeAction">NoticeAction</h3>
+        <p>NoticeAction denotes what kind of action this notification is for.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>NONE</td>
+                <td>0</td>
+                <td><p>No action</p></td>
+              </tr>
+            
+              <tr>
+                <td>UPDATE</td>
+                <td>1</td>
+                <td><p>Update the object</p></td>
+              </tr>
+            
+              <tr>
+                <td>DELETE</td>
+                <td>2</td>
+                <td><p>Delete the object</p></td>
+              </tr>
+            
+              <tr>
+                <td>VERSION</td>
+                <td>3</td>
+                <td><p>Version exchange negotitation message</p></td>
+              </tr>
+            
+              <tr>
+                <td>SENDALL_END</td>
+                <td>4</td>
+                <td><p>Initial send all finished message</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.NoticeRequestor">NoticeRequestor</h3>
+        <p>NoticeRequestor indicates which type of service the client is.</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>NoticeRequestorNone</td>
+                <td>0</td>
+                <td><p>Invalid</p></td>
+              </tr>
+            
+              <tr>
+                <td>NoticeRequestorDME</td>
+                <td>1</td>
+                <td><p>Distributed Matching Engine</p></td>
+              </tr>
+            
+              <tr>
+                <td>NoticeRequestorCRM</td>
+                <td>2</td>
+                <td><p>Cloudlet Resource Manager</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+
+      
+
+      
+        <h3 id="edgeproto.NotifyApi">NotifyApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>StreamNotice</td>
+                <td><a href="#edgeproto.NoticeRequest">NoticeRequest</a></td>
+                <td><a href="#edgeproto.NoticeReply">NoticeReply</a></td>
+                <td><p>Bidrectional stream for exchanging data between controller and DME/CRM</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="operator.proto">operator.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Operator">Operator</h3>
+        <p>An Operator defines a telecommunications provider such as AT&T, T-Mobile, etc. The operators in turn provide Mobiledgex with compute resource Cloudlets that serve as the basis for location-based services.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.OperatorKey">OperatorKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.OperatorKey">OperatorKey</h3>
+        <p>OperatorKey uniquely identifies an Operator</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>name</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Company or Organization name of the operator </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.OperatorApi">OperatorApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>CreateOperator</td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Create an Operator</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeleteOperator</td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Delete an Operator</p></td>
+              </tr>
+            
+              <tr>
+                <td>UpdateOperator</td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><p>Update an Operator</p></td>
+              </tr>
+            
+              <tr>
+                <td>ShowOperator</td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><p>Show Operators</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="refs.proto">refs.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.CloudletRefs">CloudletRefs</h3>
+        <p>CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.CloudletKey">CloudletKey</a></td>
+                  <td></td>
+                  <td><p>Cloudlet key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>clusters</td>
+                  <td><a href="#edgeproto.ClusterKey">ClusterKey</a></td>
+                  <td>repeated</td>
+                  <td><p>Clusters instantiated on the Cloudlet </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_ram</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used RAM in MB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_vcores</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used VCPU cores </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_disk</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used disk in GB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>root_lb_ports</td>
+                  <td><a href="#edgeproto.CloudletRefs.RootLbPortsEntry">CloudletRefs.RootLbPortsEntry</a></td>
+                  <td>repeated</td>
+                  <td><p>Used ports on root load balancer. Map key is public port, value is unused. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.CloudletRefs.RootLbPortsEntry">CloudletRefs.RootLbPortsEntry</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>value</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ClusterRefs">ClusterRefs</h3>
+        <p>ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
+                  <td></td>
+                  <td><p>Cluster Instance key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>apps</td>
+                  <td><a href="#edgeproto.AppKey">AppKey</a></td>
+                  <td>repeated</td>
+                  <td><p>Apps instances in the Cluster Instance </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_ram</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used RAM in MB </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_vcores</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used VCPU cores </p></td>
+                </tr>
+              
+                <tr>
+                  <td>used_disk</td>
+                  <td><a href="#uint64">uint64</a></td>
+                  <td></td>
+                  <td><p>Used disk in GB </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+        <h3 id="edgeproto.CloudletRefsApi">CloudletRefsApi</h3>
+        <p>This API should be admin-only</p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowCloudletRefs</td>
+                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
+                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
+                <td><p>Show CloudletRefs (debug only)</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+        <h3 id="edgeproto.ClusterRefsApi">ClusterRefsApi</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Method Name</td><td>Request Type</td><td>Response Type</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>ShowClusterRefs</td>
+                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
+                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
+                <td><p>Show ClusterRefs (debug only)</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
+      
+    
+      
+      <div class="file-heading">
+        <h2 id="result.proto">result.proto</h2><a href="#title">Top</a>
+      </div>
+      <p></p>
+
+      
+        <h3 id="edgeproto.Result">Result</h3>
+        <p>Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead.</p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>message</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Message, may be success or failure message </p></td>
+                </tr>
+              
+                <tr>
+                  <td>code</td>
+                  <td><a href="#int32">int32</a></td>
+                  <td></td>
+                  <td><p>Error code, 0 indicates success, non-zero indicates failure (not implemented) </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+
+      
+
+      
+
+      
+    
+
+    <h2 id="scalar-value-types">Scalar Value Types</h2>
+    <table class="scalar-value-types-table">
+      <thead>
+        <tr><td>.proto Type</td><td>Notes</td><td>C++ Type</td><td>Java Type</td><td>Python Type</td></tr>
+      </thead>
+      <tbody>
+        
+          <tr id="double">
+            <td>double</td>
+            <td></td>
+            <td>double</td>
+            <td>double</td>
+            <td>float</td>
+          </tr>
+        
+          <tr id="float">
+            <td>float</td>
+            <td></td>
+            <td>float</td>
+            <td>float</td>
+            <td>float</td>
+          </tr>
+        
+          <tr id="int32">
+            <td>int32</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint32 instead.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+          </tr>
+        
+          <tr id="int64">
+            <td>int64</td>
+            <td>Uses variable-length encoding. Inefficient for encoding negative numbers – if your field is likely to have negative values, use sint64 instead.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="uint32">
+            <td>uint32</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="uint64">
+            <td>uint64</td>
+            <td>Uses variable-length encoding.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="sint32">
+            <td>sint32</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int32s.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+          </tr>
+        
+          <tr id="sint64">
+            <td>sint64</td>
+            <td>Uses variable-length encoding. Signed int value. These more efficiently encode negative numbers than regular int64s.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="fixed32">
+            <td>fixed32</td>
+            <td>Always four bytes. More efficient than uint32 if values are often greater than 2^28.</td>
+            <td>uint32</td>
+            <td>int</td>
+            <td>int</td>
+          </tr>
+        
+          <tr id="fixed64">
+            <td>fixed64</td>
+            <td>Always eight bytes. More efficient than uint64 if values are often greater than 2^56.</td>
+            <td>uint64</td>
+            <td>long</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="sfixed32">
+            <td>sfixed32</td>
+            <td>Always four bytes.</td>
+            <td>int32</td>
+            <td>int</td>
+            <td>int</td>
+          </tr>
+        
+          <tr id="sfixed64">
+            <td>sfixed64</td>
+            <td>Always eight bytes.</td>
+            <td>int64</td>
+            <td>long</td>
+            <td>int/long</td>
+          </tr>
+        
+          <tr id="bool">
+            <td>bool</td>
+            <td></td>
+            <td>bool</td>
+            <td>boolean</td>
+            <td>boolean</td>
+          </tr>
+        
+          <tr id="string">
+            <td>string</td>
+            <td>A string must always contain UTF-8 encoded or 7-bit ASCII text.</td>
+            <td>string</td>
+            <td>String</td>
+            <td>str/unicode</td>
+          </tr>
+        
+          <tr id="bytes">
+            <td>bytes</td>
+            <td>May contain any arbitrary sequence of bytes.</td>
+            <td>string</td>
+            <td>ByteString</td>
+            <td>str</td>
+          </tr>
+        
+      </tbody>
+    </table>
+  </body>
+</html>
+
