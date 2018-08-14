@@ -57,7 +57,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud1
+      name: tmocloud-1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -67,7 +67,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud2
+      name: tmocloud-2
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -90,7 +90,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TMUS
-    name: tmocloud1
+    name: tmocloud-1
   accessuri: cloud1.tmo
   location:
     lat: 31
@@ -100,7 +100,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TMUS
-    name: tmocloud2
+    name: tmocloud-2
   accessuri: cloud2.tmo
   location:
     lat: 35
@@ -132,7 +132,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud1
+      name: tmocloud-1
     id: 123
   cloudletloc:
     lat: 31
@@ -143,7 +143,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud1
+      name: tmocloud-1
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
@@ -160,7 +160,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud2
+      name: tmocloud-2
     id: 123
   cloudletloc:
     lat: 35
@@ -171,7 +171,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud2
+      name: tmocloud-2
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker

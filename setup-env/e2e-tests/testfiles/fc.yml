@@ -1,0 +1,15 @@
+##
+## 
+##
+description: Deploys and starts a system, adds and delete appinstances and verifies findlocation results each time
+
+tests:
+
+- name: Add and show provisioning without appinst
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{datadir}}/appdata_no_appinst.yml"
+    yaml2: "{{outputdir}}/show-commands.yml"
+    filetype: appdata
+

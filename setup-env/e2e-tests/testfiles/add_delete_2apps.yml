@@ -1,20 +1,20 @@
 ##
 ##
-description: adds dataset with 10 cloudlets and 2 apps. Does get cloudlets for all or just one app
+description: adds and deletes dataset with 2 cloudlets and 2 apps.
 
 tests:
 
-- name: create and verify provisioning 10 cloudlets 
+- name: create and verify prov 2 apps 2 cloudlets 
   actions: [ctrlapi-create,ctrlapi-show]
-  apifile: "{{datadir}}/appdata_10.yml"
+  apifile: "{{datadir}}/appdata_2.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/show10.yml"
+    yaml2: "{{datadir}}/show2.yml"
     filetype: appdata
 
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
-  apifile: "{{datadir}}/appdata_10.yml"
+  apifile: "{{datadir}}/appdata_2.yml"
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata_empty.yml"
