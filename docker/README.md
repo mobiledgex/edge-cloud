@@ -2,15 +2,17 @@
 
 These docker files are for producing consistent container images of edge-cloud.
 
+We use a private registry at `registry.mobiledgex.net:5000`. You need to login to this registry via `docker login`. The login and password are available if you ask around.
+
 ## Dockerfile.protoc
 
-This is for producing a consistent protoc stubs with versioned base tools from known sources. It is not essential. See below for the `build` dockerfile
+This is for producing a consistent protoc stubs with versioned base tools from known sources. It is not essential, as it is seldom done by end users. See below for the `build` dockerfile.  
 
 ## Dockerfile.build
 
 This is for container that is used to build edge-cloud. It is used by Dockerfile.edge-cloud.  When the docker image is built
 using Dockerfile.build, it will create an image that contains all the necessary bits to compile edge-cloud.  It can be used
-by the Docker.edge-cloud as base image.
+by the Docker.edge-cloud as base image.  This is seldom created because it takes a long time. The idea is to create this once, and keep using it to have a consistent build base. It should be available to pull from the private registry at `registry.mobiledgex.net:5000`.
 
 ## Dockerfile.edge-cloud
 
