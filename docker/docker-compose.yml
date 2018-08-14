@@ -8,7 +8,6 @@ services:
     volumes:
      - /tmp/etcd-data.tmp:/etcd-data
     command: /usr/local/bin/etcd --name s1 --data-dir /etcd-data --listen-client-urls http://0.0.0.0:2379 --advertise-client-urls http://0.0.0.0:2379 --listen-peer-urls http://0.0.0.0:2380 --initial-advertise-peer-urls http://0.0.0.0:2380 --initial-cluster s1=http://0.0.0.0:2380 --initial-cluster-token tkn --initial-cluster-state new
-    network_mode: "host"
   controller:
     image: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
     ports:
@@ -16,7 +15,6 @@ services:
      - "8091:8091"
      - "55001:55001"
     command: controller -d api,notify -apiAddr :55001 -httpAddr :8091 -notifyAddr :50001 
-    network_mode: "host"
   crmserver:
     env_file: 
      - mex-docker.env
@@ -24,7 +22,6 @@ services:
     ports:
      - "55099:55099"
     command: crmserver -d mexos,api,notify  -cloudletKey '{"operator_key":{"name":"testoperator"},"name":"testcloudlet"}'
-    network_mode: "host"
     volumes:
      - ./edgecloud:/edgecloud
      - ~/.mobiledgex:/root/.mobiledgex
