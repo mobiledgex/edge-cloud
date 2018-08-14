@@ -22,6 +22,8 @@ argument which has to be the name of the binary to run.  All of the binaries suc
 
 ## building
 
+First make sure your source tree checked out of github builds OK locally.  You should do `dep ensure -v` and `make` locally to make sure.
+
 To build `mobiledgex/edge-cloud` container run the following in the main directory of `edge-cloud` source tree.
 or just run `make build-docker`.
 
