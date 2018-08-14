@@ -2,7 +2,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TMUS
-    name: tmocloud1
+    name: tmocloud-1
   accessuri: cloud1.tmo
   location:
     lat: -60

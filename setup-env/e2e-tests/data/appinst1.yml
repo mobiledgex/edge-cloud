@@ -8,5 +8,5 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud1
+      name: tmocloud-1
     id: 123
