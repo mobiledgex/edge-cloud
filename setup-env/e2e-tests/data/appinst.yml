@@ -9,7 +9,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud1
+      name: tmocloud-1
     id: 123
   ip: [10, 100, 10, 4]
   uri: /apps/someApplication

@@ -227,7 +227,7 @@ func runClusterInstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edge
 	var err error = nil
 	clusterinAPI := edgeproto.NewClusterInstApiClient(conn)
 	for _, a := range appdata.ClusterInsts {
-		log.Printf("API %v for clusterinst: %v", mode, a.Key.ClusterKey.Name)
+		log.Printf("API %v for clusterinst: %v", mode, a.Key)
 		var stream testutil.ClusterInstStream
 		switch mode {
 		case "create":

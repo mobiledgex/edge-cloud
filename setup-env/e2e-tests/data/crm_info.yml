@@ -7,7 +7,7 @@ clusterinstinfos:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud1
+      name: tmocloud-1
   state: ClusterStateReady
 - key:
     clusterkey:
@@ -15,7 +15,7 @@ clusterinstinfos:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud2
+      name: tmocloud-2
   state: ClusterStateReady
 
 appinstinfos:
@@ -28,7 +28,7 @@ appinstinfos:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud1
+      name: tmocloud-1
     id: 123
   state: AppStateReady
 - key:
@@ -40,6 +40,6 @@ appinstinfos:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud2
+      name: tmocloud-2
     id: 123
   state: AppStateReady

@@ -1,0 +1,15 @@
+##
+##
+description: cleans, deploys and starts a system. leaves running
+
+tests:
+- name: stop and cleanup services
+  actions: [stop,cleanup]
+
+- name: deploy and start services 
+  actions: [deploy,start,sleep=1]
+
+- name: verify services are running
+  actions: [status]
+
+

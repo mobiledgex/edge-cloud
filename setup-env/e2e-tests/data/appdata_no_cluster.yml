@@ -62,7 +62,7 @@ cloudlets:
 - key:
     operatorkey:
       name: DMUUS
-    name: tmocloud1
+    name: tmocloud-1
   accessuri: cloud1.tmo
   location:
     lat: 31
@@ -72,7 +72,7 @@ cloudlets:
 - key:
     operatorkey:
       name: DMUUS
-    name: tmocloud2
+    name: tmocloud-2
   accessuri: cloud2.tmo
   location:
     lat: 35
@@ -102,12 +102,12 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud1
+      name: tmocloud-1
     id: 123
   cloudletloc:
     lat: 31
     long: -91
-  uri: someApplication.tmocloud1.mobiledgex.net
+  uri: someApplication.tmocloud-1.mobiledgex.net
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
@@ -123,12 +123,12 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: DMUUS
-      name: tmocloud2
+      name: tmocloud-2
     id: 123
   cloudletloc:
     lat: 35
     long: -95
-  uri: someApplication.tmocloud2.mobiledgex.net
+  uri: someApplication.tmocloud-2.mobiledgex.net
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
   imagetype: ImageTypeDocker
