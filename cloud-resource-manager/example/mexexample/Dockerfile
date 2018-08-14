@@ -1,4 +1,4 @@
-FROM mobiledgex/build AS build
+FROM registry.mobiledgex.net:5000/mobiledgex/build AS build
 
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
 COPY . .
