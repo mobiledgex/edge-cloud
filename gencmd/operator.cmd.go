@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -116,9 +115,8 @@ var CreateOperatorCmd = &cobra.Command{
 			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateOperator failed: %s", err.Error())
 		}
@@ -136,9 +134,8 @@ var DeleteOperatorCmd = &cobra.Command{
 			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteOperator failed: %s", err.Error())
 		}
@@ -157,9 +154,8 @@ var UpdateOperatorCmd = &cobra.Command{
 		}
 		var err error
 		OperatorSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateOperator failed: %s", err.Error())
 		}
@@ -177,8 +173,7 @@ var ShowOperatorCmd = &cobra.Command{
 			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := OperatorApiCmd.ShowOperator(ctx, &OperatorIn)
 		if err != nil {
 			return fmt.Errorf("ShowOperator failed: %s", err.Error())

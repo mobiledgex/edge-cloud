@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -128,9 +127,8 @@ var CreateClusterFlavorCmd = &cobra.Command{
 			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateClusterFlavor failed: %s", err.Error())
 		}
@@ -148,9 +146,8 @@ var DeleteClusterFlavorCmd = &cobra.Command{
 			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteClusterFlavor failed: %s", err.Error())
 		}
@@ -169,9 +166,8 @@ var UpdateClusterFlavorCmd = &cobra.Command{
 		}
 		var err error
 		ClusterFlavorSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateClusterFlavor failed: %s", err.Error())
 		}
@@ -189,8 +185,7 @@ var ShowClusterFlavorCmd = &cobra.Command{
 			return fmt.Errorf("ClusterFlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterFlavorApiCmd.ShowClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
 			return fmt.Errorf("ShowClusterFlavor failed: %s", err.Error())

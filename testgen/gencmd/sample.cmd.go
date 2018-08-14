@@ -525,9 +525,8 @@ var RequestCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("Request failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := TestApiCmd.Request(ctx, &TestGenIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("Request failed: %s", err.Error())
 		}

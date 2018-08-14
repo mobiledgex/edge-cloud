@@ -377,8 +377,7 @@ var CreateAppInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
 		if err != nil {
 			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
@@ -410,8 +409,7 @@ var DeleteAppInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
@@ -444,8 +442,7 @@ var UpdateAppInstCmd = &cobra.Command{
 			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
 		}
 		AppInstSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
 		if err != nil {
 			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
@@ -477,8 +474,7 @@ var ShowAppInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstApiCmd.ShowAppInst(ctx, &AppInstIn)
 		if err != nil {
 			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
@@ -523,8 +519,7 @@ var ShowAppInstInfoCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
 		if err != nil {
 			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
@@ -562,8 +557,7 @@ var ShowAppInstMetricsCmd = &cobra.Command{
 			return fmt.Errorf("AppInstMetricsApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, &AppInstMetricsIn)
 		if err != nil {
 			return fmt.Errorf("ShowAppInstMetrics failed: %s", err.Error())
@@ -617,7 +611,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
 	AppInstFlagSet.StringVar(&AppInstIn.Config, "config", "", "Config")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
+	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
@@ -734,7 +728,7 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("config").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "11")
 	}
-	if AppInstNoConfigFlagSet.Lookup("flavor-name").Changed {
+	if AppInstFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
 	if AppInstFlagSet.Lookup("accesslayer").Changed {

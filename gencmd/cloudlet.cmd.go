@@ -266,9 +266,8 @@ var CreateCloudletCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
@@ -290,9 +289,8 @@ var DeleteCloudletCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
@@ -315,9 +313,8 @@ var UpdateCloudletCmd = &cobra.Command{
 			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
 		CloudletSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
@@ -339,8 +336,7 @@ var ShowCloudletCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudletApiCmd.ShowCloudlet(ctx, &CloudletIn)
 		if err != nil {
 			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
@@ -384,8 +380,7 @@ var ShowCloudletInfoCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudletInfoApiCmd.ShowCloudletInfo(ctx, &CloudletInfoIn)
 		if err != nil {
 			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
@@ -422,9 +417,8 @@ var InjectCloudletInfoCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
 		}
@@ -446,9 +440,8 @@ var EvictCloudletInfoCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
 		}
@@ -472,8 +465,7 @@ var ShowCloudletMetricsCmd = &cobra.Command{
 			return fmt.Errorf("CloudletMetricsApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudletMetricsApiCmd.ShowCloudletMetrics(ctx, &CloudletMetricsIn)
 		if err != nil {
 			return fmt.Errorf("ShowCloudletMetrics failed: %s", err.Error())

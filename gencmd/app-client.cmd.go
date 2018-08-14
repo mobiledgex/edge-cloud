@@ -715,9 +715,8 @@ var FindCloudletCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("FindCloudlet failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("FindCloudlet failed: %s", err.Error())
 		}
@@ -739,9 +738,8 @@ var VerifyLocationCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("VerifyLocation failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("VerifyLocation failed: %s", err.Error())
 		}
@@ -763,9 +761,8 @@ var GetLocationCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("GetLocation failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("GetLocation failed: %s", err.Error())
 		}
@@ -787,9 +784,8 @@ var RegisterClientCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("RegisterClient failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("RegisterClient failed: %s", err.Error())
 		}
@@ -811,9 +807,8 @@ var AddUserToGroupCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("AddUserToGroup failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("AddUserToGroup failed: %s", err.Error())
 		}
@@ -835,9 +830,8 @@ var GetCloudletsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("GetCloudlets failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("GetCloudlets failed: %s", err.Error())
 		}

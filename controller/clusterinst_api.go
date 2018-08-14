@@ -21,9 +21,24 @@ type ClusterInstApi struct {
 
 var clusterInstApi = ClusterInstApi{}
 
-var CreateClusterInstTimeout = 60 * time.Second
-var UpdateClusterInstTimeout = 30 * time.Second
-var DeleteClusterInstTimeout = 30 * time.Second
+// TODO: these timeouts should be adjust based on target platform,
+// as some platforms (azure, etc) may take much longer.
+// These timeouts should be at least long enough for the controller and
+// CRM to exchange an initial set of messages (i.e. 10 sec or so).
+var CreateClusterInstTimeout = 30 * time.Minute
+var UpdateClusterInstTimeout = 20 * time.Minute
+var DeleteClusterInstTimeout = 20 * time.Minute
+
+// Transition states indicate states in which the CRM is still busy.
+var CreateClusterInstTransitions = map[edgeproto.ClusterState]struct{}{
+	edgeproto.ClusterState_ClusterStateBuilding: struct{}{},
+}
+var UpdateClusterInstTransitions = map[edgeproto.ClusterState]struct{}{
+	edgeproto.ClusterState_ClusterStateChanging: struct{}{},
+}
+var DeleteClusterInstTransitions = map[edgeproto.ClusterState]struct{}{
+	edgeproto.ClusterState_ClusterStateDeleting: struct{}{},
+}
 
 func InitClusterInstApi(sync *Sync) {
 	clusterInstApi.sync = sync
@@ -82,7 +97,7 @@ func (s *ClusterInstApi) CreateNoWait(ctx context.Context, in *edgeproto.Cluster
 }
 
 func (s *ClusterInstApi) createClusterInstInternal(stm concurrency.STM, in *edgeproto.ClusterInst) error {
-	if clusterInstApi.store.STMGet(stm, &in.Key, nil) {
+	if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 		return objstore.ErrKVStoreKeyExists
 	}
 	if in.Liveness == edgeproto.Liveness_LivenessUnknown {
@@ -167,7 +182,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(in *edgeproto.ClusterInst) (*
 	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
-			return nil
+			return objstore.ErrKVStoreKeyNotFound
 		}
 
 		clusterFlavor := edgeproto.ClusterFlavor{}
@@ -224,10 +239,18 @@ func (s *ClusterInstApi) ShowClusterInst(in *edgeproto.ClusterInst, cb edgeproto
 
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	_, err := s.CreateNoWait(cb.Context(), in)
+	if err == objstore.ErrKVStoreKeyExists {
+		// Already created, but check if not present in CRM.
+		// If so, trigger update to try to get CRM back in sync.
+		info := edgeproto.ClusterInstInfo{}
+		if !clusterInstInfoApi.cache.Get(&in.Key, &info) {
+			notify.ServerMgrOne.UpdateClusterInst(&in.Key, in)
+		}
+	}
 	if err != nil {
 		return err
 	}
-	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTimeout, cb.Send)
+	err = clusterInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTransitions, CreateClusterInstTimeout, "Created successfully", cb.Send)
 	if err != nil {
 		// XXX should probably track mod revision ID and only undo
 		// if no other changes were made to appInst in the meantime.
@@ -236,7 +259,7 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 		if undoErr != nil {
 			log.InfoLog("Undo create clusterinst", "undoErr", undoErr)
 		} else {
-			undoErr = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTimeout, nil)
+			undoErr = clusterInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTransitions, DeleteClusterInstTimeout, "", nil)
 			if undoErr != nil {
 				log.InfoLog("Undo create clusterinst", "undoErr", undoErr)
 			}
@@ -249,17 +272,25 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	_, err := s.DeleteNoWait(cb.Context(), in)
+	if err == objstore.ErrKVStoreKeyNotFound {
+		// Already deleted, but check if still present in CRM.
+		// If so, trigger update to try to get CRM back in sync.
+		info := edgeproto.ClusterInstInfo{}
+		if clusterInstInfoApi.cache.Get(&in.Key, &info) {
+			notify.ServerMgrOne.UpdateClusterInst(&in.Key, in)
+		}
+	}
 	if err != nil {
 		return err
 	}
-	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTimeout, cb.Send)
+	err = clusterInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.ClusterState_ClusterStateNotPresent, DeleteClusterInstTransitions, DeleteClusterInstTimeout, "Deleted successfully", cb.Send)
 	if err != nil {
 		// crm failed or some other err, undo
 		_, undoErr := s.CreateNoWait(cb.Context(), in)
 		if undoErr != nil {
 			log.InfoLog("Undo delete clusterinst", "undoErr", undoErr)
 		} else {
-			undoErr = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTimeout, nil)
+			undoErr = clusterInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.ClusterState_ClusterStateReady, CreateClusterInstTransitions, CreateClusterInstTimeout, "", nil)
 			if undoErr != nil {
 				log.InfoLog("Undo delete clusterinst", "undoErr", undoErr)
 			}
@@ -275,7 +306,7 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	if err != nil {
 		return err
 	}
-	err = clusterInstInfoApi.cache.WaitForState(&in.Key, edgeproto.ClusterState_ClusterStateReady, UpdateClusterInstTimeout, cb.Send)
+	err = clusterInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.ClusterState_ClusterStateReady, UpdateClusterInstTransitions, UpdateClusterInstTimeout, "Updated successfully", cb.Send)
 	if err != nil {
 		// TODO: undo.
 		// Currently update is not supported. To undo we'd need to get
