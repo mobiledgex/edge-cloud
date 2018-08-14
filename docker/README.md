@@ -91,9 +91,11 @@ Use "edgectl [command] --help" for more information about a command.
 
 You can create instances of controller, crmserver, etc. using `docker-compose`.
 For the details please read `docker-compose.yml` file.  It creates three docker container
-instances.  An etcd server, controller and crmserver.  
+instances.  An etcd server, controller and crmserver.  You will need to install `docker-compose` if you don't already have it.  The `etcd` , `controller` and `crmserver` will be running on the machine you are running `docker-compose`.  This is probably your laptop. The `app` will be launched in a cloudlet kubernetes cluster that `crmserver` creates based on your test scripts.  An example is in `test-edgectl.sh`.
 
-First, get a copy of `mex-docker.env` file from a private repo: https//github.com/mobiledgex/bob-priv/mex-docker.env
+The `docker-compose` proves that the container images can run anywhere as long as the host supports docker runtime. You can create `docker-machine` in multiple cloud hosting providers and launch multiple instances of each docker container.  The example for that will be provided later.
+
+First, get a copy of `mex-docker.env` file from a private repo: https://github.com/mobiledgex/bob-priv/mex-docker.env
 
 Place `mex-docker.env` in the same directory as `docker-compose.yml` file.
 You will also need to place `.mobiledgex` directory at your `$HOME`.
