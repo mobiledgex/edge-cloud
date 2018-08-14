@@ -439,7 +439,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
     }
 
     @Test
@@ -478,7 +478,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
     }
 
 
@@ -525,7 +525,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(verifyLocationResult.getVer(), 0);
         assertEquals(verifyLocationResult.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_UNKNOWN); // Based on test data.
+        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER); // Based on test data.
 
     }
 
@@ -717,5 +717,94 @@ public class EngineCallTest {
 
         // Temporary.
         assertEquals("SessionCookies must match", response.getSessionCookie(), "");
+    }
+
+    @Test
+    public void getCloudletListTest() {
+        Context context = InstrumentationRegistry.getContext();
+
+        MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
+
+        AppClient.Match_Engine_Status response = null;
+
+        enableMockLocation(context,true);
+        Location location = createLocation("getCloudletListTest", -122.149349, 37.459609);
+        MexLocation mexLoc = new MexLocation(me);
+
+        try {
+            setMockLocation(context, location);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            assertFalse("Mock'ed Location is missing!", location == null);
+
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+
+            AppClient.Match_Engine_Cloudlet_List list = me.getCloudletList(request, GRPC_TIMEOUT_MS);
+
+            assertEquals(list.getVer(), 0);
+            assertEquals(list.getStatus(), AppClient.Match_Engine_Cloudlet_List.CL_Status.CL_UNDEFINED);
+            assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
+            for (int i = 0; i < list.getCloudletsCount(); i++) {
+                Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
+            }
+
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("getCloudletListTest: ExecutionException!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("getCloudletListTest: StatusRuntimeException!", true);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("getCloudletListTest: InterruptedException!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
+    }
+
+    @Test
+    public void getCloudletListFutureTest() {
+        Context context = InstrumentationRegistry.getContext();
+
+        MatchingEngine me = new MatchingEngine();
+        me.setMexLocationAllowed(true);
+
+        AppClient.Match_Engine_Status response = null;
+
+        enableMockLocation(context,true);
+        Location location = createLocation("getCloudletListFutureTest", -122.149349, 37.459609);
+        MexLocation mexLoc = new MexLocation(me);
+
+        try {
+            setMockLocation(context, location);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            assertFalse("Mock'ed Location is missing!", location == null);
+
+            registerClient(me, location);
+            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+
+            Future<AppClient.Match_Engine_Cloudlet_List> listFuture = me.getCloudletListFuture(request, GRPC_TIMEOUT_MS);
+            AppClient.Match_Engine_Cloudlet_List list = listFuture.get();
+
+            assertEquals(list.getVer(), 0);
+            assertEquals(list.getStatus(), AppClient.Match_Engine_Cloudlet_List.CL_Status.CL_UNDEFINED);
+            assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
+            for (int i = 0; i < list.getCloudletsCount(); i++) {
+                Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
+            }
+
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("getCloudletListFutureTest: ExecutionException!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("getCloudletListFutureTest: StatusRuntimeException!", true);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("getCloudletListFutureTest: InterruptedException!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
     }
 }
