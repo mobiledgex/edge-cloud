@@ -96,6 +96,13 @@ instances.  An etcd server, controller and crmserver.
 First, get a copy of `mex-docker.env` file from a private repo: https//github.com/mobiledgex/bob-priv/mex-docker.env
 
 Place `mex-docker.env` in the same directory as `docker-compose.yml` file.
+You will also need to place `.mobiledgex` directory at your `$HOME`.
+Get http://github.com/mobiledgex/bob-priv/mobiledgex.env.tar and untar
+into your home directory.
+
+You also should make some changes in docker-compose.yaml and test-edgectl.sh files. Change all the `test` to your own name.  For example,
+change `testoperator` to `boboperator`, etc.
+This is to avoid clashing with other testers in the same backend infrastructure.
 
 ```
 $ cd ~/src/github.com/mobiledgex/edge-cloud/docker
