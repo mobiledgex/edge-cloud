@@ -102,7 +102,7 @@ First, get a copy of `mex-docker.env` file from a private repo: https://github.c
 Place `mex-docker.env` in the same directory as `docker-compose.yml` file.
 You will also need to place `.mobiledgex` directory at your `$HOME`.
 Get http://github.com/mobiledgex/bob-priv/mobiledgex.env.tar and untar
-into your home directory. You also need to copy .mobiledge dir under this directory before building the docker image for edge-cloud.
+into your home directory. You also need to copy .mobiledge dir under this directory before building the docker image for edge-cloud. There is also http://github.com/mobiledgex/bob-priv/edgecloud.tar which must be untarred to this directory before running docker-compose.
 
 You also should make some changes in docker-compose.yaml and test-edgectl.sh files. Change all the `test` to your own name.  For example,
 change `testoperator` to `boboperator`, etc.
@@ -110,7 +110,7 @@ This is to avoid clashing with other testers in the same backend infrastructure.
 
 ```
 $ cd ~/src/github.com/mobiledgex/edge-cloud/docker
-$ # place the mex-docker.env file here.
+$ # place the mex-docker.env file, .mobiledgex directory, and edgecloud directory here.
 $ docker-compose up -d
 $ docker ps
 CONTAINER ID        IMAGE                                                COMMAND                  CREATED             STATUS              PORTS               NAMES
