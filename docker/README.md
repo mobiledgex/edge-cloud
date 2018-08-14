@@ -114,7 +114,7 @@ into your home directory. You also need to copy .mobiledge dir under this direct
 
 You also should make some changes in docker-compose.yaml and test-edgectl.sh files. Change all the `test` to your own name.  For example,
 change `testoperator` to `boboperator`, etc.
-This is to avoid clashing with other testers in the same backend infrastructure.
+This is to avoid clashing with other testers in the same backend infrastructure.  When you do this, you will also need to update a testapp.yaml with yourownnameapp.yaml and place it on registry.mobiledgex.net.  This is done manually currently. There will be more automated or UI based methods in the future.
 
 ```
 $ cd ~/src/github.com/mobiledgex/edge-cloud/docker
