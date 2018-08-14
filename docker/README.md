@@ -12,15 +12,23 @@ This is for producing a consistent protoc stubs with versioned base tools from k
 
 This is for container that is used to build edge-cloud. It is used by Dockerfile.edge-cloud.  When the docker image is built
 using Dockerfile.build, it will create an image that contains all the necessary bits to compile edge-cloud.  It can be used
-by the Docker.edge-cloud as base image.  This is seldom created because it takes a long time. The idea is to create this once, and keep using it to have a consistent build base. It should be available to pull from the private registry at `registry.mobiledgex.net:5000`.
+by the Docker.edge-cloud as base image.  This is seldom created because it takes a long time. The idea is to create this once, and keep using it to have a consistent build base. It should be available to pull from the private registry at `registry.mobiledgex.net:5000`.  
 
 ## Dockerfile.edge-cloud
 
 This is to build a container image that can produce a runnable image containing edge-cloud binaries. The base image from 
 Dockerfile.build is used to build the edge-cloud binaries. In the second stage, the base image is switched to alpine, to 
-reduce the final artifact size, which will copy in the built binaries from the first stage into runnable `alpine` based
-container. The entry point of this docker container image will be from `edge-cloud-entrypoint.sh` which takes first
+reduce the final artifact size, which will copy in the built binaries from the first stage into runnable custom base
+container which has openstack and kubectl, etc. The entry point of this docker container image will be from `edge-cloud-entrypoint.sh` which takes first
 argument which has to be the name of the binary to run.  All of the binaries such as controller, crmctl, edgectl, crmserver, etc. are available to be run. Subseqent arguments are passed to each program.
+Before building this container you may want to add an entry to your `/etc/hosts` file:
+
+```
+$ echo 37.50.143.121 fmbncisrs101.tacn.detemobil.de >> /etc/hosts
+```
+
+This is because the domain name used is Bonn openstack cluster which is not registered to public DNS server.  
+
 
 ## building
 
