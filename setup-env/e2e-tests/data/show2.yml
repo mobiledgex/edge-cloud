@@ -1,0 +1,258 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: AutoClustersomeApplication2
+  defaultflavor:
+    name: c1.small
+  auto: true
+- key:
+    name: AutoClustersomeApplication1
+  defaultflavor:
+    name: c1.small
+  auto: true
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication1
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication2
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication1
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication2
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+
+operators:
+- key:
+    name: DMUUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: AcmeAppCo-user
+  passhash: "123456789012345670"
+  address: 1234 AcmeAppCo street
+  email: AcmeAppCo@gmail.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud-1
+  accessuri: DMUUS.tmocloud-1
+  location:
+    long: -175
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud-2
+  accessuri: DMUUS.tmocloud-2
+  location:
+    long: -174
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication1
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication1:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClustersomeApplication1
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication2
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication2:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClustersomeApplication2
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+    id: 2
+  cloudletloc:
+    long: -174
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication1
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+    id: 2
+  cloudletloc:
+    long: -174
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication2
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+    id: 1
+  cloudletloc:
+    long: -175
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication1
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+    id: 1
+  cloudletloc:
+    long: -175
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication2
+    cloudletkey:
+      operatorkey:
+        name: DMUUS
+      name: tmocloud-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

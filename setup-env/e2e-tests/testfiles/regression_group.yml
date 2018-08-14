@@ -1,14 +1,17 @@
 tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
-#  - includefile: get_cloudlets.yml # Need Crm process per cloudlet
+  - includefile: add_delete.yml
+    loops: 3
+  - includefile: add_delete_2apps.yml
+    loops: 2
+  - includefile: get_cloudlets.yml
+  - includefile: crm_restart.yml ##included as a workaround
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: verify_loc.yml
     loops: 5 
   - includefile: ctrl_restart.yml
-    loops: 3
-  - includefile: find_cloudlet.yml
     loops: 3
   - includefile: restarts_2ctrls.yml
     loops: 3

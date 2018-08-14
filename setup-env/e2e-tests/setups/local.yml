@@ -73,6 +73,6 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud1"}'
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud-1"}'
   hostname: "127.0.0.1"
 

@@ -1,0 +1,8 @@
+##
+## 
+##
+description: stops and restarts crm1 and crm2 
+tests:
+
+- name: restart crms
+  actions: [stop=crm1,start=crm1,stop=crm2,start=crm2,sleep=1]
