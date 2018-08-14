@@ -34,8 +34,16 @@ func grpcGateway(addr string) (http.Handler, error) {
 	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 		edgeproto.RegisterDeveloperApiHandler,
 		edgeproto.RegisterAppApiHandler,
+		edgeproto.RegisterAppInstApiHandler,
+		edgeproto.RegisterAppInstInfoApiHandler,
 		edgeproto.RegisterOperatorApiHandler,
 		edgeproto.RegisterCloudletApiHandler,
+		edgeproto.RegisterCloudletInfoApiHandler,
+		edgeproto.RegisterFlavorApiHandler,
+		edgeproto.RegisterClusterFlavorApiHandler,
+		edgeproto.RegisterClusterApiHandler,
+		edgeproto.RegisterClusterInstApiHandler,
+		edgeproto.RegisterClusterInstInfoApiHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err
