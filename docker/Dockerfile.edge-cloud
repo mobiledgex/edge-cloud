@@ -10,7 +10,7 @@
 # All the tools will be inside the docker.
 #
 
-FROM mobiledgex/build AS build
+FROM registry.mobiledgex.net:5000/mobiledgex/build AS build
 
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
 ENV GOPATH=/go
@@ -22,7 +22,7 @@ RUN make clean
 ENV CGO_ENABLED=0
 RUN make
 
-FROM mobiledgex/openstack-kubectl
+FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl
 
 COPY --from=build /go/bin/controller /usr/local/bin
 COPY --from=build /go/bin/crmctl /usr/local/bin
