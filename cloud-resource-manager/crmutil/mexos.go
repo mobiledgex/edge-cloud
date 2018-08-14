@@ -523,6 +523,10 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 		return err
 	}
 	name := mf.Metadata.Name
+	if name == "" {
+		log.DebugLog(log.DebugLevelMexos, "error, empty name", "mf", mf)
+		return fmt.Errorf("empty name")
+	}
 	srvs, err := oscli.ListServers()
 	if err != nil {
 		return err
