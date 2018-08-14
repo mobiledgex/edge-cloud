@@ -63,7 +63,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud1
+      name: tmocloud-1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -73,7 +73,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud2
+      name: tmocloud-2
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -90,7 +90,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TMUS
-    name: tmocloud1
+    name: tmocloud-1
   accessuri: cloud1.tmo
   location:
     lat: 31
@@ -100,7 +100,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TMUS
-    name: tmocloud2
+    name: tmocloud-2
   accessuri: cloud2.tmo
   location:
     lat: 35
