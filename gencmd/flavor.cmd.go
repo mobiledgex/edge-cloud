@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -124,9 +123,8 @@ var CreateFlavorCmd = &cobra.Command{
 			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateFlavor failed: %s", err.Error())
 		}
@@ -144,9 +142,8 @@ var DeleteFlavorCmd = &cobra.Command{
 			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteFlavor failed: %s", err.Error())
 		}
@@ -165,9 +162,8 @@ var UpdateFlavorCmd = &cobra.Command{
 		}
 		var err error
 		FlavorSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateFlavor failed: %s", err.Error())
 		}
@@ -185,8 +181,7 @@ var ShowFlavorCmd = &cobra.Command{
 			return fmt.Errorf("FlavorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := FlavorApiCmd.ShowFlavor(ctx, &FlavorIn)
 		if err != nil {
 			return fmt.Errorf("ShowFlavor failed: %s", err.Error())

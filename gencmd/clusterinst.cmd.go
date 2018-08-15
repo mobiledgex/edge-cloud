@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -35,6 +34,7 @@ var ClusterInstIn edgeproto.ClusterInst
 var ClusterInstFlagSet = pflag.NewFlagSet("ClusterInst", pflag.ExitOnError)
 var ClusterInstNoConfigFlagSet = pflag.NewFlagSet("ClusterInstNoConfig", pflag.ExitOnError)
 var ClusterInstInLiveness string
+var ClusterInstInState string
 var ClusterInstInfoIn edgeproto.ClusterInstInfo
 var ClusterInstInfoFlagSet = pflag.NewFlagSet("ClusterInstInfo", pflag.ExitOnError)
 var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig", pflag.ExitOnError)
@@ -90,7 +90,7 @@ func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
 	}
 }
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -101,11 +101,12 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	s = append(s, strconv.FormatBool(in.Auto))
+	s = append(s, edgeproto.ClusterState_name[int32(in.State)])
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -113,6 +114,7 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "Flavor-Name")
 	s = append(s, "Liveness")
 	s = append(s, "Auto")
+	s = append(s, "State")
 	return s
 }
 
@@ -218,8 +220,7 @@ var CreateClusterInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("CreateClusterInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.CreateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			return fmt.Errorf("CreateClusterInst failed: %s", err.Error())
@@ -251,8 +252,7 @@ var DeleteClusterInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DeleteClusterInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.DeleteClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			return fmt.Errorf("DeleteClusterInst failed: %s", err.Error())
@@ -285,8 +285,7 @@ var UpdateClusterInstCmd = &cobra.Command{
 			return fmt.Errorf("UpdateClusterInst failed: %s", err.Error())
 		}
 		ClusterInstSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.UpdateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			return fmt.Errorf("UpdateClusterInst failed: %s", err.Error())
@@ -318,8 +317,7 @@ var ShowClusterInstCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowClusterInst failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.ShowClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
 			return fmt.Errorf("ShowClusterInst failed: %s", err.Error())
@@ -363,8 +361,7 @@ var ShowClusterInstInfoCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowClusterInstInfo failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterInstInfoApiCmd.ShowClusterInstInfo(ctx, &ClusterInstInfoIn)
 		if err != nil {
 			return fmt.Errorf("ShowClusterInstInfo failed: %s", err.Error())
@@ -397,9 +394,10 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
+	ClusterInstFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
+	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted ClusterStateChanging ClusterStateNotPresent]")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
@@ -434,7 +432,7 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("key-cloudletkey-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.2.2")
 	}
-	if ClusterInstNoConfigFlagSet.Lookup("flavor-name").Changed {
+	if ClusterInstFlagSet.Lookup("flavor-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "3.1")
 	}
 	if ClusterInstNoConfigFlagSet.Lookup("liveness").Changed {
@@ -442,6 +440,9 @@ func ClusterInstSetFields() {
 	}
 	if ClusterInstNoConfigFlagSet.Lookup("auto").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "10")
+	}
+	if ClusterInstFlagSet.Lookup("state").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "4")
 	}
 }
 
@@ -478,6 +479,28 @@ func parseClusterInstEnums() error {
 			ClusterInstIn.Liveness = edgeproto.Liveness(2)
 		default:
 			return errors.New("Invalid value for ClusterInstInLiveness")
+		}
+	}
+	if ClusterInstInState != "" {
+		switch ClusterInstInState {
+		case "ClusterStateUnknown":
+			ClusterInstIn.State = edgeproto.ClusterState(0)
+		case "ClusterStateBuilding":
+			ClusterInstIn.State = edgeproto.ClusterState(1)
+		case "ClusterStateReady":
+			ClusterInstIn.State = edgeproto.ClusterState(2)
+		case "ClusterStateErrors":
+			ClusterInstIn.State = edgeproto.ClusterState(3)
+		case "ClusterStateDeleting":
+			ClusterInstIn.State = edgeproto.ClusterState(4)
+		case "ClusterStateDeleted":
+			ClusterInstIn.State = edgeproto.ClusterState(5)
+		case "ClusterStateChanging":
+			ClusterInstIn.State = edgeproto.ClusterState(6)
+		case "ClusterStateNotPresent":
+			ClusterInstIn.State = edgeproto.ClusterState(7)
+		default:
+			return errors.New("Invalid value for ClusterInstInState")
 		}
 	}
 	return nil

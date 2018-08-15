@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -124,9 +123,8 @@ var CreateDeveloperCmd = &cobra.Command{
 			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateDeveloper failed: %s", err.Error())
 		}
@@ -144,9 +142,8 @@ var DeleteDeveloperCmd = &cobra.Command{
 			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteDeveloper failed: %s", err.Error())
 		}
@@ -165,9 +162,8 @@ var UpdateDeveloperCmd = &cobra.Command{
 		}
 		var err error
 		DeveloperSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateDeveloper failed: %s", err.Error())
 		}
@@ -185,8 +181,7 @@ var ShowDeveloperCmd = &cobra.Command{
 			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := DeveloperApiCmd.ShowDeveloper(ctx, &DeveloperIn)
 		if err != nil {
 			return fmt.Errorf("ShowDeveloper failed: %s", err.Error())

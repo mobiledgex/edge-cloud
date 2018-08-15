@@ -100,7 +100,6 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	if found {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst changed", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
-		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		flavor := edgeproto.ClusterFlavor{}
 
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
@@ -112,6 +111,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 			return
 		}
 		log.DebugLog(log.DebugLevelMexos, "Found flavor", "flavor", flavor)
+		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateBuilding)
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "cluster inst changed")
@@ -141,6 +141,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	} else {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst deleted", "clusterinst", clusterInst)
 		// clusterInst was deleted
+		cd.clusterInstInfoState(key, edgeproto.ClusterState_ClusterStateDeleting)
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "cluster inst changed, deleted")
@@ -172,7 +173,6 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 	found := cd.AppInstCache.Get(key, &appInst)
 	if found {
 		// create or update appInst
-		cd.appInstInfoState(key, edgeproto.AppState_AppStateBuilding)
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&appInst.Flavor, &flavor)
 		if !flavorFound {
@@ -189,6 +189,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			cd.appInstInfoError(key, str)
 			return
 		}
+		cd.appInstInfoState(key, edgeproto.AppState_AppStateBuilding)
 		go func() {
 			if !IsValidMEXOSEnv {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
@@ -216,6 +217,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			return
 		}
 		// appInst was deleted
+		cd.appInstInfoState(key, edgeproto.AppState_AppStateDeleting)
 		go func() {
 			if !IsValidMEXOSEnv {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")

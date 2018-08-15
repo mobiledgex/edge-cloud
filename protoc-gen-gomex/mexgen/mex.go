@@ -1009,7 +1009,7 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 {{- end}}
 
 {{if ne (.WaitForState) ("")}}
-func (c *{{.Name}}Cache) WaitForState(key *{{.KeyType}}, targetState {{.WaitForState}}, timeout time.Duration, send func(*Result) error) error {
+func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, timeout time.Duration, successMsg string, send func(*Result) error) error {
 	curState := {{.WaitForState}}_{{.WaitForState}}Unknown
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -1048,6 +1048,12 @@ func (c *{{.Name}}Cache) WaitForState(key *{{.KeyType}}, targetState {{.WaitForS
 	select {
 	case <-done:
 		err = nil
+		if successMsg != "" {
+			send(&Result{Message: successMsg})
+		}
+	case <-ctx.Done():
+		log.DebugLog(log.DebugLevelApi, "Watch for {{.Name}} cancelled by user", "key", key)
+		err = nil // caller cancelled
 	case <-failed:
 		if c.Get(key, &info) {
 			err = fmt.Errorf("Encountered failures: %v", info.Errors)
@@ -1057,9 +1063,18 @@ func (c *{{.Name}}Cache) WaitForState(key *{{.KeyType}}, targetState {{.WaitForS
 			err = errors.New("Unknown failure")
 		}
 	case <-time.After(timeout):
-		if c.Get(key, &info) && info.State == {{.WaitForState}}_{{.WaitForState}}Errors {
+		hasInfo := c.Get(key, &info)
+		if hasInfo && info.State == {{.WaitForState}}_{{.WaitForState}}Errors {
 			// error may have been sent back before watch started
 			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else if _, found := transitionStates[info.State]; hasInfo && found {
+			// no success response, but state is a valid transition
+			// state. That means work is still in progress.
+			// Notify user that this is not an error.
+			// Do not undo since CRM is still busy.
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}}Info to check current status", {{.WaitForState}}_name[int32(info.State)])
+			send(&Result{Message: msg})
+			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",
 				{{.WaitForState}}_name[int32(targetState)],
