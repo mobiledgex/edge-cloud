@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -122,9 +121,8 @@ var CreateClusterCmd = &cobra.Command{
 			return fmt.Errorf("ClusterApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterApiCmd.CreateCluster(ctx, &ClusterIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateCluster failed: %s", err.Error())
 		}
@@ -142,9 +140,8 @@ var DeleteClusterCmd = &cobra.Command{
 			return fmt.Errorf("ClusterApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterApiCmd.DeleteCluster(ctx, &ClusterIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteCluster failed: %s", err.Error())
 		}
@@ -163,9 +160,8 @@ var UpdateClusterCmd = &cobra.Command{
 		}
 		var err error
 		ClusterSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := ClusterApiCmd.UpdateCluster(ctx, &ClusterIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateCluster failed: %s", err.Error())
 		}
@@ -183,8 +179,7 @@ var ShowClusterCmd = &cobra.Command{
 			return fmt.Errorf("ClusterApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterApiCmd.ShowCluster(ctx, &ClusterIn)
 		if err != nil {
 			return fmt.Errorf("ShowCluster failed: %s", err.Error())

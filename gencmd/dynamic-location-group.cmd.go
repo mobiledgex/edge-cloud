@@ -5,7 +5,6 @@ package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -133,9 +132,8 @@ var SendToGroupCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("SendToGroup failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DynamicLocGroupApiCmd.SendToGroup(ctx, &DlgMessageIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("SendToGroup failed: %s", err.Error())
 		}

@@ -15,7 +15,6 @@ package gencmd
 
 import log "github.com/mobiledgex/edge-cloud/log"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -138,9 +137,8 @@ var EnableDebugLevelsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
 		}
@@ -162,9 +160,8 @@ var DisableDebugLevelsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
 		}
@@ -186,9 +183,8 @@ var ShowDebugLevelsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
 		}

@@ -58,7 +58,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -211,9 +210,8 @@ var CreateAppCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := AppApiCmd.CreateApp(ctx, &AppIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
@@ -235,9 +233,8 @@ var DeleteAppCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := AppApiCmd.DeleteApp(ctx, &AppIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
@@ -260,9 +257,8 @@ var UpdateAppCmd = &cobra.Command{
 			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
 		AppSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := AppApiCmd.UpdateApp(ctx, &AppIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
@@ -284,8 +280,7 @@ var ShowAppCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ShowApp failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := AppApiCmd.ShowApp(ctx, &AppIn)
 		if err != nil {
 			return fmt.Errorf("ShowApp failed: %s", err.Error())

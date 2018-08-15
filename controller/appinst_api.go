@@ -26,9 +26,24 @@ const RootLBSharedPortBegin int32 = 10000
 
 var appInstApi = AppInstApi{}
 
-var CreateAppInstTimeout = 30 * time.Second
-var UpdateAppInstTimeout = 20 * time.Second
-var DeleteAppInstTimeout = 20 * time.Second
+// TODO: these timeouts should be adjust based on target platform,
+// as some platforms (azure, etc) may take much longer.
+// These timeouts should be at least long enough for the controller and
+// CRM to exchange an initial set of messages (i.e. 10 sec or so).
+var CreateAppInstTimeout = 30 * time.Minute
+var UpdateAppInstTimeout = 20 * time.Minute
+var DeleteAppInstTimeout = 20 * time.Minute
+
+// Transition states indicate states in which the CRM is still busy.
+var CreateAppInstTransitions = map[edgeproto.AppState]struct{}{
+	edgeproto.AppState_AppStateBuilding: struct{}{},
+}
+var UpdateAppInstTransitions = map[edgeproto.AppState]struct{}{
+	edgeproto.AppState_AppStateChanging: struct{}{},
+}
+var DeleteAppInstTransitions = map[edgeproto.AppState]struct{}{
+	edgeproto.AppState_AppStateDeleting: struct{}{},
+}
 
 func InitAppInstApi(sync *Sync) {
 	appInstApi.sync = sync
@@ -124,7 +139,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 	// This is a separate STM to avoid ordering issues between
 	// auto-clusterinst create and appinst create in watch cb.
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, in.GetKey(), nil) {
+		if s.store.STMGet(stm, in.GetKey(), in) {
 			return objstore.ErrKVStoreKeyExists
 		}
 		// make sure cloudlet exists
@@ -280,7 +295,7 @@ func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, in.GetKey(), in) {
 			// already deleted
-			return nil
+			return objstore.ErrKVStoreKeyNotFound
 		}
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
@@ -329,10 +344,18 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	_, err := s.CreateNoWait(cb.Context(), in)
+	if err == objstore.ErrKVStoreKeyExists {
+		// Already created, but check if not present in CRM.
+		// If so, trigger update to try to get CRM back in sync.
+		info := edgeproto.AppInstInfo{}
+		if !appInstInfoApi.cache.Get(&in.Key, &info) {
+			notify.ServerMgrOne.UpdateAppInst(&in.Key, in)
+		}
+	}
 	if err != nil {
 		return err
 	}
-	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTimeout, cb.Send)
+	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTransitions, CreateAppInstTimeout, "Created successfully", cb.Send)
 	if err != nil {
 		// XXX should probably track mod revision ID and only undo
 		// if no other changes were made to appInst in the meantime.
@@ -341,7 +364,7 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 		if undoErr != nil {
 			log.InfoLog("Undo create appinst", "undoErr", undoErr)
 		} else {
-			undoErr = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTimeout, nil)
+			undoErr = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTransitions, DeleteAppInstTimeout, "", nil)
 			if undoErr != nil {
 				log.InfoLog("Undo create appinst", "undoErr", undoErr)
 			}
@@ -354,17 +377,25 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	_, err := s.DeleteNoWait(cb.Context(), in)
+	if err == objstore.ErrKVStoreKeyNotFound {
+		// Already deleted, but check if still present in CRM.
+		// If so, trigger update to try to get CRM back in sync.
+		info := edgeproto.AppInstInfo{}
+		if appInstInfoApi.cache.Get(&in.Key, &info) {
+			notify.ServerMgrOne.UpdateAppInst(&in.Key, in)
+		}
+	}
 	if err != nil {
 		return err
 	}
-	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTimeout, cb.Send)
+	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTransitions, DeleteAppInstTimeout, "Deleted successfully", cb.Send)
 	if err != nil {
 		// crm failed or some other err, undo
 		_, undoErr := s.CreateNoWait(cb.Context(), in)
 		if undoErr != nil {
 			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
 		} else {
-			undoErr = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTimeout, nil)
+			undoErr = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTransitions, CreateAppInstTimeout, "", nil)
 			if undoErr != nil {
 				log.InfoLog("Undo delete appinst", "undoErr", undoErr)
 			}
@@ -380,7 +411,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	if err != nil {
 		return err
 	}
-	err = appInstInfoApi.cache.WaitForState(&in.Key, edgeproto.AppState_AppStateReady, UpdateAppInstTimeout, cb.Send)
+	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, UpdateAppInstTransitions, UpdateAppInstTimeout, "Updated successfully", cb.Send)
 	if err != nil {
 		// TODO: undo and mod rev checking.
 	}
