@@ -838,9 +838,8 @@ var {{.Method}}Cmd = &cobra.Command{
 {{- if .SetFields}}
 		{{.InType}}SetFields()
 {{- end}}
-		ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
+		ctx := context.Background()
 {{- if .ServerStream}}
-		defer cancel()
 		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
 			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
@@ -873,7 +872,6 @@ var {{.Method}}Cmd = &cobra.Command{
 	{{- end}}
 {{- else}}
 		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
@@ -949,7 +947,6 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 
 	g.importCobra = true
 	g.importContext = true
-	g.importTime = true
 	g.importOutputGen = true
 	_, hasEnums := g.enumArgs[*in.DescriptorProto.Name]
 	cmd := &tmplArgs{

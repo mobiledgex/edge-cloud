@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -149,8 +148,7 @@ var ShowCloudletRefsCmd = &cobra.Command{
 			return fmt.Errorf("CloudletRefsApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudletRefsApiCmd.ShowCloudletRefs(ctx, &CloudletRefsIn)
 		if err != nil {
 			return fmt.Errorf("ShowCloudletRefs failed: %s", err.Error())
@@ -187,8 +185,7 @@ var ShowClusterRefsCmd = &cobra.Command{
 			return fmt.Errorf("ClusterRefsApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, &ClusterRefsIn)
 		if err != nil {
 			return fmt.Errorf("ShowClusterRefs failed: %s", err.Error())
