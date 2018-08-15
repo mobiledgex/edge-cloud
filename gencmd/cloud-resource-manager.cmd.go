@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -278,8 +277,7 @@ var ListCloudResourceCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
 			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
@@ -316,9 +314,8 @@ var AddCloudResourceCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
 		}
@@ -340,9 +337,8 @@ var DeleteCloudResourceCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
 		}
@@ -360,9 +356,8 @@ var DeployApplicationCmd = &cobra.Command{
 			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeployApplication failed: %s", err.Error())
 		}
@@ -380,9 +375,8 @@ var DeleteApplicationCmd = &cobra.Command{
 			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
-		cancel()
 		if err != nil {
 			return fmt.Errorf("DeleteApplication failed: %s", err.Error())
 		}

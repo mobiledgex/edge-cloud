@@ -77,7 +77,7 @@ message AppInst {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
-  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Flavor,Uri,Liveness,ClusterInstKey,PublicIp";
+  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Uri,Liveness,ClusterInstKey,PublicIp";
 }
 
 service AppInstApi {
