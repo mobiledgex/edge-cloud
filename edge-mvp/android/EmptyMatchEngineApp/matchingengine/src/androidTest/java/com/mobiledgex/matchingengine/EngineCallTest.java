@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
+import distributed_match_engine.DynamicLocationGroup;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
@@ -105,7 +106,7 @@ public class EngineCallTest {
     // Every call needs registration to be called first at some point.
     public void registerClient(String carrierName, MatchingEngine me, Location location) {
             AppClient.Match_Engine_Status registerResponse;
-            AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest regRequest = createMockMatchingEngineRequest(carrierName, me, location);
             try {
                 registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
                 assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
@@ -126,7 +127,7 @@ public class EngineCallTest {
         return networkOperatorName;
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(String networkOperatorName, MatchingEngine me, Location location) {
+    public MatchingEngineRequest createMockMatchingEngineRequest(String networkOperatorName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -153,10 +154,10 @@ public class EngineCallTest {
                 .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
                 .build();
 
-        return request;
+        return new MatchingEngineRequest(request, me.getHost(), me.getPort());
     }
 
-    public AppClient.DynamicLocGroupAdd createDynamicLocationGroupAdd(String networkOperatorName, long groupLocationId, Location location) {
+    public DynamicLocationGroupAdd createDynamicLocationGroupAdd(String networkOperatorName, MatchingEngine me, long groupLocationId, Location location) {
         // Directly create request for testing Dynamic Location Groups:
         LocOuterClass.Loc aLoc = LocOuterClass.Loc.newBuilder()
                 .setLat(location.getLatitude())
@@ -178,7 +179,7 @@ public class EngineCallTest {
                 .setCommType(AppClient.DynamicLocGroupAdd.DlgCommType.DlgSecure)
                 .setUserData("UserData").build();
 
-        return groupAdd;
+        return new DynamicLocationGroupAdd(groupAdd, me.getHost(), me.getPort());
     }
 
     @Test
@@ -199,7 +200,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
             response = me.registerClient(request, GRPC_TIMEOUT_MS);
             assert (response != null);
         } catch (ExecutionException ee) {
@@ -242,7 +243,7 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
             responseFuture = me.registerClientFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
             assert(response != null);
@@ -278,7 +279,7 @@ public class EngineCallTest {
             setMockLocation(context, loc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
 
             try {
                 FindCloudletResponse cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
@@ -344,7 +345,7 @@ public class EngineCallTest {
 
             String carrierName = getCarrierName(context);
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             cloudletResponse = me.findCloudlet(request, GRPC_TIMEOUT_MS);
 
@@ -388,7 +389,7 @@ public class EngineCallTest {
 
             String carrierName = getCarrierName(context);
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             response = me.findCloudletFuture(request, 10000);
             result = response.get();
@@ -425,7 +426,7 @@ public class EngineCallTest {
 
             String carrierName = getCarrierName(context);
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             response = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert (response != null);
@@ -471,7 +472,7 @@ public class EngineCallTest {
 
             String carrierName = getCarrierName(context);
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             locFuture = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
             response = locFuture.get();
@@ -517,7 +518,7 @@ public class EngineCallTest {
 
             String carrierName = getCarrierName(context);
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             verifyLocationResult = me.verifyLocation(request, GRPC_TIMEOUT_MS);
             assert(verifyLocationResult != null);
@@ -562,7 +563,7 @@ public class EngineCallTest {
 
 
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             response = me.getLocation(request, GRPC_TIMEOUT_MS);
             assert(response != null);
@@ -620,7 +621,7 @@ public class EngineCallTest {
 
 
             registerClient(carrierName, me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
 
             responseFuture = me.getLocationFuture(request, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
@@ -672,7 +673,7 @@ public class EngineCallTest {
 
             // FIXME: Need groupId source.
             long groupId = 1001L;
-            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(carrierName, groupId, location);
+            DynamicLocationGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(carrierName, me, groupId, location);
 
             response = me.addUserToGroup(dynamicLocGroupAdd, GRPC_TIMEOUT_MS);
             assertTrue("DynamicLocation Group Add should return: ME_SUCCESS", response.getStatus() == AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
@@ -717,7 +718,7 @@ public class EngineCallTest {
 
             // FIXME: Need groupId source.
             long groupId = 1001L;
-            AppClient.DynamicLocGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(carrierName, groupId, location);
+            DynamicLocationGroupAdd dynamicLocGroupAdd = createDynamicLocationGroupAdd(carrierName, me, groupId, location);
 
             Future<AppClient.Match_Engine_Status> responseFuture = me.addUserToGroupFuture(dynamicLocGroupAdd, GRPC_TIMEOUT_MS);
             response = responseFuture.get();
@@ -744,7 +745,7 @@ public class EngineCallTest {
     public void getCloudletListTest() {
         Context context = InstrumentationRegistry.getContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         AppClient.Match_Engine_Status response = null;
@@ -758,8 +759,8 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse("Mock'ed Location is missing!", location == null);
 
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            registerClient(me.retrieveNetworkCarrierName(context), me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
             AppClient.Match_Engine_Cloudlet_List list = me.getCloudletList(request, GRPC_TIMEOUT_MS);
 
@@ -788,7 +789,7 @@ public class EngineCallTest {
     public void getCloudletListFutureTest() {
         Context context = InstrumentationRegistry.getContext();
 
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
 
         AppClient.Match_Engine_Status response = null;
@@ -802,8 +803,8 @@ public class EngineCallTest {
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse("Mock'ed Location is missing!", location == null);
 
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            registerClient(me.retrieveNetworkCarrierName(context), me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
             Future<AppClient.Match_Engine_Cloudlet_List> listFuture = me.getCloudletListFuture(request, GRPC_TIMEOUT_MS);
             AppClient.Match_Engine_Cloudlet_List list = listFuture.get();

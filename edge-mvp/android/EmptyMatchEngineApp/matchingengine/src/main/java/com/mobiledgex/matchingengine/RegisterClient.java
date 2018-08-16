@@ -18,14 +18,14 @@ public class RegisterClient implements Callable {
     public static final String TOKEN_SERVER_URI_KEY = "token_server_u_r_i";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest;
+    private MatchingEngineRequest mRequest;
     private long mTimeoutInMilliseconds = -1;
 
     RegisterClient(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -50,10 +50,9 @@ public class RegisterClient implements Callable {
     @Override
     public AppClient.Match_Engine_Status call() throws MissingRequestException,
             StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null) {
+        if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
-
 
 
         AppClient.Match_Engine_Status reply;
@@ -61,7 +60,7 @@ public class RegisterClient implements Callable {
         ManagedChannel channel = null;
         try {
             channel = ManagedChannelBuilder
-                    .forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort())
+                    .forAddress(mRequest.host, mRequest.port)
                     .usePlaintext()
                     .build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
@@ -70,12 +69,13 @@ public class RegisterClient implements Callable {
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .registerClient(mRequest);
+                    .registerClient(mRequest.matchEngineRequest);
 
             nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();
+                channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
             }
         }
         mRequest = null;

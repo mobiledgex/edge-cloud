@@ -10,6 +10,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.telephony.CarrierConfigManager;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -21,6 +22,7 @@ import android.content.Intent;
 // Matching Engine API:
 import com.mobiledgex.matchingengine.FindCloudletResponse;
 import com.mobiledgex.matchingengine.MatchingEngine;
+import com.mobiledgex.matchingengine.MatchingEngineRequest;
 import com.mobiledgex.matchingengine.NetworkManager;
 import com.mobiledgex.matchingengine.util.RequestPermissions;
 
@@ -280,7 +282,11 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
                     boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
 
-                    AppClient.Match_Engine_Request req = mMatchingEngine.createRequest(ctx, location);
+                    //MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, location); // Regular use case.
+                    String host = "tdg.dme.mobiledgex.net"; // Override host.
+                    int port = mMatchingEngine.getPort(); // Keep same port.
+
+                    MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, host, port, location);
 
                     AppClient.Match_Engine_Status registerStatus = mMatchingEngine.registerClient(req, 10000);
                     if (registerStatus.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS) {
@@ -290,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         return;
                     }
 
-                    req = mMatchingEngine.createRequest(ctx, location);
+                    req = mMatchingEngine.createRequest(ctx, host, port, location);
                     if (req != null) {
                         // Location Verification (Blocking, or use verifyLocationFuture):
                         AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
@@ -309,13 +315,27 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             }
                             serverip += closestCloudlet.service_ip[closestCloudlet.service_ip.length - 1];
                         }
-                        someText += "[Cloudlet Server: URI: [" + closestCloudlet.uri + "], Serverip: [" + serverip + "], Port: " + closestCloudlet.port + "]";
+                        someText += "[Cloudlet Server: URI: [" + closestCloudlet.uri + "], Serverip: [" + serverip + "], Port: " + closestCloudlet.port + "]\n";
                     } else {
-                        someText = "Cannot create request object.";
+                        someText = "Cannot create request object.\n";
                         if (!mexAllowed) {
-                            someText += " Reason: Enhanced location is disabled.";
+                            someText += " Reason: Enhanced location is disabled.\n";
                         }
                     }
+
+                    someText += "[Is WiFi Enabled: " + mMatchingEngine.isWiFiEnabled(ctx) + "]\n";
+
+                    if (android.os.Build.VERSION.SDK_INT >= 28) {
+                        someText += "[Is Roaming Data Enabled: " + mMatchingEngine.isRoamingData() + "]\n";
+                    } else {
+                        someText += "[Roaming Data status unknown.]\n";
+                    }
+
+                    CarrierConfigManager carrierConfigManager = ctx.getSystemService(CarrierConfigManager.class);
+                    someText += "[Enabling WiFi Calling could disable Cellular Data if on a Roaming Network!\nWiFi Calling  Support Status: "
+                            + mMatchingEngine.isWiFiCallingSupported(carrierConfigManager) + "]\n";
+
+
                     // Background thread. Post update to the UI thread:
                     ctx.runOnUiThread(new Runnable() {
                         @Override

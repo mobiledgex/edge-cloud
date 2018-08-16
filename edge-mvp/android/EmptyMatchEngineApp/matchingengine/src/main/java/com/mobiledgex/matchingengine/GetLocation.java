@@ -17,14 +17,14 @@ public class GetLocation implements Callable {
     public static final String TAG = "GetLocation";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest;
+    private MatchingEngineRequest mRequest;
     private long mTimeoutInMilliseconds = -1;
 
     GetLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -44,7 +44,7 @@ public class GetLocation implements Callable {
     @Override
     public AppClient.Match_Engine_Loc call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null) {
+        if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: GetLocation does not have a request object to make location verification call!");
         }
 
@@ -52,19 +52,20 @@ public class GetLocation implements Callable {
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
+            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             NetworkManager nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .getLocation(mRequest);
+                    .getLocation(mRequest.matchEngineRequest);
 
             nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();
+                channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
             }
         }
         mRequest = null;

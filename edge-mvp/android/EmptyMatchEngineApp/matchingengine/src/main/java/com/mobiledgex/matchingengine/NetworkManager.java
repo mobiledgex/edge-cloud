@@ -5,6 +5,10 @@ import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
+import android.net.wifi.WifiManager;
+import android.os.PersistableBundle;
+import android.support.annotation.RequiresApi;
+import android.telephony.CarrierConfigManager;
 import android.util.Log;
 
 import java.util.concurrent.Callable;
@@ -12,6 +16,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import io.grpc.ManagedChannel;
+
+import static android.telephony.CarrierConfigManager.KEY_CARRIER_WFC_IMS_AVAILABLE_BOOL;
 
 public class NetworkManager {
     public static final String TAG = "NetworkManager";
@@ -24,18 +32,21 @@ public class NetworkManager {
     private final Object mSyncObject = new Object();
     private long mTimeoutInMilliseconds = 10000;
 
+    // GRPC ManagedChannel, subject to NetworkManager.
+    private ManagedChannel mGrpcChannel;
+
     private Network mNetwork;
     private NetworkRequest mDefaultRequest;
 
     private ExecutorService mThreadPool;
-    private boolean networkSwitchingEnabled = true;
+    private boolean mNetworkSwitchingEnabled = true;
 
-    public boolean isNetworkSwitchingEnabled() {
-        return networkSwitchingEnabled;
+    public boolean ismNetworkSwitchingEnabled() {
+        return mNetworkSwitchingEnabled;
     }
 
     public void setNetworkSwitchingEnabled(boolean networkSwitchingEnabled) {
-        this.networkSwitchingEnabled = networkSwitchingEnabled;
+        this.mNetworkSwitchingEnabled = networkSwitchingEnabled;
     }
 
     /**
@@ -47,7 +58,7 @@ public class NetworkManager {
      */
     synchronized void runOnNetwork(Callable callable, NetworkRequest networkRequest)
             throws InterruptedException, ExecutionException {
-        if (networkSwitchingEnabled == false) {
+        if (mNetworkSwitchingEnabled == false) {
             Log.e(TAG, "NetworkManager is disabled.");
             return;
         }
@@ -149,8 +160,28 @@ public class NetworkManager {
         return mNetwork;
     }
 
+    // This Roaming Data value is un-reliable except under a new NetworkCapabilities Key in API 28.
+    @RequiresApi(api = android.os.Build.VERSION_CODES.P)
+    boolean isRoamingData() {
+        boolean isroaming = mConnectivityManager.getNetworkCapabilities(mConnectivityManager.getActiveNetwork())
+            .hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING);
+        return isroaming;
+    }
+
+    /**
+     * Checks if the Carrier + Phone combination supports WiFiCalling. This is a supports value, it
+     * does not return whether or not it is enabled.
+     * @return
+     */
+    boolean isWiFiCallingSupported(CarrierConfigManager carrierConfigManager) {
+        PersistableBundle configBundle = carrierConfigManager.getConfig();
+
+        boolean isWifiCalling = configBundle.getBoolean(KEY_CARRIER_WFC_IMS_AVAILABLE_BOOL);
+        return isWifiCalling;
+    }
+
     public void resetNetworkToDefault() throws InterruptedException, ExecutionException {
-        if (networkSwitchingEnabled == false) {
+        if (mNetworkSwitchingEnabled == false) {
             Log.e(TAG, "NetworkManager is disabled.");
             return;
         }
@@ -176,7 +207,7 @@ public class NetworkManager {
         }
         @Override
         public Network call() throws InterruptedException, NetworkRequestTimeoutException {
-            if (networkSwitchingEnabled == false) {
+            if (mNetworkSwitchingEnabled == false) {
                 Log.e(TAG, "NetworkManager is disabled.");
                 return null;
             }
@@ -199,7 +230,7 @@ public class NetworkManager {
                 ConnectivityManager.NetworkCallback networkCallback = new ConnectivityManager.NetworkCallback() {
                     @Override
                     public void onAvailable(Network network) {
-                        Log.d(TAG, "requestNetwork onAvailable(), binding process to network.");
+                        Log.i(TAG, "requestNetwork onAvailable(), binding process to network.");
                         mConnectivityManager.bindProcessToNetwork(network);
                         activeListenerAdded = true;
                         mConnectivityManager.addDefaultNetworkActiveListener(activeListener);
@@ -215,7 +246,7 @@ public class NetworkManager {
                     @Override
                     public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties) {
                         Log.d(TAG, "requestNetwork onLinkPropertiesChanged(): " + network.toString());
-                        Log.d(TAG, " -- linkProperties: " + linkProperties.getRoutes());
+                        Log.i(TAG, " -- linkProperties: " + linkProperties.getRoutes());
                         synchronized (mSyncObject) {
                             mWaitingForLink = false;
                             mSyncObject.notify();
@@ -224,14 +255,14 @@ public class NetworkManager {
 
                     @Override
                     public void onLosing(Network network, int maxMsToLive) {
-                        Log.d(TAG, "requestNetwork onLosing(): " + network.toString());
+                        Log.i(TAG, "requestNetwork onLosing(): " + network.toString());
                     }
 
                     @Override
                     public void onLost(Network network) {
                         // unbind lost network.
                         mConnectivityManager.bindProcessToNetwork(null);
-                        Log.d(TAG, "requestNetwork onLost(): " + network.toString());
+                        Log.i(TAG, "requestNetwork onLost(): " + network.toString());
                     }
 
                 };
@@ -246,7 +277,7 @@ public class NetworkManager {
                         mSyncObject.wait(mTimeoutInMilliseconds - elapsed);
                     }
                     if (mWaitingForLink) {
-                        // Timed out waiting for available network.
+                        // Timed out while waiting for available network.
                         NetworkCapabilities networkCapabilities = mConnectivityManager.getNetworkCapabilities(mConnectivityManager.getActiveNetwork());
                         mConnectivityManager.unregisterNetworkCallback(networkCallback);
                         mNetwork = null;
@@ -256,7 +287,7 @@ public class NetworkManager {
                         throw new NetworkRequestTimeoutException("NetworkRequest timed out with no availability.");
                     }
                     elapsed = System.currentTimeMillis() - timeStart;
-                    Log.d(TAG, "Elapsed time waiting for link: " + elapsed);
+                    Log.i(TAG, "Elapsed time waiting for link: " + elapsed);
                     mNetworkRequest = null;
                 }
 
@@ -269,6 +300,12 @@ public class NetworkManager {
             } finally {
                 if (activeListenerAdded) {
                     mConnectivityManager.removeDefaultNetworkActiveListener(activeListener);
+                }
+            }
+
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                if (isRoamingData()) {
+                    Log.i(TAG, "Network Roaming Data Status: " + isRoamingData());
                 }
             }
             return mNetwork;
@@ -285,6 +322,11 @@ public class NetworkManager {
         Log.d(TAG, " -- networkCapabilities: TRANSPORT_LOWPAN: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_LOWPAN));
 
         Log.d(TAG, " -- networkCapabilities: NET_CAPABILITY_INTERNET: " + networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET));
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            Log.i(TAG, " -- is Roaming Data: " + isRoamingData());
+        } else {
+            Log.i(TAG, " -- is Roaming Data: UNKNOWN");
+        }
     }
 
     public boolean isCurrentNetworkInternetCellularDataCapable() {
@@ -337,7 +379,7 @@ public class NetworkManager {
     }
 
     /**
-     * Switch to a particular network type in a blocking fashion for synchronous execution blocks.
+     * Switch to a particular network type. Returns a Future.
      * @return
      */
     public Future<Network> switchToCellularInternetNetworkFuture() {
@@ -366,7 +408,7 @@ public class NetworkManager {
     }
 
     /**
-     * Switch to a particular network type in a blocking fashion for synchronous execution blocks.
+     * Switch to a particular network type. Returns a Future.
      * @return
      */
     public Future<Network> switchToDefaultInternetNetworkFuture(NetworkRequest networkRequest) {
@@ -383,7 +425,6 @@ public class NetworkManager {
      * @return
      */
     public void switchToNetwork(NetworkRequest networkRequest, final ConnectivityManager.NetworkCallback networkCallback) {
-        boolean switched;
         mConnectivityManager.requestNetwork(networkRequest, new ConnectivityManager.NetworkCallback() {
             @Override
             public void onAvailable(Network network) {

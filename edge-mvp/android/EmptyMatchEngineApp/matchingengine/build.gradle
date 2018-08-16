@@ -10,11 +10,11 @@ def nexusUser = properties.getProperty("nexus.user")
 def nexusPassword = properties.getProperty("nexus.password")
 
 android {
-    compileSdkVersion 27
+    compileSdkVersion 28
 
     defaultConfig {
         minSdkVersion 23
-        targetSdkVersion 27
+        targetSdkVersion 28
         versionCode 1
         versionName "0.0.1"
 
