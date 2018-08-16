@@ -21,6 +21,7 @@ import (
 )
 
 var Deployment DeploymentData
+var ApiAddrNone = "NONE"
 
 type yamlFileType int
 
@@ -50,6 +51,10 @@ type GoogleCloudInfo struct {
 	Cluster     string
 	Zone        string
 	MachineType string
+}
+
+type ClusterInfo struct {
+	MexManifest string
 }
 
 type K8sPod struct {
@@ -114,7 +119,7 @@ type CloudflareDNS struct {
 }
 
 type DeploymentData struct {
-	GCloud        GoogleCloudInfo     `yaml:"gcloud"`
+	Cluster       ClusterInfo         `yaml:"cluster"`
 	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
 	Locsims       []LocSimProcess     `yaml:"locsims"`
 	Toksims       []TokSimProcess     `yaml:"toksims"`
@@ -138,7 +143,7 @@ var yamlExceptions = map[string]map[string]bool{
 }
 
 func IsK8sDeployment() bool {
-	return Deployment.GCloud.Cluster != "" //TODO Azure
+	return Deployment.Cluster.MexManifest != "" //TODO Azure
 }
 
 func IsYamlOk(e error, yamltype string) bool {
@@ -236,6 +241,9 @@ func GetDme(dmename string) *DmeProcess {
 
 func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
+	if p.ApiAddr == ApiAddrNone {
+		c <- ReturnCodeWithText{true, "skipped nonexistent addr " + p.Name}
+	}
 	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
 		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}

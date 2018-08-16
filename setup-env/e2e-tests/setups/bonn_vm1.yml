@@ -1,10 +1,16 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- vm1_internal_ip: 10.1.1.8
-- vm1_external_ip: 37.50.143.110
-- locverurl: "http://10.1.1.8:8888/verifyLocation"
-- toksrvurl: "http://37.50.143.110:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- vm1_internal_ip: 127.0.0.1 
+- vm1_external_ip: 37.50.143.118
+- locverurl: "http://127.0.0.1:8888/verifyLocation"
+- toksrvurl: "http://37.50.143.118:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: tdg.dme.mobiledgex.net
+    type: A
+    content: 37.50.143.118
 
 sampleapps:
 - sampleapplocal:
@@ -12,6 +18,12 @@ sampleapps:
     exename: mexexample
     args: 
      - "-debug"
+  hostname: "{{vm1_external_ip}}"
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
   hostname: "{{vm1_external_ip}}"
 
 locsims:

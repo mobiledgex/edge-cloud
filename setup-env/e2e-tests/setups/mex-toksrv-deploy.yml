@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: toksrv
+  labels:
+    app: toksrv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: toksrv
+  template:
+    metadata:
+      labels:
+        app: toksrv
+    spec:
+      containers:
+      - name: toksrv
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        command:
+         - "tok-srv-sim"
+         - "--port"
+         - "9999"
+         
+      imagePullSecrets:
+       - name: mexreg-secret 
+

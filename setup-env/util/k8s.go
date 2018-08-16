@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"strings"
@@ -43,19 +44,20 @@ func summarizeError(output string) string {
 		strings.Contains(output, "gcloud account not logged in") {
 		return "need to run gcloud auth application-default login"
 	}
-	return "unknown gcloud error - see logs"
+	log.Printf("unknown error, no summary %s\n", output)
+	return "unknown error - see logs"
 }
 
-func CreateGloudCluster() error {
-	return runCommand("create", "gcloud", "container", "clusters", "create", Deployment.GCloud.Cluster, "--zone", Deployment.GCloud.Zone, "--machine-type", Deployment.GCloud.MachineType)
+func CreateK8sCluster() error {
+	return runCommand("create", "mex", "cluster", "create", "-manifest", Deployment.Cluster.MexManifest)
 }
 
-func DeleteGloudCluster() error {
-	return runCommand("delete", "gcloud", "container", "clusters", "delete", Deployment.GCloud.Cluster, "--quiet")
+func DeleteK8sCluster() error {
+	return runCommand("delete", "mex", "cluster", "delete", "-manifest", Deployment.Cluster.MexManifest)
 }
 
 func runCommand(actionType string, command string, args ...string) error {
-	log.Printf("runGCloudCommand for command %s args %v\n", command, args)
+	log.Printf("runCommand %s args %v\n", command, args)
 	cmd := exec.Command(command, args...)
 
 	output, err := cmd.CombinedOutput()
@@ -174,13 +176,25 @@ func GetK8sServiceAddr(svcname string, maxwait int) (string, error) {
 		if len(svc.Status.LoadBalancer.Ingress) != 0 && len(svc.Spec.Ports) != 0 {
 			//can be IP or DNS
 			host := svc.Status.LoadBalancer.Ingress[0].IP
+			port := fmt.Sprintf("%d", svc.Spec.Ports[0].Port)
 			if host == "" {
 				host = svc.Status.LoadBalancer.Ingress[0].Hostname
 			}
 			// sleep one more time after external ip shows up just to make sure it's ready before hitting it with traffic
-			// TODO: is there a better way to do this?
-			time.Sleep(3 * time.Second)
-			return fmt.Sprintf("%s:%d", host, svc.Spec.Ports[0].Port), nil
+			time.Sleep(1 * time.Second)
+			for i := 0; i < 30; i++ {
+				//wait for port to be reachable
+				log.Printf("Check if port is open: %s\n", host+":"+port)
+				conn, err := net.DialTimeout("tcp", host+":"+port, 1*time.Minute)
+				if err == nil {
+					conn.Close()
+					log.Printf("Port is open: %s\n", host+":"+port)
+					return fmt.Sprintf(host + ":" + port), nil
+				}
+				log.Printf("port not yet reachable: %v", err)
+				time.Sleep(1 * time.Second)
+			}
+			return "", fmt.Errorf("Service created but not reachable")
 		}
 		log.Printf("waiting for service: %s iter %d max %d current status %+v \n", svcname, i, maxwait, svc.Status)
 		time.Sleep(3 * time.Second)

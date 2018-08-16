@@ -1,0 +1,10 @@
+#cluster: azure aks
+apiVersion: v1
+kind: azure-aks
+resource: kubernetes-cluster
+metadata:
+  name: jlmcluster
+  tags: jlmcluster-tag
+  tenant: jlmtenant
+  location: centralus
+  resourcegroup: jlmclustergroup

@@ -27,5 +27,7 @@ e2e-tests -testfile testfiles/stop_cleanup.yml -setupfile setups/local_multi.yml
 e2e-tests -testfile testfiles/regression_group.yml -setupfile setups/local_multi.yml 
 # remote deploy and leave things set up
 e2e-tests -testfile testfiles/deploy_group.yml -setupfile setups/local_multi.yml
-e2e-tests -testfile testfiles/deploy_group.yml -setupfile setups/bonn_2vm.yml
 
+## Garner's SDK test setup
+e2e-tests -testfile testfiles/start_add_sdk.yml -setupfile setups/bonn_vm1.yml
+e2e-tests -testfile testfiles/start_add_sdk.yml -setupfile setups/bonn_vm2.yml
