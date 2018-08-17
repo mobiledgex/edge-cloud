@@ -22,7 +22,7 @@ RUN make clean
 ENV CGO_ENABLED=0
 RUN make
 
-FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl
+FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl-gcloud-az
 
 COPY --from=build /go/bin/controller /usr/local/bin
 COPY --from=build /go/bin/crmctl /usr/local/bin

@@ -197,7 +197,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "create app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
-			err := MEXCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			err := MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, errstr)
@@ -226,7 +226,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
-			err := MEXDeleteAppInst(cd.CRMRootLB, &clusterInst, old)
+			err := MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, old)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, errstr)

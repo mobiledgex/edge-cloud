@@ -21,6 +21,8 @@ And do,
 $ source .mobiledgex/openrc
 ```
 
+Google cloud CLI program `gcloud` is required for `gke` cluster related functions to work.
+Azure cloud CLI program `az` is required for `aks` cluster related functions to work.
 
 ## cloudflare
 
@@ -86,7 +88,7 @@ For Openstack, as in Buckhorn installation, we have to carve out and establish p
 Normally you will not create platform often. 
 
 ```
-$ mex -platform platform-openstack-kubernetes.yaml platform init  -manifest platform-openstack-kubernetes.yaml
+$ mex -platform platform-mex-k8s.yaml platform init  -manifest platform-mex-k8s.yaml
 
 ```
 
@@ -123,12 +125,12 @@ $ mex cluster create -manifest cluster-gcloud-gke.yaml
 
 ## create openstack kubernetes cluster at Buckhorn cloudlet
 ```
-$ mex -platform platform-openstack-kubernetes.yaml cluster create -manifest cluster-kubernetes.yaml
+$ mex -platform platform-mex-k8s.yaml cluster create -manifest cluster-mex-k8s.yaml
 #wait for 10 minutes
 ```
 
 
-After creating the clusters on each backend platforms, you can use standard `kubectl` tool to launch apps. The kubeconfig credentials retrieved from the cluster and made available. In gke and aks cases, they are in ~/.kube/config.  In the case of openstack kubernetes, they are in ~/.mobiledgex/nameofthecluster-guid.kubeconfig and ~/.mobiledgex/nameofthecluster-guid.kubeconfig-proxy.
+After creating the clusters on each backend platforms, you can use standard `kubectl` tool to launch apps. The kubeconfig credentials retrieved from the cluster and made available. In gke and aks cases, they are in ~/.kube/config.  In the case of openstack kubernetes, they are in ~/.mobiledgex/nameofthecluster.kubeconfig and ~/.mobiledgex/nameofthecluster.kubeconfig-proxy.
 
 
 ## Launching apps
@@ -138,12 +140,12 @@ Using kubectl you can launch apps.  But you should use `mex` instead.  There are
 ## Launch app into kubernetes via mex
 
 ```
-$ mex -platform platform-openstack-kubernetes.yaml application run -manifest application-kubernetes.yaml
+$ mex -platform platform-mex-k8s.yaml application run -manifest application-mex-k8s.yaml
 ```
 
-The application-kubernetes.yaml file tells Mex tool details required for the app contexts. Within it, a reference is made to kubernetes manifest that reside on a registry. The kubemainfest  has two parts. First it declares deployment. And service manifest.  The app image is mobiledgex/mexexample docker image from registry.mobiledgex.net:5000.  The code is under cloud-resource-manager/example/mexexample. Doing a make there will build, create docker image, tag it and upload to the registry.  The image is then referenced in the application-kubernetes.yaml file.  Running `mex` to run this manifest file is like doing it with kubectl.  Besides normal kubectl there are a bunch of things being done, such as making sure the secret is created in the kubernetes etcd to be referenced in the application-kubernetes.yaml to allow fetching from private repo.  Setting up proper routing and reverse proxy rules based on the service declarations of ports. The `mexexample` is an app that supports GRPC, REST and HTTP endpoint APIs.  It uses three different ports which are declared and honored by the kubernetes and reverse proxy automatically.  
+The application-mex-k8s.yaml file tells Mex tool details required for the app contexts. Within it, a reference is made to kubernetes manifest that reside on a registry. The kubemainfest  has two parts. First it declares deployment. And service manifest.  The app image is mobiledgex/mexexample docker image from registry.mobiledgex.net:5000.  The code is under cloud-resource-manager/example/mexexample. Doing a make there will build, create docker image, tag it and upload to the registry.  The image is then referenced in the application-mex-k8s.yaml file.  Running `mex` to run this manifest file is like doing it with kubectl.  Besides normal kubectl there are a bunch of things being done, such as making sure the secret is created in the kubernetes etcd to be referenced in the application-mex-k8s.yaml to allow fetching from private repo.  Setting up proper routing and reverse proxy rules based on the service declarations of ports. The `mexexample` is an app that supports GRPC, REST and HTTP endpoint APIs.  It uses three different ports which are declared and honored by the kubernetes and reverse proxy automatically.  
 
-The application-kubernetes.yaml is mostly custom yaml structures needed by mex. There is a .spec.kubemanifest: pointer which points to a kubernetes manifest called http://registry.mobiledgex.net:8080/mexexample.yaml.  This file contains the  standard kubernetes declarations for deployment and service.  This is served by a server on registry.mobiledgex.net:8080.   It is pulled by kubectl at the target kubernetes cluster.  Before  and after that happens, bunch of things have to happen, and the rest of the yaml content in application-kubernetes.yaml describes details.
+The application-mex-k8s.yaml is mostly custom yaml structures needed by mex. There is a .spec.kubemanifest: pointer which points to a kubernetes manifest called http://registry.mobiledgex.net:8080/mexexample.yaml.  This file contains the  standard kubernetes declarations for deployment and service.  This is served by a server on registry.mobiledgex.net:8080.   It is pulled by kubectl at the target kubernetes cluster.  Before  and after that happens, bunch of things have to happen, and the rest of the yaml content in application-mex-k8s.yaml describes details.
 
 
 Once `mexexample` app is running in the cluster, you can talk to it via proxy.
@@ -191,7 +193,7 @@ mexexample-deployment-56dd4f7d44-9sl5k   1/1       Running   0          20m
 A VM based app can be launched as well
 
 ```
-$ go run main.go -debug -platform platform-openstack-kubernetes.yaml application run -manifest application-qcow2.yaml
+$ go run main.go -debug -platform platform-mex-k8s.yaml application run -manifest application-mex-qcow2.yaml
 ```
 
 The details of this workflow still need to be worked out when apps are made available to us.  As is, not enough information available to see what customization has to be done for a given KVM.
@@ -205,13 +207,39 @@ When running the MEX API in a CRM talking to controller, the context of the plat
 
 
 
-
 ## cleaning up
 
 ```
 $ source ~/mex.env
-$ mex -d mexos -platform platform-openstack-kubernetes.yaml cluster remove -manifest cluster-kubernetes.yaml
-$ mex -d mexos -platform platform-openstack-kubernetes.yaml platform clean -manifest platform-openstack-kubernetes.yaml
+$ mex -d mexos -platform platform-mex-k8s.yaml cluster remove -manifest cluster-mex-k8s.yaml
+$ mex -d mexos -platform platform-mex-k8s.yaml platform clean -manifest platform-mex-k8s.yaml
 $ openstack server list
 ```
 
+## AKS
+
+The machine running the followings need to have `az` installed. You also need to register the device via `az login` before running the followings.
+
+```
+$ mex -d mexos cluster create -manifest cluster-azure-aks.yaml
+$ mex -d mexos application run -manifest application-aks.yaml
+```
+
+
+## GKE
+
+
+The machine running the followings need to have `gcloud` installed. You also need to register the device via `gcloud auth login` before running the followings.  You will need to set the following example configs or equivalent:
+
+```
+$ gcloud config set project still-entity-201400
+$ gcloud config set compute/zone us-west1-c
+$ gcloud auth application-default login
+```
+
+You may need to do `gcloud init` if this is first time you use `gcloud` which sets up the above configs.
+
+```
+$ mex -d mexos cluster create -manifest cluster-gcloud-aks.yaml
+$ mex -d mexos application run -manifest application-gke.yaml
+```

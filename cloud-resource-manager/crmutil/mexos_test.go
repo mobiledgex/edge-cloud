@@ -116,18 +116,6 @@ func TestValidateMEXOSEnv(t *testing.T) {
 	}
 }
 
-func TestAddFlavor(t *testing.T) {
-	if !IsValidMEXOSTest {
-		return
-	}
-	for _, f := range ValidClusterFlavors {
-		err := AddFlavor(f)
-		if err != nil {
-			t.Error(err)
-		}
-	}
-}
-
 func TestLBAddRoute(t *testing.T) {
 	if !IsValidMEXOSTest {
 		return
