@@ -140,7 +140,7 @@ func (s *CloudletApi) UpdatedCb(old *edgeproto.Cloudlet, new *edgeproto.Cloudlet
 				old := inst
 				inst.CloudletLoc = new.Location
 				if appInstApi.cache.NotifyCb != nil {
-					appInstApi.cache.NotifyCb(inst.GetKey(), old)
+					appInstApi.cache.NotifyCb(&inst.Key, old)
 				}
 			}
 		}

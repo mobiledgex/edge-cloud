@@ -746,6 +746,12 @@ func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs
 	return nil
 }
 
+func CloudletRefsGenericNotifyCb(fn func(key *CloudletKey, old *CloudletRefs)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*CloudletKey), obj.(*CloudletRefs))
+	}
+}
+
 func (c *CloudletRefsCache) SetNotifyCb(fn func(obj *CloudletKey, old *CloudletRefs)) {
 	c.NotifyCb = fn
 }
@@ -843,7 +849,7 @@ func (c *CloudletRefsCache) SyncListEnd() {
 	}
 }
 
-func (m *CloudletRefs) GetKey() *CloudletKey {
+func (m *CloudletRefs) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
@@ -1175,6 +1181,12 @@ func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) e
 	return nil
 }
 
+func ClusterRefsGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterRefs)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*ClusterInstKey), obj.(*ClusterRefs))
+	}
+}
+
 func (c *ClusterRefsCache) SetNotifyCb(fn func(obj *ClusterInstKey, old *ClusterRefs)) {
 	c.NotifyCb = fn
 }
@@ -1272,7 +1284,7 @@ func (c *ClusterRefsCache) SyncListEnd() {
 	}
 }
 
-func (m *ClusterRefs) GetKey() *ClusterInstKey {
+func (m *ClusterRefs) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

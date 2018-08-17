@@ -1388,6 +1388,12 @@ func (c *CloudletCache) Show(filter *Cloudlet, cb func(ret *Cloudlet) error) err
 	return nil
 }
 
+func CloudletGenericNotifyCb(fn func(key *CloudletKey, old *Cloudlet)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*CloudletKey), obj.(*Cloudlet))
+	}
+}
+
 func (c *CloudletCache) SetNotifyCb(fn func(obj *CloudletKey, old *Cloudlet)) {
 	c.NotifyCb = fn
 }
@@ -1485,7 +1491,7 @@ func (c *CloudletCache) SyncListEnd() {
 	}
 }
 
-func (m *Cloudlet) GetKey() *CloudletKey {
+func (m *Cloudlet) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
@@ -1955,6 +1961,12 @@ func (c *CloudletInfoCache) Show(filter *CloudletInfo, cb func(ret *CloudletInfo
 	return nil
 }
 
+func CloudletInfoGenericNotifyCb(fn func(key *CloudletKey, old *CloudletInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*CloudletKey), obj.(*CloudletInfo))
+	}
+}
+
 func (c *CloudletInfoCache) SetNotifyCb(fn func(obj *CloudletKey, old *CloudletInfo)) {
 	c.NotifyCb = fn
 }
@@ -2052,7 +2064,7 @@ func (c *CloudletInfoCache) SyncListEnd() {
 	}
 }
 
-func (m *CloudletInfo) GetKey() *CloudletKey {
+func (m *CloudletInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

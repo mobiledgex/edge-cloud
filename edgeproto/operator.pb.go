@@ -722,6 +722,12 @@ func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) err
 	return nil
 }
 
+func OperatorGenericNotifyCb(fn func(key *OperatorKey, old *Operator)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*OperatorKey), obj.(*Operator))
+	}
+}
+
 func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey, old *Operator)) {
 	c.NotifyCb = fn
 }
@@ -819,7 +825,7 @@ func (c *OperatorCache) SyncListEnd() {
 	}
 }
 
-func (m *Operator) GetKey() *OperatorKey {
+func (m *Operator) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

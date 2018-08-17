@@ -909,6 +909,13 @@ func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) 
 	return nil
 }
 
+func {{.Name}}GenericNotifyCb(fn func(key *{{.KeyType}}, old *{{.Name}})) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*{{.KeyType}}), obj.(*{{.Name}}))
+	}
+}
+
+
 func (c *{{.Name}}Cache) SetNotifyCb(fn func(obj *{{.KeyType}}, old *{{.Name}})) {
 	c.NotifyCb = fn
 }
@@ -1189,7 +1196,8 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.importUtil = true
 	}
 	if field := GetMessageKey(message); field != nil {
-		m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
+		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
+		m.P("func (m *", message.Name, ") GetKey() objstore.ObjKey {")
 		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
