@@ -1,10 +1,22 @@
-#cluster: azure aks
 apiVersion: v1
-kind: azure-aks
-resource: kubernetes-cluster
+kind: cluster
+resource: azure-centralus-rg-1
 metadata:
   name: testcluster
   tags: testcluster-tag
+  kind: mex-aks-cluster
   tenant: testtenant
+  operator: azure
+  region: centralus
+  zone: centralus
   location: centralus
+  project:
   resourcegroup: testclustergroup
+spec:
+  flags:
+  flavor:
+  key: aks-testcluster
+  dockerregistry: registry.mobiledgex.net:5000
+  rootlb:
+  networkscheme:
+  

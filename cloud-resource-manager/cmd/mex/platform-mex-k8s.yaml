@@ -1,22 +1,21 @@
-#platform: mex openstack with kubernetes cluster
 apiVersion: v1
-kind: mex-openstack-kubernetes
-resource: openstack-platform
+kind: platform
+resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
 metadata:
-  kind: mex-tdg-openstack-kubernetes
-  name: testcloudlet.testoperator.mobiledgex.net
-  tags: testoperator-testlocation
+  kind: mex-tdg-platform
+  name: testcloudlet.mex-tdg.mobiledgex.net
+  tags: mex-tdg-testlocation-tdg
   tenant: testtenant
   region: eu-central-1
   zone: eu-central-1c
   location: testlocation
   openrc: ~/.mobiledgex/openrc
   dnszone: mobiledgex.net
-  operator: testoperator
+  operator: mex-tdg
 spec:
   flags: force
   flavor: x1.medium
-  rootlb: testcloudlet.testoperator.mobiledgex.net
+  rootlb: testcloudlet.mex-tdg.mobiledgex.net
   key: testcloudlet
   dockerregistry: registry.mobiledgex.net:5000
   externalnetwork: external-network-shared

@@ -1,22 +1,22 @@
-#application: kubernetes
 apiVersion: v1
-kind: mex-openstack-kubernetes
-resource: kubernetes-application
+kind: application
+resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
 metadata:
-  kind: mex-app-kubernetes
+  kind: mex-app-k8s
   name: testapp
-  tags: testapp-kubernetes-tag
+  tags: testapp-k8s-tag
   tenant: testtenant
+  operator: mex-tdg
 spec:
   flags: none
   key: testapp
-  rootlb: testcloudlet.testoperator.mobiledgex.net
+  rootlb: testcloudlet.mex-tdg.mobiledgex.net
   image: registry.mobiledgex.net:5000/mobiledgex/mexexample
   imagetype: ImageTypeDocker
   proxypath: testapp
   portmap: 
   pathmap: /etc:/mexexample
-  flavor: app-kubernetes-flavor
-  uri: https://testapp.testcloudlet.testoperator.mobiledgex.net
+  flavor: x1.medium
+  uri: https://testapp.testcloudlet.mex-tdg.mobiledgex.net
   kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
   accesslayer: L7
