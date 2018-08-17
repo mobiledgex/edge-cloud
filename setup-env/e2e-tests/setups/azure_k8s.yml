@@ -1,0 +1,116 @@
+cluster:
+    mexmanifest: "{{datadir}}//cluster-azure-aks.yaml"
+
+#we don't actually know the ip until after it is created, so this is updated
+#after and deploy is run a second time.  A better solution TBD
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: mex.dme.mobiledgex.net
+    type: A
+    content: 23.99.192.41 
+  - name: mex.tok.mobiledgex.net
+    type: A
+    content: 23.99.254.204
+  - name: mex.ctrl.mobiledgex.net
+    type: A
+    content: 168.61.222.27
+  - name: mex.ctrl-not.mobiledgex.net
+    type: A
+    content: 168.61.217.237
+
+k8s-deployment:
+
+   - file: rbac.yml
+     description: setup permissions for service account
+
+   - file: mex-secret.yml
+     description: secret used to access private repo
+
+   - file: mex-locsim-deploy.yml
+     description: create a location api simulator
+     waitforpods:
+     - podname: locsim
+       podcount: 1
+       maxwait: 180 
+     copyfile:
+       podname: locsim
+       src: ../data/locsim.yml
+       dest: /var/tmp
+
+   - file: mex-locsim-svc.yml
+     description: create service to allow locsim to be accessed within cluster
+     
+   - file: mex-toksrv-deploy.yml
+     description: create token service simulator
+     waitforpods:
+     - podname: toksrv
+       podcount: 1
+       maxwait: 180
+
+   - file: mex-toksrv-lb.yml
+     description: create a load balancer for token service
+
+   - file: etcd-operator.yml
+     description: create an operator deployment to manage etcd
+     waitforpods:
+      - podname: etcd-operator
+        podcount: 1
+        maxwait: 180
+ 
+   - file: mex-etcd-cluster.yml
+     description: creates the MEX etcd cluster
+     waitforpods:
+      - podname: mex-etcd-cluster
+        podcount: 3 
+        maxwait: 180
+
+   - file: mex-controller-deploy.yml
+     description: deploys the controllers
+     waitforpods:
+      - podname: controller
+        podcount: 2
+        maxwait: 180
+
+   - file: mex-controller-lb.yml
+     description: create a load balancer for controllers
+
+   - file: mex-controller-notify-lb.yml
+     description: expose controller notify port via lb 
+
+   - file: mex-dme-deploy.yml
+     description: deploys the dmes
+     waitforpods:
+      - podname: dme
+        podcount: 2
+        maxwait: 180
+
+   - file: mex-dme-lb.yml
+     description: create a load balancer for dmes
+
+   - file: mex-crm-deploy-centralus.yml
+     description: deploys the cluster in azure central
+     waitforpods:
+      - podname: crmcentralus
+        podcount: 1
+        maxwait: 180
+
+#   - file: mex-crm-deploy-bonn.yml
+#     description: deploys the cluster in bonn
+#     waitforpods:
+#      - podname: crmbonn
+#        podcount: 1
+#        maxwait: 180
+
+controllers:
+- controllerlocal:
+    name: ctrl-pool
+
+dmes:
+- dmelocal:
+    name: dme-pool
+    carrier: tdg
+
+crms:
+ - crmlocal:
+     name: crm-pool

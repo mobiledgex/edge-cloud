@@ -22,7 +22,7 @@ var apiAddrsUpdated = false
 
 //when first creating a cluster, it may take a while for the load balancer to get an IP. Usually
 // this happens much faster, but occasionally it takes longer
-var maxWaitForServiceSeconds = 300
+var maxWaitForServiceSeconds = 900 //15 min
 
 func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
@@ -117,31 +117,41 @@ func getExternalApiAddress(internalApiAddr string, externalHost string) string {
 //external address which clients need to use as floating IPs are used.  So use the external
 //hostname and api port when connecting to the API.  This needs to be done after startup
 //but before trying to connect to the APIs remotely
-func UpdateApiAddrs() {
+func UpdateAPIAddrs() bool {
 	if apiAddrsUpdated {
 		//no need to do this more than once
-		return
+		return true
 	}
 	//for k8s deployments, get the ip from the service
 	if util.IsK8sDeployment() {
 		if len(util.Deployment.Controllers) > 0 {
 			addr, err := util.GetK8sServiceAddr("controller", maxWaitForServiceSeconds)
 			if err != nil {
-				log.Fatalf("unable to get controller service")
+				fmt.Fprintf(os.Stderr, "unable to get controller service ")
+				return false
 			}
 			util.Deployment.Controllers[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Dmes) > 0 {
 			addr, err := util.GetK8sServiceAddr("dme", maxWaitForServiceSeconds)
 			if err != nil {
-				log.Fatalf("unable to get dme service")
+				fmt.Fprintf(os.Stderr, "unable to get dme service ")
+				return false
 			}
 			util.Deployment.Dmes[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Crms) > 0 {
 			addr, err := util.GetK8sServiceAddr("crm", maxWaitForServiceSeconds)
 			if err != nil {
-				log.Fatalf("unable to get crm service")
+				//we may not always deploy CRM with service addresses if it is in
+				//the same cluster as the controller and we don't need the direct api
+				if strings.HasSuffix(err.Error(), "not found") {
+					log.Printf("No CRM service")
+					addr = util.ApiAddrNone
+				} else {
+					fmt.Fprintf(os.Stderr, "unable to get crm service ")
+					return false
+				}
 			}
 			util.Deployment.Crms[0].ApiAddr = addr
 		}
@@ -157,6 +167,7 @@ func UpdateApiAddrs() {
 		}
 	}
 	apiAddrsUpdated = true
+	return true
 }
 
 func getLogFile(procname string, outputDir string) string {
@@ -474,7 +485,7 @@ func getCloudflareUserAndKey() (string, string) {
 	return user, apikey
 }
 
-func createCloudfareRecords() error {
+func CreateCloudfareRecords() error {
 	log.Printf("createCloudfareRecords\n")
 
 	ttl := 300
@@ -500,25 +511,48 @@ func createCloudfareRecords() error {
 	for _, r := range util.Deployment.Cloudflare.Records {
 		log.Printf("adding dns entry: %s content: %s \n", r.Name, r.Content)
 
-		record := cloudflare.DNSRecord{
+		addRecord := cloudflare.DNSRecord{
 			Name:    strings.ToLower(r.Name),
 			Type:    strings.ToUpper(r.Type),
 			Content: r.Content,
 			TTL:     ttl,
 			Proxied: false,
 		}
+		queryRecord := cloudflare.DNSRecord{
+			Name:    strings.ToLower(r.Name),
+			Type:    strings.ToUpper(r.Type),
+			Proxied: false,
+		}
 
-		resp, err := api.CreateDNSRecord(zoneID, record)
+		records, err := api.DNSRecords(zoneID, queryRecord)
+		if err != nil {
+			log.Printf("Error querying dns %s, %v", zoneID, err)
+			return err
+		}
+		for _, r := range records {
+			log.Printf("Found a DNS record to delete %v\n", r)
+			//we could try updating instead, but that is problematic if there
+			//are multiple.  We are going to add it back anyway
+			err := api.DeleteDNSRecord(zoneID, r.ID)
+			if err != nil {
+				log.Printf("Error in deleting DNS record for %s - %v\n", r.Name, err)
+				return err
+			}
+		}
+
+		resp, err := api.CreateDNSRecord(zoneID, addRecord)
 		if err != nil {
 			log.Printf("Error, cannot create DNS record for zone %s, %v", zoneID, err)
 			return err
 		}
-		log.Printf("Cloudflare DNS Response %+v\n", resp)
+		log.Printf("Cloudflare Create DNS Response %+v\n", resp)
+
 	}
 	return nil
 }
 
-func deleteCloudfareRecords() error {
+//delete provioned records from DNS
+func DeleteCloudfareRecords() error {
 	log.Printf("deleteCloudfareRecords\n")
 
 	if util.Deployment.Cloudflare.Zone == "" {
@@ -544,15 +578,17 @@ func deleteCloudfareRecords() error {
 	//list many times
 	recordsToClean := make(map[string]bool)
 	for _, d := range util.Deployment.Cloudflare.Records {
-		recordsToClean[strings.ToLower(d.Name+d.Type+d.Content)] = true
-		log.Printf("cloudflare recordsToClean: %v", d.Name+d.Type+d.Content)
+		//	recordsToClean[strings.ToLower(d.Name+d.Type+d.Content)] = true
+		//delete records with the same name even if they point to a different ip
+		recordsToClean[strings.ToLower(d.Name+d.Type)] = true
+		log.Printf("cloudflare recordsToClean: %v", d.Name+d.Type)
 	}
 
 	//find all the records for the zone and delete ours.  Alternately we could apply a filter when doing the query
 	//but there could be multiple records and building that filter could be hard
 	records, err := api.DNSRecords(zoneID, cloudflare.DNSRecord{})
 	for _, r := range records {
-		_, exists := recordsToClean[strings.ToLower(r.Name+r.Type+r.Content)]
+		_, exists := recordsToClean[strings.ToLower(r.Name+r.Type)]
 		if exists {
 			log.Printf("Found a DNS record to delete %v\n", r)
 			err := api.DeleteDNSRecord(zoneID, r.ID)
@@ -567,13 +603,11 @@ func deleteCloudfareRecords() error {
 }
 
 func DeployProcesses() bool {
+
 	if util.IsK8sDeployment() {
 		return true //nothing to do for k8s
 	}
-	err := createCloudfareRecords()
-	if err != nil {
-		return false
-	}
+
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_deploy.yml"
 	return runPlaybook(playbook, []string{}, "")
@@ -614,14 +648,9 @@ func StopRemoteProcesses(processName string) bool {
 }
 
 func CleanupRemoteProcesses() bool {
-	cfrc := true
-	err := deleteCloudfareRecords()
-	if err != nil {
-		cfrc = false
-	}
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	playbook := ansHome + "/playbooks/mex_cleanup.yml"
-	return cfrc && runPlaybook(playbook, []string{}, "")
+	return runPlaybook(playbook, []string{}, "")
 }
 
 func FetchRemoteLogs(outputDir string) bool {
