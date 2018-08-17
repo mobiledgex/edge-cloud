@@ -139,7 +139,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 	// This is a separate STM to avoid ordering issues between
 	// auto-clusterinst create and appinst create in watch cb.
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, in.GetKey(), in) {
+		if s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyExists
 		}
 		// make sure cloudlet exists
@@ -194,7 +194,7 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 	}()
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, in.GetKey(), nil) {
+		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists
 		}
 
@@ -293,7 +293,7 @@ func (s *AppInstApi) UpdateNoWait(ctx context.Context, in *edgeproto.AppInst) (*
 func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !s.store.STMGet(stm, in.GetKey(), in) {
+		if !s.store.STMGet(stm, &in.Key, in) {
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
@@ -313,7 +313,7 @@ func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 		// delete app inst
-		s.store.STMDel(stm, in.GetKey())
+		s.store.STMDel(stm, &in.Key)
 		return nil
 	})
 	if err == nil {

@@ -779,6 +779,12 @@ func (c *ClusterCache) Show(filter *Cluster, cb func(ret *Cluster) error) error 
 	return nil
 }
 
+func ClusterGenericNotifyCb(fn func(key *ClusterKey, old *Cluster)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*ClusterKey), obj.(*Cluster))
+	}
+}
+
 func (c *ClusterCache) SetNotifyCb(fn func(obj *ClusterKey, old *Cluster)) {
 	c.NotifyCb = fn
 }
@@ -876,7 +882,7 @@ func (c *ClusterCache) SyncListEnd() {
 	}
 }
 
-func (m *Cluster) GetKey() *ClusterKey {
+func (m *Cluster) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

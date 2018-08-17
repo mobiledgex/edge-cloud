@@ -1184,6 +1184,12 @@ func (c *ClusterInstCache) Show(filter *ClusterInst, cb func(ret *ClusterInst) e
 	return nil
 }
 
+func ClusterInstGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterInst)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*ClusterInstKey), obj.(*ClusterInst))
+	}
+}
+
 func (c *ClusterInstCache) SetNotifyCb(fn func(obj *ClusterInstKey, old *ClusterInst)) {
 	c.NotifyCb = fn
 }
@@ -1281,7 +1287,7 @@ func (c *ClusterInstCache) SyncListEnd() {
 	}
 }
 
-func (m *ClusterInst) GetKey() *ClusterInstKey {
+func (m *ClusterInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
@@ -1728,6 +1734,12 @@ func (c *ClusterInstInfoCache) Show(filter *ClusterInstInfo, cb func(ret *Cluste
 	return nil
 }
 
+func ClusterInstInfoGenericNotifyCb(fn func(key *ClusterInstKey, old *ClusterInstInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*ClusterInstKey), obj.(*ClusterInstInfo))
+	}
+}
+
 func (c *ClusterInstInfoCache) SetNotifyCb(fn func(obj *ClusterInstKey, old *ClusterInstInfo)) {
 	c.NotifyCb = fn
 }
@@ -1902,7 +1914,7 @@ func (c *ClusterInstInfoCache) WaitForState(ctx context.Context, key *ClusterIns
 	return err
 }
 
-func (m *ClusterInstInfo) GetKey() *ClusterInstKey {
+func (m *ClusterInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
