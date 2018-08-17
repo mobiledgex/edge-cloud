@@ -269,7 +269,7 @@
     "openstack-prov/oscliapi",
     "openstack-tenant/agent/cloudflare"
   ]
-  revision = "d868bf06179487c464c57b9bd7d251fb2827d104"
+  revision = "5b7ea1a90aa14ace910b639c53e9368ff27f458b"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
@@ -673,6 +673,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "351025d4a936df104d00f2a80449707be90625c16f881cda56ebeb94a92c4e96"
+  inputs-digest = "370a832277869a25f5e685b6b0fdce5959ef87d899ef0685a3af0504b9005035"
   solver-name = "gps-cdcl"
   solver-version = 1

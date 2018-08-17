@@ -113,7 +113,7 @@ Get http://github.com/mobiledgex/bob-priv/mobiledgex.env.tar and untar
 into your home directory. You also need to copy .mobiledge dir under this directory before building the docker image for edge-cloud. There is also http://github.com/mobiledgex/bob-priv/edgecloud.tar which must be untarred to this directory before running docker-compose.
 
 You also should make some changes in docker-compose.yaml and test-edgectl.sh files. Change all the `test` to your own name.  For example,
-change `testoperator` to `boboperator`, etc.
+change `testxyz` to `bobxyz`, etc.
 This is to avoid clashing with other testers in the same backend infrastructure.  When you do this, you will also need to update a testapp.yaml with yourownnameapp.yaml and place it on registry.mobiledgex.net.  This is done manually currently. There will be more automated or UI based methods in the future.
 
 ```
@@ -160,7 +160,7 @@ inside `mexosagent` also has paths registered and terminates TLS.  From the Inte
 To list the proxy assignment of paths:
 
 ```
-$ curl -s -XPOST  http://testcloudlet.testoperator.mobiledgex.net:18889/v1/proxy -d '{"message":"list"}' | jq .
+$ curl -s -XPOST  http://testcloudlet.mex-tdg.mobiledgex.net:18889/v1/proxy -d '{"message":"list"}' | jq .
 {
   "message": "list",
   "status": "map[/testappgrpc/*catchall:http://10.101.103.2:27272 /testapprest/*catchall:http://10.101.103.2:27273 /testapphttp/*catchall:http://10.101.103.2:27274]"
@@ -170,14 +170,14 @@ $ curl -s -XPOST  http://testcloudlet.testoperator.mobiledgex.net:18889/v1/proxy
 To talk to `testapp` at its HTTP via GET:
 
 ```
-$ curl https://testcloudlet.testoperator.mobiledgex.net/testapphttp/
+$ curl https://testcloudlet.mex-tdg.mobiledgex.net/testapphttp/
 hostname testapp-deployment-74db74fc9b-mxs8poutbound ip 10.36.0.1{1 65536 lo  up|loopback} [127.0.0.1/8] {12 1376 eth0 c2:8c:7e:bd:54:66 up|broadcast|multicast} [10.36.0.1/12]
 ```
 
 To POST to REST endpoint of `testapp`:
 
 ```
-$ curl -XPOST https://testcloudlet.testoperator.mobiledgex.net/testapprest/info -d '{"message": "info"}'
+$ curl -XPOST https://testcloudlet.mex-tdg.mobiledgex.net/testapprest/info -d '{"message": "info"}'
 {"message":"info","outbound":"10.44.0.1","hostname":"testapp-deployment-74db74fc9b-szk97","interfaces":[{"name":"lo","addresses":"[127.0.0.1/8]"},{"name":"eth0","addresses":"[10.44.0.1/12]"}]}
 ```
 
