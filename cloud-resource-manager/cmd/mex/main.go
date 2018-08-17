@@ -32,8 +32,8 @@ var platformOps = map[string]func(*crmutil.Manifest) error{
 }
 
 var applicationOps = map[string]func(*crmutil.Manifest) error{
-	"run":  crmutil.MEXCreateAppManifest,
-	"kill": crmutil.MEXKillAppManifest,
+	"run":  crmutil.MEXAppCreateAppManifest,
+	"kill": crmutil.MEXAppDeleteAppManifest,
 }
 
 var categories = map[string]map[string]func(*crmutil.Manifest) error{
@@ -143,8 +143,8 @@ func manifestHandler(kind string, args []string) {
 	if mf.APIVersion != apiversion {
 		log.FatalLog("invalid api version")
 	}
-	if !strings.Contains(mf.Resource, kind) {
-		log.FatalLog("not a resource", "kind", kind)
+	if !strings.Contains(mf.Kind, kind) {
+		log.FatalLog("not a resource", "mf", mf, "mf resource", mf.Resource, "kind", kind)
 	}
 	err = categories[kind][cmd](mf)
 	if err != nil {
