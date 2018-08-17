@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: application
+resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+metadata:
+  kind: mex-app-k8s
+  name: testapp
+  tags: testapp-k8s-tag
+  tenant: testtenant
+  operator: azure
+spec:
+  flags: none
+  key: aks-testcluster
+  image: registry.mobiledgex.net:5000/mobiledgex/mexexample
+  imagetype: ImageTypeDocker
+  proxypath: testapp
+  portmap: 
+  pathmap: /etc:/mexexample
+  flavor: x1.medium
+  uri: https://testapp.testcloudlet.azure.mobiledgex.net
+  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
+  accesslayer: L7
