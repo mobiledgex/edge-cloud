@@ -1,9 +1,9 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- vm2_internal_ip: 10.1.1.4
-- vm2_external_ip: 37.50.143.100
-- locverurl: "http://10.1.1.4:8888/verifyLocation"
-- toksrvurl: "http://37.50.143.100:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- vm2_internal_ip: 127.0.0.1
+- vm2_external_ip: 37.50.143.103
+- locverurl: "http://127.0.0.1:8888/verifyLocation"
+- toksrvurl: "http://37.50.143.103:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
 sampleapps:
 - sampleapplocal:
@@ -11,6 +11,12 @@ sampleapps:
     exename: mexexample
     args: 
      - "-debug"
+  hostname: "{{vm2_external_ip}}"
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
   hostname: "{{vm2_external_ip}}"
 
 locsims:
