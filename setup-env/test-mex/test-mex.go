@@ -181,23 +181,28 @@ func main() {
 		util.PrintStepBanner("running action: " + a)
 		switch action {
 		case "createcluster":
-			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
-				err := util.CreateGloudCluster()
+			if util.Deployment.Cluster.MexManifest != "" {
+				err := util.CreateK8sCluster()
 				if err != nil {
 					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			}
 		case "deletecluster":
-			if util.Deployment.GCloud.Cluster != "" { //TODO: Azure
-				err := util.DeleteGloudCluster()
+			if util.Deployment.Cluster.MexManifest != "" {
+				err := util.DeleteK8sCluster()
 				if err != nil {
 					errorsFound++
 					errors = append(errors, err.Error())
 				}
 			}
 		case "deploy":
-			if util.Deployment.GCloud.Cluster != "" {
+			err := setupmex.CreateCloudfareRecords()
+			if err != nil {
+				errorsFound++
+				errors = append(errors, err.Error())
+			}
+			if util.Deployment.Cluster.MexManifest != "" {
 				dir := path.Dir(*setupFile)
 				err := util.DeployK8sServices(dir)
 				if err != nil {
@@ -233,18 +238,23 @@ func main() {
 				break
 
 			}
-			setupmex.UpdateApiAddrs()
-			if !setupmex.WaitForProcesses(actionParam) {
-				errorsFound += 1
-				errors = append(errors, "wait for process failed")
-
+			if !setupmex.UpdateAPIAddrs() {
+				errorsFound++
+			} else {
+				if !setupmex.WaitForProcesses(actionParam) {
+					errorsFound++
+					errors = append(errors, "wait for process failed")
+				}
 			}
 		case "status":
-			setupmex.UpdateApiAddrs()
-			if !setupmex.WaitForProcesses(actionParam) {
+			if !setupmex.UpdateAPIAddrs() {
 				errorsFound++
-				errors = append(errors, "wait for process failed")
+			} else {
+				if !setupmex.WaitForProcesses(actionParam) {
+					errorsFound++
+					errors = append(errors, "wait for process failed")
 
+				}
 			}
 		case "stop":
 			setupmex.StopProcesses(actionParam)
@@ -254,30 +264,42 @@ func main() {
 
 			}
 		case "ctrlapi":
-			setupmex.UpdateApiAddrs()
-			if !apis.RunControllerAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-				log.Printf("Unable to run api for %s\n", action)
+			if !setupmex.UpdateAPIAddrs() {
 				errorsFound++
-				errors = append(errors, "controller api failed")
+			} else {
+				if !apis.RunControllerAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+					log.Printf("Unable to run api for %s\n", action)
+					errorsFound++
+					errors = append(errors, "controller api failed")
+				}
 			}
 		case "ctrlinfo":
-			setupmex.UpdateApiAddrs()
-			if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-				log.Printf("Unable to run api for %s\n", action)
+			if !setupmex.UpdateAPIAddrs() {
 				errorsFound++
-				errors = append(errors, "controller info api failed")
-
+			} else {
+				if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+					log.Printf("Unable to run api for %s\n", action)
+					errorsFound++
+					errors = append(errors, "controller info api failed")
+				}
 			}
 		case "dmeapi":
-			setupmex.UpdateApiAddrs()
-			if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-				log.Printf("Unable to run api for %s\n", action)
+			if !setupmex.UpdateAPIAddrs() {
 				errorsFound++
-				errors = append(errors, "dme api failed")
-
+			} else {
+				if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+					log.Printf("Unable to run api for %s\n", action)
+					errorsFound++
+					errors = append(errors, "dme api failed")
+				}
 			}
 		case "cleanup":
-			if util.Deployment.GCloud.Cluster != "" {
+			err := setupmex.DeleteCloudfareRecords()
+			if err != nil {
+				errorsFound++
+				errors = append(errors, err.Error())
+			}
+			if util.Deployment.Cluster.MexManifest != "" {
 				dir := path.Dir(*setupFile)
 				err := util.DeleteK8sServices(dir)
 

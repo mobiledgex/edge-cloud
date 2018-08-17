@@ -30,7 +30,7 @@ spec:
          - "--d"
          - "locapi,dmedb,dmereq"
          - "--toksrvurl"
-         - "http://gddt.dme.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+         - "http://mex.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
          
       imagePullSecrets:
        - name: mexreg-secret 
