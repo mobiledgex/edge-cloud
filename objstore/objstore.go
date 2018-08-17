@@ -73,7 +73,7 @@ type Obj interface {
 	// update. It will be nil for create.
 	Validate(fields map[string]struct{}) error
 	// CopyInFields copies in modified fields for an Update.
-	CopyInFields(src Obj)
+	//CopyInFields(src Obj)
 	// GetKey returns the ObjKey that uniquely identifies the object.
 	GetKey() ObjKey
 	// HasFields returns true if the object contains a Fields []string

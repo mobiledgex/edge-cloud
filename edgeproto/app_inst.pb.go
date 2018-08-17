@@ -1765,6 +1765,12 @@ func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error 
 	return nil
 }
 
+func AppInstGenericNotifyCb(fn func(key *AppInstKey, old *AppInst)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppInstKey), obj.(*AppInst))
+	}
+}
+
 func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInst)) {
 	c.NotifyCb = fn
 }
@@ -1862,7 +1868,7 @@ func (c *AppInstCache) SyncListEnd() {
 	}
 }
 
-func (m *AppInst) GetKey() *AppInstKey {
+func (m *AppInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
@@ -2345,6 +2351,12 @@ func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) e
 	return nil
 }
 
+func AppInstInfoGenericNotifyCb(fn func(key *AppInstKey, old *AppInstInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppInstKey), obj.(*AppInstInfo))
+	}
+}
+
 func (c *AppInstInfoCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInstInfo)) {
 	c.NotifyCb = fn
 }
@@ -2519,7 +2531,7 @@ func (c *AppInstInfoCache) WaitForState(ctx context.Context, key *AppInstKey, ta
 	return err
 }
 
-func (m *AppInstInfo) GetKey() *AppInstKey {
+func (m *AppInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

@@ -837,6 +837,12 @@ func (c *ClusterFlavorCache) Show(filter *ClusterFlavor, cb func(ret *ClusterFla
 	return nil
 }
 
+func ClusterFlavorGenericNotifyCb(fn func(key *ClusterFlavorKey, old *ClusterFlavor)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*ClusterFlavorKey), obj.(*ClusterFlavor))
+	}
+}
+
 func (c *ClusterFlavorCache) SetNotifyCb(fn func(obj *ClusterFlavorKey, old *ClusterFlavor)) {
 	c.NotifyCb = fn
 }
@@ -934,7 +940,7 @@ func (c *ClusterFlavorCache) SyncListEnd() {
 	}
 }
 
-func (m *ClusterFlavor) GetKey() *ClusterFlavorKey {
+func (m *ClusterFlavor) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

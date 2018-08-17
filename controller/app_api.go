@@ -176,13 +176,13 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	clusterKey := edgeproto.ClusterKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		app := edgeproto.App{}
-		if !s.store.STMGet(stm, in.GetKey(), &app) {
+		if !s.store.STMGet(stm, &in.Key, &app) {
 			// already deleted
 			return nil
 		}
 		clusterKey = app.Cluster
 		// delete app
-		s.store.STMDel(stm, in.GetKey())
+		s.store.STMDel(stm, &in.Key)
 		return nil
 	})
 	if err == nil {
@@ -242,7 +242,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 				inst.Config = new.Config
 				// TODO: update mapped ports if needed
 				if appInstApi.cache.NotifyCb != nil {
-					appInstApi.cache.NotifyCb(inst.GetKey(), old)
+					appInstApi.cache.NotifyCb(&inst.Key, old)
 				}
 			}
 		}
