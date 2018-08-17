@@ -1070,6 +1070,12 @@ func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
 	return nil
 }
 
+func AppGenericNotifyCb(fn func(key *AppKey, old *App)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppKey), obj.(*App))
+	}
+}
+
 func (c *AppCache) SetNotifyCb(fn func(obj *AppKey, old *App)) {
 	c.NotifyCb = fn
 }
@@ -1167,7 +1173,7 @@ func (c *AppCache) SyncListEnd() {
 	}
 }
 
-func (m *App) GetKey() *AppKey {
+func (m *App) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 

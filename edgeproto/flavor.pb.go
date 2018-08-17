@@ -785,6 +785,12 @@ func (c *FlavorCache) Show(filter *Flavor, cb func(ret *Flavor) error) error {
 	return nil
 }
 
+func FlavorGenericNotifyCb(fn func(key *FlavorKey, old *Flavor)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*FlavorKey), obj.(*Flavor))
+	}
+}
+
 func (c *FlavorCache) SetNotifyCb(fn func(obj *FlavorKey, old *Flavor)) {
 	c.NotifyCb = fn
 }
@@ -882,7 +888,7 @@ func (c *FlavorCache) SyncListEnd() {
 	}
 }
 
-func (m *Flavor) GetKey() *FlavorKey {
+func (m *Flavor) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
