@@ -36,34 +36,7 @@ var mexEnv = map[string]string{
 	"MEX_DOCKER_REG_PASS": os.Getenv("MEX_DOCKER_REG_PASS"),
 	"MEX_AGENT_PORT":      "18889",
 	"MEX_SSH_KEY":         "id_rsa_mobiledgex",
-	"MEX_K8S_MASTER":      "mex-k8s-master",
-	"MEX_K8S_NODE":        "mex-k8s-node",
 	"MEX_DOCKER_REGISTRY": "registry.mobiledgex.net:5000",
-}
-
-//MEXInit initializes MEX API
-func MEXInit() {
-	for _, evname := range reflect.ValueOf(mexEnv).MapKeys() {
-		evstr := evname.String()
-		evval := os.Getenv(evstr)
-		if evval != "" {
-			mexEnv[evstr] = evval
-		}
-	}
-	log.DebugLog(log.DebugLevelMexos, "mex environment", "mexEnv", mexEnv)
-}
-
-//MEXCheckEnvVars sets up environment vars and checks for credentials required for running
-func MEXCheckEnvVars(mf *Manifest) error {
-	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
-	// TODO: use `secrets` or `vault`
-	for _, evar := range []string{"MEX_CF_KEY", "MEX_CF_USER", "MEX_DOCKER_REG_PASS", "MEX_DIR"} {
-		if _, ok := mexEnv[evar]; !ok {
-			return fmt.Errorf("missing env var %s", evar)
-		}
-	}
-	//TODO need to allow users to save the environment under platform name inside .mobiledgex
-	return nil
 }
 
 //MEXRootLB has rootLB data
@@ -75,33 +48,29 @@ type MEXRootLB struct {
 //MEXRootLBMap maps name of rootLB to rootLB instance
 var MEXRootLBMap = make(map[string]*MEXRootLB)
 
-//NewRootLB gets a new rootLB instance
-func NewRootLB(rootLBName string) (*MEXRootLB, error) {
-	log.DebugLog(log.DebugLevelMexos, "new rootLB", "rootLBName", rootLBName)
-	curlb, ok := MEXRootLBMap[rootLBName]
-	if ok {
-		return nil, fmt.Errorf("rootlb exists %v", curlb)
-	}
-	newRootLB := &MEXRootLB{Name: rootLBName}
-	MEXRootLBMap[rootLBName] = newRootLB
-	return newRootLB, nil
+//ValidClusterFlavors lists all valid flavor names
+var ValidClusterFlavors = []string{
+	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
 }
 
-//NewRootLBManifest creates rootLB instance and sets Platform Config with manifest
-func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
-	log.DebugLog(log.DebugLevelMexos, "new rootLB with manifest", "mf", mf)
-	rootLB, err := NewRootLB(mf.Spec.RootLB)
-	if err != nil {
-		return nil, err
-	}
-	setPlatConf(rootLB, mf)
-	return rootLB, nil
+//AvailableClusterFlavors lists currently available flavors
+var AvailableClusterFlavors = []*ClusterFlavor{
+	&ClusterFlavor{
+		Name:           "x1.medium",
+		Kind:           "mex-cluster-flavor",
+		Status:         "active",
+		NumNodes:       2,
+		NumMasterNodes: 1,
+		Topology:       "type-1",
+		NetworkSpec:    "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
+		StorageSpec:    "default",
+		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-medium", Type: "k8s-node"},
+		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-medium", Type: "k8s-master"},
+	},
 }
 
-//DeleteRootLB to be called by code that called NewRootLB
-func DeleteRootLB(rootLBName string) {
-	delete(MEXRootLBMap, rootLBName) //no mutex because caller should be serializing New/Delete in a control loop
-}
+//IsValidMEXOSEnv caches the validity of the env
+var IsValidMEXOSEnv = false
 
 //TODO use versioning on docker image for agent
 
@@ -124,7 +93,7 @@ func DeleteRootLB(rootLBName string) {
 
 //ClusterFlavor contains definitions of cluster flavor
 type ClusterFlavor struct {
-	Type           string
+	Kind           string
 	Name           string
 	Status         string
 	NumNodes       int
@@ -164,35 +133,58 @@ type ClusterMasterFlavor struct {
 	Name string
 }
 
-//ValidClusterFlavors lists all valid flavor names
-var ValidClusterFlavors = []string{
-	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
+//MEXInit initializes MEX API
+func MEXInit() {
+	for _, evname := range reflect.ValueOf(mexEnv).MapKeys() {
+		evstr := evname.String()
+		evval := os.Getenv(evstr)
+		if evval != "" {
+			mexEnv[evstr] = evval
+		}
+	}
+	log.DebugLog(log.DebugLevelMexos, "mex environment", "mexEnv", mexEnv)
 }
 
-const (
-	activeStatus    = "active"
-	availableStatus = "available"
-	activeService   = "ACTIVE"
-)
-
-//AvailableClusterFlavors lists currently available flavors
-var AvailableClusterFlavors = []*ClusterFlavor{
-	&ClusterFlavor{
-		Name:           "x1.medium",
-		Type:           "k8s",
-		Status:         activeStatus,
-		NumNodes:       2,
-		NumMasterNodes: 1,
-		Topology:       "type-1",
-		NetworkSpec:    "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
-		StorageSpec:    "default",
-		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-medium", Type: "k8s-node"},
-		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-medium", Type: "k8s-master"},
-	},
+//MEXCheckEnvVars sets up environment vars and checks for credentials required for running
+func MEXCheckEnvVars(mf *Manifest) error {
+	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
+	// TODO: use `secrets` or `vault`
+	for _, evar := range []string{"MEX_CF_KEY", "MEX_CF_USER", "MEX_DOCKER_REG_PASS", "MEX_DIR"} {
+		if _, ok := mexEnv[evar]; !ok {
+			return fmt.Errorf("missing env var %s", evar)
+		}
+	}
+	//TODO need to allow users to save the environment under platform name inside .mobiledgex
+	return nil
 }
 
-//IsValidMEXOSEnv caches the validity of the env
-var IsValidMEXOSEnv = false
+//NewRootLB gets a new rootLB instance
+func NewRootLB(rootLBName string) (*MEXRootLB, error) {
+	log.DebugLog(log.DebugLevelMexos, "new rootLB", "rootLBName", rootLBName)
+	curlb, ok := MEXRootLBMap[rootLBName]
+	if ok {
+		return nil, fmt.Errorf("rootlb exists %v", curlb)
+	}
+	newRootLB := &MEXRootLB{Name: rootLBName}
+	MEXRootLBMap[rootLBName] = newRootLB
+	return newRootLB, nil
+}
+
+//NewRootLBManifest creates rootLB instance and sets Platform Config with manifest
+func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
+	log.DebugLog(log.DebugLevelMexos, "new rootLB with manifest", "mf", mf)
+	rootLB, err := NewRootLB(mf.Spec.RootLB)
+	if err != nil {
+		return nil, err
+	}
+	setPlatConf(rootLB, mf)
+	return rootLB, nil
+}
+
+//DeleteRootLB to be called by code that called NewRootLB
+func DeleteRootLB(rootLBName string) {
+	delete(MEXRootLBMap, rootLBName) //no mutex because caller should be serializing New/Delete in a control loop
+}
 
 //ValidateMEXOSEnv makes sure the environment is valid for mexos
 func ValidateMEXOSEnv(osEnvValid bool) bool {
@@ -207,42 +199,17 @@ func ValidateMEXOSEnv(osEnvValid bool) bool {
 	return IsValidMEXOSEnv
 }
 
-//AddFlavor adds a new flavor to be kept track of
-func AddFlavor(flavor string) error {
-	log.DebugLog(log.DebugLevelMexos, "add flavor", "flavor", flavor)
-	if err := ValidateFlavor(flavor); err != nil {
-		return fmt.Errorf("invalid flavor")
+func AddFlavorManifest(mf *Manifest) error {
+	if mf.Spec.Flavor != "x1.medium" {
+		log.DebugLog(log.DebugLevelMexos, "unsupported flavor type", "spec", mf.Spec)
+		return fmt.Errorf("unsupported flavor type %s, detail %v", mf.Spec.Flavor, mf.Spec.FlavorDetail)
 	}
-	for _, f := range AvailableClusterFlavors {
-		if flavor == f.Name {
-			if f.Status == activeStatus {
-				return nil // fmt.Errorf("exists already")
-			}
-			if f.Status == availableStatus {
-				f.Status = activeStatus
-				return nil
-			}
-		}
-	}
-	nf := ClusterFlavor{Name: flavor}
-	nf.Status = activeStatus
-	AvailableClusterFlavors = append(AvailableClusterFlavors, &nf)
-	//XXX need local database to store this persistently since controller won't
 	return nil
 }
 
-//GetClusterFlavor returns the flavor of the cluster
-func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
-	log.DebugLog(log.DebugLevelMexos, "get cluster flavor", "flavor", flavor)
-	for _, f := range AvailableClusterFlavors {
-		if flavor == f.Name {
-			if f.Status == activeStatus {
-				return f, nil
-			}
-			return nil, fmt.Errorf("flavor exists but status not active")
-		}
-	}
-	return nil, fmt.Errorf("flavor does not exist %s", flavor)
+func GetClusterFlavor(mf *Manifest) (*ClusterFlavor, error) {
+	log.DebugLog(log.DebugLevelMexos, "get cluster flavor", "mf", mf, "flavor", AvailableClusterFlavors[0])
+	return AvailableClusterFlavors[0], nil
 }
 
 //mexCreateClusterKubernetes creates a cluster of nodes. It can take a while, so call from a goroutine.
@@ -259,7 +226,7 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	if err = ValidateFlavor(mf.Spec.Flavor); err != nil {
 		return fmt.Errorf("invalid flavor")
 	}
-	cf, err := GetClusterFlavor(mf.Spec.Flavor)
+	cf, err := GetClusterFlavor(mf)
 	if err != nil {
 		return err
 	}
@@ -293,8 +260,8 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	//TODO add whole manifest yaml->json into stringified property of the kvm instance for later
 	//XXX should check for quota, permissions, access control, etc. here
 	//guid := xid.New().String()
-	//kvmname := fmt.Sprintf("%s-1-%s-%s", mexEnv["MEX_K8S_MASTER"], mf.Metadata.Name, guid)
-	kvmname := fmt.Sprintf("%s-1-%s", mexEnv["MEX_K8S_MASTER"], mf.Metadata.Name)
+	//kvmname := fmt.Sprintf("%s-1-%s-%s", "mex-k8s-master", mf.Metadata.Name, guid)
+	kvmname := fmt.Sprintf("%s-1-%s", "mex-k8s-master", mf.Metadata.Name)
 	sd, err := oscli.GetServerDetails(kvmname)
 	if err == nil {
 		if sd.Name == kvmname {
@@ -315,8 +282,8 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	}
 	for i := 1; i <= cf.NumNodes; i++ {
 		//construct node name
-		//kvmnodename := fmt.Sprintf("%s-%d-%s-%s", mexEnv["MEX_K8S_NODE"], i, mf.Metadata.Name, guid)
-		kvmnodename := fmt.Sprintf("%s-%d-%s", mexEnv["MEX_K8S_NODE"], i, mf.Metadata.Name)
+		//kvmnodename := fmt.Sprintf("%s-%d-%s-%s", "mex-k8s-node", i, mf.Metadata.Name, guid)
+		kvmnodename := fmt.Sprintf("%s-%d-%s", "mex-k8s-node", i, mf.Metadata.Name)
 		err = oscli.CreateMEXKVM(kvmnodename,
 			"k8s-node",
 			mf.Spec.NetworkScheme,
@@ -346,7 +313,7 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 			log.DebugLog(log.DebugLevelMexos, "kubernetes cluster ready")
 			break
 		}
-		log.DebugLog(log.DebugLevelMexos, "wating for kubernetes cluster to be ready...")
+		log.DebugLog(log.DebugLevelMexos, "waiting for kubernetes cluster to be ready...")
 		time.Sleep(30 * time.Second)
 	}
 	if !ready {
@@ -490,15 +457,10 @@ func ValidateTenant(tenant string) error {
 
 //ValidateFlavor parses and validates flavor
 func ValidateFlavor(flavor string) error {
-	if flavor == "" {
-		return fmt.Errorf("empty flavor")
+	if flavor != "x1.medium" {
+		return fmt.Errorf("invalid flavor")
 	}
-	for _, f := range ValidClusterFlavors {
-		if flavor == f {
-			return nil
-		}
-	}
-	return fmt.Errorf("invalid flavor")
+	return nil
 }
 
 //IsFlavorSupported checks whether flavor is supported currently
@@ -536,7 +498,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 	serverDeleted := false
 	for _, s := range srvs {
 		if strings.Contains(s.Name, name) {
-			if strings.Contains(s.Name, mexEnv["MEX_K8S_MASTER"]) {
+			if strings.Contains(s.Name, "mex-k8s-master") {
 				err = LBRemoveRoute(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, s.Name)
 				if err != nil {
 					if !force {
@@ -557,7 +519,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 				log.DebugLog(log.DebugLevelMexos, "forced to continue, error while deleting server", "server", s.Name, "error", err)
 			}
 			serverDeleted = true
-			kconfname := fmt.Sprintf("%s.kubeconfig", s.Name)
+			kconfname := fmt.Sprintf("%s.kubeconfig", s.Name[strings.LastIndex(s.Name, "-")+1:])
 			fullpath := mexEnv["MEX_DIR"] + "/" + kconfname
 			rerr := os.Remove(fullpath)
 			if rerr != nil {
@@ -769,7 +731,7 @@ func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 			}
 			break
 		}
-		log.DebugLog(log.DebugLevelMexos, "wating for rootlb...")
+		log.DebugLog(log.DebugLevelMexos, "waiting for rootlb...")
 		time.Sleep(30 * time.Second)
 	}
 	if !running {
@@ -836,7 +798,7 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	}
 	err = WaitForRootLB(mf, rootLB)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "timeout wating for agent to run", "name", rootLB.Name)
+		log.DebugLog(log.DebugLevelMexos, "timeout waiting for agent to run", "name", rootLB.Name)
 		return fmt.Errorf("Error waiting for rootLB %v", err)
 	}
 	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
@@ -1072,10 +1034,10 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if err != nil {
 		return fmt.Errorf("can't copy to %s on %s, %s, %v", keyfile, fqdn, out, err)
 	}
-	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s -r %s bob@registry.mobiledgex.net:bob/files-repo/certs", mexEnv["MEX_SSH_KEY"], fqdn) // XXX
+	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s -r %s bob@registry.mobiledgex.net:files-repo/certs", mexEnv["MEX_SSH_KEY"], fqdn) // XXX
 	out, err = client.Output(cmd)
 	if err != nil {
-		log.InfoLog("error: need fixing manually; can't scp %s to registry, %s, %v", fqdn, out, err)
+		log.InfoLog("error: need fixing manually; can't scp to registry", "fqdn", fqdn, "output", out, "error", err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "acquired cert and key", "FQDN", fqdn)
 	return nil
@@ -1118,7 +1080,7 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", addr, 1, false); err != nil {
 		return fmt.Errorf("can't create DNS record for %s, %v", fqdn, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "wating for cloudflare...")
+	log.DebugLog(log.DebugLevelMexos, "waiting for cloudflare...")
 	//once successfully inserted the A record will take a bit of time, but not too long due to fast cloudflare anycast
 	time.Sleep(10 * time.Second) //XXX verify by doing a DNS lookup
 	return nil
@@ -1135,8 +1097,9 @@ type genericItems struct {
 //IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	log.DebugLog(log.DebugLevelMexos, "checking if cluster is ready", "rootLB", rootLB, "platconf", *rootLB.PlatConf)
-	cf, err := GetClusterFlavor(rootLB.PlatConf.Spec.Flavor)
+	cf, err := GetClusterFlavor(mf)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "invalid flavor kind can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
 		return false, err
 	}
 	if cf.NumNodes < 1 {
@@ -1174,7 +1137,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 		return false, nil
 	}
 	log.DebugLog(log.DebugLevelMexos, "cluster nodes", "numnodes", cf.NumNodes, "nummasters", cf.NumMasterNodes)
-	kcpath := mexEnv["MEX_DIR"] + "/" + name + ".kubeconfig"
+	kcpath := mexEnv["MEX_DIR"] + "/" + name[strings.LastIndex(name, "-")+1:] + ".kubeconfig"
 	//if _, err := os.Stat(kcpath); err == nil {
 	//	log.DebugLog(log.DebugLevelMexos, "kubeconfig file exists, will not overwrite", "name", kcpath)
 	//	return true, nil
@@ -1240,7 +1203,7 @@ func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
 	if err != nil {
 		return fmt.Errorf("can't get ssh client for copying kubeconfig, %v", err)
 	}
-	kconfname := fmt.Sprintf("kubeconfig-%s", name)
+	kconfname := fmt.Sprintf("%s.kubeconfig", name[strings.LastIndex(name, "-")+1:])
 	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config %s", mexEnv["MEX_SSH_KEY"], ipaddr, kconfname)
 	out, err := client.Output(cmd)
 	if err != nil {
@@ -1270,7 +1233,7 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, port int, dat []byte) err
 		return fmt.Errorf("insufficient clusters info in kubeconfig %s", name)
 	}
 	//log.Debugln("kubeconfig", kc)
-	kconfname := fmt.Sprintf("%s.kubeconfig", name)
+	kconfname := fmt.Sprintf("%s.kubeconfig", name[strings.LastIndex(name, "-")+1:])
 	fullpath := mexEnv["MEX_DIR"] + "/" + kconfname
 	err = ioutil.WriteFile(fullpath, dat, 0666)
 	if err != nil {
@@ -1282,12 +1245,12 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, port int, dat []byte) err
 	if err != nil {
 		return fmt.Errorf("can't marshal kubeconfig proxy edit %s, %v", name, err)
 	}
-	fullpath = mexEnv["MEX_DIR"] + "/" + name + ".kubeconfig-proxy"
+	fullpath = fullpath + "-proxy"
 	err = ioutil.WriteFile(fullpath, dat, 0666)
 	if err != nil {
-		return fmt.Errorf("can't write kubeconfig proxy %s, %v", name, err)
+		return fmt.Errorf("can't write kubeconfig proxy %s, %v", fullpath, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "kubeconfig wrote", "file", fullpath)
+	log.DebugLog(log.DebugLevelMexos, "kubeconfig-proxy file saved", "file", fullpath)
 	return nil
 }
 
@@ -1302,7 +1265,7 @@ func FindNodeIP(name string) (string, error) {
 		return "", err
 	}
 	for _, s := range srvs {
-		if s.Status == activeService && s.Name == name {
+		if s.Status == "ACTIVE" && s.Name == name {
 			ipaddr, err := GetInternalIP(s.Name)
 			if err != nil {
 				return "", fmt.Errorf("can't get IP for %s, %v", s.Name, err)
@@ -1323,9 +1286,9 @@ func FindClusterWithKey(key string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	keyMaster := mexEnv["MEX_K8S_MASTER"] + "-1-" + key // XXX 1
 	for _, s := range srvs {
-		if s.Status == activeService && s.Name == keyMaster {
+		if s.Status == "ACTIVE" && strings.HasSuffix(s.Name, key) && strings.HasPrefix(s.Name, "mex-k8s-master") {
+			log.DebugLog(log.DebugLevelMexos, "find cluster with key", "key", key, "found", s.Name)
 			return s.Name, nil
 		}
 	}
@@ -1379,35 +1342,35 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if mf.Spec.ProxyPath == "" {
 		return fmt.Errorf("empty kubernetes proxy path")
 	}
-	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "will launch app into existing cluster", "kubeconfig", kubeconfig, "ipaddr", ipaddr)
+	log.DebugLog(log.DebugLevelMexos, "will launch app into existing cluster", "kubeconfig", kp.kubeconfig, "ipaddr", kp.ipaddr)
 	var cmd string
 	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
 		return fmt.Errorf("empty docker registry password environment variable")
 	}
 	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv["MEX_DOCKER_REG_PASS"])
-	out, err := client.Output(cmd)
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't store docker password, %s, %v", out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "stored docker password")
-	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s .docker-pass %s:", mexEnv["MEX_SSH_KEY"], ipaddr)
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s .docker-pass %s:", mexEnv["MEX_SSH_KEY"], kp.ipaddr)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy docker password to k8s-master, %s, %v", out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "copied over docker password")
-	cmd = fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", mexEnv["MEX_SSH_KEY"], ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", mexEnv["MEX_SSH_KEY"], kp.ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't docker login on k8s-master to %s, %s, %v", mexEnv["MEX_DOCKER_REGISTRY"], out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "docker login ok")
-	cmd = fmt.Sprintf("%s kubectl create secret docker-registry mexregistrysecret --docker-server=%s --docker-username=mobiledgex --docker-password=%s --docker-email=docker@mobiledgex.com", kubeconfig, mexEnv["MEX_DOCKER_REGISTRY"], mexEnv["MEX_DOCKER_REG_PASS"])
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("%s kubectl create secret docker-registry mexregistrysecret --docker-server=%s --docker-username=mobiledgex --docker-password=%s --docker-email=docker@mobiledgex.com", kp.kubeconfig, mexEnv["MEX_DOCKER_REGISTRY"], mexEnv["MEX_DOCKER_REG_PASS"])
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		if strings.Contains(out, "AlreadyExists") {
 			log.DebugLog(log.DebugLevelMexos, "secret already exists")
@@ -1416,14 +1379,14 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "created mexregistrysecret docker secret")
-	cmd = fmt.Sprintf("%s kubectl create -f %s", kubeconfig, mf.Spec.KubeManifest)
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("%s kubectl create -f %s", kp.kubeconfig, mf.Spec.KubeManifest)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest", "kubemanifest", mf.Spec.KubeManifest)
-	cmd = fmt.Sprintf("%s kubectl get svc %s-service -o json", kubeconfig, mf.Metadata.Name)
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("%s kubectl get svc %s-service -o json", kp.kubeconfig, mf.Metadata.Name)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
@@ -1434,7 +1397,7 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
 	for _, port := range svcData.Spec.Ports {
-		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
+		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.Port)
 		proxypath := mf.Spec.ProxyPath + port.Name
 		errs := AddPathReverseProxy(rootLB.Name, proxypath, origin)
 		if errs != nil {
@@ -1446,37 +1409,46 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 			}
 		}
 	}
-	cmd = fmt.Sprintf(`%s kubectl patch svc %s-service -p '{"spec":{"externalIPs":["%s"]}}'`, kubeconfig, mf.Metadata.Name, ipaddr)
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf(`%s kubectl patch svc %s-service -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, mf.Metadata.Name, kp.ipaddr)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", mf.Metadata.Name, "externalIPs", ipaddr)
+	log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", mf.Metadata.Name, "externalIPs", kp.ipaddr)
 	return nil
 }
 
 //TODO `helm` support
 
+type kubeParam struct {
+	kubeconfig string
+	client     ssh.Client
+	ipaddr     string
+}
+
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
-func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (string, ssh.Client, string, error) {
+func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (*kubeParam, error) {
 	log.DebugLog(log.DebugLevelMexos, "validate kubernetes parameters rootLB", "rootLB", rootLB, "cluster", clustName)
+	if rootLB.PlatConf == nil {
+		return nil, fmt.Errorf("validate kubernetes parameters, missing platform config")
+	}
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
-		return "", nil, "", fmt.Errorf("validate kubernetes parameters, missing external network in platform config")
+		return nil, fmt.Errorf("validate kubernetes parameters, missing external network in platform config")
 	}
 	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
 	if err != nil {
-		return "", nil, "", err
+		return nil, err
 	}
 	name, err := FindClusterWithKey(clustName)
 	if err != nil {
-		return "", nil, "", fmt.Errorf("can't find cluster with key %s, %v", clustName, err)
+		return nil, fmt.Errorf("can't find cluster with key %s, %v", clustName, err)
 	}
 	ipaddr, err := FindNodeIP(name)
 	if err != nil {
-		return "", nil, "", err
+		return nil, err
 	}
-	kubeconfig := fmt.Sprintf("KUBECONFIG=kubeconfig-%s", name)
-	return kubeconfig, client, ipaddr, nil
+	kubeconfig := fmt.Sprintf("KUBECONFIG=%s.kubeconfig", name[strings.LastIndex(name, "-")+1:])
+	return &kubeParam{kubeconfig, client, ipaddr}, nil
 }
 
 //KubernetesApplyManifest does `apply` on the manifest yaml
@@ -1489,12 +1461,12 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
 	}
-	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl apply -f %s", kubeconfig, mf.Spec.KubeManifest)
-	out, err := client.Output(cmd)
+	cmd := fmt.Sprintf("%s kubectl apply -f %s", kp.kubeconfig, mf.Spec.KubeManifest)
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error applying kubernetes manifest, %s, %s, %v", cmd, out, err)
 	}
@@ -1522,12 +1494,12 @@ func SetKubernetesConfigmapValues(rootLBName string, clustername string, confign
 	if err != nil {
 		return err
 	}
-	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, clustername)
+	kp, err := ValidateKubernetesParameters(rootLB, clustername)
 	if err != nil {
 		return err
 	}
 	//TODO support namespace
-	cmd := fmt.Sprintf("%s kubectl create configmap %s ", kubeconfig, configname)
+	cmd := fmt.Sprintf("%s kubectl create configmap %s ", kp.kubeconfig, configname)
 	for _, kv := range keyvalues {
 		items := strings.Split(kv, "=")
 		if len(items) != 2 {
@@ -1535,7 +1507,7 @@ func SetKubernetesConfigmapValues(rootLBName string, clustername string, confign
 		}
 		cmd = cmd + " --from-literal=" + kv
 	}
-	out, err := client.Output(cmd)
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error setting key/values to  kubernetes configmap, %s, %s, %v", cmd, out, err)
 	}
@@ -1553,13 +1525,13 @@ func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname strin
 	if err != nil {
 		return "", err
 	}
-	kubeconfig, client, _, err := ValidateKubernetesParameters(rootLB, clustername)
+	kp, err := ValidateKubernetesParameters(rootLB, clustername)
 	if err != nil {
 		return "", err
 	}
 	//TODO support namespace
-	cmd := fmt.Sprintf("%s kubectl get configmap %s -o yaml", kubeconfig, configname)
-	out, err := client.Output(cmd)
+	cmd := fmt.Sprintf("%s kubectl get configmap %s -o yaml", kp.kubeconfig, configname)
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return "", fmt.Errorf("error getting configmap yaml, %s, %s, %v", cmd, out, err)
 	}
@@ -1679,12 +1651,12 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if mf.Spec.ProxyPath == "" {
 		return fmt.Errorf("empty kubernetes proxy path")
 	}
-	kubeconfig, client, ipaddr, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl get svc %s-service -o json", kubeconfig, mf.Metadata.Name)
-	out, err := client.Output(cmd)
+	cmd := fmt.Sprintf("%s kubectl get svc %s-service -o json", kp.kubeconfig, mf.Metadata.Name)
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
@@ -1695,21 +1667,21 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
 	for _, port := range svcData.Spec.Ports {
-		origin := fmt.Sprintf("http://%s:%d", ipaddr, port.Port)
+		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.Port)
 		proxypath := mf.Spec.ProxyPath + port.Name
 		errs := DeletePathReverseProxy(rootLB.Name, proxypath, origin)
 		if errs != nil {
 			return fmt.Errorf("Errors deleting reverse proxy path, %v", errs)
 		}
 	}
-	cmd = fmt.Sprintf("%s kubectl delete service %s", kubeconfig, mf.Metadata.Name+"-service")
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, mf.Metadata.Name+"-service")
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes service, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted service", "name", mf.Metadata.Name)
-	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kubeconfig, mf.Metadata.Name+"-deployment")
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
 	}

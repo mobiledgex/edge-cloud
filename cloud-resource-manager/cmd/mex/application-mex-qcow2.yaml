@@ -1,24 +1,24 @@
-#application: qcow2
 apiVersion: v1
-kind: mex-openstack-kubernetes
-resource: openstack-application
+kind: application
+resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
 metadata:
   kind: mex-app-qcow2
   name: testapp-vm
   tags: testapp-vm-tag
   tenant: testtenant
+  operator: mex-tdg
 spec:
   flags: force
   key: testapp-vm
-  rootlb: testcluster.testoperator.mobiledgex.net
+  rootlb: testcluster.mex-tdg.mobiledgex.net
   image: http://registry.mobiledgex.net:8080/mobiledgex/cirros-0.4.0-x86_64-disk.img
   imageflavor: m1.tiny
   imagetype: ImageTypeQCOW
   proxypath: testapp-vm
   portmap: 
   pathmap: /etc:/testapp
-  flavor: app-qcow2-flavor
-  uri: https://testapp.testcloudlet.testoperator.mobiledgex.net
+  flavor: x1.medium
+  uri: https://testapp.testcloudlet.mex-tdg.mobiledgex.net
   networkscheme: external-ip,external-network-shared,dhcp
   kubemanifest: 
   accesslayer: L7
