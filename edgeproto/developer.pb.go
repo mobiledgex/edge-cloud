@@ -812,6 +812,12 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	return nil
 }
 
+func DeveloperGenericNotifyCb(fn func(key *DeveloperKey, old *Developer)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*DeveloperKey), obj.(*Developer))
+	}
+}
+
 func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey, old *Developer)) {
 	c.NotifyCb = fn
 }
@@ -909,7 +915,7 @@ func (c *DeveloperCache) SyncListEnd() {
 	}
 }
 
-func (m *Developer) GetKey() *DeveloperKey {
+func (m *Developer) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
