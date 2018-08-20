@@ -2,6 +2,7 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
 
@@ -16,14 +17,14 @@ public class FindCloudlet implements Callable {
     public static final String TAG = "FindCloudlet";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest; // Singleton.
+    private MatchingEngineRequest mRequest; // Singleton.
     private long mTimeoutInMilliseconds = -1;
 
     public FindCloudlet(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -41,8 +42,9 @@ public class FindCloudlet implements Callable {
     }
 
     @Override
-    public FindCloudletResponse call() throws MissingRequestException, StatusRuntimeException {
-        if (mRequest == null) {
+    public FindCloudletResponse call()
+            throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
+        if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: FindCloudlet does not have a request object to use MatchEngine!");
         }
 
@@ -52,14 +54,19 @@ public class FindCloudlet implements Callable {
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
+            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
+            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm.switchToCellularInternetNetworkBlocking();
+
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .findCloudlet(mRequest);
+                    .findCloudlet(mRequest.matchEngineRequest);
+            nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();
+                channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
             }
         }
 

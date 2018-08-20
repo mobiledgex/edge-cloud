@@ -2,14 +2,8 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.HttpUrl;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-
-import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
@@ -24,14 +18,14 @@ public class RegisterClient implements Callable {
     public static final String TOKEN_SERVER_URI_KEY = "token_server_u_r_i";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest;
+    private MatchingEngineRequest mRequest;
     private long mTimeoutInMilliseconds = -1;
 
     RegisterClient(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -49,48 +43,39 @@ public class RegisterClient implements Callable {
         return true;
     }
 
-    private String createDmeUri() {
-        return "http://"
-                + mMatchingEngine.getHost()
-                + ":"
-                + mMatchingEngine.getPort();
+    private void isBoundToCellNetwork() {
+
     }
 
-    private String getRedirectUri(String uri) {
-        HttpUrl url = HttpUrl.parse(uri);
-        return url.queryParameter("followURL");
-    }
-
-    private String getToken(String uri) {
-        HttpUrl url = HttpUrl.parse(uri);
-        return url.queryParameter("dt-id");
-    }
-
-    /**
-     *
-     * @return
-     * @throws MissingRequestException
-     * @throws StatusRuntimeException
-     */
     @Override
     public AppClient.Match_Engine_Status call() throws MissingRequestException,
-            StatusRuntimeException, IOException {
-        if (mRequest == null) {
+            StatusRuntimeException, InterruptedException, ExecutionException {
+        if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
+
 
         AppClient.Match_Engine_Status reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
+            channel = ManagedChannelBuilder
+                    .forAddress(mRequest.host, mRequest.port)
+                    .usePlaintext()
+                    .build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
+            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm.switchToCellularInternetNetworkBlocking();
+
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .registerClient(mRequest);
+                    .registerClient(mRequest.matchEngineRequest);
+
+            nm.resetNetworkToDefault();
         } finally {
             if (channel != null) {
                 channel.shutdown();
+                channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
             }
         }
         mRequest = null;

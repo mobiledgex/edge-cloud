@@ -2,9 +2,11 @@ package com.mobiledgex.matchingengine;
 
 import android.content.Context;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -97,7 +99,13 @@ public class LimitsTest {
         fusedLocationClient.flushLocations();
     }
 
-    public AppClient.Match_Engine_Request createMockMatchingEngineRequest(MatchingEngine me, Location location) {
+    public String getCarrierName(Context context) {
+        TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        String networkOperatorName = telManager.getNetworkOperatorName();
+        return networkOperatorName;
+    }
+
+    public MatchingEngineRequest createMockMatchingEngineRequest(String networkOperatorName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
         // Directly create request for testing:
@@ -111,7 +119,7 @@ public class LimitsTest {
                 .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
-                .setCarrierName("TMUS") // Mobile Network Carrier
+                .setCarrierName(networkOperatorName) // Mobile Network Carrier
                 .setTower(0) // cid and lac (int)
                 .setGpsLocation(aLoc)
                 .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
@@ -120,23 +128,27 @@ public class LimitsTest {
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
                 .setAppVers("1") // Or versionName, which is visual name?
-                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie()) // None.
+                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
+                .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
                 .build();
 
-        return request;
+        return new MatchingEngineRequest(request, me.getHost(), me.getPort());
     }
 
     // Every call needs registration to be called first.
-    public void registerClient(MatchingEngine me, Location location) {
+    public void registerClient(String carrierName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Status registerResponse;
-        AppClient.Match_Engine_Request regRequest = createMockMatchingEngineRequest(me, location);
+        MatchingEngineRequest regRequest = createMockMatchingEngineRequest(carrierName, me, location);
         try {
             registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
             assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
                     registerResponse.getSessionCookie(), me.getSessionCookie());
-        } catch (IOException ioe) {
-            Log.i(TAG, Log.getStackTraceString(ioe));
-            assertTrue("IOException registering client", false);
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertTrue("ExecutionException registering client", false);
+        } catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertTrue("InterruptedException registering client", false);
         }
 
     }
@@ -148,7 +160,7 @@ public class LimitsTest {
     @Test
     public void basicLatencyTest() {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine();
+        MatchingEngine me = new MatchingEngine(context, Executors.newFixedThreadPool(20));
         me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
@@ -167,8 +179,9 @@ public class LimitsTest {
             assertFalse(location == null);
 
             long sum1 = 0, sum2 = 0;
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
             for (int i = 0; i < elapsed1.length; i++) {
                 start = System.currentTimeMillis();
                 response1 = me.verifyLocation(request, GRPC_TIMEOUT_MS);
@@ -183,7 +196,7 @@ public class LimitsTest {
             assert (response1 != null);
 
             // Future
-            request = createMockMatchingEngineRequest(me, location);
+            request = createMockMatchingEngineRequest(carrierName, me, location);
             AppClient.Match_Engine_Loc_Verify response2 = null;
             try {
                 for (int i = 0; i < elapsed2.length; i++) {
@@ -206,66 +219,240 @@ public class LimitsTest {
 
         } catch (IOException ioe) {
             Log.i(TAG, Log.getStackTraceString(ioe));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: IOException!", true);
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("basicLatencyTest: Execution Failed!", true);
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         }  catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("basicLatencyTest: Execution Interrupted!", true);
+            assertFalse("basicLatencyTest: InterruptedException!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
+    }
+
+    @Test
+    public void basicLatencyTestConcurrent() {
+        final String TAG = "basicLatencyTestConcurrent";
+        Context context = InstrumentationRegistry.getTargetContext();
+        MatchingEngine me = new MatchingEngine(context);
+        me.setMexLocationAllowed(true);
+
+        MexLocation mexLoc = new MexLocation(me);
+        Location location;
+        AppClient.Match_Engine_Loc_Verify response1 = null;
+
+        enableMockLocation(context,true);
+        Location loc = createLocation("basicLatencyTest", -122.149349, 37.459609);
+
+        final long start = System.currentTimeMillis();
+        final long elapsed2[] = new long[20];
+        final Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[elapsed2.length];
+        final AppClient.Match_Engine_Loc_Verify responses[] = new AppClient.Match_Engine_Loc_Verify[elapsed2.length];
+        try {
+            setMockLocation(context, loc);
+            location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+            assertFalse(location == null);
+
+            long sum2 = 0;
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            MatchingEngineRequest request;
+
+            // Future
+            request = createMockMatchingEngineRequest(carrierName, me, location);
+            AppClient.Match_Engine_Loc_Verify response2 = null;
+            try {
+                // Background launch all:
+                for (int i = 0; i < elapsed2.length; i++) {
+                    responseFutures[i] = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
+                    elapsed2[i] = 0;
+                }
+                // Because everything is ultimately a Future (not callbacks) to be used with other
+                // such calls, test needs match that reality and launch threads to get() independently
+                AsyncTask parallelTasks[] = new AsyncTask[elapsed2.length];
+                final boolean error[] = new boolean[1]; // Hacky way to not create a class for one var.
+                for (int i = 0; i < elapsed2.length; i++) {
+                    final int ii = i;
+                    parallelTasks[i].execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                responses[ii] = responseFutures[ii].get();
+                                elapsed2[ii] = System.currentTimeMillis() - start;
+                            } catch (InterruptedException ie) {
+                                ie.printStackTrace();
+                                assertTrue("Cancelled!", false);
+                                error[0] = true;
+                            } catch (ExecutionException ee) {
+                                ee.printStackTrace();
+                                assertTrue("Execution failed.", false);
+                                error[0] = true;
+                            }
+                            Log.i(TAG, ii + " VerifyLocationFuture elapsed time: Elapsed2: " + elapsed2[ii]);
+                        }
+                    });
+                }
+                // Nothing fancy, just check every so often until parallel thread Async Tasks returned a result.
+                boolean done = false;
+                while (!done && error[0]==false) {
+                    long count = 0;
+                    for (int i = 0; i < responses.length; i++) {
+                        if (responses[i] != null) {
+                            count++;
+                        }
+                        if (count == responses.length) {
+                            done = true;
+                            break;
+                        }
+                    }
+                    if (done) {
+                        break;
+                    }
+                    Thread.sleep(50);
+                }
+                if (error[0] == false) {
+                    for (int i = 0; i < elapsed2.length; i++) {
+                        sum2 += elapsed2[i];
+                    }
+                    Log.i(TAG, "Average2: " + sum2 / elapsed2.length);
+                } else {
+                    assertTrue("Something went wrong with test.", false);
+                }
+                assert (response2 != null);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        } catch (ExecutionException ee) {
+            Log.i(TAG, Log.getStackTraceString(ee));
+            assertFalse("basicLatencyTest: ExecutionException!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.i(TAG, Log.getStackTraceString(sre));
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
+        }  catch (InterruptedException ie) {
+            Log.i(TAG, Log.getStackTraceString(ie));
+            assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
     }
 
     /**
-     * Basic threading test using a thread pool to talk to dme-server. 2 calls are made per iteration,
-     * as async futures: RegisterClient, then VerifyLocation.
+     * This test is set at some high values for GRPC API threads and parallel Application ASync
+     * Tasks, and in debug mode, prints latency numbers. This is closer to a stress test, and not
+     * realistic development practices. Can generate too many requests exceptions on system ConnectivityManager.
      */
     @Test
-    public void threadpoolTest() {
+    public void parameterizedLatencyTest1() {
+        parameterizedLatencyTestConcurrent("parameterizedLatencyTest1", 10, 1100, 180 * 1000);
+    }
+
+    /**
+     * Concurrency test.
+     * @param TAG Test case name.
+     * @param threadPoolSize Size of GPRC API thread pool to handle App parallel tasks.
+     * @param concurrency This setting can use a lot of memory due to parallel tasks.
+     */
+    public void parameterizedLatencyTestConcurrent(final String TAG, final int threadPoolSize, final int concurrency, long timeoutMs) {
         Context context = InstrumentationRegistry.getTargetContext();
-        MatchingEngine me = new MatchingEngine(Executors.newFixedThreadPool(100));
+        MatchingEngine me = new MatchingEngine(context, Executors.newWorkStealingPool(threadPoolSize));
+
+        final long start = System.currentTimeMillis();
         me.setMexLocationAllowed(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
 
         enableMockLocation(context,true);
-        Location loc = createLocation("threadpoolTest", -122.149349, 37.459609);
+        Location loc = createLocation("basicLatencyTest", -122.149349, 37.459609);
 
+        final long elapsed[] = new long[concurrency];
+        final Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[elapsed.length];
+        final AppClient.Match_Engine_Loc_Verify responses[] = new AppClient.Match_Engine_Loc_Verify[elapsed.length];
         try {
             setMockLocation(context, loc);
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
             assertFalse(location == null);
 
-            // TODO: Need responseFutures.length number of requests if doing separate clients.
-            registerClient(me, location);
-            AppClient.Match_Engine_Request request = createMockMatchingEngineRequest(me, location);
-            Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[10000];
+            long sum = 0;
+            String carrierName = getCarrierName(context);
+            registerClient(carrierName, me, location);
+            MatchingEngineRequest request;
 
-            for (int i = 0; i < responseFutures.length; i++) {
+            // Future
+            request = createMockMatchingEngineRequest(carrierName, me, location);
+
+            // Background launch all:
+            for (int i = 0; i < elapsed.length; i++) {
                 responseFutures[i] = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
-                assert (responseFutures[i] != null);
+                elapsed[i] = 0;
             }
+            // Because everything is ultimately a Future (not callbacks) to be used with other
+            // such calls, test needs match that reality and launch threads to get() independently
+            AsyncTask parallelTasks[] = new AsyncTask[elapsed.length];
+            final boolean error[] = new boolean[1]; // Hacky way to not create a class for one var.
+            for (int i = 0; i < elapsed.length; i++) {
+                final int ii = i;
+                parallelTasks[i].execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            responses[ii] = responseFutures[ii].get();
+                            elapsed[ii] = System.currentTimeMillis() - start;
+                        } catch (InterruptedException ie) {
+                            ie.printStackTrace();
+                            assertTrue("Cancelled!", false);
+                            error[0] = true;
+                        } catch (ExecutionException ee) {
+                            ee.printStackTrace();
+                            assertTrue("Execution failed.", false);
+                            error[0] = true;
+                        }
+                        Log.i(TAG, ii + " VerifyLocationFuture elapsed time: Elapsed2: " + elapsed[ii]);
+                    }
+                });
+            }
+            // Nothing fancy, just check every so often until parallel thread Async Tasks returned a result.
+            boolean done = false;
+            long count = 0;
+            while (!done && error[0]==false && (System.currentTimeMillis() - start < timeoutMs)) {
+                for (int i = 0; i < responses.length; i++) {
+                    if (responses[i] != null) {
+                        count++;
+                    }
+                    if (count == responses.length) {
+                        done = true;
+                        break;
+                    }
+                }
+                if (done) {
+                    break;
+                }
+                Thread.sleep(50);
+            }
+            if (done && (error[0] == false)) {
+                for (int i = 0; i < elapsed.length; i++) {
+                    sum += elapsed[i];
+                }
+                Log.v(TAG, "Average: " + sum / elapsed.length);
+            } else {
+                assertTrue("Something went wrong with test.", false);
+            }
+            assertTrue("Test did not complete successfully.", done);
 
-            for (int i = 0; i < responseFutures.length; i++) {
-                AppClient.Match_Engine_Loc_Verify locv = responseFutures[i].get();
-                assert (locv != null);
-                Log.i(TAG, "Locv: " + locv.getVer());
-            }
         } catch (ExecutionException ee) {
-            Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("threadpoolTest: Execution Failed!", true);
+            Log.e(TAG, Log.getStackTraceString(ee));
+            assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
-            Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("threadpoolTest: Execution Failed!", true);
+            Log.e(TAG, Log.getStackTraceString(sre));
+            assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
-            Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("threadpoolTest: Execution Interrupted!", true);
+            Log.e(TAG, Log.getStackTraceString(ie));
+            assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }

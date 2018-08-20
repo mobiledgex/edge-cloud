@@ -2,7 +2,6 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
-import com.google.protobuf.ByteString;
 import com.squareup.okhttp.Headers;
 import com.squareup.okhttp.HttpUrl;
 import com.squareup.okhttp.OkHttpClient;
@@ -11,6 +10,7 @@ import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
@@ -23,14 +23,14 @@ public class VerifyLocation implements Callable {
     public static final String TAG = "VerifyLocationTask";
 
     private MatchingEngine mMatchingEngine;
-    private AppClient.Match_Engine_Request mRequest; // Singleton.
+    private MatchingEngineRequest mRequest; // Singleton.
     private long mTimeoutInMilliseconds = -1;
 
     VerifyLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -47,7 +47,7 @@ public class VerifyLocation implements Callable {
         return true;
     }
 
-    private String getToken() throws IOException {
+    private String getToken() throws InterruptedException, IOException, ExecutionException {
         String token;
 
         OkHttpClient httpClient = new OkHttpClient();
@@ -57,6 +57,7 @@ public class VerifyLocation implements Callable {
         Request request = new Request.Builder()
                 .url(mMatchingEngine.getTokenServerURI())
                 .build();
+
         Response response = httpClient.newCall(request).execute();
         if (!response.isRedirect()) {
             throw new IllegalStateException("Expected a redirect!");
@@ -72,26 +73,28 @@ public class VerifyLocation implements Callable {
                 throw new IllegalStateException("Required Token ID Missinng");
             }
         }
+
         return token;
     }
 
     private AppClient.Match_Engine_Request addTokenToRequest(String token) {
+        AppClient.Match_Engine_Request grpcRequest = mRequest.matchEngineRequest;
         AppClient.Match_Engine_Request tokenizedRequest = AppClient.Match_Engine_Request.newBuilder()
-                .setVer(mRequest.getVer())
-                .setIdType(mRequest.getIdType())
-                .setUuid(mRequest.getUuid())
-                .setId(mRequest.getId())
-                .setCarrierID(mRequest.getCarrierID())
-                .setCarrierName(mRequest.getCarrierName())
-                .setTower(mRequest.getTower())
-                .setGpsLocation(mRequest.getGpsLocation())
-                .setAppId(mRequest.getAppId())
-                .setProtocol(mRequest.getProtocol())
-                .setServerPort(mRequest.getServerPort())
-                .setDevName(mRequest.getDevName())
-                .setAppName(mRequest.getAppName())
-                .setAppVers(mRequest.getAppVers())
-                .setSessionCookie(mRequest.getSessionCookie())
+                .setVer(grpcRequest.getVer())
+                .setIdType(grpcRequest.getIdType())
+                .setUuid(grpcRequest.getUuid())
+                .setId(grpcRequest.getId())
+                .setCarrierID(grpcRequest.getCarrierID())
+                .setCarrierName(grpcRequest.getCarrierName())
+                .setTower(grpcRequest.getTower())
+                .setGpsLocation(grpcRequest.getGpsLocation())
+                .setAppId(grpcRequest.getAppId())
+                .setProtocol(grpcRequest.getProtocol())
+                .setServerPort(grpcRequest.getServerPort())
+                .setDevName(grpcRequest.getDevName())
+                .setAppName(grpcRequest.getAppName())
+                .setAppVers(grpcRequest.getAppVers())
+                .setSessionCookie(grpcRequest.getSessionCookie())
                 .setVerifyLocToken(token)
                 .build();
         return tokenizedRequest;
@@ -99,30 +102,38 @@ public class VerifyLocation implements Callable {
 
     @Override
     public AppClient.Match_Engine_Loc_Verify call()
-            throws MissingRequestException, StatusRuntimeException, IOException {
-        if (mRequest == null) {
+            throws MissingRequestException, StatusRuntimeException,
+                   IOException, InterruptedException, ExecutionException {
+        if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
         }
+        AppClient.Match_Engine_Request grpcRequest = mRequest.matchEngineRequest;
 
         // Make One time use of HTTP Request to Token Server:
-        String token = getToken(); // This is short lived.
-        mRequest = addTokenToRequest(token);
+        NetworkManager nm = mMatchingEngine.getNetworkManager();
+        nm.switchToCellularInternetNetworkBlocking();
+
+        String token = getToken(); // This token is short lived.
+        grpcRequest = addTokenToRequest(token);
 
         AppClient.Match_Engine_Loc_Verify reply;
         // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mMatchingEngine.getHost(), mMatchingEngine.getPort()).usePlaintext().build();
+            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .verifyLocation(mRequest);
+                    .verifyLocation(grpcRequest);
         } finally {
             if (channel != null) {
                 channel.shutdown();
+                channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
             }
+            nm.resetNetworkToDefault();
         }
         mRequest = null;
+
         // FIXME: Reply TBD.
         int ver = -1;
         if (reply != null) {
