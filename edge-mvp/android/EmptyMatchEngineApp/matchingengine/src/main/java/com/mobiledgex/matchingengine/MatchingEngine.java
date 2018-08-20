@@ -3,7 +3,12 @@ package com.mobiledgex.matchingengine;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.wifi.WifiManager;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
+import android.telephony.CarrierConfigManager;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 
@@ -30,9 +35,9 @@ import android.util.Log;
 // TODO: GRPC (which needs http/2).
 public class MatchingEngine {
     public static final String TAG = "MatchingEngine";
-    private final String mInitalDMEContactHost = "tdg.dme.mobiledgex.net";
-    private String mCurrentNetworkOperatorName = "";
-    private String host = "tdg.dme.mobiledgex.net"; // FIXME: Need CarrierName from actual SIM card to generate.
+    private final String mInitialDMEContactHost = "tdg.dme.mobiledgex.net";
+    private String host = mInitialDMEContactHost;
+    private NetworkManager mNetworkManager;
     private int port = 50051;
 
     // A threadpool for all the MatchEngine API callable interfaces:
@@ -49,11 +54,15 @@ public class MatchingEngine {
     private AppClient.Match_Engine_Loc mMatchEngineLocation;
     private AppClient.Match_Engine_Loc_Verify mMatchEngineLocationVerify;
 
-    public MatchingEngine() {
+    public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
+        ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
+        mNetworkManager = NetworkManager.getSingleton(connectivityManager);
     }
-    public MatchingEngine(ExecutorService executorService) {
+    public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
+        ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
+        mNetworkManager = NetworkManager.getSingleton(connectivityManager, threadpool);
     }
 
     // Application state Bundle Key.
@@ -66,6 +75,22 @@ public class MatchingEngine {
 
     public static void setMexLocationAllowed(boolean allowMexLocation) {
         mMexLocationAllowed = allowMexLocation;
+    }
+
+    /**
+     * Check if Roaming Data is enabled on the System.
+     * @return
+     */
+    public boolean isRoamingDataEanbled(Context context) {
+        boolean enabled;
+        try {
+            enabled = android.provider.Settings.Global.getInt(context.getContentResolver(), Settings.Global.DATA_ROAMING) == 1;
+        } catch (Settings.SettingNotFoundException snfe) {
+            Log.i(TAG, "android.provider.Settings.Global.DATA_ROAMING key is not present!");
+            return false; // Unavailable setting.
+        }
+
+        return enabled;
     }
 
     public Future submit(Callable task) {
@@ -108,24 +133,72 @@ public class MatchingEngine {
         mMatchEngineFindCloudletReply = reply;
     }
 
-    String getCurrentNetworkOperatorName() {
-        return mCurrentNetworkOperatorName;
+    /**
+     * Utility method retrieves current network CarrierName from system service.
+     * @param context
+     * @return
+     */
+    public String retrieveNetworkCarrierName(Context context) {
+        TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+        String networkOperatorName = telManager.getNetworkOperatorName();
+        if (networkOperatorName == null) {
+            Log.w(TAG, "Network Carrier name is not found on device.");
+        }
+        return networkOperatorName;
     }
 
-    void setCurrentNetworkOperatorName(String networkOperatorName) {
-        this.mCurrentNetworkOperatorName = networkOperatorName;
+    public String generateDmeHostAddress(String networkOperatorName) {
+        String host;
+
+        if (networkOperatorName == null || networkOperatorName.isEmpty()) {
+            host = mInitialDMEContactHost;
+            return host;
+        }
+
+        host = networkOperatorName + ".dme.mobiledgex.net";
+        return host;
     }
 
-    private void updateDmeHostAddress(String networkOperatorName) {
-        setCurrentNetworkOperatorName(networkOperatorName);
-        this.host = getCurrentNetworkOperatorName() + ".dme.mobiledgex.net";
+    NetworkManager getNetworkManager() {
+        return mNetworkManager;
+    }
+
+    void setNetworkManager(NetworkManager networkManager) {
+        mNetworkManager = networkManager;
+    }
+
+
+    /**
+     * Creates a MatchingEngineRequest going to the Distributed Matching Engine (DME). The library
+     * itself will not directly ask for permissions, the application should before use.
+     * @param context
+     * @param loc
+     * @return
+     * @throws SecurityException
+     */
+    public MatchingEngineRequest createRequest(Context context, android.location.Location loc) throws SecurityException {
+        String dmeHost = generateDmeHostAddress(retrieveNetworkCarrierName(context));
+        MatchingEngineRequest request = createRequest(context, dmeHost, getPort(), loc);
+        return request;
     }
 
     /**
-     * The library itself will not directly ask for permissions, the application should before use.
-     * This keeps responsibilities managed clearly in one spot under the app's control.
+     * Creates a MatchingEngineRequest going to the Distributed Matching Engine (DME). The library
+     * itself will not directly ask for permissions, the application should before use.
+     * @param context
+     * @param host
+     * @param port
+     * @param loc
+     * @return
+     * @throws SecurityException
      */
-    public Match_Engine_Request createRequest(Context context, android.location.Location loc) throws SecurityException {
+    public MatchingEngineRequest createRequest(Context context, String host, int port, android.location.Location loc) throws SecurityException {
+        Match_Engine_Request grpcRequest = createGRPCRequest(context, retrieveNetworkCarrierName(context), loc);
+        MatchingEngineRequest matchingEngineRequest = new MatchingEngineRequest(grpcRequest, host, port);
+        return matchingEngineRequest;
+    }
+
+    Match_Engine_Request createGRPCRequest(Context context, String networkOperatorName, android.location.Location loc) throws SecurityException {
         if (context == null) {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
@@ -145,8 +218,8 @@ public class MatchingEngine {
 
         // Operator
         TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-        String networkOperatorName = telManager.getNetworkOperatorName();
-        // READ_PHONE_STATE or
+        String carrierName = retrieveNetworkCarrierName(context);
+        // READ_PHONE_STATE. FIXME: May
         AppClient.IDTypes id_types = AppClient.IDTypes.IPADDR;
         String id = telManager.getLine1Number(); // NOT IMEI, if this throws a SecurityException, application must handle it.
         String mnc = telManager.getNetworkOperator();
@@ -209,10 +282,6 @@ public class MatchingEngine {
                 .setVerifyLocToken(mTokenServerToken == null ? "" : mTokenServerToken)
                 .build();
 
-
-        // also update MatchingEngine state.
-        // FIXME: NetworkManager callback.
-        updateDmeHostAddress(networkOperatorName);
         return request;
     }
 
@@ -242,8 +311,7 @@ public class MatchingEngine {
             throw new IllegalArgumentException("UUID is not set, and is required.");
         }
 
-        TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-        String networkOperatorName = telManager.getNetworkOperatorName();
+        String networkOperatorName = retrieveNetworkCarrierName(context);
 
         TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         List<NeighboringCellInfo> neighbors = tm.getNeighboringCellInfo();
@@ -293,8 +361,8 @@ public class MatchingEngine {
      * @return
      * @throws StatusRuntimeException
      */
-    public AppClient.Match_Engine_Status registerClient(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException, IOException {
+    public AppClient.Match_Engine_Status registerClient(MatchingEngineRequest request, long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         RegisterClient registerClient = new RegisterClient(this);
         registerClient.setRequest(request, timeoutInMilliseconds);
         return registerClient.call();
@@ -306,7 +374,7 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public Future<AppClient.Match_Engine_Status> registerClientFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Status> registerClientFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         RegisterClient registerClient = new RegisterClient(this);
         registerClient.setRequest(request, timeoutInMilliseconds);
         return submit(registerClient);
@@ -318,8 +386,8 @@ public class MatchingEngine {
      * @return cloudlet URI.
      * @throws StatusRuntimeException
      */
-    public FindCloudletResponse findCloudlet(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException {
+    public FindCloudletResponse findCloudlet(MatchingEngineRequest request, long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         FindCloudlet findCloudlet = new FindCloudlet(this);
         findCloudlet.setRequest(request, timeoutInMilliseconds);
         return findCloudlet.call();
@@ -330,7 +398,7 @@ public class MatchingEngine {
      * @param request
      * @return cloudlet URI Future.
      */
-    public Future<FindCloudletResponse> findCloudletFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<FindCloudletResponse> findCloudletFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         FindCloudlet findCloudlet = new FindCloudlet(this);
         findCloudlet.setRequest(request, timeoutInMilliseconds);
         return submit(findCloudlet);
@@ -343,9 +411,11 @@ public class MatchingEngine {
      * @param request
      * @return boolean validated or not.
      * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws IOException
      */
-    public AppClient.Match_Engine_Loc_Verify verifyLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException, IOException {
+    public AppClient.Match_Engine_Loc_Verify verifyLocation(MatchingEngineRequest request, long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, IOException, ExecutionException {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return verifyLocation.call();
@@ -357,7 +427,7 @@ public class MatchingEngine {
      * @param request
      * @return Future<Boolean> validated or not.
      */
-    public Future<AppClient.Match_Engine_Loc_Verify> verifyLocationFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Loc_Verify> verifyLocationFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         VerifyLocation verifyLocation = new VerifyLocation(this);
         verifyLocation.setRequest(request, timeoutInMilliseconds);
         return submit(verifyLocation);
@@ -370,8 +440,8 @@ public class MatchingEngine {
      * @return
      * @throws StatusRuntimeException
      */
-    public AppClient.Match_Engine_Loc getLocation(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
-            throws StatusRuntimeException {
+    public AppClient.Match_Engine_Loc getLocation(MatchingEngineRequest request, long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
         GetLocation getLocation = new GetLocation(this);
         getLocation.setRequest(request, timeoutInMilliseconds);
         return getLocation.call();
@@ -383,7 +453,7 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public Future<AppClient.Match_Engine_Loc> getLocationFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Loc> getLocationFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         GetLocation getLocation = new GetLocation(this);
         getLocation.setRequest(request, timeoutInMilliseconds);
         return submit(getLocation);
@@ -395,13 +465,14 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Status addUserToGroup(AppClient.DynamicLocGroupAdd request, long timeoutInMilliseconds) {
+    public AppClient.Match_Engine_Status addUserToGroup(DynamicLocationGroupAdd request, long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
         AddUserToGroup addUserToGroup = new AddUserToGroup(this);
         addUserToGroup.setRequest(request, timeoutInMilliseconds);
         return addUserToGroup.call();
     }
 
-    public Future<AppClient.Match_Engine_Status> addUserToGroupFuture(AppClient.DynamicLocGroupAdd request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Status> addUserToGroupFuture(DynamicLocationGroupAdd request, long timeoutInMilliseconds) {
         AddUserToGroup addUserToGroup = new AddUserToGroup(this);
         addUserToGroup.setRequest(request, timeoutInMilliseconds);
         return submit(addUserToGroup);
@@ -413,18 +484,53 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Cloudlet_List getCloudletList(AppClient.Match_Engine_Request request, long timeoutInMilliseconds)
+    public AppClient.Match_Engine_Cloudlet_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return getCloudletList.call();
     }
 
-    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(AppClient.Match_Engine_Request request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return submit(getCloudletList);
     }
+
+    //
+    // Network Wrappers:
+    //
+
+    /**
+     * Returns if the bound Data Network for application is currently roaming or not.
+     * @return
+     */
+    @RequiresApi(api = android.os.Build.VERSION_CODES.P)
+    public boolean isRoamingData() {
+        return mNetworkManager.isRoamingData();
+    }
+
+    /**
+     * Returns whether Wifi is enabled on the system or not, independent of Application's network state.
+     * @param context
+     * @return
+     */
+    public boolean isWiFiEnabled(Context context) {
+        WifiManager wifiManager = (WifiManager)context.getSystemService(Context.WIFI_SERVICE);
+        return wifiManager.isWifiEnabled();
+    }
+
+    /**
+     * Checks if the Carrier + Phone combination supports WiFiCalling. This does not return whether it is enabled.
+     * If under roaming conditions, WiFi Calling may disable cellular network data interfaces needed by
+     * cellular data only Distributed Matching Enigne and Cloudlet network operations.
+     *
+     * @return
+     */
+    public boolean isWiFiCallingSupported(CarrierConfigManager carrierConfigManager) {
+        return mNetworkManager.isWiFiCallingSupported(carrierConfigManager);
+    }
+
 
     public String getHost() {
         return host;
