@@ -1,0 +1,29 @@
+$ openssl genrsa -out server.key 2048
+$ openssl req -new -x509 -sha256 -key server.key \
+              -out server.crt -days 3650
+
+$ openssl req -new -sha256 -key server.key -out server.csr
+$ openssl x509 -req -sha256 -in server.csr -signkey server.key \
+               -out server.crt -days 3650
+
+#make cert authority
+certstrap init --common-name mexca
+certstrap request-cert -ip 127.0.0.1
+certstrap sign 127.0.0.1 --CA mexca
+certstrap request-cert --common-name mexclient
+certstrap sign mexclient --CA mexca
+
+
+ certstrap init --common-name "Zombie Spotters Ltd"
+$ certstrap request-cert --common-name zombieclient
+$ certstrap sign zombieclient --CA "Zombie Spotters Ltd"
+$ certstrap request-cert --common-name zombieserver
+$ certstrap sign zombieserver --CA "Zombie Spotters Ltd"
+
+
+
+  certstrap init --common-name mex
+  certstrap request-cert --common-name mexclient
+  certstrap request-cert --common-name mexserver
+  certstrap sign mexclient --CA mex
+  certstrap sign mexserver --CA mex
