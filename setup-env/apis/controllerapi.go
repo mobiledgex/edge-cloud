@@ -270,7 +270,7 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 }
 
 func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
-	log.Printf("Applying data via APIs\n")
+	log.Printf("Applying data via APIs for %s\n", apiFile)
 	apiConnectTimeout := 5 * time.Second
 	apiTimeout := 30 * time.Minute
 

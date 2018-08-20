@@ -6,7 +6,6 @@ tests:
   - includefile: add_delete_2apps.yml
     loops: 2
   - includefile: get_cloudlets.yml
-  - includefile: crm_restart.yml ##included as a workaround
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: verify_loc.yml
