@@ -1,0 +1,49 @@
+<h1>Cloudlets
+  </h1>
+  
+      <ul>
+        <li *ngFor="let cloudlet of cloudlets$">
+          <ul>
+            <li> Operator Name: {{ cloudlet.key.operator_key.name }}</li>
+            <li> Cloudlet Name    : {{ cloudlet.key.name }}</li>
+            <li> Access URI    : {{ cloudlet.access_uri }}</li>
+            <li> Longitude    : {{ cloudlet.location.long }}</li>
+            <li> Lattitude    : {{ cloudlet.location.lat }}</li>
+            <li> IP Support       : {{ cloudlet.ip_support }}</li>
+            <li> Number Of Dynamic IPs       : {{ cloudlet.num_dynamic_ips }}</li>
+          </ul>
+        </li>
+      </ul>
+
+<!-- [
+  {
+    "key": {
+      "operator_key": {
+        "name": "TMUS"
+      },
+      "name": "tmocloud-1"
+    },
+    "access_uri": "cloud1.tmo",
+    "location": {
+      "lat": 31,
+      "long": -91
+    },
+    "ip_support": 2,
+    "num_dynamic_ips": 254
+  },
+  {
+    "key": {
+      "operator_key": {
+        "name": "TMUS"
+      },
+      "name": "tmocloud-2"
+    },
+    "access_uri": "cloud2.tmo",
+    "location": {
+      "lat": 35,
+      "long": -95
+    },
+    "ip_support": 2,
+    "num_dynamic_ips": 254
+  }
+] -->
