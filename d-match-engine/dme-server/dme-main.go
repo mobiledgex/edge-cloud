@@ -1,9 +1,14 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"path"
+	"strings"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -12,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -23,6 +29,7 @@ var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data i
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
+var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
@@ -115,6 +122,45 @@ func (s *server) AddUserToGroup(ctx context.Context,
 	return mreq, nil
 }
 
+func initTLS() (*grpc.Server, error) {
+
+	dir := path.Dir(*tlsCertFile)
+	caFile := dir + "/" + "mex-ca.crt"
+	keyFile := strings.Replace(*tlsCertFile, "crt", "key", 1)
+	fmt.Printf("Loading certfile %s cafile %s keyfile %s\n", *tlsCertFile, caFile, keyFile)
+
+	// Create a certificate pool from the certificate authority
+	certPool := x509.NewCertPool()
+	cabs, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not read CA certificate: %s", err)
+	}
+	ok := certPool.AppendCertsFromPEM(cabs)
+	if !ok {
+		return nil, fmt.Errorf("fail to append cert CA %s", caFile)
+	}
+
+	// Load the certificates from disk
+	certificate, err := tls.LoadX509KeyPair(*tlsCertFile, keyFile)
+	if err != nil {
+		return nil, fmt.Errorf("could not load server key pair: %s", err)
+	}
+
+	// Create the TLS credentials
+	creds := credentials.NewTLS(&tls.Config{
+		ClientAuth: tls.RequireAndVerifyClientCert,
+		//ClientAuth:   tls.RequireAnyClientCert,
+		//ClientAuth: tls.VerifyClientCertIfGiven,
+
+		Certificates: []tls.Certificate{certificate},
+		ClientCAs:    certPool,
+	})
+
+	// Create the gRPC server with the credentials
+	srv := grpc.NewServer(grpc.Creds(creds))
+	return srv, nil
+}
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -138,7 +184,17 @@ func main() {
 	if err != nil {
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
-	s := grpc.NewServer()
+
+	var s *grpc.Server
+	if *tlsCertFile != "" {
+		s, err = initTLS()
+		if err != nil {
+			log.FatalLog("failed to init TLS", "error", err)
+		}
+	} else {
+		s = grpc.NewServer()
+	}
+
 	dme.RegisterMatch_Engine_ApiServer(s, &server{})
 
 	if *standalone {
