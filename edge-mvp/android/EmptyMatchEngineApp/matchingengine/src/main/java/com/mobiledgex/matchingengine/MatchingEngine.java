@@ -285,13 +285,29 @@ public class MatchingEngine {
         return request;
     }
 
-    public AppClient.DynamicLocGroupAdd createDynamicLocationGroupAdd(Context context,
-                                                                      long groupLocationId,
-                                                                      @NonNull
-                                                                      AppClient.DynamicLocGroupAdd.DlgCommType type,
-                                                                      @NonNull
-                                                                      android.location.Location loc,
-                                                                      String userData)
+    public DynamicLocationGroupAdd createDynamicLocationGroupAdd(Context context,
+                                                           long groupLocationId,
+                                                           @NonNull
+                                                           AppClient.DynamicLocGroupAdd.DlgCommType type,
+                                                           @NonNull
+                                                           android.location.Location loc,
+                                                           String userData)
+            throws SecurityException {
+
+        return createDynamicLocationGroupAdd(context, groupLocationId, this.host, this.port,
+                                             type, loc, userData);
+    }
+
+    public DynamicLocationGroupAdd createDynamicLocationGroupAdd(Context context,
+                                                                 long groupLocationId,
+                                                                 @NonNull
+                                                                 String host,
+                                                                 int port,
+                                                                 @NonNull
+                                                                 AppClient.DynamicLocGroupAdd.DlgCommType type,
+                                                                 @NonNull
+                                                                 android.location.Location loc,
+                                                                 String userData)
             throws SecurityException {
 
         if (context == null) {
@@ -337,7 +353,7 @@ public class MatchingEngine {
                 .setUserData(userData)
                 .build();
 
-        return groupAddRequest;
+        return new DynamicLocationGroupAdd(groupAddRequest, host, port);
 
     }
 
