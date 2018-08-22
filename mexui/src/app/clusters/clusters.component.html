@@ -1,0 +1,25 @@
+<h1>Cloudlets
+  </h1>
+  
+      <ul>
+        <li *ngFor="let cluster of clusters$">
+          <ul>
+            <li> Cluster Name: {{ cluster.key.name }}</li>
+            <li> Cluster Default Flavor    : {{ cluster.default_flavor.name }}</li>
+          </ul>
+        </li>
+      </ul>
+
+
+
+
+<!-- [
+  {
+    "key": {
+      "name": "SmallCluster"
+    },
+    "default_flavor": {
+      "name": "c1.small"
+    }
+  }
+] -->
