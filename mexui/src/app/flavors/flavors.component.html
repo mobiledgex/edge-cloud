@@ -1,0 +1,24 @@
+<h1>Flavors
+  </h1>
+  
+      <ul>
+        <li *ngFor="let flavor of flavors$">
+          <ul>
+            <li> flavor Name: {{ flavor.result.key.name }}</li>
+            <li> ram    : {{ flavor.result.ram }}</li>
+            <li> vcpus  : {{ flavor.result.vcpus }}</li>
+            <li> disk    : {{ flavor.result.disk }}</li>
+          </ul>
+        </li>
+      </ul>
+  
+      <!-- {
+        "key": {
+          "name": "x1.tiny"
+        },
+        "ram": 1024,
+        "vcpus": 1,
+        "disk": 1
+      }, -->
+
+      
