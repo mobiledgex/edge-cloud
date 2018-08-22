@@ -1,0 +1,70 @@
+<h1>App Instances
+  </h1>
+  
+      <ul>
+        <li *ngFor="let appinst of  appinsts$">
+          <ul>
+            <li> Id                     :  {{ appinst.key.id }}</li>
+            <li> Developer Name          : {{ appinst.key.app_key.developer_key.name }}</li>
+            <li> Application Name        : {{ appinst.key.app_key.name }}</li>
+            <li> Version                 : {{ appinst.key.app_key.version }}</li>
+            <li> ImagePath               : {{ appinst.image_path }}</li>
+            <li> ImageType               : {{ appinst.image_type }}</li>
+            <li> Uri                     : {{ appinst.uri }}</li>
+            <li> Liveness                : {{ appinst.liveness }}</li>
+            <li> Mapped Ports            : {{ appinst.mapped_ports }}</li>
+            <li> Mapped Path             : {{ appinst.mapped_path }}</li>
+            <li> Flavor                  : {{ appinst.flavor.name }}</li>
+            <li> Cloudlet Key            : {{ appinst.key.cloudlet_key.operator_key.name }}</li>
+            <li> Cloudlet Name            : {{ appinst.key.cloudlet_key.name }}</li>
+            <li> Cloudlet Lat            : {{ appinst.cloudlet_loc.lat }}</li>
+            <li> Cloudlet Long            : {{ appinst.cloudlet_loc.long }}</li>
+            <li> Cluster                 : {{ appinst.cluster_inst_key.cluster_key.name }} </li>
+            <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
+          </ul>
+        </li>
+      </ul>
+
+
+      <!-- {
+        "key": {
+          "app_key": {
+            "developer_key": {
+              "name": "AcmeAppCo"
+            },
+            "name": "someApplication",
+            "version": "1.0"
+          },
+          "cloudlet_key": {
+            "operator_key": {
+              "name": "TMUS"
+            },
+            "name": "tmocloud1"
+          },
+          "id": 123
+        },
+        "cloudlet_loc": {
+          "lat": 31,
+          "long": -91
+        },
+        "uri": "someApplication.tmocloud1.mobiledgex.net",
+        "cluster_inst_key": {
+          "cluster_key": {
+            "name": "SmallCluster"
+          },
+          "cloudlet_key": {
+            "operator_key": {
+              "name": "TMUS"
+            },
+            "name": "tmocloud1"
+          }
+        },
+        "liveness": 1,
+        "image_path": "mobiledgex_AcmeAppCo/someApplication:1.0",
+        "image_type": 1,
+        "mapped_ports": null,
+        "mapped_path": "someApplication",
+        "flavor": {
+          "name": "x1.small"
+        }
+      }, -->
