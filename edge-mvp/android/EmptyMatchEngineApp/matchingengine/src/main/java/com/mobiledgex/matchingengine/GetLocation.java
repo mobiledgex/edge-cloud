@@ -2,6 +2,8 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -49,23 +51,34 @@ public class GetLocation implements Callable {
         }
 
         AppClient.Match_Engine_Loc reply;
-        // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
+        NetworkManager nm = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
+            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
-            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .getLocation(mRequest.matchEngineRequest);
 
-            nm.resetNetworkToDefault();
+            // Nothing a sdk user can do below but read the exception cause:
+        } catch (MexKeyStoreException mkse) {
+            throw new ExecutionException("Exception calling GetLocation: ", mkse);
+        } catch (MexTrustStoreException mtse) {
+            throw new ExecutionException("Exception calling GetLocation: ", mtse);
+        } catch (KeyManagementException kme) {
+            throw new ExecutionException("Exception calling GetLocation: ", kme);
+        } catch (NoSuchAlgorithmException nsa) {
+            throw new ExecutionException("Exception calling GetLocation: ", nsa);
         } finally {
             if (channel != null) {
                 channel.shutdown();
                 channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
+            }
+            if (nm != null) {
+                nm.resetNetworkToDefault();
             }
         }
         mRequest = null;

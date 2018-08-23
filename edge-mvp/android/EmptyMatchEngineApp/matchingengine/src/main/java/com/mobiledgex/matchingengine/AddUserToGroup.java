@@ -2,6 +2,8 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -48,23 +50,34 @@ public class AddUserToGroup implements Callable {
         }
 
         AppClient.Match_Engine_Status reply;
-        // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
+        NetworkManager nm = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
+            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mMatchingEngine.getPort());
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
-            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .addUserToGroup(mRequest.dynamicLocGroupAdd);
 
-            nm.resetNetworkToDefault();
+            // Nothing a sdk user can do below but read the exception cause:
+        } catch (MexKeyStoreException mkse) {
+            throw new ExecutionException("Exception calling AddUserToGroup: ", mkse);
+        } catch (MexTrustStoreException mtse) {
+            throw new ExecutionException("Exception calling AddUserToGroup: ", mtse);
+        } catch (KeyManagementException kme) {
+            throw new ExecutionException("Exception calling AddUserToGroup: ", kme);
+        } catch (NoSuchAlgorithmException nsa) {
+            throw new ExecutionException("Exception calling AddUserToGroup: ", nsa);
         } finally {
             if (channel != null) {
                 channel.shutdown();
                 channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
+            }
+            if (nm != null) {
+                nm.resetNetworkToDefault();
             }
         }
 
