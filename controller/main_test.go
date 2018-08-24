@@ -55,7 +55,7 @@ func TestController(t *testing.T) {
 	// test notify clients
 	notifyAddrs := []string{*notifyAddr}
 	crmNotify := notify.NewDummyHandler()
-	crmClient := notify.NewCRMClient(notifyAddrs, crmNotify)
+	crmClient := notify.NewCRMClient(notifyAddrs, "", crmNotify)
 	crmNotify.SetClientCb(crmClient)
 	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
 		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
@@ -65,7 +65,7 @@ func TestController(t *testing.T) {
 	go crmClient.Start()
 	defer crmClient.Stop()
 	dmeNotify := notify.NewDummyHandler()
-	dmeClient := notify.NewDMEClient(notifyAddrs, dmeNotify)
+	dmeClient := notify.NewDMEClient(notifyAddrs, "", dmeNotify)
 	dmeNotify.SetClientCb(dmeClient)
 	go dmeClient.Start()
 	defer dmeClient.Stop()

@@ -15,7 +15,6 @@ import (
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	"google.golang.org/grpc"
 )
 
 type dmeApiRequest struct {
@@ -45,12 +44,12 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		return false
 	}
 	log.Printf("RunDmeAPI for api %s\n", api)
+	apiConnectTimeout := 5 * time.Second
 
 	readMERFile(apiFile)
 
 	dme := util.GetDme(procname)
-	conn, err := grpc.Dial(dme.ApiAddr, grpc.WithInsecure())
-
+	conn, err := dme.DmeLocal.ConnectAPI(apiConnectTimeout)
 	if err != nil {
 		log.Printf("Error: unable to connect to dme addr %v\n", dme.ApiAddr)
 		return false

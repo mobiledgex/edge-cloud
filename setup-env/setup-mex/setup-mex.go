@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"time"
 
@@ -184,6 +185,10 @@ func ReadSetupFile(setupfile string, dataDir string) bool {
 	var varlist []string
 	var replacementVars util.YamlReplacementVariables
 	util.DeploymentReplacementVars = ""
+
+	//{{tlsoutdir}} is relative to the setupdir.
+	tlsOutDir := path.Dir(setupfile) + "/../../../tls/out"
+	varlist = append(varlist, "tlsoutdir="+tlsOutDir)
 
 	if dataDir != "" {
 		varlist = append(varlist, "datadir="+dataDir)

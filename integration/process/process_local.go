@@ -13,14 +13,19 @@ import (
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
 
 // Local processes all run in the same global namespace, using different
 // tcp ports to communicate with each other.
 
-// EtcdLocal
+type TLSCerts struct {
+	ServerCert string
+	ClientCert string
+}
 
+// EtcdLocal
 type EtcdLocal struct {
 	Name           string
 	DataDir        string
@@ -53,6 +58,7 @@ type ControllerLocal struct {
 	ApiAddr    string
 	HttpAddr   string
 	NotifyAddr string
+	TLS        TLSCerts
 	cmd        *exec.Cmd
 }
 
@@ -65,6 +71,10 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	if p.HttpAddr != "" {
 		args = append(args, "--httpAddr")
 		args = append(args, p.HttpAddr)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -82,7 +92,7 @@ func (p *ControllerLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
-func connectAPIImpl(timeout time.Duration, apiaddr string) (*grpc.ClientConn, error) {
+func connectAPIImpl(timeout time.Duration, apiaddr string, tlsCertFile string) (*grpc.ClientConn, error) {
 	// Wait for service to be ready to connect.
 	// Note: using grpc WithBlock() takes about a second longer
 	// than doing the retry connect below so requires a larger timeout.
@@ -104,17 +114,19 @@ func connectAPIImpl(timeout time.Duration, apiaddr string) (*grpc.ClientConn, er
 		timeout -= wait
 		time.Sleep(wait)
 	}
-
-	conn, err := grpc.Dial(apiaddr, grpc.WithInsecure())
+	dialOption, err := tls.GetTLSClientDialOption(apiaddr, tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := grpc.Dial(apiaddr, dialOption)
 	return conn, err
 }
 
 func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr)
+	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
 // DmeLocal
-
 type DmeLocal struct {
 	Name        string
 	ApiAddr     string
@@ -122,6 +134,7 @@ type DmeLocal struct {
 	LocVerUrl   string
 	TokSrvUrl   string
 	Carrier     string
+	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
 
@@ -143,6 +156,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "--carrier")
 		args = append(args, p.Carrier)
 	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
@@ -159,7 +176,7 @@ func (p *DmeLocal) Stop() {
 }
 
 func (p *DmeLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr)
+	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
 // CrmLocal
@@ -169,6 +186,7 @@ type CrmLocal struct {
 	ApiAddr     string
 	NotifyAddrs string
 	CloudletKey string
+	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
 
@@ -181,6 +199,10 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 	if p.CloudletKey != "" {
 		args = append(args, "--cloudletKey")
 		args = append(args, p.CloudletKey)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -199,7 +221,7 @@ func (p *CrmLocal) Stop() {
 }
 
 func (p *CrmLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
-	return connectAPIImpl(timeout, p.ApiAddr)
+	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
 // Support funcs
