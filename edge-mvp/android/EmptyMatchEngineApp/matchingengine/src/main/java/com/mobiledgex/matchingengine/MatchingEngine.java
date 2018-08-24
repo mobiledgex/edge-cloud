@@ -229,7 +229,7 @@ public class MatchingEngine {
         if (id == null) { // Fallback to IP:
 	    // TODO: Dual SIM?
         }
-        if(carrierName == null || carrierName == "") {
+        if(carrierName == null || carrierName.equals("")) {
             carrierName = networkOperatorName.equals("") ? mnc : networkOperatorName; // Carrier Name or Mnc?
         }
 
@@ -263,7 +263,7 @@ public class MatchingEngine {
             nfe.printStackTrace();
             // Hard stop, or continue?
         }
-        if(devName == null || devName == "") {
+        if(devName == null || devName.equals("")) {
             devName = packageLabel; // From signing certificate?
         }
 
