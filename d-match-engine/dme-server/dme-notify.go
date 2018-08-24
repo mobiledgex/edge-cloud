@@ -30,9 +30,9 @@ func NewNotifyHandler() *notify.DefaultHandler {
 	return &handler
 }
 
-func initNotifyClient(addrs string) *notify.Client {
+func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	handler := NewNotifyHandler()
-	notifyClient := notify.NewDMEClient(strings.Split(addrs, ","), handler)
+	notifyClient := notify.NewDMEClient(strings.Split(addrs, ","), tlsCertFile, handler)
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }

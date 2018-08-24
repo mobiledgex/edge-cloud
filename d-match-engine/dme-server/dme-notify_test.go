@@ -22,10 +22,10 @@ func TestNotify(t *testing.T) {
 	serverHandler := notify.NewDummyHandler()
 	serverMgr := notify.ServerMgr{}
 	serverHandler.SetServerCb(&serverMgr)
-	serverMgr.Start(addr, serverHandler)
+	serverMgr.Start(addr, "", serverHandler)
 
 	// client (dme) side
-	client := initNotifyClient(addr)
+	client := initNotifyClient(addr, "")
 	client.Start()
 
 	// create data on server side

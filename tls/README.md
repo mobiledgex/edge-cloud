@@ -34,7 +34,8 @@ Created out/dme.xyz.mobiledgex.net.crt from out/dme.xyx.mobiledgex.net.csr signe
 The DME can now be run with --tls ./out/dme.xyz.mobiledgex.net.crt
 
 IP address based:
-$ certstrap request-cert --ip 127.0.0.1
+
+$ certstrap request-cert --ip 127.0.0.1,0.0.0.0
 Enter passphrase (empty for no passphrase): 
 <leave blank>
 Enter same passphrase again: 

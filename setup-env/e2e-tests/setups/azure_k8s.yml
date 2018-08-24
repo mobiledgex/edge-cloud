@@ -6,18 +6,33 @@ cluster:
 cloudflare:
   zone: mobiledgex.net
   records: 
-  - name: mex.dme.mobiledgex.net
+  - name: mexdemo.dme.mobiledgex.net
     type: A
-    content: 23.99.192.41 
-  - name: mex.tok.mobiledgex.net
+    content: 40.122.71.185
+  - name: mexdemo.tok.mobiledgex.net
     type: A
-    content: 23.99.254.204
-  - name: mex.ctrl.mobiledgex.net
+    content: 40.113.219.126
+  - name: mexdemo.locsim.mobiledgex.net
     type: A
-    content: 168.61.222.27
-  - name: mex.ctrl-not.mobiledgex.net
+    content: 40.113.219.126
+  - name: mexdemo.ctrl.mobiledgex.net
     type: A
-    content: 168.61.217.237
+    content: 104.43.221.230
+  - name: mexdemo.ctrl-http.mobiledgex.net
+    type: A
+    content: 40.122.29.67
+  - name: mexdemo.ctrl-not.mobiledgex.net
+    type: A
+    content: 40.113.245.183
+  - name: mobiledgexsdkdemo.centraluscloudlet.tdg.mobiledgex.net
+    type: A
+    content: 40.113.219.126
+  - name: mobiledgexsdkdemo.westuscloudlet.tdg.mobiledgex.net
+    type: A
+    content: 40.118.185.214
+  - name: mobiledgexsdkdemo.bonncloudlet.tdg.mobiledgex.net
+    type: A
+    content: 37.50.143.101
 
 k8s-deployment:
 
@@ -27,29 +42,29 @@ k8s-deployment:
    - file: mex-secret.yml
      description: secret used to access private repo
 
-   - file: mex-locsim-deploy.yml
-     description: create a location api simulator
-     waitforpods:
-     - podname: locsim
-       podcount: 1
-       maxwait: 180 
-     copyfile:
-       podname: locsim
-       src: ../data/locsim.yml
-       dest: /var/tmp
+#   - file: mex-locsim-deploy.yml
+#     description: create a location api simulator
+#     waitforpods:
+#     - podname: locsim
+#       podcount: 1
+#       maxwait: 180 
+#     copyfile:
+#       podname: locsim
+#      src: ../data/locsim.yml
+#      dest: /var/tmp
 
-   - file: mex-locsim-svc.yml
-     description: create service to allow locsim to be accessed within cluster
+#   - file: mex-locsim-lb.yml
+#     description: create locsim load balancer for external access
      
-   - file: mex-toksrv-deploy.yml
-     description: create token service simulator
-     waitforpods:
-     - podname: toksrv
-       podcount: 1
-       maxwait: 180
+#   - file: mex-toksrv-deploy.yml
+#     description: create token service simulator
+#     waitforpods:
+#     - podname: toksrv
+#       podcount: 1
+#       maxwait: 180
 
-   - file: mex-toksrv-lb.yml
-     description: create a load balancer for token service
+#   - file: mex-toksrv-lb.yml
+#     description: create a load balancer for token service
 
    - file: etcd-operator.yml
      description: create an operator deployment to manage etcd
@@ -95,7 +110,14 @@ k8s-deployment:
         podcount: 1
         maxwait: 180
 
-#   - file: mex-crm-deploy-bonn.yml
+   - file: mex-crm-deploy-westus.yml
+     description: deploys the cluster in azure west
+     waitforpods:
+      - podname: crmwestus
+        podcount: 1
+        maxwait: 180
+
+#   - file: mecrm-deploy-bonn.yml
 #     description: deploys the cluster in bonn
 #     waitforpods:
 #      - podname: crmbonn

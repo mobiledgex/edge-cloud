@@ -17,6 +17,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	yaml "gopkg.in/yaml.v2"
@@ -28,6 +29,7 @@ var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
+var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -59,8 +61,12 @@ func main() {
 	controllerData = crmutil.NewControllerData()
 
 	srv, err := crmutil.NewCloudResourceManagerServer(controllerData)
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	if err != nil {
+		log.FatalLog("get TLS Credentials", "error", err)
+	}
+	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
-	grpcServer := grpc.NewServer()
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	if OSEnvValid {
@@ -102,7 +108,7 @@ func main() {
 	} else {
 		notifyHandler = NewNotifyHandler(controllerData)
 		addrs := strings.Split(*notifyAddrs, ",")
-		notifyClient = notify.NewCRMClient(addrs, notifyHandler)
+		notifyClient = notify.NewCRMClient(addrs, *tlsCertFile, notifyHandler)
 		// set callbacks to trigger send of infos
 		controllerData.AppInstInfoCache.SetNotifyCb(notifyClient.UpdateAppInstInfo)
 		controllerData.ClusterInstInfoCache.SetNotifyCb(notifyClient.UpdateClusterInstInfo)
@@ -121,11 +127,16 @@ func main() {
 	defer grpcServer.Stop()
 
 	log.InfoLog("Server started", "addr", *bindAddress)
-
-	conn, err := grpc.Dial(*controllerAddress, grpc.WithInsecure())
+	dialOption, err := tls.GetTLSClientDialOption(*controllerAddress, *tlsCertFile)
+	if err != nil {
+		log.FatalLog("Failed get TLS options", "error", err)
+		os.Exit(1)
+	}
+	conn, err := grpc.Dial(*controllerAddress, dialOption)
 	if err != nil {
 		log.FatalLog("Failed to connect to controller",
 			"addr", *controllerAddress, "err", err)
+		os.Exit(1)
 	}
 	defer func() {
 		err := conn.Close()
