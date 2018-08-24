@@ -1,22 +1,17 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path"
-	"strings"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 var addr string
@@ -59,44 +54,11 @@ var completionCmd = &cobra.Command{
 func connect(cmd *cobra.Command, args []string) error {
 	var err error
 
-	if tlsCertFile != "" {
-		dir := path.Dir(tlsCertFile)
-		keyFile := strings.Replace(tlsCertFile, "crt", "key", 1)
-
-		certPool := x509.NewCertPool()
-		bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
-		if err != nil {
-			return err
-		}
-		ok := certPool.AppendCertsFromPEM(bs)
-		if !ok {
-			return fmt.Errorf("fail to append certs")
-		}
-		certificate, err := tls.LoadX509KeyPair(
-			tlsCertFile,
-			keyFile,
-		)
-		if err != nil {
-			return fmt.Errorf("Fail to load client certs")
-		}
-
-		serverName := strings.Split(addr, ":")[0]
-
-		fmt.Printf("")
-		transportCreds := credentials.NewTLS(&tls.Config{
-			ServerName:   serverName,
-			Certificates: []tls.Certificate{certificate},
-			RootCAs:      certPool,
-		})
-
-		fmt.Printf("using TLS credentials server %s certfile %s keyFile %s\n", serverName, tlsCertFile, keyFile)
-
-		dialOption := grpc.WithTransportCredentials(transportCreds)
-		conn, err = grpc.Dial(addr, dialOption)
-
-	} else {
-		conn, err = grpc.Dial(addr, grpc.WithInsecure())
+	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile)
+	if err != nil {
+		return err
 	}
+	conn, err = grpc.Dial(addr, dialOption)
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", addr, err.Error())
 	}

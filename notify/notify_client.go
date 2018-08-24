@@ -8,6 +8,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -17,6 +18,7 @@ import (
 
 type Client struct {
 	addrs       []string
+	tlsCertFile string
 	handler     ClientHandler
 	requestor   edgeproto.NoticeRequestor
 	version     uint32
@@ -122,17 +124,18 @@ type ClientStats struct {
 
 func cancelNoop() {}
 
-func NewDMEClient(addrs []string, handler ClientHandler) *Client {
-	return newClient(addrs, handler, edgeproto.NoticeRequestor_NoticeRequestorDME)
+func NewDMEClient(addrs []string, tlsCertFile string, handler ClientHandler) *Client {
+	return newClient(addrs, tlsCertFile, handler, edgeproto.NoticeRequestor_NoticeRequestorDME)
 }
 
-func NewCRMClient(addrs []string, handler ClientHandler) *Client {
-	return newClient(addrs, handler, edgeproto.NoticeRequestor_NoticeRequestorCRM)
+func NewCRMClient(addrs []string, tlsCertFile string, handler ClientHandler) *Client {
+	return newClient(addrs, tlsCertFile, handler, edgeproto.NoticeRequestor_NoticeRequestorCRM)
 }
 
-func newClient(addrs []string, handler ClientHandler, requestor edgeproto.NoticeRequestor) *Client {
+func newClient(addrs []string, tlsCertFile string, handler ClientHandler, requestor edgeproto.NoticeRequestor) *Client {
 	s := Client{}
 	s.addrs = addrs
+	s.tlsCertFile = tlsCertFile
 	s.handler = handler
 	s.requestor = requestor
 	s.signal = make(chan bool, 1)
@@ -206,14 +209,19 @@ func (s *Client) connect() (edgeproto.NotifyApi_StreamNoticeClient, error) {
 	s.mux.Unlock()
 
 	ctx, cancel := context.WithTimeout(context.Background(), NotifyRetryTime)
+	dialOption, err := tls.GetTLSClientDialOption(addr, s.tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
 	conn, err := grpc.DialContext(ctx, addr,
-		grpc.WithInsecure(),
+		dialOption,
 		grpc.WithStatsHandler(&grpcStatsHandler{client: s}),
 		grpc.WithKeepaliveParams(clientParams))
 	cancel()
 	if err != nil {
 		return nil, err
 	}
+	log.DebugLog(log.DebugLevelNotify, "creating notify client", "addr", addr, "tlsCert", s.tlsCertFile)
 
 	api := edgeproto.NewNotifyApiClient(conn)
 	ctx, cancel = context.WithCancel(context.Background())
