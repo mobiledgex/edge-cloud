@@ -84,10 +84,6 @@ func main() {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 	server := grpc.NewServer(grpc.Creds(creds))
-
-	if err != nil {
-		log.FatalLog("Failed to get TLS creds", "err", err)
-	}
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
