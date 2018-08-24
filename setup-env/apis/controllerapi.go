@@ -346,7 +346,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				/// Testcase is still marked failed, but a successful deletion after the delay may
 				// prevent a bunch of other tests from failing later due to mismatched data.
 				// TODO: remove this workaround once the root cause is found.
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second * 3)
 				err2 := runAppinstApi(ctrlapi, ctx, &appData, api)
 				log.Printf("Error in appinst API for %v retry %v \n", err, err2)
 				rc = false
