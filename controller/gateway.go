@@ -8,12 +8,17 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
 
-func grpcGateway(addr string) (http.Handler, error) {
+func grpcGateway(addr string, tlsCertFile string) (http.Handler, error) {
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure())
+	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := grpc.DialContext(ctx, addr, dialOption)
 	if err != nil {
 		log.FatalLog("Failed to start REST gateway", "error", err)
 	}

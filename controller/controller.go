@@ -16,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
 
@@ -28,6 +29,7 @@ var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
+var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 
 func GetRootDir() string {
 	return *rootDir
@@ -74,10 +76,18 @@ func main() {
 	defer sync.Done()
 
 	notifyHandler := NewNotifyHandler()
-	notify.ServerMgrOne.Start(*notifyAddr, notifyHandler)
+	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile, notifyHandler)
 	defer notify.ServerMgrOne.Stop()
 
-	server := grpc.NewServer()
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	if err != nil {
+		log.FatalLog("get TLS Credentials", "error", err)
+	}
+	server := grpc.NewServer(grpc.Creds(creds))
+
+	if err != nil {
+		log.FatalLog("Failed to get TLS creds", "err", err)
+	}
 	edgeproto.RegisterDeveloperApiServer(server, &developerApi)
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
@@ -103,7 +113,7 @@ func main() {
 
 	// REST gateway
 	mux := http.NewServeMux()
-	gw, err := grpcGateway(*apiAddr)
+	gw, err := grpcGateway(*apiAddr, *tlsCertFile)
 	if err != nil {
 		log.FatalLog("Failed to create grpc gateway", "error", err)
 	}

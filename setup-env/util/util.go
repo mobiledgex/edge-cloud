@@ -86,7 +86,8 @@ type ControllerProcess struct {
 }
 type DmeProcess struct {
 	process.DmeLocal
-	Hostname string
+	Hostname      string
+	TLSClientCert string
 }
 type CrmProcess struct {
 	process.CrmLocal

@@ -1,0 +1,228 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor:
+    name: x1.medium
+  masterflavor:
+    name: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
+
+clusters:
+- key:
+    name: centraluscluster
+  defaultflavor:
+    name: c1.small
+- key:
+    name: westuscluster
+  defaultflavor:
+    name: c1.small
+- key:
+    name: bonncluster
+  defaultflavor:
+    name: c1.small
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: centraluscluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: centraluscloudlet
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
+
+- key:
+    clusterkey:
+      name: westuscluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: westuscloudlet
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
+
+- key:
+    clusterkey:
+      name: bonncluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonncloudlet
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
+
+operators:
+- key:
+    name: TDG
+
+developers:
+- key:
+    name: MobiledgeX SDK Demo
+  username: bruce
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TDG
+    name: centraluscloudlet
+  accessuri: 
+  location:
+    lat: 42.379
+    long: -87.858
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG
+    name: westuscloudlet
+  accessuri:
+  location:
+    lat: 37.338
+    long: -121.886
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG
+    name: bonncloudlet
+  accessuri:
+  location:
+    lat: 50.737
+    long: 7.098
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: MobiledgeX SDK Demo
+    version: "1.0"
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: centraluscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: centraluscluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: centraluscloudlet
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  mappedpath: MobiledgeXSDKDemo
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: westuscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: westuscluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: westuscloudlet
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  mappedpath: MobiledgeXSDKDemo
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonncloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: bonncluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonncloudlet
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  mappedpath: MobiledgeXSDKDemo
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
