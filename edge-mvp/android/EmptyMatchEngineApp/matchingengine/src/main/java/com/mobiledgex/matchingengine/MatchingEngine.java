@@ -3,6 +3,7 @@ package com.mobiledgex.matchingengine;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.provider.Settings;
@@ -178,7 +179,7 @@ public class MatchingEngine {
      */
     public MatchingEngineRequest createRequest(Context context, android.location.Location loc) throws SecurityException {
         String dmeHost = generateDmeHostAddress(retrieveNetworkCarrierName(context));
-        MatchingEngineRequest request = createRequest(context, dmeHost, getPort(), loc);
+        MatchingEngineRequest request = createRequest(context, dmeHost, getPort(), "", "", loc);
         return request;
     }
 
@@ -192,13 +193,14 @@ public class MatchingEngine {
      * @return
      * @throws SecurityException
      */
-    public MatchingEngineRequest createRequest(Context context, String host, int port, android.location.Location loc) throws SecurityException {
-        Match_Engine_Request grpcRequest = createGRPCRequest(context, retrieveNetworkCarrierName(context), loc);
+    public MatchingEngineRequest createRequest(Context context, String host, int port, String carrierName,
+                                               String developerName, android.location.Location loc) throws SecurityException {
+        Match_Engine_Request grpcRequest = createGRPCRequest(context, retrieveNetworkCarrierName(context), carrierName, developerName, loc);
         MatchingEngineRequest matchingEngineRequest = new MatchingEngineRequest(grpcRequest, host, port);
         return matchingEngineRequest;
     }
 
-    Match_Engine_Request createGRPCRequest(Context context, String networkOperatorName, android.location.Location loc) throws SecurityException {
+    Match_Engine_Request createGRPCRequest(Context context, String networkOperatorName, String carrierName, String devName, Location loc) throws SecurityException {
         if (context == null) {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
@@ -218,7 +220,6 @@ public class MatchingEngine {
 
         // Operator
         TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-        String carrierName = retrieveNetworkCarrierName(context);
         // READ_PHONE_STATE. FIXME: May
         AppClient.IDTypes id_types = AppClient.IDTypes.IPADDR;
         String id = telManager.getLine1Number(); // NOT IMEI, if this throws a SecurityException, application must handle it.
@@ -227,6 +228,9 @@ public class MatchingEngine {
 
         if (id == null) { // Fallback to IP:
 	    // TODO: Dual SIM?
+        }
+        if(carrierName == null || carrierName.equals("")) {
+            carrierName = networkOperatorName.equals("") ? mnc : networkOperatorName; // Carrier Name or Mnc?
         }
 
         // Tower
@@ -259,6 +263,9 @@ public class MatchingEngine {
             nfe.printStackTrace();
             // Hard stop, or continue?
         }
+        if(devName == null || devName.equals("")) {
+            devName = packageLabel; // From signing certificate?
+        }
 
         // Passed in Location (which is a callback interface)
         Loc aLoc = androidLocToMexLoc(loc);
@@ -269,13 +276,13 @@ public class MatchingEngine {
                 .setUuid(mUUID.toString())
                 .setId((id == null) ? "" : id)
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
-                .setCarrierName(networkOperatorName.equals("") ? mnc : networkOperatorName) // Carrier Name or Mnc?
+                .setCarrierName(carrierName)
                 .setTower(cid) // cid and lac (int)
                 .setGpsLocation(aLoc)
                 .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
                 .setProtocol(ByteString.copyFromUtf8("http")) // This one is appId context sensitive.
                 .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
-                .setDevName(packageLabel) // From signing certificate?
+                .setDevName(devName)
                 .setAppName(appName)
                 .setAppVers(versionName) // Or versionName, which is visual name?
                 .setSessionCookie(mSessionCookie == null ? "" : mSessionCookie) // "" if null/unknown.
