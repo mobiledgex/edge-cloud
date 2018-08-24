@@ -285,8 +285,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     //MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, location); // Regular use case.
                     String host = "tdg.dme.mobiledgex.net"; // Override host.
                     int port = mMatchingEngine.getPort(); // Keep same port.
+                    String carrierName = "TDG";
+                    String devName = "EmptyMatchEngineApp";
 
-                    MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, host, port, location);
+                    MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, host, port, carrierName, devName, location);
 
                     AppClient.Match_Engine_Status registerStatus = mMatchingEngine.registerClient(req, 10000);
                     if (registerStatus.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS) {
@@ -296,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         return;
                     }
 
-                    req = mMatchingEngine.createRequest(ctx, host, port, location);
+                    req = mMatchingEngine.createRequest(ctx, host, port, carrierName, devName, location);
                     if (req != null) {
                         // Location Verification (Blocking, or use verifyLocationFuture):
                         AppClient.Match_Engine_Loc_Verify verifiedLocation = mMatchingEngine.verifyLocation(req, 10000);
