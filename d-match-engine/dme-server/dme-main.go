@@ -1,23 +1,18 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net"
-	"path"
-	"strings"
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -122,45 +117,6 @@ func (s *server) AddUserToGroup(ctx context.Context,
 	return mreq, nil
 }
 
-func initTLS() (*grpc.Server, error) {
-
-	dir := path.Dir(*tlsCertFile)
-	caFile := dir + "/" + "mex-ca.crt"
-	keyFile := strings.Replace(*tlsCertFile, "crt", "key", 1)
-	fmt.Printf("Loading certfile %s cafile %s keyfile %s\n", *tlsCertFile, caFile, keyFile)
-
-	// Create a certificate pool from the certificate authority
-	certPool := x509.NewCertPool()
-	cabs, err := ioutil.ReadFile(caFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not read CA certificate: %s", err)
-	}
-	ok := certPool.AppendCertsFromPEM(cabs)
-	if !ok {
-		return nil, fmt.Errorf("fail to append cert CA %s", caFile)
-	}
-
-	// Load the certificates from disk
-	certificate, err := tls.LoadX509KeyPair(*tlsCertFile, keyFile)
-	if err != nil {
-		return nil, fmt.Errorf("could not load server key pair: %s", err)
-	}
-
-	// Create the TLS credentials
-	creds := credentials.NewTLS(&tls.Config{
-		ClientAuth: tls.RequireAndVerifyClientCert,
-		//ClientAuth:   tls.RequireAnyClientCert,
-		//ClientAuth: tls.VerifyClientCertIfGiven,
-
-		Certificates: []tls.Certificate{certificate},
-		ClientCAs:    certPool,
-	})
-
-	// Create the gRPC server with the credentials
-	srv := grpc.NewServer(grpc.Creds(creds))
-	return srv, nil
-}
-
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -175,7 +131,7 @@ func main() {
 		}
 		listAppinstTbl()
 	} else {
-		notifyClient := initNotifyClient(*notifyAddrs)
+		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
@@ -185,15 +141,11 @@ func main() {
 		log.FatalLog("Failed to listen", "addr", *apiAddr, "err", err)
 	}
 
-	var s *grpc.Server
-	if *tlsCertFile != "" {
-		s, err = initTLS()
-		if err != nil {
-			log.FatalLog("failed to init TLS", "error", err)
-		}
-	} else {
-		s = grpc.NewServer()
+	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
+	if err != nil {
+		log.FatalLog("get TLS Credentials", "error", err)
 	}
+	s := grpc.NewServer(grpc.Creds(creds))
 
 	dme.RegisterMatch_Engine_ApiServer(s, &server{})
 

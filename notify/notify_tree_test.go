@@ -168,9 +168,9 @@ func newNode(listenAddr string, connectAddrs []string, typ nodeType) *node {
 	}
 	if connectAddrs != nil {
 		if typ == crm {
-			n.client = NewCRMClient(connectAddrs, n.handler)
+			n.client = NewCRMClient(connectAddrs, "", n.handler)
 		} else {
-			n.client = NewDMEClient(connectAddrs, n.handler)
+			n.client = NewDMEClient(connectAddrs, "", n.handler)
 		}
 		n.handler.SetClientCb(n.client)
 	}
@@ -178,7 +178,7 @@ func newNode(listenAddr string, connectAddrs []string, typ nodeType) *node {
 }
 
 func (n *node) startServer() {
-	n.serverMgr.Start(n.listenAddr, n.handler)
+	n.serverMgr.Start(n.listenAddr, "", n.handler)
 }
 
 func (n *node) startClient() {

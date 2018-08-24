@@ -25,6 +25,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -141,7 +142,7 @@ type ServerMgr struct {
 
 var ServerMgrOne ServerMgr
 
-func (mgr *ServerMgr) Start(addr string, handler ServerHandler) {
+func (mgr *ServerMgr) Start(addr string, tlsCertFile string, handler ServerHandler) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 
@@ -155,7 +156,12 @@ func (mgr *ServerMgr) Start(addr string, handler ServerHandler) {
 	if err != nil {
 		log.FatalLog("ServerMgr listen failed", "err", err)
 	}
-	mgr.serv = grpc.NewServer(grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
+
+	creds, err := tls.GetTLSServerCreds(tlsCertFile)
+	if err != nil {
+		log.FatalLog("Failed to get TLS creds", "err", err)
+	}
+	mgr.serv = grpc.NewServer(grpc.Creds(creds), grpc.KeepaliveParams(serverParams), grpc.KeepaliveEnforcementPolicy(serverEnforcement))
 	edgeproto.RegisterNotifyApiServer(mgr.serv, mgr)
 	log.DebugLog(log.DebugLevelNotify, "ServerMgr listening", "addr", addr)
 	go func() {

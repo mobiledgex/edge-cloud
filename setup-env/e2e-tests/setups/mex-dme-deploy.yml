@@ -24,13 +24,14 @@ spec:
          - "--notifyAddrs"
          - "controller-notify:37001"
          - "--locverurl"
-         - "http://locsim:8888/verifyLocation"
+         - "http://mexdemo.locsim.mobiledgex.net:8888/verifyLocation"
          - "--carrier"
          - "GDDT"
          - "--d"
          - "locapi,dmedb,dmereq"
          - "--toksrvurl"
-         - "http://mex.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+         - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+
          
       imagePullSecrets:
        - name: mexreg-secret 
