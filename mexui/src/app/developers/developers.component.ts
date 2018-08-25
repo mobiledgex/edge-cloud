@@ -13,7 +13,11 @@ export class DevelopersComponent implements OnInit {
 
   ngOnInit() {
     this.data.getDevelopers().subscribe(
-       (data) => (this.developers$ = data )
+       (data) => {
+         // console.log(data);
+         data = "[" + data.split("}\n{").join("},\n{") + "]";
+        this.developers$ = JSON.parse(data);
+       }
     );
   }
 

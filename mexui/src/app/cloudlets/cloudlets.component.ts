@@ -13,7 +13,11 @@ export class CloudletsComponent implements OnInit {
 
   ngOnInit() {
     this.data.getCloudlets().subscribe(
-      (data) => (this.cloudlets$ = data )
+      (data) => {
+        // console.log(data);
+        this.cloudlets$ = JSON.parse( "[" + data.split('}\n{').join('},\n{') + "]");
+        // console.log(this.cloudlets$);
+      }
    );
   }
 
