@@ -13,7 +13,8 @@ export class OperatorsComponent implements OnInit {
 
   ngOnInit() {
     this.data.getOperators().subscribe(
-      (data) => (this.operators$ = data )
+      (data) => (
+        this.operators$ = JSON.parse("[" + data.split('}\n{').join('},\n{') + "]"))
    );
   }
 

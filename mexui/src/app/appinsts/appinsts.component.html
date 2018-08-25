@@ -4,22 +4,22 @@
       <ul>
         <li *ngFor="let appinst of  appinsts$">
           <ul>
-            <li> Id                     :  {{ appinst.key.id }}</li>
-            <li> Developer Name          : {{ appinst.key.app_key.developer_key.name }}</li>
-            <li> Application Name        : {{ appinst.key.app_key.name }}</li>
-            <li> Version                 : {{ appinst.key.app_key.version }}</li>
-            <li> ImagePath               : {{ appinst.image_path }}</li>
-            <li> ImageType               : {{ appinst.image_type }}</li>
-            <li> Uri                     : {{ appinst.uri }}</li>
-            <li> Liveness                : {{ appinst.liveness }}</li>
-            <li> Mapped Ports            : {{ appinst.mapped_ports }}</li>
-            <li> Mapped Path             : {{ appinst.mapped_path }}</li>
-            <li> Flavor                  : {{ appinst.flavor.name }}</li>
-            <li> Cloudlet Key            : {{ appinst.key.cloudlet_key.operator_key.name }}</li>
-            <li> Cloudlet Name            : {{ appinst.key.cloudlet_key.name }}</li>
-            <li> Cloudlet Lat            : {{ appinst.cloudlet_loc.lat }}</li>
-            <li> Cloudlet Long            : {{ appinst.cloudlet_loc.long }}</li>
-            <li> Cluster                 : {{ appinst.cluster_inst_key.cluster_key.name }} </li>
+            <li> Id                     :  {{ appinst.result.key.id }}</li>
+            <li> Developer Name          : {{ appinst.result.key.app_key.developer_key.name }}</li>
+            <li> Application Name        : {{ appinst.result.key.app_key.name }}</li>
+            <li> Version                 : {{ appinst.result.key.app_key.version }}</li>
+            <li> ImagePath               : {{ appinst.result.image_path }}</li>
+            <li> ImageType               : {{ appinst.result.image_type }}</li>
+            <li> Uri                     : {{ appinst.result.uri }}</li>
+            <li> Liveness                : {{ appinst.result.liveness }}</li>
+            <li> Mapped Ports            : {{ appinst.result.mapped_ports }}</li>
+            <li> Mapped Path             : {{ appinst.result.mapped_path }}</li>
+            <li> Flavor                  : {{ appinst.result.flavor.name }}</li>
+            <li> Cloudlet Key            : {{ appinst.result.key.cloudlet_key.operator_key.name }}</li>
+            <li> Cloudlet Name            : {{ appinst.result.key.cloudlet_key.name }}</li>
+            <li> Cloudlet Lat            : {{ appinst.result.cloudlet_loc.lat }}</li>
+            <li> Cloudlet Long            : {{ appinst.result.cloudlet_loc.long }}</li>
+            <li> Cluster                 : {{ appinst.result.cluster_inst_key.cluster_key.name }} </li>
             <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
           </ul>
         </li>
