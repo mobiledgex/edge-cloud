@@ -4,12 +4,17 @@
     <ul>
       <li *ngFor="let dvlper of developers$">
         <ul>
-          <li> Account Name: {{ dvlper.key.name }}</li>
+          <li> Account Name: {{ dvlper.result.key.name }}</li>
+          <li> Username    : {{ dvlper.result.username }}</li>
+          <li> Passhash    : {{ dvlper.result.passhash }}</li>
+          <li> Address     : {{ dvlper.result.address }}</li>
+          <li> Email       : {{ dvlper.result.email }}</li>
+          <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
+          <!-- <li> Account Name: {{ dvlper.key.name }}</li>
           <li> Username    : {{ dvlper.username }}</li>
           <li> Passhash    : {{ dvlper.passhash }}</li>
           <li> Address     : {{ dvlper.address }}</li>
-          <li> Email       : {{ dvlper.email }}</li>
-          <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
+          <li> Email       : {{ dvlper.email }}</li> -->
         </ul>
       </li>
     </ul>
