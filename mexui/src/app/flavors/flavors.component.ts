@@ -12,7 +12,9 @@ export class FlavorsComponent implements OnInit {
 
   ngOnInit() {
     this.data.getFlavors().subscribe(
-      (data) => (this.flavors$ = data )
+      (data) => (
+        this.flavors$ = JSON.parse("[" + data.split('}\n{').join('},\n{') + "]")
+      )
    );
   }
 

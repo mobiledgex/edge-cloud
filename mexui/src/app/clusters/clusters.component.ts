@@ -13,7 +13,7 @@ export class ClustersComponent implements OnInit {
 
   ngOnInit() {
     this.data.getClusters().subscribe(
-      (data) => (this.clusters$ = data )
+      (data) => (this.clusters$ = JSON.parse("[" + data.split('}\n{').join('},\n{') + "]"))
    );
   }
 

@@ -15,21 +15,10 @@ export class AppsComponent implements OnInit {
 
   ngOnInit() {
     this.data.getApps().subscribe(
-      (data) => (this.apps$ = data )
+      (data) => (
+        this.apps$ = JSON.parse("[" + data.split('}\n{').join('},\n{') + "]")
+      )
    );
-
-  // this.data.getApps().subscribe(
-  //   (data) => {
-  //     console.log("POST Request is successful ", data);
-  //     //this.cities = [ ... resp.body ];
-  //     this.apps$ = data.body;
-  //     console.log(this.apps$);
-  //   },
-  //   error => {
-  //     console.log("Error", error);
-  //   }
-  //   );
-
   }
  
 }
