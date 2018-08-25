@@ -2,6 +2,7 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
@@ -73,6 +74,8 @@ public class GetCloudletList implements Callable {
             throw new ExecutionException("Exception calling GetCloudletList: ", kme);
         } catch (NoSuchAlgorithmException nsa) {
             throw new ExecutionException("Exception calling GetCloudletList: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling GetCloudletList: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

@@ -32,22 +32,21 @@ import javax.security.auth.x500.X500Principal;
 
 public class OkHttpSSLChannelHelper {
 
-    public static SSLSocketFactory getMutualAuthSSLSocketFactory(String serverCAPemFileName,
-                                                                 String clientCertFileName,
-                                                                 String clientKeyFileName)
+    public static SSLSocketFactory getMutualAuthSSLSocketFactory(FileInputStream serverCAPemFis,
+                                                                 FileInputStream clientCertFis,
+                                                                 PrivateKey privateKey)
             throws MexKeyStoreException, MexTrustStoreException, NoSuchAlgorithmException, KeyManagementException {
-
 
         KeyManager[] keyManagers;
         TrustManager[] trustManagers;
         try {
-            keyManagers = OkHttpSSLChannelHelper.getKeyManagers(clientCertFileName, clientKeyFileName);
+            keyManagers = OkHttpSSLChannelHelper.getKeyManagers(clientCertFis, privateKey);
         } catch (Exception e) {
             throw new MexKeyStoreException("Could not get Keystore: ", e);
         }
 
         try {
-            trustManagers = OkHttpSSLChannelHelper.getTrustManagers(serverCAPemFileName);
+            trustManagers = OkHttpSSLChannelHelper.getTrustManagers(serverCAPemFis);
         } catch (Exception e) {
             throw new MexTrustStoreException("Could not get Truststore: ", e);
         }
@@ -61,36 +60,18 @@ public class OkHttpSSLChannelHelper {
         return sslContext.getSocketFactory();
     }
 
-    public static KeyManager[] getKeyManagers(String clientCertFilename, String clientPrivateKeyFilename)
-            throws CertificateException, KeyStoreException, InvalidKeySpecException, IOException,
-                    NoSuchAlgorithmException, UnrecoverableEntryException {
-
-        FileInputStream clientCertStream = null;
+    public static PrivateKey getPrivateKey(String clientPrivateKeyFilename)
+        throws IOException, InvalidKeySpecException, KeyStoreException, NoSuchAlgorithmException {
+        // Private Key for Public Cert:
+        PrivateKey privateKey = null;
         FileInputStream clientPrivateKeyStream = null;
-        KeyManagerFactory keyManagerFactory;
         try {
-            clientCertStream = new FileInputStream(clientCertFilename);
-            clientPrivateKeyStream = new FileInputStream(clientPrivateKeyFilename);
             File keyFile = new File(clientPrivateKeyFilename);
+            clientPrivateKeyStream = new FileInputStream(keyFile);
 
-            KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
-            keyStore.load(null, null);
-
-            X500Principal principal;
-
-            // Public Cert
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate pubCert = (X509Certificate) cf.generateCertificate(clientCertStream);
-            principal = pubCert.getSubjectX500Principal();
-            if (keyStore.getCertificate(principal.getName()) != null) {
-                keyStore.deleteEntry(principal.getName("RFC2253"));
-            }
-            keyStore.setCertificateEntry(principal.getName("RFC2253"), pubCert);
-
-            // Private Key for Public Cert:
             int length = (int) keyFile.length(); // byte[] can't be size long.
             if (length != keyFile.length()) {
-                throw new KeyStoreException("Private Key file is too large!");
+                throw new KeyStoreException("Private Key file is too large to convert to byte array!");
             }
             byte[] keyBytes = new byte[length];
             int read = clientPrivateKeyStream.read(keyBytes);
@@ -101,52 +82,65 @@ public class OkHttpSSLChannelHelper {
             keyStr = keyStr.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
             keyStr = keyStr.replace("-----END RSA PRIVATE KEY-----", "");
             byte[] decodedKey = Base64.decode(keyStr, Base64.DEFAULT);
-
-            PrivateKey privateKey =
-                    KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
-            keyStore.setKeyEntry(principal.getName("RFC2253"), privateKey, null, new Certificate[]{pubCert});
-
-            // KeyManagerFactory
-            keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keyStore, null);
-
+            privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
         } finally {
-            if (clientCertStream != null) {
-                clientCertStream.close();
-            }
             if (clientPrivateKeyStream != null) {
                 clientPrivateKeyStream.close();
             }
         }
+        return privateKey;
+    }
+
+    public static KeyManager[] getKeyManagers(FileInputStream clientCertStream, PrivateKey privateKey)
+            throws CertificateException, KeyStoreException, IOException,
+                    NoSuchAlgorithmException, UnrecoverableEntryException {
+
+        KeyManagerFactory keyManagerFactory;
+
+        KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+        keyStore.load(null, null);
+
+        X500Principal principal;
+
+        // Public Cert
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate pubCert = (X509Certificate) cf.generateCertificate(clientCertStream);
+        principal = pubCert.getSubjectX500Principal();
+        if (keyStore.getCertificate(principal.getName()) != null) {
+            keyStore.deleteEntry(principal.getName("RFC2253"));
+        }
+        keyStore.setCertificateEntry(principal.getName("RFC2253"), pubCert);
+
+        // KeyEntry with Private Key with public Certificate
+        keyStore.setKeyEntry(principal.getName("RFC2253"), privateKey, null, new Certificate[]{pubCert});
+
+        // KeyManagerFactory
+        keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keyStore, null);
+
         return keyManagerFactory.getKeyManagers();
     }
 
-    public static TrustManager[] getTrustManagers(String trustedCaFilename)
+    public static TrustManager[] getTrustManagers(FileInputStream caCertFileStream)
             throws CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
 
-        FileInputStream caCertFileStream = null;
         TrustManagerFactory trustManagerFactory = null;
-        try {
-            // For TrustCA.
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null);
-            caCertFileStream = new FileInputStream(new File(trustedCaFilename));
 
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate caCert = (X509Certificate) cf.generateCertificate(caCertFileStream);
+        // For TrustCA.
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null);
 
-            X500Principal principal = caCert.getSubjectX500Principal();
-            keyStore.setCertificateEntry(principal.getName("RFC2253"), caCert);
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate caCert = (X509Certificate) cf.generateCertificate(caCertFileStream);
 
-            // Set up trust manager factory to use our key store.
-            trustManagerFactory = TrustManagerFactory.getInstance(
-                    TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(keyStore);
-        } finally {
-            if (caCertFileStream != null) {
-                caCertFileStream.close();
-            }
-        }
+        X500Principal principal = caCert.getSubjectX500Principal();
+        keyStore.setCertificateEntry(principal.getName("RFC2253"), caCert);
+
+        // Set up trust manager factory to use our key store.
+        trustManagerFactory = TrustManagerFactory.getInstance(
+                TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(keyStore);
+
 
         return trustManagerFactory.getTrustManagers();
     }

@@ -2,6 +2,7 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
@@ -71,6 +72,8 @@ public class AddUserToGroup implements Callable {
             throw new ExecutionException("Exception calling AddUserToGroup: ", kme);
         } catch (NoSuchAlgorithmException nsa) {
             throw new ExecutionException("Exception calling AddUserToGroup: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling AddUserToGroup: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

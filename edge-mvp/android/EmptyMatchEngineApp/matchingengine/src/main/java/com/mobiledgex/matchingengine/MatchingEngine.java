@@ -20,8 +20,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.Key;
 import java.security.KeyManagementException;
+import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -631,7 +635,8 @@ public class MatchingEngine {
     }
 
     public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance()
-            throws MexKeyStoreException, MexTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
+            throws IOException, InvalidKeySpecException, MexKeyStoreException, MexTrustStoreException,
+                KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
         if (mMutualAuthSocketFactory != null) {
             return mMutualAuthSocketFactory;
         }
@@ -641,10 +646,26 @@ public class MatchingEngine {
         String clientCertFilePath = "/mnt/sdcard/mex-client.crt";
         String privateKeyFilePath = "/mnt/sdcard/mex-client.key";
 
-        mMutualAuthSocketFactory = OkHttpSSLChannelHelper.getMutualAuthSSLSocketFactory(
-                trustCaFilePath,
-                clientCertFilePath,
-                privateKeyFilePath);
+        FileInputStream trustCAFis = null;
+        FileInputStream clientCertFis = null;
+        PrivateKey privateKey = OkHttpSSLChannelHelper.getPrivateKey(privateKeyFilePath);
+
+        try {
+            trustCAFis = new FileInputStream(trustCaFilePath);
+            clientCertFis = new FileInputStream(clientCertFilePath);
+
+            mMutualAuthSocketFactory = OkHttpSSLChannelHelper.getMutualAuthSSLSocketFactory(
+                    trustCAFis,
+                    clientCertFis,
+                    privateKey);
+        } finally {
+            if (trustCAFis != null) {
+                trustCAFis.close();
+            }
+            if (clientCertFis != null) {
+                clientCertFis.close();
+            }
+        }
 
         return mMutualAuthSocketFactory;
     }
@@ -661,18 +682,24 @@ public class MatchingEngine {
      * @throws NoSuchAlgorithmException
      */
     ManagedChannel channelPicker(String host, int port)
-            throws MexKeyStoreException, MexTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
+            throws IOException, MexKeyStoreException, MexTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
 
-        if (isSSLEnabled()) {
-            return OkHttpChannelBuilder
-                    .forAddress(host, port)
-                    .sslSocketFactory(getMutualAuthSSLSocketFactoryInstance())
-                    .build();
-        } else {
-            return ManagedChannelBuilder
-                    .forAddress(host, port)
-                    .usePlaintext()
-                    .build();
+        try {
+            if (isSSLEnabled()) {
+                return OkHttpChannelBuilder
+                        .forAddress(host, port)
+                        .sslSocketFactory(getMutualAuthSSLSocketFactoryInstance())
+                        .build();
+            } else {
+                return ManagedChannelBuilder
+                        .forAddress(host, port)
+                        .usePlaintext()
+                        .build();
+            }
+        } catch (InvalidKeySpecException ikse) {
+            throw new MexKeyStoreException("InvalidKeystore: ", ikse);
+        } catch (KeyStoreException kse) {
+            throw new MexKeyStoreException("MexKeyStoreException: ", kse);
         }
     }
 

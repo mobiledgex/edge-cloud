@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
@@ -84,6 +85,8 @@ public class RegisterClient implements Callable {
             throw new ExecutionException("Exception calling RegisterClient: ", kme);
         } catch (NoSuchAlgorithmException nsa) {
             throw new ExecutionException("Exception calling RegisterClient: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling RegisterClient: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

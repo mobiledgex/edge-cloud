@@ -136,6 +136,8 @@ public class VerifyLocation implements Callable {
             throw new ExecutionException("Exception calling VerifyLocation: ", kme);
         } catch (NoSuchAlgorithmException nsa) {
             throw new ExecutionException("Exception calling VerifyLocation: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
