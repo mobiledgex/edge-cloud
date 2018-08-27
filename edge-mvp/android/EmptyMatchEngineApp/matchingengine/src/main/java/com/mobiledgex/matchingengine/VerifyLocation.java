@@ -47,7 +47,7 @@ public class VerifyLocation implements Callable {
         return true;
     }
 
-    private String getToken() throws InterruptedException, IOException, ExecutionException {
+    private String getToken() throws IOException {
         String token;
 
         OkHttpClient httpClient = new OkHttpClient();
