@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -642,9 +643,10 @@ public class MatchingEngine {
         }
 
         // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
-        String trustCaFilePath = "/mnt/sdcard/mex-ca.crt";
-        String clientCertFilePath = "/mnt/sdcard/mex-client.crt";
-        String privateKeyFilePath = "/mnt/sdcard/mex-client.key";
+        String downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        String trustCaFilePath = downloads + "/mex-ca.crt";
+        String clientCertFilePath = downloads +  "/mex-client.crt";
+        String privateKeyFilePath = downloads + "/mex-client.key";
 
         FileInputStream trustCAFis = null;
         FileInputStream clientCertFis = null;
