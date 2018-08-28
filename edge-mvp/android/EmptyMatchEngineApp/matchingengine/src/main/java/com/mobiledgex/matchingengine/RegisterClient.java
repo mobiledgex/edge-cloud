@@ -2,15 +2,24 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
+import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
+
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocketFactory;
+
 import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import io.grpc.okhttp.OkHttpChannelBuilder;
 
 public class RegisterClient implements Callable {
     public static final String TAG = "RegisterClient";
@@ -48,34 +57,43 @@ public class RegisterClient implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Status call() throws MissingRequestException,
-            StatusRuntimeException, InterruptedException, ExecutionException {
+    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
 
 
-        AppClient.Match_Engine_Status reply;
-        // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
+        AppClient.Match_Engine_Status reply = null;
         ManagedChannel channel = null;
+        NetworkManager nm = null;
         try {
-            channel = ManagedChannelBuilder
-                    .forAddress(mRequest.host, mRequest.port)
-                    .usePlaintext()
-                    .build();
+            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mMatchingEngine.getPort());
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
-            NetworkManager nm = mMatchingEngine.getNetworkManager();
+            nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .registerClient(mRequest.matchEngineRequest);
 
-            nm.resetNetworkToDefault();
+            // Nothing a sdk user can do below but read the exception cause:
+        } catch (MexKeyStoreException mkse) {
+            throw new ExecutionException("Exception calling RegisterClient: ", mkse);
+        } catch (MexTrustStoreException mtse) {
+            throw new ExecutionException("Exception calling RegisterClient: ", mtse);
+        } catch (KeyManagementException kme) {
+            throw new ExecutionException("Exception calling RegisterClient: ", kme);
+        } catch (NoSuchAlgorithmException nsa) {
+            throw new ExecutionException("Exception calling RegisterClient: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling RegisterClient: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();
                 channel.awaitTermination(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS);
+            }
+            if (nm != null) {
+                nm.resetNetworkToDefault();
             }
         }
         mRequest = null;

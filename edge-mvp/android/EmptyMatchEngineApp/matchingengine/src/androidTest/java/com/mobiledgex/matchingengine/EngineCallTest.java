@@ -33,6 +33,8 @@ import android.location.Location;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import javax.net.ssl.SSLException;
+
 
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
@@ -49,6 +51,11 @@ public class EngineCallTest {
             InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
                     "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
                             + " android.permission.READ_PHONE_STATE");
+            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
+                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
+                            + " android.permission.ACCESS_COARSE_LOCATION");
+
+            // FIXME: Read application cert and keys.
             InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
                     "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
                             + " android.permission.ACCESS_COARSE_LOCATION");
@@ -111,6 +118,9 @@ public class EngineCallTest {
                 registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
                 assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
                         registerResponse.getSessionCookie(), me.getSessionCookie());
+            /*} catch (SSLException se) {
+                Log.e(TAG, Log.getStackTraceString(se));
+                assertTrue("SSLException registering client", false);*/
             } catch (ExecutionException ee) {
                 Log.e(TAG, Log.getStackTraceString(ee));
                 assertTrue("ExecutionException registering client", false);
@@ -237,6 +247,9 @@ public class EngineCallTest {
             MatchingEngineRequest request = createMockMatchingEngineRequest(getCarrierName(context), me, location);
             response = me.registerClient(request, GRPC_TIMEOUT_MS);
             assert (response != null);
+        /*} catch (SSLException se) {
+            Log.e(TAG, Log.getStackTraceString(se));
+            assertFalse("registerClientTest: SSLException!", true);*/
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
             assertFalse("registerClientTest: ExecutionException!", true);

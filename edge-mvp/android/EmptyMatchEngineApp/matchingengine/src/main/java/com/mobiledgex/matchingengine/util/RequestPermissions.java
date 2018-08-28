@@ -29,6 +29,7 @@ public class RequestPermissions {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.READ_PHONE_STATE, // Get Phone number
+            Manifest.permission.READ_EXTERNAL_STORAGE, // TODO: Read Application private keys.
     };
 
     public static boolean permissionsDeniedShown = false;

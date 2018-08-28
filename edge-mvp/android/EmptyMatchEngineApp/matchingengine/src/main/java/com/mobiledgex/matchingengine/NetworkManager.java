@@ -11,11 +11,19 @@ import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
 import android.util.Log;
 
+import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
+
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 import io.grpc.ManagedChannel;
 
@@ -32,14 +40,12 @@ public class NetworkManager {
     private final Object mSyncObject = new Object();
     private long mTimeoutInMilliseconds = 10000;
 
-    // GRPC ManagedChannel, subject to NetworkManager.
-    private ManagedChannel mGrpcChannel;
-
     private Network mNetwork;
     private NetworkRequest mDefaultRequest;
 
     private ExecutorService mThreadPool;
     private boolean mNetworkSwitchingEnabled = true;
+    private boolean mSSLEnabled = true;
 
     public boolean isNetworkSwitchingEnabled() {
         return mNetworkSwitchingEnabled;
@@ -68,14 +74,14 @@ public class NetworkManager {
         resetNetworkToDefault();
     }
 
-    public static NetworkManager getSingleton(ConnectivityManager connectivityManager) {
+    public static NetworkManager getInstance(ConnectivityManager connectivityManager) {
         if (mNetworkManager == null) {
             mNetworkManager = new NetworkManager(connectivityManager);
         }
         return mNetworkManager;
     }
 
-    public static NetworkManager getSingleton(ConnectivityManager connectivityManager, ExecutorService executorService) {
+    public static NetworkManager getInstance(ConnectivityManager connectivityManager, ExecutorService executorService) {
         if (mNetworkManager == null) {
             mNetworkManager = new NetworkManager(connectivityManager, executorService);
         }
@@ -83,6 +89,7 @@ public class NetworkManager {
     }
 
     private NetworkManager(ConnectivityManager connectivityManager) {
+
         this.mConnectivityManager = connectivityManager;
         mThreadPool = Executors.newSingleThreadExecutor();
     }
@@ -195,6 +202,10 @@ public class NetworkManager {
         NetworkCapabilities networkCapabilities = mConnectivityManager.getNetworkCapabilities(mConnectivityManager.getActiveNetwork());
         logTransportCapabilities(networkCapabilities);
 
+    }
+
+    public boolean isSSLEnabled() {
+        return mSSLEnabled;
     }
 
     class NetworkSwitcherCallable implements Callable {
@@ -473,5 +484,4 @@ public class NetworkManager {
             }
         });
     }
-
 }

@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.google.protobuf'
 apply plugin: 'maven-publish'
 
-def grpcVersion='1.13.1'
+def grpcVersion='1.14.0'
 
 Properties properties = new Properties()
 properties.load(project.rootProject.file('local.properties').newDataInputStream())
@@ -45,7 +45,18 @@ android {
             }
         }
     }
-
+    packagingOptions {
+        exclude 'META-INF/INDEX.LIST'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/ASL2.0'
+        exclude 'META-INF/io.netty.versions.properties'
+    }
 }
 
 protobuf {
@@ -88,6 +99,9 @@ dependencies {
 
     // You need to build grpc-java to obtain these libraries below.
     implementation "io.grpc:grpc-okhttp:${grpcVersion}"
+    //implementation "io.grpc:grpc-android:${grpcVersion}"
+    //implementation "io.grpc:grpc-netty:${grpcVersion}"
+    //implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
     implementation "io.grpc:grpc-protobuf-lite:${grpcVersion}"
     implementation "io.grpc:grpc-stub:${grpcVersion}"
     protobuf 'com.google.protobuf:protobuf-java:3.0.2' // FIXME: Timestamp, for lite version: old lib: https://github.com/google/protobuf/issues/1889
