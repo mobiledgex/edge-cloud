@@ -14,6 +14,9 @@ import { FlavorsComponent } from './flavors/flavors.component';
 import { HttpClientModule } from '@angular/common/http'; 
 import {CdkTableModule} from '@angular/cdk/table';
 import { OperatorsComponent } from './operators/operators.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { TopbarComponent } from './topbar/topbar.component';
+import { FormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -25,13 +28,16 @@ import { OperatorsComponent } from './operators/operators.component';
     CloudletsComponent,
     ClustersComponent,
     FlavorsComponent,
-    OperatorsComponent
+    OperatorsComponent,
+    TopbarComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    CdkTableModule
+    CdkTableModule,
+    NgbModule.forRoot(),
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

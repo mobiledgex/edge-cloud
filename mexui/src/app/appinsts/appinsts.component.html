@@ -1,70 +1,190 @@
 <h1>App Instances
   </h1>
   
-      <ul>
-        <li *ngFor="let appinst of  appinsts$">
-          <ul>
-            <li> Id                     :  {{ appinst.result.key.id }}</li>
-            <li> Developer Name          : {{ appinst.result.key.app_key.developer_key.name }}</li>
-            <li> Application Name        : {{ appinst.result.key.app_key.name }}</li>
-            <li> Version                 : {{ appinst.result.key.app_key.version }}</li>
-            <li> ImagePath               : {{ appinst.result.image_path }}</li>
-            <li> ImageType               : {{ appinst.result.image_type }}</li>
-            <li> Uri                     : {{ appinst.result.uri }}</li>
-            <li> Liveness                : {{ appinst.result.liveness }}</li>
-            <li> Mapped Ports            : {{ appinst.result.mapped_ports }}</li>
-            <li> Mapped Path             : {{ appinst.result.mapped_path }}</li>
-            <li> Flavor                  : {{ appinst.result.flavor.name }}</li>
-            <li> Cloudlet Key            : {{ appinst.result.key.cloudlet_key.operator_key.name }}</li>
-            <li> Cloudlet Name            : {{ appinst.result.key.cloudlet_key.name }}</li>
-            <li> Cloudlet Lat            : {{ appinst.result.cloudlet_loc.lat }}</li>
-            <li> Cloudlet Long            : {{ appinst.result.cloudlet_loc.long }}</li>
-            <li> Cluster                 : {{ appinst.result.cluster_inst_key.cluster_key.name }} </li>
-            <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
-          </ul>
-        </li>
-      </ul>
+  <div class="container">
+    <div class="instlist">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Id</th>
+            <th>DeveloperName</th>
+            <th>Name</th>
+            <th>Version</th>
+            <th>ImagePath</th>
+            <th>ImageType</th>
+            <th>Uri</th>
+            <th>Liveness</th>
+            <th>Mapped Ports</th>
+            <th>Mapped Path</th>
+            <th>Flavor</th>
+            <th>Cloudlet Key</th>
+            <th>Cloudlet Name</th>
+            <th>Cloudlet Lat</th>
+            <th>Cloudlet Long</th>
+            <th>Cluster</th>
+            <th>AccessLayer</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let inst of appinsts; let i = index">
+            <th scope="row">{{ i + 1 }}</th>
+            <td>{{ inst.id }}</td>
+            <td>{{ inst.developerName }}</td>
+            <td>{{ inst.name }}</td>
+            <td>{{ inst.version}}</td>
+            <td>{{ inst.imagePath }}</td>
+            <td>{{ inst.imageType }}</td>
+            <td>{{ inst.uri }}</td>
+            <td>{{ inst.liveNess }}</td>
+            <td>{{ inst.mappedPorts }}</td>
+            <td>{{ inst.mappedPath }}</td>
+            <td>{{ inst.flavor }}</td>
+            <td>{{ inst.cloudletKey }}</td>
+            <td>{{ inst.cloudletName }}</td>
+            <td>{{ inst.cloudletLat }}</td>
+            <td>{{ inst.cloudletLong }}</td>
+            <td>{{ inst.cluster }}</td>
+            <td>{{ inst.accessLayer }}</td>
+            <td>
+              <button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button>
+            </td>
+            <td>
+              <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-right">
+        <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
+      </div>
+    </div>
+    <br>
+    <div class="instentry" *ngIf="showNew">
+      <form (ngSubmit)="onSave()">
+        <div class="form-group row">
+          <label for="devname-id" class="col-2 col-form-label">Id</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.id" name="id">
+          </div>
+        </div>
 
+        <div class="form-group row">
+          <label for="devname-input" class="col-2 col-form-label">DeveloperName</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.developerName" name="developerName">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="name-input" class="col-2 col-form-label">Name</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.name" name="name">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+            <label for="version-input" class="col-2 col-form-label">Version</label>
+            <div class="col-10">
+              <input class="form-control" type="text" [(ngModel)]="instModel.version" name="version">
+            </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="imagepath-input" class="col-2 col-form-label">ImagePath</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.imagePath" name="imagePath">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="imagetype-input" class="col-2 col-form-label">ImageType</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.imageType" name="imageType">
+          </div>
+        </div>
 
-      <!-- {
-        "key": {
-          "app_key": {
-            "developer_key": {
-              "name": "AcmeAppCo"
-            },
-            "name": "someApplication",
-            "version": "1.0"
-          },
-          "cloudlet_key": {
-            "operator_key": {
-              "name": "TMUS"
-            },
-            "name": "tmocloud1"
-          },
-          "id": 123
-        },
-        "cloudlet_loc": {
-          "lat": 31,
-          "long": -91
-        },
-        "uri": "someApplication.tmocloud1.mobiledgex.net",
-        "cluster_inst_key": {
-          "cluster_key": {
-            "name": "SmallCluster"
-          },
-          "cloudlet_key": {
-            "operator_key": {
-              "name": "TMUS"
-            },
-            "name": "tmocloud1"
-          }
-        },
-        "liveness": 1,
-        "image_path": "mobiledgex_AcmeAppCo/someApplication:1.0",
-        "image_type": 1,
-        "mapped_ports": null,
-        "mapped_path": "someApplication",
-        "flavor": {
-          "name": "x1.small"
-        }
-      }, -->
+        <div class="form-group row">
+          <label for="uri-input" class="col-2 col-form-label">Uri</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.uri" name="uri">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="liveNess-input" class="col-2 col-form-label">Liveness</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.liveNess" name="liveNess">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="mappedPorts-input" class="col-2 col-form-label">Mapped Ports</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.mappedPorts" name="mappedPorts">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="mappedPath-input" class="col-2 col-form-label">Mapped Path</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.mappedPath" name="mappedPath">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="flavor-input" class="col-2 col-form-label">Flavor</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.flavor" name="flavor">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="cloudletKey-input" class="col-2 col-form-label">Cloudlet Key</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletKey" name="cloudletKey">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label for="cloudletName-input" class="col-2 col-form-label">Cloudlet Name</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletName" name="cloudletName">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="cloudletLat-input" class="col-2 col-form-label">Cloudlet Lat</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletLat" name="cloudletLat">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="cloudletLong-input" class="col-2 col-form-label">Cloudlet Long</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletLong" name="cloudletLong">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="cluster-input" class="col-2 col-form-label">Cluster</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.cluster" name="cluster">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="accesslayer-input" class="col-2 col-form-label">AccessLayer</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="instModel.accessLayer" name="accessLayer">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-success">{{submitType}}</button>
+        <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+      </form>
+    </div>
+  </div>
+     
+     
