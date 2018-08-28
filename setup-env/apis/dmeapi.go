@@ -108,16 +108,14 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		// to be sorted to allow a consistent yaml compare
 		log.Printf("DME REQUEST: %+v\n", apiRequest.MatchEngineRequest)
 		mel, err := client.GetCloudlets(ctx, &apiRequest.MatchEngineRequest)
-		if err == nil {
-			sort.Slice((*mel).Cloudlets, func(i, j int) bool {
-				return (*mel).Cloudlets[i].CloudletName < (*mel).Cloudlets[j].CloudletName
+		sort.Slice((*mel).Cloudlets, func(i, j int) bool {
+			return (*mel).Cloudlets[i].CloudletName < (*mel).Cloudlets[j].CloudletName
+		})
+		//appinstances within the cloudlet must be sorted too
+		for _, c := range (*mel).Cloudlets {
+			sort.Slice(c.Appinstances, func(i, j int) bool {
+				return c.Appinstances[i].Appname < c.Appinstances[j].Appname
 			})
-			//appinstances within the cloudlet must be sorted too
-			for _, c := range (*mel).Cloudlets {
-				sort.Slice(c.Appinstances, func(i, j int) bool {
-					return c.Appinstances[i].Appname < c.Appinstances[j].Appname
-				})
-			}
 		}
 		dmereply = mel
 		dmeerror = err
