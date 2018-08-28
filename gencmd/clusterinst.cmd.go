@@ -39,16 +39,6 @@ var ClusterInstInfoIn edgeproto.ClusterInstInfo
 var ClusterInstInfoFlagSet = pflag.NewFlagSet("ClusterInstInfo", pflag.ExitOnError)
 var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig", pflag.ExitOnError)
 var ClusterInstInfoInState string
-var ClusterStateStrings = []string{
-	"ClusterStateUnknown",
-	"ClusterStateBuilding",
-	"ClusterStateReady",
-	"ClusterStateErrors",
-	"ClusterStateDeleting",
-	"ClusterStateDeleted",
-	"ClusterStateChanging",
-	"ClusterStateNotPresent",
-}
 
 func ClusterInstKeySlicer(in *edgeproto.ClusterInstKey) []string {
 	s := make([]string, 0, 2)
@@ -90,7 +80,7 @@ func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
 	}
 }
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -101,12 +91,16 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	s = append(s, strconv.FormatBool(in.Auto))
-	s = append(s, edgeproto.ClusterState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -115,6 +109,7 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "Liveness")
 	s = append(s, "Auto")
 	s = append(s, "State")
+	s = append(s, "Errors")
 	return s
 }
 
@@ -151,7 +146,7 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.ClusterState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -194,6 +189,22 @@ func ClusterInstInfoWriteOutputOne(obj *edgeproto.ClusterInstInfo) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func ClusterInstHideTags(in *edgeproto.ClusterInst) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
+	}
+}
+
 func ClusterInstInfoHideTags(in *edgeproto.ClusterInstInfo) {
 	if cmdsup.HideTags == "" {
 		return
@@ -331,6 +342,7 @@ var ShowClusterInstCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("ShowClusterInst recv failed: %s", err.Error())
 			}
+			ClusterInstHideTags(obj)
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
@@ -397,12 +409,12 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
-	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted ClusterStateChanging ClusterStateNotPresent]")
+	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [ClusterStateUnknown ClusterStateBuilding ClusterStateReady ClusterStateErrors ClusterStateDeleting ClusterStateDeleted ClusterStateChanging ClusterStateNotPresent]")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -444,6 +456,9 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("state").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "4")
 	}
+	if ClusterInstFlagSet.Lookup("errors").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "5")
+	}
 }
 
 func ClusterInstInfoSetFields() {
@@ -483,22 +498,30 @@ func parseClusterInstEnums() error {
 	}
 	if ClusterInstInState != "" {
 		switch ClusterInstInState {
-		case "ClusterStateUnknown":
-			ClusterInstIn.State = edgeproto.ClusterState(0)
-		case "ClusterStateBuilding":
-			ClusterInstIn.State = edgeproto.ClusterState(1)
-		case "ClusterStateReady":
-			ClusterInstIn.State = edgeproto.ClusterState(2)
-		case "ClusterStateErrors":
-			ClusterInstIn.State = edgeproto.ClusterState(3)
-		case "ClusterStateDeleting":
-			ClusterInstIn.State = edgeproto.ClusterState(4)
-		case "ClusterStateDeleted":
-			ClusterInstIn.State = edgeproto.ClusterState(5)
-		case "ClusterStateChanging":
-			ClusterInstIn.State = edgeproto.ClusterState(6)
-		case "ClusterStateNotPresent":
-			ClusterInstIn.State = edgeproto.ClusterState(7)
+		case "TrackedStateUnknown":
+			ClusterInstIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			ClusterInstIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			ClusterInstIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			ClusterInstIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			ClusterInstIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			ClusterInstIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			ClusterInstIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			ClusterInstIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			ClusterInstIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			ClusterInstIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			ClusterInstIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			ClusterInstIn.State = edgeproto.TrackedState(11)
 		default:
 			return errors.New("Invalid value for ClusterInstInState")
 		}
@@ -509,22 +532,30 @@ func parseClusterInstEnums() error {
 func parseClusterInstInfoEnums() error {
 	if ClusterInstInfoInState != "" {
 		switch ClusterInstInfoInState {
-		case "ClusterStateUnknown":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(0)
-		case "ClusterStateBuilding":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(1)
-		case "ClusterStateReady":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(2)
-		case "ClusterStateErrors":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(3)
-		case "ClusterStateDeleting":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(4)
-		case "ClusterStateDeleted":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(5)
-		case "ClusterStateChanging":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(6)
-		case "ClusterStateNotPresent":
-			ClusterInstInfoIn.State = edgeproto.ClusterState(7)
+		case "TrackedStateUnknown":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(11)
 		default:
 			return errors.New("Invalid value for ClusterInstInfoInState")
 		}

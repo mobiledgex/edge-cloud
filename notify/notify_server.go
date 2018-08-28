@@ -506,7 +506,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			} else {
 				if sendAppInst != nil {
 					sendAppInst.GetAllKeys(appInsts)
-					log.DebugLog(log.DebugLevelNotify, "all app insts", "count", len(appInsts))
+					log.DebugLog(log.DebugLevelNotify, "all AppInsts", "count", len(appInsts))
 				}
 			}
 		}
@@ -522,7 +522,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 					notice.Action = edgeproto.NoticeAction_DELETE
 					flavor.Key = key
 				}
-				log.DebugLog(log.DebugLevelNotify, "Send flavor",
+				log.DebugLog(log.DebugLevelNotify, "Send Flavor",
 					"client", s.peerAddr,
 					"action", notice.Action,
 					"key", flavor.Key.GetKeyString())
@@ -549,7 +549,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 					notice.Action = edgeproto.NoticeAction_DELETE
 					clusterflavor.Key = key
 				}
-				log.DebugLog(log.DebugLevelNotify, "Send cluster flavor",
+				log.DebugLog(log.DebugLevelNotify, "Send ClusterFlavor",
 					"client", s.peerAddr,
 					"action", notice.Action,
 					"key", clusterflavor.Key.GetKeyString())
@@ -571,12 +571,15 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			for key, _ := range clusterInsts {
 				found := sendClusterInst.Get(&key, &clusterInst)
 				if found {
+					if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM && clusterInst.State != edgeproto.TrackedState_CreateRequested && clusterInst.State != edgeproto.TrackedState_UpdateRequested && clusterInst.State != edgeproto.TrackedState_DeleteRequested {
+						continue
+					}
 					notice.Action = edgeproto.NoticeAction_UPDATE
 				} else {
 					notice.Action = edgeproto.NoticeAction_DELETE
 					clusterInst.Key = key
 				}
-				log.DebugLog(log.DebugLevelNotify, "Send cluster inst",
+				log.DebugLog(log.DebugLevelNotify, "Send ClusterInst",
 					"client", s.peerAddr,
 					"action", notice.Action,
 					"key", clusterInst.Key.GetKeyString())
@@ -598,12 +601,15 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			for key, _ := range appInsts {
 				found := sendAppInst.Get(&key, &appInst)
 				if found {
+					if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorCRM && appInst.State != edgeproto.TrackedState_CreateRequested && appInst.State != edgeproto.TrackedState_UpdateRequested && appInst.State != edgeproto.TrackedState_DeleteRequested {
+						continue
+					}
 					notice.Action = edgeproto.NoticeAction_UPDATE
 				} else {
 					notice.Action = edgeproto.NoticeAction_DELETE
 					appInst.Key = key
 				}
-				log.DebugLog(log.DebugLevelNotify, "Send app inst",
+				log.DebugLog(log.DebugLevelNotify, "Send AppInst",
 					"client", s.peerAddr,
 					"action", notice.Action,
 					"key", appInst.Key.GetKeyString())
@@ -630,7 +636,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 					notice.Action = edgeproto.NoticeAction_DELETE
 					cloudlet.Key = key
 				}
-				log.DebugLog(log.DebugLevelNotify, "Send cloudlet",
+				log.DebugLog(log.DebugLevelNotify, "Send Cloudlet",
 					"client", s.peerAddr,
 					"action", notice.Action,
 					"key", cloudlet.Key.GetKeyString())

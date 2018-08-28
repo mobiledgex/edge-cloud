@@ -93,6 +93,10 @@ func main() {
 		log.DebugLog(log.DebugLevelMexos, "OS env invalid")
 	}
 
+	// GatherInsts should be called before the notify client is started,
+	// so that the initial send to the controller has the current state.
+	controllerData.GatherInsts()
+
 	if *standalone {
 		// In standalone mode, use "touch allownoconfig" for edgectl
 		// to set no-config fields like "flavor" on CreateClusterInst.

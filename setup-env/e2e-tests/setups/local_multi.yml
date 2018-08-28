@@ -58,6 +58,7 @@ controllers:
     tls:
        servercert: "{{tlsoutdir}}/127.0.0.1.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
+    shorttimeouts: true
   hostname: "127.0.0.1"
 
 - controllerlocal:
@@ -69,6 +70,7 @@ controllers:
     tls:
        servercert: "{{tlsoutdir}}/127.0.0.1.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
+    shorttimeouts: true
   hostname: "127.0.0.1"
 
 

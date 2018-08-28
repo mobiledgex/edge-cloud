@@ -55,6 +55,7 @@ controllers:
     apiaddr: "0.0.0.0:55001"
     httpaddr: "0.0.0.0:36001"
     notifyaddr: "127.0.0.1:37001"
+    shorttimeouts: true
   hostname: "127.0.0.1"
 
 dmes:

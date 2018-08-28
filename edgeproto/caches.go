@@ -25,7 +25,7 @@ func (s *ClusterInstCache) GetClusterInstsForCloudlets(cloudlets map[CloudletKey
 	}
 }
 
-func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state ClusterState) {
+func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state TrackedState) {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
@@ -35,17 +35,17 @@ func (s *ClusterInstInfoCache) SetState(key *ClusterInstKey, state ClusterState)
 	s.Update(&info, 0)
 }
 
-func (s *ClusterInstInfoCache) SetError(key *ClusterInstKey, err string) {
+func (s *ClusterInstInfoCache) SetError(key *ClusterInstKey, errState TrackedState, err string) {
 	info := ClusterInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
 	}
 	info.Errors = append(info.Errors, err)
-	info.State = ClusterState_ClusterStateErrors
+	info.State = errState
 	s.Update(&info, 0)
 }
 
-func (s *AppInstInfoCache) SetState(key *AppInstKey, state AppState) {
+func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
@@ -55,12 +55,12 @@ func (s *AppInstInfoCache) SetState(key *AppInstKey, state AppState) {
 	s.Update(&info, 0)
 }
 
-func (s *AppInstInfoCache) SetError(key *AppInstKey, err string) {
+func (s *AppInstInfoCache) SetError(key *AppInstKey, errState TrackedState, err string) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {
 		info.Key = *key
 	}
 	info.Errors = append(info.Errors, err)
-	info.State = AppState_AppStateErrors
+	info.State = errState
 	s.Update(&info, 0)
 }

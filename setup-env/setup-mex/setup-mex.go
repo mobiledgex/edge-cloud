@@ -29,12 +29,14 @@ func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan util.ReturnCodeWithText)
 	var numProcs = 0 //len(procs Controllers) + len(procs.Crms) + len(procs.Dmes)
+	var pnames []string
 	for _, ctrl := range util.Deployment.Controllers {
 		if processName != "" && processName != ctrl.Name {
 			continue
 		}
 		numProcs += 1
 		ctrlp := ctrl.ControllerLocal
+		pnames = append(pnames, ctrlp.Name)
 		go util.ConnectController(&ctrlp, c)
 	}
 	for _, dme := range util.Deployment.Dmes {
@@ -43,6 +45,7 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		dmep := dme.DmeLocal
+		pnames = append(pnames, dmep.Name)
 		go util.ConnectDme(&dmep, c)
 	}
 	for _, crm := range util.Deployment.Crms {
@@ -51,6 +54,7 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		crmp := crm.CrmLocal
+		pnames = append(pnames, crmp.Name)
 		go util.ConnectCrm(&crmp, c)
 	}
 	allpass := true
@@ -61,7 +65,28 @@ func WaitForProcesses(processName string) bool {
 			allpass = false
 		}
 	}
+	if !ensureProcesses(pnames) {
+		allpass = false
+	}
 	return allpass
+}
+
+// This uses the same methods as kill processes to look for local processes,
+// to ensure that the lookup method for finding local processes is valid.
+func ensureProcesses(processNames []string) bool {
+	if util.IsK8sDeployment() {
+		return true
+	}
+	ensured := true
+	for _, p := range processNames {
+		hostName, exeName, args := findProcess(p)
+		log.Printf("Looking for host %v processexe %v processargs %v\n", hostName, exeName, args)
+		if !util.EnsureProcessesByName(exeName, args) {
+			ensured = false
+			break
+		}
+	}
+	return ensured
 }
 
 //to identify running processes, we need to know where they are running
@@ -111,6 +136,14 @@ func findProcess(processName string) (string, string, string) {
 func getExternalApiAddress(internalApiAddr string, externalHost string) string {
 	//in cloud deployments, the internal address the controller listens to may be different than the
 	//external address which clients need to use.   So use the external hostname and api port
+	if externalHost == "0.0.0.0" || externalHost == "127.0.0.1" {
+		// local host: prevent swapping around these two addresses
+		// because they are used interchangably between the host and
+		// api addr fields, and they are also used by pgrep to search
+		// for the process, which can cause pgrep to fail to find the
+		// process.
+		return internalApiAddr
+	}
 	return externalHost + ":" + strings.Split(internalApiAddr, ":")[1]
 }
 

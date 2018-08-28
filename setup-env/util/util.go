@@ -179,11 +179,14 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 		pgrepCommand = "pgrep -x " + processName
 	} else {
 		//look for a process running with particular arguments
-		pgrepCommand = "pgrep -f \"" + processName + " .*" + processArgs + "\""
+		pgrepCommand = "pgrep -f \"" + processName + " .*" + processArgs + ".*\""
 	}
 	log.Printf("Running pgrep %v\n", pgrepCommand)
 	out, perr := exec.Command("sh", "-c", pgrepCommand).Output()
 	if perr != nil {
+		log.Printf("Process not found for: %s\n", pgrepCommand)
+		pinfo := ProcessInfo{alive: false}
+		processes = append(processes, pinfo)
 		return processes
 	}
 
@@ -328,6 +331,18 @@ func KillProcessesByName(processName string, maxwait time.Duration, processArgs 
 	}
 
 	c <- "forcefully shut down " + processName
+}
+
+func EnsureProcessesByName(processName string, processArgs string) bool {
+	processes := getPidsByName(processName, processArgs)
+	ensured := true
+	for _, p := range processes {
+		if !p.alive {
+			log.Printf("Process not alive: %s args %s\n", processName, processArgs)
+			ensured = false
+		}
+	}
+	return ensured
 }
 
 func PrintStartBanner(label string) {
