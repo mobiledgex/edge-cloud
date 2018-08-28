@@ -41,7 +41,7 @@ public class NetworkManager {
     private ExecutorService mThreadPool;
     private boolean mNetworkSwitchingEnabled = true;
 
-    public boolean ismNetworkSwitchingEnabled() {
+    public boolean isNetworkSwitchingEnabled() {
         return mNetworkSwitchingEnabled;
     }
 

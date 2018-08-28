@@ -127,6 +127,40 @@ public class EngineCallTest {
         return networkOperatorName;
     }
 
+    public MatchingEngineRequest createMockMatchingEngineRequest(String networkOperatorName,
+                                                                 String developerName,
+                                                                 String appName,
+                                                                 MatchingEngine me,
+                                                                 String host, int port, Location location) {
+        AppClient.Match_Engine_Request request;
+
+        // Directly create request for testing:
+        LocOuterClass.Loc aLoc = LocOuterClass.Loc.newBuilder()
+                .setLat(location.getLatitude())
+                .setLong(location.getLongitude())
+                .build();
+
+        request = AppClient.Match_Engine_Request.newBuilder()
+                .setVer(5)
+                .setIdType(AppClient.IDTypes.IPADDR)
+                .setId("")
+                .setCarrierID(3l) // uint64 --> String? mnc, mcc?
+                .setCarrierName(networkOperatorName) // Mobile Network Carrier
+                .setTower(0) // cid and lac (int)
+                .setGpsLocation(aLoc)
+                .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
+                .setProtocol(ByteString.copyFromUtf8("http")) // This one is appId context sensitive.
+                .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
+                .setDevName(developerName) // From signing certificate?
+                .setAppName(appName)
+                .setAppVers("1") // Or versionName, which is visual name?
+                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
+                .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
+                .build();
+
+        return new MatchingEngineRequest(request, host, port);
+    }
+
     public MatchingEngineRequest createMockMatchingEngineRequest(String networkOperatorName, MatchingEngine me, Location location) {
         AppClient.Match_Engine_Request request;
 
@@ -271,7 +305,7 @@ public class EngineCallTest {
         me.setMexLocationAllowed(false);
         MexLocation mexLoc = new MexLocation(me);
 
-        Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
+        Location loc = createLocation("mexDisabledTest", -122.149349, 37.459609);
         boolean allRun = false;
 
         try {
@@ -312,18 +346,65 @@ public class EngineCallTest {
             allRun = true;
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
-            assertFalse("FindCloudlet: ExecutionException!", true);
+            assertFalse("mexDisabledTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("FindCloudlet: StatusRuntimeException!", true);
+            assertFalse("mexDisabledTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
-            assertFalse("FindCloudlet: InterruptedException!", true);
+            assertFalse("mexDisabledTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
 
         assertTrue("All requests must run with failures.", allRun);
+    }
+
+    /**
+     * This test disabled networking. This test will only ever pass if the DME server accepts
+     * non-cellular communications.
+     */
+    @Test
+    public void mexNetworkingDisabledTest() {
+        Context context = InstrumentationRegistry.getTargetContext();
+        MatchingEngine me = new MatchingEngine(context);
+        me.setNetworkSwitchingEnabled(false);
+        me.setMexLocationAllowed(true);
+        MexLocation mexLoc = new MexLocation(me);
+
+        Location loc = createLocation("mexNetworkingDisabledTest", -122.149349, 37.459609);
+        boolean allRun = false;
+
+        try {
+            enableMockLocation(context, true);
+            setMockLocation(context, loc);
+            Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
+
+            MatchingEngineRequest request = createMockMatchingEngineRequest(
+                    getCarrierName(context),
+                    "EmptyMatchEngineRequest",
+                    "EmptyMatchEngineRequest",
+                    me,
+                    "nosim.dme.mobiledgex.net", // This should point to a mapped hostname or actual test server
+                    50051,
+                    location);
+
+            AppClient.Match_Engine_Status registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
+            if (registerStatusResponse.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS) {
+                assertFalse("mexNetworkDisabledTest: registerClient failed!", true);
+            }
+        } catch (ExecutionException ee) {
+            Log.e(TAG, Log.getStackTraceString(ee));
+            assertFalse("mexNetworkingDisabledTest: ExecutionException!", true);
+        } catch (StatusRuntimeException sre) {
+            Log.e(TAG, Log.getStackTraceString(sre));
+            assertFalse("mexNetworkingDisabledTest: StatusRuntimeException!", true);
+        } catch (InterruptedException ie) {
+            Log.e(TAG, Log.getStackTraceString(ie));
+            assertFalse("mexNetworkingDisabledTest: InterruptedException!", true);
+        } finally {
+            enableMockLocation(context,false);
+        }
     }
 
     @Test

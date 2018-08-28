@@ -78,6 +78,14 @@ public class MatchingEngine {
         mMexLocationAllowed = allowMexLocation;
     }
 
+    public boolean isNetworkSwitchingEnabled() {
+        return this.getNetworkManager().isNetworkSwitchingEnabled();
+    }
+
+    public void setNetworkSwitchingEnabled(boolean networkSwitchingEnabled) {
+        this.getNetworkManager().setNetworkSwitchingEnabled(networkSwitchingEnabled);
+    }
+
     /**
      * Check if Roaming Data is enabled on the System.
      * @return
