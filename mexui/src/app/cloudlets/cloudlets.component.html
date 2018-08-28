@@ -1,49 +1,101 @@
 <h1>Cloudlets
   </h1>
   
-      <ul>
-        <li *ngFor="let cloudlet of cloudlets$">
-          <ul>
-            <li> Operator Name: {{ cloudlet.result.key.operator_key.name }}</li>
-            <li> Cloudlet Name    : {{ cloudlet.result.key.name }}</li>
-            <li> Access URI    : {{ cloudlet.result.access_uri }}</li>
-            <li> Longitude    : {{ cloudlet.result.location.long }}</li>
-            <li> Lattitude    : {{ cloudlet.result.location.lat }}</li>
-            <li> IP Support       : {{ cloudlet.result.ip_support }}</li>
-            <li> Number Of Dynamic IPs       : {{ cloudlet.result.num_dynamic_ips }}</li>
-          </ul>
-        </li>
-      </ul>
+  <div class="container">
+    <div class="cldlist">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>OperatorName</th>
+            <th>CloudletName</th>
+            <th>Uri</th>
+            <th>Location Lattitude</th>
+            <th>Location Longitude</th>
+            <th>IpSupport Type</th>
+            <th>Number of Dynamic IPs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let cloudlet of cloudlets; let i = index">
+            <th scope="row">{{ i + 1 }}</th>
+            <td>{{ cloudlet.operatorName }}</td>
+            <td>{{ cloudlet.cloudletName }}</td>
+            <td>{{ cloudlet.uri}}</td>
+            <td>{{ cloudlet.locationLat }}</td>
+            <td>{{ cloudlet.locationLong }}</td>
+            <td>{{ cloudlet.ipSupport }}</td>
+            <td>{{ cloudlet.numDynamicIps }}</td>
+            <td>
+              <button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button>
+            </td>
+            <td>
+              <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-right">
+        <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
+      </div>
+    </div>
+    <br>
+    <div class="cldentry" *ngIf="showNew">
+      <form (ngSubmit)="onSave()">
+        <div class="form-group row">
+          <label for="cldoprname-input" class="col-2 col-form-label">OperatorName</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.operatorName" name="operatorName">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="cloudletName-input" class="col-2 col-form-label">cloudletName</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.cloudletName" name="cloudletName">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+            <label for="uri-input" class="col-2 col-form-label">Uri</label>
+            <div class="col-10">
+              <input class="form-control" type="text" [(ngModel)]="cldModel.uri" name="uri">
+            </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="locationLat-input" class="col-2 col-form-label">location Lattitude</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.locationLat" name="locationLat">
+          </div>
+        </div>
 
-<!-- [
-  {
-    "key": {
-      "operator_key": {
-        "name": "TMUS"
-      },
-      "name": "tmocloud-1"
-    },
-    "access_uri": "cloud1.tmo",
-    "location": {
-      "lat": 31,
-      "long": -91
-    },
-    "ip_support": 2,
-    "num_dynamic_ips": 254
-  },
-  {
-    "key": {
-      "operator_key": {
-        "name": "TMUS"
-      },
-      "name": "tmocloud-2"
-    },
-    "access_uri": "cloud2.tmo",
-    "location": {
-      "lat": 35,
-      "long": -95
-    },
-    "ip_support": 2,
-    "num_dynamic_ips": 254
-  }
-] -->
+        <div class="form-group row">
+          <label for="locationLong-input" class="col-2 col-form-label">location Longitude</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.locationLong" name="locationLong">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="ipSupport-input" class="col-2 col-form-label">IpSupport Type</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.ipSupport" name="ipSupport">
+          </div>
+        </div>
+       
+        <div class="form-group row">
+          <label for="numDynIps-input" class="col-2 col-form-label">Number of Dyamic IPs</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.numDynamicIps" name="numDynamicIps">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success">{{submitType}}</button>
+        <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+      </form>
+    </div>
+  </div>
+     
+
+      
+ 
