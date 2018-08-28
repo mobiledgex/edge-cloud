@@ -24,7 +24,6 @@ type carrierAppInst struct {
 	ip []byte
 	// Location of the cloudlet site (lat, long?)
 	location dme.Loc
-	id       uint64
 }
 
 type carrierAppKey struct {
@@ -104,7 +103,6 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.carrierName = key.carrierName
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
-		cNew.id = appInst.Key.Id
 		app.insts[cNew.cloudletKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.key.appKey.Name,
@@ -162,9 +160,7 @@ func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
 		for _, inst := range app.insts {
 			key.AppKey = app.key.appKey
 			key.CloudletKey = inst.cloudletKey
-			key.Id = inst.id
 			if _, found := appInsts[key]; !found {
-				log.DebugLog(log.DebugLevelDmereq, "pruning app", "key", key)
 				delete(app.insts, key.CloudletKey)
 			}
 		}
