@@ -27,7 +27,6 @@ toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
-    token: 0000000001
   hostname: "127.0.0.1"
   
 
