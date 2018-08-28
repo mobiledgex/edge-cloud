@@ -8,7 +8,7 @@ import 'rxjs/add/observable/of';
 import { Developer, App, AppInst, Flavor, Oprator, Cloudlet, Cluster } from './app.model';
 
 const ctrlUrl="http://mexdemo.ctrl-http.mobiledgex.net:36001";
-// const ctrlUrl="http://0.0.0.0:36002";
+//const ctrlUrl="http://0.0.0.0:36002";
 
 
 @Injectable({
@@ -455,8 +455,6 @@ export class DevdataService {
                     "num_dynamic_ips": ${cld.numDynamicIps}
                   }`;
     
-                  console.log(body);
-                  console.log(`${ctrlUrl}/create/cloudlet`);
     return this.http.post(`${ctrlUrl}/create/cloudlet`, body, {})
     .pipe(
       catchError(this.handleError)
@@ -502,9 +500,7 @@ export class DevdataService {
       "ip_support": "${cld.ipSupport}",
       "num_dynamic_ips": ${cld.numDynamicIps}
     }`;
-    console.log(body);
-    console.log(`${ctrlUrl}/delete/cloudet`);
-    return this.http.post(`${ctrlUrl}/delete/cloudet`, body, {})
+    return this.http.post(`${ctrlUrl}/delete/cloudlet`, body, {})
     .pipe(
       catchError(this.handleError)
     );
