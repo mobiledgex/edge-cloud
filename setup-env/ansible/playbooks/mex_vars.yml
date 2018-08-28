@@ -1,5 +1,6 @@
   
   - gopath: "{{ lookup('env', 'GOPATH') }}"
+  - tlsoutdir: "{{ gopath }}/src/github.com/mobiledgex/edge-cloud/tls/out"
   - server_to_path:
       Linux_x86_64: "{{ gopath }}/bin/linux_amd64"
       Darwin_x86_64: "{{ gopath }}/bin"

@@ -70,6 +70,8 @@ var actionChoices = map[string]string{
 	"fetchlogs":     "",
 	"createcluster": "",
 	"deletecluster": "",
+	"gencerts":      "",
+	"cleancerts":    "",
 	"sleep":         "seconds",
 }
 
@@ -195,6 +197,18 @@ func main() {
 					errorsFound++
 					errors = append(errors, err.Error())
 				}
+			}
+		case "gencerts":
+			err := setupmex.GenerateTLSCerts()
+			if err != nil {
+				errorsFound++
+				errors = append(errors, err.Error())
+			}
+		case "cleancerts":
+			err := setupmex.CleanupTLSCerts()
+			if err != nil {
+				errorsFound++
+				errors = append(errors, err.Error())
 			}
 		case "deploy":
 			err := setupmex.CreateCloudfareRecords()
