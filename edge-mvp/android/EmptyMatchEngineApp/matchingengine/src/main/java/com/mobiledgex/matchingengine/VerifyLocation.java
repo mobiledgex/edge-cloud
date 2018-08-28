@@ -9,6 +9,8 @@ import com.squareup.okhttp.Request;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -117,14 +119,25 @@ public class VerifyLocation implements Callable {
         grpcRequest = addTokenToRequest(token);
 
         AppClient.Match_Engine_Loc_Verify reply;
-        // FIXME: UsePlaintxt means no encryption is enabled to the MatchEngine server!
         ManagedChannel channel = null;
         try {
-            channel = ManagedChannelBuilder.forAddress(mRequest.host, mRequest.port).usePlaintext().build();
+            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
                     .verifyLocation(grpcRequest);
+
+            // Nothing a sdk user can do below but read the exception cause:
+        } catch (MexKeyStoreException mkse) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", mkse);
+        } catch (MexTrustStoreException mtse) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", mtse);
+        } catch (KeyManagementException kme) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", kme);
+        } catch (NoSuchAlgorithmException nsa) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", nsa);
+        } catch (IOException ioe) {
+            throw new ExecutionException("Exception calling VerifyLocation: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

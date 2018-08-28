@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -14,8 +15,18 @@ import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 
 import com.google.protobuf.ByteString;
+import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.security.Key;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -27,10 +38,15 @@ import java.util.concurrent.Future;
 import distributed_match_engine.AppClient;
 import distributed_match_engine.AppClient.Match_Engine_Request;
 import distributed_match_engine.LocOuterClass.Loc;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
+import io.grpc.okhttp.OkHttpChannelBuilder;
 
 import android.content.pm.PackageInfo;
 import android.util.Log;
+
+import javax.net.ssl.SSLSocketFactory;
 
 
 // TODO: GRPC (which needs http/2).
@@ -55,15 +71,18 @@ public class MatchingEngine {
     private AppClient.Match_Engine_Loc mMatchEngineLocation;
     private AppClient.Match_Engine_Loc_Verify mMatchEngineLocationVerify;
 
+    private boolean isSSLEnabled = true;
+    private SSLSocketFactory mMutualAuthSocketFactory;
+
     public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = NetworkManager.getSingleton(connectivityManager);
+        mNetworkManager = NetworkManager.getInstance(connectivityManager);
     }
     public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = NetworkManager.getSingleton(connectivityManager, threadpool);
+        mNetworkManager = NetworkManager.getInstance(connectivityManager, threadpool);
     }
 
     // Application state Bundle Key.
@@ -186,6 +205,7 @@ public class MatchingEngine {
      * @throws SecurityException
      */
     public MatchingEngineRequest createRequest(Context context, android.location.Location loc) throws SecurityException {
+        String carrierName = retrieveNetworkCarrierName(context);
         String dmeHost = generateDmeHostAddress(retrieveNetworkCarrierName(context));
         MatchingEngineRequest request = createRequest(context, dmeHost, getPort(), "", "", loc);
         return request;
@@ -203,12 +223,12 @@ public class MatchingEngine {
      */
     public MatchingEngineRequest createRequest(Context context, String host, int port, String carrierName,
                                                String developerName, android.location.Location loc) throws SecurityException {
-        Match_Engine_Request grpcRequest = createGRPCRequest(context, retrieveNetworkCarrierName(context), carrierName, developerName, loc);
+        Match_Engine_Request grpcRequest = createGRPCRequest(context, carrierName, developerName, loc);
         MatchingEngineRequest matchingEngineRequest = new MatchingEngineRequest(grpcRequest, host, port);
         return matchingEngineRequest;
     }
 
-    Match_Engine_Request createGRPCRequest(Context context, String networkOperatorName, String carrierName, String devName, Location loc) throws SecurityException {
+    Match_Engine_Request createGRPCRequest(Context context, String carrierName, String devName, Location loc) throws SecurityException {
         if (context == null) {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
@@ -235,10 +255,12 @@ public class MatchingEngine {
         String mcc = telManager.getNetworkCountryIso();
 
         if (id == null) { // Fallback to IP:
-	    // TODO: Dual SIM?
+	        // TODO: Dual SIM?
         }
+
+        String retrievedNetworkOperatorName = retrieveNetworkCarrierName(context);
         if(carrierName == null || carrierName.equals("")) {
-            carrierName = networkOperatorName.equals("") ? mnc : networkOperatorName; // Carrier Name or Mnc?
+            carrierName = retrievedNetworkOperatorName.equals("") ? mnc : retrievedNetworkOperatorName; // Carrier Name or Mnc?
         }
 
         // Tower
@@ -292,7 +314,7 @@ public class MatchingEngine {
                 .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
                 .setDevName(devName)
                 .setAppName(appName)
-                .setAppVers(versionName) // Or versionName, which is visual name?
+                .setAppVers(versionName)
                 .setSessionCookie(mSessionCookie == null ? "" : mSessionCookie) // "" if null/unknown.
                 .setVerifyLocToken(mTokenServerToken == null ? "" : mTokenServerToken)
                 .build();
@@ -333,6 +355,15 @@ public class MatchingEngine {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
+
+        if (host == null || host.isEmpty()) {
+            throw new IllegalArgumentException("MatchingEngine requires a host target value.");
+        }
+
+        if (port < 0) {
+            throw new IllegalArgumentException("MatchingEngine requires a positive port value.");
+        }
+
 
         if (loc == null) {
             throw new IllegalStateException("Location parameter is required.");
@@ -594,4 +625,84 @@ public class MatchingEngine {
     String getTokenServerToken() {
         return mTokenServerToken;
     }
+
+
+    public boolean isSSLEnabled() {
+        return isSSLEnabled;
+    }
+
+    public void setSSLEnabled(boolean SSLEnabled) {
+        isSSLEnabled = SSLEnabled;
+    }
+
+    public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance()
+            throws IOException, InvalidKeySpecException, MexKeyStoreException, MexTrustStoreException,
+                KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
+        if (mMutualAuthSocketFactory != null) {
+            return mMutualAuthSocketFactory;
+        }
+
+        // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
+        String downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+        String trustCaFilePath = downloads + "/mex-ca.crt";
+        String clientCertFilePath = downloads +  "/mex-client.crt";
+        String privateKeyFilePath = downloads + "/mex-client.key";
+
+        FileInputStream trustCAFis = null;
+        FileInputStream clientCertFis = null;
+        PrivateKey privateKey = OkHttpSSLChannelHelper.getPrivateKey(privateKeyFilePath);
+
+        try {
+            trustCAFis = new FileInputStream(trustCaFilePath);
+            clientCertFis = new FileInputStream(clientCertFilePath);
+
+            mMutualAuthSocketFactory = OkHttpSSLChannelHelper.getMutualAuthSSLSocketFactory(
+                    trustCAFis,
+                    clientCertFis,
+                    privateKey);
+        } finally {
+            if (trustCAFis != null) {
+                trustCAFis.close();
+            }
+            if (clientCertFis != null) {
+                clientCertFis.close();
+            }
+        }
+
+        return mMutualAuthSocketFactory;
+    }
+
+    /**
+     * Helper function to return a channel that handles SSL Mutual Authentication,
+     * or returns a more basic ManagedChannelBuilder.
+     * @param host
+     * @param port
+     * @return
+     * @throws MexKeyStoreException
+     * @throws MexTrustStoreException
+     * @throws KeyManagementException
+     * @throws NoSuchAlgorithmException
+     */
+    ManagedChannel channelPicker(String host, int port)
+            throws IOException, MexKeyStoreException, MexTrustStoreException, KeyManagementException, NoSuchAlgorithmException {
+
+        try {
+            if (isSSLEnabled()) {
+                return OkHttpChannelBuilder
+                        .forAddress(host, port)
+                        .sslSocketFactory(getMutualAuthSSLSocketFactoryInstance())
+                        .build();
+            } else {
+                return ManagedChannelBuilder
+                        .forAddress(host, port)
+                        .usePlaintext()
+                        .build();
+            }
+        } catch (InvalidKeySpecException ikse) {
+            throw new MexKeyStoreException("InvalidKeystore: ", ikse);
+        } catch (KeyStoreException kse) {
+            throw new MexKeyStoreException("MexKeyStoreException: ", kse);
+        }
+    }
+
 }

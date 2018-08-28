@@ -23,7 +23,6 @@ import android.content.Intent;
 import com.mobiledgex.matchingengine.FindCloudletResponse;
 import com.mobiledgex.matchingengine.MatchingEngine;
 import com.mobiledgex.matchingengine.MatchingEngineRequest;
-import com.mobiledgex.matchingengine.NetworkManager;
 import com.mobiledgex.matchingengine.util.RequestPermissions;
 
 import distributed_match_engine.AppClient;
@@ -55,8 +54,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     private LocationCallback mLocationCallback;
     private LocationRequest mLocationRequest;
     private boolean mDoLocationUpdates;
-
-    private NetworkManager networkManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
