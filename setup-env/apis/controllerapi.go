@@ -29,7 +29,12 @@ func readAppDataFile(file string) {
 	}
 }
 
-func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
+const (
+	HideCmp bool = false
+	ShowCmp bool = true
+)
+
+func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
 	errFound := false
 	var showCmds = []string{
 		"flavors: ShowFlavor",
@@ -45,9 +50,13 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string) bool {
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
-		var cmdargs = []string{"--addr", ctrl.ApiAddr, "controller", cmdstr, "--hidetags", "nocmp"}
+		var cmdargs = []string{"--addr", ctrl.ApiAddr, "controller", cmdstr}
 		if ctrl.TLS.ClientCert != "" {
 			cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
+		}
+		if cmp == HideCmp {
+			cmdargs = append(cmdargs, "--hidetags")
+			cmdargs = append(cmdargs, "nocmp")
 		}
 		cmd := exec.Command("edgectl", cmdargs[0:]...)
 		log.Printf("generating output for %s\n", label)
@@ -175,15 +184,16 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 	clAPI := edgeproto.NewCloudletApiClient(conn)
 	for _, c := range appdata.Cloudlets {
 		log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
+		var stream testutil.CloudletStream
 		switch mode {
 		case "create":
-			_, err = clAPI.CreateCloudlet(ctx, &c)
+			stream, err = clAPI.CreateCloudlet(ctx, &c)
 		case "update":
-			_, err = clAPI.UpdateCloudlet(ctx, &c)
+			stream, err = clAPI.UpdateCloudlet(ctx, &c)
 		case "delete":
-			_, err = clAPI.DeleteCloudlet(ctx, &c)
-
+			stream, err = clAPI.DeleteCloudlet(ctx, &c)
 		}
+		err = testutil.CloudletReadResultStream(stream, err)
 		err = ignoreExpectedErrors(mode, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
@@ -312,7 +322,10 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 
 	if api == "show" {
 		//handled separately since it uses edgectl not direct api connection
-		return runShowCommands(ctrl, outputDir)
+		return runShowCommands(ctrl, outputDir, HideCmp)
+	}
+	if api == "showcmp" {
+		return runShowCommands(ctrl, outputDir, ShowCmp)
 	}
 
 	if apiFile == "" {
@@ -457,41 +470,4 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	}
 	ctrlapi.Close()
 	return rc
-}
-
-func RunControllerInfoAPI(api, ctrlname, apiFile, outputDir string) bool {
-	log.Printf("Showing info structs via APIs\n")
-
-	ctrl := util.GetController(ctrlname)
-	errFound := false
-
-	var showCmds = []string{
-		"clusterinstinfos: ShowClusterInstInfo",
-		"appinstinfos: ShowAppInstInfo",
-	}
-
-	for i, c := range showCmds {
-		label := strings.Split(c, " ")[0]
-		cmdstr := strings.Split(c, " ")[1]
-		var cmdargs = []string{"--addr", ctrl.ApiAddr, "controller", cmdstr, "--hidetags", "nocmp"}
-		if ctrl.TLS.ClientCert != "" {
-			cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
-		}
-		cmd := exec.Command("edgectl", cmdargs[0:]...)
-
-		log.Printf("generating output for %s\n", label)
-		out, _ := cmd.CombinedOutput()
-		truncate := false
-		//truncate the file for the first command output, afterwards append
-		if i == 0 {
-			truncate = true
-		}
-		//edgectl returns exitcode 0 even if it cannot connect, so look for the error
-		if strings.Contains(string(out), cmdstr+" failed") {
-			log.Printf("Found failure in show output\n")
-			errFound = true
-		}
-		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+string(out)+"\n", truncate)
-	}
-	return !errFound
 }

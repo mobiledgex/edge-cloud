@@ -53,13 +53,14 @@ func (p *EtcdLocal) ResetData() error {
 // ControllerLocal
 
 type ControllerLocal struct {
-	Name       string
-	EtcdAddrs  string
-	ApiAddr    string
-	HttpAddr   string
-	NotifyAddr string
-	TLS        TLSCerts
-	cmd        *exec.Cmd
+	Name          string
+	EtcdAddrs     string
+	ApiAddr       string
+	HttpAddr      string
+	NotifyAddr    string
+	TLS           TLSCerts
+	ShortTimeouts bool
+	cmd           *exec.Cmd
 }
 
 func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
@@ -81,6 +82,9 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	if options.Debug != "" {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
+	}
+	if p.ShortTimeouts {
+		args = append(args, "-shortTimeouts")
 	}
 
 	var err error

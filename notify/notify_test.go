@@ -117,6 +117,15 @@ func TestNotify(t *testing.T) {
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	assert.Equal(t, uint64(2), stats.AppInstsSent)
 
+	// set ClusterInst and AppInst state to CreateRequested so they get
+	// sent to the CRM.
+	for i, _ := range testutil.ClusterInstData {
+		testutil.ClusterInstData[i].State = edgeproto.TrackedState_CreateRequested
+	}
+	for i, _ := range testutil.AppInstData {
+		testutil.AppInstData[i].State = edgeproto.TrackedState_CreateRequested
+	}
+
 	// Now test cloudlets. Use the same receiver, but register it
 	// as a cloudlet mananger. CRM should have 2 connects since
 	// server was restarted.

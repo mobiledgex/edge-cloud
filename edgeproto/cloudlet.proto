@@ -45,27 +45,29 @@ message Cloudlet {
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
 }
 
 service CloudletApi {
   // Create a Cloudlet
-  rpc CreateCloudlet(Cloudlet) returns (Result) {
+  rpc CreateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/cloudlet"
       body: "*"
     };
   }
   // Delete a Cloudlet
-  rpc DeleteCloudlet(Cloudlet) returns (Result) {
+  rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/delete/cloudet"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
   // Update a Cloudlet
-  rpc UpdateCloudlet(Cloudlet) returns (Result) {
+  rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
     option (google.api.http) = {
       post: "/update/cloudlet"
       body: "*"

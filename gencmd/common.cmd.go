@@ -32,5 +32,20 @@ var L4ProtoStrings = []string{
 	"L4ProtoUDP",
 }
 
+var TrackedStateStrings = []string{
+	"TrackedStateUnknown",
+	"NotPresent",
+	"CreateRequested",
+	"Creating",
+	"CreateError",
+	"Ready",
+	"UpdateRequested",
+	"Updating",
+	"UpdateError",
+	"DeleteRequested",
+	"Deleting",
+	"DeleteError",
+}
+
 func init() {
 }

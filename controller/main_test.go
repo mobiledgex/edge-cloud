@@ -79,7 +79,6 @@ func TestController(t *testing.T) {
 	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 	clusterClient := edgeproto.NewClusterApiClient(conn)
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
-	appInstInfoClient := edgeproto.NewAppInstInfoApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
 
 	crmClient.WaitForConnect(1)
@@ -104,14 +103,10 @@ func TestController(t *testing.T) {
 	assert.Equal(t, 3, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
 	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	assert.Equal(t, 5, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
-	assert.Equal(t, 9, len(clusterInstInfoApi.cache.Objs), "server cluster inst infos")
-	assert.Equal(t, 5, len(appInstInfoApi.cache.Objs), "server app inst infos")
 
 	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
 
-	WaitForAppInstInfo(len(testutil.AppInstInfoData))
 	WaitForCloudletInfo(len(testutil.CloudletInfoData))
-	assert.Equal(t, len(testutil.AppInstInfoData), len(appInstInfoApi.cache.Objs))
 	assert.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
 	assert.Equal(t, len(crmNotify.CloudletInfoCache.Objs), len(cloudletInfoApi.cache.Objs))
 
@@ -119,7 +114,6 @@ func TestController(t *testing.T) {
 	// XXX These checks won't work until we move notifyId out of struct
 	// and into meta data in cache (TODO)
 	if false {
-		CheckAppInstInfo(t, appInstInfoClient, testutil.AppInstInfoData)
 		CheckCloudletInfo(t, cloudletInfoClient, testutil.CloudletInfoData)
 	}
 
@@ -129,7 +123,8 @@ func TestController(t *testing.T) {
 	assert.NotNil(t, err)
 	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
 	assert.NotNil(t, err)
-	_, err = cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
+	err = testutil.CloudletReadResultStream(stream, err)
 	assert.NotNil(t, err)
 	_, err = appClient.DeleteApp(ctx, &testutil.AppData[0])
 	assert.NotNil(t, err)
@@ -164,8 +159,6 @@ func TestController(t *testing.T) {
 	dmeNotify.WaitForAppInsts(0)
 	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
-	assert.Equal(t, 0, len(appInstInfoApi.cache.Objs))
-	assert.Equal(t, 0, len(clusterInstInfoApi.cache.Objs))
 	assert.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
 	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
 	assert.Equal(t, 0, len(appInstApi.cache.Objs))
@@ -319,15 +312,6 @@ cloudletinfos:
 	<-mainDone
 }
 
-func WaitForAppInstInfo(count int) {
-	for i := 0; i < 10; i++ {
-		if len(appInstInfoApi.cache.Objs) == count {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-}
-
 func WaitForCloudletInfo(count int) {
 	for i := 0; i < 10; i++ {
 		if len(cloudletInfoApi.cache.Objs) == count {
@@ -346,21 +330,6 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 	filterNone := edgeproto.CloudletInfo{}
 	err := api.ShowCloudletInfo(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show cloudlet info")
-	for _, obj := range data {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(data), len(show.Data), "show count")
-}
-
-func CheckAppInstInfo(t *testing.T, client edgeproto.AppInstInfoApiClient, data []edgeproto.AppInstInfo) {
-	api := testutil.NewClientAppInstInfoApi(client)
-	ctx := context.TODO()
-
-	show := testutil.ShowAppInstInfo{}
-	show.Init()
-	filterNone := edgeproto.AppInstInfo{}
-	err := api.ShowAppInstInfo(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show appinst info")
 	for _, obj := range data {
 		show.AssertFound(t, &obj)
 	}

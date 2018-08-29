@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -49,43 +48,45 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 	return false
 }
 
-func (s *CloudletApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	if !operatorApi.HasOperator(&in.Key.OperatorKey) {
-		return &edgeproto.Result{}, errors.New("Specified cloudlet operator not found")
+		return errors.New("Specified cloudlet operator not found")
 	}
 	if in.IpSupport == edgeproto.IpSupport_IpSupportUnknown {
 		in.IpSupport = edgeproto.IpSupport_IpSupportDynamic
 	}
 	// TODO: support static IP assignment.
 	if in.IpSupport != edgeproto.IpSupport_IpSupportDynamic {
-		return &edgeproto.Result{}, errors.New("Only dynamic IPs are supported currently")
+		return errors.New("Only dynamic IPs are supported currently")
 	}
 	if in.IpSupport == edgeproto.IpSupport_IpSupportStatic {
 		// TODO: Validate static ips
 	} else {
 		// dynamic
 		if in.NumDynamicIps < 1 {
-			return &edgeproto.Result{}, errors.New("Must specify at least one dynamic public IP available")
+			return errors.New("Must specify at least one dynamic public IP available")
 		}
 	}
-	return s.store.Create(in, s.sync.syncWait)
+	_, err := s.store.Create(in, s.sync.syncWait)
+	return err
 }
 
-func (s *CloudletApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
-	return s.store.Update(in, s.sync.syncWait)
+func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	_, err := s.store.Update(in, s.sync.syncWait)
+	return err
 }
 
-func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *CloudletApi) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesCloudlet(&in.Key, dynInsts) {
 		// disallow delete if static instances are present
-		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Application Instance")
+		return errors.New("Cloudlet in use by static Application Instance")
 	}
 	clDynInsts := make(map[edgeproto.ClusterInstKey]struct{})
 	if clusterInstApi.UsesCloudlet(&in.Key, clDynInsts) {
-		return &edgeproto.Result{}, errors.New("Cloudlet in use by static Cluster Instance")
+		return errors.New("Cloudlet in use by static Cluster Instance")
 	}
-	res, err := s.store.Delete(in, s.sync.syncWait)
+	_, err := s.store.Delete(in, s.sync.syncWait)
 	// also delete associated info
 	// Note: don't delete cloudletinfo, that will get deleted once CRM
 	// disconnects. Otherwise if admin deletes/recreates Cloudlet with
@@ -96,7 +97,7 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 		// delete dynamic instances
 		for key, _ := range dynInsts {
 			appInst := edgeproto.AppInst{Key: key}
-			_, derr := appInstApi.DeleteNoWait(ctx, &appInst)
+			derr := appInstApi.deleteAppInstInternal(DefCallContext, &appInst, cb)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",
@@ -107,7 +108,7 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 	if len(clDynInsts) > 0 {
 		for key, _ := range clDynInsts {
 			clInst := edgeproto.ClusterInst{Key: key}
-			_, derr := clusterInstApi.DeleteNoWait(ctx, &clInst)
+			derr := clusterInstApi.deleteClusterInstInternal(DefCallContext, &clInst, cb)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic cluster inst",
@@ -115,7 +116,7 @@ func (s *CloudletApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet
 			}
 		}
 	}
-	return res, err
+	return err
 }
 
 func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
