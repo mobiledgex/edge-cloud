@@ -58,7 +58,7 @@ public class EngineCallTest {
             // FIXME: Read application cert and keys.
             InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
                     "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_COARSE_LOCATION");
+                            + " android.permission.READ_EXTERNAL_STORAGE");
         }
     }
 
@@ -417,6 +417,7 @@ public class EngineCallTest {
             assertFalse("mexNetworkingDisabledTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
+            me.setNetworkSwitchingEnabled(true);
         }
     }
 
