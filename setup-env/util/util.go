@@ -73,7 +73,7 @@ type K8sDeploymentStep struct {
 	File        string
 	Description string
 	WaitForPods []K8sPod
-	CopyFile    K8CopyFile
+	CopyFiles   []K8CopyFile
 }
 
 type EtcdProcess struct {
@@ -86,9 +86,8 @@ type ControllerProcess struct {
 }
 type DmeProcess struct {
 	process.DmeLocal
-	Hostname      string
-	TLSClientCert string
-	EnvVars       []map[string]string
+	Hostname string
+	EnvVars  []map[string]string
 }
 type CrmProcess struct {
 	process.CrmLocal
