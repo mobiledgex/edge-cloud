@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -35,14 +34,14 @@ var UpdateAppInstTimeout = 20 * time.Minute
 var DeleteAppInstTimeout = 20 * time.Minute
 
 // Transition states indicate states in which the CRM is still busy.
-var CreateAppInstTransitions = map[edgeproto.AppState]struct{}{
-	edgeproto.AppState_AppStateBuilding: struct{}{},
+var CreateAppInstTransitions = map[edgeproto.TrackedState]struct{}{
+	edgeproto.TrackedState_Creating: struct{}{},
 }
-var UpdateAppInstTransitions = map[edgeproto.AppState]struct{}{
-	edgeproto.AppState_AppStateChanging: struct{}{},
+var UpdateAppInstTransitions = map[edgeproto.TrackedState]struct{}{
+	edgeproto.TrackedState_Updating: struct{}{},
 }
-var DeleteAppInstTransitions = map[edgeproto.AppState]struct{}{
-	edgeproto.AppState_AppStateDeleting: struct{}{},
+var DeleteAppInstTransitions = map[edgeproto.TrackedState]struct{}{
+	edgeproto.TrackedState_Deleting: struct{}{},
 }
 
 func InitAppInstApi(sync *Sync) {
@@ -51,6 +50,11 @@ func InitAppInstApi(sync *Sync) {
 	edgeproto.InitAppInstCache(&appInstApi.cache)
 	appInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateAppInst)
 	sync.RegisterCache(&appInstApi.cache)
+	if *shortTimeouts {
+		CreateAppInstTimeout = 3 * time.Second
+		UpdateAppInstTimeout = 2 * time.Second
+		DeleteAppInstTimeout = 2 * time.Second
+	}
 }
 
 func (s *AppInstApi) GetAllKeys(keys map[edgeproto.AppInstKey]struct{}) {
@@ -123,22 +127,23 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	return false
 }
 
-func (s *AppInstApi) CreateNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
-	return s.createAppInstInternal(in)
+	return s.createAppInstInternal(DefCallContext, in, cb)
 }
 
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
-func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	if in.Liveness == edgeproto.Liveness_LivenessUnknown {
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
 
-	// make sure cluster inst exists.
-	// This is a separate STM to avoid ordering issues between
-	// auto-clusterinst create and appinst create in watch cb.
+	var autocluster bool
+	// See if we need to create auto-cluster.
+	// This also sets up the correct ClusterInstKey in "in".
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyExists
 		}
@@ -167,31 +172,39 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 			if !clusterApi.store.STMGet(stm, &app.Cluster, nil) {
 				return errors.New("Cluster does not exist for app")
 			}
-			// auto-create cluster inst
-			clusterInst := edgeproto.ClusterInst{}
-			clusterInst.Key = in.ClusterInstKey
-			clusterInst.Auto = true
-			err := clusterInstApi.createClusterInstInternal(stm,
-				&clusterInst)
-			if err != nil {
-				return err
-			}
-			log.DebugLog(log.DebugLevelApi,
-				"Create auto-clusterinst",
-				"key", clusterInst.Key,
-				"appinst", in)
-			fmt.Printf("Creating auto cluster inst %v\n", clusterInst)
+			autocluster = true
 		}
 		return nil
 	})
 	if err != nil {
-		return &edgeproto.Result{}, err
+		return err
 	}
-	defer func() {
+	if autocluster {
+		// auto-create cluster inst
+		clusterInst := edgeproto.ClusterInst{}
+		clusterInst.Key = in.ClusterInstKey
+		clusterInst.Auto = true
+		log.DebugLog(log.DebugLevelApi,
+			"Create auto-clusterinst",
+			"key", clusterInst.Key,
+			"appinst", in)
+		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
-			s.deleteClusterInstAuto(&in.ClusterInstKey)
+			return err
 		}
-	}()
+		defer func() {
+			if err != nil && !cctx.Undo {
+				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
+				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
+				if undoErr != nil {
+					log.DebugLog(log.DebugLevelApi,
+						"Undo create auto-clusterinst failed",
+						"key", clusterInst.Key,
+						"undoErr", undoErr)
+				}
+			}
+		}()
+	}
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
@@ -226,7 +239,9 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 		if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
 			return errors.New("Cluster instance does not exist for app")
 		}
-		fmt.Printf("Creating appinst with clusterinst %v/%v\n", clusterInst.Key, clusterInst)
+		if clusterInst.State != edgeproto.TrackedState_Ready {
+			return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
+		}
 
 		var info edgeproto.CloudletInfo
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
@@ -270,33 +285,56 @@ func (s *AppInstApi) createAppInstInternal(in *edgeproto.AppInst) (*edgeproto.Re
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 
+		in.State = edgeproto.TrackedState_CreateRequested
 		s.store.STMPut(stm, in)
 		return nil
 	})
-	return &edgeproto.Result{}, err
+	if err != nil {
+		return err
+	}
+	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateAppInstTransitions, edgeproto.TrackedState_CreateError, CreateAppInstTimeout, "Created successfully", cb.Send)
+	if err != nil && !cctx.Undo {
+		// XXX should probably track mod revision ID and only undo
+		// if no other changes were made to appInst in the meantime.
+		// crm failed or some other err, undo
+		cb.Send(&edgeproto.Result{Message: "Deleting AppInst due to failure"})
+		undoErr := s.deleteAppInstInternal(cctx.WithUndo(), in, cb)
+		if undoErr != nil {
+			log.InfoLog("Undo create appinst", "undoErr", undoErr)
+		}
+	}
+	return err
 }
 
-func (s *AppInstApi) UpdateNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	// don't allow updates to cached fields
 	if in.Fields != nil {
 		for _, field := range in.Fields {
 			if field == edgeproto.AppInstFieldImagePath {
-				return &edgeproto.Result{}, errors.New("Cannot specify image path as it is inherited from specified app")
+				return errors.New("Cannot specify image path as it is inherited from specified app")
 			} else if strings.HasPrefix(field, edgeproto.AppInstFieldCloudletLoc) {
-				return &edgeproto.Result{}, errors.New("Cannot specify cloudlet location fields as they are inherited from specified cloudlet")
+				return errors.New("Cannot specify cloudlet location fields as they are inherited from specified cloudlet")
 			}
 		}
 	}
-	return s.store.Update(in, s.sync.syncWait)
+	return errors.New("Update app instance not supported yet")
 }
 
-func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
+	return s.deleteAppInstInternal(DefCallContext, in, cb)
+}
+
+func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
+		if in.State != edgeproto.TrackedState_Ready && !cctx.Undo {
+			return errors.New("AppInst not ready, cannot delete")
+		}
+
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
 		if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
@@ -313,25 +351,35 @@ func (s *AppInstApi) DeleteNoWait(ctx context.Context, in *edgeproto.AppInst) (*
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 		// delete app inst
-		s.store.STMDel(stm, &in.Key)
+		in.State = edgeproto.TrackedState_DeleteRequested
+		s.store.STMPut(stm, in)
 		return nil
 	})
-	if err == nil {
-		// delete clusterinst afterwards if it was auto-created
-		s.deleteClusterInstAuto(&clusterInstKey)
+	if err != nil {
+		return err
 	}
-	return &edgeproto.Result{}, err
-}
-
-func (s *AppInstApi) deleteClusterInstAuto(key *edgeproto.ClusterInstKey) {
-	clusterInst := edgeproto.ClusterInst{}
-	if clusterInstApi.Get(key, &clusterInst) && clusterInst.Auto {
-		_, err := clusterInstApi.deleteClusterInstInternal(&clusterInst)
-		if err != nil {
-			log.InfoLog("Failed to delete auto cluster inst",
-				"clusterInst", key, "err", err)
+	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteAppInstTransitions, edgeproto.TrackedState_DeleteError, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
+	if err != nil && !cctx.Undo {
+		// crm failed or some other err, undo
+		cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
+		undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
+		if undoErr != nil {
+			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
+		}
+		return err
+	} else {
+		// delete clusterinst afterwards if it was auto-created
+		clusterInst := edgeproto.ClusterInst{}
+		if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto {
+			cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
+			autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
+			if autoerr != nil {
+				log.InfoLog("Failed to delete auto cluster inst",
+					"clusterInst", clusterInst, "err", err)
+			}
 		}
 	}
+	return err
 }
 
 func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
@@ -342,78 +390,49 @@ func (s *AppInstApi) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_
 	return err
 }
 
-func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
-	_, err := s.CreateNoWait(cb.Context(), in)
-	if err == objstore.ErrKVStoreKeyExists {
-		// Already created, but check if not present in CRM.
-		// If so, trigger update to try to get CRM back in sync.
-		info := edgeproto.AppInstInfo{}
-		if !appInstInfoApi.cache.Get(&in.Key, &info) {
-			notify.ServerMgrOne.UpdateAppInst(&in.Key, in)
+func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
+	log.DebugLog(log.DebugLevelApi, "Update AppInst from info", "key", in.Key, "state", in.State)
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
 		}
-	}
-	if err != nil {
-		return err
-	}
-	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTransitions, CreateAppInstTimeout, "Created successfully", cb.Send)
-	if err != nil {
-		// XXX should probably track mod revision ID and only undo
-		// if no other changes were made to appInst in the meantime.
-		// crm failed or some other err, undo
-		_, undoErr := s.DeleteNoWait(cb.Context(), in)
-		if undoErr != nil {
-			log.InfoLog("Undo create appinst", "undoErr", undoErr)
-		} else {
-			undoErr = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTransitions, DeleteAppInstTimeout, "", nil)
-			if undoErr != nil {
-				log.InfoLog("Undo create appinst", "undoErr", undoErr)
-			}
+		if inst.State == in.State {
+			// already in that state
+			return nil
 		}
-		log.DebugLog(log.DebugLevelApi, "Create app inst failed",
-			"in", in, "err", err)
-	}
-	return err
+		// please see state_transitions.md
+		if !crmTransitionOk(inst.State, in.State) {
+			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
+				"key", &in.Key, "cur", inst.State, "next", in.State)
+			return nil
+		}
+		inst.State = in.State
+		if in.State == edgeproto.TrackedState_CreateError || in.State == edgeproto.TrackedState_DeleteError || in.State == edgeproto.TrackedState_UpdateError {
+			inst.Errors = in.Errors
+		}
+		s.store.STMPut(stm, &inst)
+		return nil
+	})
 }
 
-func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	_, err := s.DeleteNoWait(cb.Context(), in)
-	if err == objstore.ErrKVStoreKeyNotFound {
-		// Already deleted, but check if still present in CRM.
-		// If so, trigger update to try to get CRM back in sync.
-		info := edgeproto.AppInstInfo{}
-		if appInstInfoApi.cache.Get(&in.Key, &info) {
-			notify.ServerMgrOne.UpdateAppInst(&in.Key, in)
+func (s *AppInstApi) DeleteFromInfo(in *edgeproto.AppInstInfo) {
+	log.DebugLog(log.DebugLevelApi, "Delete AppInst from info", "key", in.Key, "state", in.State)
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
 		}
-	}
-	if err != nil {
-		return err
-	}
-	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateNotPresent, DeleteAppInstTransitions, DeleteAppInstTimeout, "Deleted successfully", cb.Send)
-	if err != nil {
-		// crm failed or some other err, undo
-		_, undoErr := s.CreateNoWait(cb.Context(), in)
-		if undoErr != nil {
-			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
-		} else {
-			undoErr = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, CreateAppInstTransitions, CreateAppInstTimeout, "", nil)
-			if undoErr != nil {
-				log.InfoLog("Undo delete appinst", "undoErr", undoErr)
-			}
+		// please see state_transitions.md
+		if inst.State != edgeproto.TrackedState_Deleting && inst.State != edgeproto.TrackedState_DeleteRequested {
+			log.DebugLog(log.DebugLevelApi, "Invalid state transition",
+				"key", &in.Key, "cur", inst.State,
+				"next", edgeproto.TrackedState_NotPresent)
+			return nil
 		}
-		log.DebugLog(log.DebugLevelApi, "Delete app inst failed",
-			"in", in, "err", err)
-	}
-	return err
-}
-
-func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-	_, err := s.UpdateNoWait(cb.Context(), in)
-	if err != nil {
-		return err
-	}
-	err = appInstInfoApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.AppState_AppStateReady, UpdateAppInstTransitions, UpdateAppInstTimeout, "Updated successfully", cb.Send)
-	if err != nil {
-		// TODO: undo and mod rev checking.
-	}
-	return err
+		s.store.STMDel(stm, &in.Key)
+		return nil
+	})
 }

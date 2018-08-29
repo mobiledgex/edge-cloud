@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -24,7 +25,7 @@ func TestAppInstApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi.cache, &clusterInstInfoApi.cache)
+		&appInstInfoApi, &clusterInstInfoApi)
 
 	// cannote create instances without apps and cloudlets
 	for _, obj := range testutil.AppInstData {
@@ -43,18 +44,26 @@ func TestAppInstApi(t *testing.T) {
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 	testutil.InternalClusterInstCreate(t, &clusterInstApi, testutil.ClusterInstData)
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
+	clusterInstCnt := len(clusterInstApi.cache.Objs)
 
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
 	// create all the app insts will fail.
-	responder.SetSimulateFailure(true)
+	responder.SetSimulateCreateFailure(true)
 	for _, obj := range testutil.AppInstData {
 		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 		assert.NotNil(t, err, "Create app inst responder failures")
 		// make sure error matches responder
-		assert.Equal(t, "Encountered failures: [crm create app inst failed]", err.Error())
+		// if app-inst triggers auto-cluster, the error will be for a cluster
+		if strings.Contains(err.Error(), "cluster inst") {
+			assert.Equal(t, "Encountered failures: [crm create cluster inst failed]", err.Error())
+		} else {
+			assert.Equal(t, "Encountered failures: [crm create app inst failed]", err.Error())
+		}
 	}
-	responder.SetSimulateFailure(false)
+	responder.SetSimulateCreateFailure(false)
+	assert.Equal(t, 0, len(appInstApi.cache.Objs))
+	assert.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 
 	testutil.InternalAppInstTest(t, "cud", &appInstApi, testutil.AppInstData)
 	InternalAppInstCachedFieldsTest(t)
@@ -142,7 +151,7 @@ func TestAutoClusterInst(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi.cache, &clusterInstInfoApi.cache)
+		&appInstInfoApi, &clusterInstInfoApi)
 
 	// create supporting data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)

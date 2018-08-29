@@ -267,7 +267,6 @@ func main() {
 				if !setupmex.WaitForProcesses(actionParam) {
 					errorsFound++
 					errors = append(errors, "wait for process failed")
-
 				}
 			}
 		case "stop":
@@ -285,16 +284,6 @@ func main() {
 					log.Printf("Unable to run api for %s\n", action)
 					errorsFound++
 					errors = append(errors, "controller api failed")
-				}
-			}
-		case "ctrlinfo":
-			if !setupmex.UpdateAPIAddrs() {
-				errorsFound++
-			} else {
-				if !apis.RunControllerInfoAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
-					log.Printf("Unable to run api for %s\n", action)
-					errorsFound++
-					errors = append(errors, "controller info api failed")
 				}
 			}
 		case "dmeapi":

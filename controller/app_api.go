@@ -193,7 +193,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// delete dynamic instances
 		for key, _ := range dynInsts {
 			appInst := edgeproto.AppInst{Key: key}
-			_, derr := appInstApi.DeleteNoWait(ctx, &appInst)
+			derr := appInstApi.DeleteAppInst(&appInst, nil)
 			if derr != nil {
 				log.DebugLog(log.DebugLevelApi,
 					"Failed to delete dynamic app inst",

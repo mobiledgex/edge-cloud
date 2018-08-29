@@ -1,6 +1,57 @@
-# expected data - notifyid needs to be ignored
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 
-clusterinstinfos:
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor:
+    name: x1.medium
+  masterflavor:
+    name: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
+
+clusters:
+- key:
+    name: AutoClustersomeApplication
+  defaultflavor:
+    name: c1.small
+  auto: true
+
+clusterinsts:
 - key:
     clusterkey:
       name: AutoClustersomeApplication
@@ -8,7 +59,11 @@ clusterinstinfos:
       operatorkey:
         name: TMUS
       name: tmocloud-1
-  state: ClusterStateReady
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+  state: Ready
 - key:
     clusterkey:
       name: AutoClustersomeApplication
@@ -16,9 +71,63 @@ clusterinstinfos:
       operatorkey:
         name: TMUS
       name: tmocloud-2
-  state: ClusterStateReady
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+  state: Ready
 
-appinstinfos:
+operators:
+- key:
+    name: ATT
+- key:
+    name: TMUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud-1
+  accessuri: cloud1.tmo
+  location:
+    lat: 31
+    long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud-2
+  accessuri: cloud2.tmo
+  location:
+    lat: 35
+    long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClustersomeApplication
+
+appinstances:
 - key:
     appkey:
       developerkey:
@@ -30,7 +139,25 @@ appinstinfos:
         name: TMUS
       name: tmocloud-1
     id: 123
-  state: AppStateReady
+  cloudletloc:
+    lat: 31
+    long: -91
+  uri: tmocloud-1.TMUS.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+  state: Ready
 - key:
     appkey:
       developerkey:
@@ -42,4 +169,23 @@ appinstinfos:
         name: TMUS
       name: tmocloud-2
     id: 123
-  state: AppStateReady
+  cloudletloc:
+    lat: 35
+    long: -95
+  uri: tmocloud-2.TMUS.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+  state: Ready
+

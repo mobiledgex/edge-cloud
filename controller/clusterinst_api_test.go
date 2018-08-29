@@ -23,7 +23,7 @@ func TestClusterInstApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
-		&appInstInfoApi.cache, &clusterInstInfoApi.cache)
+		&appInstInfoApi, &clusterInstInfoApi)
 
 	// cannot create insts without cluster/cloudlet
 	for _, obj := range testutil.ClusterInstData {
@@ -42,14 +42,15 @@ func TestClusterInstApi(t *testing.T) {
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
 	// create all the cluster insts will fail.
-	responder.SetSimulateFailure(true)
+	responder.SetSimulateCreateFailure(true)
 	for _, obj := range testutil.ClusterInstData {
 		err := clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 		assert.NotNil(t, err, "Create cluster inst responder failures")
 		// make sure error matches responder
 		assert.Equal(t, "Encountered failures: [crm create cluster inst failed]", err.Error())
 	}
-	responder.SetSimulateFailure(false)
+	responder.SetSimulateCreateFailure(false)
+	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
 
 	testutil.InternalClusterInstTest(t, "cud", &clusterInstApi, testutil.ClusterInstData)
 	// after cluster insts create, check that cloudlet refs data is correct.

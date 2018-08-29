@@ -40,6 +40,38 @@ func (x *ShowCloudlet) Send(m *edgeproto.Cloudlet) error {
 	return nil
 }
 
+type CudStreamoutCloudlet struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamoutCloudlet) Send(res *edgeproto.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamoutCloudlet) Context() context.Context {
+	return context.TODO()
+}
+
+type CloudletStream interface {
+	Recv() (*edgeproto.Result, error)
+}
+
+func CloudletReadResultStream(stream CloudletStream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
 func (x *ShowCloudlet) ReadStream(stream edgeproto.CloudletApi_ShowCloudletClient, err error) {
 	x.Data = make(map[string]edgeproto.Cloudlet)
 	if err != nil {
@@ -119,25 +151,34 @@ type CloudletCommonApi struct {
 
 func (x *CloudletCommonApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.CreateCloudlet(ctx, in)
+		err := x.internal_api.CreateCloudlet(in, &CudStreamoutCloudlet{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.CreateCloudlet(ctx, in)
+		stream, err := x.client_api.CreateCloudlet(ctx, in)
+		err = CloudletReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *CloudletCommonApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.UpdateCloudlet(ctx, in)
+		err := x.internal_api.UpdateCloudlet(in, &CudStreamoutCloudlet{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.UpdateCloudlet(ctx, in)
+		stream, err := x.client_api.UpdateCloudlet(ctx, in)
+		err = CloudletReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *CloudletCommonApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
 	if x.internal_api != nil {
-		return x.internal_api.DeleteCloudlet(ctx, in)
+		err := x.internal_api.DeleteCloudlet(in, &CudStreamoutCloudlet{})
+		return &edgeproto.Result{}, err
 	} else {
-		return x.client_api.DeleteCloudlet(ctx, in)
+		stream, err := x.client_api.DeleteCloudlet(ctx, in)
+		err = CloudletReadResultStream(stream, err)
+		return &edgeproto.Result{}, err
 	}
 }
 
