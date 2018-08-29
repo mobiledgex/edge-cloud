@@ -43,5 +43,5 @@ spec:
          - "mexos"
 
       imagePullSecrets:
-       - name: mexreg-secret 
+       - name: mexreg-secret
 
