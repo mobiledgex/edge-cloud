@@ -88,6 +88,7 @@ type DmeProcess struct {
 	process.DmeLocal
 	Hostname      string
 	TLSClientCert string
+	EnvVars       []map[string]string
 }
 type CrmProcess struct {
 	process.CrmLocal
@@ -107,6 +108,12 @@ type SampleAppProcess struct {
 	Hostname string
 }
 
+type TLSCertInfo struct {
+	CommonName string
+	IPs        []string
+	DNSNames   []string
+}
+
 type DnsRecord struct {
 	Name    string
 	Type    string
@@ -120,6 +127,7 @@ type CloudflareDNS struct {
 }
 
 type DeploymentData struct {
+	TLSCerts      []TLSCertInfo       `yaml:"tlscerts"`
 	Cluster       ClusterInfo         `yaml:"cluster"`
 	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
 	Locsims       []LocSimProcess     `yaml:"locsims"`

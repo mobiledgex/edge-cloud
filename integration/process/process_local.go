@@ -278,13 +278,18 @@ func (p *LocApiSimLocal) Stop() {
 
 //Token service simulator
 type TokSrvSimLocal struct {
-	Name string
-	Port int
-	cmd  *exec.Cmd
+	Name  string
+	Port  int
+	Token string
+	cmd   *exec.Cmd
 }
 
 func (p *TokSrvSimLocal) Start(logfile string) error {
 	args := []string{"-port", fmt.Sprintf("%d", p.Port)}
+	if p.Token != "" {
+		args = append(args, "-token")
+		args = append(args, p.Token)
+	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "tok-srv-sim", args, logfile)
 	return err

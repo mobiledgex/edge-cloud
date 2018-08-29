@@ -2,6 +2,12 @@ vars:
   - locverurl: "http://127.0.0.1:8888/verifyLocation" 
   - toksrvurl: "http://127.0.0.1:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc" 
 
+tlscerts:
+- commonname: localserver
+  ips:
+    - 127.0.0.1
+    - 0.0.0.0
+
 sampleapps:
 - sampleapplocal:
     name: mexexample1
@@ -22,6 +28,7 @@ toksims:
     name: toksim1
     port: 9999
   hostname: "127.0.0.1"
+  
 
 etcds:
 - etcdlocal:
@@ -56,7 +63,7 @@ controllers:
     httpaddr: "0.0.0.0:36001"
     notifyaddr: "127.0.0.1:37001"
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -67,7 +74,7 @@ controllers:
     httpaddr: "0.0.0.0:36002"
     notifyaddr: "127.0.0.1:37002"
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -81,9 +88,12 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - LOCAPI_USER: mexserver
+     - LOCAPI_PASSWD: eC2835!
 
 - dmelocal:
     name: dme2
@@ -93,10 +103,12 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-
+  envvars:
+     - LOCAPI_USER: mexserver
+     - LOCAPI_PASSWD: eC2835!
   
 crms:
 - crmlocal:
@@ -105,7 +117,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-1"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -115,7 +127,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-2"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -125,7 +137,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-3"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -135,7 +147,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-4"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -145,7 +157,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-5"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -155,7 +167,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-6"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -165,7 +177,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-7"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -175,7 +187,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-8"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -185,7 +197,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-9"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
@@ -195,7 +207,7 @@ crms:
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-10"}'
     tls:
-       servercert: "{{tlsoutdir}}/127.0.0.1.crt"
+       servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 

@@ -1,0 +1,9 @@
+##
+##
+description: removes TLS certs for a deployment setup
+
+tests:
+
+- name: clean certs
+  actions: [cleancerts]
+
