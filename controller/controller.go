@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -30,10 +31,13 @@ var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address"
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 
 func GetRootDir() string {
 	return *rootDir
 }
+
+var ErrCtrlAlreadyInProgress = errors.New("Change already in progress")
 
 var sigChan chan os.Signal
 
@@ -94,8 +98,6 @@ func main() {
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
-	edgeproto.RegisterAppInstInfoApiServer(server, &appInstInfoApi)
-	edgeproto.RegisterClusterInstInfoApiServer(server, &clusterInstInfoApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 

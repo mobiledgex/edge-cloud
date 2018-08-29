@@ -267,11 +267,25 @@ var CreateCloudletCmd = &cobra.Command{
 			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
 		ctx := context.Background()
-		obj, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
+		stream, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
 		if err != nil {
 			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		objs := make([]*edgeproto.Result, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		ResultWriteOutputArray(objs)
 		return nil
 	},
 }
@@ -290,11 +304,20 @@ var DeleteCloudletCmd = &cobra.Command{
 			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
 		ctx := context.Background()
-		obj, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
+		stream, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
 		if err != nil {
 			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("DeleteCloudlet recv failed: %s", err.Error())
+			}
+			ResultWriteOutputOne(obj)
+		}
 		return nil
 	},
 }
@@ -314,11 +337,25 @@ var UpdateCloudletCmd = &cobra.Command{
 		}
 		CloudletSetFields()
 		ctx := context.Background()
-		obj, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
+		stream, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
 		if err != nil {
 			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
-		ResultWriteOutputOne(obj)
+		objs := make([]*edgeproto.Result, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		ResultWriteOutputArray(objs)
 		return nil
 	},
 }

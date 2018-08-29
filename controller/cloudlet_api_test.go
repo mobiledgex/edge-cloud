@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/log"
@@ -23,9 +22,8 @@ func TestCloudletApi(t *testing.T) {
 	defer sync.Done()
 
 	// cannot create cloudlets without apps
-	ctx := context.TODO()
 	for _, obj := range testutil.CloudletData {
-		_, err := cloudletApi.CreateCloudlet(ctx, &obj)
+		err := cloudletApi.CreateCloudlet(&obj, &testutil.CudStreamoutCloudlet{})
 		assert.NotNil(t, err, "Create cloudlet without operator")
 	}
 

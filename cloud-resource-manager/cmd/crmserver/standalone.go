@@ -57,19 +57,19 @@ func (s *standaloneServer) ShowClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return err
 }
 
-func (s *standaloneServer) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *standaloneServer) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
 	s.data.CloudletCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *standaloneServer) DeleteCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_DeleteCloudletServer) error {
 	s.data.CloudletCache.Delete(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
-func (s *standaloneServer) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+func (s *standaloneServer) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	s.data.CloudletCache.Update(in, 0)
-	return &edgeproto.Result{}, nil
+	return nil
 }
 
 func (s *standaloneServer) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_ShowCloudletServer) error {
