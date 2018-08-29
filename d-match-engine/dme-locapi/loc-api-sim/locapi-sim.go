@@ -72,6 +72,7 @@ func showLocations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(b)
+
 }
 
 func updateLocation(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +109,7 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("updateLocation addr: %s lat: %v long: %v\n", req.Ipaddress, req.Lat, req.Long)
+	log.Printf("updateLocation addr: %s lat: %f long: %f\n", req.Ipaddress, req.Lat, req.Long)
 	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
 
 	ymlout, err := yaml.Marshal(locations)
@@ -158,13 +159,14 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	} else {
 		foundLoc, err := findLocForIP(ip)
 		if err != nil {
-			resp.LocationResult = dmecommon.LocationUnknown
+			resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
 		} else {
+
 			reqLoc := dme.Loc{Lat: req.Lat, Long: req.Long}
 			log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
 			d := dmecommon.DistanceBetween(reqLoc, foundLoc)
-			resp.LocationResult = dmecommon.GetLocationResultForDistance(d)
-			log.Printf("calculated distance: %v km\n result: %d", int(d), resp.LocationResult)
+			resp.MatchingDegree = fmt.Sprintf("%d", (dmecommon.GetLocationResultForDistance(d)))
+			log.Printf("calculated distance: %v km\n match degree: %s", int(d), resp.MatchingDegree)
 		}
 	}
 
