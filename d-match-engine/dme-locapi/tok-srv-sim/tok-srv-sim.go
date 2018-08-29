@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	port      = flag.Int("port", 8080, "listen port")
+	port       = flag.Int("port", 8080, "listen port")
+	fixedToken = flag.String("token", "", "fixed token")
+
 	indexpath = "/"
 
 	getTokenPath        = "/its"
@@ -42,17 +44,24 @@ func getToken(w http.ResponseWriter, r *http.Request) {
 	//the encoding of token for now is just a base64 version of the ip address plus some
 	//expiry time.  We will decode this within the token server simulator and use the IP to derive
 	//a location, or reject if the expiry time is passed
-	token64 := ""
-	if strings.Contains(r.URL.Path, getExpiredTokenPath) {
-		log.Println("getting an expired token")
-		//this is to test the case where we have an expired token. Ask for a token which expired 10 seconds ago.
-		token64 = util.GenerateToken(remoteIp, -10)
-	} else {
-		token64 = util.GenerateToken(remoteIp, util.DefaultTokenValidSeconds)
-	}
-	log.Printf("followurl: %s remoteIp: %s token: %s\n", f, remoteIp, token64)
+	tokenresult := ""
 
-	http.Redirect(w, r, f+"?dt-id="+token64, 303)
+	// if a token is specified as an argument, we just use this value.  This is for integration with
+	// TDG's location verification mockup
+	if *fixedToken != "" {
+		tokenresult = *fixedToken
+	} else {
+		if strings.Contains(r.URL.Path, getExpiredTokenPath) {
+			log.Println("getting an expired token")
+			//this is to test the case where we have an expired token. Ask for a token which expired 10 seconds ago.
+			tokenresult = util.GenerateToken(remoteIp, -10)
+		} else {
+			tokenresult = util.GenerateToken(remoteIp, util.DefaultTokenValidSeconds)
+		}
+	}
+	log.Printf("followurl: %s remoteIp: %s token: %s\n", f, remoteIp, tokenresult)
+
+	http.Redirect(w, r, f+"?dt-id="+tokenresult, 303)
 }
 
 func run() {
