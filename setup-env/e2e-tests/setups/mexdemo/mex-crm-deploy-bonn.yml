@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmcentralus
+  name: crmbonn
   labels:
-    app: crmcentralus
+    app: crmbonn
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmcentralus
+      app: crmbonn
   template:
     metadata:
       labels:
-        app: crmcentralus
+        app: crmbonn
     spec:
       containers:
-      - name: crmcentralus
+      - name: crmbonn
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
         env:
          - name: MEX_CF_USER
@@ -34,12 +34,14 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"bonncloudlet\"}"
          - "--notifyAddrs"
          - "controller-notify:37001"
+         - "--tls"
+         - "/root/tls/mexdemo.crt"
          - "--d"
          - "mexos"
 
       imagePullSecrets:
-       - name: mexreg-secret 
+       - name: mexreg-secret
 

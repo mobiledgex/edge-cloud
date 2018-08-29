@@ -25,7 +25,8 @@ spec:
          - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"Bonn\"}"
          - "--notifyAddrs"
          - "controller:37001"
-         
+         - "--tls"
+         - "/root/tls/mexdemo.crt"         
       imagePullSecrets:
        - name: mexreg-secret 
 

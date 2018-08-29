@@ -12,6 +12,14 @@ cloudflare:
     type: A
     content: 37.50.143.118
 
+tlscerts:
+- commonname: bonn_vm1
+  ips:
+    - "{{vm1_internal_ip}}"
+    - "{{vm1_external_ip}}"
+  dnsnames:
+    - tdg.dme.mobiledgex.net
+
 sampleapps:
 - sampleapplocal:
     name: mexexample1
@@ -65,6 +73,9 @@ controllers:
     apiaddr: "0.0.0.0:55001"
     httpaddr: "0.0.0.0:36001"
     notifyaddr: "{{vm1_internal_ip}}:37001"
+    tls:
+       servercert: "{{tlsoutdir}}/bonn_vm1.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
 
 dmes:
@@ -75,7 +86,13 @@ dmes:
     locverurl: "http://{{vm1_internal_ip}}:8888"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
+    tls:
+       servercert: "{{tlsoutdir}}/bonn_vm1.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
+  envvars:
+     - LOCAPI_USER: mexserver
+     - LOCAPI_PASSWD: seC2835!
 
 crms:
 - crmlocal:
@@ -83,4 +100,7 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    tls:
+       servercert: "{{tlsoutdir}}/bonn_vm1.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
