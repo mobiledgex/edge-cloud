@@ -8,7 +8,7 @@ cloudflare:
   records: 
   - name: mexdemo.dme.mobiledgex.net
     type: A
-    content: 40.122.71.185
+    content: 104.43.212.22
   - name: mexdemo.tok.mobiledgex.net
     type: A
     content: 40.113.219.126
@@ -17,13 +17,13 @@ cloudflare:
     content: 40.113.219.126
   - name: mexdemo.ctrl.mobiledgex.net
     type: A
-    content: 104.43.221.230
+    content: 168.61.185.109
   - name: mexdemo.ctrl-http.mobiledgex.net
     type: A
     content: 40.122.29.67
   - name: mexdemo.ctrl-not.mobiledgex.net
     type: A
-    content: 40.113.245.183
+    content: 104.43.211.39
   - name: mobiledgexsdkdemo.centraluscloudlet.tdg.mobiledgex.net
     type: A
     content: 40.113.219.126
@@ -34,37 +34,26 @@ cloudflare:
     type: A
     content: 37.50.143.101
 
-k8s-deployment:
+tlscerts:
+- commonname: mexdemo
+  dnsnames:
+    - controller
+    - controller-notify
+    - mobiledgexsdkdemo.centraluscloudlet.tdg.mobiledgex.net
+    - mobiledgexsdkdemo.westuscloudlet.tdg.mobiledgex.net
+    - mobiledgexsdkdemo.bonncloudlet.tdg.mobiledgex.net
+    - mexdemo.ctrl.mobiledgex.net
+    - mexdemo.ctrl-http.mobiledgex.net
+    - mexdemo.ctrl-not.mobiledgex.net
+    - mexdemo.dme.mobiledgex.net 
 
+
+k8s-deployment:
    - file: rbac.yml
      description: setup permissions for service account
 
    - file: mex-secret.yml
      description: secret used to access private repo
-
-#   - file: mex-locsim-deploy.yml
-#     description: create a location api simulator
-#     waitforpods:
-#     - podname: locsim
-#       podcount: 1
-#       maxwait: 180 
-#     copyfile:
-#       podname: locsim
-#      src: ../data/locsim.yml
-#      dest: /var/tmp
-
-#   - file: mex-locsim-lb.yml
-#     description: create locsim load balancer for external access
-     
-#   - file: mex-toksrv-deploy.yml
-#     description: create token service simulator
-#     waitforpods:
-#     - podname: toksrv
-#       podcount: 1
-#       maxwait: 180
-
-#   - file: mex-toksrv-lb.yml
-#     description: create a load balancer for token service
 
    - file: etcd-operator.yml
      description: create an operator deployment to manage etcd
@@ -117,22 +106,32 @@ k8s-deployment:
         podcount: 1
         maxwait: 180
 
-#   - file: mecrm-deploy-bonn.yml
-#     description: deploys the cluster in bonn
-#     waitforpods:
-#      - podname: crmbonn
-#        podcount: 1
-#        maxwait: 180
+   - file: mex-crm-deploy-bonn.yml
+     description: deploys the cluster in bonn
+     waitforpods:
+      - podname: crmbonn
+        podcount: 1
+        maxwait: 180
+
 
 controllers:
 - controllerlocal:
     name: ctrl-pool
+    tls:
+       servercert: "{{tlsoutdir}}/mexdemo.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
 
 dmes:
 - dmelocal:
     name: dme-pool
     carrier: tdg
+    tls:
+       servercert: "{{tlsoutdir}}/mexdemo.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
 
 crms:
  - crmlocal:
      name: crm-pool
+     tls:
+       servercert: "{{tlsoutdir}}/mexdemo.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"

@@ -138,10 +138,13 @@ func DeployK8sServices(directory string) error {
 				return err
 			}
 		}
-		if k.CopyFile.PodName != "" {
-			err := copyFileToPods(k.CopyFile.PodName, directory+"/"+k.CopyFile.Src, k.CopyFile.Dest)
-			if err != nil {
-				return err
+		if len(k.CopyFiles) > 0 {
+			for _, f := range k.CopyFiles {
+				log.Printf("copying file: %s to %s\n", f.Src, f.Dest)
+				err := copyFileToPods(f.PodName, directory+"/"+f.Src, f.Dest)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

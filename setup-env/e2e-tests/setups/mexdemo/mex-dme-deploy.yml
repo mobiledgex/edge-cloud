@@ -30,8 +30,14 @@ spec:
          - "--d"
          - "locapi,dmedb,dmereq"
          - "--toksrvurl"
-         - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc"
-
+         - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
+         - "--tls"
+         - "/root/tls/mexdemo.crt"
+        env:
+         - name: LOCAPI_USER
+           value: mexserver
+         - name: LOCAPI_PASSWD
+           value: seC2835!
          
       imagePullSecrets:
        - name: mexreg-secret 

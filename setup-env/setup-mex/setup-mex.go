@@ -152,6 +152,27 @@ func getExternalApiAddress(internalApiAddr string, externalHost string) string {
 	return externalHost + ":" + strings.Split(internalApiAddr, ":")[1]
 }
 
+// if there is a DNS address configured we will use that.  Required because TLS certs
+// are generated against the DNS name if one is available.
+func getDNSNameForAddr(addr string) string {
+	//split the port off
+
+	ss := strings.Split(addr, ":")
+	if len(ss) < 2 {
+		return addr
+	}
+	a := ss[0]
+	p := ss[1]
+
+	for _, r := range util.Deployment.Cloudflare.Records {
+		if r.Content == a {
+			return r.Name + ":" + p
+		}
+	}
+	// no record found, just use the add
+	return addr
+}
+
 //in cloud deployments, the internal address the controller listens to may be different than the
 //external address which clients need to use as floating IPs are used.  So use the external
 //hostname and api port when connecting to the API.  This needs to be done after startup
@@ -169,6 +190,7 @@ func UpdateAPIAddrs() bool {
 				fmt.Fprintf(os.Stderr, "unable to get controller service ")
 				return false
 			}
+			addr = getDNSNameForAddr(addr)
 			util.Deployment.Controllers[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Dmes) > 0 {
@@ -177,6 +199,7 @@ func UpdateAPIAddrs() bool {
 				fmt.Fprintf(os.Stderr, "unable to get dme service ")
 				return false
 			}
+			addr = getDNSNameForAddr(addr)
 			util.Deployment.Dmes[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Crms) > 0 {
@@ -192,6 +215,7 @@ func UpdateAPIAddrs() bool {
 					return false
 				}
 			}
+			addr = getDNSNameForAddr(addr)
 			util.Deployment.Crms[0].ApiAddr = addr
 		}
 	} else {
