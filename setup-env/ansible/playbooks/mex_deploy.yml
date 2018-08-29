@@ -11,6 +11,12 @@
        state: directory
        path: "{{ remote_log_path }}"
   
+  - name: copy mex-ca.crt
+    copy: 
+      src: "{{ tlsoutdir }}/mex-ca.crt"
+      dest: "{{ remote_log_path }}"
+      mode: 0444
+  
 - name: deploy binary to remote controllers
   gather_facts: yes
   user: root
@@ -18,6 +24,7 @@
 
   vars_files:
   - mex_vars.yml
+  - "{{ setupfile }}"
 
   tasks:
   - name: copy controller binary
@@ -26,6 +33,18 @@
        dest: "{{ remote_bin_path }}" 
        mode: 0755
 
+  - name: copy tls cert
+    copy:
+       src: "{{ controllers[0].controllerlocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+
+  - name: copy tls key
+    copy:
+       src: "{{ (controllers[0].controllerlocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
+
 - name: deploy binary to remote crms
   gather_facts: yes
   user: root
@@ -33,6 +52,7 @@
 
   vars_files:
   - mex_vars.yml
+  - "{{ setupfile }}"
 
   tasks:
   - name: copy crm binary
@@ -41,6 +61,19 @@
        dest: "{{ remote_bin_path }}"
        mode: 0755
 
+  - name: copy tls cert
+    copy:
+       src: "{{ crms[0].crmlocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+  
+  - name: copy tls key
+    copy:
+       src: "{{ (crms[0].crmlocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
+
+
 - name: deploy binary to remote dmes
   gather_facts: yes
   user: root
@@ -48,6 +81,7 @@
 
   vars_files:
   - mex_vars.yml
+  - "{{ setupfile }}"
 
   tasks:
   - name: copy dme-server binary
@@ -56,6 +90,17 @@
        dest: "{{ remote_bin_path }}"
        mode: 0755
 
+  - name: copy tls cert
+    copy:
+       src: "{{ dmes[0].dmelocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+  
+  - name: copy tls key
+    copy:
+       src: "{{ (dmes[0].dmelocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
 
 - name: deploy binary to remote locsims
   gather_facts: yes

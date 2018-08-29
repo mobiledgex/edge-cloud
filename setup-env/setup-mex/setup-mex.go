@@ -8,18 +8,23 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
-
 	yaml "gopkg.in/yaml.v2"
 )
 
 var apiAddrsUpdated = false
+
+//root TLS Dir
+var tlsDir = ""
+
+//outout TLS cert dir
+var tlsOutDir = ""
 
 //when first creating a cluster, it may take a while for the load balancer to get an IP. Usually
 // this happens much faster, but occasionally it takes longer
@@ -186,8 +191,14 @@ func ReadSetupFile(setupfile string, dataDir string) bool {
 	var replacementVars util.YamlReplacementVariables
 	util.DeploymentReplacementVars = ""
 
-	//{{tlsoutdir}} is relative to the setupdir.
-	tlsOutDir := path.Dir(setupfile) + "/../../../tls/out"
+	//{{tlsoutdir}} is relative to the GO dir.
+	goPath := os.Getenv("GOPATH")
+	if goPath == "" {
+		fmt.Fprintf(os.Stderr, "GOPATH not set, cannot calculate tlsoutdir")
+		return false
+	}
+	tlsDir = goPath + "/src/github.com/mobiledgex/edge-cloud/tls"
+	tlsOutDir = tlsDir + "/out"
 	varlist = append(varlist, "tlsoutdir="+tlsOutDir)
 
 	if dataDir != "" {
@@ -484,6 +495,70 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	return invfile.Name(), foundServer
 }
 
+// CleanupTLSCerts . Deletes certs for a CN
+func CleanupTLSCerts() error {
+	if len(util.Deployment.TLSCerts) == 0 {
+		//nothing to do
+		return nil
+	}
+	for _, t := range util.Deployment.TLSCerts {
+		patt := tlsOutDir + "/" + t.CommonName + ".*"
+		log.Printf("Removing [%s]\n", patt)
+
+		files, err := filepath.Glob(patt)
+		if err != nil {
+			return err
+		}
+		for _, f := range files {
+			if err := os.Remove(f); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// GenerateTLSCerts . create tls certs using certstrap.  This requires certstrap binary to be installed.  We can eventually
+// do this programmatically but certstrap has some dependency problems that require manual package workarounds
+// and so will use the command for now so as not to break builds.
+func GenerateTLSCerts() error {
+	if len(util.Deployment.TLSCerts) == 0 {
+		//nothing to do
+		return nil
+	}
+	for _, t := range util.Deployment.TLSCerts {
+
+		var cmdargs = []string{"--depot-path", tlsOutDir, "request-cert", "--passphrase", "", "--common-name", t.CommonName}
+		if len(t.DNSNames) > 0 {
+			cmdargs = append(cmdargs, "--domain", strings.Join(t.DNSNames, ","))
+		}
+		if len(t.IPs) > 0 {
+			cmdargs = append(cmdargs, "--ip", strings.Join(t.IPs, ","))
+		}
+
+		cmd := exec.Command("certstrap", cmdargs[0:]...)
+		output, err := cmd.CombinedOutput()
+		log.Printf("Certstrap Request Cert cmdargs: %v output:\n%v\n", cmdargs, string(output))
+		if err != nil {
+			if strings.HasPrefix(string(output), "Certificate request has existed") {
+				// this is ok
+			} else {
+				return err
+			}
+		}
+
+		cmd = exec.Command("certstrap", "--depot-path", tlsOutDir, "sign", "--CA", "mex-ca", t.CommonName)
+		output, err = cmd.CombinedOutput()
+		log.Printf("Certstrap Sign Cert cmdargs: %v output:\n%v\n", cmdargs, string(output))
+		if strings.HasPrefix(string(output), "Certificate has existed") {
+			// this is ok
+		} else {
+			return err
+		}
+	}
+	return nil
+}
+
 func getCloudflareUserAndKey() (string, string) {
 	user := os.Getenv("MEX_CF_USER")
 	apikey := os.Getenv("MEX_CF_KEY")
@@ -724,9 +799,17 @@ func StartProcesses(processName string, outputDir string) bool {
 			continue
 		}
 		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
+			for _, e := range dme.EnvVars {
+				for k, v := range e {
+					//doing it this way means the variable is set for other commands too.
+					// Not ideal but not problematic, and only will happen on local process deploy
+					os.Setenv(k, v)
+				}
+			}
+
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name, outputDir)
-			err := dme.Start(logfile, process.WithDebug("dmelocapi,dmedb,dmereq"))
+			err := dme.Start(logfile, process.WithDebug("locapi,dmedb,dmereq"))
 			if err != nil {
 				log.Printf("Error on DME startup: %v", err)
 				return false

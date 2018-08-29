@@ -2,9 +2,13 @@ package dmelocapi
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"strconv"
 
 	"github.com/mobiledgex/edge-cloud/log"
 
@@ -14,7 +18,7 @@ import (
 )
 
 type LocationResponseMessage struct {
-	LocationResult uint32 `json:"locresult"`
+	MatchingDegree string `json:"matchingDegree"`
 	Error          string `json:"error"`
 }
 
@@ -24,10 +28,15 @@ type LocationRequestMessage struct {
 	Lat       float64       `json:"latitude" yaml:"lat"`
 	Long      float64       `json:"longitude" yaml:"long"`
 	Token     util.GDDTToken `json:"token" yaml:"token"`
-	Ipaddress string        `json:"ipaddr" yaml:"ipaddr"`
+	Ipaddress string        `json:"ipaddr,omitempty" yaml:"ipaddr"`
 }
 
-//REST API client for the GDDT implementation of Location verification API
+func basicAuth(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+// CallGDDTLocationVerifyAPI REST API client for the GDDT implementation of Location verification API
 func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string) dmecommon.LocationResult {
 
 	var lrm LocationRequestMessage
@@ -35,9 +44,33 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 	lrm.Long = long
 	lrm.Token = util.GDDTToken(token)
 
-	b, _ := json.Marshal(lrm)
+	b, err := json.Marshal(lrm)
+	if err != nil {
+		log.WarnLog("error in json mashal of request", "err", err)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+	}
+
 	body := bytes.NewBufferString(string(b))
-	resp, err := http.Post(locVerUrl, "application/json", body)
+	req, err := http.NewRequest("POST", locVerUrl, body)
+
+	if err != nil {
+		log.WarnLog("error in http.NewRequest", "err", err)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+	}
+	req.Header.Add("Content-Type", "application/json")
+	username := os.Getenv("LOCAPI_USER")
+	password := os.Getenv("LOCAPI_PASSWD")
+
+	if username != "" {
+		log.DebugLog(log.DebugLevelLocapi, "adding auth header", "username", username)
+		req.Header.Add("Authorization", "Basic "+basicAuth(username, password))
+	} else {
+		log.DebugLog(log.DebugLevelLocapi, "no auth credentials")
+	}
+	client := &http.Client{}
+	log.DebugLog(log.DebugLevelLocapi, "sending to api gw", "body:", body)
+
+	resp, err := client.Do(req)
 
 	if err != nil {
 		log.WarnLog("Error in POST to GDDT Loc service error", "error", err)
@@ -63,25 +96,33 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 	}
 
 	respBytes, resperr := ioutil.ReadAll(resp.Body)
+
 	if resperr != nil {
 		log.WarnLog("Error read response body", "resperr", resperr)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 	var lrmResp LocationResponseMessage
 
+	//resp = string(respBytes)
 	err = json.Unmarshal(respBytes, &lrmResp)
 	if err != nil {
-		log.WarnLog("Error unmarshall response", "respByes", respBytes, "err", err)
+		log.WarnLog("Error unmarshall response", "respBytes", respBytes, "err", err)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
 
-	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "locationResult:", lrmResp.LocationResult)
+	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "match degree:", lrmResp.MatchingDegree)
 	if lrmResp.Error != "" {
 		log.WarnLog("Error received in token response", "err", lrmResp.Error)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
 	}
+	l, err := strconv.ParseInt(lrmResp.MatchingDegree, 10, 32)
+	if err != nil {
+		log.WarnLog("Error in LocationResult", "LocationResult", lrmResp.MatchingDegree, "err", err)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+	}
+	rc := dmecommon.GetDistanceAndStatusForLocationResult(uint32(l))
+	fmt.Printf("6666 %v %v", l, rc)
 
-	rc := dmecommon.GetDistanceAndStatusForLocationResult(lrmResp.LocationResult)
 	log.DebugLog(log.DebugLevelLocapi, "Returning result", "Location Result", rc)
 
 	return rc

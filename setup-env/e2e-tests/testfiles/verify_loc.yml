@@ -2,6 +2,7 @@
 description: executes matching engine request for verify location using jims location and then with central dallas and then Australia. Verify results
 
 tests:
+- includefile: register.yml
 
 - name: Add and show provisioning
   apifile: "{{datadir}}/appdata.yml"
