@@ -34,3 +34,33 @@ enum L4Proto {
   // UDP protocol
   L4ProtoUDP = 2;
 }
+
+// TrackedState is used to track the state of an object on a remote node,
+// i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
+enum TrackedState {
+  // Unknown state
+  TrackedStateUnknown = 0;
+  // Not present (does not exist)
+  NotPresent = 1;
+  // Create requested
+  CreateRequested = 2;
+  // Creating
+  Creating = 3;
+  // Create error
+  CreateError = 4;
+  // Ready
+  Ready = 5;
+  // Update requested
+  UpdateRequested = 6;
+  // Updating
+  Updating = 7;
+  // Update error
+  UpdateError = 8;
+  // Delete requested
+  DeleteRequested = 9;
+  // Deleting
+  Deleting = 10;
+  // Delete error
+  DeleteError = 11;
+}
+  

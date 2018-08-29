@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
@@ -69,10 +70,14 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.FlavorCache.Update(&testutil.FlavorData[0], 0)
 	top.handler.FlavorCache.Update(&testutil.FlavorData[1], 0)
 	top.handler.FlavorCache.Update(&testutil.FlavorData[2], 0)
+	// set ClusterInst and AppInst state to CreateRequested so they get
+	// sent to the CRM.
 	for ii, _ := range testutil.ClusterInstData {
+		testutil.ClusterInstData[ii].State = edgeproto.TrackedState_CreateRequested
 		top.handler.ClusterInstCache.Update(&testutil.ClusterInstData[ii], 0)
 	}
 	for ii, _ := range testutil.AppInstData {
+		testutil.AppInstData[ii].State = edgeproto.TrackedState_CreateRequested
 		top.handler.AppInstCache.Update(&testutil.AppInstData[ii], 0)
 	}
 	top.handler.CloudletCache.Update(&testutil.CloudletData[0], 0)

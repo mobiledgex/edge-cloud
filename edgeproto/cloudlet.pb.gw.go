@@ -28,7 +28,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_CreateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -36,12 +36,20 @@ func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreateCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_DeleteCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -49,12 +57,20 @@ func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.DeleteCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_UpdateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -62,8 +78,16 @@ func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.UpdateCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -193,7 +217,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_CreateCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_CreateCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -222,7 +246,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_DeleteCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_DeleteCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -251,7 +275,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_UpdateCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_UpdateCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -298,11 +322,11 @@ var (
 )
 
 var (
-	forward_CloudletApi_CreateCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_CreateCloudlet_0 = runtime.ForwardResponseStream
 
-	forward_CloudletApi_DeleteCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_DeleteCloudlet_0 = runtime.ForwardResponseStream
 
-	forward_CloudletApi_UpdateCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_UpdateCloudlet_0 = runtime.ForwardResponseStream
 
 	forward_CloudletApi_ShowCloudlet_0 = runtime.ForwardResponseStream
 )

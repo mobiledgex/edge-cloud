@@ -1016,7 +1016,7 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 {{- end}}
 
 {{if ne (.WaitForState) ("")}}
-func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, timeout time.Duration, successMsg string, send func(*Result) error) error {
+func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
 	curState := {{.WaitForState}}_{{.WaitForState}}Unknown
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
@@ -1027,14 +1027,14 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		if c.Get(key, &info) {
 			curState = info.State
 		} else {
-			curState = {{.WaitForState}}_{{.WaitForState}}NotPresent
+			curState = {{.WaitForState}}_NotPresent
 		}
 		if send != nil {
 			msg := {{.WaitForState}}_name[int32(curState)]
 			send(&Result{Message: msg})
 		}
 		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_name[int32(curState)])
-		if curState == {{.WaitForState}}_{{.WaitForState}}Errors {
+		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
 			done <- true
@@ -1046,7 +1046,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	if c.Get(key, &info) {
 		curState = info.State
 	} else {
-		curState = {{.WaitForState}}_{{.WaitForState}}NotPresent
+		curState = {{.WaitForState}}_NotPresent
 	}
 	if curState == targetState {
 		done <- true
@@ -1071,7 +1071,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	case <-time.After(timeout):
 		hasInfo := c.Get(key, &info)
-		if hasInfo && info.State == {{.WaitForState}}_{{.WaitForState}}Errors {
+		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
 			err = fmt.Errorf("Encountered failures: %v", info.Errors)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
@@ -1079,7 +1079,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}}Info to check current status", {{.WaitForState}}_name[int32(info.State)])
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_name[int32(info.State)])
 			send(&Result{Message: msg})
 			err = nil
 		} else {
@@ -1173,6 +1173,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
 		if args.WaitForState != "" {
+			m.importErrors = true
 			m.importTime = true
 		}
 	}

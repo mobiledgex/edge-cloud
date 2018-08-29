@@ -41,6 +41,7 @@ var AppInstInLiveness string
 var AppInstInImageType string
 var AppInstInMappedPortsProto string
 var AppInstInAccessLayer string
+var AppInstInState string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
@@ -48,16 +49,6 @@ var AppInstInfoInState string
 var AppInstMetricsIn edgeproto.AppInstMetrics
 var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError)
 var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
-var AppStateStrings = []string{
-	"AppStateUnknown",
-	"AppStateBuilding",
-	"AppStateReady",
-	"AppStateErrors",
-	"AppStateDeleting",
-	"AppStateDeleted",
-	"AppStateChanging",
-	"AppStateNotPresent",
-}
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s := make([]string, 0, 3)
@@ -144,7 +135,7 @@ func AppPortWriteOutputOne(obj *edgeproto.AppPort) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 15)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -184,11 +175,16 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Config)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
+	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 15)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -218,6 +214,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Config")
 	s = append(s, "Flavor-Name")
 	s = append(s, "AccessLayer")
+	s = append(s, "State")
+	s = append(s, "Errors")
 	return s
 }
 
@@ -257,7 +255,7 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.AppState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -348,6 +346,12 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Uri = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.State = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Errors = nil
 	}
 }
 
@@ -613,6 +617,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Config, "config", "", "Config")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
+	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -620,7 +625,7 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [AppStateUnknown AppStateBuilding AppStateReady AppStateErrors AppStateDeleting AppStateDeleted AppStateChanging AppStateNotPresent]")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -734,6 +739,12 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("accesslayer").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "13")
 	}
+	if AppInstFlagSet.Lookup("state").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "14")
+	}
+	if AppInstFlagSet.Lookup("errors").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "15")
+	}
 }
 
 func AppInstInfoSetFields() {
@@ -818,28 +829,66 @@ func parseAppInstEnums() error {
 			return errors.New("Invalid value for AppInstInAccessLayer")
 		}
 	}
+	if AppInstInState != "" {
+		switch AppInstInState {
+		case "TrackedStateUnknown":
+			AppInstIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			AppInstIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			AppInstIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			AppInstIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			AppInstIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			AppInstIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			AppInstIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			AppInstIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			AppInstIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			AppInstIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			AppInstIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			AppInstIn.State = edgeproto.TrackedState(11)
+		default:
+			return errors.New("Invalid value for AppInstInState")
+		}
+	}
 	return nil
 }
 
 func parseAppInstInfoEnums() error {
 	if AppInstInfoInState != "" {
 		switch AppInstInfoInState {
-		case "AppStateUnknown":
-			AppInstInfoIn.State = edgeproto.AppState(0)
-		case "AppStateBuilding":
-			AppInstInfoIn.State = edgeproto.AppState(1)
-		case "AppStateReady":
-			AppInstInfoIn.State = edgeproto.AppState(2)
-		case "AppStateErrors":
-			AppInstInfoIn.State = edgeproto.AppState(3)
-		case "AppStateDeleting":
-			AppInstInfoIn.State = edgeproto.AppState(4)
-		case "AppStateDeleted":
-			AppInstInfoIn.State = edgeproto.AppState(5)
-		case "AppStateChanging":
-			AppInstInfoIn.State = edgeproto.AppState(6)
-		case "AppStateNotPresent":
-			AppInstInfoIn.State = edgeproto.AppState(7)
+		case "TrackedStateUnknown":
+			AppInstInfoIn.State = edgeproto.TrackedState(0)
+		case "NotPresent":
+			AppInstInfoIn.State = edgeproto.TrackedState(1)
+		case "CreateRequested":
+			AppInstInfoIn.State = edgeproto.TrackedState(2)
+		case "Creating":
+			AppInstInfoIn.State = edgeproto.TrackedState(3)
+		case "CreateError":
+			AppInstInfoIn.State = edgeproto.TrackedState(4)
+		case "Ready":
+			AppInstInfoIn.State = edgeproto.TrackedState(5)
+		case "UpdateRequested":
+			AppInstInfoIn.State = edgeproto.TrackedState(6)
+		case "Updating":
+			AppInstInfoIn.State = edgeproto.TrackedState(7)
+		case "UpdateError":
+			AppInstInfoIn.State = edgeproto.TrackedState(8)
+		case "DeleteRequested":
+			AppInstInfoIn.State = edgeproto.TrackedState(9)
+		case "Deleting":
+			AppInstInfoIn.State = edgeproto.TrackedState(10)
+		case "DeleteError":
+			AppInstInfoIn.State = edgeproto.TrackedState(11)
 		default:
 			return errors.New("Invalid value for AppInstInfoInState")
 		}
