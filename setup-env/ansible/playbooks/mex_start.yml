@@ -64,7 +64,7 @@
 
   - name: set creds from variables
     set_fact:
-        envvar:  "{% if dmes[0].envvars[0]['LOCAPI_USER'] is defined %} export LOCAPI_USER={{ dmes[0].envvars[0]['LOCAPI_USER'] }} LOCAPI_PASSWD={{ dmes[0].envvars[1]['LOCAPI_PASSWD']}}  {% else %} true {% endif %}" 
+        envvar:  "{% if dmes[0].envvars|length > 1 and dmes[0].envvars[0]['LOCAPI_USER'] is defined %} export LOCAPI_USER={{ dmes[0].envvars[0]['LOCAPI_USER'] }} LOCAPI_PASSWD={{ dmes[0].envvars[1]['LOCAPI_PASSWD']}}  {% else %} true {% endif %}" 
 
   - name: start up dme-server process
     shell: "{{ envvar }} && nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} {{ tlsopt }} -d locapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"

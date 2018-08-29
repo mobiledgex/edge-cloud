@@ -27,6 +27,8 @@ spec:
          - "0.0.0.0:37001"
          - "--etcdUrls"  
          - "mex-etcd-cluster:2379"
+         - "--tls"
+         - "/root/tls/mexdemo.crt"
 
       imagePullSecrets:
        - name: mexreg-secret 
