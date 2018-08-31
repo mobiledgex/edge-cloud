@@ -12,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 public class AddUserToGroup implements Callable {

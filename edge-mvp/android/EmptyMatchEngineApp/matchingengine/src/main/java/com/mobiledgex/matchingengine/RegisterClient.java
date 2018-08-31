@@ -2,8 +2,6 @@ package com.mobiledgex.matchingengine;
 
 import android.util.Log;
 
-import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
-
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -11,15 +9,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocketFactory;
-
 import distributed_match_engine.AppClient;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
-import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import io.grpc.okhttp.OkHttpChannelBuilder;
 
 public class RegisterClient implements Callable {
     public static final String TAG = "RegisterClient";
