@@ -258,6 +258,9 @@ func ReadSetupFile(setupfile string, dataDir string) bool {
 	tlsOutDir = tlsDir + "/out"
 	varlist = append(varlist, "tlsoutdir="+tlsOutDir)
 
+	setupdir := filepath.Dir(setupfile)
+	varlist = append(varlist, "setupdir="+setupdir)
+
 	if dataDir != "" {
 		varlist = append(varlist, "datadir="+dataDir)
 	}

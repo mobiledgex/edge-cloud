@@ -33,6 +33,14 @@ cloudflare:
   - name: mobiledgexsdkdemo.bonncloudlet.tdg.mobiledgex.net
     type: A
     content: 37.50.143.101
+  - name: mobiledgexsdkdemo.azcentraluscloudlet.azure.mobiledgex.net
+    type: A
+    content: 40.113.226.72
+  - name: mobiledgexsdkdemo.aznortheuropecloudlet.azure.mobiledgex.net
+    type: A
+    content: 40.112.91.229
+
+
 
 tlscerts:
 - commonname: mexdemo
@@ -45,7 +53,10 @@ tlscerts:
     - mexdemo.ctrl.mobiledgex.net
     - mexdemo.ctrl-http.mobiledgex.net
     - mexdemo.ctrl-not.mobiledgex.net
-    - mexdemo.dme.mobiledgex.net 
+    - mexdemo.dme.mobiledgex.net
+  ips:
+    - 127.0.0.1
+    - 0.0.0.0
 
 
 k8s-deployment:

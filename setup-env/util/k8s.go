@@ -53,7 +53,7 @@ func CreateK8sCluster() error {
 }
 
 func DeleteK8sCluster() error {
-	return runCommand("delete", "mex", "cluster", "delete", "-manifest", Deployment.Cluster.MexManifest)
+	return runCommand("delete", "mex", "cluster", "remove", "-manifest", Deployment.Cluster.MexManifest)
 }
 
 func runCommand(actionType string, command string, args ...string) error {

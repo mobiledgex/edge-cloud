@@ -14,9 +14,14 @@ spec:
       labels:
         app: crmcentralus
     spec:
+      hostAliases:
+       - ip: "37.50.143.121"
+         hostnames:
+         - "fmbncisrs101.tacn.detemobil.de"
       containers:
       - name: crmcentralus
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        imagePullPolicy: Always
         env:
          - name: MEX_CF_USER
            value: bob.bae@gmail.com
@@ -28,19 +33,29 @@ spec:
            value: sandhill
          - name: MEX_DIR
            value: /root/.mobiledgex
+         - name: OS_AUTH_URL
+           value: https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
+         - name: OS_CACERT
+           value: /root/.mobiledgex/haproxy-ca.crt
+         - name: OS_USERNAME
+           value: mexadmin
+         - name: OS_PASSWORD
+           value: MEX$Admin12345
+         - name: OS_REGION_NAME
+           value: RegionOne
+         - name: OS_TENANT_NAME
+           value: MEX
+         - name: OS_TENANT_ID
+           value: fbeaf83f155445cdb6cb3a1a6e067be5
+         - name: OS_ENDPOINT_TYPE
+           value: publicURL
+         - name: OS_IDENTITY_API_VERSION
+           value: "2"
         command:
-         - crmserver
+         - bash 
         args:
-         - "--apiAddr"
-         - "0.0.0.0:55091"
-         - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}"
-         - "--notifyAddrs"
-         - "controller-notify:37001"
-         - "--tls"
-         - "/root/tls/mexdemo.crt"
-         - "--d"
-         - "mexos"
+         - "-c"
+         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller-notify:37001 --tls /root/tls/mexdemo.crt --d mexos"
       imagePullSecrets:
        - name: mexreg-secret 
 
