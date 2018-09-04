@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/ghodss/yaml"
@@ -77,25 +78,50 @@ func fillClusterTemplateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.Clus
 		Operator:      clusterInst.Key.CloudletKey.OperatorKey.Name,
 		Key:           clusterInst.Key.ClusterKey.Name,
 		Kind:          clusterInst.Flavor.Name,
-		ResourceGroup: clusterInst.Key.ClusterKey.Name,
+		ResourceGroup: clusterInst.Key.CloudletKey.Name + "_" + clusterInst.Key.ClusterKey.Name,
 		Flavor:        clusterInst.Flavor.Name,
 		RootLB:        rootLB.Name,
 		NetworkScheme: "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
 	}
+
+	// if these env variables are not set, fall back to the
+	// existing defaults based on deployment type(operator name)
+	data.Region = os.Getenv("CLOUDLET_REGION")
+	data.Zone = os.Getenv("CLOUDLET_ZONE")
+	data.Location = os.Getenv("CLOUDLET_LOCATION")
+
 	switch clusterInst.Key.CloudletKey.OperatorKey.Name {
 	case "gcp":
-		data.Region = "us-west1"
-		data.Zone = "us-west1-a"
-		data.Location = "us-west"
+		if data.Region == "" {
+			data.Region = "us-west1"
+		}
+		if data.Zone == "" {
+			data.Zone = "us-west1-a"
+		}
+		if data.Location == "" {
+			data.Location = "us-west"
+		}
 		data.Project = "still-entity-201400" // XXX
 	case "azure":
-		data.Region = "centralus"
-		data.Zone = "centralus"
-		data.Location = "centralus"
+		if data.Region == "" {
+			data.Region = "centralus"
+		}
+		if data.Zone == "" {
+			data.Zone = "centralus"
+		}
+		if data.Location == "" {
+			data.Location = "centralus"
+		}
 	default:
-		data.Region = "eu-central-1"
-		data.Zone = "eu-central-1c"
-		data.Location = "bonn"
+		if data.Region == "" {
+			data.Region = "eu-central-1"
+		}
+		if data.Zone == "" {
+			data.Zone = "eu-central-1c"
+		}
+		if data.Location == "" {
+			data.Location = "bonn"
+		}
 	}
 	mf, err := templateUnmarshal(&data, yamlMEXCluster)
 	if err != nil {
@@ -132,6 +158,8 @@ func azureCreateAKS(mf *Manifest) error {
 	if err = azure.CreateAKSCluster(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 		return err
 	}
+        //race condition exists where the config file is not ready until just after the cluster create is done
+	time.Sleep(3 * time.Second)
 	saveKubeconfig()
 	if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 		return err

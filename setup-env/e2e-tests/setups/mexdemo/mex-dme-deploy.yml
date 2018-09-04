@@ -17,6 +17,7 @@ spec:
       containers:
       - name: dme
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        imagePullPolicy: Always
         command:
          - "dme-server"
          - "--apiAddr"

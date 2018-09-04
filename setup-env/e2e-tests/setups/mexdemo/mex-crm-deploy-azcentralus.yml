@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmwestus
+  name: crmazcentralus
   labels:
-    app: crmwestus
+    app: crmazcentralus
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmwestus
+      app: crmazcentralus
   template:
     metadata:
       labels:
-        app: crmwestus
+        app: crmazcentralus
     spec:
       hostAliases:
        - ip: "37.50.143.121"
          hostnames:
          - "fmbncisrs101.tacn.detemobil.de"
       containers:
-      - name: crmwestus
+      - name: crmazcentralus
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
         imagePullPolicy: Always
         env:
@@ -51,11 +51,17 @@ spec:
            value: publicURL
          - name: OS_IDENTITY_API_VERSION
            value: "2"
+         - name: CLOUDLET_REGION
+           value: centralus
+         - name: CLOUDLET_ZONE
+           value: centralus
+         - name: CLOUDLET_LOCATION
+           value: centralus
         command:
          - bash 
         args:
          - "-c"
-         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"westuscloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller-notify:37001 --tls /root/tls/mexdemo.crt --d mexos"
+         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"azcentraluscloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller-notify:37001 --tls /root/tls/mexdemo.crt --d mexos"
       imagePullSecrets:
        - name: mexreg-secret 
 
