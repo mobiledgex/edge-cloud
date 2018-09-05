@@ -9,7 +9,7 @@ type VerifyLocRR struct {
 
 const Unknown = dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
 const Verified = dme.Match_Engine_Loc_Verify_LOC_VERIFIED
-const Mismatch = dme.Match_Engine_Loc_Verify_LOC_MISMATCH
+const Mismatch = dme.Match_Engine_Loc_Verify_LOC_MISMATCH_SAME_COUNTRY
 const ErrorOther = dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER
 
 // VerifyLocation API test data.

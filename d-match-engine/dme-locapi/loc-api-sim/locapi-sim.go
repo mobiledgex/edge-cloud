@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AsGz/geo/georeverse"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmelocapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	locutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
@@ -22,6 +23,8 @@ import (
 
 var locations map[string]dme.Loc
 
+//var countries map[string]string
+
 var (
 	locport     = flag.Int("port", 8080, "listen port")
 	indexpath   = "/"
@@ -29,10 +32,13 @@ var (
 	showlocpath = "/showLocations"
 	updatepath  = "/updateLocation"
 
-	locdbfile = flag.String("file", "/var/tmp/locapisim.yml", "file of IP to location mappings")
+	locdbfile   = flag.String("file", "/var/tmp/locapisim.yml", "file of IP to location mappings")
+	geofile     = flag.String("geo", "", "geocoder db file")
+	homeCountry = flag.String("country", "US", "Home Country")
 )
 
 var locdbLastUpdate = int64(0)
+var countryReverser *georeverse.CountryReverser
 
 func printUsage() {
 	fmt.Println("\nUsage: \nlocsim [options]\n\noptions:")
@@ -45,6 +51,12 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 	rc += "/updateLocation -- adds or replaces an IP->location entry\n"
 	rc += "/showLocations -- shows current locations\n"
 	w.Write([]byte(rc))
+}
+
+func getCountryCode(long, lat float64) string {
+	cc := countryReverser.GetCountryCode(long, lat)
+	fmt.Printf("Got country code %s for lat %f long %f\n", cc, lat, long)
+	return cc
 }
 
 func checkForLocUpdate() {
@@ -166,6 +178,30 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 			log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
 			d := dmecommon.DistanceBetween(reqLoc, foundLoc)
 			resp.MatchingDegree = fmt.Sprintf("%d", (dmecommon.GetLocationResultForDistance(d)))
+
+			if *geofile != "" {
+				reqCC := countryReverser.GetCountryCode(req.Long, req.Lat)
+				realCC := countryReverser.GetCountryCode(foundLoc.Long, foundLoc.Lat)
+				log.Printf("country codes req: [%s] real [%s] home [%s]\n", reqCC, realCC, *homeCountry)
+				ccMismatch := false
+				if reqCC != realCC && reqCC != "" && realCC != "" {
+					ccMismatch = true
+					log.Printf("mismatched country code\n")
+				}
+				if reqCC != *homeCountry {
+					// roaming
+					if ccMismatch {
+						resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationRoamingCountryMismatch)
+					} else {
+						resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationRoamingCountryMatch)
+					}
+				} else {
+					//non roaming
+					if ccMismatch {
+						resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationMismatchOtherCountry)
+					}
+				}
+			}
 			log.Printf("calculated distance: %v km\n match degree: %s", int(d), resp.MatchingDegree)
 		}
 	}
@@ -203,6 +239,13 @@ func run() {
 
 	portstr := fmt.Sprintf(":%d", *locport)
 
+	if *geofile != "" {
+		var err error
+		countryReverser, err = georeverse.NewCountryReverser(*geofile)
+		if err != nil {
+			panic(err)
+		}
+	}
 	log.Printf("Listening on http://127.0.0.1:%d", *locport)
 	if err := http.ListenAndServe(portstr, nil); err != nil {
 		panic(err)
