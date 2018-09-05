@@ -15,6 +15,8 @@ locsims:
     name: locsim1
     port: 8888
     locfile: "{{datadir}}/locsim.yml"
+    geofile: "{{datadir}}/geocode.dat"
+    country: US
   hostname: "127.0.0.1"
 
 toksims:
@@ -55,6 +57,7 @@ controllers:
     apiaddr: "0.0.0.0:55001"
     httpaddr: "0.0.0.0:36001"
     notifyaddr: "127.0.0.1:37001"
+    shorttimeouts: true
   hostname: "127.0.0.1"
 
 - controllerlocal:
@@ -63,6 +66,7 @@ controllers:
     apiaddr: "0.0.0.0:55002"
     httpaddr: "0.0.0.0:36002"
     notifyaddr: "127.0.0.1:37002"
+    shorttimeouts: true
   hostname: "127.0.0.1"
 
 

@@ -1,13 +1,15 @@
 package main
 
 import (
+	"fmt"
+
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	locapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify, carrier string, peerIp string, locVerUrl string) {
+func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify, carrier string, peerIp string, locVerUrl string) error {
 	var key carrierAppKey
 	var found *carrierAppInst
 	var app *carrierApp
@@ -21,6 +23,11 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	key.appKey.Version = mreq.AppVers
 
 	mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
+	mreply.GPS_Location_Accuracy_KM = -1
+
+	if mreq.GpsLocation == nil {
+		return fmt.Errorf("Missing GpsLocation")
+	}
 
 	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
 		"appName", key.appKey.Name,
@@ -35,8 +42,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	if !ok {
 		tbl.RUnlock()
 		log.InfoLog("Could not find key in app table", "key", key)
-		mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER
-		return
+		return fmt.Errorf("app not found")
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and GDDT
@@ -85,6 +91,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	}
 
 	tbl.RUnlock()
+	return nil
 }
 
 func GetClientLoc(mreq *dme.Match_Engine_Request, mloc *dme.Match_Engine_Loc) {

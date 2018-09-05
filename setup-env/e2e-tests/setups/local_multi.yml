@@ -21,6 +21,8 @@ locsims:
     name: locsim1
     port: 8888
     locfile: "{{datadir}}/locsim.yml"
+    geofile: "{{datadir}}/geocode.dat"
+    country: US
   hostname: "127.0.0.1"
 
 toksims:

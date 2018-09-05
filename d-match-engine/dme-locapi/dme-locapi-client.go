@@ -88,8 +88,8 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 	case http.StatusForbidden:
 		fallthrough
 	case http.StatusUnauthorized:
-		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_INVALID_TOKEN", "received code", resp.StatusCode)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_INVALID_TOKEN}
+		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_UNAUTHORIZED", "received code", resp.StatusCode)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_UNAUTHORIZED}
 	default:
 		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_OTHER", "received code", resp.StatusCode)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}

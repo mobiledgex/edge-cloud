@@ -266,11 +266,19 @@ type LocApiSimLocal struct {
 	Name    string
 	Port    int
 	Locfile string
+	Geofile string
+	Country string
 	cmd     *exec.Cmd
 }
 
 func (p *LocApiSimLocal) Start(logfile string) error {
 	args := []string{"-port", fmt.Sprintf("%d", p.Port), "-file", p.Locfile}
+	if p.Geofile != "" {
+		args = append(args, "-geo", p.Geofile)
+	}
+	if p.Country != "" {
+		args = append(args, "-country", p.Country)
+	}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "loc-api-sim", args, logfile)
 	return err
