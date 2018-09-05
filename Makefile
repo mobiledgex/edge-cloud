@@ -22,9 +22,9 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
-	docker build -t mobiledgex/edge-cloud -f docker/Dockerfile.edge-cloud .
-	docker tag mobiledgex/edge-cloud registry.mobiledgex.net:5000/mobiledgex/edge-cloud
-	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud
+	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud .
+	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
+	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 
 install:
 	go install ./...

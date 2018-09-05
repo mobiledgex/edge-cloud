@@ -10,12 +10,14 @@ import (
 //Based on business logic (currently just defaults), we map these to
 //a location range in KM
 var (
-	LocationUnknown        uint32 = 0
-	LocationVerifiedNear   uint32 = 1
-	LocationVerifiedMedium uint32 = 2
-	LocationVerifiedFar    uint32 = 3
-	LocationMismatch       uint32 = 4
-	LocationOtherCountry   uint32 = 5
+	LocationUnknown                uint32 = 0
+	LocationVerifiedNear           uint32 = 1
+	LocationVerifiedMedium         uint32 = 2
+	LocationVerifiedFar            uint32 = 3
+	LocationMismatchSameCounty     uint32 = 4
+	LocationMismatchOtherCountry   uint32 = 5
+	LocationRoamingCountryMatch    uint32 = 6
+	LocationRoamingCountryMismatch uint32 = 7
 )
 
 type LocationResult struct {
@@ -26,27 +28,33 @@ type LocationResult struct {
 // it has been agreed that mappings between location result integer and distances
 // in kilometers should be flexible.  These are the default mappings
 var DefaultGDDTLocationRangeMap = map[uint32]LocationResult{
-	LocationUnknown:        {-1, dme.Match_Engine_Loc_Verify_LOC_UNKNOWN},   // unknown = negative distance (unverified)
-	LocationVerifiedNear:   {2, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},   // within 2km
-	LocationVerifiedMedium: {10, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},  // within 10km
-	LocationVerifiedFar:    {100, dme.Match_Engine_Loc_Verify_LOC_VERIFIED}, //within 100km
-	LocationMismatch:       {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH},  // mismatch = negative distance (unverified)
-	LocationOtherCountry:   {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH},  // other-country = negative distance (unverified)
+	LocationUnknown:                {-1, dme.Match_Engine_Loc_Verify_LOC_UNKNOWN},                  // unknown = negative distance (unverified)
+	LocationVerifiedNear:           {2, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                  // within 2km
+	LocationVerifiedMedium:         {10, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                 // within 10km
+	LocationVerifiedFar:            {100, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                // within 100km
+	LocationMismatchSameCounty:     {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH_SAME_COUNTRY},    // mismatch = negative distance (unverified)
+	LocationMismatchOtherCountry:   {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH_OTHER_COUNTRY},   // mismatch, wrong country = negative distance (unverified)
+	LocationRoamingCountryMatch:    {-1, dme.Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MATCH},    // roamer in correct country = negative distance (unverified)
+	LocationRoamingCountryMismatch: {-1, dme.Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MISMATCH}, // roamer in wrong country = negative distance (unverified)
+
 }
 
-//Given a value returned by GDDT API GW, map that into a distance and DME return status
+// GetDistanceAndStatusForLocationResult - Given a value returned by GDDT API GW, map that into a
+// distance and DME return status.
 func GetDistanceAndStatusForLocationResult(locationResult uint32) LocationResult {
 	l, ok := DefaultGDDTLocationRangeMap[locationResult]
 	if !ok {
-		return DefaultGDDTLocationRangeMap[LocationMismatch]
+		return DefaultGDDTLocationRangeMap[LocationUnknown]
 	}
 	return l
 }
 
-//returns gets the location range and verified distance.
+// GetLocationResultForDistance - given a distance, converts that into a location result.
+// This function has no knowledge of country, it is not used when we have access to
+// the real Location Verification API Gateway.
 func GetLocationResultForDistance(distance float64) uint32 {
 	closestDistance := float64(999999)
-	rc := LocationMismatch
+	rc := LocationMismatchSameCounty
 
 	for l, m := range DefaultGDDTLocationRangeMap {
 		if m.DistanceRange >= 0 && m.DistanceRange < closestDistance && m.DistanceRange > distance {
