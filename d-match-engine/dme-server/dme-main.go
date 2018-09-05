@@ -49,6 +49,10 @@ func (s *server) GetCloudlets(ctx context.Context, req *dme.Match_Engine_Request
 	if err != nil {
 		return nil, err
 	}
+	if req.GpsLocation == nil {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid GetCloudlets request", "Error", "Missing GpsLocation")
+		return nil, fmt.Errorf("missing GPS location")
+	}
 	clist := new(dme.Match_Engine_Cloudlet_List)
 	getCloudlets(req, clist)
 	return clist, nil
@@ -65,7 +69,10 @@ func (s *server) VerifyLocation(ctx context.Context,
 		return nil, err
 	}
 
-	VerifyClientLoc(req, mreq, *carrier, peerIp, *locVerUrl)
+	err = VerifyClientLoc(req, mreq, *carrier, peerIp, *locVerUrl)
+	if err != nil {
+		return nil, err
+	}
 	return mreq, nil
 }
 

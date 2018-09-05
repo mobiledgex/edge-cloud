@@ -77,9 +77,12 @@ message Match_Engine_Loc_Verify {
   enum GPS_Location_Status {
     LOC_UNKNOWN = 0;
     LOC_VERIFIED = 1;
-    LOC_MISMATCH = 2;
-    LOC_ERROR_INVALID_TOKEN = 3;
-    LOC_ERROR_OTHER = 4;
+    LOC_MISMATCH_SAME_COUNTRY = 2;
+    LOC_MISMATCH_OTHER_COUNTRY = 3;
+    LOC_ROAMING_COUNTRY_MATCH = 4;
+    LOC_ROAMING_COUNTRY_MISMATCH = 5;
+    LOC_ERROR_UNAUTHORIZED = 6;
+    LOC_ERROR_OTHER = 7;
   }
   GPS_Location_Status gps_location_status = 3;
   // location accuracy, the location is verified to 
