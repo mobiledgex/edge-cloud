@@ -74,15 +74,19 @@ public class MatchingEngine {
     private boolean isSSLEnabled = true;
     private SSLSocketFactory mMutualAuthSocketFactory;
 
+    private Context mContext;
+
     public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
         mNetworkManager = NetworkManager.getInstance(connectivityManager);
+        mContext = context;
     }
     public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
         mNetworkManager = NetworkManager.getInstance(connectivityManager, threadpool);
+        mContext = context;
     }
 
     // Application state Bundle Key.
@@ -643,10 +647,13 @@ public class MatchingEngine {
         }
 
         // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
-        String downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
-        String trustCaFilePath = downloads + "/mex-ca.crt";
-        String clientCertFilePath = downloads +  "/mex-client.crt";
-        String privateKeyFilePath = downloads + "/mex-client.key";
+        // First, copy asset files to local storage
+        String outputDir = mContext.getFilesDir().getAbsolutePath();
+        OkHttpSSLChannelHelper.copyAssets(mContext, "certs", outputDir);
+
+        String trustCaFilePath = outputDir+ "/mex-ca.crt";
+        String clientCertFilePath = outputDir+"/mex-client.crt";
+        String privateKeyFilePath = outputDir+ "/mex-client.key";
 
         FileInputStream trustCAFis = null;
         FileInputStream clientCertFis = null;
