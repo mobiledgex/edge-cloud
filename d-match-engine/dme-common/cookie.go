@@ -3,6 +3,7 @@ package dmecommon
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -80,10 +81,12 @@ l+CiuBqG+a/qu6qJVvPH1zt5lN+z+VorKI0qM0bLkr9+2Qq01FPfaSUm9LfL3ggh
 rsYPlqEPvtSrS1HPve+6akMCAwEAAQ==
 -----END PUBLIC KEY-----`
 
-
 // returns Peer IP or Error
 func VerifyCookie(cookie string) (string, error) {
 
+	if cookie == "" {
+		return "", fmt.Errorf("missing cookie")
+	}
 	claims := jwt.StandardClaims{}
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(dmePublicKey))
 	if err != nil {

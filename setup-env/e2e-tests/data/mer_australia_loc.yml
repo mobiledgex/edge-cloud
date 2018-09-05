@@ -1,7 +1,7 @@
 match-engine-request:
   carriername: TMUS
   gpslocation: 
-    lat: 25.2744
+    lat: -25.2744
     long: 133.7751
   devname: AcmeAppCo
   appname: someApplication

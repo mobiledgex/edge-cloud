@@ -7,7 +7,7 @@ cloudlets:
   accessuri:
   location:
     lat: 53.1424
-    long: 7.6921
+    long: -7.6921
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
