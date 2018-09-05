@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def grpcVersion='1.13.1'
+def grpcVersion = '1.13.1'
 
 android {
     compileSdkVersion 28
@@ -22,10 +22,10 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:appcompat-v7:28.0.0-rc01'
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
-    implementation 'com.android.support:design:27.1.1'
-    implementation 'com.android.support:support-v4:27.1.1'
+    implementation 'com.android.support:design:28.0.0-rc01'
+    implementation 'com.android.support:support-v4:28.0.0-rc01'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
@@ -35,7 +35,7 @@ dependencies {
     implementation project(":matchingengine")
     implementation "io.grpc:grpc-protobuf-lite:${grpcVersion}"
     // Use maven:
-    //implementation 'com.mobiledgex:matchingengine:0.0.2'
+    //implementation 'com.mobiledgex:matchingengine:0.0.3'
     // Dependencies of Matching Engine, if using Maven:
     //implementation "io.grpc:grpc-okhttp:${grpcVersion}"
     //implementation "io.grpc:grpc-stub:${grpcVersion}"

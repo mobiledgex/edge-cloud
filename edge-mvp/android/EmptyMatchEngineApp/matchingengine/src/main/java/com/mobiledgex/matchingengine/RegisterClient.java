@@ -31,7 +31,7 @@ public class RegisterClient implements Callable {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
-            Log.d(TAG, "Mex Location is disabled.");
+            Log.e(TAG, "Mex Location is disabled.");
             mRequest = null;
             return false;
         }
