@@ -8,10 +8,22 @@
   version = "v0.25.0"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/AsGz/geo"
+  packages = ["georeverse"]
+  revision = "324ae0e800450fcd92c5753005d07388037b29ac"
+
+[[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
   version = "v9"
+
+[[projects]]
+  name = "github.com/cespare/xxhash"
+  packages = ["."]
+  revision = "5c37fe3735342a2e0d01c87a907579987c8936cc"
+  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/cloudflare/cloudflare-go"
@@ -247,6 +259,16 @@
   packages = ["."]
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  name = "github.com/influxdata/influxdb"
+  packages = [
+    "client/v2",
+    "models",
+    "pkg/escape"
+  ]
+  revision = "7adf7f9d14ef38517d4bb19301b7f8d9a26d19dd"
+  version = "v1.6.2"
 
 [[projects]]
   branch = "master"
@@ -673,6 +695,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "370a832277869a25f5e685b6b0fdce5959ef87d899ef0685a3af0504b9005035"
+  inputs-digest = "e5f75ca6bd9145fc94ec5b3d6091705a627992429a74c5e85d96c9c88432b1f9"
   solver-name = "gps-cdcl"
   solver-version = 1

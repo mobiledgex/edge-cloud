@@ -68,6 +68,7 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     locverurl: "http://{{vm1_internal_ip}}:8888/verifyLocation"
     carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Saginaw1"}'
   hostname: "{{vm1_external_ip}}"
 
 crms:

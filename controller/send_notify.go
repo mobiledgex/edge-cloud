@@ -4,7 +4,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/notify"
 )
 
-func NewNotifyHandler() *notify.DefaultHandler {
+func NewNotifyHandler(influxQ *InfluxQ) *notify.DefaultHandler {
 	handler := notify.DefaultHandler{}
 
 	handler.SendFlavor = &flavorApi
@@ -15,5 +15,6 @@ func NewNotifyHandler() *notify.DefaultHandler {
 	handler.RecvAppInstInfo = &appInstInfoApi
 	handler.RecvClusterInstInfo = &clusterInstInfoApi
 	handler.RecvCloudletInfo = &cloudletInfoApi
+	handler.RecvMetric = influxQ
 	return &handler
 }

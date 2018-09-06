@@ -78,6 +78,7 @@ dmes:
     locverurl: "http://{{vm2_internal_ip}}:8888"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
     tls:
        servercert: "{{tlsoutdir}}/bonn_vm2.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"

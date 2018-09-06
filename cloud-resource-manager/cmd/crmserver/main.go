@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"net"
@@ -16,11 +15,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
-	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
@@ -48,7 +45,8 @@ var OSEnvValid = false
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
-	parseCloudletKey()
+	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
+	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
 	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
 
 	OSEnvValid = ValidateOSEnv()
@@ -176,34 +174,6 @@ func main() {
 
 	<-sigChan
 	os.Exit(0)
-}
-
-func parseCloudletKey() {
-	if *standalone && *cloudletKeyStr == "" {
-		// Use fake cloudlet
-		myCloudlet.Key = testutil.CloudletData[0].Key
-		bytes, _ := json.Marshal(&myCloudlet.Key)
-		*cloudletKeyStr = string(bytes)
-		log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", *cloudletKeyStr)
-		return
-	}
-
-	if *cloudletKeyStr == "" {
-		log.FatalLog("cloudletKey not specified")
-	}
-
-	err := json.Unmarshal([]byte(*cloudletKeyStr), &myCloudlet.Key)
-	if err != nil {
-		err = yaml.Unmarshal([]byte(*cloudletKeyStr), &myCloudlet.Key)
-	}
-	if err != nil {
-		log.FatalLog("Failed to parse cloudletKey", "err", err)
-	}
-
-	err = myCloudlet.Key.Validate()
-	if err != nil {
-		log.FatalLog("Invalid cloudletKey", "err", err)
-	}
 }
 
 //ValidateOSEnv makes sure environment is set up correctly for opensource

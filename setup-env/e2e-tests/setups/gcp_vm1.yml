@@ -66,6 +66,7 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     locverurl: "{{locverurl}}"
     carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-1"}'
     tls:
        servercert: "{{tlsoutdir}}/gcp_vm.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"

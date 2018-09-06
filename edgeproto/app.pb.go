@@ -15,6 +15,7 @@
 		common.proto
 		developer.proto
 		flavor.proto
+		metric.proto
 		notice.proto
 		operator.proto
 		refs.proto
@@ -46,6 +47,9 @@
 		Developer
 		FlavorKey
 		Flavor
+		MetricTag
+		MetricVal
+		Metric
 		NoticeReply
 		NoticeRequest
 		OperatorKey
