@@ -178,35 +178,28 @@ func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
 	tbl.Unlock()
 }
 
-func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
-	var key carrierAppKey
-	var c, found *carrierAppInst
-	var app *carrierApp
+// given the carrier app key, find closest cloudlet and
+// give trhe distance
+func findClosestForKey(key carrierAppKey, loc *dme.Loc) (*carrierAppInst, float64) {
+	tbl := carrierAppTbl
+	var found *carrierAppInst
 	var distance, d float64
-	var tbl *carrierApps
 
-	tbl = carrierAppTbl
-	key.carrierName = mreq.CarrierName
-	key.appKey.DeveloperKey.Name = mreq.DevName
-	key.appKey.Name = mreq.AppName
-	key.appKey.Version = mreq.AppVers
-
-	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
-	mreply.CloudletLocation = &dme.Loc{}
+	distance = 10000
 
 	tbl.RLock()
+
 	app, ok := tbl.apps[key]
 	if !ok {
 		tbl.RUnlock()
-		return
+		return nil, distance
 	}
 
-	distance = 10000
-	log.DebugLog(log.DebugLevelDmereq, ">>>Find Cloudlet",
+	log.DebugLog(log.DebugLevelDmereq, ">>>Find Closest",
 		"appName", key.appKey.Name,
 		"carrier", key.carrierName)
-	for _, c = range app.insts {
-		d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
+	for _, c := range app.insts {
+		d = dmecommon.DistanceBetween(*loc, c.location)
 		log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
 			"lat", c.location.Lat,
 			"long", c.location.Long,
@@ -215,14 +208,11 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		if d < distance {
 			distance = d
 			found = c
-			mreply.Uri = c.uri
-			mreply.ServiceIp = c.ip
-			*mreply.CloudletLocation = c.location
 		}
 	}
 	if found != nil {
 		var ipaddr net.IP
-		ipaddr = c.ip
+		ipaddr = found.ip
 		log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
 			"app", key.appKey.Name,
 			"carrier", key.carrierName,
@@ -231,9 +221,77 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 			"distance", distance,
 			"uri", found.uri,
 			"IP", ipaddr.String())
-		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
 	}
 	tbl.RUnlock()
+	return found, distance
+}
+
+func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
+	var key carrierAppKey
+	var found *carrierAppInst
+	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
+
+	key.carrierName = mreq.CarrierName
+	key.appKey.DeveloperKey.Name = mreq.DevName
+	key.appKey.Name = mreq.AppName
+	key.appKey.Version = mreq.AppVers
+
+	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
+	mreply.CloudletLocation = &dme.Loc{}
+
+	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", key.carrierName, "app", key.appKey.Name, "developer", key.appKey.DeveloperKey.Name, "version", key.appKey.Version)
+
+	var bestDistance float64 //just for logging
+	c, carrierDistance := findClosestForKey(key, mreq.GpsLocation)
+	searchPublicCloud := true
+
+	if c != nil {
+		found = c
+		bestDistance = carrierDistance
+		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "uri", c.uri, "distance", carrierDistance)
+		if carrierDistance <= publicCloudPadding {
+			searchPublicCloud = false
+		}
+	}
+
+	if searchPublicCloud {
+		key.carrierName = "azure"
+		a, azDistance := findClosestForKey(key, mreq.GpsLocation)
+		key.carrierName = "gcp"
+		g, gcpDistance := findClosestForKey(key, mreq.GpsLocation)
+
+		azDistance += publicCloudPadding
+		gcpDistance += publicCloudPadding
+		log.DebugLog(log.DebugLevelDmereq, "public cloud padded distances", "azure", azDistance, "gcp", gcpDistance)
+
+		if azDistance < gcpDistance && a != nil {
+			if azDistance < carrierDistance {
+				found = a
+				bestDistance = azDistance
+				log.DebugLog(log.DebugLevelDmereq, "found azure cloudlet", "uri", a.uri)
+			}
+		} else {
+			if gcpDistance < azDistance && g != nil {
+				if gcpDistance < carrierDistance {
+					found = g
+					bestDistance = gcpDistance
+					log.DebugLog(log.DebugLevelDmereq, "found gcp cloudlet", "uri", g.uri)
+
+				}
+			}
+		}
+	}
+
+	if found != nil {
+		log.DebugLog(log.DebugLevelDmereq, "overall best cloudlet", "uri", found.uri, "distance", bestDistance)
+		mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
+		mreply.Uri = found.uri
+		mreply.ServiceIp = found.ip
+		*mreply.CloudletLocation = found.location
+
+	} else {
+		mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
+	}
 }
 
 func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
@@ -246,8 +304,9 @@ func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudl
 	// find all the unique cloudlets, and the app instances for each.  the data is
 	//stored as appinst->cloudlet and we need the opposite mapping.
 	for _, a := range tbl.apps {
-		//if the carrier name was provided, only look for cloudlets for that carrier
-		if mreq.CarrierName != "" && mreq.CarrierName != a.key.carrierName {
+		//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
+		if mreq.CarrierName != "" && a.key.carrierName != "azure" && a.key.carrierName != "gcp" && mreq.CarrierName != a.key.carrierName {
+			log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "app.CarrierName", a.key.carrierName)
 			continue
 		}
 		//if the app name or version was provided, only look for cloudlets for that app

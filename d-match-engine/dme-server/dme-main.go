@@ -49,6 +49,9 @@ func (s *server) GetCloudlets(ctx context.Context, req *dme.Match_Engine_Request
 	if err != nil {
 		return nil, err
 	}
+
+	log.DebugLog(log.DebugLevelDmereq, "GetCloudlets", "carrier", req.CarrierName, "app", req.AppName)
+
 	if req.GpsLocation == nil {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid GetCloudlets request", "Error", "Missing GpsLocation")
 		return nil, fmt.Errorf("missing GPS location")
