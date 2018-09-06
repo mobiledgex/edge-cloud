@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -29,8 +28,7 @@ var locVerUrl = flag.String("locverurl", "", "location verification REST API URL
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var scaleID = flag.Int("scaleID", 0, "ID to distinguish multiple DMEs in the same cloudlet")
-var scaleIDStr string
+var scaleID = flag.String("scaleID", "0", "ID to distinguish multiple DMEs in the same cloudlet. For Kubernetes set it to the hostname.")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -142,7 +140,6 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
-	scaleIDStr = strconv.Itoa(*scaleID)
 
 	setupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)

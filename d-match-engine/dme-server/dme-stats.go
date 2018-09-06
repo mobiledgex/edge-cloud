@@ -133,7 +133,7 @@ func ApiStatToMetric(ts *types.Timestamp, key *StatKey, stat *ApiStat) *edgeprot
 	metric.AddTag("ver", key.AppKey.Version)
 	metric.AddTag("oper", myCloudletKey.OperatorKey.Name)
 	metric.AddTag("cloudlet", myCloudletKey.Name)
-	metric.AddTag("id", scaleIDStr)
+	metric.AddTag("id", *scaleID)
 	metric.AddTag("method", key.method)
 	metric.AddIntVal("reqs", stat.reqs)
 	metric.AddIntVal("errs", stat.errs)
