@@ -26,6 +26,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	mreply.GPS_Location_Accuracy_KM = -1
 
 	if mreq.GpsLocation == nil {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return fmt.Errorf("Missing GpsLocation")
 	}
 
