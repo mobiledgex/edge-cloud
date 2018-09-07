@@ -456,9 +456,6 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("state").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "4")
 	}
-	if ClusterInstFlagSet.Lookup("errors").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "5")
-	}
 }
 
 func ClusterInstInfoSetFields() {
@@ -477,9 +474,6 @@ func ClusterInstInfoSetFields() {
 	}
 	if ClusterInstInfoFlagSet.Lookup("state").Changed {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "4")
-	}
-	if ClusterInstInfoFlagSet.Lookup("errors").Changed {
-		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "5")
 	}
 }
 
