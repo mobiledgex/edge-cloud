@@ -4,7 +4,10 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
@@ -25,11 +28,21 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
 var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to client on register")
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
+var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 
+// TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
+// should be replaced by it, but requires dealing with carrier-specific
+// verify location API behavior and e2e test setups.
 var carrier = flag.String("carrier", "standalone", "carrier name for API connection, or standalone for internal DME")
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
+
+// myCloudlet is the information for the cloudlet in which the DME is instantiated.
+// The key for myCloudlet is provided as a configuration - either command line or
+// from a file.
+var myCloudletKey edgeproto.CloudletKey
 
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
@@ -130,8 +143,16 @@ func (s *server) AddUserToGroup(ctx context.Context,
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
+	if *scaleID == "" {
+		*scaleID, _ = os.Hostname()
+		if *scaleID == "" {
+			*scaleID = "nohostname"
+		}
+	}
 
 	setupMatchEngine()
+	grpcOpts := make([]grpc.ServerOption, 0)
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")
@@ -144,6 +165,11 @@ func main() {
 		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
 		notifyClient.Start()
 		defer notifyClient.Stop()
+
+		stats := NewDmeStats(time.Second, 10, notifyClient.SendMetric)
+		stats.Start()
+		defer stats.Stop()
+		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(stats.UnaryStatsInterceptor))
 	}
 
 	lis, err := net.Listen("tcp", *apiAddr)
@@ -155,7 +181,8 @@ func main() {
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
-	s := grpc.NewServer(grpc.Creds(creds))
+	grpcOpts = append(grpcOpts, grpc.Creds(creds))
+	s := grpc.NewServer(grpcOpts...)
 
 	dme.RegisterMatch_Engine_ApiServer(s, &server{})
 

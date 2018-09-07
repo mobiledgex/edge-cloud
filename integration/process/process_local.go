@@ -13,6 +13,7 @@ import (
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
@@ -138,6 +139,7 @@ type DmeLocal struct {
 	LocVerUrl   string
 	TokSrvUrl   string
 	Carrier     string
+	CloudletKey string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -159,6 +161,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.Carrier != "" {
 		args = append(args, "--carrier")
 		args = append(args, p.Carrier)
+	}
+	if p.CloudletKey != "" {
+		args = append(args, "--cloudletKey")
+		args = append(args, p.CloudletKey)
 	}
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
@@ -226,6 +232,35 @@ func (p *CrmLocal) Stop() {
 
 func (p *CrmLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
+}
+
+// InfluxLocal
+
+type InfluxLocal struct {
+	Name     string
+	DataDir  string
+	HttpAddr string
+	Config   string // set during Start
+	cmd      *exec.Cmd
+}
+
+func (p *InfluxLocal) Start(logfile string) error {
+	configFile, err := influxsup.SetupInflux(p.DataDir)
+	if err != nil {
+		return err
+	}
+	p.Config = configFile
+	args := []string{"-config", configFile}
+	p.cmd, err = StartLocal(p.Name, "influxd", args, logfile)
+	return err
+}
+
+func (p *InfluxLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
+func (p *InfluxLocal) ResetData() error {
+	return os.RemoveAll(p.DataDir)
 }
 
 // Support funcs

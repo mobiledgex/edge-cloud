@@ -16,6 +16,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const MetricsLimit = 500
+
 type Client struct {
 	addrs       []string
 	tlsCertFile string
@@ -40,6 +42,7 @@ type Client struct {
 	appInstInfos     map[edgeproto.AppInstKey]struct{}
 	clusterInstInfos map[edgeproto.ClusterInstKey]struct{}
 	cloudletInfos    map[edgeproto.CloudletKey]struct{}
+	metrics          []*edgeproto.Metric
 }
 
 type ClientRecvAllMaps struct {
@@ -114,6 +117,8 @@ type ClientStats struct {
 	AppInstInfosSent     uint64
 	ClusterInstInfosSent uint64
 	CloudletInfosSent    uint64
+	MetricsSent          uint64
+	MetricsDropped       uint64
 	AppInstRecv          uint64
 	CloudletRecv         uint64
 	FlavorRecv           uint64
@@ -142,6 +147,7 @@ func newClient(addrs []string, tlsCertFile string, handler ClientHandler, reques
 	s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
 	s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 	s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
+	s.metrics = make([]*edgeproto.Metric, 0)
 	return &s
 }
 
@@ -443,6 +449,7 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	var nAppInstInfo edgeproto.NoticeRequest_AppInstInfo
 	var nClusterInstInfo edgeproto.NoticeRequest_ClusterInstInfo
 	var nCloudletInfo edgeproto.NoticeRequest_CloudletInfo
+	var nMetric edgeproto.NoticeRequest_Metric
 	var appInstInfo edgeproto.AppInstInfo
 	var clusterInstInfo edgeproto.ClusterInstInfo
 	var cloudletInfo edgeproto.CloudletInfo
@@ -465,7 +472,7 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		}
 		s.mux.Lock()
 		if len(s.appInstInfos) == 0 && len(s.cloudletInfos) == 0 &&
-			len(s.clusterInstInfos) == 0 &&
+			len(s.clusterInstInfos) == 0 && len(s.metrics) == 0 &&
 			!s.done && !sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
@@ -473,9 +480,11 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		appInstInfos := s.appInstInfos
 		clusterInstInfos := s.clusterInstInfos
 		cloudletInfos := s.cloudletInfos
+		metrics := s.metrics
 		s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
 		s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 		s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
+		s.metrics = make([]*edgeproto.Metric, 0)
 		s.mux.Unlock()
 		if s.done || stream.Context().Err() != nil {
 			break
@@ -573,12 +582,28 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			break
 		}
 
+		for ii, _ := range metrics {
+			nMetric.Metric = metrics[ii]
+			notice.Action = edgeproto.NoticeAction_UPDATE
+			notice.Data = &nMetric
+			err = stream.Send(&notice)
+			if err != nil {
+				break
+			}
+			s.stats.MetricsSent++
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
+		}
+
 		if sendAll {
 			sendAll = false
 		}
 		appInstInfos = nil
 		clusterInstInfos = nil
 		cloudletInfos = nil
+		metrics = nil
 	}
 	close(s.sendRunning)
 }
@@ -614,6 +639,17 @@ func (s *Client) UpdateCloudletInfo(key *edgeproto.CloudletKey, old *edgeproto.C
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cloudletInfos[*key] = struct{}{}
+	s.wakeupSend()
+}
+
+func (s *Client) SendMetric(metric *edgeproto.Metric) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	if len(s.metrics) > MetricsLimit {
+		s.stats.MetricsDropped++
+		return
+	}
+	s.metrics = append(s.metrics, metric)
 	s.wakeupSend()
 }
 

@@ -32,6 +32,7 @@ var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener a
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
+var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
 
 func GetRootDir() string {
 	return *rootDir
@@ -79,7 +80,15 @@ func main() {
 	sync.Start()
 	defer sync.Done()
 
-	notifyHandler := NewNotifyHandler()
+	influxQ := NewInfluxQ()
+	err = influxQ.Start(*influxAddr)
+	if err != nil {
+		log.FatalLog("Failed to start influx queue",
+			"address", *influxAddr, "err", err)
+	}
+	defer influxQ.Stop()
+
+	notifyHandler := NewNotifyHandler(influxQ)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile, notifyHandler)
 	defer notify.ServerMgrOne.Stop()
 

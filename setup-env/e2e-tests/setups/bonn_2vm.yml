@@ -70,6 +70,8 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
+    scaleid: 0
   hostname: "{{vm1_external_ip}}"
 
 - dmelocal:
@@ -79,6 +81,8 @@ dmes:
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
+    scaleid: 1
   hostname: "{{vm2_external_ip}}"
 
   

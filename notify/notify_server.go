@@ -83,6 +83,10 @@ type RecvClusterInstInfoHandler interface {
 	Flush(notifyId int64)
 }
 
+type RecvMetricHandler interface {
+	Recv(metric *edgeproto.Metric)
+}
+
 type ServerHandler interface {
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
@@ -92,6 +96,7 @@ type ServerHandler interface {
 	RecvAppInstInfoHandler() RecvAppInstInfoHandler
 	RecvCloudletInfoHandler() RecvCloudletInfoHandler
 	RecvClusterInstInfoHandler() RecvClusterInstInfoHandler
+	RecvMetricHandler() RecvMetricHandler
 }
 
 type ServerStats struct {
@@ -674,6 +679,7 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	recvAppInstInfo := s.handler.RecvAppInstInfoHandler()
 	recvCloudletInfo := s.handler.RecvCloudletInfoHandler()
 	recvClusterInstInfo := s.handler.RecvClusterInstInfoHandler()
+	recvMetric := s.handler.RecvMetricHandler()
 	for !s.done {
 		req, err := stream.Recv()
 		if s.done {
@@ -731,6 +737,10 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 				recvCloudletInfo.Delete(cloudletInfo, s.notifyId)
 				s.updateTrackedCloudlets(&cloudletInfo.Key, unregister)
 			}
+		}
+		metric := req.GetMetric()
+		if recvMetric != nil && metric != nil {
+			recvMetric.Recv(metric)
 		}
 	}
 }
