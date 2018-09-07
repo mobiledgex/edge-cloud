@@ -138,8 +138,7 @@ public class MatchingEngine {
     }
 
     public UUID createUUID() {
-        mUUID = UUID.randomUUID();
-        return mUUID;
+        return UUID.randomUUID();
     }
 
     void setSessionCookie(String sessionCookie) {
