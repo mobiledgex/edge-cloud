@@ -15,6 +15,7 @@ It is generated from these files:
 	common.proto
 	developer.proto
 	flavor.proto
+	metric.proto
 	notice.proto
 	operator.proto
 	refs.proto
@@ -46,6 +47,9 @@ It has these top-level messages:
 	Developer
 	FlavorKey
 	Flavor
+	MetricTag
+	MetricVal
+	Metric
 	NoticeReply
 	NoticeRequest
 	OperatorKey

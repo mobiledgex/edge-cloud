@@ -14,6 +14,7 @@ type DefaultHandler struct {
 	RecvAppInstInfo     RecvAppInstInfoHandler
 	RecvClusterInstInfo RecvClusterInstInfoHandler
 	RecvCloudletInfo    RecvCloudletInfoHandler
+	RecvMetric          RecvMetricHandler
 	// client handlers
 	SendAppInstInfo     SendAppInstInfoHandler
 	SendClusterInstInfo SendClusterInstInfoHandler
@@ -55,6 +56,10 @@ func (s *DefaultHandler) RecvClusterInstInfoHandler() RecvClusterInstInfoHandler
 
 func (s *DefaultHandler) RecvCloudletInfoHandler() RecvCloudletInfoHandler {
 	return s.RecvCloudletInfo
+}
+
+func (s *DefaultHandler) RecvMetricHandler() RecvMetricHandler {
+	return s.RecvMetric
 }
 
 func (s *DefaultHandler) SendAppInstInfoHandler() SendAppInstInfoHandler {

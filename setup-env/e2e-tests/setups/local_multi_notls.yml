@@ -78,6 +78,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: GDDT
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud-1"}'
   hostname: "127.0.0.1"
 
 - dmelocal:
@@ -87,6 +88,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: GDDT
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud-2"}'
   hostname: "127.0.0.1"
 
   
