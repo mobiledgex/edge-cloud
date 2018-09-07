@@ -54,6 +54,7 @@ dmes:
     name: dme1
     apiaddr: 192.168.56.102:50051
     notifyaddrs: 192.168.56.101:37001
+    cloudletkey: '{"operator_key":{"name":"AT&T Inc."},"name":"San Jose Site"}'
   hostname: 192.168.56.102
 
   

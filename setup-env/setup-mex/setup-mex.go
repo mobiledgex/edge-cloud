@@ -103,6 +103,11 @@ func findProcess(processName string) (string, string, string) {
 			return etcd.Hostname, "etcd", "-name " + etcd.Name
 		}
 	}
+	for _, influx := range util.Deployment.Influxs {
+		if influx.Name == processName {
+			return influx.Hostname, "influxd", "-config " + influx.Config
+		}
+	}
 	for _, ctrl := range util.Deployment.Controllers {
 		if ctrl.Name == processName {
 			return ctrl.Hostname, "controller", "-apiAddr " + ctrl.ApiAddr
@@ -316,7 +321,7 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim", "influx"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
 	}
@@ -415,6 +420,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 
 	allRemoteServers := make(map[string]string)
 	etcdRemoteServers := make(map[string]string)
+	influxRemoteServers := make(map[string]string)
 	ctrlRemoteServers := make(map[string]string)
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
@@ -429,6 +435,16 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
 			allRemoteServers[p.Hostname] = p.Name
 			etcdRemoteServers[p.Hostname] = p.Name
+			foundServer = true
+		}
+	}
+	for _, p := range util.Deployment.Influxs {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+			allRemoteServers[p.Hostname] = p.Name
+			influxRemoteServers[p.Hostname] = p.Name
 			foundServer = true
 		}
 	}
@@ -506,6 +522,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[etcds]")
 		for s := range etcdRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(influxRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[influxs]")
+		for s := range influxRemoteServers {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -822,6 +845,24 @@ func StartProcesses(processName string, outputDir string) bool {
 			err := etcd.Start(logfile)
 			if err != nil {
 				log.Printf("Error on Etcd startup: %v", err)
+				return false
+			}
+		}
+	}
+	for _, influx := range util.Deployment.Influxs {
+		if processName != "" && processName != influx.Name {
+			continue
+		}
+		if influx.Hostname == "localhost" || influx.Hostname == "127.0.0.1" {
+			log.Printf("Starting InfluxDB +%v", influx)
+			if processName == "" {
+				// only reset the data if this is a full start of all
+				influx.ResetData()
+			}
+			logfile := getLogFile(influx.Name, outputDir)
+			err := influx.Start(logfile)
+			if err != nil {
+				log.Printf("Error on Influx startup: %v", err)
 				return false
 			}
 		}

@@ -106,6 +106,10 @@ type SampleAppProcess struct {
 	Args     []string
 	Hostname string
 }
+type InfluxProcess struct {
+	process.InfluxLocal
+	Hostname string
+}
 
 type TLSCertInfo struct {
 	CommonName string
@@ -136,6 +140,7 @@ type DeploymentData struct {
 	Dmes          []DmeProcess        `yaml:"dmes"`
 	Crms          []CrmProcess        `yaml:"crms"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
+	Influxs       []InfluxProcess     `yaml:"influxs"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 

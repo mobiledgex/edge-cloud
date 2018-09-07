@@ -46,6 +46,7 @@ var DebugLevelStrings = []string{
 	"dmereq",
 	"locapi",
 	"mexos",
+	"metrics",
 }
 
 func DebugLevelsSlicer(in *log.DebugLevels) []string {
@@ -229,6 +230,8 @@ func parseDebugLevelsEnums() error {
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(5))
 			case "mexos":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(6))
+			case "metrics":
+				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(7))
 			default:
 				return errors.New("Invalid value for DebugLevelsInLevels")
 			}

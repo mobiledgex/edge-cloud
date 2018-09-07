@@ -62,6 +62,8 @@ dmes:
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
     locverurl: "http://{{vm1_internal_ip}}:8888"
     carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"AT&T Inc."},"name":"San Jose Site"}'
+    scaleid: 0
   hostname: "{{vm1_external_ip}}"
 
 - dmelocal:
@@ -70,6 +72,8 @@ dmes:
     notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm2_internal_ip}}:37001"
     locverurl: "http://{{vm1_internal_ip}}:8888"
     carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"AT&T Inc."},"name":"San Jose Site"}'
+    scaleid: 1
   hostname: "{{vm2_external_ip}}"
 
   
