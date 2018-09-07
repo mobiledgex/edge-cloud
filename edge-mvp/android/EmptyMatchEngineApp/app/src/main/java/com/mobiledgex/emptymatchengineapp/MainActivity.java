@@ -130,8 +130,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         String uuidKey = getResources().getString(R.string.preference_mex_user_uuid);
         String currentUUID = prefs.getString(uuidKey, "");
         if (currentUUID.isEmpty()) {
+            UUID uuid = mMatchingEngine.createUUID();
+            mMatchingEngine.setUUID(uuid);
             prefs.edit()
-                    .putString(uuidKey, mMatchingEngine.createUUID().toString())
+                    .putString(uuidKey, uuid.toString())
                     .apply();
         } else {
             mMatchingEngine.setUUID(UUID.fromString(currentUUID));

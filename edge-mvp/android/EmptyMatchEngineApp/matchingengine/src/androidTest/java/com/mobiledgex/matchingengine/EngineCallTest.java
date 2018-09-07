@@ -150,6 +150,7 @@ public class EngineCallTest {
                 .setVer(5)
                 .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
+                .setUuid(me.getUUID().toString())
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName(networkOperatorName) // Mobile Network Carrier
                 .setTower(0) // cid and lac (int)
@@ -180,6 +181,7 @@ public class EngineCallTest {
                 .setVer(5)
                 .setIdType(AppClient.IDTypes.IPADDR)
                 .setId("")
+                .setUuid(me.getUUID().toString())
                 .setCarrierID(3l) // uint64 --> String? mnc, mcc?
                 .setCarrierName(networkOperatorName) // Mobile Network Carrier
                 .setTower(0) // cid and lac (int)
@@ -204,12 +206,11 @@ public class EngineCallTest {
                 .setLong(location.getLongitude())
                 .build();
 
-        UUID uuid = UUID.randomUUID();
         AppClient.DynamicLocGroupAdd groupAdd = AppClient.DynamicLocGroupAdd.newBuilder()
                 .setVer(0)
                 .setIdType(IPADDR)
                 .setId("")
-                .setUuid(uuid.toString())
+                .setUuid(me.getUUID().toString())
                 .setCarrierID(3l)
                 .setCarrierName(networkOperatorName)
                 .setTower(0)
@@ -227,6 +228,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -272,6 +274,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -312,6 +315,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(false);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("mexDisabledTest", -122.149349, 37.459609);
@@ -379,6 +383,7 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine(context);
         me.setNetworkSwitchingEnabled(false);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("mexNetworkingDisabledTest", -122.149349, 37.459609);
@@ -424,6 +429,7 @@ public class EngineCallTest {
         FindCloudletResponse cloudletResponse = null;
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
@@ -469,6 +475,7 @@ public class EngineCallTest {
         FindCloudletResponse result = null;
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
@@ -506,6 +513,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
 
@@ -541,7 +549,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH);
     }
 
     @Test
@@ -550,6 +558,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
         AppClient.Match_Engine_Loc_Verify response = null;
 
@@ -581,7 +590,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(response.getVer(), 0);
         assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER);
+        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH);
     }
 
 
@@ -599,6 +608,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
         AppClient.Match_Engine_Loc_Verify verifyLocationResult = null;
@@ -629,7 +639,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(verifyLocationResult.getVer(), 0);
         assertEquals(verifyLocationResult.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER); // Based on test data.
+        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH); // Based on test data.
 
     }
 
@@ -638,6 +648,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
         Location location;
         AppClient.Match_Engine_Status registerResponse;
@@ -693,6 +704,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -747,6 +759,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         AppClient.Match_Engine_Status response = null;
 
@@ -792,6 +805,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         AppClient.Match_Engine_Status response = null;
 
@@ -838,6 +852,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         AppClient.Match_Engine_Status response = null;
 
@@ -882,6 +897,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setUUID(UUID.randomUUID());
 
         AppClient.Match_Engine_Status response = null;
 
