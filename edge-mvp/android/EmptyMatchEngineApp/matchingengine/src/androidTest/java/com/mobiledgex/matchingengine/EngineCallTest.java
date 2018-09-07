@@ -55,10 +55,6 @@ public class EngineCallTest {
                     "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
                             + " android.permission.ACCESS_COARSE_LOCATION");
 
-            // FIXME: Read application cert and keys.
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.READ_EXTERNAL_STORAGE");
         }
     }
 

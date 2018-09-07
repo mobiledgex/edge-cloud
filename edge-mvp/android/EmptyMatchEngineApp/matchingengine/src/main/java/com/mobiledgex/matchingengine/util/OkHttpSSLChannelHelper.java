@@ -1,13 +1,19 @@
 package com.mobiledgex.matchingengine.util;
 
+import android.content.Context;
+import android.content.res.AssetManager;
 import android.util.Base64;
+import android.util.Log;
 
 import com.mobiledgex.matchingengine.MexKeyStoreException;
 import com.mobiledgex.matchingengine.MexTrustStoreException;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.KeyFactory;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -144,4 +150,55 @@ public class OkHttpSSLChannelHelper {
 
         return trustManagerFactory.getTrustManagers();
     }
+
+    public static void copyAssets(Context context, String sourceDir, String outputDir) {
+        Log.d("copyAssets", "copyAssets(" + sourceDir + "," + outputDir + ")");
+        AssetManager assetManager = context.getAssets();
+        String[] files = null;
+        try {
+            files = assetManager.list(sourceDir);
+        } catch (IOException e) {
+            Log.e("copyAssets", "Failed to get asset file list.", e);
+        }
+        if (files != null) {
+            for (String filename : files) {
+                Log.d("copyAssets", "filename=" + filename);
+                InputStream in = null;
+                OutputStream out = null;
+                try {
+                    in = assetManager.open(sourceDir + "/" + filename);
+                    File outFile = new File(outputDir, filename);
+                    Log.d("copyAssets", "outFile=" + outFile.getAbsolutePath());
+                    out = new FileOutputStream(outFile);
+                    copyFile(in, out);
+                } catch (IOException e) {
+                    Log.e("copyAssets", "Failed to copy asset file: " + filename, e);
+                } finally {
+                    if (in != null) {
+                        try {
+                            in.close();
+                        } catch (IOException e) {
+                            // NOOP
+                        }
+                    }
+                    if (out != null) {
+                        try {
+                            out.close();
+                        } catch (IOException e) {
+                            // NOOP
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public static void copyFile(InputStream in, OutputStream out) throws IOException {
+        byte[] buffer = new byte[1024];
+        int read;
+        while((read = in.read(buffer)) != -1){
+            out.write(buffer, 0, read);
+        }
+    }
+
 }
