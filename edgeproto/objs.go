@@ -231,3 +231,20 @@ func HasField(fmap map[string]struct{}, field string) bool {
 	_, ok := fmap[field]
 	return ok
 }
+
+func (m *Metric) AddTag(name string, val string) {
+	tag := MetricTag{Name: name, Val: val}
+	m.Tags = append(m.Tags, &tag)
+}
+
+func (m *Metric) AddDoubleVal(name string, dval float64) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Dval{Dval: dval}
+	m.Vals = append(m.Vals, &val)
+}
+
+func (m *Metric) AddIntVal(name string, ival uint64) {
+	val := MetricVal{Name: name}
+	val.Value = &MetricVal_Ival{Ival: ival}
+	m.Vals = append(m.Vals, &val)
+}

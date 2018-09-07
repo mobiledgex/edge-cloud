@@ -30,7 +30,13 @@ toksims:
     name: toksim1
     port: 9999
   hostname: "127.0.0.1"
-  
+
+influxs:
+- influxlocal:
+    name: influx1
+    datadir: /var/tmp/edge-cloud-local-influx/influx1
+    httpaddr: "127.0.0.1:8086"
+  hostname: "127.0.0.1"
 
 etcds:
 - etcdlocal:
@@ -91,6 +97,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: GDDT
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud-1"}'
     tls:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -106,6 +113,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: GDDT
+    cloudletkey: '{"operator_key":{"name":"DMUUS"},"name":"tmocloud-2"}'
     tls:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
