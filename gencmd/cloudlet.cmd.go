@@ -654,9 +654,6 @@ func CloudletInfoSetFields() {
 	if CloudletInfoFlagSet.Lookup("osmaxvolgb").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "8")
 	}
-	if CloudletInfoFlagSet.Lookup("errors").Changed {
-		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "9")
-	}
 }
 
 func parseCloudletEnums() error {

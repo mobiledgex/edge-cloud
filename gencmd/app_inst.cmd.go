@@ -718,15 +718,6 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("imagetype").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "8")
 	}
-	if AppInstFlagSet.Lookup("mappedports-proto").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "9.1")
-	}
-	if AppInstFlagSet.Lookup("mappedports-internalport").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "9.2")
-	}
-	if AppInstFlagSet.Lookup("mappedports-publicport").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "9.3")
-	}
 	if AppInstNoConfigFlagSet.Lookup("mappedpath").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "10")
 	}
@@ -741,9 +732,6 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("state").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "14")
-	}
-	if AppInstFlagSet.Lookup("errors").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "15")
 	}
 }
 
@@ -772,9 +760,6 @@ func AppInstInfoSetFields() {
 	}
 	if AppInstInfoFlagSet.Lookup("state").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "4")
-	}
-	if AppInstInfoFlagSet.Lookup("errors").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "5")
 	}
 }
 

@@ -586,6 +586,12 @@ func (g *GenCmd) generateSetFields(msgName string, parents, nums []string, desc 
 			// not supported
 			continue
 		}
+		// We have to skip repeated fields here because they are
+		// skipped in generateVarFlags().
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			continue
+		}
+
 		name := generator.CamelCase(*field.Name)
 		if name == "Fields" {
 			continue
