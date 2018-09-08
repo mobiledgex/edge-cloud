@@ -127,6 +127,21 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	if !found {
 		return
 	}
+	// If CRM crashes or reconnects to controller, controller will resend
+	// current state. This is needed to:
+	// -restart actions that were lost due to a crash
+	// -update cache for dependent objects (AppInst looks up ClusterInst from
+	// cache).
+	// If it was a disconnect and not a restart, there may alread be a
+	// thread in progress. To prevent multiple conflicting threads, check
+	// the info state which can tell us if a thread is in progress.
+	info := edgeproto.ClusterInstInfo{}
+	if infoFound := cd.ClusterInstInfoCache.Get(key, &info); infoFound {
+		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
+			return
+		}
+	}
+	// do request
 	if clusterInst.State == edgeproto.TrackedState_CreateRequested {
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
@@ -207,6 +222,14 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 	if !found {
 		return
 	}
+	// Check current thread state. See comment in clusterInstChanged.
+	info := edgeproto.AppInstInfo{}
+	if infoFound := cd.AppInstInfoCache.Get(key, &info); infoFound {
+		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
+			return
+		}
+	}
+	// do request
 	log.DebugLog(log.DebugLevelMexos, "appInstChanged", "appInst", appInst)
 	if appInst.State == edgeproto.TrackedState_CreateRequested {
 		// create
