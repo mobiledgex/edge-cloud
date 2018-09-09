@@ -9,7 +9,7 @@ metadata:
   operator: mex-gddt
 spec:
   flags: none
-  key: testapp
+  key: testcluster
   rootlb: testcloudlet.mex-gddt.mobiledgex.net
   image: registry.mobiledgex.net:5000/mobiledgex/mexexample
   imagetype: ImageTypeDocker
@@ -18,5 +18,5 @@ spec:
   pathmap: /etc:/mexexample
   flavor: x1.medium
   uri: https://testapp.testcloudlet.mex-gddt.mobiledgex.net
-  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
+  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/testapp.yaml
   accesslayer: L7
