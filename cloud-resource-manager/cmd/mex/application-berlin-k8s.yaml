@@ -1,21 +1,22 @@
 apiVersion: v1
 kind: application
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+resource: beredgecloud.telekom.de:5000/v2.0
 metadata:
   kind: mex-app-k8s
   name: testapp
   tags: testapp-k8s-tag
   tenant: testtenant
-  operator: gcp
+  operator: mex-tdg
 spec:
   flags: none
-  key: gke-testcluster
+  key: testcluster
+  rootlb: berlin.mex-tdg.mobiledgex.net
   image: registry.mobiledgex.net:5000/mobiledgex/mexexample
   imagetype: ImageTypeDocker
   proxypath: testapp
   portmap: 
   pathmap: /etc:/mexexample
   flavor: x1.medium
-  uri: https://testapp.testcloudlet.gcp.mobiledgex.net
+  uri: https://testapp.berlin.mex-tdg.mobiledgex.net
   kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/testapp.yaml
   accesslayer: L7

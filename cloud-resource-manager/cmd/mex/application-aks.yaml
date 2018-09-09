@@ -17,5 +17,5 @@ spec:
   pathmap: /etc:/mexexample
   flavor: x1.medium
   uri: https://testapp.testcloudlet.azure.mobiledgex.net
-  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/mexexample.yaml
+  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/testapp.yaml
   accesslayer: L7
