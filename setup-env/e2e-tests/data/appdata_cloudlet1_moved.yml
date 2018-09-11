@@ -1,0 +1,11 @@
+cloudlets:
+- key:
+    operatorkey:
+      name: DMUUS
+    name: tmocloud-1
+  accessuri: cloud1.tmo
+  location:
+    lat: 40
+    long: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 100

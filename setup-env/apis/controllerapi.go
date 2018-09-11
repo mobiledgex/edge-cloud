@@ -183,12 +183,15 @@ func runCloudletApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgepro
 	var err error = nil
 	clAPI := edgeproto.NewCloudletApiClient(conn)
 	for _, c := range appdata.Cloudlets {
-		log.Printf("API %v for cloudlet: %v", mode, c.Key.Name)
+		log.Printf("API %v for cloudlet: %v data %+v", mode, c.Key.Name, c)
 		var stream testutil.CloudletStream
 		switch mode {
 		case "create":
 			stream, err = clAPI.CreateCloudlet(ctx, &c)
 		case "update":
+			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLat)
+			c.Fields = append(c.Fields, edgeproto.CloudletFieldLocationLong)
+			c.Fields = append(c.Fields, edgeproto.CloudletFieldNumDynamicIps)
 			stream, err = clAPI.UpdateCloudlet(ctx, &c)
 		case "delete":
 			stream, err = clAPI.DeleteCloudlet(ctx, &c)
@@ -227,7 +230,7 @@ func runClusterApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 	var err error = nil
 	clusterAPI := edgeproto.NewClusterApiClient(conn)
 	for _, c := range appdata.Clusters {
-		log.Printf("API %v for cluster: %v", mode, c.Key)
+		log.Printf("API %v for cluster: %v data %+v", mode, c.Key, c)
 		switch mode {
 		case "create":
 			_, err = clusterAPI.CreateCluster(ctx, &c)
