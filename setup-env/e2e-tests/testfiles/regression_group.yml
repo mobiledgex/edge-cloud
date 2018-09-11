@@ -2,21 +2,22 @@ tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
   - includefile: add_delete.yml
-    loops: 3
+    loops: 2
   - includefile: add_delete_2apps.yml
     loops: 2
   - includefile: get_cloudlets.yml
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: verify_loc.yml
-    loops: 5 
-  - includefile: ctrl_restart.yml
-    loops: 3
-  - includefile: restarts_2ctrls.yml
-    loops: 3
-  - includefile: verify_loc.yml
     loops: 3 
+  - includefile: ctrl_restart.yml
+    loops: 2
+  - includefile: restarts_2ctrls.yml
+    loops: 2
+  - includefile: verify_loc.yml
+    loops: 2 
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
+  - includefile: update_move_cloudlet1.yml 
   - includefile: fetchlogs.yml
   - includefile: stop_cleanup.yml

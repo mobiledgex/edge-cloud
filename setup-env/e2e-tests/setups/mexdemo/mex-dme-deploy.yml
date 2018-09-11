@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: dme
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0910
         imagePullPolicy: Always
         command:
          - "dme-server"
@@ -34,6 +34,8 @@ spec:
          - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
          - "--tls"
          - "/root/tls/mexdemo.crt"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}"
         env:
          - name: LOCAPI_USER
            value: mexserver
