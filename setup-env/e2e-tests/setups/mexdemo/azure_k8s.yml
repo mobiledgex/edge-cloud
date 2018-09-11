@@ -20,7 +20,7 @@ cloudflare:
     content: 168.61.185.109
   - name: mexdemo.ctrl-http.mobiledgex.net
     type: A
-    content: 40.122.29.67
+    content: 104.43.134.79
   - name: mexdemo.ctrl-not.mobiledgex.net
     type: A
     content: 104.43.211.39
@@ -39,8 +39,12 @@ cloudflare:
   - name: mobiledgexsdkdemo.aznortheuropecloudlet.azure.mobiledgex.net
     type: A
     content: 40.112.91.229
-
-
+  - name: mobiledgexsdkdemo.berlincloudlet.tdg.mobiledgex.net
+    type: A
+    content: 80.187.128.15
+  - name: mexdemo.metrics.tdg.mobiledgex.net
+    type: A
+    content: 40.113.246.128
 
 tlscerts:
 - commonname: mexdemo
