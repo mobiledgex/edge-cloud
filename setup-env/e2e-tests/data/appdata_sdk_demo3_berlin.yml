@@ -1,0 +1,49 @@
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TDG
+    name: berlincloudlet
+  accessuri:
+  location:
+    lat: 52.5200
+    long: 13.405
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: berlincloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: berlincloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: berlincloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

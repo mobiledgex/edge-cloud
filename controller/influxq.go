@@ -145,7 +145,6 @@ func (q *InfluxQ) RunPush() {
 				continue
 			}
 			bp.AddPoint(pt)
-			log.InfoLog("add point", "pt", pt)
 		}
 		err = q.client.Write(bp)
 		if err != nil {

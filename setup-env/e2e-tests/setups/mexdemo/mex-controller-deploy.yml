@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0910
         imagePullPolicy: Always
         command:
          - "controller"
@@ -28,8 +28,12 @@ spec:
          - "0.0.0.0:37001"
          - "--etcdUrls"  
          - "mex-etcd-cluster:2379"
+         - "--influxAddr"
+         - "monitoring-influxdb:8086"
          - "--tls"
          - "/root/tls/mexdemo.crt"
+         - "--d" 
+         - "etcd,api,notify"
 
       imagePullSecrets:
        - name: mexreg-secret 
