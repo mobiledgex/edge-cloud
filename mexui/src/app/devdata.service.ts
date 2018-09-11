@@ -221,14 +221,14 @@ export class DevdataService {
           "name": "${inst.cloudletName}"
         }
       },
-      "liveness": "${inst.liveNess}",
+      "liveness": ${inst.liveNess},
       "image_path": "${inst.imagePath}",
-      "image_type": "${inst.imageType}",
+      "image_type": ${inst.imageType},
       "mapped_path": "${inst.mappedPath}",
       "flavor": {
         "name": "${inst.flavor}"
       },
-      "access_layer": "${inst.accessLayer}"
+      "access_layer": ${inst.accessLayer}
     }`;
    
     // "mapped_ports": "${inst.mappedPorts}",  For some reason create request chokes on mapped_ports

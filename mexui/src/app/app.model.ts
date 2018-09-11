@@ -61,7 +61,7 @@ export class AppInst {
     public liveNess: string = '',
     public mappedPorts: string = '',
     public mappedPath: string = '',
-    public flavor: string = '',
+    public flavor: string = 'x1.small',
     public cloudletKey: string = '',
     public cloudletName: string = '',
     public cloudletLat: number = 0,
