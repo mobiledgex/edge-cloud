@@ -1,7 +1,37 @@
 <h1>App Instances
   </h1>
   
-  <div class="container">
+  <ul>
+      <li *ngFor="let appinst of  appinsts$">
+        <ul>
+          <li> Id                     :  {{ appinst.result.key.id }}</li>
+          <li> Developer Name          : {{ appinst.result.key.app_key.developer_key.name }}</li>
+          <li> Application Name        : {{ appinst.result.key.app_key.name }}</li>
+          <li> Version                 : {{ appinst.result.key.app_key.version }}</li>
+          <li> ImagePath               : {{ appinst.result.image_path }}</li>
+          <li> ImageType               : {{ appinst.result.image_type }}</li>
+          <li> Uri                     : {{ appinst.result.uri }}</li>
+          <li> Liveness                : {{ appinst.result.liveness }}</li>
+          <li> Mapped Ports            : {{ appinst.result.mapped_ports }}</li>
+          <li> Mapped Path             : {{ appinst.result.mapped_path }}</li>
+          <li> Flavor                  : {{ appinst.result.flavor.name }}</li>
+          <li> Cloudlet Key            : {{ appinst.result.key.cloudlet_key.operator_key.name }}</li>
+          <li> Cloudlet Name            : {{appinst.result.key.cloudlet_key.name }}</li>
+          <li> Cloudlet Lat            : {{ appinst.result.cloudlet_loc.lat }}</li>
+          <li> Cloudlet Long            : {{appinst.result.cloudlet_loc.long }}</li>
+          <li> Cluster                 : {{ appinst.result.cluster_inst_key.cluster_key.name }} </li>
+          <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
+          <table style="width:65%">
+              <tr>
+                <td><button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button></td>
+                <td><button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button></td>
+              </tr>
+            </table>
+        </ul>
+      </li>
+    </ul>
+
+  <!-- <div class="container">
     <div class="instlist">
       <table class="table table-striped">
         <thead>
@@ -52,14 +82,17 @@
             <td>
               <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
             </td>
+            
           </tr>
         </tbody>
-      </table>
-      <div class="text-right">
+      </table> 
+    </div> -->
+    <div class="container">
+    <br>
+      <div class="text-center">
         <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
       </div>
-    </div>
-    <br>
+   
     <div class="instentry" *ngIf="showNew">
       <form (ngSubmit)="onSave()">
         <div class="form-group row">
@@ -69,77 +102,68 @@
           </div>
         </div>
 
-        <div class="form-group row">
+        <!-- <div class="form-group row">
           <label for="devname-input" class="col-2 col-form-label">DeveloperName</label>
           <div class="col-10">
             <input class="form-control" type="text" [(ngModel)]="instModel.developerName" name="developerName">
           </div>
-        </div>
-  
+        </div> -->
+
         <div class="form-group row">
+            <label for="DeveloperName" class="col-2 col-form-label" >DeveloperName</label>
+            <div class="col-10">
+            <select *ngIf="developers" [(ngModel)]="selectedDvlpr" (change)="onSelectDeveloper($event.target.value)" class="form-control input-lg" name="Developer" id="Developer"
+               >
+               <option value="0">Select Developer</option>
+              <option *ngFor="let dvlpr of developers" value= {{dvlpr.id}}>{{dvlpr.dvlpr}}</option>
+            </select>
+            </div>
+          </div>
+         
+
+
+  
+        <!-- <div class="form-group row">
           <label for="name-input" class="col-2 col-form-label">Name</label>
           <div class="col-10">
             <input class="form-control" type="text" [(ngModel)]="instModel.name" name="name">
           </div>
-        </div>
+        </div> -->
   
         <div class="form-group row">
+            <label for="ApplicationName" class="col-2 col-form-label" >ApplicationName</label>
+            <div class="col-10">
+            <select *ngIf="applications" [(ngModel)]="selectedApp" (change)="onSelectApp($event.target.value)" class="form-control input-lg" name="Application" id="Application"
+               >
+               <option value="0">Select Application</option>
+              <option *ngFor="let app of applications" value= {{app.id}}>{{app.app}}</option>
+            </select>
+            </div>
+          </div>
+
+        <!-- <div class="form-group row">
             <label for="version-input" class="col-2 col-form-label">Version</label>
             <div class="col-10">
               <input class="form-control" type="text" [(ngModel)]="instModel.version" name="version">
             </div>
-        </div>
-  
-        <div class="form-group row">
-          <label for="imagepath-input" class="col-2 col-form-label">ImagePath</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.imagePath" name="imagePath">
-          </div>
-        </div>
-  
-        <div class="form-group row">
-          <label for="imagetype-input" class="col-2 col-form-label">ImageType</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.imageType" name="imageType">
-          </div>
-        </div>
+        </div> -->
 
         <div class="form-group row">
-          <label for="uri-input" class="col-2 col-form-label">Uri</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.uri" name="uri">
+            <label for="VersionName" class="col-2 col-form-label" >VersionName</label>
+            <div class="col-10">
+            <select *ngIf="versions" [(ngModel)]="selectedVer" (change)="onSelectVer($event.target.value)" class="form-control input-lg" name="Version" id="Version">
+               <option *ngIf="!selectedVer" value="0">Select Version</option>
+              <option *ngFor="let ver of versions" value={{ver.id}}>{{ver.ver}}</option>
+            </select>
+            </div>
           </div>
-        </div>
+   
 
-        <div class="form-group row">
-          <label for="liveNess-input" class="col-2 col-form-label">Liveness</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.liveNess" name="liveNess">
-          </div>
-        </div>
+        
 
-        <div class="form-group row">
-          <label for="mappedPorts-input" class="col-2 col-form-label">Mapped Ports</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.mappedPorts" name="mappedPorts">
-          </div>
-        </div>
 
-        <div class="form-group row">
-          <label for="mappedPath-input" class="col-2 col-form-label">Mapped Path</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.mappedPath" name="mappedPath">
-          </div>
-        </div>
 
-        <div class="form-group row">
-          <label for="flavor-input" class="col-2 col-form-label">Flavor</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.flavor" name="flavor">
-          </div>
-        </div>
-
-        <div class="form-group row">
+        <!-- <div class="form-group row">
           <label for="cloudletKey-input" class="col-2 col-form-label">Cloudlet Key</label>
           <div class="col-10">
             <input class="form-control" type="text" [(ngModel)]="instModel.cloudletKey" name="cloudletKey">
@@ -151,40 +175,56 @@
           <div class="col-10">
             <input class="form-control" type="text" [(ngModel)]="instModel.cloudletName" name="cloudletName">
           </div>
-        </div>
-  
+        </div> -->
+ 
         <div class="form-group row">
-          <label for="cloudletLat-input" class="col-2 col-form-label">Cloudlet Lat</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletLat" name="cloudletLat">
+            <label for="CloudletName" class="col-2 col-form-label" >CloudletName</label>
+            <div class="col-10">
+            <select *ngIf="cloudlets" [(ngModel)]="selectedCld" (change)="onSelectCloudlet($event.target.value)" class="form-control input-lg" name="Cloudlet" id="Cloudlet">
+               <option *ngIf="!selectedCld" value="0">Select Cloudlet</option>
+              <option *ngFor="let cld of cloudlets" value={{cld.id}}>{{cld.cld}}</option>
+            </select>
+            </div>
           </div>
-        </div>
-  
-        <div class="form-group row">
-          <label for="cloudletLong-input" class="col-2 col-form-label">Cloudlet Long</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.cloudletLong" name="cloudletLong">
-          </div>
-        </div>
-  
-        <div class="form-group row">
+
+          <div class="form-group row">
+              <label for="flavor-input" class="col-2 col-form-label">Flavor</label>
+              <div class="col-10 dropdown" ngbDropdown myDrop="ngbDropDown">
+                <button type="button" class="btn btn-outline-primary" 
+                id="dropdownManual" name="Flavor"
+                ngbDropdownToggle> {{ instModel.flavor }} </button>
+    
+                <div ngbDropdownMenu aria-labelledby="dropdownManual">
+    
+                  <button type="button" class ="dropdown-item"
+                     *ngFor="let flavor of flavors"
+                     (click)="onChangeFlavor(flavor)">{{flavor}}</button>
+                </div>
+    
+                <!-- <input class="form-control" type="text" [(ngModel)]="instModel.flavor" name="flavor"> -->
+              </div>
+            </div>
+
+        <!-- <div class="form-group row">
           <label for="cluster-input" class="col-2 col-form-label">Cluster</label>
           <div class="col-10">
             <input class="form-control" type="text" [(ngModel)]="instModel.cluster" name="cluster">
           </div>
-        </div>
-  
-        <div class="form-group row">
-          <label for="accesslayer-input" class="col-2 col-form-label">AccessLayer</label>
-          <div class="col-10">
-            <input class="form-control" type="text" [(ngModel)]="instModel.accessLayer" name="accessLayer">
-          </div>
-        </div>
+        </div> -->
 
-        <button type="submit" class="btn btn-success">{{submitType}}</button>
-        <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+        <!-- <button type="submit" class="btn btn-success">{{submitType}}</button> -->
+        
+        <table style="width:65%">
+            <tr>
+              <td><button type="submit" class="btn btn-success">Launch App Instance</button></td>
+              <td><button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button></td>
+            </tr>
+          </table>
+        
+        
+     
       </form>
     </div>
-  </div>
+ </div>
      
      

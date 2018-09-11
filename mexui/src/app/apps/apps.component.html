@@ -1,6 +1,29 @@
 <h1>Apps</h1>
   
-  <div class="container">
+<ul>
+  <li *ngFor="let ap of apps$; let i = index">
+    <ul>
+      <li> Developer Name          : {{ ap.result.key.developer_key.name }}</li>
+      <li> Application Name        : {{ ap.result.key.name }}</li>
+      <li> Version                 : {{ ap.result.key.version }}</li>
+      <li> ImagePath               : {{ ap.result.image_path }}</li>
+      <li> ImageType               : {{ ap.result.image_type }}</li>
+      <li> AccessLayer             : {{ ap.result.access_layer }}</li>
+      <li> DefaultFlavor           : {{ ap.result.default_flavor.name }}</li>
+      <li> Cluster                 : {{ ap.result.cluster.name }} </li>
+    </ul>
+      <table style="width:100%">
+        <tr>
+          <td><button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button></td>
+          <td><button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button></td>
+        </tr>
+      </table>
+
+
+
+</li>
+</ul>
+  <!-- <div class="container">
     <div class="applist">
       <table class="table table-striped">
         <thead>
@@ -35,11 +58,13 @@
             </td>
           </tr>
         </tbody>
-      </table>
-      <div class="text-right">
+      </table> 
+    </div>-->
+   <div class="text-center"> 
+     
         <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
       </div>
-    </div>
+   
     <br>
     <div class="appentry" *ngIf="showNew">
       <form (ngSubmit)="onSave()">
@@ -102,5 +127,5 @@
         <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
       </form>
     </div>
-  </div>
+
      

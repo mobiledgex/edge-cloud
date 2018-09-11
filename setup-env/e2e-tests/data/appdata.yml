@@ -85,6 +85,12 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
+- key:
+    name: AcmeAppCo1
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
 
 cloudlets:
 - key:
