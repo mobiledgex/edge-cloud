@@ -1,0 +1,52 @@
+##
+##
+description: update provisioning tests
+
+tests:
+
+- name: create show and compare provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
+
+- name: update provisioning for cloudlet1
+  apifile: "{{datadir}}/appdata_cloudlet1_moved.yml"
+  actions: [ctrlapi-update]
+
+- name: show provisioning again and compare results 
+  actions: [ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_cloudlet1_moved_show.yml"
+    filetype: appdata
+
+- name: restart ctrl1
+  actions: [stop=ctrl1,start=ctrl1,sleep=1]
+
+- name: show ctrl1 provisioning again and compare results
+  actions: [ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_cloudlet1_moved_show.yml"
+    filetype: appdata
+
+- name: show ctrl2 provisioning again and compare results
+  actions: [ctrlapi-show=ctrl2]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_cloudlet1_moved_show.yml"
+    filetype: appdata
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

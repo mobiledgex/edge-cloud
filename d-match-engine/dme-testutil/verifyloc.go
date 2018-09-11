@@ -54,8 +54,8 @@ var VerifyLocData = []VerifyLocRR{
 			AppVers:     "1.1",
 		},
 		Reply: dme.Match_Engine_Loc_Verify{
-			GpsLocationStatus:        ErrorOther,
-			GPS_Location_Accuracy_KM: 0,
+			GpsLocationStatus:        Unknown,
+			GPS_Location_Accuracy_KM: -1,
 		},
 	},
 	VerifyLocRR{
