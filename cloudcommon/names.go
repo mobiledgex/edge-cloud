@@ -3,6 +3,7 @@ package cloudcommon
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -46,4 +47,16 @@ func ParseMyCloudletKey(standalone bool, keystr *string, mykey *edgeproto.Cloudl
 	if err != nil {
 		log.FatalLog("Invalid cloudletKey", "err", err)
 	}
+}
+
+func SetNodeKey(hostname *string, nodeType edgeproto.NodeType, cloudletKey *edgeproto.CloudletKey, key *edgeproto.NodeKey) {
+	if *hostname == "" {
+		*hostname, _ = os.Hostname()
+		if *hostname == "" {
+			*hostname = "nohostname"
+		}
+	}
+	key.Name = *hostname
+	key.NodeType = nodeType
+	key.CloudletKey = *cloudletKey
 }

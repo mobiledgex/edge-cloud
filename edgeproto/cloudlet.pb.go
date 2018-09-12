@@ -1247,7 +1247,7 @@ func (s *CloudletStore) Update(m *Cloudlet, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *CloudletStore) Put(m *Cloudlet, wait func(int64)) (*Result, error) {
+func (s *CloudletStore) Put(m *Cloudlet, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1273,7 +1273,7 @@ func (s *CloudletStore) Put(m *Cloudlet, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -1800,7 +1800,7 @@ func (s *CloudletInfoStore) Update(m *CloudletInfo, wait func(int64)) (*Result, 
 	return &Result{}, err
 }
 
-func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64)) (*Result, error) {
+func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1826,7 +1826,7 @@ func (s *CloudletInfoStore) Put(m *CloudletInfo, wait func(int64)) (*Result, err
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}

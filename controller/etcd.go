@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -141,12 +142,17 @@ func (e *EtcdClient) Get(key string) ([]byte, int64, int64, error) {
 	return obj.Value, obj.Version, obj.ModRevision, nil
 }
 
-func (e *EtcdClient) Put(key, val string) (int64, error) {
+func (e *EtcdClient) Put(key, val string, ops ...objstore.KVOp) (int64, error) {
 	if e.client == nil {
 		return 0, objstore.ErrKVStoreNotInitialized
 	}
+	opts := objstore.GetKVOptions(ops)
+	etcdOps := make([]clientv3.OpOption, 0)
+	if opts.LeaseID != 0 {
+		etcdOps = append(etcdOps, clientv3.WithLease(clientv3.LeaseID(opts.LeaseID)))
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
-	resp, err := e.client.Put(ctx, key, val)
+	resp, err := e.client.Put(ctx, key, val, etcdOps...)
 	cancel()
 	if err != nil {
 		return 0, err
@@ -290,4 +296,42 @@ func (e *EtcdClient) ApplySTM(apply func(concurrency.STM) error) (int64, error) 
 		return 0, err
 	}
 	return resp.Header.Revision, nil
+}
+
+func (e *EtcdClient) Grant(ctx context.Context, ttl int64) (int64, error) {
+	resp, err := e.client.Grant(ctx, ttl)
+	if err != nil {
+		return 0, err
+	}
+	if resp.Error != "" {
+		return 0, errors.New(resp.Error)
+	}
+	return int64(resp.ID), nil
+}
+
+func (e *EtcdClient) KeepAlive(ctx context.Context, leaseID int64) error {
+	for {
+		ch, err := e.client.KeepAlive(ctx, clientv3.LeaseID(leaseID))
+		if err != nil {
+			return err
+		}
+		closed := false
+		for {
+			select {
+			case <-ctx.Done():
+				return nil
+			case _, ok := <-ch:
+				if !ok {
+					closed = true
+				}
+			}
+			if closed {
+				break
+			}
+		}
+		if closed {
+			break
+		}
+	}
+	return nil
 }

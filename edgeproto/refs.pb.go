@@ -540,7 +540,7 @@ func (s *CloudletRefsStore) Update(m *CloudletRefs, wait func(int64)) (*Result, 
 	return &Result{}, err
 }
 
-func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64)) (*Result, error) {
+func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -551,7 +551,7 @@ func (s *CloudletRefsStore) Put(m *CloudletRefs, wait func(int64)) (*Result, err
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -975,7 +975,7 @@ func (s *ClusterRefsStore) Update(m *ClusterRefs, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64)) (*Result, error) {
+func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	err := m.Validate(nil)
 	if err != nil {
 		return nil, err
@@ -986,7 +986,7 @@ func (s *ClusterRefsStore) Put(m *ClusterRefs, wait func(int64)) (*Result, error
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}

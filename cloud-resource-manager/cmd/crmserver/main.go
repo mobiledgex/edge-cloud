@@ -27,11 +27,13 @@ var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted clou
 var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var hostname = flag.String("hostname", "", "unique hostname within Cloudlet")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudlet edgeproto.CloudletInfo
+var myNode edgeproto.Node
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -46,6 +48,7 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
+	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
 	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
 
@@ -115,6 +118,7 @@ func main() {
 		controllerData.AppInstInfoCache.SetNotifyCb(notifyClient.UpdateAppInstInfo)
 		controllerData.ClusterInstInfoCache.SetNotifyCb(notifyClient.UpdateClusterInstInfo)
 		controllerData.CloudletInfoCache.SetNotifyCb(notifyClient.UpdateCloudletInfo)
+		controllerData.NodeCache.SetNotifyCb(notifyClient.UpdateNode)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
@@ -162,6 +166,7 @@ func main() {
 	log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 	// trigger send of info upstream to controller
 	controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+	controllerData.NodeCache.Update(&myNode, 0)
 
 	log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 	sigChan = make(chan os.Signal, 1)

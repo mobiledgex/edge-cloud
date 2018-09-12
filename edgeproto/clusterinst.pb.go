@@ -967,7 +967,7 @@ func (s *ClusterInstStore) Update(m *ClusterInst, wait func(int64)) (*Result, er
 	return &Result{}, err
 }
 
-func (s *ClusterInstStore) Put(m *ClusterInst, wait func(int64)) (*Result, error) {
+func (s *ClusterInstStore) Put(m *ClusterInst, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -993,7 +993,7 @@ func (s *ClusterInstStore) Put(m *ClusterInst, wait func(int64)) (*Result, error
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}
@@ -1574,7 +1574,7 @@ func (s *ClusterInstInfoStore) Update(m *ClusterInstInfo, wait func(int64)) (*Re
 	return &Result{}, err
 }
 
-func (s *ClusterInstInfoStore) Put(m *ClusterInstInfo, wait func(int64)) (*Result, error) {
+func (s *ClusterInstInfoStore) Put(m *ClusterInstInfo, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -1600,7 +1600,7 @@ func (s *ClusterInstInfoStore) Put(m *ClusterInstInfo, wait func(int64)) (*Resul
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}

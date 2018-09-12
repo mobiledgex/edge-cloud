@@ -22,5 +22,6 @@ func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
 	h.RecvClusterFlavor = &cd.ClusterFlavorCache // todo: auto-gen this
 	// or make it easier to add new caches/objects
 	h.RecvClusterInst = &cd.ClusterInstCache
+	h.SendNode = &cd.NodeCache
 	return &h
 }
