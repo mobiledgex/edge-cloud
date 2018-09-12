@@ -2,22 +2,46 @@
   
 <ul>
   <li *ngFor="let ap of apps$; let i = index">
-    <ul>
-      <li> Developer Name          : {{ ap.result.key.developer_key.name }}</li>
-      <li> Application Name        : {{ ap.result.key.name }}</li>
-      <li> Version                 : {{ ap.result.key.version }}</li>
-      <li> ImagePath               : {{ ap.result.image_path }}</li>
-      <li> ImageType               : {{ ap.result.image_type }}</li>
-      <li> AccessLayer             : {{ ap.result.access_layer }}</li>
-      <li> DefaultFlavor           : {{ ap.result.default_flavor.name }}</li>
-      <li> Cluster                 : {{ ap.result.cluster.name }} </li>
-    </ul>
-      <table style="width:100%">
+    <table style="width:100%">
+ 
+    <tr>
+          <td style="width:30%">Developer Name</td>         
+          <td>{{ ap.result.key.developer_key.name }}</td>
+    </tr> 
+    <tr>
+      <td style="width:30%">Application Name</td>
+      <td>{{ ap.result.key.name }}</td>         
+    </tr>
+    <tr>
+        <td style="width:30%">Version</td>
+        <td>{{ ap.result.key.version }} </td>
+    </tr>
+    <tr>
+      <td style="width:30%">ImagePath</td>
+      <td>{{ ap.result.image_path }}</td>
+    </tr>
+    <tr>  
+      <td style="width:30%">ImageType</td>
+      <td>{{ ap.result.image_type }}</td>
+    </tr>
+    <tr>
+      <td style="width:30%">AccessLayer</td>
+      <td>{{ ap.result.access_layer }}</td>
+    </tr>
+    <tr>
+      <td style="width:30%">DefaultFlavor</td>
+      <td>{{ ap.result.default_flavor.name }}</td>
+    </tr>
+    <tr>
+      <td style="width:30%">Cluster</td>
+      <td> {{ ap.result.cluster.name }} </td>
+    </tr>
+      
         <tr>
-          <td><button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button></td>
+          <td style="width:30%"><button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button></td>
           <td><button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button></td>
         </tr>
-      </table>
+    </table>
 
 
 
