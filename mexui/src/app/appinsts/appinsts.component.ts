@@ -377,7 +377,7 @@ export class AppinstsComponent implements OnInit {
     console.log('selectedCld is ' + this.selectedCld );
     console.log(this.cloudlets);
    
-    for ( var index:number  = 0, len:number = this.versions.length; index < len ; index++ ){
+    for ( var index:number  = 0, len:number = this.cloudlets.length; index < len ; index++ ){
      console.log( 'inside for loop iteration index' + index);
      console.log( 'len is' + len);
      console.log('this.cloudlets[index].id is' + this.cloudlets[index].id);
