@@ -34,19 +34,8 @@ const (
 	ShowCmp bool = true
 )
 
-func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
+func runShow(ctrl *util.ControllerProcess, showCmds []string, outputDir string, cmp bool) bool {
 	errFound := false
-	var showCmds = []string{
-		"flavors: ShowFlavor",
-		"clusterflavors: ShowClusterFlavor",
-		"clusters: ShowCluster",
-		"clusterinsts: ShowClusterInst",
-		"operators: ShowOperator",
-		"developers: ShowDeveloper",
-		"cloudlets: ShowCloudlet",
-		"apps: ShowApp",
-		"appinstances: ShowAppInst",
-	}
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
@@ -74,6 +63,28 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) b
 		util.PrintToFile("show-commands.yml", outputDir, label+"\n"+string(out)+"\n", truncate)
 	}
 	return !errFound
+}
+
+func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
+	var showCmds = []string{
+		"flavors: ShowFlavor",
+		"clusterflavors: ShowClusterFlavor",
+		"clusters: ShowCluster",
+		"clusterinsts: ShowClusterInst",
+		"operators: ShowOperator",
+		"developers: ShowDeveloper",
+		"cloudlets: ShowCloudlet",
+		"apps: ShowApp",
+		"appinstances: ShowAppInst",
+	}
+	return runShow(ctrl, showCmds, outputDir, cmp)
+}
+
+func runNodeShow(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
+	var showCmds = []string{
+		"nodes: ShowNode",
+	}
+	return runShow(ctrl, showCmds, outputDir, cmp)
 }
 
 //based on the api some errors will be converted to no error
@@ -329,6 +340,9 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	}
 	if api == "showcmp" {
 		return runShowCommands(ctrl, outputDir, ShowCmp)
+	}
+	if api == "nodeshow" {
+		return runNodeShow(ctrl, outputDir, HideCmp)
 	}
 
 	if apiFile == "" {

@@ -32,7 +32,7 @@ type KVStore interface {
 	// Get returns the data, a version, mod revision, and any error.
 	Get(key string) ([]byte, int64, int64, error)
 	// Put the key-value pair, regardless of whether it already exists or not.
-	Put(key, val string) (int64, error)
+	Put(key, val string, opts ...KVOp) (int64, error)
 	// List retrives all objects that have the given key string prefix.
 	List(key string, cb ListCb) error
 	// Sync is a blocking call used to keep in sync with the database.
@@ -58,6 +58,13 @@ type KVStore interface {
 	// callbacks (perhaps because they all have the same revision ID).
 	// If ordering is important, do not use multiple puts in the same STM.
 	ApplySTM(apply func(concurrency.STM) error) (int64, error)
+	// Leases work like etcd leases. A key committed with a lease will
+	// automatically be deleted once the lease expires.
+	// To avoid that, the KeepAlive call must remain active.
+	// Grant creates a new lease
+	Grant(ctx context.Context, ttl int64) (int64, error)
+	// KeepAlive keeps a lease alive. This call blocks.
+	KeepAlive(ctx context.Context, leaseID int64) error
 }
 
 var ErrKVStoreNotInitialized = errors.New("Object Storage not initialized")
@@ -88,6 +95,28 @@ type ObjKey interface {
 	// Validate checks that the key object fields do not contain
 	// invalid or missing data.
 	Validate() error
+}
+
+type KVOptions struct {
+	LeaseID int64
+}
+
+type KVOp func(opts *KVOptions)
+
+func WithLease(leaseID int64) KVOp {
+	return func(opts *KVOptions) { opts.LeaseID = leaseID }
+}
+
+func (o *KVOptions) Apply(opts []KVOp) {
+	for _, opt := range opts {
+		opt(o)
+	}
+}
+
+func GetKVOptions(opts []KVOp) *KVOptions {
+	o := KVOptions{}
+	o.Apply(opts)
+	return &o
 }
 
 type SyncCbAction int32

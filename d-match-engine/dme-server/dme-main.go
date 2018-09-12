@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"net"
-	"os"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -43,6 +42,7 @@ type server struct{}
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file.
 var myCloudletKey edgeproto.CloudletKey
+var myNode edgeproto.Node
 
 func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
 	error) {
@@ -144,12 +144,7 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
-	if *scaleID == "" {
-		*scaleID, _ = os.Hostname()
-		if *scaleID == "" {
-			*scaleID = "nohostname"
-		}
-	}
+	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NodeDME, &myCloudletKey, &myNode.Key)
 
 	setupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)
@@ -171,6 +166,7 @@ func main() {
 		defer stats.Stop()
 		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(stats.UnaryStatsInterceptor))
 	}
+	nodeCache.Update(&myNode, 0)
 
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
