@@ -3,11 +3,12 @@
 ABSPATH :=$(shell grealpath ../..)
 GRPCTOOLS_VERSION := "Grpc.Tools.1.14.2"
 TEMP_DIR := "packages/$(GRPCTOOLS_VERSION)/tmp"
-CURL_URL := "https://www.nuget.org/api/v2/package/Grpc.Tools/"
+CURL_URL := "https://www.nuget.org/api/v2/package/Grpc.Tools"
 PROTOC := protoc
 # Run "brew install coreutils" to get "grealpath" for protoc's requirement of absolute paths
 ABSOLUTEPATH := $(shell grealpath ../..)
-APPCLIENTOUT := "AppClient/"
+VSPROJECTROOT := "MatchingEngineSDK"
+APPCLIENTOUT := "$(VSPROJECTROOT)/MatchingEngineLibrary"
 
 MACOSX_PLATFORM := "macosx_x64"
 LINUX_PLATFORM := "linux_x64"
@@ -17,7 +18,10 @@ GETOUTPUT := $(shell mkdir -p $(TEMP_DIR) && cd $(TEMP_DIR) && curl -sL $(CURL_U
 OUTPUT := $(shell chmod 750 packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/protoc)
 OUTPUT := $(shell chmod 750 packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/grpc_csharp_plugin)
 
-all: build
+all: packageRestore build
+
+packageRestore:
+	cd $(VSPROJECTROOT) && dotnet restore
 
 build:
 	@echo "Absolute Path for Proto files are: $(ABSOLUTEPATH)"
