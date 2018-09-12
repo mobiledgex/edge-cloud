@@ -22,7 +22,7 @@ enum NodeType {
 // NodeKey uniquely identifies a DME or CRM node
 message NodeKey {
   // Name or hostname of node
-  string name = 1;
+  string name = 1 [(protocmd.hidetag) = "nocmp"];
   // Node type
   NodeType node_type = 2;
   // Cloudlet on which node is running, or is associated with
