@@ -16,5 +16,6 @@ func NewNotifyHandler(influxQ *InfluxQ) *notify.DefaultHandler {
 	handler.RecvClusterInstInfo = &clusterInstInfoApi
 	handler.RecvCloudletInfo = &cloudletInfoApi
 	handler.RecvMetric = influxQ
+	handler.RecvNode = &nodeApi
 	return &handler
 }
