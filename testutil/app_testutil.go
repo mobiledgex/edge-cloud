@@ -13,9 +13,11 @@ It is generated from these files:
 	clusterflavor.proto
 	clusterinst.proto
 	common.proto
+	controller.proto
 	developer.proto
 	flavor.proto
 	metric.proto
+	node.proto
 	notice.proto
 	operator.proto
 	refs.proto
@@ -43,6 +45,8 @@ It has these top-level messages:
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
+	ControllerKey
+	Controller
 	DeveloperKey
 	Developer
 	FlavorKey
@@ -50,6 +54,8 @@ It has these top-level messages:
 	MetricTag
 	MetricVal
 	Metric
+	NodeKey
+	Node
 	NoticeReply
 	NoticeRequest
 	OperatorKey
