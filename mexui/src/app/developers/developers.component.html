@@ -1,0 +1,86 @@
+<h1>Developers
+</h1>
+
+
+<div class="container">
+  <div class="devlist">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>DeveloperName</th>
+          <th>Username</th>
+          <th>Passhash</th>
+          <th>Address</th>
+          <th>Email</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let developer of developers; let i = index">
+          <th scope="row">{{ i + 1 }}</th>
+          <td>{{ developer.developerName }}</td>
+          <td>{{ developer.userName }}</td>
+          <td>{{ developer.passHash}}</td>
+          <td>{{ developer.address }}</td>
+          <td>{{ developer.email }}</td>
+          <td>
+            <button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button>
+          </td>
+          <td>
+            <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="text-right">
+      <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
+    </div>
+  </div>
+  <br>
+  <div class="deventry" *ngIf="showNew">
+    <form (ngSubmit)="onSave()">
+      <div class="form-group row">
+        <label for="devname-input" class="col-2 col-form-label">DeveloperName</label>
+        <div class="col-10">
+          <input class="form-control" type="text" [(ngModel)]="devModel.developerName" name="developerName">
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="username-input" class="col-2 col-form-label">Username</label>
+        <div class="col-10">
+          <input class="form-control" type="text" [(ngModel)]="devModel.userName" name="userName">
+        </div>
+      </div>
+
+      <div class="form-group row">
+          <label for="passhash-input" class="col-2 col-form-label">Passhash</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="devModel.passHash" name="passHash">
+          </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="address-input" class="col-2 col-form-label">Address</label>
+        <div class="col-10">
+          <input class="form-control" type="text" [(ngModel)]="devModel.address" name="address">
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label for="email-input" class="col-2 col-form-label">Email</label>
+        <div class="col-10">
+          <input class="form-control" type="email" [(ngModel)]="devModel.email" name="email">
+        </div>
+      </div>
+
+      
+
+     
+      <button type="submit" class="btn btn-success">{{submitType}}</button>
+      <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+    </form>
+  </div>
+</div>

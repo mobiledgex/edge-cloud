@@ -1,17 +1,15 @@
 package main
 
-
 import (
 	"log"
 	"time"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 )
 
 const (
-	//port = "192.168.1.27:50051"
 	address = "localhost:50051"
 	version = 1
 )
@@ -26,11 +24,9 @@ func main() {
 
 	client := dme.NewMatch_Engine_ApiClient(conn)
 
-
 	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-
-	find_cloudlets(client)
+	FindCloudlets(client)
 	TestLocations(client)
 }

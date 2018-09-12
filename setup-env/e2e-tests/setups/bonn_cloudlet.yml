@@ -1,0 +1,52 @@
+## First GCP VM external IP 37.50.143.110 internal IP 37.50.143.110
+
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: http://37.50.143.110:30011
+    clientaddrs: http://37.50.143.110:30001
+    initialcluster: etcd1=http://37.50.143.110:30011,etcd2=http://37.50.143.110:30012,etcd3=http://37.50.143.110:30013
+  hostname: 37.50.143.110
+
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: http://37.50.143.110:30012
+    clientaddrs: http://37.50.143.110:30002
+    initialcluster: etcd1=http://37.50.143.110:30011,etcd2=http://37.50.143.110:30012,etcd3=http://37.50.143.110:30013
+  hostname: 37.50.143.110
+
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: http://37.50.143.110:30013
+    clientaddrs: http://37.50.143.110:30003
+    initialcluster: etcd1=http://37.50.143.110:30011,etcd2=http://37.50.143.110:30012,etcd3=http://37.50.143.110:30013
+  hostname: 37.50.143.110
+
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: http://37.50.143.110:30001,http://37.50.143.110:30002,http://37.50.143.110:30003
+    apiaddr: 37.50.143.110:55001
+    httpaddr: 37.50.143.110:36001
+    notifyaddr: 37.50.143.110:37001
+  hostname: 37.50.143.110
+
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: 37.50.143.110:50051
+    notifyaddrs: 37.50.143.110:37001
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
+  hostname: 37.50.143.110
+
+  
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: 37.50.143.110:55091
+    notifyaddrs: 37.50.143.110:37001
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"Bonn"}'
+  hostname: 37.50.143.110

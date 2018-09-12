@@ -10,133 +10,143 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
-type DummyServerHandler struct {
-	appInsts  map[edgeproto.AppInstKey]edgeproto.AppInst
-	cloudlets map[edgeproto.CloudletKey]edgeproto.Cloudlet
+type DummyHandler struct {
+	DefaultHandler
+	AppInstCache         edgeproto.AppInstCache
+	CloudletCache        edgeproto.CloudletCache
+	FlavorCache          edgeproto.FlavorCache
+	ClusterFlavorCache   edgeproto.ClusterFlavorCache
+	ClusterInstCache     edgeproto.ClusterInstCache
+	AppInstInfoCache     edgeproto.AppInstInfoCache
+	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
+	CloudletInfoCache    edgeproto.CloudletInfoCache
 }
 
-func NewDummyServerHandler() *DummyServerHandler {
-	handler := &DummyServerHandler{}
-	handler.appInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
-	handler.cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
-	return handler
+func NewDummyHandler() *DummyHandler {
+	h := &DummyHandler{}
+	edgeproto.InitAppInstCache(&h.AppInstCache)
+	edgeproto.InitCloudletCache(&h.CloudletCache)
+	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
+	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
+	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
+	edgeproto.InitFlavorCache(&h.FlavorCache)
+	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
+	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
+	h.DefaultHandler.SendAppInst = &h.AppInstCache
+	h.DefaultHandler.RecvAppInst = &h.AppInstCache
+	h.DefaultHandler.SendCloudlet = &h.CloudletCache
+	h.DefaultHandler.RecvCloudlet = &h.CloudletCache
+	h.DefaultHandler.SendAppInstInfo = &h.AppInstInfoCache
+	h.DefaultHandler.RecvAppInstInfo = &h.AppInstInfoCache
+	h.DefaultHandler.SendClusterInstInfo = &h.ClusterInstInfoCache
+	h.DefaultHandler.RecvClusterInstInfo = &h.ClusterInstInfoCache
+	h.DefaultHandler.SendCloudletInfo = &h.CloudletInfoCache
+	h.DefaultHandler.RecvCloudletInfo = &h.CloudletInfoCache
+	h.DefaultHandler.SendFlavor = &h.FlavorCache
+	h.DefaultHandler.RecvFlavor = &h.FlavorCache
+	h.DefaultHandler.SendClusterFlavor = &h.ClusterFlavorCache
+	h.DefaultHandler.RecvClusterFlavor = &h.ClusterFlavorCache
+	h.DefaultHandler.SendClusterInst = &h.ClusterInstCache
+	h.DefaultHandler.RecvClusterInst = &h.ClusterInstCache
+	return h
 }
 
-func (s *DummyServerHandler) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{}) {
-	for key, _ := range s.appInsts {
-		keys[key] = struct{}{}
+func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
+	s.AppInstCache.SetNotifyCb(mgr.UpdateAppInst)
+	s.CloudletCache.SetNotifyCb(mgr.UpdateCloudlet)
+	s.FlavorCache.SetNotifyCb(mgr.UpdateFlavor)
+	s.ClusterFlavorCache.SetNotifyCb(mgr.UpdateClusterFlavor)
+	s.ClusterInstCache.SetNotifyCb(mgr.UpdateClusterInst)
+}
+
+func (s *DummyHandler) SetClientCb(cl *Client) {
+	s.AppInstInfoCache.SetNotifyCb(cl.UpdateAppInstInfo)
+	s.ClusterInstInfoCache.SetNotifyCb(cl.UpdateClusterInstInfo)
+	s.CloudletInfoCache.SetNotifyCb(cl.UpdateCloudletInfo)
+}
+
+type CacheType int
+
+const (
+	AppInstType CacheType = iota
+	CloudletType
+	FlavorType
+	ClusterFlavorType
+	ClusterInstType
+	AppInstInfoType
+	ClusterInstInfoType
+	CloudletInfoType
+)
+
+type WaitForCache interface {
+	GetCount() int
+}
+
+func (s *DummyHandler) WaitFor(typ CacheType, count int) {
+	var cache WaitForCache
+	switch typ {
+	case AppInstType:
+		cache = &s.AppInstCache
+	case CloudletType:
+		cache = &s.CloudletCache
+	case FlavorType:
+		cache = &s.FlavorCache
+	case ClusterFlavorType:
+		cache = &s.ClusterFlavorCache
+	case ClusterInstType:
+		cache = &s.ClusterInstCache
+	case AppInstInfoType:
+		cache = &s.AppInstInfoCache
+	case ClusterInstInfoType:
+		cache = &s.ClusterInstInfoCache
+	case CloudletInfoType:
+		cache = &s.CloudletInfoCache
 	}
+	WaitFor(cache, count)
 }
 
-func (s *DummyServerHandler) GetAppInst(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool {
-	obj, found := s.appInsts[*key]
-	if found {
-		*buf = obj
+func WaitFor(cache WaitForCache, count int) {
+	if cache == nil {
+		return
 	}
-	return found
-}
-
-func (s *DummyServerHandler) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{}) {
-	for key, _ := range s.cloudlets {
-		keys[key] = struct{}{}
-	}
-}
-
-func (s *DummyServerHandler) GetCloudlet(key *edgeproto.CloudletKey, buf *edgeproto.Cloudlet) bool {
-	obj, found := s.cloudlets[*key]
-	if found {
-		*buf = obj
-	}
-	return found
-}
-
-func (s *DummyServerHandler) CreateAppInst(in *edgeproto.AppInst) {
-	s.appInsts[in.Key] = *in
-	UpdateAppInst(&in.Key)
-}
-
-func (s *DummyServerHandler) DeleteAppInst(in *edgeproto.AppInst) {
-	delete(s.appInsts, in.Key)
-	UpdateAppInst(&in.Key)
-}
-
-func (s *DummyServerHandler) CreateCloudlet(in *edgeproto.Cloudlet) {
-	s.cloudlets[in.Key] = *in
-	UpdateCloudlet(&in.Key)
-}
-
-func (s *DummyServerHandler) DeleteCloudlet(in *edgeproto.Cloudlet) {
-	delete(s.cloudlets, in.Key)
-	UpdateCloudlet(&in.Key)
-}
-
-type DummyClientHandler struct {
-	AppInsts           map[edgeproto.AppInstKey]edgeproto.AppInst
-	Cloudlets          map[edgeproto.CloudletKey]edgeproto.Cloudlet
-	NumAppInstUpdates  int
-	NumCloudletUpdates int
-	NumUpdates         int
-}
-
-func NewDummyClientHandler() *DummyClientHandler {
-	handler := &DummyClientHandler{}
-	handler.AppInsts = make(map[edgeproto.AppInstKey]edgeproto.AppInst)
-	handler.Cloudlets = make(map[edgeproto.CloudletKey]edgeproto.Cloudlet)
-	return handler
-}
-
-func (s *DummyClientHandler) HandleSendAllDone(maps *AllMaps) {
-	for key, _ := range s.AppInsts {
-		if _, ok := maps.AppInsts[key]; !ok {
-			delete(s.AppInsts, key)
-		}
-	}
-	for key, _ := range s.Cloudlets {
-		if _, ok := maps.Cloudlets[key]; !ok {
-			delete(s.Cloudlets, key)
-		}
-	}
-}
-
-func (s *DummyClientHandler) HandleNotice(notice *edgeproto.NoticeReply) error {
-	appInst := notice.GetAppInst()
-	if appInst != nil {
-		if notice.Action == edgeproto.NoticeAction_UPDATE {
-			s.AppInsts[appInst.Key] = *appInst
-		} else if notice.Action == edgeproto.NoticeAction_DELETE {
-			delete(s.AppInsts, appInst.Key)
-		}
-		s.NumAppInstUpdates++
-	}
-	cloudlet := notice.GetCloudlet()
-	if cloudlet != nil {
-		if notice.Action == edgeproto.NoticeAction_UPDATE {
-			s.Cloudlets[cloudlet.Key] = *cloudlet
-		} else if notice.Action == edgeproto.NoticeAction_DELETE {
-			delete(s.Cloudlets, cloudlet.Key)
-		}
-		s.NumCloudletUpdates++
-	}
-	s.NumUpdates++
-	return nil
-}
-
-func (s *DummyClientHandler) WaitForAppInsts(count int) {
 	for i := 0; i < 10; i++ {
-		if len(s.AppInsts) == count {
+		if cache.GetCount() == count {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
 }
 
-func (s *DummyClientHandler) WaitForCloudlets(count int) {
-	for i := 0; i < 10; i++ {
-		if len(s.Cloudlets) == count {
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
+func (s *DummyHandler) WaitForAppInstInfo(count int) {
+	WaitFor(&s.AppInstInfoCache, count)
+}
+
+func (s *DummyHandler) WaitForClusterInstInfo(count int) {
+	WaitFor(&s.ClusterInstInfoCache, count)
+}
+
+func (s *DummyHandler) WaitForCloudletInfo(count int) {
+	WaitFor(&s.CloudletInfoCache, count)
+}
+
+func (s *DummyHandler) WaitForAppInsts(count int) {
+	WaitFor(&s.AppInstCache, count)
+}
+
+func (s *DummyHandler) WaitForCloudlets(count int) {
+	WaitFor(&s.CloudletCache, count)
+}
+
+func (s *DummyHandler) WaitForFlavors(count int) {
+	WaitFor(&s.FlavorCache, count)
+}
+
+func (s *DummyHandler) WaitForClusterFlavors(count int) {
+	WaitFor(&s.ClusterFlavorCache, count)
+}
+
+func (s *DummyHandler) WaitForClusterInsts(count int) {
+	WaitFor(&s.ClusterInstCache, count)
 }
 
 func (s *Client) WaitForConnect(connect uint64) {
@@ -148,11 +158,11 @@ func (s *Client) WaitForConnect(connect uint64) {
 	}
 }
 
-func WaitServerCount(count int) {
+func (mgr *ServerMgr) WaitServerCount(count int) {
 	for i := 0; i < 10; i++ {
-		serverMgr.mux.Lock()
-		cnt := len(serverMgr.table)
-		serverMgr.mux.Unlock()
+		mgr.mux.Lock()
+		cnt := len(mgr.table)
+		mgr.mux.Unlock()
 		if cnt == count {
 			break
 		}

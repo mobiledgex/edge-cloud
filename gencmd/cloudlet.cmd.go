@@ -14,9 +14,8 @@ import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
+import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -33,8 +32,26 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var CloudletApiCmd edgeproto.CloudletApiClient
+var CloudletInfoApiCmd edgeproto.CloudletInfoApiClient
+var CloudletMetricsApiCmd edgeproto.CloudletMetricsApiClient
 var CloudletIn edgeproto.Cloudlet
 var CloudletFlagSet = pflag.NewFlagSet("Cloudlet", pflag.ExitOnError)
+var CloudletNoConfigFlagSet = pflag.NewFlagSet("CloudletNoConfig", pflag.ExitOnError)
+var CloudletInIpSupport string
+var CloudletInfoIn edgeproto.CloudletInfo
+var CloudletInfoFlagSet = pflag.NewFlagSet("CloudletInfo", pflag.ExitOnError)
+var CloudletInfoNoConfigFlagSet = pflag.NewFlagSet("CloudletInfoNoConfig", pflag.ExitOnError)
+var CloudletInfoInState string
+var CloudletMetricsIn edgeproto.CloudletMetrics
+var CloudletMetricsFlagSet = pflag.NewFlagSet("CloudletMetrics", pflag.ExitOnError)
+var CloudletMetricsNoConfigFlagSet = pflag.NewFlagSet("CloudletMetricsNoConfig", pflag.ExitOnError)
+var CloudletStateStrings = []string{
+	"CloudletStateUnknown",
+	"CloudletStateErrors",
+	"CloudletStateReady",
+	"CloudletStateOffline",
+	"CloudletStateNotPresent",
+}
 
 func CloudletKeySlicer(in *edgeproto.CloudletKey) []string {
 	s := make([]string, 0, 2)
@@ -50,21 +67,38 @@ func CloudletKeyHeaderSlicer() []string {
 	return s
 }
 
+func CloudletKeyWriteOutputArray(objs []*edgeproto.CloudletKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
-	s = append(s, "")
-	for i, b := range in.AccessIp {
-		s[len(s)-1] += fmt.Sprintf("%v", b)
-		if i < 3 {
-			s[len(s)-1] += "."
-		}
-	}
+	s = append(s, in.AccessUri)
 	s = append(s, strconv.FormatFloat(float64(in.Location.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Long), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.HorizontalAccuracy), 'e', -1, 32))
@@ -77,15 +111,18 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	}
 	_Location_TimestampTime := time.Unix(in.Location.Timestamp.Seconds, int64(in.Location.Timestamp.Nanos))
 	s = append(s, _Location_TimestampTime.String())
+	s = append(s, edgeproto.IpSupport_name[int32(in.IpSupport)])
+	s = append(s, in.StaticIps)
+	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
 	return s
 }
 
 func CloudletHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
-	s = append(s, "AccessIp")
+	s = append(s, "AccessUri")
 	s = append(s, "Location-Lat")
 	s = append(s, "Location-Long")
 	s = append(s, "Location-HorizontalAccuracy")
@@ -94,162 +131,252 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Location-Course")
 	s = append(s, "Location-Speed")
 	s = append(s, "Location-Timestamp")
+	s = append(s, "IpSupport")
+	s = append(s, "StaticIps")
+	s = append(s, "NumDynamicIps")
 	return s
+}
+
+func CloudletWriteOutputArray(objs []*edgeproto.Cloudlet) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletWriteOutputOne(obj *edgeproto.Cloudlet) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
+	s := make([]string, 0, 8)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
+	}
+	s = append(s, in.Fields[0])
+	s = append(s, in.Key.OperatorKey.Name)
+	s = append(s, in.Key.Name)
+	s = append(s, edgeproto.CloudletState_name[int32(in.State)])
+	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxRam), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxVcores), 10))
+	s = append(s, strconv.FormatUint(uint64(in.OsMaxVolGb), 10))
+	if in.Errors == nil {
+		in.Errors = make([]string, 1)
+	}
+	s = append(s, in.Errors[0])
+	return s
+}
+
+func CloudletInfoHeaderSlicer() []string {
+	s := make([]string, 0, 8)
+	s = append(s, "Fields")
+	s = append(s, "Key-OperatorKey-Name")
+	s = append(s, "Key-Name")
+	s = append(s, "State")
+	s = append(s, "NotifyId")
+	s = append(s, "OsMaxRam")
+	s = append(s, "OsMaxVcores")
+	s = append(s, "OsMaxVolGb")
+	s = append(s, "Errors")
+	return s
+}
+
+func CloudletInfoWriteOutputArray(objs []*edgeproto.CloudletInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletInfoWriteOutputOne(obj *edgeproto.CloudletInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func CloudletMetricsSlicer(in *edgeproto.CloudletMetrics) []string {
+	s := make([]string, 0, 1)
+	s = append(s, strconv.FormatUint(uint64(in.Foo), 10))
+	return s
+}
+
+func CloudletMetricsHeaderSlicer() []string {
+	s := make([]string, 0, 1)
+	s = append(s, "Foo")
+	return s
+}
+
+func CloudletMetricsWriteOutputArray(objs []*edgeproto.CloudletMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletMetricsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletMetricsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletMetricsWriteOutputOne(obj *edgeproto.CloudletMetrics) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletMetricsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletMetricsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
 }
 
 var CreateCloudletCmd = &cobra.Command{
 	Use: "CreateCloudlet",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudletApiCmd == nil {
-			fmt.Println("CloudletApi client not initialized")
-			return
+			return fmt.Errorf("CloudletApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
-		cancel()
+		err = parseCloudletEnums()
 		if err != nil {
-			fmt.Println("CreateCloudlet failed: ", err)
-			return
+			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		ctx := context.Background()
+		stream, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
+		if err != nil {
+			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
+		objs := make([]*edgeproto.Result, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		ResultWriteOutputArray(objs)
+		return nil
 	},
 }
 
 var DeleteCloudletCmd = &cobra.Command{
 	Use: "DeleteCloudlet",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudletApiCmd == nil {
-			fmt.Println("CloudletApi client not initialized")
-			return
+			return fmt.Errorf("CloudletApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
-		cancel()
+		err = parseCloudletEnums()
 		if err != nil {
-			fmt.Println("DeleteCloudlet failed: ", err)
-			return
+			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		ctx := context.Background()
+		stream, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
+		if err != nil {
+			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("DeleteCloudlet recv failed: %s", err.Error())
+			}
+			ResultWriteOutputOne(obj)
+		}
+		return nil
 	},
 }
 
 var UpdateCloudletCmd = &cobra.Command{
 	Use: "UpdateCloudlet",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudletApiCmd == nil {
-			fmt.Println("CloudletApi client not initialized")
-			return
+			return fmt.Errorf("CloudletApi client not initialized")
 		}
 		var err error
-		CloudletSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
-		cancel()
+		err = parseCloudletEnums()
 		if err != nil {
-			fmt.Println("UpdateCloudlet failed: ", err)
-			return
+			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		CloudletSetFields()
+		ctx := context.Background()
+		stream, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
+		if err != nil {
+			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
+		objs := make([]*edgeproto.Result, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		ResultWriteOutputArray(objs)
+		return nil
 	},
 }
 
 var ShowCloudletCmd = &cobra.Command{
 	Use: "ShowCloudlet",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudletApiCmd == nil {
-			fmt.Println("CloudletApi client not initialized")
-			return
+			return fmt.Errorf("CloudletApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		err = parseCloudletEnums()
+		if err != nil {
+			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
+		}
+		ctx := context.Background()
 		stream, err := CloudletApiCmd.ShowCloudlet(ctx, &CloudletIn)
 		if err != nil {
-			fmt.Println("ShowCloudlet failed: ", err)
-			return
+			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Cloudlet, 0)
 		for {
@@ -258,58 +385,201 @@ var ShowCloudletCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowCloudlet recv failed: ", err)
-				break
+				return fmt.Errorf("ShowCloudlet recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(CloudletHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(CloudletSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		CloudletWriteOutputArray(objs)
+		return nil
 	},
+}
+
+var CloudletApiCmds = []*cobra.Command{
+	CreateCloudletCmd,
+	DeleteCloudletCmd,
+	UpdateCloudletCmd,
+	ShowCloudletCmd,
+}
+
+var ShowCloudletInfoCmd = &cobra.Command{
+	Use: "ShowCloudletInfo",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
+		if CloudletInfoApiCmd == nil {
+			return fmt.Errorf("CloudletInfoApi client not initialized")
+		}
+		var err error
+		err = parseCloudletInfoEnums()
+		if err != nil {
+			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
+		}
+		ctx := context.Background()
+		stream, err := CloudletInfoApiCmd.ShowCloudletInfo(ctx, &CloudletInfoIn)
+		if err != nil {
+			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
+		}
+		objs := make([]*edgeproto.CloudletInfo, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("ShowCloudletInfo recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		CloudletInfoWriteOutputArray(objs)
+		return nil
+	},
+}
+
+var InjectCloudletInfoCmd = &cobra.Command{
+	Use: "InjectCloudletInfo",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
+		if CloudletInfoApiCmd == nil {
+			return fmt.Errorf("CloudletInfoApi client not initialized")
+		}
+		var err error
+		err = parseCloudletInfoEnums()
+		if err != nil {
+			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
+		}
+		ctx := context.Background()
+		obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
+		if err != nil {
+			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+		return nil
+	},
+}
+
+var EvictCloudletInfoCmd = &cobra.Command{
+	Use: "EvictCloudletInfo",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
+		if CloudletInfoApiCmd == nil {
+			return fmt.Errorf("CloudletInfoApi client not initialized")
+		}
+		var err error
+		err = parseCloudletInfoEnums()
+		if err != nil {
+			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
+		}
+		ctx := context.Background()
+		obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
+		if err != nil {
+			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+		return nil
+	},
+}
+
+var CloudletInfoApiCmds = []*cobra.Command{
+	ShowCloudletInfoCmd,
+	InjectCloudletInfoCmd,
+	EvictCloudletInfoCmd,
+}
+
+var ShowCloudletMetricsCmd = &cobra.Command{
+	Use: "ShowCloudletMetrics",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
+		if CloudletMetricsApiCmd == nil {
+			return fmt.Errorf("CloudletMetricsApi client not initialized")
+		}
+		var err error
+		ctx := context.Background()
+		stream, err := CloudletMetricsApiCmd.ShowCloudletMetrics(ctx, &CloudletMetricsIn)
+		if err != nil {
+			return fmt.Errorf("ShowCloudletMetrics failed: %s", err.Error())
+		}
+		objs := make([]*edgeproto.CloudletMetrics, 0)
+		for {
+			obj, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return fmt.Errorf("ShowCloudletMetrics recv failed: %s", err.Error())
+			}
+			objs = append(objs, obj)
+		}
+		if len(objs) == 0 {
+			return nil
+		}
+		CloudletMetricsWriteOutputArray(objs)
+		return nil
+	},
+}
+
+var CloudletMetricsApiCmds = []*cobra.Command{
+	ShowCloudletMetricsCmd,
 }
 
 func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
-	CloudletFlagSet.BytesHexVar(&CloudletIn.AccessIp, "accessip", nil, "AccessIp")
+	CloudletFlagSet.StringVar(&CloudletIn.AccessUri, "accessuri", "", "AccessUri")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Lat, "location-lat", 0, "Location.Lat")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Long, "location-long", 0, "Location.Long")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.HorizontalAccuracy, "location-horizontalaccuracy", 0, "Location.HorizontalAccuracy")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.VerticalAccuracy, "location-verticalaccuracy", 0, "Location.VerticalAccuracy")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Course, "location-course", 0, "Location.Course")
+	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Speed, "location-speed", 0, "Location.Speed")
+	CloudletIn.Location.Timestamp = &google_protobuf.Timestamp{}
+	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.Location.Timestamp.Seconds, "location-timestamp-seconds", 0, "Location.Timestamp.Seconds")
+	CloudletNoConfigFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
+	CloudletFlagSet.StringVar(&CloudletInIpSupport, "ipsupport", "", "one of [IpSupportUnknown IpSupportStatic IpSupportDynamic]")
+	CloudletFlagSet.StringVar(&CloudletIn.StaticIps, "staticips", "", "StaticIps")
+	CloudletFlagSet.Int32Var(&CloudletIn.NumDynamicIps, "numdynamicips", 0, "NumDynamicIps")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
+	CloudletInfoFlagSet.Int64Var(&CloudletInfoIn.NotifyId, "notifyid", 0, "NotifyId")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
+	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
+	CloudletMetricsFlagSet.Uint64Var(&CloudletMetricsIn.Foo, "foo", 0, "Foo")
 	CreateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	DeleteCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	UpdateCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
 	ShowCloudletCmd.Flags().AddFlagSet(CloudletFlagSet)
+	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
+	InjectCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
+	EvictCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoFlagSet)
+	ShowCloudletMetricsCmd.Flags().AddFlagSet(CloudletMetricsFlagSet)
+}
+
+func CloudletApiAllowNoConfig() {
+	CreateCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	DeleteCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	UpdateCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+	ShowCloudletCmd.Flags().AddFlagSet(CloudletNoConfigFlagSet)
+}
+
+func CloudletInfoApiAllowNoConfig() {
+	ShowCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+	InjectCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+	EvictCloudletInfoCmd.Flags().AddFlagSet(CloudletInfoNoConfigFlagSet)
+}
+
+func CloudletMetricsApiAllowNoConfig() {
+	ShowCloudletMetricsCmd.Flags().AddFlagSet(CloudletMetricsNoConfigFlagSet)
 }
 
 func CloudletSetFields() {
@@ -320,7 +590,7 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("key-name").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "2.2")
 	}
-	if CloudletFlagSet.Lookup("accessip").Changed {
+	if CloudletFlagSet.Lookup("accessuri").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
 	}
 	if CloudletFlagSet.Lookup("location-lat").Changed {
@@ -329,25 +599,95 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("location-long").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.2")
 	}
-	if CloudletFlagSet.Lookup("location-horizontalaccuracy").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-horizontalaccuracy").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.3")
 	}
-	if CloudletFlagSet.Lookup("location-verticalaccuracy").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-verticalaccuracy").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.4")
 	}
 	if CloudletFlagSet.Lookup("location-altitude").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.5")
 	}
-	if CloudletFlagSet.Lookup("location-course").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-course").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.6")
 	}
-	if CloudletFlagSet.Lookup("location-speed").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-speed").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.7")
 	}
-	if CloudletFlagSet.Lookup("location-timestamp-seconds").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-timestamp-seconds").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.1")
 	}
-	if CloudletFlagSet.Lookup("location-timestamp-nanos").Changed {
+	if CloudletNoConfigFlagSet.Lookup("location-timestamp-nanos").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.8.2")
 	}
+	if CloudletFlagSet.Lookup("ipsupport").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "6")
+	}
+	if CloudletFlagSet.Lookup("staticips").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "7")
+	}
+	if CloudletFlagSet.Lookup("numdynamicips").Changed {
+		CloudletIn.Fields = append(CloudletIn.Fields, "8")
+	}
+}
+
+func CloudletInfoSetFields() {
+	CloudletInfoIn.Fields = make([]string, 0)
+	if CloudletInfoFlagSet.Lookup("key-operatorkey-name").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "2.1.1")
+	}
+	if CloudletInfoFlagSet.Lookup("key-name").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "2.2")
+	}
+	if CloudletInfoFlagSet.Lookup("state").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "3")
+	}
+	if CloudletInfoFlagSet.Lookup("notifyid").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "4")
+	}
+	if CloudletInfoFlagSet.Lookup("osmaxram").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "6")
+	}
+	if CloudletInfoFlagSet.Lookup("osmaxvcores").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "7")
+	}
+	if CloudletInfoFlagSet.Lookup("osmaxvolgb").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "8")
+	}
+}
+
+func parseCloudletEnums() error {
+	if CloudletInIpSupport != "" {
+		switch CloudletInIpSupport {
+		case "IpSupportUnknown":
+			CloudletIn.IpSupport = edgeproto.IpSupport(0)
+		case "IpSupportStatic":
+			CloudletIn.IpSupport = edgeproto.IpSupport(1)
+		case "IpSupportDynamic":
+			CloudletIn.IpSupport = edgeproto.IpSupport(2)
+		default:
+			return errors.New("Invalid value for CloudletInIpSupport")
+		}
+	}
+	return nil
+}
+
+func parseCloudletInfoEnums() error {
+	if CloudletInfoInState != "" {
+		switch CloudletInfoInState {
+		case "CloudletStateUnknown":
+			CloudletInfoIn.State = edgeproto.CloudletState(0)
+		case "CloudletStateErrors":
+			CloudletInfoIn.State = edgeproto.CloudletState(1)
+		case "CloudletStateReady":
+			CloudletInfoIn.State = edgeproto.CloudletState(2)
+		case "CloudletStateOffline":
+			CloudletInfoIn.State = edgeproto.CloudletState(3)
+		case "CloudletStateNotPresent":
+			CloudletInfoIn.State = edgeproto.CloudletState(4)
+		default:
+			return errors.New("Invalid value for CloudletInfoInState")
+		}
+	}
+	return nil
 }

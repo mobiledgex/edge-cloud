@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">matchingengine</string>
-    <string name="request_permission">This application uses enhanced features of carrier networks to validate identity. ACCESS_COARSE_LOCATION and READ_PHONE_STATE permissions are used for this feature.</string>
+    <string name="request_permission">This application uses enhanced features of carrier networks to validate your device location. ACCESS_COARSE_LOCATION and READ_PHONE_STATE permissions are used for this feature.</string>
+    <string name="location_verification">Location Verification</string>
 </resources>

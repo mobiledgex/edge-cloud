@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crmbonn
+  labels:
+    app: crmbonn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crmbonn
+  template:
+    metadata:
+      labels:
+        app: crmbonn
+    spec:
+      containers:
+      - name: crmbonn
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        env:
+         - name: MEX_CF_USER
+           value: bob.bae@gmail.com
+         - name: MEX_CF_KEY
+           value: e6aefae8a9825d40dbf7eadb9a49967373847
+         - name: MEX_SSH_KEY
+           value: id_rsa_mobiledgex
+         - name: MEX_DOCKER_REG_PASS
+           value: sandhill
+         - name: MEX_DIR
+           value: /root/.mobiledgex
+        command:
+         - crmserver
+        args:
+         - "--apiAddr"
+         - "0.0.0.0:55091"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"bonncloudlet\"}"
+         - "--notifyAddrs"
+         - "controller-notify:37001"
+         - "--tls"
+         - "/root/tls/mexdemo.crt"
+         - "--d"
+         - "mexos"
+
+      imagePullSecrets:
+       - name: mexreg-secret
+

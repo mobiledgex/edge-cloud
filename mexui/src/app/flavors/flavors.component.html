@@ -1,0 +1,77 @@
+<h1>Flavors
+  </h1>
+  
+  <div class="container">
+    <div class="devlist">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>FlavorName</th>
+            <th>RAM</th>
+            <th>VCPUs</th>
+            <th>Disk</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let flavor of flavors; let i = index">
+            <th scope="row">{{ i + 1 }}</th>
+            <td>{{ flavor.name }}</td>
+            <td>{{ flavor.ram }}</td>
+            <td>{{ flavor.vcpus}}</td>
+            <td>{{ flavor.disk }}</td>
+            <td>
+              <button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button>
+            </td>
+            <td>
+              <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="text-right">
+        <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
+      </div>
+    </div>
+    <br>
+    <div class="flventry" *ngIf="showNew">
+      <form (ngSubmit)="onSave()">
+        <div class="form-group row">
+          <label for="flvname-input" class="col-2 col-form-label">FlavorName</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="flvModel.name" name="name">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="ram-input" class="col-2 col-form-label">RAM</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="flvModel.ram" name="ram">
+          </div>
+        </div>
+  
+        <div class="form-group row">
+            <label for="vcpus-input" class="col-2 col-form-label">VCPUs</label>
+            <div class="col-10">
+              <input class="form-control" type="text" [(ngModel)]="flvModel.vcpus" name="vcpus">
+            </div>
+        </div>
+  
+        <div class="form-group row">
+          <label for="disk-input" class="col-2 col-form-label">Disk</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="flvModel.disk" name="disk">
+          </div>
+        </div>
+  
+       
+        <button type="submit" class="btn btn-success">{{submitType}}</button>
+        <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+      </form>
+    </div>
+  </div>
+     
+
+      

@@ -1,23 +1,20 @@
 package main
 
-import "github.com/mobiledgex/edge-cloud/edgeproto"
+import (
+	"github.com/mobiledgex/edge-cloud/notify"
+)
 
-type ControllerNotifier struct {
-	*AppInstApi
-	*CloudletApi
-}
+func NewNotifyHandler(influxQ *InfluxQ) *notify.DefaultHandler {
+	handler := notify.DefaultHandler{}
 
-func NewControllerNotifier(appInstApi *AppInstApi, cloudletApi *CloudletApi) *ControllerNotifier {
-	n := ControllerNotifier{}
-	n.AppInstApi = appInstApi
-	n.CloudletApi = cloudletApi
-	return &n
-}
-
-func (s *ControllerNotifier) GetAllAppInstKeys(keys map[edgeproto.AppInstKey]struct{}) {
-	s.AppInstApi.GetAllKeys(keys)
-}
-
-func (s *ControllerNotifier) GetAllCloudletKeys(keys map[edgeproto.CloudletKey]struct{}) {
-	s.CloudletApi.GetAllKeys(keys)
+	handler.SendFlavor = &flavorApi
+	handler.SendClusterFlavor = &clusterFlavorApi
+	handler.SendClusterInst = &clusterInstApi
+	handler.SendAppInst = &appInstApi
+	handler.SendCloudlet = &cloudletApi
+	handler.RecvAppInstInfo = &appInstInfoApi
+	handler.RecvClusterInstInfo = &clusterInstInfoApi
+	handler.RecvCloudletInfo = &cloudletInfoApi
+	handler.RecvMetric = influxQ
+	return &handler
 }

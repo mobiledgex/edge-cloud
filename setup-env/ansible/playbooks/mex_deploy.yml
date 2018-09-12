@@ -1,0 +1,211 @@
+- name: setup log dir
+  gather_facts: no
+  user: root
+  hosts: mexservers
+  vars_files:
+    - mex_vars.yml
+ 
+  tasks:
+  - name: create remote log dir 
+    file:
+       state: directory
+       path: "{{ remote_log_path }}"
+  
+  - name: copy mex-ca.crt
+    copy: 
+      src: "{{ tlsoutdir }}/mex-ca.crt"
+      dest: "{{ remote_log_path }}"
+      mode: 0444
+  
+- name: deploy binary to remote controllers
+  gather_facts: yes
+  user: root
+  hosts: controllers
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: copy controller binary
+    copy:
+       src: "{{ controller_bin }}"
+       dest: "{{ remote_bin_path }}" 
+       mode: 0755
+
+  - name: copy tls cert
+    copy:
+       src: "{{ controllers[0].controllerlocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+
+  - name: copy tls key
+    copy:
+       src: "{{ (controllers[0].controllerlocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
+
+- name: deploy binary to remote crms
+  gather_facts: yes
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: copy crm binary
+    copy:
+       src: "{{ crm_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+  - name: copy tls cert
+    copy:
+       src: "{{ crms[0].crmlocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+  
+  - name: copy tls key
+    copy:
+       src: "{{ (crms[0].crmlocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
+
+
+- name: deploy binary to remote dmes
+  gather_facts: yes
+  user: root
+  hosts: dmes
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: copy dme-server binary
+    copy:
+       src: "{{ dme_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+  - name: copy tls cert
+    copy:
+       src: "{{ dmes[0].dmelocal.tls.servercert }}"
+       dest: "{{ remote_log_path }}"
+       mode: 0444
+  
+  - name: copy tls key
+    copy:
+       src: "{{ (dmes[0].dmelocal.tls.servercert|splitext)[0] }}.key"
+       dest: "{{ remote_log_path }}"
+       mode: 0440
+
+- name: deploy binary to remote locsims
+  gather_facts: yes
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy locsim binary
+    copy:
+       src: "{{ locsim_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+  - name: copy locsim data file if it exists
+    copy:
+       src: "{{locsim_data_file}}"
+       dest: "{{ locsim_remote_data_dir }}"
+       mode: 0755
+    ignore_errors: yes
+
+- name: deploy binary to remote toksims
+  gather_facts: yes
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+
+  tasks:
+  - name: copy toksim binary
+    copy:
+       src: "{{ toksim_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+
+
+- name: deploy binaries to remote sampleapps
+  gather_facts: yes
+  user: root
+  hosts: sampleapps
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: copy sampleapp binary
+    copy:
+       src: "{{ local_binpath}}/{{ item.sampleapplocal.exename }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755
+    with_items:
+       "{{ sampleapps }}"
+
+- name: install etcd to remote etcd nodes
+  gather_facts: no
+  user: root
+  hosts: etcds
+
+  vars_files:
+  - mex_vars.yml
+
+  vars:
+     ##todo we should derive the os here, but this is only for ubuntu currently anyway
+     etcd_version_os: "etcd-{{ etcd_version }}-linux-amd64"
+     etcd_tarfile: "{{ etcd_version_os }}.tar.gz"
+
+  tasks:
+  - name: install etcd via package manager for non ubuntu
+    package:
+       name: etcd
+       state: latest
+    when: ansible_distribution != "Ubuntu"
+    
+  - name: download etcd via wget for ubuntu
+    get_url:
+       url: "{{ etcd_url }}/{{ etcd_version }}/{{ etcd_tarfile }}"
+       dest: /tmp
+    when: ansible_distribution == "Ubuntu"
+
+  - name: untar etcd package
+    unarchive:
+       src: "/tmp/{{ etcd_tarfile }}"
+       dest: /tmp
+       remote_src: yes
+    when: ansible_distribution == "Ubuntu"
+
+
+  - name: move the etcd file to bin dir
+    command: "mv /tmp/{{ etcd_version_os }}/etcd {{ remote_bin_path }}"
+    when: ansible_distribution == "Ubuntu"
+
+  - name: cleanup tarfile
+    file:
+       path: "/tmp/{{ etcd_tarfile }}"
+       state: absent
+    when: ansible_distribution == "Ubuntu"
+
+  - name: cleanup tar temp dir
+    file:
+       path: "/tmp/{{ etcd_version }}"
+       state: absent
+    when: ansible_distribution == "Ubuntu"
+
+  

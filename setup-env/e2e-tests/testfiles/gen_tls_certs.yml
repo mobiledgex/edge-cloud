@@ -1,0 +1,9 @@
+##
+##
+description: generates TLS certs for a deployment setup
+
+tests:
+
+- name: generate certs
+  actions: [gencerts]
+

@@ -22,8 +22,11 @@ import binary "encoding/binary"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "sync"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "time"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -33,37 +36,13 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// type of instance
-type AppInst_Liveness int32
-
-const (
-	AppInst_UNKNOWN AppInst_Liveness = 0
-	AppInst_STATIC  AppInst_Liveness = 1
-	AppInst_DYNAMIC AppInst_Liveness = 2
-)
-
-var AppInst_Liveness_name = map[int32]string{
-	0: "UNKNOWN",
-	1: "STATIC",
-	2: "DYNAMIC",
-}
-var AppInst_Liveness_value = map[string]int32{
-	"UNKNOWN": 0,
-	"STATIC":  1,
-	"DYNAMIC": 2,
-}
-
-func (x AppInst_Liveness) String() string {
-	return proto.EnumName(AppInst_Liveness_name, int32(x))
-}
-func (AppInst_Liveness) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1, 0} }
-
+// AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 type AppInstKey struct {
 	// App key
 	AppKey AppKey `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
-	// Cloudlet it's on
+	// Cloudlet on which the App is instantiated
 	CloudletKey CloudletKey `protobuf:"bytes,2,opt,name=cloudlet_key,json=cloudletKey" json:"cloudlet_key"`
-	// inst id
+	// Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet)
 	Id uint64 `protobuf:"fixed64,3,opt,name=id,proto3" json:"id,omitempty"`
 }
 
@@ -72,30 +51,104 @@ func (m *AppInstKey) String() string            { return proto.CompactTextString
 func (*AppInstKey) ProtoMessage()               {}
 func (*AppInstKey) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{0} }
 
-// AppInsts are instances of an application instantiated
-// on a cloudlet, like a docker or VM instance.
+// AppPort describes an L4 public access port mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy.
+type AppPort struct {
+	// TCP or UDP protocol
+	Proto L4Proto `protobuf:"varint,1,opt,name=proto,proto3,enum=edgeproto.L4Proto" json:"proto,omitempty"`
+	// Container port
+	InternalPort int32 `protobuf:"varint,2,opt,name=internal_port,json=internalPort,proto3" json:"internal_port,omitempty"`
+	// Public facing port (may be mapped on shared LB reverse proxy)
+	PublicPort int32 `protobuf:"varint,3,opt,name=public_port,json=publicPort,proto3" json:"public_port,omitempty"`
+}
+
+func (m *AppPort) Reset()                    { *m = AppPort{} }
+func (m *AppPort) String() string            { return proto.CompactTextString(m) }
+func (*AppPort) ProtoMessage()               {}
+func (*AppPort) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1} }
+
+// AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
+// When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
 type AppInst struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Cache the location of the cloudlet
+	// Cached location of the cloudlet
 	CloudletLoc distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
-	// how to connect to this instance
-	Ip []byte `protobuf:"bytes,4,opt,name=ip,proto3" json:"ip,omitempty"`
-	// port to connect to this instance
-	Port     uint32           `protobuf:"varint,5,opt,name=port,proto3" json:"port,omitempty"`
-	Liveness AppInst_Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.AppInst_Liveness" json:"liveness,omitempty"`
+	// URI to connect to this instance
+	Uri string `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
+	// Cluster instance on which this is instatiated (not specifiable by user)
+	ClusterInstKey ClusterInstKey `protobuf:"bytes,5,opt,name=cluster_inst_key,json=clusterInstKey" json:"cluster_inst_key"`
+	// Liveness of instance (see Liveness)
+	Liveness Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`
+	// URI from which to download image
+	ImagePath string `protobuf:"bytes,7,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	// Image type (see ImageType)
+	ImageType ImageType `protobuf:"varint,8,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	// For instances accessible via a shared load balancer, defines the external
+	// ports on the shared load balancer that map to the internal ports
+	// External ports should be appended to the Uri for L4 access.
+	MappedPorts []AppPort `protobuf:"bytes,9,rep,name=mapped_ports,json=mappedPorts" json:"mapped_ports"`
+	// Mapped path to append to Uri for public access.
+	// Only valid for L7 access types.
+	MappedPath string `protobuf:"bytes,10,opt,name=mapped_path,json=mappedPath,proto3" json:"mapped_path,omitempty"`
+	// URI of resource to be used to establish config for App.
+	Config string `protobuf:"bytes,11,opt,name=config,proto3" json:"config,omitempty"`
+	// Flavor defining resource requirements
+	Flavor FlavorKey `protobuf:"bytes,12,opt,name=flavor" json:"flavor"`
+	// Access layer(s)
+	AccessLayer AccessLayer `protobuf:"varint,13,opt,name=access_layer,json=accessLayer,proto3,enum=edgeproto.AccessLayer" json:"access_layer,omitempty"`
+	// Current state of the AppInst on the Cloudlet
+	State TrackedState `protobuf:"varint,14,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	// Any errors trying to create, update, or delete the AppInst on the Cloudlet
+	Errors []string `protobuf:"bytes,15,rep,name=errors" json:"errors,omitempty"`
 }
 
 func (m *AppInst) Reset()                    { *m = AppInst{} }
 func (m *AppInst) String() string            { return proto.CompactTextString(m) }
 func (*AppInst) ProtoMessage()               {}
-func (*AppInst) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{1} }
+func (*AppInst) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{2} }
+
+// AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
+type AppInstInfo struct {
+	// Fields are used for the Update API to specify which fields to apply
+	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// Unique identifier key
+	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
+	// Id of client assigned by server (internal use only)
+	NotifyId int64 `protobuf:"varint,3,opt,name=notify_id,json=notifyId,proto3" json:"notify_id,omitempty"`
+	// Current state of the AppInst on the Cloudlet
+	State TrackedState `protobuf:"varint,4,opt,name=state,proto3,enum=edgeproto.TrackedState" json:"state,omitempty"`
+	// Any errors trying to create, update, or delete the AppInst on the Cloudlet
+	Errors []string `protobuf:"bytes,5,rep,name=errors" json:"errors,omitempty"`
+}
+
+func (m *AppInstInfo) Reset()                    { *m = AppInstInfo{} }
+func (m *AppInstInfo) String() string            { return proto.CompactTextString(m) }
+func (*AppInstInfo) ProtoMessage()               {}
+func (*AppInstInfo) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{3} }
+
+// (TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
+type AppInstMetrics struct {
+	// what goes here?
+	// Note that metrics for grpc calls can be done by a prometheus
+	// interceptor in grpc, so adding call metrics here may be
+	// redundant unless they're needed for billing.
+	Something uint64 `protobuf:"varint,5,opt,name=something,proto3" json:"something,omitempty"`
+}
+
+func (m *AppInstMetrics) Reset()                    { *m = AppInstMetrics{} }
+func (m *AppInstMetrics) String() string            { return proto.CompactTextString(m) }
+func (*AppInstMetrics) ProtoMessage()               {}
+func (*AppInstMetrics) Descriptor() ([]byte, []int) { return fileDescriptorAppInst, []int{4} }
 
 func init() {
 	proto.RegisterType((*AppInstKey)(nil), "edgeproto.AppInstKey")
+	proto.RegisterType((*AppPort)(nil), "edgeproto.AppPort")
 	proto.RegisterType((*AppInst)(nil), "edgeproto.AppInst")
-	proto.RegisterEnum("edgeproto.AppInst_Liveness", AppInst_Liveness_name, AppInst_Liveness_value)
+	proto.RegisterType((*AppInstInfo)(nil), "edgeproto.AppInstInfo")
+	proto.RegisterType((*AppInstMetrics)(nil), "edgeproto.AppInstMetrics")
 }
 func (this *AppInstKey) GoString() string {
 	if this == nil {
@@ -129,9 +182,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppInstApi service
 
 type AppInstApiClient interface {
-	CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error)
-	DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error)
-	UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error)
+	// Create an application instance
+	CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_CreateAppInstClient, error)
+	// Delete an application instance
+	DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_DeleteAppInstClient, error)
+	// Update an application instance
+	UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_UpdateAppInstClient, error)
+	// Show application instances. Any fields specified will be used to filter results.
 	ShowAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_ShowAppInstClient, error)
 }
 
@@ -143,35 +200,104 @@ func NewAppInstApiClient(cc *grpc.ClientConn) AppInstApiClient {
 	return &appInstApiClient{cc}
 }
 
-func (c *appInstApiClient) CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppInstApi/CreateAppInst", in, out, c.cc, opts...)
+func (c *appInstApiClient) CreateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_CreateAppInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstApi/CreateAppInst", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &appInstApiCreateAppInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
 }
 
-func (c *appInstApiClient) DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppInstApi/DeleteAppInst", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
+type AppInstApi_CreateAppInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
 }
 
-func (c *appInstApiClient) UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (*Result, error) {
-	out := new(Result)
-	err := grpc.Invoke(ctx, "/edgeproto.AppInstApi/UpdateAppInst", in, out, c.cc, opts...)
+type appInstApiCreateAppInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstApiCreateAppInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *appInstApiClient) DeleteAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_DeleteAppInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstApi_serviceDesc.Streams[1], c.cc, "/edgeproto.AppInstApi/DeleteAppInst", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &appInstApiDeleteAppInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstApi_DeleteAppInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type appInstApiDeleteAppInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstApiDeleteAppInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *appInstApiClient) UpdateAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_UpdateAppInstClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstApi_serviceDesc.Streams[2], c.cc, "/edgeproto.AppInstApi/UpdateAppInst", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appInstApiUpdateAppInstClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstApi_UpdateAppInstClient interface {
+	Recv() (*Result, error)
+	grpc.ClientStream
+}
+
+type appInstApiUpdateAppInstClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstApiUpdateAppInstClient) Recv() (*Result, error) {
+	m := new(Result)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *appInstApiClient) ShowAppInst(ctx context.Context, in *AppInst, opts ...grpc.CallOption) (AppInstApi_ShowAppInstClient, error) {
-	stream, err := grpc.NewClientStream(ctx, &_AppInstApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstApi/ShowAppInst", opts...)
+	stream, err := grpc.NewClientStream(ctx, &_AppInstApi_serviceDesc.Streams[3], c.cc, "/edgeproto.AppInstApi/ShowAppInst", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -205,9 +331,13 @@ func (x *appInstApiShowAppInstClient) Recv() (*AppInst, error) {
 // Server API for AppInstApi service
 
 type AppInstApiServer interface {
-	CreateAppInst(context.Context, *AppInst) (*Result, error)
-	DeleteAppInst(context.Context, *AppInst) (*Result, error)
-	UpdateAppInst(context.Context, *AppInst) (*Result, error)
+	// Create an application instance
+	CreateAppInst(*AppInst, AppInstApi_CreateAppInstServer) error
+	// Delete an application instance
+	DeleteAppInst(*AppInst, AppInstApi_DeleteAppInstServer) error
+	// Update an application instance
+	UpdateAppInst(*AppInst, AppInstApi_UpdateAppInstServer) error
+	// Show application instances. Any fields specified will be used to filter results.
 	ShowAppInst(*AppInst, AppInstApi_ShowAppInstServer) error
 }
 
@@ -215,58 +345,67 @@ func RegisterAppInstApiServer(s *grpc.Server, srv AppInstApiServer) {
 	s.RegisterService(&_AppInstApi_serviceDesc, srv)
 }
 
-func _AppInstApi_CreateAppInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AppInst)
-	if err := dec(in); err != nil {
-		return nil, err
+func _AppInstApi_CreateAppInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(AppInstApiServer).CreateAppInst(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.AppInstApi/CreateAppInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppInstApiServer).CreateAppInst(ctx, req.(*AppInst))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(AppInstApiServer).CreateAppInst(m, &appInstApiCreateAppInstServer{stream})
 }
 
-func _AppInstApi_DeleteAppInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AppInst)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AppInstApiServer).DeleteAppInst(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.AppInstApi/DeleteAppInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppInstApiServer).DeleteAppInst(ctx, req.(*AppInst))
-	}
-	return interceptor(ctx, in, info, handler)
+type AppInstApi_CreateAppInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
 }
 
-func _AppInstApi_UpdateAppInst_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(AppInst)
-	if err := dec(in); err != nil {
-		return nil, err
+type appInstApiCreateAppInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstApiCreateAppInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _AppInstApi_DeleteAppInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(AppInstApiServer).UpdateAppInst(ctx, in)
+	return srv.(AppInstApiServer).DeleteAppInst(m, &appInstApiDeleteAppInstServer{stream})
+}
+
+type AppInstApi_DeleteAppInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type appInstApiDeleteAppInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstApiDeleteAppInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func _AppInstApi_UpdateAppInst_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInst)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/edgeproto.AppInstApi/UpdateAppInst",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AppInstApiServer).UpdateAppInst(ctx, req.(*AppInst))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(AppInstApiServer).UpdateAppInst(m, &appInstApiUpdateAppInstServer{stream})
+}
+
+type AppInstApi_UpdateAppInstServer interface {
+	Send(*Result) error
+	grpc.ServerStream
+}
+
+type appInstApiUpdateAppInstServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstApiUpdateAppInstServer) Send(m *Result) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _AppInstApi_ShowAppInst_Handler(srv interface{}, stream grpc.ServerStream) error {
@@ -293,24 +432,212 @@ func (x *appInstApiShowAppInstServer) Send(m *AppInst) error {
 var _AppInstApi_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "edgeproto.AppInstApi",
 	HandlerType: (*AppInstApiServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CreateAppInst",
-			Handler:    _AppInstApi_CreateAppInst_Handler,
-		},
-		{
-			MethodName: "DeleteAppInst",
-			Handler:    _AppInstApi_DeleteAppInst_Handler,
-		},
-		{
-			MethodName: "UpdateAppInst",
-			Handler:    _AppInstApi_UpdateAppInst_Handler,
-		},
-	},
+	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "CreateAppInst",
+			Handler:       _AppInstApi_CreateAppInst_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "DeleteAppInst",
+			Handler:       _AppInstApi_DeleteAppInst_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "UpdateAppInst",
+			Handler:       _AppInstApi_UpdateAppInst_Handler,
+			ServerStreams: true,
+		},
 		{
 			StreamName:    "ShowAppInst",
 			Handler:       _AppInstApi_ShowAppInst_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "app_inst.proto",
+}
+
+// Client API for AppInstInfoApi service
+
+type AppInstInfoApiClient interface {
+	// Show application instances state.
+	ShowAppInstInfo(ctx context.Context, in *AppInstInfo, opts ...grpc.CallOption) (AppInstInfoApi_ShowAppInstInfoClient, error)
+}
+
+type appInstInfoApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAppInstInfoApiClient(cc *grpc.ClientConn) AppInstInfoApiClient {
+	return &appInstInfoApiClient{cc}
+}
+
+func (c *appInstInfoApiClient) ShowAppInstInfo(ctx context.Context, in *AppInstInfo, opts ...grpc.CallOption) (AppInstInfoApi_ShowAppInstInfoClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstInfoApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstInfoApi/ShowAppInstInfo", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appInstInfoApiShowAppInstInfoClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstInfoApi_ShowAppInstInfoClient interface {
+	Recv() (*AppInstInfo, error)
+	grpc.ClientStream
+}
+
+type appInstInfoApiShowAppInstInfoClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstInfoApiShowAppInstInfoClient) Recv() (*AppInstInfo, error) {
+	m := new(AppInstInfo)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for AppInstInfoApi service
+
+type AppInstInfoApiServer interface {
+	// Show application instances state.
+	ShowAppInstInfo(*AppInstInfo, AppInstInfoApi_ShowAppInstInfoServer) error
+}
+
+func RegisterAppInstInfoApiServer(s *grpc.Server, srv AppInstInfoApiServer) {
+	s.RegisterService(&_AppInstInfoApi_serviceDesc, srv)
+}
+
+func _AppInstInfoApi_ShowAppInstInfo_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInstInfo)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AppInstInfoApiServer).ShowAppInstInfo(m, &appInstInfoApiShowAppInstInfoServer{stream})
+}
+
+type AppInstInfoApi_ShowAppInstInfoServer interface {
+	Send(*AppInstInfo) error
+	grpc.ServerStream
+}
+
+type appInstInfoApiShowAppInstInfoServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstInfoApiShowAppInstInfoServer) Send(m *AppInstInfo) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _AppInstInfoApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AppInstInfoApi",
+	HandlerType: (*AppInstInfoApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowAppInstInfo",
+			Handler:       _AppInstInfoApi_ShowAppInstInfo_Handler,
+			ServerStreams: true,
+		},
+	},
+	Metadata: "app_inst.proto",
+}
+
+// Client API for AppInstMetricsApi service
+
+type AppInstMetricsApiClient interface {
+	// Show application instance metrics.
+	ShowAppInstMetrics(ctx context.Context, in *AppInstMetrics, opts ...grpc.CallOption) (AppInstMetricsApi_ShowAppInstMetricsClient, error)
+}
+
+type appInstMetricsApiClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewAppInstMetricsApiClient(cc *grpc.ClientConn) AppInstMetricsApiClient {
+	return &appInstMetricsApiClient{cc}
+}
+
+func (c *appInstMetricsApiClient) ShowAppInstMetrics(ctx context.Context, in *AppInstMetrics, opts ...grpc.CallOption) (AppInstMetricsApi_ShowAppInstMetricsClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_AppInstMetricsApi_serviceDesc.Streams[0], c.cc, "/edgeproto.AppInstMetricsApi/ShowAppInstMetrics", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &appInstMetricsApiShowAppInstMetricsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type AppInstMetricsApi_ShowAppInstMetricsClient interface {
+	Recv() (*AppInstMetrics, error)
+	grpc.ClientStream
+}
+
+type appInstMetricsApiShowAppInstMetricsClient struct {
+	grpc.ClientStream
+}
+
+func (x *appInstMetricsApiShowAppInstMetricsClient) Recv() (*AppInstMetrics, error) {
+	m := new(AppInstMetrics)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for AppInstMetricsApi service
+
+type AppInstMetricsApiServer interface {
+	// Show application instance metrics.
+	ShowAppInstMetrics(*AppInstMetrics, AppInstMetricsApi_ShowAppInstMetricsServer) error
+}
+
+func RegisterAppInstMetricsApiServer(s *grpc.Server, srv AppInstMetricsApiServer) {
+	s.RegisterService(&_AppInstMetricsApi_serviceDesc, srv)
+}
+
+func _AppInstMetricsApi_ShowAppInstMetrics_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(AppInstMetrics)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(AppInstMetricsApiServer).ShowAppInstMetrics(m, &appInstMetricsApiShowAppInstMetricsServer{stream})
+}
+
+type AppInstMetricsApi_ShowAppInstMetricsServer interface {
+	Send(*AppInstMetrics) error
+	grpc.ServerStream
+}
+
+type appInstMetricsApiShowAppInstMetricsServer struct {
+	grpc.ServerStream
+}
+
+func (x *appInstMetricsApiShowAppInstMetricsServer) Send(m *AppInstMetrics) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _AppInstMetricsApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "edgeproto.AppInstMetricsApi",
+	HandlerType: (*AppInstMetricsApiServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ShowAppInstMetrics",
+			Handler:       _AppInstMetricsApi_ShowAppInstMetrics_Handler,
 			ServerStreams: true,
 		},
 	},
@@ -353,6 +680,39 @@ func (m *AppInstKey) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		binary.LittleEndian.PutUint64(dAtA[i:], uint64(m.Id))
 		i += 8
+	}
+	return i, nil
+}
+
+func (m *AppPort) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppPort) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Proto != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.Proto))
+	}
+	if m.InternalPort != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.InternalPort))
+	}
+	if m.PublicPort != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.PublicPort))
 	}
 	return i, nil
 }
@@ -403,21 +763,181 @@ func (m *AppInst) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n4
-	if len(m.Ip) > 0 {
+	if len(m.Uri) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(len(m.Ip)))
-		i += copy(dAtA[i:], m.Ip)
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.Uri)))
+		i += copy(dAtA[i:], m.Uri)
 	}
-	if m.Port != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintAppInst(dAtA, i, uint64(m.Port))
+	dAtA[i] = 0x2a
+	i++
+	i = encodeVarintAppInst(dAtA, i, uint64(m.ClusterInstKey.Size()))
+	n5, err := m.ClusterInstKey.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
 	}
+	i += n5
 	if m.Liveness != 0 {
 		dAtA[i] = 0x30
 		i++
 		i = encodeVarintAppInst(dAtA, i, uint64(m.Liveness))
+	}
+	if len(m.ImagePath) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.ImagePath)))
+		i += copy(dAtA[i:], m.ImagePath)
+	}
+	if m.ImageType != 0 {
+		dAtA[i] = 0x40
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.ImageType))
+	}
+	if len(m.MappedPorts) > 0 {
+		for _, msg := range m.MappedPorts {
+			dAtA[i] = 0x4a
+			i++
+			i = encodeVarintAppInst(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
+	}
+	if len(m.MappedPath) > 0 {
+		dAtA[i] = 0x52
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.MappedPath)))
+		i += copy(dAtA[i:], m.MappedPath)
+	}
+	if len(m.Config) > 0 {
+		dAtA[i] = 0x5a
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(len(m.Config)))
+		i += copy(dAtA[i:], m.Config)
+	}
+	dAtA[i] = 0x62
+	i++
+	i = encodeVarintAppInst(dAtA, i, uint64(m.Flavor.Size()))
+	n6, err := m.Flavor.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n6
+	if m.AccessLayer != 0 {
+		dAtA[i] = 0x68
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.AccessLayer))
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x70
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			dAtA[i] = 0x7a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *AppInstInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstInfo) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			dAtA[i] = 0xa
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	dAtA[i] = 0x12
+	i++
+	i = encodeVarintAppInst(dAtA, i, uint64(m.Key.Size()))
+	n7, err := m.Key.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n7
+	if m.NotifyId != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.NotifyId))
+	}
+	if m.State != 0 {
+		dAtA[i] = 0x20
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			dAtA[i] = 0x2a
+			i++
+			l = len(s)
+			for l >= 1<<7 {
+				dAtA[i] = uint8(uint64(l)&0x7f | 0x80)
+				l >>= 7
+				i++
+			}
+			dAtA[i] = uint8(l)
+			i++
+			i += copy(dAtA[i:], s)
+		}
+	}
+	return i, nil
+}
+
+func (m *AppInstMetrics) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AppInstMetrics) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Something != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintAppInst(dAtA, i, uint64(m.Something))
 	}
 	return i, nil
 }
@@ -431,18 +951,25 @@ func encodeVarintAppInst(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *AppInstKey) Matches(filter *AppInstKey) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.AppKey.Matches(&filter.AppKey) {
+func (m *AppInstKey) Matches(o *AppInstKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if !m.CloudletKey.Matches(&filter.CloudletKey) {
+	if !m.AppKey.Matches(&o.AppKey, fopts...) {
 		return false
 	}
-	if filter.Id != 0 && filter.Id != m.Id {
+	if !m.CloudletKey.Matches(&o.CloudletKey, fopts...) {
 		return false
+	}
+	if !opts.Filter || o.Id != 0 {
+		if o.Id != m.Id {
+			return false
+		}
 	}
 	return true
 }
@@ -459,7 +986,7 @@ func (m *AppInstKey) CopyInFields(src *AppInstKey) {
 func (m *AppInstKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal AppInstKey key string", "obj", m)
+		log.FatalLog("Failed to marshal AppInstKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -467,32 +994,138 @@ func (m *AppInstKey) GetKeyString() string {
 func AppInstKeyStringParse(str string, key *AppInstKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal AppInstKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal AppInstKey key string", "str", str)
 	}
 }
 
-func (m *AppInst) Matches(filter *AppInst) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.Matches(&filter.Key) {
+func (m *AppPort) CopyInFields(src *AppPort) {
+	m.Proto = src.Proto
+	m.InternalPort = src.InternalPort
+	m.PublicPort = src.PublicPort
+}
+
+func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.Port != 0 && filter.Port != m.Port {
+	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if filter.Liveness != 0 && filter.Liveness != m.Liveness {
-		return false
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Uri != "" {
+			if o.Uri != m.Uri {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !m.ClusterInstKey.Matches(&o.ClusterInstKey, fopts...) {
+			return false
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Liveness != 0 {
+			if o.Liveness != m.Liveness {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.ImagePath != "" {
+			if o.ImagePath != m.ImagePath {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.ImageType != 0 {
+			if o.ImageType != m.ImageType {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.MappedPorts != nil {
+			if m.MappedPorts == nil && o.MappedPorts != nil || m.MappedPorts != nil && o.MappedPorts == nil {
+				return false
+			} else if m.MappedPorts != nil && o.MappedPorts != nil {
+				if len(m.MappedPorts) != len(o.MappedPorts) {
+					return false
+				}
+				for i := 0; i < len(m.MappedPorts); i++ {
+				}
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.MappedPath != "" {
+			if o.MappedPath != m.MappedPath {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Config != "" {
+			if o.Config != m.Config {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !m.Flavor.Matches(&o.Flavor, fopts...) {
+			return false
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.AccessLayer != 0 {
+			if o.AccessLayer != m.AccessLayer {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.State != 0 {
+			if o.State != m.State {
+				return false
+			}
+		}
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.Errors != nil {
+			if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+				return false
+			} else if m.Errors != nil && o.Errors != nil {
+				if len(m.Errors) != len(o.Errors) {
+					return false
+				}
+				for i := 0; i < len(m.Errors); i++ {
+					if o.Errors[i] != m.Errors[i] {
+						return false
+					}
+				}
+			}
+		}
 	}
 	return true
 }
 
+const AppInstFieldKey = "2"
+const AppInstFieldKeyAppKey = "2.1"
+const AppInstFieldKeyAppKeyDeveloperKey = "2.1.1"
 const AppInstFieldKeyAppKeyDeveloperKeyName = "2.1.1.2"
 const AppInstFieldKeyAppKeyName = "2.1.2"
 const AppInstFieldKeyAppKeyVersion = "2.1.3"
+const AppInstFieldKeyCloudletKey = "2.2"
+const AppInstFieldKeyCloudletKeyOperatorKey = "2.2.1"
 const AppInstFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
 const AppInstFieldKeyCloudletKeyName = "2.2.2"
 const AppInstFieldKeyId = "2.3"
+const AppInstFieldCloudletLoc = "3"
 const AppInstFieldCloudletLocLat = "3.1"
 const AppInstFieldCloudletLocLong = "3.2"
 const AppInstFieldCloudletLocHorizontalAccuracy = "3.3"
@@ -500,11 +1133,31 @@ const AppInstFieldCloudletLocVerticalAccuracy = "3.4"
 const AppInstFieldCloudletLocAltitude = "3.5"
 const AppInstFieldCloudletLocCourse = "3.6"
 const AppInstFieldCloudletLocSpeed = "3.7"
+const AppInstFieldCloudletLocTimestamp = "3.8"
 const AppInstFieldCloudletLocTimestampSeconds = "3.8.1"
 const AppInstFieldCloudletLocTimestampNanos = "3.8.2"
-const AppInstFieldIp = "4"
-const AppInstFieldPort = "5"
+const AppInstFieldUri = "4"
+const AppInstFieldClusterInstKey = "5"
+const AppInstFieldClusterInstKeyClusterKey = "5.1"
+const AppInstFieldClusterInstKeyClusterKeyName = "5.1.1"
+const AppInstFieldClusterInstKeyCloudletKey = "5.2"
+const AppInstFieldClusterInstKeyCloudletKeyOperatorKey = "5.2.1"
+const AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName = "5.2.1.1"
+const AppInstFieldClusterInstKeyCloudletKeyName = "5.2.2"
 const AppInstFieldLiveness = "6"
+const AppInstFieldImagePath = "7"
+const AppInstFieldImageType = "8"
+const AppInstFieldMappedPorts = "9"
+const AppInstFieldMappedPortsProto = "9.1"
+const AppInstFieldMappedPortsInternalPort = "9.2"
+const AppInstFieldMappedPortsPublicPort = "9.3"
+const AppInstFieldMappedPath = "10"
+const AppInstFieldConfig = "11"
+const AppInstFieldFlavor = "12"
+const AppInstFieldFlavorName = "12.1"
+const AppInstFieldAccessLayer = "13"
+const AppInstFieldState = "14"
+const AppInstFieldErrors = "15"
 
 var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyDeveloperKeyName,
@@ -522,24 +1175,204 @@ var AppInstAllFields = []string{
 	AppInstFieldCloudletLocSpeed,
 	AppInstFieldCloudletLocTimestampSeconds,
 	AppInstFieldCloudletLocTimestampNanos,
-	AppInstFieldIp,
-	AppInstFieldPort,
+	AppInstFieldUri,
+	AppInstFieldClusterInstKeyClusterKeyName,
+	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName,
+	AppInstFieldClusterInstKeyCloudletKeyName,
 	AppInstFieldLiveness,
+	AppInstFieldImagePath,
+	AppInstFieldImageType,
+	AppInstFieldMappedPortsProto,
+	AppInstFieldMappedPortsInternalPort,
+	AppInstFieldMappedPortsPublicPort,
+	AppInstFieldMappedPath,
+	AppInstFieldConfig,
+	AppInstFieldFlavorName,
+	AppInstFieldAccessLayer,
+	AppInstFieldState,
+	AppInstFieldErrors,
+}
+
+var AppInstAllFieldsMap = map[string]struct{}{
+	AppInstFieldKeyAppKeyDeveloperKeyName:                struct{}{},
+	AppInstFieldKeyAppKeyName:                            struct{}{},
+	AppInstFieldKeyAppKeyVersion:                         struct{}{},
+	AppInstFieldKeyCloudletKeyOperatorKeyName:            struct{}{},
+	AppInstFieldKeyCloudletKeyName:                       struct{}{},
+	AppInstFieldKeyId:                                    struct{}{},
+	AppInstFieldCloudletLocLat:                           struct{}{},
+	AppInstFieldCloudletLocLong:                          struct{}{},
+	AppInstFieldCloudletLocHorizontalAccuracy:            struct{}{},
+	AppInstFieldCloudletLocVerticalAccuracy:              struct{}{},
+	AppInstFieldCloudletLocAltitude:                      struct{}{},
+	AppInstFieldCloudletLocCourse:                        struct{}{},
+	AppInstFieldCloudletLocSpeed:                         struct{}{},
+	AppInstFieldCloudletLocTimestampSeconds:              struct{}{},
+	AppInstFieldCloudletLocTimestampNanos:                struct{}{},
+	AppInstFieldUri:                                      struct{}{},
+	AppInstFieldClusterInstKeyClusterKeyName:             struct{}{},
+	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName: struct{}{},
+	AppInstFieldClusterInstKeyCloudletKeyName:            struct{}{},
+	AppInstFieldLiveness:                                 struct{}{},
+	AppInstFieldImagePath:                                struct{}{},
+	AppInstFieldImageType:                                struct{}{},
+	AppInstFieldMappedPortsProto:                         struct{}{},
+	AppInstFieldMappedPortsInternalPort:                  struct{}{},
+	AppInstFieldMappedPortsPublicPort:                    struct{}{},
+	AppInstFieldMappedPath:                               struct{}{},
+	AppInstFieldConfig:                                   struct{}{},
+	AppInstFieldFlavorName:                               struct{}{},
+	AppInstFieldAccessLayer:                              struct{}{},
+	AppInstFieldState:                                    struct{}{},
+	AppInstFieldErrors:                                   struct{}{},
+}
+
+func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
+	if m.Key.AppKey.DeveloperKey.Name != o.Key.AppKey.DeveloperKey.Name {
+		fields[AppInstFieldKeyAppKeyDeveloperKeyName] = struct{}{}
+		fields[AppInstFieldKeyAppKeyDeveloperKey] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Name != o.Key.AppKey.Name {
+		fields[AppInstFieldKeyAppKeyName] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Version != o.Key.AppKey.Version {
+		fields[AppInstFieldKeyAppKeyVersion] = struct{}{}
+		fields[AppInstFieldKeyAppKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[AppInstFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[AppInstFieldKeyCloudletKeyName] = struct{}{}
+		fields[AppInstFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.Key.Id != o.Key.Id {
+		fields[AppInstFieldKeyId] = struct{}{}
+		fields[AppInstFieldKey] = struct{}{}
+	}
+	if m.CloudletLoc.Lat != o.CloudletLoc.Lat {
+		fields[AppInstFieldCloudletLocLat] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Long != o.CloudletLoc.Long {
+		fields[AppInstFieldCloudletLocLong] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.HorizontalAccuracy != o.CloudletLoc.HorizontalAccuracy {
+		fields[AppInstFieldCloudletLocHorizontalAccuracy] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.VerticalAccuracy != o.CloudletLoc.VerticalAccuracy {
+		fields[AppInstFieldCloudletLocVerticalAccuracy] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Altitude != o.CloudletLoc.Altitude {
+		fields[AppInstFieldCloudletLocAltitude] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Course != o.CloudletLoc.Course {
+		fields[AppInstFieldCloudletLocCourse] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Speed != o.CloudletLoc.Speed {
+		fields[AppInstFieldCloudletLocSpeed] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Timestamp.Seconds != o.CloudletLoc.Timestamp.Seconds {
+		fields[AppInstFieldCloudletLocTimestampSeconds] = struct{}{}
+		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.CloudletLoc.Timestamp.Nanos != o.CloudletLoc.Timestamp.Nanos {
+		fields[AppInstFieldCloudletLocTimestampNanos] = struct{}{}
+		fields[AppInstFieldCloudletLocTimestamp] = struct{}{}
+		fields[AppInstFieldCloudletLoc] = struct{}{}
+	}
+	if m.Uri != o.Uri {
+		fields[AppInstFieldUri] = struct{}{}
+	}
+	if m.ClusterInstKey.ClusterKey.Name != o.ClusterInstKey.ClusterKey.Name {
+		fields[AppInstFieldClusterInstKeyClusterKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyClusterKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.ClusterInstKey.CloudletKey.OperatorKey.Name != o.ClusterInstKey.CloudletKey.OperatorKey.Name {
+		fields[AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.ClusterInstKey.CloudletKey.Name != o.ClusterInstKey.CloudletKey.Name {
+		fields[AppInstFieldClusterInstKeyCloudletKeyName] = struct{}{}
+		fields[AppInstFieldClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.Liveness != o.Liveness {
+		fields[AppInstFieldLiveness] = struct{}{}
+	}
+	if m.ImagePath != o.ImagePath {
+		fields[AppInstFieldImagePath] = struct{}{}
+	}
+	if m.ImageType != o.ImageType {
+		fields[AppInstFieldImageType] = struct{}{}
+	}
+	if len(m.MappedPorts) != len(o.MappedPorts) {
+		fields[AppInstFieldMappedPorts] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.MappedPorts); i0++ {
+			if m.MappedPorts[i0].Proto != o.MappedPorts[i0].Proto {
+				fields[AppInstFieldMappedPortsProto] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].InternalPort != o.MappedPorts[i0].InternalPort {
+				fields[AppInstFieldMappedPortsInternalPort] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+			if m.MappedPorts[i0].PublicPort != o.MappedPorts[i0].PublicPort {
+				fields[AppInstFieldMappedPortsPublicPort] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
+		}
+	}
+	if m.MappedPath != o.MappedPath {
+		fields[AppInstFieldMappedPath] = struct{}{}
+	}
+	if m.Config != o.Config {
+		fields[AppInstFieldConfig] = struct{}{}
+	}
+	if m.Flavor.Name != o.Flavor.Name {
+		fields[AppInstFieldFlavorName] = struct{}{}
+		fields[AppInstFieldFlavor] = struct{}{}
+	}
+	if m.AccessLayer != o.AccessLayer {
+		fields[AppInstFieldAccessLayer] = struct{}{}
+	}
+	if m.State != o.State {
+		fields[AppInstFieldState] = struct{}{}
+	}
+	if len(m.Errors) != len(o.Errors) {
+		fields[AppInstFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[AppInstFieldErrors] = struct{}{}
+				break
+			}
+		}
+	}
 }
 
 func (m *AppInst) CopyInFields(src *AppInst) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.1"]; set {
@@ -601,16 +1434,72 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 		}
 	}
 	if _, set := fmap["4"]; set {
-		if m.Ip == nil || len(m.Ip) < len(src.Ip) {
-			m.Ip = make([]byte, len(src.Ip))
-		}
-		copy(m.Ip, src.Ip)
+		m.Uri = src.Uri
 	}
 	if _, set := fmap["5"]; set {
-		m.Port = src.Port
+		if _, set := fmap["5.1"]; set {
+			if _, set := fmap["5.1.1"]; set {
+				m.ClusterInstKey.ClusterKey.Name = src.ClusterInstKey.ClusterKey.Name
+			}
+		}
+		if _, set := fmap["5.2"]; set {
+			if _, set := fmap["5.2.1"]; set {
+				if _, set := fmap["5.2.1.1"]; set {
+					m.ClusterInstKey.CloudletKey.OperatorKey.Name = src.ClusterInstKey.CloudletKey.OperatorKey.Name
+				}
+			}
+			if _, set := fmap["5.2.2"]; set {
+				m.ClusterInstKey.CloudletKey.Name = src.ClusterInstKey.CloudletKey.Name
+			}
+		}
 	}
 	if _, set := fmap["6"]; set {
 		m.Liveness = src.Liveness
+	}
+	if _, set := fmap["7"]; set {
+		m.ImagePath = src.ImagePath
+	}
+	if _, set := fmap["8"]; set {
+		m.ImageType = src.ImageType
+	}
+	if _, set := fmap["9"]; set {
+		if m.MappedPorts == nil || len(m.MappedPorts) != len(src.MappedPorts) {
+			m.MappedPorts = make([]AppPort, len(src.MappedPorts))
+		}
+		for i0 := 0; i0 < len(src.MappedPorts); i0++ {
+			if _, set := fmap["9.1"]; set {
+				m.MappedPorts[i0].Proto = src.MappedPorts[i0].Proto
+			}
+			if _, set := fmap["9.2"]; set {
+				m.MappedPorts[i0].InternalPort = src.MappedPorts[i0].InternalPort
+			}
+			if _, set := fmap["9.3"]; set {
+				m.MappedPorts[i0].PublicPort = src.MappedPorts[i0].PublicPort
+			}
+		}
+	}
+	if _, set := fmap["10"]; set {
+		m.MappedPath = src.MappedPath
+	}
+	if _, set := fmap["11"]; set {
+		m.Config = src.Config
+	}
+	if _, set := fmap["12"]; set {
+		if _, set := fmap["12.1"]; set {
+			m.Flavor.Name = src.Flavor.Name
+		}
+	}
+	if _, set := fmap["13"]; set {
+		m.AccessLayer = src.AccessLayer
+	}
+	if _, set := fmap["14"]; set {
+		m.State = src.State
+	}
+	if _, set := fmap["15"]; set {
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
+			m.Errors = make([]string, len(src.Errors))
+		}
+		copy(m.Errors, src.Errors)
 	}
 }
 
@@ -619,32 +1508,24 @@ func (s *AppInst) HasFields() bool {
 }
 
 type AppInstStore struct {
-	objstore    objstore.ObjStore
-	listAppInst map[AppInstKey]struct{}
+	kvstore objstore.KVStore
 }
 
-func NewAppInstStore(objstore objstore.ObjStore) AppInstStore {
-	return AppInstStore{objstore: objstore}
-}
-
-type AppInstCacher interface {
-	SyncAppInstUpdate(m *AppInst, rev int64)
-	SyncAppInstDelete(m *AppInst, rev int64)
-	SyncAppInstPrune(current map[AppInstKey]struct{})
-	SyncAppInstRevOnly(rev int64)
+func NewAppInstStore(kvstore objstore.KVStore) AppInstStore {
+	return AppInstStore{kvstore: kvstore}
 }
 
 func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	err := m.Validate(AppInstAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("AppInst", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -655,13 +1536,14 @@ func (s *AppInstStore) Create(m *AppInst, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("AppInst", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -677,7 +1559,43 @@ func (s *AppInstStore) Update(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstStore) Put(m *AppInst, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInst", m.GetKey())
+	var val []byte
+	curBytes, _, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur AppInst
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -692,8 +1610,8 @@ func (s *AppInstStore) Delete(m *AppInst, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	key := objstore.DbKeyString("AppInst", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -703,128 +1621,74 @@ func (s *AppInstStore) Delete(m *AppInst, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-type AppInstCb func(m *AppInst) error
-
-func (s *AppInstStore) LoadAll(cb AppInstCb) error {
-	loadkey := objstore.DbKeyPrefixString(&AppInstKey{})
-	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
-		var obj AppInst
-		err := json.Unmarshal(val, &obj)
-		if err != nil {
-			util.WarnLog("Failed to parse AppInst data", "val", string(val))
-			return nil
-		}
-		err = cb(&obj)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
-}
-
 func (s *AppInstStore) LoadOne(key string) (*AppInst, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
 	var obj AppInst
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse AppInst data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInst data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
 }
 
-// Sync will sync changes for any AppInst objects.
-func (s *AppInstStore) Sync(ctx context.Context, cacher AppInstCacher) error {
-	str := objstore.DbKeyPrefixString(&AppInstKey{})
-	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
-		obj := AppInst{}
-		// Even on parse error, we should still call back to keep
-		// the revision numbers in sync so no caller hangs on wait.
-		action := in.Action
-		if action == objstore.SyncUpdate || action == objstore.SyncList {
-			err := json.Unmarshal(in.Value, &obj)
-			if err != nil {
-				util.WarnLog("Failed to parse AppInst data", "val", string(in.Value))
-				action = objstore.SyncRevOnly
-			}
-		} else if action == objstore.SyncDelete {
-			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
-			AppInstKeyStringParse(keystr, obj.GetKey())
+func (s *AppInstStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *AppInst) bool {
+	keystr := objstore.DbKeyString("AppInst", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
 		}
-		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
-		switch action {
-		case objstore.SyncUpdate:
-			cacher.SyncAppInstUpdate(&obj, in.Rev)
-		case objstore.SyncDelete:
-			cacher.SyncAppInstDelete(&obj, in.Rev)
-		case objstore.SyncListStart:
-			s.listAppInst = make(map[AppInstKey]struct{})
-		case objstore.SyncList:
-			s.listAppInst[obj.Key] = struct{}{}
-			cacher.SyncAppInstUpdate(&obj, in.Rev)
-		case objstore.SyncListEnd:
-			cacher.SyncAppInstPrune(s.listAppInst)
-			s.listAppInst = nil
-		case objstore.SyncRevOnly:
-			cacher.SyncAppInstRevOnly(in.Rev)
-		}
-	})
+	}
+	return true
+}
+
+func (s *AppInstStore) STMPut(stm concurrency.STM, obj *AppInst) {
+	keystr := objstore.DbKeyString("AppInst", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *AppInstStore) STMDel(stm concurrency.STM, key *AppInstKey) {
+	keystr := objstore.DbKeyString("AppInst", key)
+	stm.Del(keystr)
+}
+
+type AppInstKeyWatcher struct {
+	cb func()
 }
 
 // AppInstCache caches AppInst objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppInstCache struct {
-	Store      *AppInstStore
-	Objs       map[AppInstKey]*AppInst
-	Rev        int64
-	Mux        util.Mutex
-	Cond       sync.Cond
-	initWait   bool
-	syncDone   bool
-	syncCancel context.CancelFunc
-	notifyCb   func(obj *AppInstKey)
+	Objs        map[AppInstKey]*AppInst
+	Mux         util.Mutex
+	List        map[AppInstKey]struct{}
+	NotifyCb    func(obj *AppInstKey, old *AppInst)
+	UpdatedCb   func(old *AppInst, new *AppInst)
+	KeyWatchers map[AppInstKey][]*AppInstKeyWatcher
 }
 
-func NewAppInstCache(store *AppInstStore) *AppInstCache {
-	cache := AppInstCache{
-		Store:    store,
-		Objs:     make(map[AppInstKey]*AppInst),
-		initWait: true,
-	}
-	cache.Mux.InitCond(&cache.Cond)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cache.syncCancel = cancel
-	go func() {
-		err := cache.Store.Sync(ctx, &cache)
-		if err != nil {
-			util.WarnLog("AppInst Sync failed", "err", err)
-		}
-		cache.syncDone = true
-		cache.Cond.Broadcast()
-	}()
+func NewAppInstCache() *AppInstCache {
+	cache := AppInstCache{}
+	InitAppInstCache(&cache)
 	return &cache
 }
 
-func (c *AppInstCache) WaitInitSyncDone() {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for c.initWait {
-		c.Cond.Wait()
-	}
+func InitAppInstCache(cache *AppInstCache) {
+	cache.Objs = make(map[AppInstKey]*AppInst)
+	cache.KeyWatchers = make(map[AppInstKey][]*AppInstKeyWatcher)
 }
 
-func (c *AppInstCache) Done() {
-	c.syncCancel()
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for !c.syncDone {
-		c.Cond.Wait()
-	}
+func (c *AppInstCache) GetTypeString() string {
+	return "AppInst"
 }
 
 func (c *AppInstCache) Get(key *AppInstKey, valbuf *AppInst) bool {
@@ -852,77 +1716,72 @@ func (c *AppInstCache) GetAllKeys(keys map[AppInstKey]struct{}) {
 	}
 }
 
-func (c *AppInstCache) SyncAppInstUpdate(in *AppInst, rev int64) {
+func (c *AppInstCache) Update(in *AppInst, rev int64) {
 	c.Mux.Lock()
-	c.Objs[*in.GetKey()] = in
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
-	c.Cond.Broadcast()
-	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		old := c.Objs[in.Key]
+		if c.UpdatedCb != nil {
+			new := &AppInst{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", in, "rev", rev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *AppInstCache) SyncAppInstDelete(in *AppInst, rev int64) {
+func (c *AppInstCache) Delete(in *AppInst, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
-	c.Cond.Broadcast()
+	old := c.Objs[in.Key]
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInst", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key, old)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *AppInstCache) SyncAppInstPrune(current map[AppInstKey]struct{}) {
-	deleted := make(map[AppInstKey]struct{})
+func (c *AppInstCache) Prune(validKeys map[AppInstKey]struct{}) {
+	notify := make(map[AppInstKey]*AppInst)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
-		if _, found := current[key]; !found {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
-	}
-	if c.initWait {
-		c.initWait = false
-		c.Cond.Broadcast()
 	}
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		for key, _ := range deleted {
-			c.notifyCb(&key)
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key, old)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
-func (c *AppInstCache) SyncAppInstRevOnly(rev int64) {
+func (c *AppInstCache) GetCount() int {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
-	c.Cond.Broadcast()
-}
-
-func (c *AppInstCache) SyncWait(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
-	for c.Rev < rev {
-		c.Cond.Wait()
-	}
+	return len(c.Objs)
 }
 
 func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show AppInst", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show AppInst", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show AppInst", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -931,12 +1790,778 @@ func (c *AppInstCache) Show(filter *AppInst, cb func(ret *AppInst) error) error 
 	return nil
 }
 
-func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey)) {
-	c.notifyCb = fn
+func AppInstGenericNotifyCb(fn func(key *AppInstKey, old *AppInst)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppInstKey), obj.(*AppInst))
+	}
 }
 
-func (m *AppInst) GetKey() *AppInstKey {
+func (c *AppInstCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInst)) {
+	c.NotifyCb = fn
+}
+
+func (c *AppInstCache) SetUpdatedCb(fn func(old *AppInst, new *AppInst)) {
+	c.UpdatedCb = fn
+}
+
+func (c *AppInstCache) WatchKey(key *AppInstKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppInstKeyWatcher, 0)
+	}
+	watcher := AppInstKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching AppInst", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppInstCache) TriggerKeyWatchers(key *AppInstKey) {
+	watchers := make([]*AppInstKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
+}
+func (c *AppInstCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := AppInst{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse AppInst data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AppInstCache) SyncDelete(key []byte, rev int64) {
+	obj := AppInst{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppInstKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *AppInstCache) SyncListStart() {
+	c.List = make(map[AppInstKey]struct{})
+}
+
+func (c *AppInstCache) SyncListEnd() {
+	deleted := make(map[AppInstKey]*AppInst)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
+			c.TriggerKeyWatchers(&key)
+		}
+	}
+}
+
+func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
+	curState := TrackedState_TrackedStateUnknown
+	done := make(chan bool, 1)
+	failed := make(chan bool, 1)
+	var err error
+
+	cancel := c.WatchKey(key, func() {
+		info := AppInst{}
+		if c.Get(key, &info) {
+			curState = info.State
+		} else {
+			curState = TrackedState_NotPresent
+		}
+		if send != nil {
+			msg := TrackedState_name[int32(curState)]
+			send(&Result{Message: msg})
+		}
+		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_name[int32(curState)])
+		if curState == errorState {
+			failed <- true
+		} else if curState == targetState {
+			done <- true
+		}
+	})
+	// After setting up watch, check current state,
+	// as it may have already changed to target state
+	info := AppInst{}
+	if c.Get(key, &info) {
+		curState = info.State
+	} else {
+		curState = TrackedState_NotPresent
+	}
+	if curState == targetState {
+		done <- true
+	}
+
+	select {
+	case <-done:
+		err = nil
+		if successMsg != "" {
+			send(&Result{Message: successMsg})
+		}
+	case <-ctx.Done():
+		log.DebugLog(log.DebugLevelApi, "Watch for AppInst cancelled by user", "key", key)
+		err = nil // caller cancelled
+	case <-failed:
+		if c.Get(key, &info) {
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else {
+			// this shouldn't happen, since only way to get here
+			// is if info state is set to Error
+			err = errors.New("Unknown failure")
+		}
+	case <-time.After(timeout):
+		hasInfo := c.Get(key, &info)
+		if hasInfo && info.State == errorState {
+			// error may have been sent back before watch started
+			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+		} else if _, found := transitionStates[info.State]; hasInfo && found {
+			// no success response, but state is a valid transition
+			// state. That means work is still in progress.
+			// Notify user that this is not an error.
+			// Do not undo since CRM is still busy.
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowAppInst to check current status", TrackedState_name[int32(info.State)])
+			send(&Result{Message: msg})
+			err = nil
+		} else {
+			err = fmt.Errorf("Timed out; expected state %s but is %s",
+				TrackedState_name[int32(targetState)],
+				TrackedState_name[int32(curState)])
+		}
+	}
+	cancel()
+	// note: do not close done/failed, garbage collector will deal with it.
+	return err
+}
+
+func (m *AppInst) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !m.Key.Matches(&o.Key, fopts...) {
+		return false
+	}
+	if !opts.Filter || o.NotifyId != 0 {
+		if o.NotifyId != m.NotifyId {
+			return false
+		}
+	}
+	if !opts.Filter || o.State != 0 {
+		if o.State != m.State {
+			return false
+		}
+	}
+	if !opts.Filter || o.Errors != nil {
+		if m.Errors == nil && o.Errors != nil || m.Errors != nil && o.Errors == nil {
+			return false
+		} else if m.Errors != nil && o.Errors != nil {
+			if len(m.Errors) != len(o.Errors) {
+				return false
+			}
+			for i := 0; i < len(m.Errors); i++ {
+				if o.Errors[i] != m.Errors[i] {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
+const AppInstInfoFieldKey = "2"
+const AppInstInfoFieldKeyAppKey = "2.1"
+const AppInstInfoFieldKeyAppKeyDeveloperKey = "2.1.1"
+const AppInstInfoFieldKeyAppKeyDeveloperKeyName = "2.1.1.2"
+const AppInstInfoFieldKeyAppKeyName = "2.1.2"
+const AppInstInfoFieldKeyAppKeyVersion = "2.1.3"
+const AppInstInfoFieldKeyCloudletKey = "2.2"
+const AppInstInfoFieldKeyCloudletKeyOperatorKey = "2.2.1"
+const AppInstInfoFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
+const AppInstInfoFieldKeyCloudletKeyName = "2.2.2"
+const AppInstInfoFieldKeyId = "2.3"
+const AppInstInfoFieldNotifyId = "3"
+const AppInstInfoFieldState = "4"
+const AppInstInfoFieldErrors = "5"
+
+var AppInstInfoAllFields = []string{
+	AppInstInfoFieldKeyAppKeyDeveloperKeyName,
+	AppInstInfoFieldKeyAppKeyName,
+	AppInstInfoFieldKeyAppKeyVersion,
+	AppInstInfoFieldKeyCloudletKeyOperatorKeyName,
+	AppInstInfoFieldKeyCloudletKeyName,
+	AppInstInfoFieldKeyId,
+	AppInstInfoFieldNotifyId,
+	AppInstInfoFieldState,
+	AppInstInfoFieldErrors,
+}
+
+var AppInstInfoAllFieldsMap = map[string]struct{}{
+	AppInstInfoFieldKeyAppKeyDeveloperKeyName:     struct{}{},
+	AppInstInfoFieldKeyAppKeyName:                 struct{}{},
+	AppInstInfoFieldKeyAppKeyVersion:              struct{}{},
+	AppInstInfoFieldKeyCloudletKeyOperatorKeyName: struct{}{},
+	AppInstInfoFieldKeyCloudletKeyName:            struct{}{},
+	AppInstInfoFieldKeyId:                         struct{}{},
+	AppInstInfoFieldNotifyId:                      struct{}{},
+	AppInstInfoFieldState:                         struct{}{},
+	AppInstInfoFieldErrors:                        struct{}{},
+}
+
+func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
+	if m.Key.AppKey.DeveloperKey.Name != o.Key.AppKey.DeveloperKey.Name {
+		fields[AppInstInfoFieldKeyAppKeyDeveloperKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKeyDeveloperKey] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Name != o.Key.AppKey.Name {
+		fields[AppInstInfoFieldKeyAppKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.AppKey.Version != o.Key.AppKey.Version {
+		fields[AppInstInfoFieldKeyAppKeyVersion] = struct{}{}
+		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.OperatorKey.Name != o.Key.CloudletKey.OperatorKey.Name {
+		fields[AppInstInfoFieldKeyCloudletKeyOperatorKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKeyOperatorKey] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.CloudletKey.Name != o.Key.CloudletKey.Name {
+		fields[AppInstInfoFieldKeyCloudletKeyName] = struct{}{}
+		fields[AppInstInfoFieldKeyCloudletKey] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.Key.Id != o.Key.Id {
+		fields[AppInstInfoFieldKeyId] = struct{}{}
+		fields[AppInstInfoFieldKey] = struct{}{}
+	}
+	if m.NotifyId != o.NotifyId {
+		fields[AppInstInfoFieldNotifyId] = struct{}{}
+	}
+	if m.State != o.State {
+		fields[AppInstInfoFieldState] = struct{}{}
+	}
+	if len(m.Errors) != len(o.Errors) {
+		fields[AppInstInfoFieldErrors] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Errors); i0++ {
+			if m.Errors[i0] != o.Errors[i0] {
+				fields[AppInstInfoFieldErrors] = struct{}{}
+				break
+			}
+		}
+	}
+}
+
+func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
+	fmap := MakeFieldMap(src.Fields)
+	if _, set := fmap["2"]; set {
+		if _, set := fmap["2.1"]; set {
+			if _, set := fmap["2.1.1"]; set {
+				if _, set := fmap["2.1.1.2"]; set {
+					m.Key.AppKey.DeveloperKey.Name = src.Key.AppKey.DeveloperKey.Name
+				}
+			}
+			if _, set := fmap["2.1.2"]; set {
+				m.Key.AppKey.Name = src.Key.AppKey.Name
+			}
+			if _, set := fmap["2.1.3"]; set {
+				m.Key.AppKey.Version = src.Key.AppKey.Version
+			}
+		}
+		if _, set := fmap["2.2"]; set {
+			if _, set := fmap["2.2.1"]; set {
+				if _, set := fmap["2.2.1.1"]; set {
+					m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
+				}
+			}
+			if _, set := fmap["2.2.2"]; set {
+				m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+			}
+		}
+		if _, set := fmap["2.3"]; set {
+			m.Key.Id = src.Key.Id
+		}
+	}
+	if _, set := fmap["3"]; set {
+		m.NotifyId = src.NotifyId
+	}
+	if _, set := fmap["4"]; set {
+		m.State = src.State
+	}
+	if _, set := fmap["5"]; set {
+		if m.Errors == nil || len(m.Errors) != len(src.Errors) {
+			m.Errors = make([]string, len(src.Errors))
+		}
+		copy(m.Errors, src.Errors)
+	}
+}
+
+func (s *AppInstInfo) HasFields() bool {
+	return true
+}
+
+type AppInstInfoStore struct {
+	kvstore objstore.KVStore
+}
+
+func NewAppInstInfoStore(kvstore objstore.KVStore) AppInstInfoStore {
+	return AppInstInfoStore{kvstore: kvstore}
+}
+
+func (s *AppInstInfoStore) Create(m *AppInstInfo, wait func(int64)) (*Result, error) {
+	err := m.Validate(AppInstInfoAllFieldsMap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
+	val, err := json.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Create(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstInfoStore) Update(m *AppInstInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
+	var vers int64 = 0
+	curBytes, vers, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	var cur AppInstInfo
+	err = json.Unmarshal(curBytes, &cur)
+	if err != nil {
+		return nil, err
+	}
+	cur.CopyInFields(m)
+	// never save fields
+	cur.Fields = nil
+	val, err := json.Marshal(cur)
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstInfoStore) Put(m *AppInstInfo, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
+	var val []byte
+	curBytes, _, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur AppInstInfo
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(key, string(val))
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstInfoStore) Delete(m *AppInstInfo, wait func(int64)) (*Result, error) {
+	err := m.GetKey().Validate()
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("AppInstInfo", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppInstInfoStore) LoadOne(key string) (*AppInstInfo, int64, error) {
+	val, rev, _, err := s.kvstore.Get(key)
+	if err != nil {
+		return nil, 0, err
+	}
+	var obj AppInstInfo
+	err = json.Unmarshal(val, &obj)
+	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "Failed to parse AppInstInfo data", "val", string(val))
+		return nil, 0, err
+	}
+	return &obj, rev, nil
+}
+
+func (s *AppInstInfoStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *AppInstInfo) bool {
+	keystr := objstore.DbKeyString("AppInstInfo", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
+func (s *AppInstInfoStore) STMPut(stm concurrency.STM, obj *AppInstInfo) {
+	keystr := objstore.DbKeyString("AppInstInfo", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *AppInstInfoStore) STMDel(stm concurrency.STM, key *AppInstKey) {
+	keystr := objstore.DbKeyString("AppInstInfo", key)
+	stm.Del(keystr)
+}
+
+type AppInstInfoKeyWatcher struct {
+	cb func()
+}
+
+// AppInstInfoCache caches AppInstInfo objects in memory in a hash table
+// and keeps them in sync with the database.
+type AppInstInfoCache struct {
+	Objs        map[AppInstKey]*AppInstInfo
+	Mux         util.Mutex
+	List        map[AppInstKey]struct{}
+	NotifyCb    func(obj *AppInstKey, old *AppInstInfo)
+	UpdatedCb   func(old *AppInstInfo, new *AppInstInfo)
+	KeyWatchers map[AppInstKey][]*AppInstInfoKeyWatcher
+}
+
+func NewAppInstInfoCache() *AppInstInfoCache {
+	cache := AppInstInfoCache{}
+	InitAppInstInfoCache(&cache)
+	return &cache
+}
+
+func InitAppInstInfoCache(cache *AppInstInfoCache) {
+	cache.Objs = make(map[AppInstKey]*AppInstInfo)
+	cache.KeyWatchers = make(map[AppInstKey][]*AppInstInfoKeyWatcher)
+}
+
+func (c *AppInstInfoCache) GetTypeString() string {
+	return "AppInstInfo"
+}
+
+func (c *AppInstInfoCache) Get(key *AppInstKey, valbuf *AppInstInfo) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	inst, found := c.Objs[*key]
+	if found {
+		*valbuf = *inst
+	}
+	return found
+}
+
+func (c *AppInstInfoCache) HasKey(key *AppInstKey) bool {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	_, found := c.Objs[*key]
+	return found
+}
+
+func (c *AppInstInfoCache) GetAllKeys(keys map[AppInstKey]struct{}) {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for key, _ := range c.Objs {
+		keys[key] = struct{}{}
+	}
+}
+
+func (c *AppInstInfoCache) Update(in *AppInstInfo, rev int64) {
+	c.Mux.Lock()
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		old := c.Objs[in.Key]
+		if c.UpdatedCb != nil {
+			new := &AppInstInfo{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
+	}
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", in, "rev", rev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(&in.Key)
+}
+
+func (c *AppInstInfoCache) Delete(in *AppInstInfo, rev int64) {
+	c.Mux.Lock()
+	old := c.Objs[in.Key]
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete AppInstInfo", "key", in.Key, "rev", rev)
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key, old)
+	}
+	c.TriggerKeyWatchers(&in.Key)
+}
+
+func (c *AppInstInfoCache) Prune(validKeys map[AppInstKey]struct{}) {
+	notify := make(map[AppInstKey]*AppInstInfo)
+	c.Mux.Lock()
+	for key, _ := range c.Objs {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
+			delete(c.Objs, key)
+		}
+	}
+	c.Mux.Unlock()
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key, old)
+		}
+		c.TriggerKeyWatchers(&key)
+	}
+}
+
+func (c *AppInstInfoCache) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+func (c *AppInstInfoCache) Flush(notifyId int64) {
+	flushed := make(map[AppInstKey]*AppInstInfo)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if val.NotifyId != notifyId {
+			continue
+		}
+		flushed[key] = c.Objs[key]
+		delete(c.Objs, key)
+	}
+	c.Mux.Unlock()
+	if len(flushed) > 0 {
+		for key, old := range flushed {
+			if c.NotifyCb != nil {
+				c.NotifyCb(&key, old)
+			}
+			c.TriggerKeyWatchers(&key)
+		}
+	}
+}
+
+func (c *AppInstInfoCache) Show(filter *AppInstInfo, cb func(ret *AppInstInfo) error) error {
+	log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "count", len(c.Objs))
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	for _, obj := range c.Objs {
+		if !obj.Matches(filter, MatchFilter()) {
+			continue
+		}
+		log.DebugLog(log.DebugLevelApi, "Show AppInstInfo", "obj", obj)
+		err := cb(obj)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func AppInstInfoGenericNotifyCb(fn func(key *AppInstKey, old *AppInstInfo)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppInstKey), obj.(*AppInstInfo))
+	}
+}
+
+func (c *AppInstInfoCache) SetNotifyCb(fn func(obj *AppInstKey, old *AppInstInfo)) {
+	c.NotifyCb = fn
+}
+
+func (c *AppInstInfoCache) SetUpdatedCb(fn func(old *AppInstInfo, new *AppInstInfo)) {
+	c.UpdatedCb = fn
+}
+
+func (c *AppInstInfoCache) WatchKey(key *AppInstKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppInstInfoKeyWatcher, 0)
+	}
+	watcher := AppInstInfoKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching AppInstInfo", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppInstInfoCache) TriggerKeyWatchers(key *AppInstKey) {
+	watchers := make([]*AppInstInfoKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
+}
+func (c *AppInstInfoCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := AppInstInfo{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse AppInstInfo data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AppInstInfoCache) SyncDelete(key []byte, rev int64) {
+	obj := AppInstInfo{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppInstKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *AppInstInfoCache) SyncListStart() {
+	c.List = make(map[AppInstKey]struct{})
+}
+
+func (c *AppInstInfoCache) SyncListEnd() {
+	deleted := make(map[AppInstKey]*AppInstInfo)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
+			c.TriggerKeyWatchers(&key)
+		}
+	}
+}
+
+func (m *AppInstInfo) GetKey() objstore.ObjKey {
+	return &m.Key
+}
+
+func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) {
+	m.Something = src.Something
 }
 
 func (m *AppInstKey) Size() (n int) {
@@ -948,6 +2573,21 @@ func (m *AppInstKey) Size() (n int) {
 	n += 1 + l + sovAppInst(uint64(l))
 	if m.Id != 0 {
 		n += 9
+	}
+	return n
+}
+
+func (m *AppPort) Size() (n int) {
+	var l int
+	_ = l
+	if m.Proto != 0 {
+		n += 1 + sovAppInst(uint64(m.Proto))
+	}
+	if m.InternalPort != 0 {
+		n += 1 + sovAppInst(uint64(m.InternalPort))
+	}
+	if m.PublicPort != 0 {
+		n += 1 + sovAppInst(uint64(m.PublicPort))
 	}
 	return n
 }
@@ -965,15 +2605,84 @@ func (m *AppInst) Size() (n int) {
 	n += 1 + l + sovAppInst(uint64(l))
 	l = m.CloudletLoc.Size()
 	n += 1 + l + sovAppInst(uint64(l))
-	l = len(m.Ip)
+	l = len(m.Uri)
 	if l > 0 {
 		n += 1 + l + sovAppInst(uint64(l))
 	}
-	if m.Port != 0 {
-		n += 1 + sovAppInst(uint64(m.Port))
-	}
+	l = m.ClusterInstKey.Size()
+	n += 1 + l + sovAppInst(uint64(l))
 	if m.Liveness != 0 {
 		n += 1 + sovAppInst(uint64(m.Liveness))
+	}
+	l = len(m.ImagePath)
+	if l > 0 {
+		n += 1 + l + sovAppInst(uint64(l))
+	}
+	if m.ImageType != 0 {
+		n += 1 + sovAppInst(uint64(m.ImageType))
+	}
+	if len(m.MappedPorts) > 0 {
+		for _, e := range m.MappedPorts {
+			l = e.Size()
+			n += 1 + l + sovAppInst(uint64(l))
+		}
+	}
+	l = len(m.MappedPath)
+	if l > 0 {
+		n += 1 + l + sovAppInst(uint64(l))
+	}
+	l = len(m.Config)
+	if l > 0 {
+		n += 1 + l + sovAppInst(uint64(l))
+	}
+	l = m.Flavor.Size()
+	n += 1 + l + sovAppInst(uint64(l))
+	if m.AccessLayer != 0 {
+		n += 1 + sovAppInst(uint64(m.AccessLayer))
+	}
+	if m.State != 0 {
+		n += 1 + sovAppInst(uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovAppInst(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AppInstInfo) Size() (n int) {
+	var l int
+	_ = l
+	if len(m.Fields) > 0 {
+		for _, s := range m.Fields {
+			l = len(s)
+			n += 1 + l + sovAppInst(uint64(l))
+		}
+	}
+	l = m.Key.Size()
+	n += 1 + l + sovAppInst(uint64(l))
+	if m.NotifyId != 0 {
+		n += 1 + sovAppInst(uint64(m.NotifyId))
+	}
+	if m.State != 0 {
+		n += 1 + sovAppInst(uint64(m.State))
+	}
+	if len(m.Errors) > 0 {
+		for _, s := range m.Errors {
+			l = len(s)
+			n += 1 + l + sovAppInst(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *AppInstMetrics) Size() (n int) {
+	var l int
+	_ = l
+	if m.Something != 0 {
+		n += 1 + sovAppInst(uint64(m.Something))
 	}
 	return n
 }
@@ -1090,6 +2799,113 @@ func (m *AppInstKey) Unmarshal(dAtA []byte) error {
 			}
 			m.Id = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppInst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppPort) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppInst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppPort: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppPort: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Proto", wireType)
+			}
+			m.Proto = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Proto |= (L4Proto(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field InternalPort", wireType)
+			}
+			m.InternalPort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.InternalPort |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PublicPort", wireType)
+			}
+			m.PublicPort = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PublicPort |= (int32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppInst(dAtA[iNdEx:])
@@ -1231,9 +3047,9 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ip", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
 			}
-			var byteLen int
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppInst
@@ -1243,28 +3059,26 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				stringLen |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
 				return ErrInvalidLengthAppInst
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + intStringLen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Ip = append(m.Ip[:0], dAtA[iNdEx:postIndex]...)
-			if m.Ip == nil {
-				m.Ip = []byte{}
-			}
+			m.Uri = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Port", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInstKey", wireType)
 			}
-			m.Port = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppInst
@@ -1274,11 +3088,22 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Port |= (uint32(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClusterInstKey.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		case 6:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Liveness", wireType)
@@ -1293,7 +3118,486 @@ func (m *AppInst) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Liveness |= (AppInst_Liveness(b) & 0x7F) << shift
+				m.Liveness |= (Liveness(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ImagePath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ImagePath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ImageType", wireType)
+			}
+			m.ImageType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ImageType |= (ImageType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MappedPorts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MappedPorts = append(m.MappedPorts, AppPort{})
+			if err := m.MappedPorts[len(m.MappedPorts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MappedPath", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MappedPath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 11:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Config = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Flavor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessLayer", wireType)
+			}
+			m.AccessLayer = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AccessLayer |= (AccessLayer(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (TrackedState(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppInst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppInstInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppInst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Fields", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Fields = append(m.Fields, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Key", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Key.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NotifyId", wireType)
+			}
+			m.NotifyId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.NotifyId |= (int64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field State", wireType)
+			}
+			m.State = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.State |= (TrackedState(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Errors", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Errors = append(m.Errors, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppInst(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppInst
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AppInstMetrics) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppInst
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AppInstMetrics: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AppInstMetrics: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Something", wireType)
+			}
+			m.Something = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppInst
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Something |= (uint64(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1427,44 +3731,74 @@ var (
 func init() { proto.RegisterFile("app_inst.proto", fileDescriptorAppInst) }
 
 var fileDescriptorAppInst = []byte{
-	// 619 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x93, 0x41, 0x8b, 0xd3, 0x4e,
-	0x18, 0xc6, 0x77, 0xb2, 0xfb, 0xcf, 0xee, 0x4e, 0xba, 0xfd, 0xd7, 0x41, 0x97, 0xd8, 0xd5, 0x6e,
-	0xc8, 0x29, 0x08, 0x49, 0x4a, 0x3d, 0x28, 0xbd, 0x48, 0x37, 0x8b, 0x52, 0x5a, 0x2b, 0x66, 0x77,
-	0x11, 0x4f, 0x25, 0x4d, 0x66, 0xd3, 0xc1, 0x34, 0x33, 0x34, 0x89, 0x6b, 0x6f, 0xe2, 0xd1, 0xab,
-	0x67, 0xc1, 0x8f, 0x20, 0x7e, 0x06, 0x0f, 0x3d, 0x0a, 0x1e, 0x05, 0xd1, 0xe2, 0xc1, 0xa3, 0x50,
-	0x0f, 0x1e, 0x25, 0xd3, 0xb4, 0x8d, 0xbb, 0xa2, 0xc2, 0x5e, 0xc2, 0xfb, 0x4e, 0x9e, 0xdf, 0xf3,
-	0x3e, 0x79, 0xc3, 0xc0, 0xa2, 0xc3, 0x58, 0x97, 0x84, 0x51, 0x6c, 0xb0, 0x21, 0x8d, 0x29, 0xda,
-	0xc4, 0x9e, 0x8f, 0x79, 0x59, 0xbe, 0xe2, 0x53, 0xea, 0x07, 0xd8, 0x74, 0x18, 0x31, 0x9d, 0x30,
-	0xa4, 0xb1, 0x13, 0x13, 0x1a, 0x46, 0x33, 0x61, 0xb9, 0x30, 0xc4, 0x51, 0x12, 0x64, 0x58, 0xf9,
-	0xa6, 0x4f, 0xe2, 0x7e, 0xd2, 0x33, 0x5c, 0x3a, 0x30, 0x07, 0xb4, 0x47, 0x82, 0xd4, 0xe6, 0x89,
-	0x99, 0x3e, 0x75, 0x37, 0xa0, 0x89, 0x67, 0x72, 0x9d, 0x8f, 0xc3, 0x45, 0x91, 0x91, 0x77, 0xfe,
-	0x8d, 0x74, 0x75, 0x1f, 0x87, 0xba, 0x3b, 0x98, 0xb7, 0xb9, 0x22, 0x33, 0xda, 0x74, 0x18, 0xcb,
-	0xca, 0x22, 0x07, 0x03, 0x3c, 0x4f, 0x67, 0xfd, 0x75, 0x86, 0xa7, 0x0f, 0x9c, 0xd8, 0xed, 0xeb,
-	0x38, 0xf4, 0x49, 0x88, 0x4d, 0x6f, 0x80, 0x75, 0x8e, 0x9a, 0x01, 0x75, 0x33, 0x13, 0x3d, 0x67,
-	0xe2, 0x53, 0x9f, 0xce, 0xe6, 0xf7, 0x92, 0x63, 0xde, 0xcd, 0xd4, 0x69, 0x35, 0x93, 0xab, 0x2f,
-	0x01, 0x84, 0x0d, 0xc6, 0x9a, 0x61, 0x14, 0xb7, 0xf0, 0x08, 0x55, 0xe1, 0x7a, 0xba, 0xe9, 0x47,
-	0x78, 0x24, 0x03, 0x05, 0x68, 0x52, 0xed, 0x82, 0xb1, 0xd8, 0xb4, 0xd1, 0x60, 0xac, 0x85, 0x47,
-	0x7b, 0x6b, 0xe3, 0x8f, 0xbb, 0x2b, 0xb6, 0xe8, 0xf0, 0x0e, 0xdd, 0x82, 0x85, 0xf9, 0x67, 0x70,
-	0x4c, 0xe0, 0xd8, 0x76, 0x0e, 0xb3, 0xb2, 0xd7, 0x4b, 0x56, 0x72, 0x97, 0x47, 0xa8, 0x08, 0x05,
-	0xe2, 0xc9, 0xab, 0x0a, 0xd0, 0x44, 0x5b, 0x20, 0x5e, 0xbd, 0xf0, 0x75, 0x2a, 0x83, 0x1f, 0x53,
-	0x19, 0xbc, 0x7e, 0xb5, 0x0b, 0xd4, 0xb7, 0x02, 0x5c, 0xcf, 0xf2, 0xa1, 0x6d, 0x28, 0x1e, 0x13,
-	0x1c, 0x78, 0x91, 0x0c, 0x94, 0x55, 0x6d, 0xd3, 0xce, 0x3a, 0xa4, 0xc3, 0xd5, 0xe5, 0xe4, 0x4b,
-	0xbf, 0x06, 0xce, 0x3e, 0x2c, 0x1b, 0x9c, 0xea, 0xd0, 0xed, 0x5c, 0xe2, 0x80, 0xba, 0x7c, 0xb4,
-	0x54, 0xbb, 0x6a, 0x78, 0x24, 0x8a, 0x87, 0xa4, 0x97, 0xc4, 0xd8, 0xeb, 0xf2, 0x35, 0x77, 0x67,
-	0x6b, 0x36, 0xda, 0xd4, 0x3d, 0x1d, 0xbc, 0x4d, 0x5d, 0x1e, 0x9c, 0xc9, 0x6b, 0x0a, 0xd0, 0x0a,
-	0xb6, 0x40, 0x18, 0x42, 0x70, 0x8d, 0xd1, 0x61, 0x2c, 0xff, 0xa7, 0x00, 0x6d, 0xcb, 0xe6, 0x35,
-	0xba, 0x01, 0x37, 0x02, 0xf2, 0x18, 0x87, 0x38, 0x8a, 0x64, 0x51, 0x01, 0x5a, 0xb1, 0xb6, 0x73,
-	0x36, 0x9f, 0xd1, 0xce, 0x24, 0xf6, 0x42, 0xac, 0x56, 0xe1, 0xc6, 0xfc, 0x14, 0x49, 0x70, 0xfd,
-	0xa8, 0xd3, 0xea, 0xdc, 0x7b, 0xd0, 0x29, 0xad, 0x20, 0x08, 0xc5, 0x83, 0xc3, 0xc6, 0x61, 0xd3,
-	0x2a, 0x81, 0xf4, 0xc5, 0xfe, 0xc3, 0x4e, 0xe3, 0x6e, 0xd3, 0x2a, 0x09, 0xf5, 0x9d, 0x74, 0x6f,
-	0xdf, 0xa6, 0x32, 0x78, 0xfa, 0x5d, 0x06, 0xcf, 0xdf, 0x5c, 0x96, 0xac, 0x65, 0xd6, 0xda, 0x07,
-	0x61, 0xf1, 0x9b, 0x1b, 0x8c, 0x20, 0x1b, 0x6e, 0x59, 0x43, 0xec, 0xc4, 0x78, 0xbe, 0x5a, 0x74,
-	0x36, 0x55, 0x39, 0xff, 0xeb, 0x6d, 0x7e, 0x8b, 0xd4, 0xf2, 0xb3, 0xf7, 0x5f, 0x5e, 0x08, 0x17,
-	0xd5, 0xff, 0x4d, 0x97, 0xe3, 0xa6, 0xc3, 0x58, 0x7a, 0x2b, 0xeb, 0xe0, 0x5a, 0xea, 0xb9, 0x8f,
-	0x03, 0x7c, 0x0e, 0x4f, 0x8f, 0xe3, 0xa7, 0x3c, 0x8f, 0x98, 0x77, 0x9e, 0x9c, 0x09, 0xc7, 0xf3,
-	0x9e, 0xf7, 0xa1, 0x74, 0xd0, 0xa7, 0x27, 0x7f, 0x72, 0xfc, 0xcd, 0x99, 0x2a, 0x73, 0x4b, 0xa4,
-	0x6e, 0x99, 0x51, 0x9f, 0x9e, 0xe4, 0x0c, 0xab, 0x60, 0xaf, 0x34, 0xfe, 0x5c, 0x59, 0x19, 0x4f,
-	0x2a, 0xe0, 0xdd, 0xa4, 0x02, 0x3e, 0x4d, 0x2a, 0xa0, 0x27, 0x72, 0xf8, 0xfa, 0xcf, 0x00, 0x00,
-	0x00, 0xff, 0xff, 0x56, 0x50, 0x04, 0x9a, 0xb8, 0x04, 0x00, 0x00,
+	// 1104 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcd, 0x6b, 0x1b, 0xc7,
+	0x1b, 0xce, 0x58, 0x96, 0x6c, 0xcd, 0xca, 0x72, 0x3c, 0x3f, 0xff, 0xdc, 0x91, 0x70, 0x6d, 0xb3,
+	0x21, 0x45, 0x14, 0x7d, 0x04, 0xf7, 0x83, 0xd6, 0x14, 0x8a, 0xed, 0x92, 0x22, 0x62, 0x83, 0xab,
+	0x24, 0xd0, 0x9b, 0x18, 0xed, 0x8e, 0x56, 0x43, 0x76, 0x77, 0x86, 0xdd, 0x51, 0x52, 0xdd, 0x4a,
+	0x8e, 0x85, 0x42, 0x69, 0x2e, 0xb9, 0x14, 0x72, 0xec, 0x31, 0xf8, 0xd8, 0xbf, 0xc0, 0xc7, 0x42,
+	0x4f, 0xbd, 0x94, 0xd6, 0xf4, 0xd0, 0x4b, 0xa1, 0x60, 0x1d, 0x7a, 0x2c, 0x33, 0x3b, 0x2b, 0xed,
+	0xda, 0x4d, 0x5a, 0x48, 0x2f, 0xf6, 0xec, 0xfb, 0x3e, 0xef, 0xf3, 0x3e, 0xf3, 0xcc, 0x3b, 0x23,
+	0x58, 0x25, 0x42, 0xf4, 0x59, 0x18, 0xcb, 0xb6, 0x88, 0xb8, 0xe4, 0xa8, 0x4c, 0x5d, 0x8f, 0xea,
+	0x65, 0x7d, 0xd3, 0xe3, 0xdc, 0xf3, 0x69, 0x87, 0x08, 0xd6, 0x21, 0x61, 0xc8, 0x25, 0x91, 0x8c,
+	0x87, 0x71, 0x02, 0xac, 0x57, 0x22, 0x1a, 0x8f, 0x7d, 0x53, 0x56, 0x7f, 0xcf, 0x63, 0x72, 0x34,
+	0x1e, 0xb4, 0x1d, 0x1e, 0x74, 0x02, 0x3e, 0x60, 0xbe, 0xa2, 0xf9, 0xac, 0xa3, 0xfe, 0xb6, 0x1c,
+	0x9f, 0x8f, 0xdd, 0x8e, 0xc6, 0x79, 0x34, 0x9c, 0x2d, 0x4c, 0xe5, 0xc7, 0xff, 0xae, 0xd2, 0x69,
+	0x79, 0x34, 0x6c, 0x39, 0x41, 0xfa, 0x99, 0x59, 0x18, 0xa2, 0x32, 0x11, 0xc2, 0x2c, 0xab, 0xba,
+	0xd0, 0xa7, 0xa9, 0xba, 0xca, 0xd0, 0x27, 0x0f, 0x79, 0x64, 0xbe, 0xd6, 0x1c, 0x7f, 0x1c, 0x4b,
+	0x1a, 0xcd, 0x77, 0x5d, 0xaf, 0x38, 0x3c, 0x08, 0x78, 0x2a, 0xe9, 0xf0, 0x1f, 0x25, 0xb9, 0xad,
+	0x80, 0x48, 0x67, 0xd4, 0xa2, 0xa1, 0xc7, 0x42, 0xda, 0x71, 0x03, 0xda, 0xd2, 0xa5, 0x1d, 0x9f,
+	0x3b, 0x86, 0xa4, 0x95, 0x21, 0xf1, 0xb8, 0xc7, 0x13, 0xb9, 0x83, 0xf1, 0x50, 0x7f, 0x25, 0x68,
+	0xb5, 0x4a, 0xe0, 0xf6, 0x37, 0x00, 0xc2, 0x7d, 0x21, 0xba, 0x61, 0x2c, 0xef, 0xd0, 0x09, 0xba,
+	0x05, 0x97, 0xd4, 0xc1, 0x3c, 0xa0, 0x13, 0x0c, 0x76, 0x40, 0xc3, 0xda, 0x5d, 0x6b, 0xcf, 0x0e,
+	0xa6, 0xbd, 0x2f, 0xc4, 0x1d, 0x3a, 0x39, 0x58, 0x3c, 0xfb, 0x69, 0xfb, 0x5a, 0xaf, 0x44, 0xf4,
+	0x17, 0xfa, 0x10, 0x56, 0xd2, 0x5d, 0xeb, 0xb2, 0x05, 0x5d, 0xb6, 0x91, 0x29, 0x3b, 0x34, 0xe9,
+	0x79, 0xad, 0xe5, 0xcc, 0x43, 0xa8, 0x0a, 0x17, 0x98, 0x8b, 0x0b, 0x3b, 0xa0, 0x51, 0xea, 0x2d,
+	0x30, 0x77, 0xaf, 0xf2, 0xdb, 0x05, 0x06, 0x7f, 0x5e, 0x60, 0xf0, 0xfc, 0xd9, 0x36, 0xb0, 0x27,
+	0x70, 0x69, 0x5f, 0x88, 0x13, 0x1e, 0x49, 0xd4, 0x80, 0x45, 0x4d, 0xa8, 0x95, 0x55, 0x77, 0x51,
+	0xa6, 0xc5, 0xd1, 0xdb, 0x27, 0xea, 0x7f, 0x2f, 0x01, 0xa0, 0x1b, 0x70, 0x85, 0x85, 0x92, 0x46,
+	0x21, 0xf1, 0xfb, 0x82, 0x47, 0x52, 0x8b, 0x2a, 0xf6, 0x2a, 0x69, 0x50, 0xd3, 0x6d, 0x43, 0x4b,
+	0x8c, 0x07, 0x3e, 0x73, 0x12, 0x48, 0x41, 0x43, 0x60, 0x12, 0x52, 0x00, 0xfb, 0xc9, 0x92, 0xee,
+	0xad, 0xac, 0x41, 0x1b, 0xb0, 0x34, 0x64, 0xd4, 0x77, 0x63, 0x0c, 0x76, 0x0a, 0x8d, 0x72, 0xcf,
+	0x7c, 0xa1, 0x16, 0x2c, 0xcc, 0x37, 0xfd, 0xff, 0xbc, 0x57, 0xc6, 0x53, 0xb3, 0x67, 0x85, 0x43,
+	0xb7, 0x33, 0x66, 0xf9, 0xdc, 0xd1, 0x4d, 0xad, 0xdd, 0xd7, 0xdb, 0x2e, 0x8b, 0x65, 0xc4, 0x06,
+	0x63, 0x49, 0xdd, 0xbe, 0x3e, 0xe1, 0x7e, 0x72, 0xc2, 0xed, 0x23, 0xee, 0x5c, 0xf6, 0xec, 0x88,
+	0x3b, 0x68, 0x1b, 0x16, 0xc6, 0x11, 0xc3, 0x8b, 0x3b, 0xa0, 0x51, 0x3e, 0x58, 0xf9, 0x76, 0x8a,
+	0xc1, 0xd7, 0xa7, 0xb5, 0x62, 0xc8, 0x9d, 0x40, 0xf4, 0x54, 0x06, 0x1d, 0xc3, 0xeb, 0x66, 0xda,
+	0xf4, 0x25, 0xd3, 0x27, 0x53, 0xd4, 0xcd, 0x6a, 0xb9, 0x93, 0xd1, 0x90, 0x54, 0xe8, 0xb2, 0x22,
+	0xd2, 0xcd, 0xaa, 0x4e, 0x2e, 0x83, 0xde, 0x81, 0xcb, 0x3e, 0x7b, 0x48, 0x43, 0x1a, 0xc7, 0xb8,
+	0xa4, 0xdd, 0xff, 0x5f, 0xd6, 0x7d, 0x93, 0x3a, 0x58, 0x54, 0x04, 0xbd, 0x19, 0x14, 0xdd, 0x80,
+	0x90, 0x05, 0xc4, 0xa3, 0x7d, 0x41, 0xe4, 0x08, 0x2f, 0x69, 0xb5, 0x09, 0xa6, 0xac, 0xe3, 0x27,
+	0x44, 0x8e, 0xd0, 0xfb, 0x29, 0x48, 0x4e, 0x04, 0xc5, 0xcb, 0x9a, 0x7d, 0x3d, 0xc3, 0xde, 0x55,
+	0xc9, 0x7b, 0x13, 0x41, 0x73, 0xa5, 0x2a, 0xa0, 0x66, 0x2f, 0x20, 0x42, 0x50, 0x57, 0x1f, 0x61,
+	0x8c, 0xcb, 0x3b, 0x85, 0x86, 0x95, 0x1b, 0x0c, 0x33, 0x3b, 0x99, 0xad, 0x59, 0x49, 0x85, 0x8a,
+	0xc6, 0xe8, 0x26, 0xb4, 0x52, 0x02, 0xa5, 0x10, 0x66, 0x14, 0x42, 0x83, 0x53, 0x12, 0x37, 0x61,
+	0xc9, 0xe1, 0xe1, 0x90, 0x79, 0xd8, 0xca, 0x20, 0x4c, 0x0c, 0xbd, 0x0b, 0x4b, 0xc9, 0x3d, 0xc7,
+	0x15, 0xed, 0x70, 0x56, 0xfc, 0x6d, 0x9d, 0xc8, 0x9b, 0x6b, 0xd0, 0x4a, 0x3d, 0x71, 0x1c, 0x1a,
+	0xc7, 0x7d, 0x9f, 0x4c, 0x68, 0x84, 0x57, 0xf4, 0xd6, 0xb3, 0x37, 0x67, 0x5f, 0xa7, 0x8f, 0x54,
+	0xd6, 0xf4, 0xb4, 0xc8, 0x3c, 0x84, 0x3e, 0x80, 0xc5, 0x58, 0x12, 0x49, 0x71, 0x55, 0x57, 0xbe,
+	0x96, 0xa9, 0xbc, 0x17, 0x11, 0xe7, 0x01, 0x75, 0xef, 0xaa, 0xf4, 0xe5, 0x01, 0x49, 0x8a, 0xd0,
+	0x4d, 0x58, 0xa2, 0x51, 0xc4, 0xa3, 0x18, 0xaf, 0xaa, 0x91, 0xbe, 0x8c, 0x32, 0xc9, 0xbd, 0x2f,
+	0x81, 0xba, 0x8f, 0x7f, 0x5c, 0x60, 0xf0, 0xf9, 0x14, 0x83, 0xa7, 0x53, 0x0c, 0x9e, 0x4f, 0x31,
+	0xf8, 0x6e, 0x8a, 0x2b, 0xd9, 0x1e, 0x5f, 0x9c, 0xd6, 0xe8, 0xe1, 0x7c, 0x40, 0x9b, 0xdd, 0xf4,
+	0x78, 0x9b, 0xb3, 0xe3, 0x6b, 0x1e, 0xcf, 0x8d, 0x4f, 0xd7, 0x0a, 0x70, 0xa8, 0x5d, 0x3c, 0x26,
+	0xa2, 0x79, 0x3f, 0x62, 0xcd, 0x74, 0x96, 0x9a, 0xf9, 0xd9, 0x6c, 0x9e, 0xe8, 0x7b, 0xd9, 0x15,
+	0xf6, 0x8f, 0x00, 0x5a, 0xe6, 0x72, 0x75, 0xc3, 0x21, 0xff, 0xaf, 0x6e, 0xe6, 0x1b, 0xb0, 0x1c,
+	0x72, 0xc9, 0x86, 0x93, 0xbe, 0x79, 0x8c, 0x0a, 0x07, 0xe5, 0xb9, 0x19, 0xcb, 0x49, 0xae, 0xeb,
+	0xa2, 0x56, 0xea, 0xf9, 0xe2, 0x4b, 0x3d, 0x4f, 0x4d, 0xde, 0x98, 0x99, 0x5c, 0x4c, 0xd4, 0x19,
+	0x57, 0xd7, 0xb3, 0xa6, 0x7e, 0x35, 0xc5, 0xe0, 0xd9, 0x14, 0x03, 0xbb, 0x0d, 0xab, 0x46, 0xdd,
+	0x31, 0x95, 0x11, 0x73, 0x62, 0xb4, 0x09, 0xcb, 0x31, 0x0f, 0xa8, 0x1c, 0xb1, 0xd0, 0xd3, 0x17,
+	0x78, 0xb1, 0x37, 0x0f, 0xec, 0xfe, 0xbe, 0x30, 0x7b, 0xbc, 0xf7, 0x05, 0x43, 0x9f, 0xc2, 0x95,
+	0xc3, 0x88, 0x12, 0x49, 0xd3, 0x57, 0x0b, 0x5d, 0xdd, 0x76, 0x3d, 0xfb, 0xa0, 0xf7, 0xf4, 0x4f,
+	0xa9, 0xbd, 0xf5, 0xf4, 0xb4, 0x06, 0x1e, 0xff, 0xf0, 0xeb, 0x93, 0x85, 0x75, 0x7b, 0xb5, 0xe3,
+	0x68, 0x8a, 0x0e, 0x11, 0x42, 0xbd, 0x1c, 0x7b, 0xe0, 0xcd, 0x5b, 0x40, 0x31, 0x7f, 0x44, 0x7d,
+	0xfa, 0x8a, 0xcc, 0xae, 0xa6, 0xb8, 0xc2, 0x7c, 0x5f, 0xb8, 0xaf, 0xaa, 0x79, 0xac, 0x29, 0xf2,
+	0xcc, 0x9f, 0x40, 0xeb, 0xee, 0x88, 0x3f, 0x7a, 0x19, 0xef, 0xdf, 0xc4, 0x6c, 0xac, 0x49, 0x91,
+	0xbd, 0xd2, 0x89, 0x47, 0xfc, 0x51, 0x8e, 0x72, 0x37, 0x9e, 0x9d, 0x8f, 0x1a, 0x3d, 0x65, 0x39,
+	0x81, 0xab, 0x99, 0x26, 0xc9, 0x40, 0x5e, 0x25, 0x55, 0xf1, 0xfa, 0x0b, 0xe2, 0xf6, 0xa6, 0x6e,
+	0xb8, 0x61, 0xaf, 0xe5, 0x1a, 0xb2, 0x70, 0xc8, 0x93, 0xa6, 0x8f, 0x01, 0x5c, 0xcb, 0x4f, 0x85,
+	0x6a, 0x1c, 0x40, 0x94, 0x69, 0x9c, 0x8e, 0x4b, 0xed, 0x6a, 0x0f, 0x93, 0xaa, 0xbf, 0x38, 0x65,
+	0x6f, 0x6b, 0x05, 0x35, 0x7b, 0x3d, 0xa7, 0x20, 0x48, 0xb2, 0x5a, 0xc4, 0xc1, 0xf5, 0xb3, 0x5f,
+	0xb6, 0xae, 0x9d, 0x9d, 0x6f, 0x81, 0xef, 0xcf, 0xb7, 0xc0, 0xcf, 0xe7, 0x5b, 0x60, 0x50, 0xd2,
+	0x54, 0x6f, 0xfd, 0x15, 0x00, 0x00, 0xff, 0xff, 0x48, 0xa9, 0x23, 0xd5, 0xc9, 0x09, 0x00, 0x00,
 }

@@ -1,202 +1,352 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"net"
 	"sync"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 )
 
-type cloudlet struct {
+// AppInst by carrier
+type carrierAppInst struct {
 	// Unique identifier key for the cloudlet
-	id uint64
+	cloudletKey edgeproto.CloudletKey
 	//Carrier ID for carrier hosting the cloudlet
 	carrierId uint64
 	//Carrier Name for carrier hosting the cloudlet
 	carrierName string
-	// IP to use to connect to and control cloudlet site
-	accessIp []byte
+	// URI to connect to app inst in this cloudlet
+	uri string
+	// Ip to connect o app inst in this cloudlet (XXX why is this needed?)
+	ip []byte
 	// Location of the cloudlet site (lat, long?)
 	location dme.Loc
-	// Next cloudlet
-	next *cloudlet
+	id       uint64
 }
 
-type app_carrier_key struct {
-	carrier_name string
-	app_key      edgeproto.AppKey
+type carrierAppKey struct {
+	carrierName string // replace with edgeproto.OperatorKey?
+	appKey      edgeproto.AppKey
 }
 
-type carrier_app_cloudlet struct {
+// App by carrier
+type carrierApp struct {
 	sync.RWMutex
-	carrier_id        uint64
-	carrier_name      string
-	app_name          string
-	app_vers          string
-	app_developer     string
-	app_cloudlet_inst *cloudlet
+	carrierId uint64 // XXX: carrierId seems redundant with carrierName
+	key       carrierAppKey
+	insts     map[edgeproto.CloudletKey]*carrierAppInst
 }
 
-type carrier_app struct {
+type carrierApps struct {
 	sync.RWMutex
-	apps map[app_carrier_key]*carrier_app_cloudlet
+	apps map[carrierAppKey]*carrierApp
 }
 
-var carrier_app_tbl *carrier_app
+var carrierAppTbl *carrierApps
 
-func setup_match_engine() {
-	carrier_app_tbl = new(carrier_app)
-	carrier_app_tbl.apps = make(map[app_carrier_key]*carrier_app_cloudlet)
-
-	populate_tbl()
-	list_appinst_tbl()
+func setupMatchEngine() {
+	carrierAppTbl = new(carrierApps)
+	carrierAppTbl.apps = make(map[carrierAppKey]*carrierApp)
 }
 
-func torads(deg float64) float64 {
-	return deg * math.Pi / 180
+// TODO: Have protoc auto-generate Equal functions.
+func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) bool {
+	return key1.GetKeyString() == key2.GetKeyString()
 }
 
-// Use the ‘haversine’ formula to calculate the great-circle distance between two points
-func distance_between(loc1, loc2 dme.Loc) float64 {
-	radiusofearth := 6371
-	var diff_lat, diff_long float64
-	var a, c, dist float64
-	var lat1, long1, lat2, long2 float64
-
-	lat1 = loc1.Lat
-	long1 = loc1.Long
-	lat2 = loc2.Lat
-	long2 = loc2.Long
-
-	diff_lat = torads(lat2 - lat1)
-	diff_long = torads(long2 - long1)
-
-	rad_lat1 := torads(lat1)
-	rad_lat2 := torads(lat2)
-
-	a = math.Sin(diff_lat/2)*math.Sin(diff_lat/2) + math.Sin(diff_long/2)*
-		math.Sin(diff_long/2)*math.Cos(rad_lat1)*math.Cos(rad_lat2)
-	c = 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-	dist = c * float64(radiusofearth)
-
-	return dist
+func setCarrierAppKey(appInst *edgeproto.AppInst, key *carrierAppKey) {
+	key.carrierName = appInst.Key.CloudletKey.OperatorKey.Name
+	key.appKey = appInst.Key.AppKey
 }
 
-func add_app(app_inst *app, cloudlet_inst *cloudlet) {
-	var key app_carrier_key
-	var c, c_new *cloudlet
-	var carrier *carrier_app_cloudlet
-	var tbl *carrier_app
+func addApp(appInst *edgeproto.AppInst) {
+	var key carrierAppKey
+	var cNew *carrierAppInst
+	var app *carrierApp
+	var tbl *carrierApps
 
-	tbl = carrier_app_tbl
-	key.carrier_name = cloudlet_inst.carrierName
-	key.app_key.DeveloperKey.Name = app_inst.developer
-	key.app_key.Name = app_inst.name
-	key.app_key.Version = app_inst.vers
+	tbl = carrierAppTbl
+	setCarrierAppKey(appInst, &key)
 
 	tbl.Lock()
 	_, ok := tbl.apps[key]
 	if !ok {
 		// Key doesn't exists
-		carrier = new(carrier_app_cloudlet)
-		carrier.carrier_id = cloudlet_inst.carrierId
-		carrier.carrier_name = cloudlet_inst.carrierName
-		carrier.app_name = app_inst.name
-		carrier.app_vers = app_inst.vers
-		carrier.app_developer = app_inst.developer
-		tbl.apps[key] = carrier
-		fmt.Printf("Adding App %s/%s for Carrier = %s\n",
-			carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName)
+		app = new(carrierApp)
+		app.insts = make(map[edgeproto.CloudletKey]*carrierAppInst)
+		app.key = key
+		tbl.apps[key] = app
+		log.DebugLog(log.DebugLevelDmedb, "Adding app",
+			"appName", key.appKey.Name,
+			"appVersion", key.appKey.Version,
+			"carrier", key.carrierName)
 	} else {
-		carrier = tbl.apps[key]
+		app = tbl.apps[key]
 	}
 
-	// Todo: Check for updates
-
-	c_new = new(cloudlet)
-	*c_new = *cloudlet_inst
-	carrier.Lock()
-	// check if the cloudlet already exists
-	c = carrier.app_cloudlet_inst
-	if c != nil {
-		c_new.next = c
+	app.Lock()
+	if c, found := app.insts[appInst.Key.CloudletKey]; found {
+		// update existing carrier app inst
+		c.uri = appInst.Uri
+		c.location = appInst.CloudletLoc
+		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
+			"appName", app.key.appKey.Name,
+			"appVersion", app.key.appKey.Version,
+			"carrier", key.carrierName,
+			"lat", appInst.CloudletLoc.Lat,
+			"long", appInst.CloudletLoc.Long)
+	} else {
+		cNew = new(carrierAppInst)
+		cNew.cloudletKey = appInst.Key.CloudletKey
+		cNew.carrierName = key.carrierName
+		cNew.uri = appInst.Uri
+		cNew.location = appInst.CloudletLoc
+		cNew.id = appInst.Key.Id
+		app.insts[cNew.cloudletKey] = cNew
+		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
+			"appName", app.key.appKey.Name,
+			"appVersion", app.key.appKey.Version,
+			"carrier", cNew.carrierName,
+			"lat", cNew.location.Lat,
+			"long", cNew.location.Long)
 	}
-	carrier.app_cloudlet_inst = c_new
-	fmt.Printf("Adding App %s/%s for Carrier = %s, Loc = %f/%f\n",
-		carrier.app_name, carrier.app_vers, cloudlet_inst.carrierName,
-		cloudlet_inst.location.Lat, cloudlet_inst.location.Long)
-	carrier.Unlock()
+	app.Unlock()
 	tbl.Unlock()
 }
 
-func find_cloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
-	var key app_carrier_key
-	var c, found *cloudlet
-	var carrier *carrier_app_cloudlet
-	var distance, d float64
-	var tbl *carrier_app
-	var ipaddr net.IP
+func removeApp(appInst *edgeproto.AppInst) {
+	var key carrierAppKey
+	var app *carrierApp
+	var tbl *carrierApps
 
-	tbl = carrier_app_tbl
-	key.carrier_name = mreq.CarrierName
-	key.app_key.DeveloperKey.Name = mreq.DevName
-	key.app_key.Name = mreq.AppName
-	key.app_key.Version = mreq.AppVers
+	tbl = carrierAppTbl
+	setCarrierAppKey(appInst, &key)
 
-	mreply.Status = false
+	tbl.Lock()
+	app, ok := tbl.apps[key]
+	if ok {
+		app.Lock()
+		if c, found := app.insts[appInst.Key.CloudletKey]; found {
+			delete(app.insts, appInst.Key.CloudletKey)
+			log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
+				"appName", app.key.appKey.Name,
+				"appVersion", app.key.appKey.Version,
+				"carrier", c.carrierName,
+				"lat", c.location.Lat,
+				"long", c.location.Long)
+		}
+		if len(app.insts) == 0 {
+			delete(tbl.apps, key)
+			log.DebugLog(log.DebugLevelDmedb, "Removing app",
+				"appName", app.key.appKey.Name,
+				"appVersion", app.key.appKey.Version,
+				"carrier", app.key.carrierName)
+		}
+		app.Unlock()
+	}
+	tbl.Unlock()
+}
+
+// pruneApps removes any data that was not sent by the controller.
+func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
+	var key edgeproto.AppInstKey
+	var carrierKey carrierAppKey
+
+	tbl := carrierAppTbl
+	tbl.Lock()
+	for _, app := range tbl.apps {
+		app.Lock()
+		for _, inst := range app.insts {
+			key.AppKey = app.key.appKey
+			key.CloudletKey = inst.cloudletKey
+			key.Id = inst.id
+			if _, found := appInsts[key]; !found {
+				log.DebugLog(log.DebugLevelDmereq, "pruning app", "key", key)
+				delete(app.insts, key.CloudletKey)
+			}
+		}
+		if len(app.insts) == 0 {
+			carrierKey.carrierName = key.CloudletKey.OperatorKey.Name
+			carrierKey.appKey = key.AppKey
+			delete(tbl.apps, carrierKey)
+		}
+		app.Unlock()
+	}
+	tbl.Unlock()
+}
+
+// given the carrier app key, update the reply if we find a cloudlet closer
+// than the max distance.  Return the distance and whether or not response was updated
+func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mreply *dme.Match_Engine_Reply) (float64, bool) {
+	tbl := carrierAppTbl
+	var c, found *carrierAppInst
+	var d float64
+	var updated = false
+
 	tbl.RLock()
-	carrier, ok := tbl.apps[key]
+
+	app, ok := tbl.apps[key]
 	if !ok {
 		tbl.RUnlock()
-		return
+		return maxDistance, updated
 	}
 
-	distance = 10000
-	c = carrier.app_cloudlet_inst
-	fmt.Printf(">>>Cloudlet for %s@%s\n", carrier.app_name, carrier.carrier_name)
-	for ; c != nil; c = c.next {
-		d = distance_between(*mreq.GpsLocation, c.location)
-		fmt.Printf("Loc = %f/%f is at dist %f. ",
-			c.location.Lat, c.location.Long, d)
-		if d < distance {
-			fmt.Printf("Repl. with new dist %f.", d)
-			distance = d
+	log.DebugLog(log.DebugLevelDmereq, ">>>Find Closest",
+		"appName", key.appKey.Name,
+		"carrier", key.carrierName)
+	for _, c = range app.insts {
+		d = dmecommon.DistanceBetween(*loc, c.location)
+		log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
+			"lat", c.location.Lat,
+			"long", c.location.Long,
+			"maxDistance", maxDistance,
+			"this-dist", d)
+		if d < maxDistance {
+			log.DebugLog(log.DebugLevelDmereq, "closer cloudlet", "uri", c.uri)
+			updated = true
+			maxDistance = d
 			found = c
-			mreply.ServiceIp = c.accessIp
-			mreply.CloudletLocation = &c.location
+			mreply.Uri = c.uri
+			mreply.ServiceIp = c.ip
+			mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
+			*mreply.CloudletLocation = c.location
 		}
-		fmt.Printf("\n")
 	}
 	if found != nil {
-		ipaddr = found.accessIp
-		fmt.Printf("Found Loc = %f/%f with IP %s\n",
-			found.location.Lat, found.location.Long, ipaddr.String())
-		mreply.Status = true
+		var ipaddr net.IP
+		ipaddr = found.ip
+		log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
+			"app", key.appKey.Name,
+			"carrier", key.carrierName,
+			"lat", found.location.Lat,
+			"long", found.location.Long,
+			"distance", maxDistance,
+			"uri", found.uri,
+			"IP", ipaddr.String())
+	}
+	tbl.RUnlock()
+	return maxDistance, updated
+}
+
+func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
+	var key carrierAppKey
+	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
+
+	key.carrierName = mreq.CarrierName
+	key.appKey.DeveloperKey.Name = mreq.DevName
+	key.appKey.Name = mreq.AppName
+	key.appKey.Version = mreq.AppVers
+	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
+	mreply.CloudletLocation = &dme.Loc{}
+
+	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", key.carrierName, "app", key.appKey.Name, "developer", key.appKey.DeveloperKey.Name, "version", key.appKey.Version)
+
+	// first find carrier cloudlet with 10k
+	bestDistance, updated := findClosestForKey(key, mreq.GpsLocation, 10000, mreply)
+
+	if updated {
+		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "uri", mreply.Uri, "distance", bestDistance)
+	}
+
+	if updated && bestDistance > publicCloudPadding {
+		paddedCarrierDistance := bestDistance - publicCloudPadding
+
+		// look for an azure cloud closer than the carrier distance minus padding
+		key.carrierName = "azure"
+		azDistance, updated := findClosestForKey(key, mreq.GpsLocation, paddedCarrierDistance, mreply)
+		if updated {
+			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "uri", mreply.Uri, "distance", azDistance)
+			bestDistance = azDistance
+		}
+
+		// look for a gcp cloud closer than either the azure cloud or the carrier cloud
+		key.carrierName = "gcp"
+		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
+		gcpDistance, updated := findClosestForKey(key, mreq.GpsLocation, maxGCPDistance, mreply)
+		if updated {
+			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "uri", mreply.Uri, "distance", gcpDistance)
+			bestDistance = gcpDistance
+		}
+	}
+
+	if mreply.Status == dme.Match_Engine_Reply_FIND_FOUND {
+		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "uri", mreply.Uri, "distance", bestDistance)
+	} else {
+		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
+
+	}
+
+}
+
+func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
+	var tbl *carrierApps
+	tbl = carrierAppTbl
+	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
+
+	tbl.RLock()
+
+	// find all the unique cloudlets, and the app instances for each.  the data is
+	//stored as appinst->cloudlet and we need the opposite mapping.
+	for _, a := range tbl.apps {
+		//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
+		if mreq.CarrierName != "" && a.key.carrierName != "azure" && a.key.carrierName != "gcp" && mreq.CarrierName != a.key.carrierName {
+			log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "app.CarrierName", a.key.carrierName)
+			continue
+		}
+		//if the app name or version was provided, only look for cloudlets for that app
+		if (mreq.AppName != "" && mreq.AppName != a.key.appKey.Name) ||
+			(mreq.AppVers != "" && mreq.AppVers != a.key.appKey.Version) {
+			continue
+		}
+		for _, i := range a.insts {
+			cloc, exists := foundCloudlets[i.cloudletKey]
+			if !exists {
+				cloc = new(dme.CloudletLocation)
+				d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+				cloc.GpsLocation = &i.location
+				cloc.CarrierName = i.carrierName
+				cloc.CloudletName = i.cloudletKey.Name
+				cloc.Distance = d
+			}
+			ai := dme.Appinstance{}
+			ai.Appname = a.key.appKey.Name
+			ai.Appversion = a.key.appKey.Version
+			ai.Uri = i.uri
+			cloc.Appinstances = append(cloc.Appinstances, &ai)
+			foundCloudlets[i.cloudletKey] = cloc
+		}
+	}
+	for _, c := range foundCloudlets {
+		clist.Cloudlets = append(clist.Cloudlets, c)
 	}
 	tbl.RUnlock()
 }
 
-// add function delete and find
+func listAppinstTbl() {
+	var app *carrierApp
+	var inst *carrierAppInst
+	var tbl *carrierApps
 
-func list_appinst_tbl() {
-	var c *cloudlet
-	var carrier *carrier_app_cloudlet
-	var tbl *carrier_app
-
-	tbl = carrier_app_tbl
+	tbl = carrierAppTbl
 	tbl.RLock()
 	for a := range tbl.apps {
-		carrier = tbl.apps[a]
-		fmt.Printf(">> app = %s/%s info for carrier %s\n", carrier.app_name,
-			carrier.app_vers, carrier.carrier_name)
-		c = carrier.app_cloudlet_inst
-		for ; c != nil; c = c.next {
-			fmt.Printf("app = %s/%s info for carrier = %s, Loc = %f/%f\n",
-				carrier.app_name, carrier.app_vers, carrier.carrier_name,
-				c.location.Lat, c.location.Long)
+		app = tbl.apps[a]
+		log.DebugLog(log.DebugLevelDmedb, "app",
+			"Name", app.key.appKey.Name,
+			"Ver", app.key.appKey.Version,
+			"Carrier", app.key.carrierName)
+		for c := range app.insts {
+			inst = app.insts[c]
+			log.DebugLog(log.DebugLevelDmedb, "app",
+				"Name", app.key.appKey.Name,
+				"Ver", app.key.appKey.Version,
+				"Carrier", app.key.carrierName,
+				"Lat", inst.location.Lat,
+				"Long", inst.location.Long)
 		}
 	}
 	tbl.RUnlock()

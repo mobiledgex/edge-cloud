@@ -1,0 +1,124 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+- key:
+    name: c1.medium
+  nodeflavor:
+    name: x1.medium
+  masterflavor:
+    name: x1.medium
+  numnodes: 3
+  maxnodes: 4
+  nummasters: 1
+
+clusters:
+- key:
+    name: SmallCluster
+  defaultflavor:
+    name: c1.small
+
+operators:
+- key:
+    name: ATT
+- key:
+    name: TMUS
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-1
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-2
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud-1
+  accessuri: cloud1.tmo
+  location:
+    lat: 31
+    long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud-2
+  accessuri: cloud2.tmo
+  location:
+    lat: 35
+    long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+

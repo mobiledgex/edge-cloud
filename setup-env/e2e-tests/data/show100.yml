@@ -1,0 +1,8588 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: AutoClusterapp1
+  defaultflavor:
+    name: c1.small
+  auto: true
+- key:
+    name: AutoClusterapp2
+  defaultflavor:
+    name: c1.small
+  auto: true
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+- key:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+
+operators:
+- key:
+    name: OP1
+
+developers:
+- key:
+    name: Dev1
+  username: Dev1-user
+  passhash: "123456789012345670"
+  address: 1234 Dev1 street
+  email: Dev1@gmail.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-32
+  accessuri: OP1.cloudlet-32
+  location:
+    long: -144
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-60
+  accessuri: OP1.cloudlet-60
+  location:
+    long: -116
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-65
+  accessuri: OP1.cloudlet-65
+  location:
+    long: -111
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-66
+  accessuri: OP1.cloudlet-66
+  location:
+    long: -110
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-73
+  accessuri: OP1.cloudlet-73
+  location:
+    long: -103
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-4
+  accessuri: OP1.cloudlet-4
+  location:
+    long: -172
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-18
+  accessuri: OP1.cloudlet-18
+  location:
+    long: -158
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-29
+  accessuri: OP1.cloudlet-29
+  location:
+    long: -147
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-81
+  accessuri: OP1.cloudlet-81
+  location:
+    long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-55
+  accessuri: OP1.cloudlet-55
+  location:
+    long: -121
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-58
+  accessuri: OP1.cloudlet-58
+  location:
+    long: -118
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-9
+  accessuri: OP1.cloudlet-9
+  location:
+    long: -167
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-13
+  accessuri: OP1.cloudlet-13
+  location:
+    long: -163
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-37
+  accessuri: OP1.cloudlet-37
+  location:
+    long: -139
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-25
+  accessuri: OP1.cloudlet-25
+  location:
+    long: -151
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-28
+  accessuri: OP1.cloudlet-28
+  location:
+    long: -148
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-72
+  accessuri: OP1.cloudlet-72
+  location:
+    long: -104
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-1
+  accessuri: OP1.cloudlet-1
+  location:
+    long: -175
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-11
+  accessuri: OP1.cloudlet-11
+  location:
+    long: -165
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-20
+  accessuri: OP1.cloudlet-20
+  location:
+    long: -156
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-50
+  accessuri: OP1.cloudlet-50
+  location:
+    long: -126
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-52
+  accessuri: OP1.cloudlet-52
+  location:
+    long: -124
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-71
+  accessuri: OP1.cloudlet-71
+  location:
+    long: -105
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-76
+  accessuri: OP1.cloudlet-76
+  location:
+    long: -100
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-83
+  accessuri: OP1.cloudlet-83
+  location:
+    long: -93
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-26
+  accessuri: OP1.cloudlet-26
+  location:
+    long: -150
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-27
+  accessuri: OP1.cloudlet-27
+  location:
+    long: -149
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-36
+  accessuri: OP1.cloudlet-36
+  location:
+    long: -140
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-90
+  accessuri: OP1.cloudlet-90
+  location:
+    long: -86
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-95
+  accessuri: OP1.cloudlet-95
+  location:
+    long: -81
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-84
+  accessuri: OP1.cloudlet-84
+  location:
+    long: -92
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-85
+  accessuri: OP1.cloudlet-85
+  location:
+    long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-100
+  accessuri: OP1.cloudlet-100
+  location:
+    long: -76
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-10
+  accessuri: OP1.cloudlet-10
+  location:
+    long: -166
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-34
+  accessuri: OP1.cloudlet-34
+  location:
+    long: -142
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-44
+  accessuri: OP1.cloudlet-44
+  location:
+    long: -132
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-70
+  accessuri: OP1.cloudlet-70
+  location:
+    long: -106
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-80
+  accessuri: OP1.cloudlet-80
+  location:
+    long: -96
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-82
+  accessuri: OP1.cloudlet-82
+  location:
+    long: -94
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-89
+  accessuri: OP1.cloudlet-89
+  location:
+    long: -87
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-6
+  accessuri: OP1.cloudlet-6
+  location:
+    long: -170
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-24
+  accessuri: OP1.cloudlet-24
+  location:
+    long: -152
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-67
+  accessuri: OP1.cloudlet-67
+  location:
+    long: -109
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-38
+  accessuri: OP1.cloudlet-38
+  location:
+    long: -138
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-98
+  accessuri: OP1.cloudlet-98
+  location:
+    long: -78
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-5
+  accessuri: OP1.cloudlet-5
+  location:
+    long: -171
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-22
+  accessuri: OP1.cloudlet-22
+  location:
+    long: -154
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-33
+  accessuri: OP1.cloudlet-33
+  location:
+    long: -143
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-39
+  accessuri: OP1.cloudlet-39
+  location:
+    long: -137
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-40
+  accessuri: OP1.cloudlet-40
+  location:
+    long: -136
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-42
+  accessuri: OP1.cloudlet-42
+  location:
+    long: -134
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-54
+  accessuri: OP1.cloudlet-54
+  location:
+    long: -122
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-59
+  accessuri: OP1.cloudlet-59
+  location:
+    long: -117
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-3
+  accessuri: OP1.cloudlet-3
+  location:
+    long: -173
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-30
+  accessuri: OP1.cloudlet-30
+  location:
+    long: -146
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-35
+  accessuri: OP1.cloudlet-35
+  location:
+    long: -141
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-51
+  accessuri: OP1.cloudlet-51
+  location:
+    long: -125
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-69
+  accessuri: OP1.cloudlet-69
+  location:
+    long: -107
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-99
+  accessuri: OP1.cloudlet-99
+  location:
+    long: -77
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-8
+  accessuri: OP1.cloudlet-8
+  location:
+    long: -168
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-45
+  accessuri: OP1.cloudlet-45
+  location:
+    long: -131
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-46
+  accessuri: OP1.cloudlet-46
+  location:
+    long: -130
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-2
+  accessuri: OP1.cloudlet-2
+  location:
+    long: -174
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-79
+  accessuri: OP1.cloudlet-79
+  location:
+    long: -97
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-92
+  accessuri: OP1.cloudlet-92
+  location:
+    long: -84
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-68
+  accessuri: OP1.cloudlet-68
+  location:
+    long: -108
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-74
+  accessuri: OP1.cloudlet-74
+  location:
+    long: -102
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-77
+  accessuri: OP1.cloudlet-77
+  location:
+    long: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-14
+  accessuri: OP1.cloudlet-14
+  location:
+    long: -162
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-43
+  accessuri: OP1.cloudlet-43
+  location:
+    long: -133
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-56
+  accessuri: OP1.cloudlet-56
+  location:
+    long: -120
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-31
+  accessuri: OP1.cloudlet-31
+  location:
+    long: -145
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-47
+  accessuri: OP1.cloudlet-47
+  location:
+    long: -129
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-48
+  accessuri: OP1.cloudlet-48
+  location:
+    long: -128
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-63
+  accessuri: OP1.cloudlet-63
+  location:
+    long: -113
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-78
+  accessuri: OP1.cloudlet-78
+  location:
+    long: -98
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-7
+  accessuri: OP1.cloudlet-7
+  location:
+    long: -169
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-15
+  accessuri: OP1.cloudlet-15
+  location:
+    long: -161
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-17
+  accessuri: OP1.cloudlet-17
+  location:
+    long: -159
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-93
+  accessuri: OP1.cloudlet-93
+  location:
+    long: -83
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-97
+  accessuri: OP1.cloudlet-97
+  location:
+    long: -79
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-62
+  accessuri: OP1.cloudlet-62
+  location:
+    long: -114
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-64
+  accessuri: OP1.cloudlet-64
+  location:
+    long: -112
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-16
+  accessuri: OP1.cloudlet-16
+  location:
+    long: -160
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-19
+  accessuri: OP1.cloudlet-19
+  location:
+    long: -157
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-23
+  accessuri: OP1.cloudlet-23
+  location:
+    long: -153
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-87
+  accessuri: OP1.cloudlet-87
+  location:
+    long: -89
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-94
+  accessuri: OP1.cloudlet-94
+  location:
+    long: -82
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-96
+  accessuri: OP1.cloudlet-96
+  location:
+    long: -80
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-12
+  accessuri: OP1.cloudlet-12
+  location:
+    long: -164
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-75
+  accessuri: OP1.cloudlet-75
+  location:
+    long: -101
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-86
+  accessuri: OP1.cloudlet-86
+  location:
+    long: -90
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-88
+  accessuri: OP1.cloudlet-88
+  location:
+    long: -88
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-91
+  accessuri: OP1.cloudlet-91
+  location:
+    long: -85
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-21
+  accessuri: OP1.cloudlet-21
+  location:
+    long: -155
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-41
+  accessuri: OP1.cloudlet-41
+  location:
+    long: -135
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-53
+  accessuri: OP1.cloudlet-53
+  location:
+    long: -123
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-49
+  accessuri: OP1.cloudlet-49
+  location:
+    long: -127
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-57
+  accessuri: OP1.cloudlet-57
+  location:
+    long: -119
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: OP1
+    name: cloudlet-61
+  accessuri: OP1.cloudlet-61
+  location:
+    long: -115
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: Dev1
+    name: app1
+    version: "1.0"
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClusterapp1
+- key:
+    developerkey:
+      name: Dev1
+    name: app2
+    version: "1.0"
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClusterapp2
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+    id: 45
+  cloudletloc:
+    long: -131
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+    id: 53
+  cloudletloc:
+    long: -123
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+    id: 72
+  cloudletloc:
+    long: -104
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+    id: 96
+  cloudletloc:
+    long: -80
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+    id: 100
+  cloudletloc:
+    long: -76
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+    id: 14
+  cloudletloc:
+    long: -162
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+    id: 21
+  cloudletloc:
+    long: -155
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+    id: 83
+  cloudletloc:
+    long: -93
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+    id: 90
+  cloudletloc:
+    long: -86
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+    id: 93
+  cloudletloc:
+    long: -83
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+    id: 30
+  cloudletloc:
+    long: -146
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+    id: 32
+  cloudletloc:
+    long: -144
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+    id: 54
+  cloudletloc:
+    long: -122
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+    id: 85
+  cloudletloc:
+    long: -91
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+    id: 2
+  cloudletloc:
+    long: -174
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+    id: 19
+  cloudletloc:
+    long: -157
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+    id: 35
+  cloudletloc:
+    long: -141
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+    id: 56
+  cloudletloc:
+    long: -120
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+    id: 87
+  cloudletloc:
+    long: -89
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+    id: 97
+  cloudletloc:
+    long: -79
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+    id: 97
+  cloudletloc:
+    long: -79
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-97
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+    id: 11
+  cloudletloc:
+    long: -165
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+    id: 18
+  cloudletloc:
+    long: -158
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+    id: 25
+  cloudletloc:
+    long: -151
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+    id: 31
+  cloudletloc:
+    long: -145
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+    id: 37
+  cloudletloc:
+    long: -139
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+    id: 41
+  cloudletloc:
+    long: -135
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+    id: 82
+  cloudletloc:
+    long: -94
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+    id: 5
+  cloudletloc:
+    long: -171
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+    id: 33
+  cloudletloc:
+    long: -143
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+    id: 46
+  cloudletloc:
+    long: -130
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+    id: 77
+  cloudletloc:
+    long: -99
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+    id: 78
+  cloudletloc:
+    long: -98
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+    id: 3
+  cloudletloc:
+    long: -173
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+    id: 20
+  cloudletloc:
+    long: -156
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+    id: 36
+  cloudletloc:
+    long: -140
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+    id: 36
+  cloudletloc:
+    long: -140
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-36
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+    id: 46
+  cloudletloc:
+    long: -130
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-46
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+    id: 59
+  cloudletloc:
+    long: -117
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+    id: 61
+  cloudletloc:
+    long: -115
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+    id: 74
+  cloudletloc:
+    long: -102
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+    id: 84
+  cloudletloc:
+    long: -92
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+    id: 7
+  cloudletloc:
+    long: -169
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+    id: 12
+  cloudletloc:
+    long: -164
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+    id: 17
+  cloudletloc:
+    long: -159
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+    id: 50
+  cloudletloc:
+    long: -126
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+    id: 76
+  cloudletloc:
+    long: -100
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+    id: 100
+  cloudletloc:
+    long: -76
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-100
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+    id: 13
+  cloudletloc:
+    long: -163
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+    id: 65
+  cloudletloc:
+    long: -111
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+    id: 73
+  cloudletloc:
+    long: -103
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+    id: 9
+  cloudletloc:
+    long: -167
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+    id: 10
+  cloudletloc:
+    long: -166
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+    id: 16
+  cloudletloc:
+    long: -160
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+    id: 19
+  cloudletloc:
+    long: -157
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-19
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+    id: 23
+  cloudletloc:
+    long: -153
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+    id: 34
+  cloudletloc:
+    long: -142
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+    id: 39
+  cloudletloc:
+    long: -137
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+    id: 48
+  cloudletloc:
+    long: -128
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+    id: 53
+  cloudletloc:
+    long: -123
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-53
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+    id: 62
+  cloudletloc:
+    long: -114
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+    id: 17
+  cloudletloc:
+    long: -159
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-17
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+    id: 22
+  cloudletloc:
+    long: -154
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+    id: 25
+  cloudletloc:
+    long: -151
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-25
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+    id: 35
+  cloudletloc:
+    long: -141
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-35
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+    id: 47
+  cloudletloc:
+    long: -129
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+    id: 88
+  cloudletloc:
+    long: -88
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+    id: 3
+  cloudletloc:
+    long: -173
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-3
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+    id: 9
+  cloudletloc:
+    long: -167
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-9
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+    id: 43
+  cloudletloc:
+    long: -133
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+    id: 71
+  cloudletloc:
+    long: -105
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+    id: 86
+  cloudletloc:
+    long: -90
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+    id: 98
+  cloudletloc:
+    long: -78
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+    id: 13
+  cloudletloc:
+    long: -163
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-13
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+    id: 20
+  cloudletloc:
+    long: -156
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-20
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+    id: 28
+  cloudletloc:
+    long: -148
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+    id: 30
+  cloudletloc:
+    long: -146
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-30
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+    id: 31
+  cloudletloc:
+    long: -145
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-31
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+    id: 87
+  cloudletloc:
+    long: -89
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-87
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+    id: 37
+  cloudletloc:
+    long: -139
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-37
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+    id: 79
+  cloudletloc:
+    long: -97
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+    id: 91
+  cloudletloc:
+    long: -85
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+    id: 99
+  cloudletloc:
+    long: -77
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+    id: 1
+  cloudletloc:
+    long: -175
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+    id: 33
+  cloudletloc:
+    long: -143
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-33
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+    id: 47
+  cloudletloc:
+    long: -129
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-47
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+    id: 51
+  cloudletloc:
+    long: -125
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+    id: 61
+  cloudletloc:
+    long: -115
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-61
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+    id: 68
+  cloudletloc:
+    long: -108
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+    id: 7
+  cloudletloc:
+    long: -169
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-7
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+    id: 8
+  cloudletloc:
+    long: -168
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+    id: 18
+  cloudletloc:
+    long: -158
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-18
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+    id: 40
+  cloudletloc:
+    long: -136
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+    id: 55
+  cloudletloc:
+    long: -121
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+    id: 56
+  cloudletloc:
+    long: -120
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-56
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+    id: 80
+  cloudletloc:
+    long: -96
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+    id: 98
+  cloudletloc:
+    long: -78
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-98
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+    id: 48
+  cloudletloc:
+    long: -128
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-48
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+    id: 63
+  cloudletloc:
+    long: -113
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+    id: 85
+  cloudletloc:
+    long: -91
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-85
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+    id: 11
+  cloudletloc:
+    long: -165
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-11
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+    id: 12
+  cloudletloc:
+    long: -164
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-12
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+    id: 26
+  cloudletloc:
+    long: -150
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+    id: 44
+  cloudletloc:
+    long: -132
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+    id: 50
+  cloudletloc:
+    long: -126
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-50
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+    id: 82
+  cloudletloc:
+    long: -94
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-82
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+    id: 95
+  cloudletloc:
+    long: -81
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+    id: 99
+  cloudletloc:
+    long: -77
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-99
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+    id: 1
+  cloudletloc:
+    long: -175
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+    id: 32
+  cloudletloc:
+    long: -144
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-32
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+    id: 42
+  cloudletloc:
+    long: -134
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+    id: 44
+  cloudletloc:
+    long: -132
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-44
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+    id: 54
+  cloudletloc:
+    long: -122
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-54
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+    id: 70
+  cloudletloc:
+    long: -106
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+    id: 91
+  cloudletloc:
+    long: -85
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-91
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+    id: 92
+  cloudletloc:
+    long: -84
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+    id: 4
+  cloudletloc:
+    long: -172
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+    id: 52
+  cloudletloc:
+    long: -124
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+    id: 66
+  cloudletloc:
+    long: -110
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+    id: 67
+  cloudletloc:
+    long: -109
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+    id: 69
+  cloudletloc:
+    long: -107
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+    id: 69
+  cloudletloc:
+    long: -107
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-69
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+    id: 72
+  cloudletloc:
+    long: -104
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-72
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+    id: 75
+  cloudletloc:
+    long: -101
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+    id: 24
+  cloudletloc:
+    long: -152
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+    id: 27
+  cloudletloc:
+    long: -149
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+    id: 29
+  cloudletloc:
+    long: -147
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+    id: 60
+  cloudletloc:
+    long: -116
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+    id: 94
+  cloudletloc:
+    long: -82
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+    id: 16
+  cloudletloc:
+    long: -160
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-16
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+    id: 41
+  cloudletloc:
+    long: -135
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-41
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+    id: 43
+  cloudletloc:
+    long: -133
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-43
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+    id: 59
+  cloudletloc:
+    long: -117
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-59
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+    id: 73
+  cloudletloc:
+    long: -103
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-73
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+    id: 75
+  cloudletloc:
+    long: -101
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-75
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+    id: 84
+  cloudletloc:
+    long: -92
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-84
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+    id: 8
+  cloudletloc:
+    long: -168
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-8
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+    id: 29
+  cloudletloc:
+    long: -147
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-29
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+    id: 34
+  cloudletloc:
+    long: -142
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-34
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+    id: 49
+  cloudletloc:
+    long: -127
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+    id: 65
+  cloudletloc:
+    long: -111
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-65
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+    id: 86
+  cloudletloc:
+    long: -90
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-86
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+    id: 89
+  cloudletloc:
+    long: -87
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+    id: 93
+  cloudletloc:
+    long: -83
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-93
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+    id: 94
+  cloudletloc:
+    long: -82
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-94
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+    id: 22
+  cloudletloc:
+    long: -154
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-22
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+    id: 45
+  cloudletloc:
+    long: -131
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-45
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+    id: 51
+  cloudletloc:
+    long: -125
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-51
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+    id: 76
+  cloudletloc:
+    long: -100
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-76
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+    id: 5
+  cloudletloc:
+    long: -171
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-5
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+    id: 14
+  cloudletloc:
+    long: -162
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-14
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+    id: 57
+  cloudletloc:
+    long: -119
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+    id: 78
+  cloudletloc:
+    long: -98
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-78
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+    id: 6
+  cloudletloc:
+    long: -170
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+    id: 27
+  cloudletloc:
+    long: -149
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-27
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+    id: 49
+  cloudletloc:
+    long: -127
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-49
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+    id: 58
+  cloudletloc:
+    long: -118
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+    id: 81
+  cloudletloc:
+    long: -95
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+    id: 92
+  cloudletloc:
+    long: -84
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-92
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+    id: 10
+  cloudletloc:
+    long: -166
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-10
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+    id: 23
+  cloudletloc:
+    long: -153
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-23
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+    id: 26
+  cloudletloc:
+    long: -150
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-26
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+    id: 64
+  cloudletloc:
+    long: -112
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+    id: 64
+  cloudletloc:
+    long: -112
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-64
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+    id: 68
+  cloudletloc:
+    long: -108
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-68
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+    id: 77
+  cloudletloc:
+    long: -99
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-77
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+    id: 83
+  cloudletloc:
+    long: -93
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-83
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+    id: 88
+  cloudletloc:
+    long: -88
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-88
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+    id: 95
+  cloudletloc:
+    long: -81
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-95
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+    id: 96
+  cloudletloc:
+    long: -80
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-96
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+    id: 24
+  cloudletloc:
+    long: -152
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-24
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+    id: 38
+  cloudletloc:
+    long: -138
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+    id: 63
+  cloudletloc:
+    long: -113
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-63
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+    id: 67
+  cloudletloc:
+    long: -109
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-67
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+    id: 4
+  cloudletloc:
+    long: -172
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-4
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+    id: 6
+  cloudletloc:
+    long: -170
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-6
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+    id: 42
+  cloudletloc:
+    long: -134
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-42
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+    id: 58
+  cloudletloc:
+    long: -118
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-58
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+    id: 74
+  cloudletloc:
+    long: -102
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-74
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+    id: 52
+  cloudletloc:
+    long: -124
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-52
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+    id: 62
+  cloudletloc:
+    long: -114
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-62
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+    id: 80
+  cloudletloc:
+    long: -96
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-80
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+    id: 90
+  cloudletloc:
+    long: -86
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-90
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+    id: 2
+  cloudletloc:
+    long: -174
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+    id: 15
+  cloudletloc:
+    long: -161
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+    id: 15
+  cloudletloc:
+    long: -161
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-15
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+    id: 21
+  cloudletloc:
+    long: -155
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-21
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+    id: 28
+  cloudletloc:
+    long: -148
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-28
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+    id: 40
+  cloudletloc:
+    long: -136
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-40
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+    id: 55
+  cloudletloc:
+    long: -121
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-55
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+    id: 57
+  cloudletloc:
+    long: -119
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-57
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+    id: 60
+  cloudletloc:
+    long: -116
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-60
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+    id: 66
+  cloudletloc:
+    long: -110
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-66
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+    id: 70
+  cloudletloc:
+    long: -106
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-70
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+    id: 71
+  cloudletloc:
+    long: -105
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-71
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+    id: 79
+  cloudletloc:
+    long: -97
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-79
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+    id: 81
+  cloudletloc:
+    long: -95
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-81
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+    id: 38
+  cloudletloc:
+    long: -138
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-38
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+    id: 39
+  cloudletloc:
+    long: -137
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp2
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-39
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app2:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app2
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+- key:
+    appkey:
+      developerkey:
+        name: Dev1
+      name: app1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+    id: 89
+  cloudletloc:
+    long: -87
+  clusterinstkey:
+    clusterkey:
+      name: AutoClusterapp1
+    cloudletkey:
+      operatorkey:
+        name: OP1
+      name: cloudlet-89
+  liveness: LivenessStatic
+  imagepath: mobiledgex_Dev1/app1:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: app1
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

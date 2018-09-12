@@ -1,0 +1,40 @@
+##
+##
+description: Adds provisioning and compares to expected value.  Then restarts everything and compares again
+
+tests:
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/appdata.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
+
+
+- name: stop ctrl1
+  actions: [stop=ctrl1]
+
+- name: start ctrl1 
+  actions: [start=ctrl1]
+
+- name: verify services are running
+  actions: [status]
+
+- name: show provisioning again and compare results 
+  actions: [ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata.yml"
+    filetype: appdata
+
+  
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

@@ -1,0 +1,17 @@
+##
+##
+description: Deploys and starts a system, adds provisioning for SDK interworking
+
+tests:
+
+- includefile: stop_cleanup.yml
+
+- name: deploy and start services 
+  actions: [deploy,start]
+
+- name: verify services are running
+  actions: [status]
+
+- name: create provisioning
+  apifile: "{{datadir}}/appdata_sdk.yml"
+  actions: [ctrlapi-create,ctrlapi-show]

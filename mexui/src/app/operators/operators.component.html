@@ -1,0 +1,48 @@
+<h1>Operators
+  </h1>
+      <div class="container">
+        <div class="oprlist">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>OperatorName</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let operator of operators; let i = index">
+                <th scope="row">{{ i + 1 }}</th>
+                <td>{{ operator.name }}</td>
+                <td>
+                  <button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button>
+                </td>
+                <td>
+                  <button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="text-right">
+            <button type="submit" class="btn btn-primary" (click)="onNew()">New</button>
+          </div>
+        </div>
+        <br>
+        <div class="flventry" *ngIf="showNew">
+          <form (ngSubmit)="onSave()">
+            <div class="form-group row">
+              <label for="oprname-input" class="col-2 col-form-label">OperatorName</label>
+              <div class="col-10">
+                <input class="form-control" type="text" [(ngModel)]="oprModel.name" name="name">
+              </div>
+            </div>
+           
+            <button type="submit" class="btn btn-success">{{submitType}}</button>
+            <button type="submit" class="btn btn-primary" (click)="onCancel()">Cancel</button>
+          </form>
+        </div>
+      </div>
+         
+    
+          
+    

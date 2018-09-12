@@ -28,60 +28,112 @@ func (t *TestCud) Init(g *generator.Generator) {
 	t.cudTmpl = template.Must(template.New("cud").Parse(tmpl))
 }
 
+type cudFunc struct {
+	Func      string
+	Pkg       string
+	Name      string
+	KeyName   string
+	Streamout bool
+}
+
 type tmplArgs struct {
 	Pkg         string
 	Name        string
 	KeyName     string
 	UpdateField string
+	UpdateValue string
+	ShowOnly    bool
+	Streamout   bool
+	CudFuncs    []cudFunc
 }
 
 var tmpl = `
 type Show{{.Name}} struct {
-	data map[string]{{.Pkg}}.{{.Name}}
+	Data map[string]{{.Pkg}}.{{.Name}}
 	grpc.ServerStream
 }
 
 func (x *Show{{.Name}}) Init() {
-	x.data = make(map[string]{{.Pkg}}.{{.Name}})
+	x.Data = make(map[string]{{.Pkg}}.{{.Name}})
 }
 
 func (x *Show{{.Name}}) Send(m *{{.Pkg}}.{{.Name}}) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
+{{- if .Streamout}}
+type CudStreamout{{.Name}} struct {
+	grpc.ServerStream
+}
+
+func (x *CudStreamout{{.Name}}) Send(res *{{.Pkg}}.Result) error {
+	fmt.Println(res)
+	return nil
+}
+func (x *CudStreamout{{.Name}}) Context() context.Context {
+	return context.TODO()
+}
+
+type {{.Name}}Stream interface {
+	Recv() (*{{.Pkg}}.Result, error)
+}
+
+func {{.Name}}ReadResultStream(stream {{.Name}}Stream, err error) error {
+	if err != nil {
+		return err
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		fmt.Println(res)
+	}
+}
+
+{{- end}}
+
 func (x *Show{{.Name}}) ReadStream(stream {{.Pkg}}.{{.Name}}Api_Show{{.Name}}Client, err error) {
-	x.data = make(map[string]{{.Pkg}}.{{.Name}})
+	x.Data = make(map[string]{{.Pkg}}.{{.Name}})
 	if err != nil {
 		return
 	}
 	for {
 		obj, err := stream.Recv()
-		if (err == io.EOF) {
+		if err == io.EOF {
 			break
 		}
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.Matches(obj, {{.Pkg}}.MatchIgnoreBackend(), {{.Pkg}}.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "{{.Name}} are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
 func (x *Show{{.Name}}) AssertNotFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
 }
 
@@ -122,29 +174,28 @@ type {{.Name}}CommonApi struct {
 	client_api {{.Pkg}}.{{.Name}}ApiClient
 }
 
-func (x *{{.Name}}CommonApi) Create{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{- if not .ShowOnly}}
+{{range .CudFuncs}}
+func (x *{{.Name}}CommonApi) {{.Func}}{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{- if .Streamout}}
 	if x.internal_api != nil {
-		return x.internal_api.Create{{.Name}}(ctx, in)
+		err := x.internal_api.{{.Func}}{{.Name}}(in, &CudStreamout{{.Name}}{})
+		return &{{.Pkg}}.Result{}, err
 	} else {
-		return x.client_api.Create{{.Name}}(ctx, in)
+		stream, err := x.client_api.{{.Func}}{{.Name}}(ctx, in)
+		err = {{.Name}}ReadResultStream(stream, err)
+		return &{{.Pkg}}.Result{}, err
 	}
-}
-
-func (x *{{.Name}}CommonApi) Update{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+{{- else}}
 	if x.internal_api != nil {
-		return x.internal_api.Update{{.Name}}(ctx, in)
+		return x.internal_api.{{.Func}}{{.Name}}(ctx, in)
 	} else {
-		return x.client_api.Update{{.Name}}(ctx, in)
+		return x.client_api.{{.Func}}{{.Name}}(ctx, in)
 	}
+{{- end}}
 }
-
-func (x *{{.Name}}CommonApi) Delete{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
-	if x.internal_api != nil {
-		return x.internal_api.Delete{{.Name}}(ctx, in)
-	} else {
-		return x.client_api.Delete{{.Name}}(ctx, in)
-	}
-}
+{{end}}
+{{- end}}
 
 func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}.{{.Name}}, showData *Show{{.Name}}) error {
 	if x.internal_api != nil {
@@ -156,18 +207,56 @@ func (x *{{.Name}}CommonApi) Show{{.Name}}(ctx context.Context, filter *{{.Pkg}}
 	}
 }
 
-func Internal{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+func NewInternal{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiServer) *{{.Name}}CommonApi {
 	apiWrap := {{.Name}}CommonApi{}
 	apiWrap.internal_api = api
-	basic{{.Name}}CudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
-func Client{{.Name}}CudTest(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+func NewClient{{.Name}}Api(api {{.Pkg}}.{{.Name}}ApiClient) *{{.Name}}CommonApi {
 	apiWrap := {{.Name}}CommonApi{}
 	apiWrap.client_api = api
-	basic{{.Name}}CudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
+func Internal{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	switch test {
+{{- if not .ShowOnly}}
+	case "cud":
+		basic{{.Name}}CudTest(t, NewInternal{{.Name}}Api(api), testData)
+{{- end}}
+	case "show":
+		basic{{.Name}}ShowTest(t, NewInternal{{.Name}}Api(api), testData)
+	}
+}
+
+func Client{{.Name}}Test(t *testing.T, test string, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	switch test {
+{{- if not .ShowOnly}}
+	case "cud":
+		basic{{.Name}}CudTest(t, NewClient{{.Name}}Api(api), testData)
+{{- end}}
+	case "show":
+		basic{{.Name}}ShowTest(t, NewClient{{.Name}}Api(api), testData)
+	}
+}
+
+func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+	var err error
+	ctx := context.TODO()
+
+	show := Show{{.Name}}{}
+	show.Init()
+	filterNone := {{.Pkg}}.{{.Name}}{}
+	err = api.Show{{.Name}}(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
+
+{{- if not .ShowOnly}}
 func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
 	ctx := context.TODO()
@@ -178,31 +267,24 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.Create{{.Name}}(ctx, &obj)
-		assert.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
-	}
+	create{{.Name}}Data(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate {{.Name}}")
 
 	// test show all items
+	basic{{.Name}}ShowTest(t, api, testData)
+
+	// test delete
+	_, err = api.Delete{{.Name}}(ctx, &testData[0])
+	assert.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
 	show := Show{{.Name}}{}
 	show.Init()
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
-
-	// test delete
-	_, err = api.Delete{{.Name}}(ctx, &testData[0])
-	assert.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
-	show.Init()
-	err = api.Show{{.Name}}(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData) - 1, len(show.data), "Show count")
+	assert.Equal(t, len(testData) - 1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.Update{{.Name}}(ctx, &testData[0])
@@ -220,7 +302,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	// test update
 	updater := {{.Pkg}}.{{.Name}}{}
 	updater.Key = testData[0].Key
-	updater.{{.UpdateField}} = "update just this"
+	updater.{{.UpdateField}} = {{.UpdateValue}}
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
@@ -228,23 +310,47 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 
 	show.Init()
 	updater = testData[0]
-	updater.{{.UpdateField}} = "update just this"
+	updater.{{.UpdateField}} = {{.UpdateValue}}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show {{.Name}}")
 	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.{{.UpdateField}} = testData[0].{{.UpdateField}}
+	_, err = api.Update{{.Name}}(ctx, &updater)
+	assert.Nil(t, err, "Update back {{.Name}}")
 {{- end}}
 }
 
+func Internal{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiServer, testData []{{.Pkg}}.{{.Name}}) {
+	create{{.Name}}Data(t, NewInternal{{.Name}}Api(api), testData)
+}
+
+func Client{{.Name}}Create(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, testData []{{.Pkg}}.{{.Name}}) {
+	create{{.Name}}Data(t, NewClient{{.Name}}Api(api), testData)
+}
+
+func create{{.Name}}Data(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.Create{{.Name}}(ctx, &obj)
+		assert.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
+	}
+}
+{{- end}}
 `
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
-	hasGenerateCud := false
+	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			hasGenerateCud = true
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			hasGenerateCudTest = true
 		}
 	}
-	if !hasGenerateCud {
+	if !hasGenerateCudTest {
 		return
 	}
 	t.PrintImport("", "google.golang.org/grpc")
@@ -257,39 +363,73 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
-	hasGenerateCud := false
+	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			hasGenerateCud = true
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			hasGenerateCudTest = true
+			break
 		}
 	}
-	if !hasGenerateCud {
+	if !hasGenerateCudTest {
 		return
 	}
 	for _, msg := range file.Messages() {
-		if GetGenerateCud(msg.DescriptorProto) {
-			t.generateTestCud(msg.DescriptorProto)
+		if GetGenerateCudTest(msg.DescriptorProto) ||
+			GetGenerateShowTest(msg.DescriptorProto) {
+			t.generateCudTest(msg.DescriptorProto)
 		}
 	}
 }
 
-func (t *TestCud) generateTestCud(message *descriptor.DescriptorProto) {
+func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 	args := tmplArgs{
-		Pkg:     edgeproto,
-		Name:    *message.Name,
-		KeyName: *message.Name + "Key",
+		Pkg:       edgeproto,
+		Name:      *message.Name,
+		KeyName:   *message.Name + "Key",
+		ShowOnly:  GetGenerateShowTest(message),
+		Streamout: GetGenerateCudStreamout(message),
 	}
+	cudFuncs := make([]cudFunc, 0)
+	for _, str := range []string{"Create", "Update", "Delete"} {
+		cf := cudFunc{
+			Func:      str,
+			Pkg:       args.Pkg,
+			Name:      args.Name,
+			KeyName:   args.KeyName,
+			Streamout: args.Streamout,
+		}
+		cudFuncs = append(cudFuncs, cf)
+	}
+	args.CudFuncs = cudFuncs
+
 	for _, field := range message.Field {
 		if GetTestUpdate(field) {
 			args.UpdateField = generator.CamelCase(*field.Name)
+			switch *field.Type {
+			case descriptor.FieldDescriptorProto_TYPE_STRING:
+				args.UpdateValue = "\"update just this\""
+			case descriptor.FieldDescriptorProto_TYPE_BYTES:
+				args.UpdateValue = "[]byte{1,2,3,4}"
+			default:
+				args.UpdateValue = "1101"
+			}
 		}
 	}
 	t.P(gensupport.AutoGenComment)
 	t.cudTmpl.Execute(t, args)
 }
 
-func GetGenerateCud(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
+func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudTest, false)
+}
+
+func GetGenerateCudStreamout(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCudStreamout, false)
+}
+
+func GetGenerateShowTest(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateShowTest, false)
 }
 
 func GetTestUpdate(field *descriptor.FieldDescriptorProto) bool {

@@ -1,40 +1,35 @@
 package main
 
 import (
-	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestCloudletApi(t *testing.T) {
-	util.SetDebugLevel(util.DebugLevelEtcd | util.DebugLevelApi)
+	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
 
 	dummy := dummyEtcd{}
 	dummy.Start()
 
-	operApi := InitOperatorApi(&dummy)
-	api := InitCloudletApi(&dummy, operApi)
-	operApi.WaitInitDone()
-	api.WaitInitDone()
+	sync := InitSync(&dummy)
+	InitApis(sync)
+	sync.Start()
+	defer sync.Done()
 
 	// cannot create cloudlets without apps
-	ctx := context.TODO()
 	for _, obj := range testutil.CloudletData {
-		_, err := api.CreateCloudlet(ctx, &obj)
+		err := cloudletApi.CreateCloudlet(&obj, &testutil.CudStreamoutCloudlet{})
 		assert.NotNil(t, err, "Create cloudlet without operator")
 	}
 
 	// create operators
-	for _, obj := range testutil.OperatorData {
-		_, err := operApi.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create operator")
-	}
+	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 
-	testutil.InternalCloudletCudTest(t, api, testutil.CloudletData)
+	testutil.InternalCloudletTest(t, "cud", &cloudletApi, testutil.CloudletData)
 	dummy.Stop()
 }

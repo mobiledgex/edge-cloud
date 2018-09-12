@@ -9,8 +9,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
 
@@ -34,6 +34,8 @@ var commandList = []string{
 }
 
 func main() {
+	flag.Parse()
+
 	if len(os.Args) < 2 {
 		printHelpAndExit()
 	}
@@ -62,15 +64,16 @@ func printHelpAndExit() {
 	os.Exit(1)
 }
 
-func getAPI(address string) (edgeproto.CloudResourceManagerClient, error) {
-	q.Q("grpc dial", address)
-
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+func getAPI(address string, tlsCertFile string) (edgeproto.CloudResourceManagerClient, error) {
+	dialOption, err := tls.GetTLSClientDialOption(address, tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := grpc.Dial(address, dialOption)
 	if err != nil {
 		return nil, err
 	}
 
-	q.Q("getting CRM api")
 	api := edgeproto.NewCloudResourceManagerClient(conn)
 
 	return api, nil
@@ -86,15 +89,19 @@ func doAddCloudResource() {
 	opkeyname := cmd.String("opkeyname", "", "Operator Key Name for the cloudlet (required)")
 
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
+	tlsCertFile := cmd.String("tls", "", "TLS cert file (optional)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *name == "" || *address == "" || *location == "" || *opkey == "" || *opkeyname == "" || *crm == "" {
 		cmd.PrintDefaults()
 		os.Exit(1)
 	}
 
-	api, err := getAPI(*crm)
+	api, err := getAPI(*crm, *tlsCertFile)
 	if err != nil {
 		fatalError("can't get API endpoint %v", err)
 	}
@@ -126,9 +133,14 @@ func doListCloudResource() {
 	cmd := flag.NewFlagSet("list-cloud-resource", flag.ExitOnError)
 
 	category := cmd.Int("category", 0, "Category of the cloudlet to list")
+	tlsCertFile := cmd.String("tls", "", "TLS cert file (optional)")
+
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *category < 0 {
 		cmd.PrintDefaults()
@@ -140,7 +152,7 @@ func doListCloudResource() {
 		os.Exit(1)
 	}
 
-	api, err := getAPI(*crm)
+	api, err := getAPI(*crm, *tlsCertFile)
 	if err != nil {
 		fatalError("can't get API endpoint, error %v", err)
 		os.Exit(1)
@@ -151,8 +163,6 @@ func doListCloudResource() {
 	cr := edgeproto.CloudResource{CloudletKey: &cloudletKey}
 	cr.Category = edgeproto.CloudResourceCategory(*category)
 
-	q.Q("calling ListCloudResource")
-
 	stream, err := api.ListCloudResource(ctx, &cr)
 	if err != nil {
 		fatalError("ListCloudResource call failed, %v", err)
@@ -162,14 +172,12 @@ func doListCloudResource() {
 
 	go func() {
 		for {
-			q.Q("wait for stream input")
 			in, err := stream.Recv()
 			if err == io.EOF {
 				close(waitc)
 				return
 			}
 
-			q.Q("received from stream", *in)
 			if err != nil {
 				fatalError("Failed to receive from stream, %v", err)
 			}
@@ -179,7 +187,6 @@ func doListCloudResource() {
 	}()
 
 	<-waitc
-	q.Q("stream done")
 }
 
 func doDeleteCloudResource() {
@@ -190,17 +197,21 @@ func doDeleteCloudResource() {
 	location := cmd.String("location", "", "Location of the cloudlet (required)")
 	opkey := cmd.String("opkey", "", "Operator Key for the cloudlet (required)")
 	opkeyname := cmd.String("opkeyname", "", "Operator Key Name for the cloudlet (required)")
+	tlsCertFile := cmd.String("tls", "", "TLS cert file (optional)")
 
 	crm := cmd.String("crm", "", "Address of Cloud Resource Manager (required)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *name == "" || *address == "" || *location == "" || *opkey == "" || *opkeyname == "" || *crm == "" {
 		cmd.PrintDefaults()
 		os.Exit(1)
 	}
 
-	api, err := getAPI(*crm)
+	api, err := getAPI(*crm, *tlsCertFile)
 	if err != nil {
 		fatalError("can't get API endpoint %v", err)
 	}
@@ -236,10 +247,14 @@ func doDeployApplication() {
 	flavor := cmd.String("flavor", "", "Flavor UUID of the application (required if openstack)")
 	network := cmd.String("network", "", "Network UUID of the application (required if openstack)")
 	region := cmd.String("region", "", "Region of the application")
+	tlsCertFile := cmd.String("tls", "", "TLS cert file (optional)")
 
 	//TODO context, limitfactor, cpu, memory, repository, ...
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *crm == "" || *name == "" || *kind == "" || *image == "" {
 		cmd.PrintDefaults()
@@ -264,7 +279,7 @@ func doDeployApplication() {
 
 	ctx := context.TODO()
 
-	api, err := getAPI(*crm)
+	api, err := getAPI(*crm, *tlsCertFile)
 	if err != nil {
 		fatalError("can't get API endpoint %v", err)
 	}
@@ -307,8 +322,12 @@ func doDeleteApplication() {
 	kind := cmd.String("kind", "", "Type of the application, e.g. k8s-simple, k8s-manifest, (required)")
 	namespace := cmd.String("namespace", "default", "Namespace of the application")
 	region := cmd.String("region", "", "Region of the application")
+	tlsCertFile := cmd.String("tls", "", "TLS cert file (optional)")
 
-	cmd.Parse(os.Args[2:])
+	if err := cmd.Parse(os.Args[2:]); err != nil {
+		fmt.Printf("parse error %v", err)
+		os.Exit(1)
+	}
 
 	if *crm == "" || *name == "" || *kind == "" {
 		cmd.PrintDefaults()
@@ -325,7 +344,7 @@ func doDeleteApplication() {
 
 	ctx := context.TODO()
 
-	api, err := getAPI(*crm)
+	api, err := getAPI(*crm, *tlsCertFile)
 	if err != nil {
 		fatalError("can't get API endpoint %v", err)
 	}

@@ -4,7 +4,11 @@
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
+import "strings"
 import "strconv"
+import "os"
+import "text/tabwriter"
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -19,23 +23,59 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var NotifyApiCmd edgeproto.NotifyApiClient
+var NoticeActionStrings = []string{
+	"NONE",
+	"UPDATE",
+	"DELETE",
+	"VERSION",
+	"SENDALL_END",
+}
+
+var NoticeRequestorStrings = []string{
+	"NoticeRequestorNone",
+	"NoticeRequestorDME",
+	"NoticeRequestorCRM",
+}
 
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
 func NoticeReplyHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, "Action")
 	s = append(s, "Version")
 	return s
 }
 
+func NoticeReplyWriteOutputArray(objs []*edgeproto.NoticeReply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NoticeReplyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(NoticeReplySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func NoticeReplyWriteOutputOne(obj *edgeproto.NoticeReply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NoticeReplyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NoticeReplySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 8)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	s = append(s, edgeproto.NoticeRequestor_name[int32(in.Requestor)])
@@ -44,7 +84,7 @@ func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
 }
 
 func NoticeRequestHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 8)
 	s = append(s, "Action")
 	s = append(s, "Version")
 	s = append(s, "Requestor")
@@ -52,5 +92,51 @@ func NoticeRequestHeaderSlicer() []string {
 	return s
 }
 
+func NoticeRequestWriteOutputArray(objs []*edgeproto.NoticeRequest) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NoticeRequestHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(NoticeRequestSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func NoticeRequestWriteOutputOne(obj *edgeproto.NoticeRequest) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NoticeRequestHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NoticeRequestSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func NoticeReplyHideTags(in *edgeproto.NoticeReply) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+}
+
+func NoticeRequestHideTags(in *edgeproto.NoticeRequest) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+}
+
 func init() {
+}
+
+func NotifyApiAllowNoConfig() {
 }

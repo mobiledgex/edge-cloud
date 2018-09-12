@@ -1,0 +1,9 @@
+##
+##
+description: delete provisioning 
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata_demo.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]

@@ -1,0 +1,118 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+
+clusterflavors:
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: AutoClustersomeApplication
+  defaultflavor:
+    name: c1.small
+  auto: true
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: AutoClustersomeApplication
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-1
+  flavor:
+    name: c1.small
+  liveness: LivenessDynamic
+  auto: true
+
+operators:
+- key:
+    name: TMUS
+
+developers:
+- key:
+    name: AcmeAppCo
+  username: AcmeAppCo-user
+  passhash: "123456789012345670"
+  address: 1234 AcmeAppCo street
+  email: AcmeAppCo@gmail.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TMUS
+    name: tmocloud-1
+  accessuri: TMUS.tmocloud-1
+  location:
+    long: -175
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: someApplication
+    version: "1.0"
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AutoClustersomeApplication
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-1
+    id: 1
+  cloudletloc:
+    long: -175
+  clusterinstkey:
+    clusterkey:
+      name: AutoClustersomeApplication
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: someApplication
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

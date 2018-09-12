@@ -10,6 +10,7 @@ build:
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	make -C ./protoc-gen-cmd
+	make -C ./log
 	make -C edgeproto
 	make -C testgen
 	make -C d-match-engine
@@ -19,6 +20,11 @@ build:
 build-linux:
 	${LINUX_XCOMPILE_ENV} go build ./...
 	make -C d-match-engine linux
+
+build-docker:
+	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud .
+	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
+	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 
 install:
 	go install ./...
@@ -31,3 +37,12 @@ tools:
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogofast
 	go install ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+
+test:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
+
+test-debug:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+
+clean:
+	go clean ./...

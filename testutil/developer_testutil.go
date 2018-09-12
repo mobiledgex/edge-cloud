@@ -25,21 +25,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowDeveloper struct {
-	data map[string]edgeproto.Developer
+	Data map[string]edgeproto.Developer
 	grpc.ServerStream
 }
 
 func (x *ShowDeveloper) Init() {
-	x.data = make(map[string]edgeproto.Developer)
+	x.Data = make(map[string]edgeproto.Developer)
 }
 
 func (x *ShowDeveloper) Send(m *edgeproto.Developer) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperClient, err error) {
-	x.data = make(map[string]edgeproto.Developer)
+	x.Data = make(map[string]edgeproto.Developer)
 	if err != nil {
 		return
 	}
@@ -51,25 +51,30 @@ func (x *ShowDeveloper) ReadStream(stream edgeproto.DeveloperApi_ShowDeveloperCl
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Developer %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Developer are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
 func (x *ShowDeveloper) AssertNotFound(t *testing.T, obj *edgeproto.Developer) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
 }
 
@@ -144,18 +149,50 @@ func (x *DeveloperCommonApi) ShowDeveloper(ctx context.Context, filter *edgeprot
 	}
 }
 
-func InternalDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+func NewInternalDeveloperApi(api edgeproto.DeveloperApiServer) *DeveloperCommonApi {
 	apiWrap := DeveloperCommonApi{}
 	apiWrap.internal_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
-func ClientDeveloperCudTest(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
+func NewClientDeveloperApi(api edgeproto.DeveloperApiClient) *DeveloperCommonApi {
 	apiWrap := DeveloperCommonApi{}
 	apiWrap.client_api = api
-	basicDeveloperCudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
+func InternalDeveloperTest(t *testing.T, test string, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+	switch test {
+	case "cud":
+		basicDeveloperCudTest(t, NewInternalDeveloperApi(api), testData)
+	case "show":
+		basicDeveloperShowTest(t, NewInternalDeveloperApi(api), testData)
+	}
+}
+
+func ClientDeveloperTest(t *testing.T, test string, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
+	switch test {
+	case "cud":
+		basicDeveloperCudTest(t, NewClientDeveloperApi(api), testData)
+	case "show":
+		basicDeveloperShowTest(t, NewClientDeveloperApi(api), testData)
+	}
+}
+
+func basicDeveloperShowTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowDeveloper{}
+	show.Init()
+	filterNone := edgeproto.Developer{}
+	err = api.ShowDeveloper(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
 	ctx := context.TODO()
@@ -166,31 +203,24 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
-	}
+	createDeveloperData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateDeveloper(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Developer")
 
 	// test show all items
+	basicDeveloperShowTest(t, api, testData)
+
+	// test delete
+	_, err = api.DeleteDeveloper(ctx, &testData[0])
+	assert.Nil(t, err, "delete Developer %s", testData[0].Key.GetKeyString())
 	show := ShowDeveloper{}
 	show.Init()
 	filterNone := edgeproto.Developer{}
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
-
-	// test delete
-	_, err = api.DeleteDeveloper(ctx, &testData[0])
-	assert.Nil(t, err, "delete Developer %s", testData[0].Key.GetKeyString())
-	show.Init()
-	err = api.ShowDeveloper(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateDeveloper(ctx, &testData[0])
@@ -219,4 +249,27 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show Developer")
 	show.AssertFound(t, &updater)
+
+	// revert change
+	updater.Email = testData[0].Email
+	_, err = api.UpdateDeveloper(ctx, &updater)
+	assert.Nil(t, err, "Update back Developer")
+}
+
+func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
+	createDeveloperData(t, NewInternalDeveloperApi(api), testData)
+}
+
+func ClientDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiClient, testData []edgeproto.Developer) {
+	createDeveloperData(t, NewClientDeveloperApi(api), testData)
+}
+
+func createDeveloperData(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateDeveloper(ctx, &obj)
+		assert.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
+	}
 }

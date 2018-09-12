@@ -32,12 +32,8 @@ required = [
 ]
 
 [[constraint]]
-  name = "github.com/bobbae/q"
-  version = "1.0.3"
-
-[[constraint]]
   name = "github.com/coreos/etcd"
-  version = "3.3.5"
+  version = "3.3.9"
 
 [[constraint]]
   name = "github.com/gogo/gateway"
@@ -102,3 +98,11 @@ required = [
   [[prune.project]]
     name = "github.com/grpc-ecosystem/grpc-gateway"
     non-go = false
+
+[[constraint]]
+  name = "github.com/cespare/xxhash"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/influxdata/influxdb"
+  version = "1.6.2"

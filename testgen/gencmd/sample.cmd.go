@@ -27,14 +27,13 @@ import "os"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import _ "github.com/mobiledgex/edge-cloud/protogen"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -45,8 +44,22 @@ var _ = math.Inf
 var TestApiCmd testgen.TestApiClient
 var TestGenIn testgen.TestGen
 var TestGenFlagSet = pflag.NewFlagSet("TestGen", pflag.ExitOnError)
+var TestGenNoConfigFlagSet = pflag.NewFlagSet("TestGenNoConfig", pflag.ExitOnError)
 var TestGenInOuterEn string
 var TestGenInInnerEn string
+var OuterEnumStrings = []string{
+	"OUTER0",
+	"OUTER1",
+	"OUTER2",
+	"OUTER3",
+}
+
+var InnerEnumStrings = []string{
+	"INNER0",
+	"INNER1",
+	"INNER2",
+	"INNER3",
+}
 
 func NestedMessageSlicer(in *testgen.NestedMessage) []string {
 	s := make([]string, 0, 1)
@@ -60,6 +73,29 @@ func NestedMessageHeaderSlicer() []string {
 	return s
 }
 
+func NestedMessageWriteOutputArray(objs []*testgen.NestedMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NestedMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(NestedMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func NestedMessageWriteOutputOne(obj *testgen.NestedMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(NestedMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NestedMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func IncludeMessageSlicer(in *testgen.IncludeMessage) []string {
 	s := make([]string, 0, 3)
 	s = append(s, in.Name)
@@ -79,6 +115,29 @@ func IncludeMessageHeaderSlicer() []string {
 	return s
 }
 
+func IncludeMessageWriteOutputArray(objs []*testgen.IncludeMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(IncludeMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func IncludeMessageWriteOutputOne(obj *testgen.IncludeMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(IncludeMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func IncludeFieldsSlicer(in *testgen.IncludeFields) []string {
 	s := make([]string, 0, 2)
 	s = append(s, "")
@@ -96,8 +155,31 @@ func IncludeFieldsHeaderSlicer() []string {
 	return s
 }
 
+func IncludeFieldsWriteOutputArray(objs []*testgen.IncludeFields) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeFieldsHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(IncludeFieldsSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func IncludeFieldsWriteOutputOne(obj *testgen.IncludeFields) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(IncludeFieldsHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(IncludeFieldsSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func TestGenSlicer(in *testgen.TestGen) []string {
-	s := make([]string, 0, 36)
+	s := make([]string, 0, 38)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -285,7 +367,7 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 }
 
 func TestGenHeaderSlicer() []string {
-	s := make([]string, 0, 36)
+	s := make([]string, 0, 38)
 	s = append(s, "Fields")
 	s = append(s, "Name")
 	s = append(s, "Db")
@@ -369,6 +451,29 @@ func TestGenHeaderSlicer() []string {
 	return s
 }
 
+func TestGenWriteOutputArray(objs []*testgen.TestGen) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(TestGenSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func TestGenWriteOutputOne(obj *testgen.TestGen) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(TestGenSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func TestGen_InnerMessageSlicer(in *testgen.TestGen_InnerMessage) []string {
 	s := make([]string, 0, 2)
 	s = append(s, in.Url)
@@ -383,55 +488,55 @@ func TestGen_InnerMessageHeaderSlicer() []string {
 	return s
 }
 
+func InnerMessageWriteOutputArray(objs []*testgen.TestGen_InnerMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(TestGen_InnerMessageSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func InnerMessageWriteOutputOne(obj *testgen.TestGen_InnerMessage) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(TestGen_InnerMessageSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var RequestCmd = &cobra.Command{
 	Use: "Request",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if TestApiCmd == nil {
-			fmt.Println("TestApi client not initialized")
-			return
+			return fmt.Errorf("TestApi client not initialized")
 		}
 		var err error
 		err = parseTestGenEnums()
 		if err != nil {
-			fmt.Println("Request: ", err)
-			return
+			return fmt.Errorf("Request failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := TestApiCmd.Request(ctx, &TestGenIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := TestApiCmd.Request(ctx, &TestGenIn)
 		if err != nil {
-			fmt.Println("Request failed: ", err)
-			return
+			return fmt.Errorf("Request failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(TestGenHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(TestGenSlicer(objs), "\t"))
-			output.Flush()
-		}
+		TestGenWriteOutputOne(obj)
+		return nil
 	},
+}
+
+var TestApiCmds = []*cobra.Command{
+	RequestCmd,
 }
 
 func init() {
@@ -449,8 +554,8 @@ func init() {
 	TestGenFlagSet.Int32Var(&TestGenIn.Sf32, "sf32", 0, "Sf32")
 	TestGenFlagSet.Int64Var(&TestGenIn.Sf64, "sf64", 0, "Sf64")
 	TestGenFlagSet.BoolVar(&TestGenIn.Bb, "bb", false, "Bb")
-	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "TestGenInOuterEn")
-	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "TestGenInInnerEn")
+	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "one of [OUTER0 OUTER1 OUTER2 OUTER3]")
+	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "one of [INNER0 INNER1 INNER2 INNER3]")
 	TestGenIn.InnerMsg = &testgen.TestGen_InnerMessage{}
 	TestGenFlagSet.StringVar(&TestGenIn.InnerMsg.Url, "innermsg-url", "", "InnerMsg.Url")
 	TestGenFlagSet.Int64Var(&TestGenIn.InnerMsg.Id, "innermsg-id", 0, "InnerMsg.Id")
@@ -489,56 +594,12 @@ func init() {
 	TestGenIn.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.LocNonnull.Timestamp.Seconds, "locnonnull-timestamp-seconds", 0, "LocNonnull.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.LocNonnull.Timestamp.Nanos, "locnonnull-timestamp-nanos", 0, "LocNonnull.Timestamp.Nanos")
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInt[0], "repeatedint", 0, "RepeatedInt")
 	TestGenFlagSet.BytesHexVar(&TestGenIn.Ip, "ip", nil, "Ip")
-	TestGenFlagSet.StringVar(&TestGenIn.Names[0], "names", "", "Names")
-	TestGenIn.RepeatedMsg = make([]*testgen.IncludeMessage, 1)
-	TestGenIn.RepeatedMsg[0] = &testgen.IncludeMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsg[0].Name, "repeatedmsg-name", "", "RepeatedMsg[0].Name")
-	TestGenFlagSet.Uint64Var(&TestGenIn.RepeatedMsg[0].Id, "repeatedmsg-id", 0, "RepeatedMsg[0].Id")
-	TestGenIn.RepeatedMsg[0].NestedMsg = &testgen.NestedMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsg[0].NestedMsg.Name, "repeatedmsg-nestedmsg-name", "", "RepeatedMsg[0].NestedMsg.Name")
-	TestGenIn.RepeatedMsgNonnull = make([]testgen.IncludeMessage, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsgNonnull[0].Name, "repeatedmsgnonnull-name", "", "RepeatedMsgNonnull[0].Name")
-	TestGenFlagSet.Uint64Var(&TestGenIn.RepeatedMsgNonnull[0].Id, "repeatedmsgnonnull-id", 0, "RepeatedMsgNonnull[0].Id")
-	TestGenIn.RepeatedMsgNonnull[0].NestedMsg = &testgen.NestedMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedMsgNonnull[0].NestedMsg.Name, "repeatedmsgnonnull-nestedmsg-name", "", "RepeatedMsgNonnull[0].NestedMsg.Name")
-	TestGenIn.RepeatedFields = make([]*testgen.IncludeFields, 1)
-	TestGenIn.RepeatedFields[0] = &testgen.IncludeFields{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedFields[0].Name, "repeatedfields-name", "", "RepeatedFields[0].Name")
-	TestGenIn.RepeatedFieldsNonnull = make([]testgen.IncludeFields, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedFieldsNonnull[0].Name, "repeatedfieldsnonnull-name", "", "RepeatedFieldsNonnull[0].Name")
-	TestGenIn.RepeatedInnerMsg = make([]*testgen.TestGen_InnerMessage, 1)
-	TestGenIn.RepeatedInnerMsg[0] = &testgen.TestGen_InnerMessage{}
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedInnerMsg[0].Url, "repeatedinnermsg-url", "", "RepeatedInnerMsg[0].Url")
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInnerMsg[0].Id, "repeatedinnermsg-id", 0, "RepeatedInnerMsg[0].Id")
-	TestGenIn.RepeatedInnerMsgNonnull = make([]testgen.TestGen_InnerMessage, 1)
-	TestGenFlagSet.StringVar(&TestGenIn.RepeatedInnerMsgNonnull[0].Url, "repeatedinnermsgnonnull-url", "", "RepeatedInnerMsgNonnull[0].Url")
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedInnerMsgNonnull[0].Id, "repeatedinnermsgnonnull-id", 0, "RepeatedInnerMsgNonnull[0].Id")
-	TestGenIn.RepeatedLoc = make([]*distributed_match_engine.Loc, 1)
-	TestGenIn.RepeatedLoc[0] = &distributed_match_engine.Loc{}
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Lat, "repeatedloc-lat", 0, "RepeatedLoc[0].Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Long, "repeatedloc-long", 0, "RepeatedLoc[0].Long")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].HorizontalAccuracy, "repeatedloc-horizontalaccuracy", 0, "RepeatedLoc[0].HorizontalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].VerticalAccuracy, "repeatedloc-verticalaccuracy", 0, "RepeatedLoc[0].VerticalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Altitude, "repeatedloc-altitude", 0, "RepeatedLoc[0].Altitude")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Course, "repeatedloc-course", 0, "RepeatedLoc[0].Course")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLoc[0].Speed, "repeatedloc-speed", 0, "RepeatedLoc[0].Speed")
-	TestGenIn.RepeatedLoc[0].Timestamp = &google_protobuf.Timestamp{}
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedLoc[0].Timestamp.Seconds, "repeatedloc-timestamp-seconds", 0, "RepeatedLoc[0].Timestamp.Seconds")
-	TestGenFlagSet.Int32Var(&TestGenIn.RepeatedLoc[0].Timestamp.Nanos, "repeatedloc-timestamp-nanos", 0, "RepeatedLoc[0].Timestamp.Nanos")
-	TestGenIn.RepeatedLocNonnull = make([]distributed_match_engine.Loc, 1)
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Lat, "repeatedlocnonnull-lat", 0, "RepeatedLocNonnull[0].Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Long, "repeatedlocnonnull-long", 0, "RepeatedLocNonnull[0].Long")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].HorizontalAccuracy, "repeatedlocnonnull-horizontalaccuracy", 0, "RepeatedLocNonnull[0].HorizontalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].VerticalAccuracy, "repeatedlocnonnull-verticalaccuracy", 0, "RepeatedLocNonnull[0].VerticalAccuracy")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Altitude, "repeatedlocnonnull-altitude", 0, "RepeatedLocNonnull[0].Altitude")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Course, "repeatedlocnonnull-course", 0, "RepeatedLocNonnull[0].Course")
-	TestGenFlagSet.Float64Var(&TestGenIn.RepeatedLocNonnull[0].Speed, "repeatedlocnonnull-speed", 0, "RepeatedLocNonnull[0].Speed")
-	TestGenIn.RepeatedLocNonnull[0].Timestamp = &google_protobuf.Timestamp{}
-	TestGenFlagSet.Int64Var(&TestGenIn.RepeatedLocNonnull[0].Timestamp.Seconds, "repeatedlocnonnull-timestamp-seconds", 0, "RepeatedLocNonnull[0].Timestamp.Seconds")
-	TestGenFlagSet.Int32Var(&TestGenIn.RepeatedLocNonnull[0].Timestamp.Nanos, "repeatedlocnonnull-timestamp-nanos", 0, "RepeatedLocNonnull[0].Timestamp.Nanos")
 	RequestCmd.Flags().AddFlagSet(TestGenFlagSet)
+}
+
+func TestApiAllowNoConfig() {
+	RequestCmd.Flags().AddFlagSet(TestGenNoConfigFlagSet)
 }
 
 func TestGenSetFields() {
@@ -681,116 +742,21 @@ func TestGenSetFields() {
 	if TestGenFlagSet.Lookup("locnonnull-timestamp-nanos").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "25.8.2")
 	}
-	if TestGenFlagSet.Lookup("repeatedint").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "26")
-	}
 	if TestGenFlagSet.Lookup("ip").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "27")
 	}
-	if TestGenFlagSet.Lookup("names").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "28")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsg-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "29.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsg-id").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "29.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsg-nestedmsg-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "29.3.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsgnonnull-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "30.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsgnonnull-id").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "30.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedmsgnonnull-nestedmsg-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "30.3.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedfields-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "31.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedfieldsnonnull-name").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "32.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedinnermsg-url").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "33.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedinnermsg-id").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "33.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedinnermsgnonnull-url").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "34.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedinnermsgnonnull-id").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "34.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-lat").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-long").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-horizontalaccuracy").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.3")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-verticalaccuracy").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.4")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-altitude").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.5")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-course").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.6")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-speed").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.7")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-timestamp-seconds").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.8.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedloc-timestamp-nanos").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "35.8.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-lat").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-long").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.2")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-horizontalaccuracy").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.3")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-verticalaccuracy").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.4")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-altitude").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.5")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-course").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.6")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-speed").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.7")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-timestamp-seconds").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.8.1")
-	}
-	if TestGenFlagSet.Lookup("repeatedlocnonnull-timestamp-nanos").Changed {
-		TestGenIn.Fields = append(TestGenIn.Fields, "36.8.2")
-	}
 }
+
 func parseTestGenEnums() error {
 	if TestGenInOuterEn != "" {
 		switch TestGenInOuterEn {
-		case "outer0":
+		case "OUTER0":
 			TestGenIn.OuterEn = testgen.OuterEnum(0)
-		case "outer1":
+		case "OUTER1":
 			TestGenIn.OuterEn = testgen.OuterEnum(1)
-		case "outer2":
+		case "OUTER2":
 			TestGenIn.OuterEn = testgen.OuterEnum(2)
-		case "outer3":
+		case "OUTER3":
 			TestGenIn.OuterEn = testgen.OuterEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInOuterEn")
@@ -798,13 +764,13 @@ func parseTestGenEnums() error {
 	}
 	if TestGenInInnerEn != "" {
 		switch TestGenInInnerEn {
-		case "inner0":
+		case "INNER0":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(0)
-		case "inner1":
+		case "INNER1":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(1)
-		case "inner2":
+		case "INNER2":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(2)
-		case "inner3":
+		case "INNER3":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInInnerEn")

@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3"
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes"
 	"github.com/coreos/etcd/mvcc/mvccpb"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type EtcdClient struct {
@@ -61,7 +62,7 @@ func (e *EtcdClient) CheckConnected(tries int, retryTime time.Duration) error {
 // create fails if key already exists
 func (e *EtcdClient) Create(key, val string) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
@@ -73,16 +74,16 @@ func (e *EtcdClient) Create(key, val string) (int64, error) {
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrObjStoreKeyExists
+		return 0, objstore.ErrKVStoreKeyExists
 	}
-	util.DebugLog(util.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "created data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
 // update fails if key does not exist
 func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	txn := e.client.Txn(ctx)
@@ -99,15 +100,15 @@ func (e *EtcdClient) Update(key, val string, version int64) (int64, error) {
 		return 0, err
 	}
 	if !resp.Succeeded {
-		return 0, objstore.ErrObjStoreKeyNotFound
+		return 0, objstore.ErrKVStoreKeyNotFound
 	}
-	util.DebugLog(util.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "updated data", "key", key, "val", val, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
 func (e *EtcdClient) Delete(key string) (int64, error) {
 	if e.client == nil {
-		return 0, objstore.ErrObjStoreNotInitialized
+		return 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
 	resp, err := e.client.Delete(ctx, key)
@@ -116,34 +117,49 @@ func (e *EtcdClient) Delete(key string) (int64, error) {
 		return 0, err
 	}
 	if resp.Deleted == 0 {
-		return 0, objstore.ErrObjStoreKeyNotFound
+		return 0, objstore.ErrKVStoreKeyNotFound
 	}
-	util.DebugLog(util.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
+	log.DebugLog(log.DebugLevelEtcd, "deleted data", "key", key, "rev", resp.Header.Revision)
 	return resp.Header.Revision, nil
 }
 
-func (e *EtcdClient) Get(key string) ([]byte, int64, error) {
+func (e *EtcdClient) Get(key string) ([]byte, int64, int64, error) {
 	if e.client == nil {
-		return nil, 0, objstore.ErrObjStoreNotInitialized
+		return nil, 0, 0, objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key)
 	cancel()
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, 0, err
 	}
 	if len(resp.Kvs) == 0 {
-		return nil, 0, objstore.ErrObjStoreKeyNotFound
+		return nil, 0, 0, objstore.ErrKVStoreKeyNotFound
 	}
 	obj := resp.Kvs[0]
-	util.DebugLog(util.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
-	return obj.Value, obj.Version, nil
+	log.DebugLog(log.DebugLevelEtcd, "got data", "key", key, "val", string(obj.Value), "ver", obj.Version, "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
+	return obj.Value, obj.Version, obj.ModRevision, nil
+}
+
+func (e *EtcdClient) Put(key, val string) (int64, error) {
+	if e.client == nil {
+		return 0, objstore.ErrKVStoreNotInitialized
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), WriteRequestTimeout)
+	resp, err := e.client.Put(ctx, key, val)
+	cancel()
+	if err != nil {
+		return 0, err
+	}
+	log.DebugLog(log.DebugLevelEtcd, "put data", "key", key, "val", val, "rev",
+		resp.Header.Revision)
+	return resp.Header.Revision, nil
 }
 
 // Get records that have the given key prefix
 func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 	if e.client == nil {
-		return objstore.ErrObjStoreNotInitialized
+		return objstore.ErrKVStoreNotInitialized
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), ReadRequestTimeout)
 	resp, err := e.client.Get(ctx, key, clientv3.WithPrefix())
@@ -152,7 +168,7 @@ func (e *EtcdClient) List(key string, cb objstore.ListCb) error {
 		return err
 	}
 	for _, obj := range resp.Kvs {
-		util.DebugLog(util.DebugLevelEtcd, "list data", "key", string(obj.Key), "val", string(obj.Value), "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
+		log.DebugLog(log.DebugLevelEtcd, "list data", "key", string(obj.Key), "val", string(obj.Value), "rev", resp.Header.Revision, "create", obj.CreateRevision, "mod", obj.ModRevision, "ver", obj.Version)
 		err = cb(obj.Key, obj.Value, resp.Header.Revision)
 		if err != nil {
 			break
@@ -213,7 +229,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Key = key
 				data.Value = val
 				data.Rev = rev
-				util.DebugLog(util.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
+				log.DebugLog(log.DebugLevelEtcd, "sync list data", "key", string(key), "val", string(val), "rev", rev)
 				cb(&data)
 				watchRev = rev
 				return nil
@@ -237,7 +253,7 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				err = resp.Err()
 				break
 			}
-			for _, event := range resp.Events {
+			for ii, event := range resp.Events {
 				if event.Type == mvccpb.PUT {
 					data.Action = objstore.SyncUpdate
 				} else {
@@ -247,7 +263,12 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 				data.Value = event.Kv.Value
 				data.Rev = resp.Header.Revision
 				watchRev = resp.Header.Revision
-				util.DebugLog(util.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev)
+				if ii == len(resp.Events)-1 {
+					data.MoreEvents = false
+				} else {
+					data.MoreEvents = true
+				}
+				log.DebugLog(log.DebugLevelEtcd, "watch data", "key", string(data.Key), "val", string(data.Value), "rev", data.Rev, "more-events", data.MoreEvents)
 				cb(&data)
 			}
 		}
@@ -261,4 +282,12 @@ func (e *EtcdClient) Sync(ctx context.Context, key string, cb objstore.SyncCb) e
 		}
 	}
 	return nil
+}
+
+func (e *EtcdClient) ApplySTM(apply func(concurrency.STM) error) (int64, error) {
+	resp, err := concurrency.NewSTM(e.client, apply)
+	if err != nil {
+		return 0, err
+	}
+	return resp.Header.Revision, nil
 }

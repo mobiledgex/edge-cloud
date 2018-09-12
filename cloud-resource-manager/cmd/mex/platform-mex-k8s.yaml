@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: platform
+resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+metadata:
+  kind: mex-tdg-platform
+  name: testcloudlet.mex-tdg.mobiledgex.net
+  tags: mex-tdg-testlocation-tdg
+  tenant: testtenant
+  region: eu-central-1
+  zone: eu-central-1c
+  location: testlocation
+  openrc: ~/.mobiledgex/openrc
+  dnszone: mobiledgex.net
+  operator: mex-tdg
+spec:
+  flags: force
+  flavor: x1.medium
+  rootlb: testcloudlet.mex-tdg.mobiledgex.net
+  key: testcloudlet
+  dockerregistry: registry.mobiledgex.net:5000
+  externalnetwork: external-network-shared
+  networkscheme: priv-subnet,mex-k8s-net-1,10.101.X.0/24
+  externalrouter: mex-k8s-router-1
+  options: dhcp
+  agent: 
+    image: registry.mobiledgex.net:5000/mobiledgex/mexosagent
+    status: active

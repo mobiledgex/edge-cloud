@@ -1,0 +1,173 @@
+- name: startup etcds
+  gather_facts: no
+  user: root
+  hosts: etcds
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: start up etcd process
+    shell: "nohup etcd  --name {{ item.etcdlocal.name }} --data-dir {{ item.etcdlocal.datadir }} --listen-peer-urls {{ item.etcdlocal.peeraddrs }} --listen-client-urls {{ item.etcdlocal.clientaddrs }} --advertise-client-urls {{ item.etcdlocal.clientaddrs }} --initial-advertise-peer-urls  {{ item.etcdlocal.peeraddrs }} --initial-cluster {{ item.etcdlocal.initialcluster }} -log-output stdout >> {{ remote_log_path }}/{{ item.etcdlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname 
+    with_items:
+       -  "{{ etcds }}"
+
+- name: startup controllers
+  gather_facts: no
+  user: root
+  hosts: controllers
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: "check controller binary installed {{ controller_remote_bin }} on {{ inventory_hostname }}"
+    stat:
+      path: "{{ controller_remote_bin }}"
+    register: ctrl_stat
+    failed_when: ctrl_stat.stat.exists == False
+ 
+  - name: set tls option
+    set_fact:
+       tlsopt: "{% if controllers[0].controllerlocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{controllers[0].controllerlocal.tls.servercert|basename}} {% endif %}"
+ 
+  - name: start up controller process
+    shell: "nohup {{ controller_remote_bin }} --etcdUrls {{ item.controllerlocal.etcdaddrs }} --apiAddr {{ item.controllerlocal.apiaddr }} --notifyAddr {{ item.controllerlocal.notifyaddr }} --httpAddr {{ item.controllerlocal.httpaddr }} {{ tlsopt }}  -d etcd,api,notify > {{ remote_log_path }}/{{ item.controllerlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ controllers }}"
+
+- name: startup dmes
+  gather_facts: no
+  user: root
+  hosts: dmes
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: check dme binary installed
+    stat:
+      path: "{{ dme_remote_bin }}"
+    register: dme_stat
+    failed_when: dme_stat.stat.exists == False
+
+  - name: set tls option
+    set_fact:
+       tlsopt: "{% if dmes[0].dmelocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{dmes[0].dmelocal.tls.servercert|basename}} {% endif %}"
+
+  - name: set creds from variables
+    set_fact:
+        envvar:  "{% if dmes[0].envvars|length > 1 and dmes[0].envvars[0]['LOCAPI_USER'] is defined %} export LOCAPI_USER={{ dmes[0].envvars[0]['LOCAPI_USER'] }} LOCAPI_PASSWD={{ dmes[0].envvars[1]['LOCAPI_PASSWD']}}  {% else %} true {% endif %}" 
+
+  - name: start up dme-server process
+    shell: "{{ envvar }} && nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} {{ tlsopt }} -d locapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname 
+    with_items:
+       -  "{{ dmes }}"
+   
+
+- name: startup crms
+  gather_facts: no
+  user: root
+  hosts: crms
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks: 
+
+  - name: check crm binary exists
+    stat:
+      path: "{{ crm_remote_bin }}"
+    register: crm_stat
+    failed_when: crm_stat.stat.exists == False
+
+  - name: set tls option
+    set_fact:
+       tlsopt: "{% if crms[0].crmlocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{crms[0].crmlocal.tls.servercert|basename}} {% endif %}"
+
+  - name: start up crmserver process
+    shell: "nohup {{ crm_remote_bin }} --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos > {{ remote_log_path }}/{{ item.crmlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ crms }}"
+
+- name: startup location api simulators
+  gather_facts: no
+  user: root
+  hosts: locsims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: check locsim binary exists
+    stat:
+      path: "{{ locsim_remote_bin }}"
+    register: loc_stat
+    failed_when: loc_stat.stat.exists == False
+
+  - name: start up locsim process
+    shell: "nohup {{ locsim_remote_bin }} --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }} > {{ remote_log_path }}/{{ item.locapisimlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ locsims }}"
+
+- name: startup token server simulators
+  gather_facts: no
+  user: root
+  hosts: toksims
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+
+  - name: check toksim binary exists
+    stat:
+      path: "{{ toksim_remote_bin }}"
+    register: tok_stat
+    failed_when: tok_stat.stat.exists == False
+
+  - name: start up toksim process
+    shell: "nohup {{ toksim_remote_bin }} --port {{ item.toksrvsimlocal.port }} --token '{{ item.toksrvsimlocal.token }}' > {{ remote_log_path }}/{{ item.toksrvsimlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ toksims }}"
+
+- name: startup sample apps
+  gather_facts: no
+  user: root
+  hosts: sampleapps
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: check sample app binary exists
+    stat:
+      path: "{{ remote_bin_path }}/{{ item.sampleapplocal.exename }}"
+    register: samp_stat
+    failed_when: samp_stat.stat.exists == False
+    with_items:
+       -  "{{ sampleapps }}"
+
+
+  - name: start up sample app process
+    shell: "nohup {{ remote_bin_path }}/{{ item.sampleapplocal.exename }} {{ item.sampleapplocal.args |join(' ') }} > {{ remote_log_path }}/{{ item.sampleapplocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname
+    with_items:
+       -  "{{ sampleapps }}"
+

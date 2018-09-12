@@ -1,0 +1,49 @@
+
+cloudlets:
+- key:
+    operatorkey:
+      name: azure
+    name: azcentraluscloudlet
+  accessuri:
+  location:
+    lat: 42.379
+    long: -87.858
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

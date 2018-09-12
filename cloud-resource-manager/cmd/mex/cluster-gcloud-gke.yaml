@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: cluster
+resource: gcp-us-west1-a-still-entity-201400
+metadata:
+  name: testcluster
+  tags: testcluster-tag
+  kind: mex-gke-cluster
+  tenant: testtenant
+  operator: gcp
+  region: us-west1
+  zone: us-west1-a
+  location: us-west
+  project: still-entity-201400
+  resourcegroup:
+spec:
+  flags:
+  flavor:
+  key: gke-testcluster
+  dockerregistry: registry.mobiledgex.net:5000
+  rootlb:
+  networkscheme:

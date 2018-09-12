@@ -7,15 +7,20 @@ import (
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/util"
+	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
 
-func grpcGateway(addr string) (http.Handler, error) {
+func grpcGateway(addr string, tlsCertFile string) (http.Handler, error) {
 	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, addr, grpc.WithInsecure())
+	dialOption, err := tls.GetTLSClientDialOption(addr, tlsCertFile)
 	if err != nil {
-		util.FatalLog("Failed to start REST gateway", "error", err)
+		return nil, err
+	}
+	conn, err := grpc.DialContext(ctx, addr, dialOption)
+	if err != nil {
+		log.FatalLog("Failed to start REST gateway", "error", err)
 	}
 
 	jsonpb := &gateway.JSONPb{
@@ -34,8 +39,16 @@ func grpcGateway(addr string) (http.Handler, error) {
 	for _, f := range []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
 		edgeproto.RegisterDeveloperApiHandler,
 		edgeproto.RegisterAppApiHandler,
+		edgeproto.RegisterAppInstApiHandler,
+		edgeproto.RegisterAppInstInfoApiHandler,
 		edgeproto.RegisterOperatorApiHandler,
 		edgeproto.RegisterCloudletApiHandler,
+		edgeproto.RegisterCloudletInfoApiHandler,
+		edgeproto.RegisterFlavorApiHandler,
+		edgeproto.RegisterClusterFlavorApiHandler,
+		edgeproto.RegisterClusterApiHandler,
+		edgeproto.RegisterClusterInstApiHandler,
+		edgeproto.RegisterClusterInstInfoApiHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err

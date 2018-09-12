@@ -5,16 +5,13 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -31,20 +28,7 @@ var _ = math.Inf
 var OperatorApiCmd edgeproto.OperatorApiClient
 var OperatorIn edgeproto.Operator
 var OperatorFlagSet = pflag.NewFlagSet("Operator", pflag.ExitOnError)
-
-func OperatorCodeSlicer(in *edgeproto.OperatorCode) []string {
-	s := make([]string, 0, 2)
-	s = append(s, in.MNC)
-	s = append(s, in.MCC)
-	return s
-}
-
-func OperatorCodeHeaderSlicer() []string {
-	s := make([]string, 0, 2)
-	s = append(s, "MNC")
-	s = append(s, "MCC")
-	return s
-}
+var OperatorNoConfigFlagSet = pflag.NewFlagSet("OperatorNoConfig", pflag.ExitOnError)
 
 func OperatorKeySlicer(in *edgeproto.OperatorKey) []string {
 	s := make([]string, 0, 1)
@@ -58,6 +42,29 @@ func OperatorKeyHeaderSlicer() []string {
 	return s
 }
 
+func OperatorKeyWriteOutputArray(objs []*edgeproto.OperatorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OperatorKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(OperatorKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func OperatorKeyWriteOutputOne(obj *edgeproto.OperatorKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OperatorKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(OperatorKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func OperatorSlicer(in *edgeproto.Operator) []string {
 	s := make([]string, 0, 2)
 	if in.Fields == nil {
@@ -75,159 +82,101 @@ func OperatorHeaderSlicer() []string {
 	return s
 }
 
+func OperatorWriteOutputArray(objs []*edgeproto.Operator) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OperatorHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(OperatorSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func OperatorWriteOutputOne(obj *edgeproto.Operator) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OperatorHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(OperatorSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var CreateOperatorCmd = &cobra.Command{
 	Use: "CreateOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
 		if err != nil {
-			fmt.Println("CreateOperator failed: ", err)
-			return
+			return fmt.Errorf("CreateOperator failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteOperatorCmd = &cobra.Command{
 	Use: "DeleteOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
 		if err != nil {
-			fmt.Println("DeleteOperator failed: ", err)
-			return
+			return fmt.Errorf("DeleteOperator failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateOperatorCmd = &cobra.Command{
 	Use: "UpdateOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
 		OperatorSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
 		if err != nil {
-			fmt.Println("UpdateOperator failed: ", err)
-			return
+			return fmt.Errorf("UpdateOperator failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowOperatorCmd = &cobra.Command{
 	Use: "ShowOperator",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if OperatorApiCmd == nil {
-			fmt.Println("OperatorApi client not initialized")
-			return
+			return fmt.Errorf("OperatorApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := OperatorApiCmd.ShowOperator(ctx, &OperatorIn)
 		if err != nil {
-			fmt.Println("ShowOperator failed: ", err)
-			return
+			return fmt.Errorf("ShowOperator failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Operator, 0)
 		for {
@@ -236,45 +185,23 @@ var ShowOperatorCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowOperator recv failed: ", err)
-				break
+				return fmt.Errorf("ShowOperator recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(OperatorHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(OperatorSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		OperatorWriteOutputArray(objs)
+		return nil
 	},
+}
+
+var OperatorApiCmds = []*cobra.Command{
+	CreateOperatorCmd,
+	DeleteOperatorCmd,
+	UpdateOperatorCmd,
+	ShowOperatorCmd,
 }
 
 func init() {
@@ -283,6 +210,13 @@ func init() {
 	DeleteOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	UpdateOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
 	ShowOperatorCmd.Flags().AddFlagSet(OperatorFlagSet)
+}
+
+func OperatorApiAllowNoConfig() {
+	CreateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	DeleteOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	UpdateOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
+	ShowOperatorCmd.Flags().AddFlagSet(OperatorNoConfigFlagSet)
 }
 
 func OperatorSetFields() {

@@ -1,17 +1,18 @@
 package crmutil
 
 import (
+	"fmt"
 	"github.com/gophercloud/gophercloud"
 	"github.com/gophercloud/gophercloud/openstack"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
-
-	"github.com/bobbae/q"
 )
 
+//OpenstackServerArgs lists args required for server API on openstack
 type OpenstackServerArgs struct {
 	Region, Name, Image, Flavor, Network string
 }
 
+//GetOpenstackClient gets handle for openstack client
 func GetOpenstackClient(region string) (*gophercloud.ServiceClient, error) {
 	authOpts, err := openstack.AuthOptionsFromEnv()
 	if err != nil {
@@ -49,10 +50,8 @@ func CreateOpenstackServer(client *gophercloud.ServiceClient,
 	}).Extract()
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error calling servers.Create, %v, %v", actual, err)
 	}
-
-	q.Q(*actual)
 
 	return nil
 }

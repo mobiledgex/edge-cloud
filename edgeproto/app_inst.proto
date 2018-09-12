@@ -9,71 +9,159 @@ import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
 import "cloudlet.proto";
+import "flavor.proto";
+import "clusterinst.proto";
+import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
+// AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
-  // Cloudlet it's on
+  // Cloudlet on which the App is instantiated
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  // inst id
+  // Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet)
   fixed64 id = 3;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
-// AppInsts are instances of an application instantiated
-// on a cloudlet, like a docker or VM instance.
+// AppPort describes an L4 public access port mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy.
+message AppPort {
+  // TCP or UDP protocol
+  L4Proto proto = 1;
+  // Container port
+  int32 internal_port = 2;
+  // Public facing port (may be mapped on shared LB reverse proxy)
+  int32 public_port = 3;
+}
+
+// AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
+//When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
 message AppInst {
+  // Fields are used for the Update API to specify which fields to apply
   repeated string fields = 1;
   // Unique identifier key
   AppInstKey key = 2 [(gogoproto.nullable) = false];
-  // Cache the location of the cloudlet
+  // Cached location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
-  // how to connect to this instance
-  bytes ip = 4;
-  // port to connect to this instance
-  uint32 port = 5;
-  // type of instance
-  enum Liveness {
-    UNKNOWN = 0;
-    STATIC = 1;
-    DYNAMIC = 2;
-  }
-  Liveness liveness = 6;
+  // URI to connect to this instance
+  string uri = 4 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Cluster instance on which this is instatiated (not specifiable by user)
+  ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Liveness of instance (see Liveness)
+  Liveness liveness = 6 [(protogen.backend) = true];
+  // URI from which to download image
+  string image_path = 7 [(protogen.backend) = true];
+  // Image type (see ImageType)
+  ImageType image_type = 8 [(protogen.backend) = true];
+  // For instances accessible via a shared load balancer, defines the external
+  // ports on the shared load balancer that map to the internal ports
+  // External ports should be appended to the Uri for L4 access.
+  repeated AppPort mapped_ports = 9 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Mapped path to append to Uri for public access.
+  // Only valid for L7 access types.
+  string mapped_path = 10 [(protogen.backend) = true];
+  // URI of resource to be used to establish config for App.
+  string config = 11 [(protogen.backend) = true];
+  // Flavor defining resource requirements
+  FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Access layer(s)
+  AccessLayer access_layer = 13 [(protogen.backend) = true];
+  // Current state of the AppInst on the Cloudlet
+  TrackedState state = 14 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Any errors trying to create, update, or delete the AppInst on the Cloudlet
+  repeated string errors = 15 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
-  option (protocmd.noconfig) = "CloudletLoc";
+  option (protogen.generate_wait_for_state) = "TrackedState";
+  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Uri,Liveness,ClusterInstKey,PublicIp";
 }
 
-// This API is for manual configuration of static app instances.
-// The long term goal is that most app instance creation/deletion
-// will be dynamic based on load.
 service AppInstApi {
-  rpc CreateAppInst(AppInst) returns (Result) {
+  // Create an application instance
+  rpc CreateAppInst(AppInst) returns (stream Result) {
     option (google.api.http) = {
       post: "/create/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc DeleteAppInst(AppInst) returns (Result) {
+  // Delete an application instance
+  rpc DeleteAppInst(AppInst) returns (stream Result) {
    option (google.api.http) = {
       post: "/delete/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
-  rpc UpdateAppInst(AppInst) returns (Result) {
+  // Update an application instance
+  rpc UpdateAppInst(AppInst) returns (stream Result) {
    option (google.api.http) = {
       post: "/update/appinst"
       body: "*"
     };
+    option (protocmd.stream_out_incremental) = true;
   }
+  // Show application instances. Any fields specified will be used to filter results.
   rpc ShowAppInst(AppInst) returns (stream AppInst) {
    option (google.api.http) = {
       post: "/show/appinst"
+      body: "*"
+    };
+  }
+}
+
+// AppInstInfo provides information from the Cloudlet Resource Manager about the state of the AppInst on the Cloudlet. Whereas the AppInst defines the intent of instantiating an App on a Cloudlet, the AppInstInfo defines the current state of trying to apply that intent on the physical resources of the Cloudlet.
+message AppInstInfo {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  AppInstKey key = 2 [(gogoproto.nullable) = false];
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 3 [(protocmd.hidetag) = "nocmp"];
+  // Current state of the AppInst on the Cloudlet
+  TrackedState state = 4;
+  // Any errors trying to create, update, or delete the AppInst on the Cloudlet
+  repeated string errors = 5;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.notify_cache) = true;
+}
+
+service AppInstInfoApi {
+  // Show application instances state.
+  rpc ShowAppInstInfo(AppInstInfo) returns (stream AppInstInfo) {
+    option (google.api.http) = {
+      post: "/show/appinstinfo"
+      body: "*"
+    };
+  }
+}
+
+// (TODO) AppInstMetrics provide metrics collected about the application instance on the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
+message AppInstMetrics {
+  // what goes here?
+  // Note that metrics for grpc calls can be done by a prometheus
+  // interceptor in grpc, so adding call metrics here may be
+  // redundant unless they're needed for billing.
+  uint64 something = 5;
+}
+
+service AppInstMetricsApi {
+  // Show application instance metrics.
+  rpc ShowAppInstMetrics(AppInstMetrics) returns (stream AppInstMetrics) {
+    option (google.api.http) = {
+      post: "/show/appinstmetrics"
       body: "*"
     };
   }

@@ -2,26 +2,24 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
 type OperatorApi struct {
+	sync  *Sync
 	store edgeproto.OperatorStore
-	cache *edgeproto.OperatorCache
+	cache edgeproto.OperatorCache
 }
 
-func InitOperatorApi(objStore objstore.ObjStore) *OperatorApi {
-	api := &OperatorApi{
-		store: edgeproto.NewOperatorStore(objStore),
-	}
-	api.cache = edgeproto.NewOperatorCache(&api.store)
-	return api
-}
+var operatorApi = OperatorApi{}
 
-func (s *OperatorApi) WaitInitDone() {
-	s.cache.WaitInitSyncDone()
+func InitOperatorApi(sync *Sync) {
+	operatorApi.sync = sync
+	operatorApi.store = edgeproto.NewOperatorStore(sync.store)
+	edgeproto.InitOperatorCache(&operatorApi.cache)
+	sync.RegisterCache(&operatorApi.cache)
 }
 
 func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {
@@ -29,15 +27,18 @@ func (s *OperatorApi) HasOperator(key *edgeproto.OperatorKey) bool {
 }
 
 func (s *OperatorApi) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	return s.store.Create(in, s.cache.SyncWait)
+	return s.store.Create(in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	return s.store.Update(in, s.cache.SyncWait)
+	return s.store.Update(in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
-	return s.store.Delete(in, s.cache.SyncWait)
+	if cloudletApi.UsesOperator(&in.Key) {
+		return &edgeproto.Result{}, errors.New("Operator in use by Cloudlet")
+	}
+	return s.store.Delete(in, s.sync.syncWait)
 }
 
 func (s *OperatorApi) ShowOperator(in *edgeproto.Operator, cb edgeproto.OperatorApi_ShowOperatorServer) error {

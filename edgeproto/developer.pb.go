@@ -18,8 +18,9 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "sync"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
 
 import io "io"
 
@@ -28,8 +29,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 type DeveloperKey struct {
-	// bytes fields = 1;
 	// Organization or Company Name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
@@ -39,16 +40,19 @@ func (m *DeveloperKey) String() string            { return proto.CompactTextStri
 func (*DeveloperKey) ProtoMessage()               {}
 func (*DeveloperKey) Descriptor() ([]byte, []int) { return fileDescriptorDeveloper, []int{0} }
 
+// A Developer defines a Mobiledgex customer that can create and manage applications, clusters, instances, etc. Applications and other objects created by one Developer cannot be seen or managed by other Developers. Billing will likely be done on a per-developer basis.
+// Creating a developer identity is likely the first step of (self-)registering a new customer.
+// TODO: user management, auth, etc is not implemented yet.
 type Developer struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key DeveloperKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// auth scheme plus generic hash instead of user/pass
-	// Login name
+	// Login name (TODO)
 	Username string `protobuf:"bytes,3,opt,name=username,proto3" json:"username,omitempty"`
-	// encrypted password
+	// Encrypted password (TODO)
 	Passhash string `protobuf:"bytes,4,opt,name=passhash,proto3" json:"passhash,omitempty"`
-	// Address
+	// Physical address
 	Address string `protobuf:"bytes,5,opt,name=address,proto3" json:"address,omitempty"`
 	// Contact email
 	Email string `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`
@@ -93,9 +97,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DeveloperApi service
 
 type DeveloperApiClient interface {
+	// Create a Developer
 	CreateDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Delete a Developer
 	DeleteDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Update a Developer
 	UpdateDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (*Result, error)
+	// Show Developers
 	ShowDeveloper(ctx context.Context, in *Developer, opts ...grpc.CallOption) (DeveloperApi_ShowDeveloperClient, error)
 }
 
@@ -169,9 +177,13 @@ func (x *developerApiShowDeveloperClient) Recv() (*Developer, error) {
 // Server API for DeveloperApi service
 
 type DeveloperApiServer interface {
+	// Create a Developer
 	CreateDeveloper(context.Context, *Developer) (*Result, error)
+	// Delete a Developer
 	DeleteDeveloper(context.Context, *Developer) (*Result, error)
+	// Update a Developer
 	UpdateDeveloper(context.Context, *Developer) (*Result, error)
+	// Show Developers
 	ShowDeveloper(*Developer, DeveloperApi_ShowDeveloperServer) error
 }
 
@@ -379,12 +391,19 @@ func encodeVarintDeveloper(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *DeveloperKey) Matches(filter *DeveloperKey) bool {
-	if filter == nil {
-		return true
-	}
-	if filter.Name != "" && filter.Name != m.Name {
+func (m *DeveloperKey) Matches(o *DeveloperKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
+	}
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
 	}
 	return true
 }
@@ -396,7 +415,7 @@ func (m *DeveloperKey) CopyInFields(src *DeveloperKey) {
 func (m *DeveloperKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal DeveloperKey key string", "obj", m)
+		log.FatalLog("Failed to marshal DeveloperKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -404,32 +423,46 @@ func (m *DeveloperKey) GetKeyString() string {
 func DeveloperKeyStringParse(str string, key *DeveloperKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal DeveloperKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal DeveloperKey key string", "str", str)
 	}
 }
 
-func (m *Developer) Matches(filter *Developer) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.Matches(&filter.Key) {
+func (m *Developer) Matches(o *Developer, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.Username != "" && filter.Username != m.Username {
+	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
 	}
-	if filter.Passhash != "" && filter.Passhash != m.Passhash {
-		return false
+	if !opts.Filter || o.Username != "" {
+		if o.Username != m.Username {
+			return false
+		}
 	}
-	if filter.Address != "" && filter.Address != m.Address {
-		return false
+	if !opts.Filter || o.Passhash != "" {
+		if o.Passhash != m.Passhash {
+			return false
+		}
 	}
-	if filter.Email != "" && filter.Email != m.Email {
-		return false
+	if !opts.Filter || o.Address != "" {
+		if o.Address != m.Address {
+			return false
+		}
+	}
+	if !opts.Filter || o.Email != "" {
+		if o.Email != m.Email {
+			return false
+		}
 	}
 	return true
 }
 
+const DeveloperFieldKey = "2"
 const DeveloperFieldKeyName = "2.2"
 const DeveloperFieldUsername = "3"
 const DeveloperFieldPasshash = "4"
@@ -444,19 +477,35 @@ var DeveloperAllFields = []string{
 	DeveloperFieldEmail,
 }
 
-func (m *Developer) CopyInFields(src *Developer) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
+var DeveloperAllFieldsMap = map[string]struct{}{
+	DeveloperFieldKeyName:  struct{}{},
+	DeveloperFieldUsername: struct{}{},
+	DeveloperFieldPasshash: struct{}{},
+	DeveloperFieldAddress:  struct{}{},
+	DeveloperFieldEmail:    struct{}{},
+}
+
+func (m *Developer) DiffFields(o *Developer, fields map[string]struct{}) {
+	if m.Key.Name != o.Key.Name {
+		fields[DeveloperFieldKeyName] = struct{}{}
+		fields[DeveloperFieldKey] = struct{}{}
 	}
+	if m.Username != o.Username {
+		fields[DeveloperFieldUsername] = struct{}{}
+	}
+	if m.Passhash != o.Passhash {
+		fields[DeveloperFieldPasshash] = struct{}{}
+	}
+	if m.Address != o.Address {
+		fields[DeveloperFieldAddress] = struct{}{}
+	}
+	if m.Email != o.Email {
+		fields[DeveloperFieldEmail] = struct{}{}
+	}
+}
+
+func (m *Developer) CopyInFields(src *Developer) {
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.2"]; set {
 			m.Key.Name = src.Key.Name
@@ -481,32 +530,24 @@ func (s *Developer) HasFields() bool {
 }
 
 type DeveloperStore struct {
-	objstore      objstore.ObjStore
-	listDeveloper map[DeveloperKey]struct{}
+	kvstore objstore.KVStore
 }
 
-func NewDeveloperStore(objstore objstore.ObjStore) DeveloperStore {
-	return DeveloperStore{objstore: objstore}
-}
-
-type DeveloperCacher interface {
-	SyncDeveloperUpdate(m *Developer, rev int64)
-	SyncDeveloperDelete(m *Developer, rev int64)
-	SyncDeveloperPrune(current map[DeveloperKey]struct{})
-	SyncDeveloperRevOnly(rev int64)
+func NewDeveloperStore(kvstore objstore.KVStore) DeveloperStore {
+	return DeveloperStore{kvstore: kvstore}
 }
 
 func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	err := m.Validate(DeveloperAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("Developer", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -517,13 +558,14 @@ func (s *DeveloperStore) Create(m *Developer, wait func(int64)) (*Result, error)
 }
 
 func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("Developer", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +581,43 @@ func (s *DeveloperStore) Update(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *DeveloperStore) Put(m *Developer, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("Developer", m.GetKey())
+	var val []byte
+	curBytes, _, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur Developer
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -554,8 +632,8 @@ func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	key := objstore.DbKeyString("Developer", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -565,128 +643,74 @@ func (s *DeveloperStore) Delete(m *Developer, wait func(int64)) (*Result, error)
 	return &Result{}, err
 }
 
-type DeveloperCb func(m *Developer) error
-
-func (s *DeveloperStore) LoadAll(cb DeveloperCb) error {
-	loadkey := objstore.DbKeyPrefixString(&DeveloperKey{})
-	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
-		var obj Developer
-		err := json.Unmarshal(val, &obj)
-		if err != nil {
-			util.WarnLog("Failed to parse Developer data", "val", string(val))
-			return nil
-		}
-		err = cb(&obj)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
-}
-
 func (s *DeveloperStore) LoadOne(key string) (*Developer, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
 	var obj Developer
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse Developer data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse Developer data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
 }
 
-// Sync will sync changes for any Developer objects.
-func (s *DeveloperStore) Sync(ctx context.Context, cacher DeveloperCacher) error {
-	str := objstore.DbKeyPrefixString(&DeveloperKey{})
-	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
-		obj := Developer{}
-		// Even on parse error, we should still call back to keep
-		// the revision numbers in sync so no caller hangs on wait.
-		action := in.Action
-		if action == objstore.SyncUpdate || action == objstore.SyncList {
-			err := json.Unmarshal(in.Value, &obj)
-			if err != nil {
-				util.WarnLog("Failed to parse Developer data", "val", string(in.Value))
-				action = objstore.SyncRevOnly
-			}
-		} else if action == objstore.SyncDelete {
-			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
-			DeveloperKeyStringParse(keystr, obj.GetKey())
+func (s *DeveloperStore) STMGet(stm concurrency.STM, key *DeveloperKey, buf *Developer) bool {
+	keystr := objstore.DbKeyString("Developer", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
 		}
-		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
-		switch action {
-		case objstore.SyncUpdate:
-			cacher.SyncDeveloperUpdate(&obj, in.Rev)
-		case objstore.SyncDelete:
-			cacher.SyncDeveloperDelete(&obj, in.Rev)
-		case objstore.SyncListStart:
-			s.listDeveloper = make(map[DeveloperKey]struct{})
-		case objstore.SyncList:
-			s.listDeveloper[obj.Key] = struct{}{}
-			cacher.SyncDeveloperUpdate(&obj, in.Rev)
-		case objstore.SyncListEnd:
-			cacher.SyncDeveloperPrune(s.listDeveloper)
-			s.listDeveloper = nil
-		case objstore.SyncRevOnly:
-			cacher.SyncDeveloperRevOnly(in.Rev)
-		}
-	})
+	}
+	return true
+}
+
+func (s *DeveloperStore) STMPut(stm concurrency.STM, obj *Developer) {
+	keystr := objstore.DbKeyString("Developer", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *DeveloperStore) STMDel(stm concurrency.STM, key *DeveloperKey) {
+	keystr := objstore.DbKeyString("Developer", key)
+	stm.Del(keystr)
+}
+
+type DeveloperKeyWatcher struct {
+	cb func()
 }
 
 // DeveloperCache caches Developer objects in memory in a hash table
 // and keeps them in sync with the database.
 type DeveloperCache struct {
-	Store      *DeveloperStore
-	Objs       map[DeveloperKey]*Developer
-	Rev        int64
-	Mux        util.Mutex
-	Cond       sync.Cond
-	initWait   bool
-	syncDone   bool
-	syncCancel context.CancelFunc
-	notifyCb   func(obj *DeveloperKey)
+	Objs        map[DeveloperKey]*Developer
+	Mux         util.Mutex
+	List        map[DeveloperKey]struct{}
+	NotifyCb    func(obj *DeveloperKey, old *Developer)
+	UpdatedCb   func(old *Developer, new *Developer)
+	KeyWatchers map[DeveloperKey][]*DeveloperKeyWatcher
 }
 
-func NewDeveloperCache(store *DeveloperStore) *DeveloperCache {
-	cache := DeveloperCache{
-		Store:    store,
-		Objs:     make(map[DeveloperKey]*Developer),
-		initWait: true,
-	}
-	cache.Mux.InitCond(&cache.Cond)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cache.syncCancel = cancel
-	go func() {
-		err := cache.Store.Sync(ctx, &cache)
-		if err != nil {
-			util.WarnLog("Developer Sync failed", "err", err)
-		}
-		cache.syncDone = true
-		cache.Cond.Broadcast()
-	}()
+func NewDeveloperCache() *DeveloperCache {
+	cache := DeveloperCache{}
+	InitDeveloperCache(&cache)
 	return &cache
 }
 
-func (c *DeveloperCache) WaitInitSyncDone() {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for c.initWait {
-		c.Cond.Wait()
-	}
+func InitDeveloperCache(cache *DeveloperCache) {
+	cache.Objs = make(map[DeveloperKey]*Developer)
+	cache.KeyWatchers = make(map[DeveloperKey][]*DeveloperKeyWatcher)
 }
 
-func (c *DeveloperCache) Done() {
-	c.syncCancel()
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for !c.syncDone {
-		c.Cond.Wait()
-	}
+func (c *DeveloperCache) GetTypeString() string {
+	return "Developer"
 }
 
 func (c *DeveloperCache) Get(key *DeveloperKey, valbuf *Developer) bool {
@@ -714,77 +738,72 @@ func (c *DeveloperCache) GetAllKeys(keys map[DeveloperKey]struct{}) {
 	}
 }
 
-func (c *DeveloperCache) SyncDeveloperUpdate(in *Developer, rev int64) {
+func (c *DeveloperCache) Update(in *Developer, rev int64) {
 	c.Mux.Lock()
-	c.Objs[*in.GetKey()] = in
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
-	c.Cond.Broadcast()
-	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		old := c.Objs[in.Key]
+		if c.UpdatedCb != nil {
+			new := &Developer{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", in, "rev", rev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *DeveloperCache) SyncDeveloperDelete(in *Developer, rev int64) {
+func (c *DeveloperCache) Delete(in *Developer, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
-	c.Cond.Broadcast()
+	old := c.Objs[in.Key]
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete Developer", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key, old)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *DeveloperCache) SyncDeveloperPrune(current map[DeveloperKey]struct{}) {
-	deleted := make(map[DeveloperKey]struct{})
+func (c *DeveloperCache) Prune(validKeys map[DeveloperKey]struct{}) {
+	notify := make(map[DeveloperKey]*Developer)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
-		if _, found := current[key]; !found {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
-	}
-	if c.initWait {
-		c.initWait = false
-		c.Cond.Broadcast()
 	}
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		for key, _ := range deleted {
-			c.notifyCb(&key)
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key, old)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
-func (c *DeveloperCache) SyncDeveloperRevOnly(rev int64) {
+func (c *DeveloperCache) GetCount() int {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
-	c.Cond.Broadcast()
-}
-
-func (c *DeveloperCache) SyncWait(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
-	for c.Rev < rev {
-		c.Cond.Wait()
-	}
+	return len(c.Objs)
 }
 
 func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show Developer", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show Developer", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show Developer", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show Developer", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -793,11 +812,110 @@ func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) 
 	return nil
 }
 
-func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey)) {
-	c.notifyCb = fn
+func DeveloperGenericNotifyCb(fn func(key *DeveloperKey, old *Developer)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*DeveloperKey), obj.(*Developer))
+	}
 }
 
-func (m *Developer) GetKey() *DeveloperKey {
+func (c *DeveloperCache) SetNotifyCb(fn func(obj *DeveloperKey, old *Developer)) {
+	c.NotifyCb = fn
+}
+
+func (c *DeveloperCache) SetUpdatedCb(fn func(old *Developer, new *Developer)) {
+	c.UpdatedCb = fn
+}
+
+func (c *DeveloperCache) WatchKey(key *DeveloperKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*DeveloperKeyWatcher, 0)
+	}
+	watcher := DeveloperKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching Developer", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *DeveloperCache) TriggerKeyWatchers(key *DeveloperKey) {
+	watchers := make([]*DeveloperKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
+}
+func (c *DeveloperCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := Developer{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse Developer data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *DeveloperCache) SyncDelete(key []byte, rev int64) {
+	obj := Developer{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	DeveloperKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *DeveloperCache) SyncListStart() {
+	c.List = make(map[DeveloperKey]struct{})
+}
+
+func (c *DeveloperCache) SyncListEnd() {
+	deleted := make(map[DeveloperKey]*Developer)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
+			c.TriggerKeyWatchers(&key)
+		}
+	}
+}
+
+func (m *Developer) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
@@ -1266,33 +1384,33 @@ var (
 func init() { proto.RegisterFile("developer.proto", fileDescriptorDeveloper) }
 
 var fileDescriptorDeveloper = []byte{
-	// 440 bytes of a gzipped FileDescriptorProto
+	// 446 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x92, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0xc7, 0x7b, 0x49, 0x1a, 0xc8, 0x11, 0x14, 0x7a, 0xaa, 0xca, 0xc9, 0xaa, 0xd2, 0xca, 0x53,
-	0x85, 0x54, 0x5f, 0x55, 0x16, 0xd4, 0x8d, 0xd0, 0x8d, 0xcd, 0x08, 0x09, 0xc6, 0x73, 0xee, 0xd5,
-	0xb6, 0x38, 0xfb, 0x2c, 0x9f, 0x4d, 0xe9, 0x86, 0x98, 0xd8, 0xf9, 0x02, 0x7c, 0x04, 0x3e, 0x46,
-	0xc6, 0x4a, 0xec, 0x08, 0x22, 0x06, 0x46, 0xa4, 0x54, 0x82, 0x11, 0xf9, 0x39, 0x31, 0xae, 0xa8,
-	0xc4, 0x90, 0xc5, 0x7a, 0xff, 0xf7, 0xfe, 0xef, 0xf7, 0xee, 0x9d, 0x8f, 0x8e, 0x14, 0xbc, 0x06,
-	0x6d, 0x32, 0xc8, 0xbd, 0x2c, 0x37, 0x85, 0x61, 0x03, 0x50, 0x21, 0x60, 0xe8, 0xec, 0x86, 0xc6,
-	0x84, 0x1a, 0x84, 0xcc, 0x62, 0x21, 0xd3, 0xd4, 0x14, 0xb2, 0x88, 0x4d, 0x6a, 0x6b, 0xa3, 0xf3,
-	0x28, 0x8c, 0x8b, 0xa8, 0x0c, 0xbc, 0xa9, 0x49, 0x44, 0x62, 0x82, 0x58, 0x57, 0x8d, 0x6f, 0x44,
-	0xf5, 0x3d, 0x9c, 0x6a, 0x53, 0x2a, 0x81, 0xbe, 0x10, 0xd2, 0x26, 0x58, 0x76, 0x0e, 0x73, 0xb0,
-	0xa5, 0x2e, 0x96, 0xea, 0xb0, 0xc5, 0x09, 0x4d, 0x68, 0x6a, 0x77, 0x50, 0x9e, 0xa1, 0x42, 0x81,
-	0x51, 0x6d, 0x77, 0x8f, 0xe8, 0xf0, 0x74, 0x75, 0xe4, 0xa7, 0x70, 0xc1, 0x18, 0xed, 0xa5, 0x32,
-	0x01, 0xde, 0xd9, 0x27, 0x07, 0x03, 0x1f, 0xe3, 0x93, 0xe1, 0x8f, 0x05, 0x27, 0xbf, 0x17, 0x9c,
-	0x7c, 0xfa, 0xb8, 0x47, 0xdc, 0x4b, 0x42, 0x07, 0x4d, 0x0b, 0xdb, 0xa1, 0xfd, 0xb3, 0x18, 0xb4,
-	0xb2, 0x9c, 0xec, 0x77, 0x0f, 0x06, 0xfe, 0x52, 0x31, 0x41, 0xbb, 0xaf, 0xe0, 0x02, 0x31, 0x77,
-	0x8e, 0xef, 0x7b, 0xcd, 0x2d, 0x78, 0xed, 0x69, 0x93, 0xde, 0xec, 0xcb, 0xde, 0x86, 0x5f, 0x39,
-	0x99, 0x43, 0x6f, 0x97, 0x16, 0x72, 0x1c, 0xde, 0xc5, 0xe1, 0x8d, 0xae, 0x6a, 0x99, 0xb4, 0x36,
-	0x92, 0x36, 0xe2, 0xbd, 0xba, 0xb6, 0xd2, 0x8c, 0xd3, 0x5b, 0x52, 0xa9, 0x1c, 0xac, 0xe5, 0x9b,
-	0x58, 0x5a, 0x49, 0xe6, 0xd0, 0x4d, 0x48, 0x64, 0xac, 0x79, 0xbf, 0xca, 0x4f, 0x7a, 0xef, 0xaf,
-	0x38, 0xf1, 0xeb, 0x54, 0xbd, 0xd2, 0xcf, 0x05, 0x27, 0x6f, 0xaf, 0x38, 0x39, 0xfe, 0xd5, 0x69,
-	0xdd, 0xc2, 0xe3, 0x2c, 0x66, 0x2f, 0xe8, 0xe8, 0x49, 0x0e, 0xb2, 0x80, 0xbf, 0x8b, 0x6e, 0xdf,
-	0xb4, 0x83, 0xb3, 0xd5, 0xca, 0xfa, 0xf8, 0x1b, 0xdc, 0xdd, 0x77, 0x9f, 0xbf, 0x7f, 0xe8, 0xec,
-	0xb8, 0x5b, 0x62, 0x8a, 0x08, 0xd1, 0x3c, 0x89, 0x13, 0xf2, 0xa0, 0x22, 0x9f, 0x82, 0x86, 0x35,
-	0xc9, 0x0a, 0x11, 0xff, 0x90, 0x9f, 0x67, 0x6a, 0xdd, 0x33, 0x97, 0x88, 0xb8, 0x4e, 0x7e, 0x49,
-	0xef, 0x3e, 0x8b, 0xcc, 0xf9, 0xff, 0xb8, 0x37, 0x66, 0x5d, 0x07, 0xd1, 0xdb, 0xee, 0x48, 0xd8,
-	0xc8, 0x9c, 0x5f, 0x03, 0x1f, 0x91, 0xc9, 0xbd, 0xd9, 0xb7, 0xf1, 0xc6, 0x6c, 0x3e, 0x26, 0x97,
-	0xf3, 0x31, 0xf9, 0x3a, 0x1f, 0x93, 0xa0, 0x8f, 0x80, 0x87, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff,
-	0x52, 0xbe, 0xfb, 0x2a, 0x4a, 0x03, 0x00, 0x00,
+	0x14, 0xc7, 0x7b, 0x49, 0x1a, 0xc8, 0x11, 0x94, 0xf6, 0x54, 0x95, 0x93, 0x55, 0xa5, 0x95, 0xa7,
+	0x0a, 0xa9, 0xb9, 0xaa, 0x2c, 0x28, 0x1b, 0xa1, 0x1b, 0x9b, 0x11, 0x12, 0x8c, 0xe7, 0xdc, 0xab,
+	0x6d, 0x71, 0xf6, 0x59, 0x3e, 0x9b, 0xd2, 0x0d, 0x31, 0xb1, 0xb3, 0x30, 0xf2, 0x11, 0xf8, 0x18,
+	0x19, 0x91, 0x60, 0x46, 0x10, 0x31, 0x30, 0x22, 0x25, 0x12, 0x8c, 0xc8, 0xcf, 0x89, 0x71, 0x45,
+	0x25, 0x86, 0x2e, 0xd6, 0xfb, 0xbf, 0xf7, 0x7f, 0xbf, 0x77, 0xef, 0x7c, 0x74, 0xa0, 0xe0, 0x05,
+	0x68, 0x93, 0x42, 0x36, 0x4a, 0x33, 0x93, 0x1b, 0xd6, 0x03, 0x15, 0x00, 0x86, 0xce, 0x5e, 0x60,
+	0x4c, 0xa0, 0x41, 0xc8, 0x34, 0x12, 0x32, 0x49, 0x4c, 0x2e, 0xf3, 0xc8, 0x24, 0xb6, 0x32, 0x3a,
+	0xf7, 0x83, 0x28, 0x0f, 0x0b, 0x7f, 0x34, 0x35, 0xb1, 0x88, 0x8d, 0x1f, 0xe9, 0xb2, 0xf1, 0xa5,
+	0x28, 0xbf, 0x47, 0x53, 0x6d, 0x0a, 0x25, 0xd0, 0x17, 0x40, 0x52, 0x07, 0xab, 0xce, 0x7e, 0x06,
+	0xb6, 0xd0, 0xf9, 0x4a, 0x1d, 0x35, 0x38, 0x81, 0x09, 0x4c, 0xe5, 0xf6, 0x8b, 0x33, 0x54, 0x28,
+	0x30, 0xaa, 0xec, 0xee, 0x31, 0xed, 0x9f, 0xae, 0x8f, 0xfc, 0x08, 0x2e, 0x18, 0xa3, 0x9d, 0x44,
+	0xc6, 0xc0, 0x5b, 0x07, 0xe4, 0xb0, 0xe7, 0x61, 0x3c, 0xee, 0xff, 0x58, 0x70, 0xf2, 0x7b, 0xc1,
+	0xc9, 0x87, 0xf7, 0xfb, 0xc4, 0xfd, 0x4c, 0x68, 0xaf, 0x6e, 0x61, 0xbb, 0xb4, 0x7b, 0x16, 0x81,
+	0x56, 0x96, 0x93, 0x83, 0xf6, 0x61, 0xcf, 0x5b, 0x29, 0x26, 0x68, 0xfb, 0x39, 0x5c, 0x20, 0xe6,
+	0xd6, 0xc9, 0x9d, 0x51, 0x7d, 0x0b, 0xa3, 0xe6, 0xb4, 0x49, 0x67, 0xf6, 0x65, 0x7f, 0xc3, 0x2b,
+	0x9d, 0xcc, 0xa1, 0x37, 0x0b, 0x0b, 0x19, 0x0e, 0x6f, 0xe3, 0xf0, 0x5a, 0x97, 0xb5, 0x54, 0x5a,
+	0x1b, 0x4a, 0x1b, 0xf2, 0x4e, 0x55, 0x5b, 0x6b, 0xc6, 0xe9, 0x0d, 0xa9, 0x54, 0x06, 0xd6, 0xf2,
+	0x4d, 0x2c, 0xad, 0x25, 0x73, 0xe8, 0x26, 0xc4, 0x32, 0xd2, 0xbc, 0x5b, 0xe6, 0x27, 0x9d, 0x37,
+	0x4b, 0x4e, 0xbc, 0x2a, 0x35, 0xde, 0x2a, 0x57, 0xfa, 0xb9, 0xe0, 0xe4, 0xd5, 0x92, 0x93, 0x77,
+	0x4b, 0x4e, 0x4e, 0x7e, 0xb5, 0x1a, 0x37, 0xf1, 0x20, 0x8d, 0xd8, 0x53, 0x3a, 0x78, 0x98, 0x81,
+	0xcc, 0xe1, 0xef, 0xb2, 0x3b, 0x57, 0xed, 0xe1, 0x6c, 0x37, 0xb2, 0x1e, 0xfe, 0x0a, 0x77, 0xef,
+	0xf5, 0xa7, 0xef, 0x6f, 0x5b, 0xbb, 0xee, 0xb6, 0x98, 0x22, 0x42, 0xd4, 0xcf, 0x62, 0x4c, 0xee,
+	0x96, 0xe4, 0x53, 0xd0, 0x70, 0x4d, 0xb2, 0x42, 0xc4, 0x3f, 0xe4, 0x27, 0xa9, 0xba, 0xee, 0x99,
+	0x0b, 0x44, 0x5c, 0x26, 0x3f, 0xa3, 0xb7, 0x1f, 0x87, 0xe6, 0xfc, 0x7f, 0xdc, 0x2b, 0xb3, 0xae,
+	0x83, 0xe8, 0x1d, 0x77, 0x20, 0x6c, 0x68, 0xce, 0x2f, 0x81, 0x8f, 0xc9, 0x64, 0x6b, 0xf6, 0x6d,
+	0xb8, 0x31, 0x9b, 0x0f, 0xc9, 0xc7, 0xf9, 0x90, 0x7c, 0x9d, 0x0f, 0x89, 0xdf, 0x45, 0xc0, 0xbd,
+	0x3f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xcf, 0x47, 0x8c, 0x0c, 0x4e, 0x03, 0x00, 0x00,
 }

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dme
+  labels:
+    app: dme
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dme
+  template:
+    metadata:
+      labels:
+        app: dme
+    spec:
+      containers:
+      - name: dme
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0910
+        imagePullPolicy: Always
+        command:
+         - "dme-server"
+         - "--apiAddr"
+         - "0.0.0.0:50051"
+         - "--notifyAddrs"
+         - "controller-notify:37001"
+         - "--locverurl"
+         - "http://mexdemo.locsim.mobiledgex.net:8888/verifyLocation"
+         - "--carrier"
+         - "TDG"
+         - "--d"
+         - "locapi,dmedb,dmereq"
+         - "--toksrvurl"
+         - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
+         - "--tls"
+         - "/root/tls/mexdemo.crt"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}"
+        env:
+         - name: LOCAPI_USER
+           value: mexserver
+         - name: LOCAPI_PASSWD
+           value: seC2835!
+         
+      imagePullSecrets:
+       - name: mexreg-secret 
+

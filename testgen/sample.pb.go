@@ -20,13 +20,15 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/gogoproto"
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import _ "github.com/mobiledgex/edge-cloud/protogen"
 
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
 import binary "encoding/binary"
 
-import strings "strings"
+import "errors"
+import "strconv"
 import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
@@ -163,6 +165,8 @@ type TestGen struct {
 	RepeatedInnerMsgNonnull []TestGen_InnerMessage          `protobuf:"bytes,34,rep,name=repeated_inner_msg_nonnull,json=repeatedInnerMsgNonnull" json:"repeated_inner_msg_nonnull"`
 	RepeatedLoc             []*distributed_match_engine.Loc `protobuf:"bytes,35,rep,name=repeated_loc,json=repeatedLoc" json:"repeated_loc,omitempty"`
 	RepeatedLocNonnull      []distributed_match_engine.Loc  `protobuf:"bytes,36,rep,name=repeated_loc_nonnull,json=repeatedLocNonnull" json:"repeated_loc_nonnull"`
+	IntMap                  map[int32]int32                 `protobuf:"bytes,37,rep,name=intMap" json:"intMap,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	MsgMap                  map[int32]*NestedMessage        `protobuf:"bytes,38,rep,name=msgMap" json:"msgMap,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *TestGen) Reset()                    { *m = TestGen{} }
@@ -726,6 +730,52 @@ func (m *TestGen) MarshalTo(dAtA []byte) (int, error) {
 			i += n
 		}
 	}
+	if len(m.IntMap) > 0 {
+		for k, _ := range m.IntMap {
+			dAtA[i] = 0xaa
+			i++
+			dAtA[i] = 0x2
+			i++
+			v := m.IntMap[k]
+			mapSize := 1 + sovSample(uint64(k)) + 1 + sovSample(uint64(v))
+			i = encodeVarintSample(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintSample(dAtA, i, uint64(k))
+			dAtA[i] = 0x10
+			i++
+			i = encodeVarintSample(dAtA, i, uint64(v))
+		}
+	}
+	if len(m.MsgMap) > 0 {
+		for k, _ := range m.MsgMap {
+			dAtA[i] = 0xb2
+			i++
+			dAtA[i] = 0x2
+			i++
+			v := m.MsgMap[k]
+			msgSize := 0
+			if v != nil {
+				msgSize = v.Size()
+				msgSize += 1 + sovSample(uint64(msgSize))
+			}
+			mapSize := 1 + sovSample(uint64(k)) + msgSize
+			i = encodeVarintSample(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0x8
+			i++
+			i = encodeVarintSample(dAtA, i, uint64(k))
+			if v != nil {
+				dAtA[i] = 0x12
+				i++
+				i = encodeVarintSample(dAtA, i, uint64(v.Size()))
+				n12, err := v.MarshalTo(dAtA[i:])
+				if err != nil {
+					return 0, err
+				}
+				i += n12
+			}
+		}
+	}
 	return i, nil
 }
 
@@ -784,6 +834,285 @@ func (m *IncludeFields) CopyInFields(src *IncludeFields) {
 	m.Name = src.Name
 }
 
+func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
+		return false
+	}
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
+	}
+	if !opts.Filter || o.Db != 0 {
+		if o.Db != m.Db {
+			return false
+		}
+	}
+	if !opts.Filter || o.Fl != 0 {
+		if o.Fl != m.Fl {
+			return false
+		}
+	}
+	if !opts.Filter || o.I32 != 0 {
+		if o.I32 != m.I32 {
+			return false
+		}
+	}
+	if !opts.Filter || o.I64 != 0 {
+		if o.I64 != m.I64 {
+			return false
+		}
+	}
+	if !opts.Filter || o.U32 != 0 {
+		if o.U32 != m.U32 {
+			return false
+		}
+	}
+	if !opts.Filter || o.U64 != 0 {
+		if o.U64 != m.U64 {
+			return false
+		}
+	}
+	if !opts.Filter || o.S32 != 0 {
+		if o.S32 != m.S32 {
+			return false
+		}
+	}
+	if !opts.Filter || o.S64 != 0 {
+		if o.S64 != m.S64 {
+			return false
+		}
+	}
+	if !opts.Filter || o.F32 != 0 {
+		if o.F32 != m.F32 {
+			return false
+		}
+	}
+	if !opts.Filter || o.F64 != 0 {
+		if o.F64 != m.F64 {
+			return false
+		}
+	}
+	if !opts.Filter || o.Sf32 != 0 {
+		if o.Sf32 != m.Sf32 {
+			return false
+		}
+	}
+	if !opts.Filter || o.Sf64 != 0 {
+		if o.Sf64 != m.Sf64 {
+			return false
+		}
+	}
+	if !opts.Filter || o.Bb != false {
+		if o.Bb != m.Bb {
+			return false
+		}
+	}
+	if !opts.Filter || o.OuterEn != 0 {
+		if o.OuterEn != m.OuterEn {
+			return false
+		}
+	}
+	if !opts.Filter || o.InnerEn != 0 {
+		if o.InnerEn != m.InnerEn {
+			return false
+		}
+	}
+	if !opts.Filter || o.InnerMsg != nil {
+		if m.InnerMsg == nil && o.InnerMsg != nil || m.InnerMsg != nil && o.InnerMsg == nil {
+			return false
+		} else if m.InnerMsg != nil && o.InnerMsg != nil {
+		}
+	}
+	if !opts.Filter || o.IncludeMsg != nil {
+		if m.IncludeMsg == nil && o.IncludeMsg != nil || m.IncludeMsg != nil && o.IncludeMsg == nil {
+			return false
+		} else if m.IncludeMsg != nil && o.IncludeMsg != nil {
+		}
+	}
+	if !opts.Filter || o.IncludeFields != nil {
+		if m.IncludeFields == nil && o.IncludeFields != nil || m.IncludeFields != nil && o.IncludeFields == nil {
+			return false
+		} else if m.IncludeFields != nil && o.IncludeFields != nil {
+		}
+	}
+	if !opts.Filter || o.Loc != nil {
+		if m.Loc == nil && o.Loc != nil || m.Loc != nil && o.Loc == nil {
+			return false
+		} else if m.Loc != nil && o.Loc != nil {
+		}
+	}
+	if !opts.Filter || o.RepeatedInt != nil {
+		if m.RepeatedInt == nil && o.RepeatedInt != nil || m.RepeatedInt != nil && o.RepeatedInt == nil {
+			return false
+		} else if m.RepeatedInt != nil && o.RepeatedInt != nil {
+			if len(m.RepeatedInt) != len(o.RepeatedInt) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedInt); i++ {
+				if o.RepeatedInt[i] != m.RepeatedInt[i] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.Ip != nil {
+		if m.Ip == nil && o.Ip != nil || m.Ip != nil && o.Ip == nil {
+			return false
+		} else if m.Ip != nil && o.Ip != nil {
+			if len(m.Ip) != len(o.Ip) {
+				return false
+			}
+			for i := 0; i < len(m.Ip); i++ {
+				if o.Ip[i] != m.Ip[i] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.Names != nil {
+		if m.Names == nil && o.Names != nil || m.Names != nil && o.Names == nil {
+			return false
+		} else if m.Names != nil && o.Names != nil {
+			if len(m.Names) != len(o.Names) {
+				return false
+			}
+			for i := 0; i < len(m.Names); i++ {
+				if o.Names[i] != m.Names[i] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedMsg != nil {
+		if m.RepeatedMsg == nil && o.RepeatedMsg != nil || m.RepeatedMsg != nil && o.RepeatedMsg == nil {
+			return false
+		} else if m.RepeatedMsg != nil && o.RepeatedMsg != nil {
+			if len(m.RepeatedMsg) != len(o.RepeatedMsg) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedMsg); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedMsgNonnull != nil {
+		if m.RepeatedMsgNonnull == nil && o.RepeatedMsgNonnull != nil || m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull == nil {
+			return false
+		} else if m.RepeatedMsgNonnull != nil && o.RepeatedMsgNonnull != nil {
+			if len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedMsgNonnull); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedFields != nil {
+		if m.RepeatedFields == nil && o.RepeatedFields != nil || m.RepeatedFields != nil && o.RepeatedFields == nil {
+			return false
+		} else if m.RepeatedFields != nil && o.RepeatedFields != nil {
+			if len(m.RepeatedFields) != len(o.RepeatedFields) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedFields); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedFieldsNonnull != nil {
+		if m.RepeatedFieldsNonnull == nil && o.RepeatedFieldsNonnull != nil || m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull == nil {
+			return false
+		} else if m.RepeatedFieldsNonnull != nil && o.RepeatedFieldsNonnull != nil {
+			if len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedFieldsNonnull); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedInnerMsg != nil {
+		if m.RepeatedInnerMsg == nil && o.RepeatedInnerMsg != nil || m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg == nil {
+			return false
+		} else if m.RepeatedInnerMsg != nil && o.RepeatedInnerMsg != nil {
+			if len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedInnerMsg); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedInnerMsgNonnull != nil {
+		if m.RepeatedInnerMsgNonnull == nil && o.RepeatedInnerMsgNonnull != nil || m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull == nil {
+			return false
+		} else if m.RepeatedInnerMsgNonnull != nil && o.RepeatedInnerMsgNonnull != nil {
+			if len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedInnerMsgNonnull); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedLoc != nil {
+		if m.RepeatedLoc == nil && o.RepeatedLoc != nil || m.RepeatedLoc != nil && o.RepeatedLoc == nil {
+			return false
+		} else if m.RepeatedLoc != nil && o.RepeatedLoc != nil {
+			if len(m.RepeatedLoc) != len(o.RepeatedLoc) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedLoc); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.RepeatedLocNonnull != nil {
+		if m.RepeatedLocNonnull == nil && o.RepeatedLocNonnull != nil || m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull == nil {
+			return false
+		} else if m.RepeatedLocNonnull != nil && o.RepeatedLocNonnull != nil {
+			if len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
+				return false
+			}
+			for i := 0; i < len(m.RepeatedLocNonnull); i++ {
+			}
+		}
+	}
+	if !opts.Filter || o.IntMap != nil {
+		if m.IntMap == nil && o.IntMap != nil || m.IntMap != nil && o.IntMap == nil {
+			return false
+		} else if m.IntMap != nil && o.IntMap != nil {
+			if len(m.IntMap) != len(o.IntMap) {
+				return false
+			}
+			for k, _ := range m.IntMap {
+				_, ok := o.IntMap[k]
+				if !ok {
+					return false
+				}
+				if o.IntMap[k] != m.IntMap[k] {
+					return false
+				}
+			}
+		}
+	}
+	if !opts.Filter || o.MsgMap != nil {
+		if m.MsgMap == nil && o.MsgMap != nil || m.MsgMap != nil && o.MsgMap == nil {
+			return false
+		} else if m.MsgMap != nil && o.MsgMap != nil {
+			if len(m.MsgMap) != len(o.MsgMap) {
+				return false
+			}
+			for k, _ := range m.MsgMap {
+				_, ok := o.MsgMap[k]
+				if !ok {
+					return false
+				}
+			}
+		}
+	}
+	return true
+}
+
 const TestGenFieldName = "2"
 const TestGenFieldDb = "3"
 const TestGenFieldFl = "4"
@@ -800,18 +1129,27 @@ const TestGenFieldSf64 = "14"
 const TestGenFieldBb = "15"
 const TestGenFieldOuterEn = "16"
 const TestGenFieldInnerEn = "17"
+const TestGenFieldInnerMsg = "18"
 const TestGenFieldInnerMsgUrl = "18.1"
 const TestGenFieldInnerMsgId = "18.2"
+const TestGenFieldInnerMsgNonnull = "19"
 const TestGenFieldInnerMsgNonnullUrl = "19.1"
 const TestGenFieldInnerMsgNonnullId = "19.2"
+const TestGenFieldIncludeMsg = "20"
 const TestGenFieldIncludeMsgName = "20.1"
 const TestGenFieldIncludeMsgId = "20.2"
+const TestGenFieldIncludeMsgNestedMsg = "20.3"
 const TestGenFieldIncludeMsgNestedMsgName = "20.3.1"
+const TestGenFieldIncludeMsgNonnull = "21"
 const TestGenFieldIncludeMsgNonnullName = "21.1"
 const TestGenFieldIncludeMsgNonnullId = "21.2"
+const TestGenFieldIncludeMsgNonnullNestedMsg = "21.3"
 const TestGenFieldIncludeMsgNonnullNestedMsgName = "21.3.1"
+const TestGenFieldIncludeFields = "22"
 const TestGenFieldIncludeFieldsName = "22.2"
+const TestGenFieldIncludeFieldsNonnull = "23"
 const TestGenFieldIncludeFieldsNonnullName = "23.2"
+const TestGenFieldLoc = "24"
 const TestGenFieldLocLat = "24.1"
 const TestGenFieldLocLong = "24.2"
 const TestGenFieldLocHorizontalAccuracy = "24.3"
@@ -819,8 +1157,10 @@ const TestGenFieldLocVerticalAccuracy = "24.4"
 const TestGenFieldLocAltitude = "24.5"
 const TestGenFieldLocCourse = "24.6"
 const TestGenFieldLocSpeed = "24.7"
+const TestGenFieldLocTimestamp = "24.8"
 const TestGenFieldLocTimestampSeconds = "24.8.1"
 const TestGenFieldLocTimestampNanos = "24.8.2"
+const TestGenFieldLocNonnull = "25"
 const TestGenFieldLocNonnullLat = "25.1"
 const TestGenFieldLocNonnullLong = "25.2"
 const TestGenFieldLocNonnullHorizontalAccuracy = "25.3"
@@ -828,23 +1168,33 @@ const TestGenFieldLocNonnullVerticalAccuracy = "25.4"
 const TestGenFieldLocNonnullAltitude = "25.5"
 const TestGenFieldLocNonnullCourse = "25.6"
 const TestGenFieldLocNonnullSpeed = "25.7"
+const TestGenFieldLocNonnullTimestamp = "25.8"
 const TestGenFieldLocNonnullTimestampSeconds = "25.8.1"
 const TestGenFieldLocNonnullTimestampNanos = "25.8.2"
 const TestGenFieldRepeatedInt = "26"
 const TestGenFieldIp = "27"
 const TestGenFieldNames = "28"
+const TestGenFieldRepeatedMsg = "29"
 const TestGenFieldRepeatedMsgName = "29.1"
 const TestGenFieldRepeatedMsgId = "29.2"
+const TestGenFieldRepeatedMsgNestedMsg = "29.3"
 const TestGenFieldRepeatedMsgNestedMsgName = "29.3.1"
+const TestGenFieldRepeatedMsgNonnull = "30"
 const TestGenFieldRepeatedMsgNonnullName = "30.1"
 const TestGenFieldRepeatedMsgNonnullId = "30.2"
+const TestGenFieldRepeatedMsgNonnullNestedMsg = "30.3"
 const TestGenFieldRepeatedMsgNonnullNestedMsgName = "30.3.1"
+const TestGenFieldRepeatedFields = "31"
 const TestGenFieldRepeatedFieldsName = "31.2"
+const TestGenFieldRepeatedFieldsNonnull = "32"
 const TestGenFieldRepeatedFieldsNonnullName = "32.2"
+const TestGenFieldRepeatedInnerMsg = "33"
 const TestGenFieldRepeatedInnerMsgUrl = "33.1"
 const TestGenFieldRepeatedInnerMsgId = "33.2"
+const TestGenFieldRepeatedInnerMsgNonnull = "34"
 const TestGenFieldRepeatedInnerMsgNonnullUrl = "34.1"
 const TestGenFieldRepeatedInnerMsgNonnullId = "34.2"
+const TestGenFieldRepeatedLoc = "35"
 const TestGenFieldRepeatedLocLat = "35.1"
 const TestGenFieldRepeatedLocLong = "35.2"
 const TestGenFieldRepeatedLocHorizontalAccuracy = "35.3"
@@ -852,8 +1202,10 @@ const TestGenFieldRepeatedLocVerticalAccuracy = "35.4"
 const TestGenFieldRepeatedLocAltitude = "35.5"
 const TestGenFieldRepeatedLocCourse = "35.6"
 const TestGenFieldRepeatedLocSpeed = "35.7"
+const TestGenFieldRepeatedLocTimestamp = "35.8"
 const TestGenFieldRepeatedLocTimestampSeconds = "35.8.1"
 const TestGenFieldRepeatedLocTimestampNanos = "35.8.2"
+const TestGenFieldRepeatedLocNonnull = "36"
 const TestGenFieldRepeatedLocNonnullLat = "36.1"
 const TestGenFieldRepeatedLocNonnullLong = "36.2"
 const TestGenFieldRepeatedLocNonnullHorizontalAccuracy = "36.3"
@@ -861,8 +1213,16 @@ const TestGenFieldRepeatedLocNonnullVerticalAccuracy = "36.4"
 const TestGenFieldRepeatedLocNonnullAltitude = "36.5"
 const TestGenFieldRepeatedLocNonnullCourse = "36.6"
 const TestGenFieldRepeatedLocNonnullSpeed = "36.7"
+const TestGenFieldRepeatedLocNonnullTimestamp = "36.8"
 const TestGenFieldRepeatedLocNonnullTimestampSeconds = "36.8.1"
 const TestGenFieldRepeatedLocNonnullTimestampNanos = "36.8.2"
+const TestGenFieldIntMap = "37"
+const TestGenFieldIntMapKey = "37.1"
+const TestGenFieldIntMapValue = "37.2"
+const TestGenFieldMsgMap = "38"
+const TestGenFieldMsgMapKey = "38.1"
+const TestGenFieldMsgMapValue = "38.2"
+const TestGenFieldMsgMapValueName = "38.2.1"
 
 var TestGenAllFields = []string{
 	TestGenFieldName,
@@ -944,21 +1304,512 @@ var TestGenAllFields = []string{
 	TestGenFieldRepeatedLocNonnullSpeed,
 	TestGenFieldRepeatedLocNonnullTimestampSeconds,
 	TestGenFieldRepeatedLocNonnullTimestampNanos,
+	TestGenFieldIntMapKey,
+	TestGenFieldIntMapValue,
+	TestGenFieldMsgMapKey,
+	TestGenFieldMsgMapValueName,
+}
+
+var TestGenAllFieldsMap = map[string]struct{}{
+	TestGenFieldName:                                 struct{}{},
+	TestGenFieldDb:                                   struct{}{},
+	TestGenFieldFl:                                   struct{}{},
+	TestGenFieldI32:                                  struct{}{},
+	TestGenFieldI64:                                  struct{}{},
+	TestGenFieldU32:                                  struct{}{},
+	TestGenFieldU64:                                  struct{}{},
+	TestGenFieldS32:                                  struct{}{},
+	TestGenFieldS64:                                  struct{}{},
+	TestGenFieldF32:                                  struct{}{},
+	TestGenFieldF64:                                  struct{}{},
+	TestGenFieldSf32:                                 struct{}{},
+	TestGenFieldSf64:                                 struct{}{},
+	TestGenFieldBb:                                   struct{}{},
+	TestGenFieldOuterEn:                              struct{}{},
+	TestGenFieldInnerEn:                              struct{}{},
+	TestGenFieldInnerMsgUrl:                          struct{}{},
+	TestGenFieldInnerMsgId:                           struct{}{},
+	TestGenFieldInnerMsgNonnullUrl:                   struct{}{},
+	TestGenFieldInnerMsgNonnullId:                    struct{}{},
+	TestGenFieldIncludeMsgName:                       struct{}{},
+	TestGenFieldIncludeMsgId:                         struct{}{},
+	TestGenFieldIncludeMsgNestedMsgName:              struct{}{},
+	TestGenFieldIncludeMsgNonnullName:                struct{}{},
+	TestGenFieldIncludeMsgNonnullId:                  struct{}{},
+	TestGenFieldIncludeMsgNonnullNestedMsgName:       struct{}{},
+	TestGenFieldIncludeFieldsName:                    struct{}{},
+	TestGenFieldIncludeFieldsNonnullName:             struct{}{},
+	TestGenFieldLocLat:                               struct{}{},
+	TestGenFieldLocLong:                              struct{}{},
+	TestGenFieldLocHorizontalAccuracy:                struct{}{},
+	TestGenFieldLocVerticalAccuracy:                  struct{}{},
+	TestGenFieldLocAltitude:                          struct{}{},
+	TestGenFieldLocCourse:                            struct{}{},
+	TestGenFieldLocSpeed:                             struct{}{},
+	TestGenFieldLocTimestampSeconds:                  struct{}{},
+	TestGenFieldLocTimestampNanos:                    struct{}{},
+	TestGenFieldLocNonnullLat:                        struct{}{},
+	TestGenFieldLocNonnullLong:                       struct{}{},
+	TestGenFieldLocNonnullHorizontalAccuracy:         struct{}{},
+	TestGenFieldLocNonnullVerticalAccuracy:           struct{}{},
+	TestGenFieldLocNonnullAltitude:                   struct{}{},
+	TestGenFieldLocNonnullCourse:                     struct{}{},
+	TestGenFieldLocNonnullSpeed:                      struct{}{},
+	TestGenFieldLocNonnullTimestampSeconds:           struct{}{},
+	TestGenFieldLocNonnullTimestampNanos:             struct{}{},
+	TestGenFieldRepeatedInt:                          struct{}{},
+	TestGenFieldIp:                                   struct{}{},
+	TestGenFieldNames:                                struct{}{},
+	TestGenFieldRepeatedMsgName:                      struct{}{},
+	TestGenFieldRepeatedMsgId:                        struct{}{},
+	TestGenFieldRepeatedMsgNestedMsgName:             struct{}{},
+	TestGenFieldRepeatedMsgNonnullName:               struct{}{},
+	TestGenFieldRepeatedMsgNonnullId:                 struct{}{},
+	TestGenFieldRepeatedMsgNonnullNestedMsgName:      struct{}{},
+	TestGenFieldRepeatedFieldsName:                   struct{}{},
+	TestGenFieldRepeatedFieldsNonnullName:            struct{}{},
+	TestGenFieldRepeatedInnerMsgUrl:                  struct{}{},
+	TestGenFieldRepeatedInnerMsgId:                   struct{}{},
+	TestGenFieldRepeatedInnerMsgNonnullUrl:           struct{}{},
+	TestGenFieldRepeatedInnerMsgNonnullId:            struct{}{},
+	TestGenFieldRepeatedLocLat:                       struct{}{},
+	TestGenFieldRepeatedLocLong:                      struct{}{},
+	TestGenFieldRepeatedLocHorizontalAccuracy:        struct{}{},
+	TestGenFieldRepeatedLocVerticalAccuracy:          struct{}{},
+	TestGenFieldRepeatedLocAltitude:                  struct{}{},
+	TestGenFieldRepeatedLocCourse:                    struct{}{},
+	TestGenFieldRepeatedLocSpeed:                     struct{}{},
+	TestGenFieldRepeatedLocTimestampSeconds:          struct{}{},
+	TestGenFieldRepeatedLocTimestampNanos:            struct{}{},
+	TestGenFieldRepeatedLocNonnullLat:                struct{}{},
+	TestGenFieldRepeatedLocNonnullLong:               struct{}{},
+	TestGenFieldRepeatedLocNonnullHorizontalAccuracy: struct{}{},
+	TestGenFieldRepeatedLocNonnullVerticalAccuracy:   struct{}{},
+	TestGenFieldRepeatedLocNonnullAltitude:           struct{}{},
+	TestGenFieldRepeatedLocNonnullCourse:             struct{}{},
+	TestGenFieldRepeatedLocNonnullSpeed:              struct{}{},
+	TestGenFieldRepeatedLocNonnullTimestampSeconds:   struct{}{},
+	TestGenFieldRepeatedLocNonnullTimestampNanos:     struct{}{},
+	TestGenFieldIntMapKey:                            struct{}{},
+	TestGenFieldIntMapValue:                          struct{}{},
+	TestGenFieldMsgMapKey:                            struct{}{},
+	TestGenFieldMsgMapValueName:                      struct{}{},
+}
+
+func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
+	if m.Name != o.Name {
+		fields[TestGenFieldName] = struct{}{}
+	}
+	if m.Db != o.Db {
+		fields[TestGenFieldDb] = struct{}{}
+	}
+	if m.Fl != o.Fl {
+		fields[TestGenFieldFl] = struct{}{}
+	}
+	if m.I32 != o.I32 {
+		fields[TestGenFieldI32] = struct{}{}
+	}
+	if m.I64 != o.I64 {
+		fields[TestGenFieldI64] = struct{}{}
+	}
+	if m.U32 != o.U32 {
+		fields[TestGenFieldU32] = struct{}{}
+	}
+	if m.U64 != o.U64 {
+		fields[TestGenFieldU64] = struct{}{}
+	}
+	if m.S32 != o.S32 {
+		fields[TestGenFieldS32] = struct{}{}
+	}
+	if m.S64 != o.S64 {
+		fields[TestGenFieldS64] = struct{}{}
+	}
+	if m.F32 != o.F32 {
+		fields[TestGenFieldF32] = struct{}{}
+	}
+	if m.F64 != o.F64 {
+		fields[TestGenFieldF64] = struct{}{}
+	}
+	if m.Sf32 != o.Sf32 {
+		fields[TestGenFieldSf32] = struct{}{}
+	}
+	if m.Sf64 != o.Sf64 {
+		fields[TestGenFieldSf64] = struct{}{}
+	}
+	if m.Bb != o.Bb {
+		fields[TestGenFieldBb] = struct{}{}
+	}
+	if m.OuterEn != o.OuterEn {
+		fields[TestGenFieldOuterEn] = struct{}{}
+	}
+	if m.InnerEn != o.InnerEn {
+		fields[TestGenFieldInnerEn] = struct{}{}
+	}
+	if m.InnerMsg.Url != o.InnerMsg.Url {
+		fields[TestGenFieldInnerMsgUrl] = struct{}{}
+		fields[TestGenFieldInnerMsg] = struct{}{}
+	}
+	if m.InnerMsg.Id != o.InnerMsg.Id {
+		fields[TestGenFieldInnerMsgId] = struct{}{}
+		fields[TestGenFieldInnerMsg] = struct{}{}
+	}
+	if m.InnerMsgNonnull.Url != o.InnerMsgNonnull.Url {
+		fields[TestGenFieldInnerMsgNonnullUrl] = struct{}{}
+		fields[TestGenFieldInnerMsgNonnull] = struct{}{}
+	}
+	if m.InnerMsgNonnull.Id != o.InnerMsgNonnull.Id {
+		fields[TestGenFieldInnerMsgNonnullId] = struct{}{}
+		fields[TestGenFieldInnerMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsg.Name != o.IncludeMsg.Name {
+		fields[TestGenFieldIncludeMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsg.Id != o.IncludeMsg.Id {
+		fields[TestGenFieldIncludeMsgId] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsg.NestedMsg.Name != o.IncludeMsg.NestedMsg.Name {
+		fields[TestGenFieldIncludeMsgNestedMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNestedMsg] = struct{}{}
+		fields[TestGenFieldIncludeMsg] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.Name != o.IncludeMsgNonnull.Name {
+		fields[TestGenFieldIncludeMsgNonnullName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.Id != o.IncludeMsgNonnull.Id {
+		fields[TestGenFieldIncludeMsgNonnullId] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeMsgNonnull.NestedMsg.Name != o.IncludeMsgNonnull.NestedMsg.Name {
+		fields[TestGenFieldIncludeMsgNonnullNestedMsgName] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnullNestedMsg] = struct{}{}
+		fields[TestGenFieldIncludeMsgNonnull] = struct{}{}
+	}
+	if m.IncludeFields.Name != o.IncludeFields.Name {
+		fields[TestGenFieldIncludeFieldsName] = struct{}{}
+		fields[TestGenFieldIncludeFields] = struct{}{}
+	}
+	if m.IncludeFieldsNonnull.Name != o.IncludeFieldsNonnull.Name {
+		fields[TestGenFieldIncludeFieldsNonnullName] = struct{}{}
+		fields[TestGenFieldIncludeFieldsNonnull] = struct{}{}
+	}
+	if m.Loc.Lat != o.Loc.Lat {
+		fields[TestGenFieldLocLat] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Long != o.Loc.Long {
+		fields[TestGenFieldLocLong] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.HorizontalAccuracy != o.Loc.HorizontalAccuracy {
+		fields[TestGenFieldLocHorizontalAccuracy] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.VerticalAccuracy != o.Loc.VerticalAccuracy {
+		fields[TestGenFieldLocVerticalAccuracy] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Altitude != o.Loc.Altitude {
+		fields[TestGenFieldLocAltitude] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Course != o.Loc.Course {
+		fields[TestGenFieldLocCourse] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Speed != o.Loc.Speed {
+		fields[TestGenFieldLocSpeed] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Timestamp.Seconds != o.Loc.Timestamp.Seconds {
+		fields[TestGenFieldLocTimestampSeconds] = struct{}{}
+		fields[TestGenFieldLocTimestamp] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.Loc.Timestamp.Nanos != o.Loc.Timestamp.Nanos {
+		fields[TestGenFieldLocTimestampNanos] = struct{}{}
+		fields[TestGenFieldLocTimestamp] = struct{}{}
+		fields[TestGenFieldLoc] = struct{}{}
+	}
+	if m.LocNonnull.Lat != o.LocNonnull.Lat {
+		fields[TestGenFieldLocNonnullLat] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Long != o.LocNonnull.Long {
+		fields[TestGenFieldLocNonnullLong] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.HorizontalAccuracy != o.LocNonnull.HorizontalAccuracy {
+		fields[TestGenFieldLocNonnullHorizontalAccuracy] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.VerticalAccuracy != o.LocNonnull.VerticalAccuracy {
+		fields[TestGenFieldLocNonnullVerticalAccuracy] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Altitude != o.LocNonnull.Altitude {
+		fields[TestGenFieldLocNonnullAltitude] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Course != o.LocNonnull.Course {
+		fields[TestGenFieldLocNonnullCourse] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Speed != o.LocNonnull.Speed {
+		fields[TestGenFieldLocNonnullSpeed] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Timestamp.Seconds != o.LocNonnull.Timestamp.Seconds {
+		fields[TestGenFieldLocNonnullTimestampSeconds] = struct{}{}
+		fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if m.LocNonnull.Timestamp.Nanos != o.LocNonnull.Timestamp.Nanos {
+		fields[TestGenFieldLocNonnullTimestampNanos] = struct{}{}
+		fields[TestGenFieldLocNonnullTimestamp] = struct{}{}
+		fields[TestGenFieldLocNonnull] = struct{}{}
+	}
+	if len(m.RepeatedInt) != len(o.RepeatedInt) {
+		fields[TestGenFieldRepeatedInt] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInt); i0++ {
+			if m.RepeatedInt[i0] != o.RepeatedInt[i0] {
+				fields[TestGenFieldRepeatedInt] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(m.Ip) != len(o.Ip) {
+		fields[TestGenFieldIp] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Ip); i0++ {
+			if m.Ip[i0] != o.Ip[i0] {
+				fields[TestGenFieldIp] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(m.Names) != len(o.Names) {
+		fields[TestGenFieldNames] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.Names); i0++ {
+			if m.Names[i0] != o.Names[i0] {
+				fields[TestGenFieldNames] = struct{}{}
+				break
+			}
+		}
+	}
+	if len(m.RepeatedMsg) != len(o.RepeatedMsg) {
+		fields[TestGenFieldRepeatedMsg] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedMsg); i0++ {
+			if m.RepeatedMsg[i0].Name != o.RepeatedMsg[i0].Name {
+				fields[TestGenFieldRepeatedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+			if m.RepeatedMsg[i0].Id != o.RepeatedMsg[i0].Id {
+				fields[TestGenFieldRepeatedMsgId] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+			if m.RepeatedMsg[i0].NestedMsg.Name != o.RepeatedMsg[i0].NestedMsg.Name {
+				fields[TestGenFieldRepeatedMsgNestedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNestedMsg] = struct{}{}
+				fields[TestGenFieldRepeatedMsg] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedMsgNonnull) != len(o.RepeatedMsgNonnull) {
+		fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedMsgNonnull); i0++ {
+			if m.RepeatedMsgNonnull[i0].Name != o.RepeatedMsgNonnull[i0].Name {
+				fields[TestGenFieldRepeatedMsgNonnullName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedMsgNonnull[i0].Id != o.RepeatedMsgNonnull[i0].Id {
+				fields[TestGenFieldRepeatedMsgNonnullId] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedMsgNonnull[i0].NestedMsg.Name != o.RepeatedMsgNonnull[i0].NestedMsg.Name {
+				fields[TestGenFieldRepeatedMsgNonnullNestedMsgName] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnullNestedMsg] = struct{}{}
+				fields[TestGenFieldRepeatedMsgNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedFields) != len(o.RepeatedFields) {
+		fields[TestGenFieldRepeatedFields] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedFields); i0++ {
+			if m.RepeatedFields[i0].Name != o.RepeatedFields[i0].Name {
+				fields[TestGenFieldRepeatedFieldsName] = struct{}{}
+				fields[TestGenFieldRepeatedFields] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedFieldsNonnull) != len(o.RepeatedFieldsNonnull) {
+		fields[TestGenFieldRepeatedFieldsNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedFieldsNonnull); i0++ {
+			if m.RepeatedFieldsNonnull[i0].Name != o.RepeatedFieldsNonnull[i0].Name {
+				fields[TestGenFieldRepeatedFieldsNonnullName] = struct{}{}
+				fields[TestGenFieldRepeatedFieldsNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedInnerMsg) != len(o.RepeatedInnerMsg) {
+		fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInnerMsg); i0++ {
+			if m.RepeatedInnerMsg[i0].Url != o.RepeatedInnerMsg[i0].Url {
+				fields[TestGenFieldRepeatedInnerMsgUrl] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+			}
+			if m.RepeatedInnerMsg[i0].Id != o.RepeatedInnerMsg[i0].Id {
+				fields[TestGenFieldRepeatedInnerMsgId] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsg] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedInnerMsgNonnull) != len(o.RepeatedInnerMsgNonnull) {
+		fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedInnerMsgNonnull); i0++ {
+			if m.RepeatedInnerMsgNonnull[i0].Url != o.RepeatedInnerMsgNonnull[i0].Url {
+				fields[TestGenFieldRepeatedInnerMsgNonnullUrl] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+			}
+			if m.RepeatedInnerMsgNonnull[i0].Id != o.RepeatedInnerMsgNonnull[i0].Id {
+				fields[TestGenFieldRepeatedInnerMsgNonnullId] = struct{}{}
+				fields[TestGenFieldRepeatedInnerMsgNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedLoc) != len(o.RepeatedLoc) {
+		fields[TestGenFieldRepeatedLoc] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedLoc); i0++ {
+			if m.RepeatedLoc[i0].Lat != o.RepeatedLoc[i0].Lat {
+				fields[TestGenFieldRepeatedLocLat] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Long != o.RepeatedLoc[i0].Long {
+				fields[TestGenFieldRepeatedLocLong] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].HorizontalAccuracy != o.RepeatedLoc[i0].HorizontalAccuracy {
+				fields[TestGenFieldRepeatedLocHorizontalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].VerticalAccuracy != o.RepeatedLoc[i0].VerticalAccuracy {
+				fields[TestGenFieldRepeatedLocVerticalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Altitude != o.RepeatedLoc[i0].Altitude {
+				fields[TestGenFieldRepeatedLocAltitude] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Course != o.RepeatedLoc[i0].Course {
+				fields[TestGenFieldRepeatedLocCourse] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Speed != o.RepeatedLoc[i0].Speed {
+				fields[TestGenFieldRepeatedLocSpeed] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Timestamp.Seconds != o.RepeatedLoc[i0].Timestamp.Seconds {
+				fields[TestGenFieldRepeatedLocTimestampSeconds] = struct{}{}
+				fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+			if m.RepeatedLoc[i0].Timestamp.Nanos != o.RepeatedLoc[i0].Timestamp.Nanos {
+				fields[TestGenFieldRepeatedLocTimestampNanos] = struct{}{}
+				fields[TestGenFieldRepeatedLocTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLoc] = struct{}{}
+			}
+		}
+	}
+	if len(m.RepeatedLocNonnull) != len(o.RepeatedLocNonnull) {
+		fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+	} else {
+		for i0 := 0; i0 < len(m.RepeatedLocNonnull); i0++ {
+			if m.RepeatedLocNonnull[i0].Lat != o.RepeatedLocNonnull[i0].Lat {
+				fields[TestGenFieldRepeatedLocNonnullLat] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Long != o.RepeatedLocNonnull[i0].Long {
+				fields[TestGenFieldRepeatedLocNonnullLong] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].HorizontalAccuracy != o.RepeatedLocNonnull[i0].HorizontalAccuracy {
+				fields[TestGenFieldRepeatedLocNonnullHorizontalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].VerticalAccuracy != o.RepeatedLocNonnull[i0].VerticalAccuracy {
+				fields[TestGenFieldRepeatedLocNonnullVerticalAccuracy] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Altitude != o.RepeatedLocNonnull[i0].Altitude {
+				fields[TestGenFieldRepeatedLocNonnullAltitude] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Course != o.RepeatedLocNonnull[i0].Course {
+				fields[TestGenFieldRepeatedLocNonnullCourse] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Speed != o.RepeatedLocNonnull[i0].Speed {
+				fields[TestGenFieldRepeatedLocNonnullSpeed] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Timestamp.Seconds != o.RepeatedLocNonnull[i0].Timestamp.Seconds {
+				fields[TestGenFieldRepeatedLocNonnullTimestampSeconds] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+			if m.RepeatedLocNonnull[i0].Timestamp.Nanos != o.RepeatedLocNonnull[i0].Timestamp.Nanos {
+				fields[TestGenFieldRepeatedLocNonnullTimestampNanos] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnullTimestamp] = struct{}{}
+				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
+			}
+		}
+	}
+	if len(m.IntMap) != len(o.IntMap) {
+		fields[TestGenFieldIntMap] = struct{}{}
+	} else {
+		for k0, _ := range m.IntMap {
+			_, vok0 := o.IntMap[k0]
+			if !vok0 {
+				fields[TestGenFieldIntMap] = struct{}{}
+			} else {
+				if m.IntMap[k0] != o.IntMap[k0] {
+					fields[TestGenFieldIntMap] = struct{}{}
+					break
+				}
+			}
+		}
+	}
+	if len(m.MsgMap) != len(o.MsgMap) {
+		fields[TestGenFieldMsgMap] = struct{}{}
+	} else {
+		for k0, _ := range m.MsgMap {
+			_, vok0 := o.MsgMap[k0]
+			if !vok0 {
+				fields[TestGenFieldMsgMap] = struct{}{}
+			} else {
+				if m.MsgMap[k0].Name != o.MsgMap[k0].Name {
+					fields[TestGenFieldMsgMapValueName] = struct{}{}
+					fields[TestGenFieldMsgMapValue] = struct{}{}
+					fields[TestGenFieldMsgMap] = struct{}{}
+				}
+			}
+		}
+	}
 }
 
 func (m *TestGen) CopyInFields(src *TestGen) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		m.Name = src.Name
 	}
@@ -1130,25 +1981,25 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["26"]; set {
-		if m.RepeatedInt == nil || len(m.RepeatedInt) < len(src.RepeatedInt) {
+		if m.RepeatedInt == nil || len(m.RepeatedInt) != len(src.RepeatedInt) {
 			m.RepeatedInt = make([]int64, len(src.RepeatedInt))
 		}
 		copy(m.RepeatedInt, src.RepeatedInt)
 	}
 	if _, set := fmap["27"]; set {
-		if m.Ip == nil || len(m.Ip) < len(src.Ip) {
+		if m.Ip == nil || len(m.Ip) != len(src.Ip) {
 			m.Ip = make([]byte, len(src.Ip))
 		}
 		copy(m.Ip, src.Ip)
 	}
 	if _, set := fmap["28"]; set {
-		if m.Names == nil || len(m.Names) < len(src.Names) {
+		if m.Names == nil || len(m.Names) != len(src.Names) {
 			m.Names = make([]string, len(src.Names))
 		}
 		copy(m.Names, src.Names)
 	}
 	if _, set := fmap["29"]; set && src.RepeatedMsg != nil {
-		if m.RepeatedMsg == nil || len(m.RepeatedMsg) < len(src.RepeatedMsg) {
+		if m.RepeatedMsg == nil || len(m.RepeatedMsg) != len(src.RepeatedMsg) {
 			m.RepeatedMsg = make([]*IncludeMessage, len(src.RepeatedMsg))
 		}
 		for i0 := 0; i0 < len(src.RepeatedMsg); i0++ {
@@ -1168,7 +2019,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["30"]; set {
-		if m.RepeatedMsgNonnull == nil || len(m.RepeatedMsgNonnull) < len(src.RepeatedMsgNonnull) {
+		if m.RepeatedMsgNonnull == nil || len(m.RepeatedMsgNonnull) != len(src.RepeatedMsgNonnull) {
 			m.RepeatedMsgNonnull = make([]IncludeMessage, len(src.RepeatedMsgNonnull))
 		}
 		for i0 := 0; i0 < len(src.RepeatedMsgNonnull); i0++ {
@@ -1187,7 +2038,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["31"]; set && src.RepeatedFields != nil {
-		if m.RepeatedFields == nil || len(m.RepeatedFields) < len(src.RepeatedFields) {
+		if m.RepeatedFields == nil || len(m.RepeatedFields) != len(src.RepeatedFields) {
 			m.RepeatedFields = make([]*IncludeFields, len(src.RepeatedFields))
 		}
 		for i0 := 0; i0 < len(src.RepeatedFields); i0++ {
@@ -1198,7 +2049,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["32"]; set {
-		if m.RepeatedFieldsNonnull == nil || len(m.RepeatedFieldsNonnull) < len(src.RepeatedFieldsNonnull) {
+		if m.RepeatedFieldsNonnull == nil || len(m.RepeatedFieldsNonnull) != len(src.RepeatedFieldsNonnull) {
 			m.RepeatedFieldsNonnull = make([]IncludeFields, len(src.RepeatedFieldsNonnull))
 		}
 		for i0 := 0; i0 < len(src.RepeatedFieldsNonnull); i0++ {
@@ -1208,7 +2059,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["33"]; set && src.RepeatedInnerMsg != nil {
-		if m.RepeatedInnerMsg == nil || len(m.RepeatedInnerMsg) < len(src.RepeatedInnerMsg) {
+		if m.RepeatedInnerMsg == nil || len(m.RepeatedInnerMsg) != len(src.RepeatedInnerMsg) {
 			m.RepeatedInnerMsg = make([]*TestGen_InnerMessage, len(src.RepeatedInnerMsg))
 		}
 		for i0 := 0; i0 < len(src.RepeatedInnerMsg); i0++ {
@@ -1222,7 +2073,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["34"]; set {
-		if m.RepeatedInnerMsgNonnull == nil || len(m.RepeatedInnerMsgNonnull) < len(src.RepeatedInnerMsgNonnull) {
+		if m.RepeatedInnerMsgNonnull == nil || len(m.RepeatedInnerMsgNonnull) != len(src.RepeatedInnerMsgNonnull) {
 			m.RepeatedInnerMsgNonnull = make([]TestGen_InnerMessage, len(src.RepeatedInnerMsgNonnull))
 		}
 		for i0 := 0; i0 < len(src.RepeatedInnerMsgNonnull); i0++ {
@@ -1235,7 +2086,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["35"]; set && src.RepeatedLoc != nil {
-		if m.RepeatedLoc == nil || len(m.RepeatedLoc) < len(src.RepeatedLoc) {
+		if m.RepeatedLoc == nil || len(m.RepeatedLoc) != len(src.RepeatedLoc) {
 			m.RepeatedLoc = make([]*distributed_match_engine.Loc, len(src.RepeatedLoc))
 		}
 		for i0 := 0; i0 < len(src.RepeatedLoc); i0++ {
@@ -1273,7 +2124,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 	}
 	if _, set := fmap["36"]; set {
-		if m.RepeatedLocNonnull == nil || len(m.RepeatedLocNonnull) < len(src.RepeatedLocNonnull) {
+		if m.RepeatedLocNonnull == nil || len(m.RepeatedLocNonnull) != len(src.RepeatedLocNonnull) {
 			m.RepeatedLocNonnull = make([]distributed_match_engine.Loc, len(src.RepeatedLocNonnull))
 		}
 		for i0 := 0; i0 < len(src.RepeatedLocNonnull); i0++ {
@@ -1309,11 +2160,142 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 			}
 		}
 	}
+	if _, set := fmap["37"]; set && src.IntMap != nil {
+		m.IntMap = make(map[int32]int32)
+		for k0, _ := range src.IntMap {
+			m.IntMap[k0] = src.IntMap[k0]
+		}
+	}
+	if _, set := fmap["38"]; set && src.MsgMap != nil {
+		m.MsgMap = make(map[int32]*NestedMessage)
+		for k0, _ := range src.MsgMap {
+			m.MsgMap[k0] = &NestedMessage{}
+			if _, set := fmap["38.1"]; set {
+				m.MsgMap[k0].Name = src.MsgMap[k0].Name
+			}
+		}
+	}
 }
 
 func (m *TestGen_InnerMessage) CopyInFields(src *TestGen_InnerMessage) {
 	m.Url = src.Url
 	m.Id = src.Id
+}
+
+var OuterEnumStrings = []string{
+	"OUTER0",
+	"OUTER1",
+	"OUTER2",
+	"OUTER3",
+}
+
+const (
+	OuterEnumOUTER0 uint64 = 1 << 0
+	OuterEnumOUTER1 uint64 = 1 << 1
+	OuterEnumOUTER2 uint64 = 1 << 2
+	OuterEnumOUTER3 uint64 = 1 << 3
+)
+
+func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := OuterEnum_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = OuterEnum_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = OuterEnum(val)
+	return nil
+}
+
+func (e OuterEnum) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var InnerEnumStrings = []string{
+	"INNER0",
+	"INNER1",
+	"INNER2",
+	"INNER3",
+}
+
+const (
+	InnerEnumINNER0 uint64 = 1 << 0
+	InnerEnumINNER1 uint64 = 1 << 1
+	InnerEnumINNER2 uint64 = 1 << 2
+	InnerEnumINNER3 uint64 = 1 << 3
+)
+
+func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := TestGen_InnerEnum_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = TestGen_InnerEnum_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = TestGen_InnerEnum(val)
+	return nil
+}
+
+func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+type MatchOptions struct {
+	// Filter will ignore 0 or nil fields on the passed in object
+	Filter bool
+	// IgnoreBackend will ignore fields that were marked backend in .proto
+	IgnoreBackend bool
+	// Sort repeated (arrays) of Key objects so matching does not
+	// fail due to order.
+	SortArrayedKeys bool
+}
+
+type MatchOpt func(*MatchOptions)
+
+func MatchFilter() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.Filter = true
+	}
+}
+
+func MatchIgnoreBackend() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.IgnoreBackend = true
+	}
+}
+
+func MatchSortArrayedKeys() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.SortArrayedKeys = true
+	}
+}
+
+func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
+	for _, f := range args {
+		f(opts)
+	}
 }
 
 func (m *NestedMessage) Size() (n int) {
@@ -1502,6 +2484,27 @@ func (m *TestGen) Size() (n int) {
 		for _, e := range m.RepeatedLocNonnull {
 			l = e.Size()
 			n += 2 + l + sovSample(uint64(l))
+		}
+	}
+	if len(m.IntMap) > 0 {
+		for k, v := range m.IntMap {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + sovSample(uint64(k)) + 1 + sovSample(uint64(v))
+			n += mapEntrySize + 2 + sovSample(uint64(mapEntrySize))
+		}
+	}
+	if len(m.MsgMap) > 0 {
+		for k, v := range m.MsgMap {
+			_ = k
+			_ = v
+			l = 0
+			if v != nil {
+				l = v.Size()
+				l += 1 + sovSample(uint64(l))
+			}
+			mapEntrySize := 1 + sovSample(uint64(k)) + l
+			n += mapEntrySize + 2 + sovSample(uint64(mapEntrySize))
 		}
 	}
 	return n
@@ -2800,6 +3803,214 @@ func (m *TestGen) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 37:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IntMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.IntMap == nil {
+				m.IntMap = make(map[int32]int32)
+			}
+			var mapkey int32
+			var mapvalue int32
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSample
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSample
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (int32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSample
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapvalue |= (int32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipSample(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthSample
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.IntMap[mapkey] = mapvalue
+			iNdEx = postIndex
+		case 38:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MsgMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSample
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSample
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.MsgMap == nil {
+				m.MsgMap = make(map[int32]*NestedMessage)
+			}
+			var mapkey int32
+			var mapvalue *NestedMessage
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowSample
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSample
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= (int32(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowSample
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= (int(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthSample
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if mapmsglen < 0 {
+						return ErrInvalidLengthSample
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &NestedMessage{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipSample(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthSample
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.MsgMap[mapkey] = mapvalue
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipSample(dAtA[iNdEx:])
@@ -3027,63 +4238,69 @@ var (
 func init() { proto.RegisterFile("sample.proto", fileDescriptorSample) }
 
 var fileDescriptorSample = []byte{
-	// 917 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x56, 0x5d, 0x6f, 0xe3, 0x44,
-	0x14, 0xed, 0xd8, 0x6d, 0xd2, 0xdc, 0x7c, 0xd4, 0x9d, 0xed, 0xb6, 0x43, 0x60, 0xb3, 0xb3, 0x59,
-	0x1e, 0x2c, 0xa4, 0x24, 0x4b, 0x92, 0x8d, 0x50, 0x2b, 0x04, 0x2c, 0x2c, 0xa8, 0xa2, 0x1f, 0xd2,
-	0xa8, 0xfb, 0x5c, 0x62, 0x7b, 0xe2, 0xb5, 0x70, 0xec, 0x10, 0xdb, 0x12, 0xff, 0x90, 0x3e, 0xf2,
-	0x0b, 0x10, 0xf4, 0x97, 0xa0, 0x19, 0x8f, 0x67, 0x9d, 0x14, 0xbc, 0x7d, 0x89, 0xce, 0x5c, 0xdf,
-	0x7b, 0xe6, 0x8c, 0xcf, 0xbd, 0xe3, 0x40, 0x2b, 0x99, 0x2f, 0x57, 0x21, 0x1f, 0xae, 0xd6, 0x71,
-	0x1a, 0xe3, 0x7a, 0xca, 0x93, 0xd4, 0xe7, 0x51, 0x77, 0xe0, 0x07, 0xe9, 0xfb, 0xcc, 0x19, 0xba,
-	0xf1, 0x72, 0xe4, 0xc7, 0x7e, 0x3c, 0x92, 0xcf, 0x9d, 0x6c, 0x21, 0x57, 0x72, 0x21, 0x51, 0x5e,
-	0xd7, 0xfd, 0xbe, 0x94, 0xbe, 0x8c, 0x9d, 0x20, 0xe4, 0x9e, 0xcf, 0x7f, 0x1f, 0x89, 0xdf, 0x81,
-	0x1b, 0xc6, 0x99, 0x37, 0xf2, 0x06, 0xcb, 0x79, 0xea, 0xbe, 0x1f, 0xf0, 0xc8, 0x0f, 0x22, 0x3e,
-	0xf2, 0x96, 0x7c, 0x90, 0xb3, 0x84, 0xb1, 0x9b, 0x93, 0xf4, 0x5f, 0x42, 0xfb, 0x8a, 0x27, 0x29,
-	0xf7, 0x2e, 0x79, 0x92, 0xcc, 0x7d, 0x8e, 0x31, 0xec, 0x46, 0xf3, 0x25, 0x27, 0x88, 0x22, 0xbb,
-	0xc1, 0x24, 0xee, 0xff, 0x0a, 0x9d, 0xf3, 0xc8, 0x0d, 0x33, 0x8f, 0x57, 0x64, 0xe1, 0x0e, 0x18,
-	0x81, 0x47, 0x0c, 0x8a, 0xec, 0x5d, 0x66, 0x04, 0x1e, 0x7e, 0x0d, 0x10, 0x49, 0xea, 0xdb, 0x65,
-	0xe2, 0x13, 0x93, 0x22, 0xbb, 0x39, 0x3e, 0x1e, 0xaa, 0xc3, 0x0e, 0x37, 0x76, 0x65, 0x8d, 0x3c,
-	0xf3, 0x32, 0xf1, 0xfb, 0x67, 0xd0, 0x56, 0x9b, 0xfd, 0x18, 0xf0, 0xd0, 0x4b, 0xf0, 0x31, 0xd4,
-	0x16, 0x12, 0xc9, 0xdd, 0x5a, 0x4c, 0xad, 0xb4, 0x06, 0xa3, 0xa4, 0xf4, 0x8f, 0x36, 0xd4, 0x6f,
-	0x78, 0x92, 0xfe, 0xc4, 0xa3, 0x8d, 0x3a, 0xd3, 0x6e, 0x54, 0xd5, 0x09, 0xed, 0x9e, 0x23, 0x35,
-	0x22, 0x66, 0x78, 0x8e, 0x58, 0x2f, 0x42, 0xb2, 0x4b, 0x91, 0x6d, 0x30, 0x63, 0x11, 0x62, 0x0b,
-	0xcc, 0x60, 0x32, 0x26, 0x7b, 0x14, 0xd9, 0x7b, 0x4c, 0x40, 0x19, 0x99, 0x4d, 0x49, 0x8d, 0x22,
-	0xdb, 0x64, 0x02, 0x8a, 0x48, 0x36, 0x19, 0x93, 0x3a, 0x45, 0x76, 0x9b, 0x09, 0x28, 0x23, 0xb3,
-	0x29, 0xd9, 0x97, 0xaf, 0x44, 0x40, 0x11, 0x49, 0x26, 0x63, 0xd2, 0xa0, 0xc8, 0x3e, 0x64, 0x02,
-	0xca, 0xc8, 0x6c, 0x4a, 0x80, 0x22, 0x1b, 0x33, 0x01, 0x45, 0x64, 0x31, 0x19, 0x93, 0x26, 0x45,
-	0x76, 0x9d, 0x09, 0x28, 0x23, 0xb3, 0x29, 0x69, 0x51, 0x64, 0xd7, 0x98, 0x80, 0xe2, 0x0c, 0x89,
-	0x48, 0x6a, 0x53, 0x64, 0x1f, 0x30, 0x89, 0xf3, 0xd8, 0x6c, 0x4a, 0x3a, 0x14, 0xd9, 0x16, 0x93,
-	0x58, 0x9c, 0xc3, 0x71, 0xc8, 0x01, 0x45, 0xf6, 0x3e, 0x33, 0x1c, 0x07, 0x0f, 0x60, 0x3f, 0xce,
-	0x52, 0xbe, 0xbe, 0xe5, 0x11, 0xb1, 0x28, 0xb2, 0x3b, 0x63, 0xac, 0x1d, 0xb9, 0x16, 0x0f, 0xde,
-	0x46, 0xd9, 0x92, 0xd5, 0xe3, 0x1c, 0xe2, 0xd7, 0xb0, 0x1f, 0x44, 0x51, 0x9e, 0x7e, 0x28, 0xd3,
-	0xbb, 0x3a, 0x5d, 0xbd, 0xe6, 0xe1, 0xb9, 0x48, 0xc8, 0xcb, 0x82, 0x1c, 0xe2, 0x53, 0x68, 0xe4,
-	0x65, 0xc2, 0x78, 0x2c, 0x8d, 0x7f, 0xf6, 0xdf, 0x75, 0x85, 0xff, 0xf9, 0x36, 0x97, 0x89, 0x8f,
-	0xaf, 0xe1, 0x50, 0xd7, 0xde, 0x46, 0x71, 0x14, 0x65, 0x61, 0x48, 0x9e, 0x3c, 0x82, 0xe3, 0xcd,
-	0xee, 0xdd, 0x5f, 0xcf, 0x77, 0xd8, 0x41, 0xc1, 0x74, 0x95, 0xd7, 0xe2, 0xaf, 0xa0, 0x19, 0xe4,
-	0xfd, 0x24, 0xe5, 0x1c, 0x49, 0xaa, 0x13, 0x4d, 0xb5, 0xd9, 0xd8, 0x0c, 0x54, 0xae, 0x90, 0x72,
-	0x09, 0x4f, 0x4a, 0x95, 0x5a, 0xcc, 0xd3, 0x4a, 0x06, 0x25, 0xe3, 0xf0, 0x03, 0x4f, 0x21, 0xe4,
-	0x6b, 0xe8, 0x14, 0x74, 0xaa, 0x2f, 0x8f, 0xb7, 0x66, 0x62, 0xa3, 0xef, 0x59, 0x3b, 0xd8, 0x18,
-	0x03, 0x06, 0xc7, 0x9b, 0xe5, 0x5a, 0xd0, 0x49, 0x15, 0x8d, 0xd2, 0x73, 0xb4, 0x41, 0x56, 0x48,
-	0x1a, 0x81, 0x19, 0xc6, 0x2e, 0x21, 0xea, 0xf5, 0x7a, 0x41, 0x92, 0xae, 0x03, 0x27, 0x93, 0x33,
-	0x2b, 0x6e, 0x8e, 0xdb, 0xfc, 0xe6, 0x18, 0x5e, 0xc4, 0x2e, 0x13, 0x99, 0xf8, 0x07, 0x68, 0x86,
-	0xb1, 0xab, 0x77, 0xfe, 0xe4, 0x11, 0x85, 0x4a, 0x00, 0x84, 0xb1, 0x5b, 0x6c, 0xfb, 0x02, 0x5a,
-	0x6b, 0xbe, 0xe2, 0x73, 0x91, 0x1e, 0x44, 0x29, 0xe9, 0x52, 0xd3, 0x36, 0x59, 0xb3, 0x88, 0x9d,
-	0x47, 0xa9, 0xbc, 0x4c, 0x56, 0xe4, 0x53, 0x39, 0xf0, 0x46, 0xb0, 0xc2, 0x47, 0xb0, 0x27, 0x06,
-	0x35, 0x21, 0x9f, 0xc9, 0x59, 0xce, 0x17, 0xf8, 0xb4, 0x44, 0x24, 0xcc, 0x7d, 0x46, 0xcd, 0x2a,
-	0x73, 0xf5, 0x0e, 0x79, 0xa3, 0x1d, 0x95, 0x6b, 0xf5, 0x99, 0x7a, 0x95, 0x1c, 0xea, 0x34, 0xb8,
-	0xc4, 0x54, 0x9c, 0xea, 0x1b, 0x38, 0xd0, 0x84, 0xca, 0xe0, 0xe7, 0x92, 0xeb, 0xff, 0x0c, 0xee,
-	0x14, 0xe9, 0xca, 0xe1, 0x1b, 0x38, 0xd9, 0x22, 0xd0, 0xa2, 0x68, 0x15, 0x91, 0xd2, 0xf4, 0x74,
-	0x93, 0xae, 0x90, 0xf5, 0x33, 0xe0, 0xd2, 0xcb, 0x2e, 0xa6, 0xf2, 0x85, 0x24, 0xfc, 0xc8, 0x54,
-	0x5a, 0x1f, 0x1c, 0x51, 0xd3, 0xf9, 0x0b, 0x74, 0x1f, 0x92, 0x69, 0x95, 0xfd, 0x47, 0x90, 0x2a,
-	0xb1, 0x27, 0xdb, 0xd4, 0x85, 0xdc, 0x6f, 0x4b, 0x96, 0x8a, 0xde, 0x7c, 0xa9, 0x38, 0x2b, 0x7b,
-	0x53, 0x1b, 0x7b, 0x11, 0xbb, 0xf8, 0x5d, 0xc9, 0xd8, 0x72, 0xb3, 0x7e, 0xfe, 0x08, 0xa6, 0x6d,
-	0x7b, 0x2f, 0x74, 0xd3, 0x76, 0x5f, 0x41, 0xab, 0x7c, 0x0e, 0x79, 0xb9, 0xaf, 0x43, 0xf5, 0x05,
-	0x14, 0xb0, 0xf4, 0x01, 0x34, 0xc5, 0x07, 0xb0, 0x7f, 0x06, 0x0d, 0x7d, 0x39, 0x62, 0x80, 0xda,
-	0xf9, 0xd5, 0xd5, 0x5b, 0xf6, 0xca, 0xda, 0xd1, 0xf8, 0x4b, 0x0b, 0x69, 0x3c, 0xb6, 0x0c, 0x8d,
-	0x27, 0x96, 0xf9, 0xc5, 0x19, 0x34, 0xf4, 0x85, 0x2c, 0x1e, 0x5c, 0xbf, 0xbb, 0xd1, 0xc5, 0x12,
-	0xab, 0x62, 0x89, 0x55, 0xb1, 0xc4, 0x13, 0xcb, 0x1c, 0x9f, 0xe6, 0x5f, 0xc1, 0xef, 0x56, 0x01,
-	0x1e, 0x41, 0x9d, 0xf1, 0xdf, 0x32, 0x9e, 0xa4, 0xd8, 0xda, 0x36, 0xa6, 0xfb, 0x20, 0xd2, 0xdf,
-	0x79, 0x63, 0xdd, 0xfd, 0xd3, 0xdb, 0xb9, 0xbb, 0xef, 0xa1, 0x3f, 0xef, 0x7b, 0xe8, 0xef, 0xfb,
-	0x1e, 0x72, 0x6a, 0xf2, 0xaf, 0xc2, 0xe4, 0xdf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa8, 0x38, 0x85,
-	0x0e, 0xb7, 0x08, 0x00, 0x00,
+	// 1020 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x56, 0x5d, 0x73, 0xdb, 0x44,
+	0x14, 0xcd, 0x4a, 0xb1, 0x1d, 0xaf, 0xbf, 0x94, 0x6d, 0x9a, 0x2c, 0xa6, 0x75, 0x55, 0x17, 0x18,
+	0x0d, 0x83, 0xed, 0x62, 0xbb, 0x9e, 0xe0, 0x0c, 0x03, 0x14, 0x02, 0x93, 0x21, 0x4e, 0x86, 0x9d,
+	0xf4, 0x39, 0x58, 0xd2, 0x5a, 0xd5, 0x54, 0x96, 0x8c, 0x25, 0x31, 0xf4, 0x17, 0x92, 0x47, 0x7e,
+	0x01, 0x03, 0x79, 0xe2, 0x9d, 0x3f, 0xd0, 0xd9, 0x0f, 0x6d, 0x64, 0x37, 0x71, 0xf3, 0xe2, 0x39,
+	0x7b, 0xf7, 0x9e, 0xb3, 0x67, 0xf7, 0xee, 0xd5, 0x1a, 0x56, 0xe3, 0xe9, 0x7c, 0x11, 0xd0, 0xee,
+	0x62, 0x19, 0x25, 0x11, 0x2a, 0x25, 0x34, 0x4e, 0x3c, 0x1a, 0x36, 0x3b, 0x9e, 0x9f, 0xbc, 0x4e,
+	0xed, 0xae, 0x13, 0xcd, 0x7b, 0x5e, 0xe4, 0x45, 0x3d, 0x3e, 0x6f, 0xa7, 0x33, 0x3e, 0xe2, 0x03,
+	0x8e, 0x04, 0xaf, 0xf9, 0x7d, 0x2e, 0x7d, 0x1e, 0xd9, 0x7e, 0x40, 0x5d, 0x8f, 0xfe, 0xd1, 0x63,
+	0xbf, 0x1d, 0x27, 0x88, 0x52, 0xb7, 0xe7, 0x76, 0xe6, 0xd3, 0xc4, 0x79, 0xdd, 0xa1, 0xa1, 0xe7,
+	0x87, 0xb4, 0xe7, 0xce, 0x69, 0x47, 0xa8, 0x04, 0x91, 0x23, 0x45, 0x0e, 0x3f, 0x28, 0xc2, 0xf3,
+	0x3c, 0x1a, 0x2a, 0x20, 0x98, 0xed, 0x67, 0xb0, 0x76, 0x46, 0xe3, 0x84, 0xba, 0x13, 0x1a, 0xc7,
+	0x53, 0x8f, 0x22, 0x04, 0xb7, 0xc3, 0xe9, 0x9c, 0x62, 0x60, 0x02, 0xab, 0x4c, 0x38, 0x6e, 0xbf,
+	0x81, 0xf5, 0x93, 0xd0, 0x09, 0x52, 0x97, 0x6e, 0xc8, 0x42, 0x75, 0xa8, 0xf9, 0x2e, 0xd6, 0x4c,
+	0x60, 0x6d, 0x13, 0xcd, 0x77, 0xd1, 0x0b, 0x08, 0x43, 0x2e, 0x7d, 0x39, 0x8f, 0x3d, 0xac, 0x9b,
+	0xc0, 0xaa, 0xf4, 0xf7, 0xbb, 0xf2, 0x98, 0xba, 0x2b, 0xab, 0x92, 0xb2, 0xc8, 0x9c, 0xc4, 0x5e,
+	0xfb, 0x08, 0xd6, 0xe4, 0x62, 0x3f, 0xfa, 0x34, 0x70, 0x63, 0xb4, 0x0f, 0x8b, 0x33, 0x8e, 0xf8,
+	0x6a, 0x55, 0x22, 0x47, 0xca, 0x83, 0x96, 0x73, 0xfa, 0x67, 0x03, 0x96, 0x2e, 0x68, 0x9c, 0xfc,
+	0x44, 0xc3, 0x15, 0x9e, 0x6e, 0x95, 0x37, 0xf1, 0x98, 0x77, 0xd7, 0xe6, 0x1e, 0x01, 0xd1, 0x5c,
+	0x9b, 0x8d, 0x67, 0x01, 0xde, 0x36, 0x81, 0xa5, 0x11, 0x6d, 0x16, 0x20, 0x03, 0xea, 0xfe, 0xa0,
+	0x8f, 0x0b, 0x26, 0xb0, 0x0a, 0x84, 0x41, 0x1e, 0x19, 0x0d, 0x71, 0xd1, 0x04, 0x96, 0x4e, 0x18,
+	0x64, 0x91, 0x74, 0xd0, 0xc7, 0x25, 0x13, 0x58, 0x35, 0xc2, 0x20, 0x8f, 0x8c, 0x86, 0x78, 0x87,
+	0x1f, 0x09, 0x83, 0x2c, 0x12, 0x0f, 0xfa, 0xb8, 0x6c, 0x02, 0x6b, 0x97, 0x30, 0xc8, 0x23, 0xa3,
+	0x21, 0x86, 0x26, 0xb0, 0x10, 0x61, 0x90, 0x45, 0x66, 0x83, 0x3e, 0xae, 0x98, 0xc0, 0x2a, 0x11,
+	0x06, 0x79, 0x64, 0x34, 0xc4, 0x55, 0x13, 0x58, 0x45, 0xc2, 0x20, 0xdb, 0x43, 0xcc, 0x92, 0x6a,
+	0x26, 0xb0, 0x1a, 0x84, 0x63, 0x11, 0x1b, 0x0d, 0x71, 0xdd, 0x04, 0x96, 0x41, 0x38, 0x66, 0xfb,
+	0xb0, 0x6d, 0xdc, 0x30, 0x81, 0xb5, 0x43, 0x34, 0xdb, 0x46, 0x1d, 0xb8, 0x13, 0xa5, 0x09, 0x5d,
+	0x5e, 0xd2, 0x10, 0x1b, 0x26, 0xb0, 0xea, 0x7d, 0xa4, 0x2a, 0x72, 0xce, 0x26, 0x8e, 0xc3, 0x74,
+	0x4e, 0x4a, 0x91, 0x80, 0xe8, 0x05, 0xdc, 0xf1, 0xc3, 0x50, 0xa4, 0xef, 0xf2, 0xf4, 0xa6, 0x4a,
+	0x97, 0xc7, 0xdc, 0x3d, 0x61, 0x09, 0x82, 0xe6, 0x0b, 0x88, 0xc6, 0xb0, 0x2c, 0x68, 0xac, 0xf0,
+	0x88, 0x17, 0xfe, 0xf1, 0xed, 0xbc, 0xac, 0xfe, 0x62, 0x99, 0x49, 0xec, 0xa1, 0x73, 0xb8, 0xab,
+	0xb8, 0x97, 0x61, 0x14, 0x86, 0x69, 0x10, 0xe0, 0x07, 0xf7, 0xd0, 0x78, 0xb9, 0x7d, 0xf5, 0xf7,
+	0x93, 0x2d, 0xd2, 0xc8, 0x94, 0xce, 0x04, 0x17, 0x1d, 0xc2, 0x8a, 0x2f, 0xee, 0x13, 0xb7, 0xb3,
+	0xc7, 0xa5, 0x0e, 0x94, 0xd4, 0xea, 0xc5, 0x26, 0x50, 0xe6, 0x32, 0x2b, 0x13, 0xf8, 0x20, 0xc7,
+	0x54, 0x66, 0x1e, 0x6e, 0x54, 0x90, 0x36, 0x76, 0x6f, 0x74, 0x32, 0x23, 0x5f, 0xc3, 0x7a, 0x26,
+	0x27, 0xef, 0xe5, 0xfe, 0x5a, 0x4f, 0xac, 0xdc, 0x7b, 0x52, 0xf3, 0x57, 0xda, 0x80, 0xc0, 0xfd,
+	0x55, 0xba, 0x32, 0x74, 0xb0, 0x49, 0x46, 0xfa, 0xd9, 0x5b, 0x11, 0xcb, 0x2c, 0xf5, 0xa0, 0x1e,
+	0x44, 0x0e, 0xc6, 0xf2, 0x78, 0x5d, 0x3f, 0x4e, 0x96, 0xbe, 0x9d, 0xf2, 0x9e, 0x65, 0xdf, 0x9c,
+	0x4b, 0xf1, 0xcd, 0xe9, 0x9e, 0x46, 0x0e, 0x61, 0x99, 0xe8, 0x07, 0x58, 0x09, 0x22, 0x47, 0xad,
+	0xfc, 0xd1, 0x3d, 0x88, 0xd2, 0x00, 0x0c, 0x22, 0x27, 0x5b, 0xf6, 0x29, 0xac, 0x2e, 0xe9, 0x82,
+	0x4e, 0x59, 0xba, 0x1f, 0x26, 0xb8, 0x69, 0xea, 0x96, 0x4e, 0x2a, 0x59, 0xec, 0x24, 0x4c, 0xf8,
+	0xc7, 0x64, 0x81, 0x3f, 0xe6, 0x0d, 0xaf, 0xf9, 0x0b, 0xb4, 0x07, 0x0b, 0xac, 0x51, 0x63, 0xfc,
+	0x88, 0xf7, 0xb2, 0x18, 0xa0, 0x71, 0x4e, 0x88, 0x15, 0xf7, 0xb1, 0xa9, 0x6f, 0x2a, 0xae, 0x5a,
+	0x41, 0x5c, 0xb4, 0xbd, 0x3c, 0x57, 0xed, 0xa9, 0xb5, 0x51, 0x43, 0xee, 0x06, 0xe5, 0x94, 0xb2,
+	0x5d, 0x7d, 0x03, 0x1b, 0x4a, 0x50, 0x16, 0xf8, 0x09, 0xd7, 0xba, 0xab, 0xc0, 0xf5, 0x2c, 0x5d,
+	0x56, 0xf8, 0x02, 0x1e, 0xac, 0x09, 0x28, 0x53, 0xe6, 0x26, 0x21, 0xe9, 0xe9, 0xe1, 0xaa, 0x5c,
+	0x66, 0xeb, 0x67, 0x88, 0x72, 0x87, 0x9d, 0x75, 0xe5, 0x53, 0x2e, 0xf8, 0x81, 0xae, 0x34, 0x6e,
+	0x2a, 0x22, 0xbb, 0xf3, 0x57, 0xd8, 0x7c, 0x5f, 0x4c, 0xb9, 0x6c, 0xdf, 0x43, 0x54, 0x9a, 0x3d,
+	0x58, 0x97, 0xce, 0xec, 0x7e, 0x9b, 0x2b, 0x29, 0xbb, 0x9b, 0xcf, 0xa4, 0xe6, 0xc6, 0xbb, 0xa9,
+	0x0a, 0x7b, 0x1a, 0x39, 0xe8, 0x55, 0xae, 0xb0, 0xf9, 0xcb, 0xfa, 0xc9, 0x3d, 0x94, 0xd6, 0xcb,
+	0x7b, 0x7a, 0x73, 0x69, 0x87, 0xb0, 0xe8, 0x87, 0xc9, 0x64, 0xba, 0xc0, 0x9f, 0x72, 0xa1, 0x47,
+	0xb7, 0x6c, 0x93, 0x4d, 0x1f, 0x87, 0xc9, 0xf2, 0x2d, 0x91, 0xb9, 0x8c, 0x35, 0x8f, 0x3d, 0xc6,
+	0xfa, 0xec, 0x0e, 0xd6, 0x84, 0x4f, 0x4b, 0x96, 0xc8, 0x6d, 0x3e, 0x87, 0xd5, 0xfc, 0x99, 0xf1,
+	0x87, 0x64, 0x19, 0xc8, 0xd7, 0x96, 0xc1, 0xdc, 0x63, 0xab, 0xb3, 0xc7, 0xb6, 0xf9, 0x15, 0xac,
+	0xe4, 0x96, 0x67, 0x84, 0x37, 0xf4, 0x2d, 0x27, 0x14, 0x08, 0x83, 0xac, 0x81, 0x7e, 0x9f, 0x06,
+	0xa9, 0x78, 0xf6, 0x0a, 0x44, 0x0c, 0xc6, 0xda, 0x21, 0x68, 0xfe, 0x02, 0x2b, 0x39, 0x0f, 0xb7,
+	0x50, 0xbf, 0xc8, 0x53, 0xef, 0x7e, 0xc3, 0x6f, 0x24, 0xdb, 0x47, 0xb0, 0xac, 0x9e, 0x05, 0x04,
+	0x61, 0xf1, 0xe4, 0xec, 0xec, 0x98, 0x3c, 0x37, 0xb6, 0x14, 0xfe, 0xd2, 0x00, 0x0a, 0xf7, 0x0d,
+	0x4d, 0xe1, 0x81, 0xa1, 0x8f, 0xb7, 0xff, 0xfb, 0x1f, 0x83, 0xcf, 0x8f, 0x60, 0x59, 0x3d, 0x48,
+	0x6c, 0xfa, 0xfc, 0xd5, 0x85, 0x92, 0xe0, 0x58, 0x4a, 0x70, 0x2c, 0x25, 0x38, 0x1e, 0x18, 0x7a,
+	0x7f, 0x2c, 0xfe, 0x05, 0x7c, 0xb7, 0xf0, 0x51, 0x0f, 0x96, 0x08, 0xfd, 0x2d, 0xa5, 0x71, 0x82,
+	0x8c, 0xf5, 0xb3, 0x6f, 0xbe, 0x17, 0x69, 0x6f, 0xbd, 0x34, 0xae, 0xfe, 0x6d, 0x6d, 0x5d, 0x5d,
+	0xb7, 0xc0, 0x5f, 0xd7, 0x2d, 0xf0, 0xcf, 0x75, 0x0b, 0xd8, 0x45, 0xfe, 0x57, 0x69, 0xf0, 0x2e,
+	0x00, 0x00, 0xff, 0xff, 0xfa, 0x05, 0x6e, 0xcd, 0xf1, 0x09, 0x00, 0x00,
 }

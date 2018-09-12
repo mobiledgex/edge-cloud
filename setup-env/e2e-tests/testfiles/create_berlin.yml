@@ -1,0 +1,9 @@
+##
+##
+description: Adds provisioning 
+
+tests:
+
+- name: create provisioning
+  apifile: "{{datadir}}/appdata_sdk_demo3_berlin.yml"
+  actions: [ctrlapi-create,ctrlapi-show]

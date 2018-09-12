@@ -28,7 +28,7 @@ var _ status.Status
 var _ = runtime.String
 var _ = utilities.NewDoubleArray
 
-func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_CreateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -36,12 +36,20 @@ func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.CreateCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.CreateCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_DeleteCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -49,12 +57,20 @@ func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.DeleteCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.DeleteCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
-func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletApiClient, req *http.Request, pathParams map[string]string) (CloudletApi_UpdateCloudletClient, runtime.ServerMetadata, error) {
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
@@ -62,8 +78,16 @@ func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.UpdateCloudlet(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
+	stream, err := client.UpdateCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
 
 }
 
@@ -76,6 +100,48 @@ func request_CloudletApi_ShowCloudlet_0(ctx context.Context, marshaler runtime.M
 	}
 
 	stream, err := client.ShowCloudlet(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
+func request_CloudletInfoApi_ShowCloudletInfo_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletInfoApiClient, req *http.Request, pathParams map[string]string) (CloudletInfoApi_ShowCloudletInfoClient, runtime.ServerMetadata, error) {
+	var protoReq CloudletInfo
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowCloudletInfo(ctx, &protoReq)
+	if err != nil {
+		return nil, metadata, err
+	}
+	header, err := stream.Header()
+	if err != nil {
+		return nil, metadata, err
+	}
+	metadata.HeaderMD = header
+	return stream, metadata, nil
+
+}
+
+func request_CloudletMetricsApi_ShowCloudletMetrics_0(ctx context.Context, marshaler runtime.Marshaler, client CloudletMetricsApiClient, req *http.Request, pathParams map[string]string) (CloudletMetricsApi_ShowCloudletMetricsClient, runtime.ServerMetadata, error) {
+	var protoReq CloudletMetrics
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	stream, err := client.ShowCloudletMetrics(ctx, &protoReq)
 	if err != nil {
 		return nil, metadata, err
 	}
@@ -151,7 +217,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_CreateCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_CreateCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -180,7 +246,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_DeleteCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_DeleteCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -209,7 +275,7 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 			return
 		}
 
-		forward_CloudletApi_UpdateCloudlet_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_CloudletApi_UpdateCloudlet_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -246,21 +312,177 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 }
 
 var (
-	pattern_CloudletApi_CreateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "developer"}, ""))
+	pattern_CloudletApi_CreateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"create", "cloudlet"}, ""))
 
-	pattern_CloudletApi_DeleteCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "developer"}, ""))
+	pattern_CloudletApi_DeleteCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"delete", "cloudet"}, ""))
 
-	pattern_CloudletApi_UpdateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "developer"}, ""))
+	pattern_CloudletApi_UpdateCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"update", "cloudlet"}, ""))
 
-	pattern_CloudletApi_ShowCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "developer"}, ""))
+	pattern_CloudletApi_ShowCloudlet_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudlet"}, ""))
 )
 
 var (
-	forward_CloudletApi_CreateCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_CreateCloudlet_0 = runtime.ForwardResponseStream
 
-	forward_CloudletApi_DeleteCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_DeleteCloudlet_0 = runtime.ForwardResponseStream
 
-	forward_CloudletApi_UpdateCloudlet_0 = runtime.ForwardResponseMessage
+	forward_CloudletApi_UpdateCloudlet_0 = runtime.ForwardResponseStream
 
 	forward_CloudletApi_ShowCloudlet_0 = runtime.ForwardResponseStream
+)
+
+// RegisterCloudletInfoApiHandlerFromEndpoint is same as RegisterCloudletInfoApiHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterCloudletInfoApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterCloudletInfoApiHandler(ctx, mux, conn)
+}
+
+// RegisterCloudletInfoApiHandler registers the http handlers for service CloudletInfoApi to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterCloudletInfoApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterCloudletInfoApiHandlerClient(ctx, mux, NewCloudletInfoApiClient(conn))
+}
+
+// RegisterCloudletInfoApiHandler registers the http handlers for service CloudletInfoApi to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "CloudletInfoApiClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletInfoApiClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "CloudletInfoApiClient" to call the correct interceptors.
+func RegisterCloudletInfoApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CloudletInfoApiClient) error {
+
+	mux.Handle("POST", pattern_CloudletInfoApi_ShowCloudletInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CloudletInfoApi_ShowCloudletInfo_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletInfoApi_ShowCloudletInfo_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_CloudletInfoApi_ShowCloudletInfo_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletinfo"}, ""))
+)
+
+var (
+	forward_CloudletInfoApi_ShowCloudletInfo_0 = runtime.ForwardResponseStream
+)
+
+// RegisterCloudletMetricsApiHandlerFromEndpoint is same as RegisterCloudletMetricsApiHandler but
+// automatically dials to "endpoint" and closes the connection when "ctx" gets done.
+func RegisterCloudletMetricsApiHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+			return
+		}
+		go func() {
+			<-ctx.Done()
+			if cerr := conn.Close(); cerr != nil {
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+			}
+		}()
+	}()
+
+	return RegisterCloudletMetricsApiHandler(ctx, mux, conn)
+}
+
+// RegisterCloudletMetricsApiHandler registers the http handlers for service CloudletMetricsApi to "mux".
+// The handlers forward requests to the grpc endpoint over "conn".
+func RegisterCloudletMetricsApiHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.ClientConn) error {
+	return RegisterCloudletMetricsApiHandlerClient(ctx, mux, NewCloudletMetricsApiClient(conn))
+}
+
+// RegisterCloudletMetricsApiHandler registers the http handlers for service CloudletMetricsApi to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "CloudletMetricsApiClient".
+// Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletMetricsApiClient"
+// doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
+// "CloudletMetricsApiClient" to call the correct interceptors.
+func RegisterCloudletMetricsApiHandlerClient(ctx context.Context, mux *runtime.ServeMux, client CloudletMetricsApiClient) error {
+
+	mux.Handle("POST", pattern_CloudletMetricsApi_ShowCloudletMetrics_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_CloudletMetricsApi_ShowCloudletMetrics_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_CloudletMetricsApi_ShowCloudletMetrics_0(ctx, mux, outboundMarshaler, w, req, func() (proto.Message, error) { return resp.Recv() }, mux.GetForwardResponseOptions()...)
+
+	})
+
+	return nil
+}
+
+var (
+	pattern_CloudletMetricsApi_ShowCloudletMetrics_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"show", "cloudletmetrics"}, ""))
+)
+
+var (
+	forward_CloudletMetricsApi_ShowCloudletMetrics_0 = runtime.ForwardResponseStream
 )

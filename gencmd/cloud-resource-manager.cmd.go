@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -14,9 +13,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
-import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -30,9 +27,27 @@ var _ = math.Inf
 var CloudResourceManagerCmd edgeproto.CloudResourceManagerClient
 var CloudResourceIn edgeproto.CloudResource
 var CloudResourceFlagSet = pflag.NewFlagSet("CloudResource", pflag.ExitOnError)
+var CloudResourceNoConfigFlagSet = pflag.NewFlagSet("CloudResourceNoConfig", pflag.ExitOnError)
 var CloudResourceInCategory string
 var EdgeCloudApplicationIn edgeproto.EdgeCloudApplication
 var EdgeCloudApplicationFlagSet = pflag.NewFlagSet("EdgeCloudApplication", pflag.ExitOnError)
+var EdgeCloudApplicationNoConfigFlagSet = pflag.NewFlagSet("EdgeCloudApplicationNoConfig", pflag.ExitOnError)
+var CloudResourceCategoryStrings = []string{
+	"AllCloudResources",
+	"Kubernetes",
+	"k8s",
+	"Mesos",
+	"AWS",
+	"GCP",
+	"Azure",
+	"DigitalOcean",
+	"PacketNet",
+	"OpenStack",
+	"Docker",
+	"EKS",
+	"AKS",
+	"GKS",
+}
 
 func CloudResourceSlicer(in *edgeproto.CloudResource) []string {
 	s := make([]string, 0, 6)
@@ -67,6 +82,29 @@ func CloudResourceHeaderSlicer() []string {
 	return s
 }
 
+func CloudResourceWriteOutputArray(objs []*edgeproto.CloudResource) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudResourceHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudResourceSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudResourceWriteOutputOne(obj *edgeproto.CloudResource) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudResourceHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudResourceSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func EdgeCloudAppSlicer(in *edgeproto.EdgeCloudApp) []string {
 	s := make([]string, 0, 14)
 	s = append(s, in.Name)
@@ -118,6 +156,29 @@ func EdgeCloudAppHeaderSlicer() []string {
 	return s
 }
 
+func EdgeCloudAppWriteOutputArray(objs []*edgeproto.EdgeCloudApp) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(EdgeCloudAppHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(EdgeCloudAppSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func EdgeCloudAppWriteOutputOne(obj *edgeproto.EdgeCloudApp) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(EdgeCloudAppHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(EdgeCloudAppSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func EdgeCloudApplicationSlicer(in *edgeproto.EdgeCloudApplication) []string {
 	s := make([]string, 0, 3)
 	s = append(s, in.Manifest)
@@ -179,25 +240,47 @@ func EdgeCloudApplicationHeaderSlicer() []string {
 	return s
 }
 
+func EdgeCloudApplicationWriteOutputArray(objs []*edgeproto.EdgeCloudApplication) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(EdgeCloudApplicationHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(EdgeCloudApplicationSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func EdgeCloudApplicationWriteOutputOne(obj *edgeproto.EdgeCloudApplication) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(EdgeCloudApplicationHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(EdgeCloudApplicationSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var ListCloudResourceCmd = &cobra.Command{
 	Use: "ListCloudResource",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudResourceManagerCmd == nil {
-			fmt.Println("CloudResourceManager client not initialized")
-			return
+			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
 		err = parseCloudResourceEnums()
 		if err != nil {
-			fmt.Println("ListCloudResource: ", err)
-			return
+			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			fmt.Println("ListCloudResource failed: ", err)
-			return
+			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.CloudResource, 0)
 		for {
@@ -206,244 +289,113 @@ var ListCloudResourceCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ListCloudResource recv failed: ", err)
-				break
+				return fmt.Errorf("ListCloudResource recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(CloudResourceHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(CloudResourceSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		CloudResourceWriteOutputArray(objs)
+		return nil
 	},
 }
 
 var AddCloudResourceCmd = &cobra.Command{
 	Use: "AddCloudResource",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudResourceManagerCmd == nil {
-			fmt.Println("CloudResourceManager client not initialized")
-			return
+			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
 		err = parseCloudResourceEnums()
 		if err != nil {
-			fmt.Println("AddCloudResource: ", err)
-			return
+			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			fmt.Println("AddCloudResource failed: ", err)
-			return
+			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteCloudResourceCmd = &cobra.Command{
 	Use: "DeleteCloudResource",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudResourceManagerCmd == nil {
-			fmt.Println("CloudResourceManager client not initialized")
-			return
+			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
 		err = parseCloudResourceEnums()
 		if err != nil {
-			fmt.Println("DeleteCloudResource: ", err)
-			return
+			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			fmt.Println("DeleteCloudResource failed: ", err)
-			return
+			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeployApplicationCmd = &cobra.Command{
 	Use: "DeployApplication",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudResourceManagerCmd == nil {
-			fmt.Println("CloudResourceManager client not initialized")
-			return
+			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
 		if err != nil {
-			fmt.Println("DeployApplication failed: ", err)
-			return
+			return fmt.Errorf("DeployApplication failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteApplicationCmd = &cobra.Command{
 	Use: "DeleteApplication",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if CloudResourceManagerCmd == nil {
-			fmt.Println("CloudResourceManager client not initialized")
-			return
+			return fmt.Errorf("CloudResourceManager client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
 		if err != nil {
-			fmt.Println("DeleteApplication failed: ", err)
-			return
+			return fmt.Errorf("DeleteApplication failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
+}
+
+var CloudResourceManagerCmds = []*cobra.Command{
+	ListCloudResourceCmd,
+	AddCloudResourceCmd,
+	DeleteCloudResourceCmd,
+	DeployApplicationCmd,
+	DeleteApplicationCmd,
 }
 
 func init() {
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.Name, "name", "", "Name")
-	CloudResourceFlagSet.StringVar(&CloudResourceInCategory, "category", "", "CloudResourceInCategory")
+	CloudResourceFlagSet.StringVar(&CloudResourceInCategory, "category", "", "one of [AllCloudResources Kubernetes k8s Mesos AWS GCP Azure DigitalOcean PacketNet OpenStack Docker EKS AKS GKS]")
 	CloudResourceIn.CloudletKey = &edgeproto.CloudletKey{}
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.CloudletKey.OperatorKey.Name, "cloudletkey-operatorkey-name", "", "CloudletKey.OperatorKey.Name")
 	CloudResourceFlagSet.StringVar(&CloudResourceIn.CloudletKey.Name, "cloudletkey-name", "", "CloudletKey.Name")
@@ -452,28 +404,6 @@ func init() {
 	CloudResourceFlagSet.BytesHexVar(&CloudResourceIn.AccessIp, "accessip", nil, "AccessIp")
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Manifest, "manifest", "", "Manifest")
 	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Kind, "kind", "", "Kind")
-	EdgeCloudApplicationIn.Apps = make([]*edgeproto.EdgeCloudApp, 1)
-	EdgeCloudApplicationIn.Apps[0] = &edgeproto.EdgeCloudApp{}
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Name, "apps-name", "", "Apps[0].Name")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Repository, "apps-repository", "", "Apps[0].Repository")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Image, "apps-image", "", "Apps[0].Image")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Cpu, "apps-cpu", "", "Apps[0].Cpu")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Memory, "apps-memory", "", "Apps[0].Memory")
-	EdgeCloudApplicationFlagSet.Int32Var(&EdgeCloudApplicationIn.Apps[0].Limitfactor, "apps-limitfactor", 0, "Apps[0].Limitfactor")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Exposure, "apps-exposure", "", "Apps[0].Exposure")
-	EdgeCloudApplicationFlagSet.Int32Var(&EdgeCloudApplicationIn.Apps[0].Replicas, "apps-replicas", 0, "Apps[0].Replicas")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Context, "apps-context", "", "Apps[0].Context")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Namespace, "apps-namespace", "", "Apps[0].Namespace")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Region, "apps-region", "", "Apps[0].Region")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Flavor, "apps-flavor", "", "Apps[0].Flavor")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].Network, "apps-network", "", "Apps[0].Network")
-	EdgeCloudApplicationIn.Apps[0].AppInstKey = &edgeproto.AppInstKey{}
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.AppKey.DeveloperKey.Name, "apps-appinstkey-appkey-developerkey-name", "", "Apps[0].AppInstKey.AppKey.DeveloperKey.Name")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.AppKey.Name, "apps-appinstkey-appkey-name", "", "Apps[0].AppInstKey.AppKey.Name")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.AppKey.Version, "apps-appinstkey-appkey-version", "", "Apps[0].AppInstKey.AppKey.Version")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.CloudletKey.OperatorKey.Name, "apps-appinstkey-cloudletkey-operatorkey-name", "", "Apps[0].AppInstKey.CloudletKey.OperatorKey.Name")
-	EdgeCloudApplicationFlagSet.StringVar(&EdgeCloudApplicationIn.Apps[0].AppInstKey.CloudletKey.Name, "apps-appinstkey-cloudletkey-name", "", "Apps[0].AppInstKey.CloudletKey.Name")
-	EdgeCloudApplicationFlagSet.Uint64Var(&EdgeCloudApplicationIn.Apps[0].AppInstKey.Id, "apps-appinstkey-id", 0, "Apps[0].AppInstKey.Id")
 	ListCloudResourceCmd.Flags().AddFlagSet(CloudResourceFlagSet)
 	AddCloudResourceCmd.Flags().AddFlagSet(CloudResourceFlagSet)
 	DeleteCloudResourceCmd.Flags().AddFlagSet(CloudResourceFlagSet)
@@ -481,36 +411,44 @@ func init() {
 	DeleteApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationFlagSet)
 }
 
+func CloudResourceManagerAllowNoConfig() {
+	ListCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	AddCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	DeleteCloudResourceCmd.Flags().AddFlagSet(CloudResourceNoConfigFlagSet)
+	DeployApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationNoConfigFlagSet)
+	DeleteApplicationCmd.Flags().AddFlagSet(EdgeCloudApplicationNoConfigFlagSet)
+}
+
 func parseCloudResourceEnums() error {
 	if CloudResourceInCategory != "" {
 		switch CloudResourceInCategory {
-		case "allcloudresources":
+		case "AllCloudResources":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(0)
-		case "kubernetes":
+		case "Kubernetes":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(200)
 		case "k8s":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(200)
-		case "mesos":
+		case "Mesos":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(201)
-		case "aws":
+		case "AWS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(202)
-		case "gcp":
+		case "GCP":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(203)
-		case "azure":
+		case "Azure":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(204)
-		case "digitalocean":
+		case "DigitalOcean":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(205)
-		case "packetnet":
+		case "PacketNet":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(206)
-		case "openstack":
+		case "OpenStack":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(300)
-		case "docker":
+		case "Docker":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(301)
-		case "eks":
+		case "EKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(400)
-		case "aks":
+		case "AKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(402)
-		case "gks":
+		case "GKS":
 			CloudResourceIn.Category = edgeproto.CloudResourceCategory(403)
 		default:
 			return errors.New("Invalid value for CloudResourceInCategory")

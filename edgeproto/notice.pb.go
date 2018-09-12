@@ -13,6 +13,9 @@ import _ "github.com/gogo/protobuf/gogoproto"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "errors"
+import "strconv"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -20,13 +23,19 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// NoticeAction denotes what kind of action this notification is for.
 type NoticeAction int32
 
 const (
-	NoticeAction_NONE        NoticeAction = 0
-	NoticeAction_UPDATE      NoticeAction = 1
-	NoticeAction_DELETE      NoticeAction = 2
-	NoticeAction_VERSION     NoticeAction = 3
+	// No action
+	NoticeAction_NONE NoticeAction = 0
+	// Update the object
+	NoticeAction_UPDATE NoticeAction = 1
+	// Delete the object
+	NoticeAction_DELETE NoticeAction = 2
+	// Version exchange negotitation message
+	NoticeAction_VERSION NoticeAction = 3
+	// Initial send all finished message
 	NoticeAction_SENDALL_END NoticeAction = 4
 )
 
@@ -50,12 +59,16 @@ func (x NoticeAction) String() string {
 }
 func (NoticeAction) EnumDescriptor() ([]byte, []int) { return fileDescriptorNotice, []int{0} }
 
+// NoticeRequestor indicates which type of service the client is.
 type NoticeRequestor int32
 
 const (
+	// Invalid
 	NoticeRequestor_NoticeRequestorNone NoticeRequestor = 0
-	NoticeRequestor_NoticeRequestorDME  NoticeRequestor = 1
-	NoticeRequestor_NoticeRequestorCRM  NoticeRequestor = 2
+	// Distributed Matching Engine
+	NoticeRequestor_NoticeRequestorDME NoticeRequestor = 1
+	// Cloudlet Resource Manager
+	NoticeRequestor_NoticeRequestorCRM NoticeRequestor = 2
 )
 
 var NoticeRequestor_name = map[int32]string{
@@ -74,16 +87,20 @@ func (x NoticeRequestor) String() string {
 }
 func (NoticeRequestor) EnumDescriptor() ([]byte, []int) { return fileDescriptorNotice, []int{1} }
 
+// NoticyReply is sent from server to client.
 type NoticeReply struct {
-	// action to perform
+	// Action to perform
 	Action NoticeAction `protobuf:"varint,1,opt,name=action,proto3,enum=edgeproto.NoticeAction" json:"action,omitempty"`
-	// protocol version supported by sender
+	// Protocol version supported by sender
 	Version uint32 `protobuf:"varint,3,opt,name=version,proto3" json:"version,omitempty"`
-	// data included (for UPDATE and DELETE)
+	// Data included (for UPDATE and DELETE)
 	//
 	// Types that are valid to be assigned to Data:
 	//	*NoticeReply_AppInst
 	//	*NoticeReply_Cloudlet
+	//	*NoticeReply_Flavor
+	//	*NoticeReply_ClusterFlavor
+	//	*NoticeReply_ClusterInst
 	Data isNoticeReply_Data `protobuf_oneof:"data"`
 }
 
@@ -104,9 +121,21 @@ type NoticeReply_AppInst struct {
 type NoticeReply_Cloudlet struct {
 	Cloudlet *Cloudlet `protobuf:"bytes,5,opt,name=cloudlet,oneof"`
 }
+type NoticeReply_Flavor struct {
+	Flavor *Flavor `protobuf:"bytes,6,opt,name=flavor,oneof"`
+}
+type NoticeReply_ClusterFlavor struct {
+	ClusterFlavor *ClusterFlavor `protobuf:"bytes,8,opt,name=clusterFlavor,oneof"`
+}
+type NoticeReply_ClusterInst struct {
+	ClusterInst *ClusterInst `protobuf:"bytes,7,opt,name=clusterInst,oneof"`
+}
 
-func (*NoticeReply_AppInst) isNoticeReply_Data()  {}
-func (*NoticeReply_Cloudlet) isNoticeReply_Data() {}
+func (*NoticeReply_AppInst) isNoticeReply_Data()       {}
+func (*NoticeReply_Cloudlet) isNoticeReply_Data()      {}
+func (*NoticeReply_Flavor) isNoticeReply_Data()        {}
+func (*NoticeReply_ClusterFlavor) isNoticeReply_Data() {}
+func (*NoticeReply_ClusterInst) isNoticeReply_Data()   {}
 
 func (m *NoticeReply) GetData() isNoticeReply_Data {
 	if m != nil {
@@ -129,11 +158,35 @@ func (m *NoticeReply) GetCloudlet() *Cloudlet {
 	return nil
 }
 
+func (m *NoticeReply) GetFlavor() *Flavor {
+	if x, ok := m.GetData().(*NoticeReply_Flavor); ok {
+		return x.Flavor
+	}
+	return nil
+}
+
+func (m *NoticeReply) GetClusterFlavor() *ClusterFlavor {
+	if x, ok := m.GetData().(*NoticeReply_ClusterFlavor); ok {
+		return x.ClusterFlavor
+	}
+	return nil
+}
+
+func (m *NoticeReply) GetClusterInst() *ClusterInst {
+	if x, ok := m.GetData().(*NoticeReply_ClusterInst); ok {
+		return x.ClusterInst
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*NoticeReply) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _NoticeReply_OneofMarshaler, _NoticeReply_OneofUnmarshaler, _NoticeReply_OneofSizer, []interface{}{
 		(*NoticeReply_AppInst)(nil),
 		(*NoticeReply_Cloudlet)(nil),
+		(*NoticeReply_Flavor)(nil),
+		(*NoticeReply_ClusterFlavor)(nil),
+		(*NoticeReply_ClusterInst)(nil),
 	}
 }
 
@@ -149,6 +202,21 @@ func _NoticeReply_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *NoticeReply_Cloudlet:
 		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.Cloudlet); err != nil {
+			return err
+		}
+	case *NoticeReply_Flavor:
+		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Flavor); err != nil {
+			return err
+		}
+	case *NoticeReply_ClusterFlavor:
+		_ = b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ClusterFlavor); err != nil {
+			return err
+		}
+	case *NoticeReply_ClusterInst:
+		_ = b.EncodeVarint(7<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ClusterInst); err != nil {
 			return err
 		}
 	case nil:
@@ -177,6 +245,30 @@ func _NoticeReply_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Bu
 		err := b.DecodeMessage(msg)
 		m.Data = &NoticeReply_Cloudlet{msg}
 		return true, err
+	case 6: // data.flavor
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Flavor)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeReply_Flavor{msg}
+		return true, err
+	case 8: // data.clusterFlavor
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ClusterFlavor)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeReply_ClusterFlavor{msg}
+		return true, err
+	case 7: // data.clusterInst
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ClusterInst)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeReply_ClusterInst{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -196,6 +288,21 @@ func _NoticeReply_OneofSizer(msg proto.Message) (n int) {
 		n += proto.SizeVarint(5<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
+	case *NoticeReply_Flavor:
+		s := proto.Size(x.Flavor)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NoticeReply_ClusterFlavor:
+		s := proto.Size(x.ClusterFlavor)
+		n += proto.SizeVarint(8<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NoticeReply_ClusterInst:
+		s := proto.Size(x.ClusterInst)
+		n += proto.SizeVarint(7<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
@@ -203,21 +310,201 @@ func _NoticeReply_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
+// NoticeRequest is sent from client to server.
 type NoticeRequest struct {
-	// action
+	// Action to perform
 	Action NoticeAction `protobuf:"varint,1,opt,name=action,proto3,enum=edgeproto.NoticeAction" json:"action,omitempty"`
-	// protocol version supported by receiver
+	// Protocol version supported by receiver
 	Version uint32 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
-	// client requestor type
+	// Client requestor type
 	Requestor NoticeRequestor `protobuf:"varint,3,opt,name=requestor,proto3,enum=edgeproto.NoticeRequestor" json:"requestor,omitempty"`
-	// revision of database
+	// Revision of database
 	Revision uint64 `protobuf:"varint,4,opt,name=revision,proto3" json:"revision,omitempty"`
+	// Data included (UPDATE)
+	//
+	// Types that are valid to be assigned to Data:
+	//	*NoticeRequest_CloudletInfo
+	//	*NoticeRequest_AppInstInfo
+	//	*NoticeRequest_ClusterInstInfo
+	//	*NoticeRequest_Metric
+	Data isNoticeRequest_Data `protobuf_oneof:"data"`
 }
 
 func (m *NoticeRequest) Reset()                    { *m = NoticeRequest{} }
 func (m *NoticeRequest) String() string            { return proto.CompactTextString(m) }
 func (*NoticeRequest) ProtoMessage()               {}
 func (*NoticeRequest) Descriptor() ([]byte, []int) { return fileDescriptorNotice, []int{1} }
+
+type isNoticeRequest_Data interface {
+	isNoticeRequest_Data()
+	MarshalTo([]byte) (int, error)
+	Size() int
+}
+
+type NoticeRequest_CloudletInfo struct {
+	CloudletInfo *CloudletInfo `protobuf:"bytes,5,opt,name=cloudletInfo,oneof"`
+}
+type NoticeRequest_AppInstInfo struct {
+	AppInstInfo *AppInstInfo `protobuf:"bytes,6,opt,name=appInstInfo,oneof"`
+}
+type NoticeRequest_ClusterInstInfo struct {
+	ClusterInstInfo *ClusterInstInfo `protobuf:"bytes,7,opt,name=clusterInstInfo,oneof"`
+}
+type NoticeRequest_Metric struct {
+	Metric *Metric `protobuf:"bytes,8,opt,name=metric,oneof"`
+}
+
+func (*NoticeRequest_CloudletInfo) isNoticeRequest_Data()    {}
+func (*NoticeRequest_AppInstInfo) isNoticeRequest_Data()     {}
+func (*NoticeRequest_ClusterInstInfo) isNoticeRequest_Data() {}
+func (*NoticeRequest_Metric) isNoticeRequest_Data()          {}
+
+func (m *NoticeRequest) GetData() isNoticeRequest_Data {
+	if m != nil {
+		return m.Data
+	}
+	return nil
+}
+
+func (m *NoticeRequest) GetCloudletInfo() *CloudletInfo {
+	if x, ok := m.GetData().(*NoticeRequest_CloudletInfo); ok {
+		return x.CloudletInfo
+	}
+	return nil
+}
+
+func (m *NoticeRequest) GetAppInstInfo() *AppInstInfo {
+	if x, ok := m.GetData().(*NoticeRequest_AppInstInfo); ok {
+		return x.AppInstInfo
+	}
+	return nil
+}
+
+func (m *NoticeRequest) GetClusterInstInfo() *ClusterInstInfo {
+	if x, ok := m.GetData().(*NoticeRequest_ClusterInstInfo); ok {
+		return x.ClusterInstInfo
+	}
+	return nil
+}
+
+func (m *NoticeRequest) GetMetric() *Metric {
+	if x, ok := m.GetData().(*NoticeRequest_Metric); ok {
+		return x.Metric
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*NoticeRequest) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _NoticeRequest_OneofMarshaler, _NoticeRequest_OneofUnmarshaler, _NoticeRequest_OneofSizer, []interface{}{
+		(*NoticeRequest_CloudletInfo)(nil),
+		(*NoticeRequest_AppInstInfo)(nil),
+		(*NoticeRequest_ClusterInstInfo)(nil),
+		(*NoticeRequest_Metric)(nil),
+	}
+}
+
+func _NoticeRequest_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*NoticeRequest)
+	// data
+	switch x := m.Data.(type) {
+	case *NoticeRequest_CloudletInfo:
+		_ = b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CloudletInfo); err != nil {
+			return err
+		}
+	case *NoticeRequest_AppInstInfo:
+		_ = b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.AppInstInfo); err != nil {
+			return err
+		}
+	case *NoticeRequest_ClusterInstInfo:
+		_ = b.EncodeVarint(7<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ClusterInstInfo); err != nil {
+			return err
+		}
+	case *NoticeRequest_Metric:
+		_ = b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Metric); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("NoticeRequest.Data has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _NoticeRequest_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*NoticeRequest)
+	switch tag {
+	case 5: // data.cloudletInfo
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CloudletInfo)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeRequest_CloudletInfo{msg}
+		return true, err
+	case 6: // data.appInstInfo
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(AppInstInfo)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeRequest_AppInstInfo{msg}
+		return true, err
+	case 7: // data.clusterInstInfo
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ClusterInstInfo)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeRequest_ClusterInstInfo{msg}
+		return true, err
+	case 8: // data.metric
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Metric)
+		err := b.DecodeMessage(msg)
+		m.Data = &NoticeRequest_Metric{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _NoticeRequest_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*NoticeRequest)
+	// data
+	switch x := m.Data.(type) {
+	case *NoticeRequest_CloudletInfo:
+		s := proto.Size(x.CloudletInfo)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NoticeRequest_AppInstInfo:
+		s := proto.Size(x.AppInstInfo)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NoticeRequest_ClusterInstInfo:
+		s := proto.Size(x.ClusterInstInfo)
+		n += proto.SizeVarint(7<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *NoticeRequest_Metric:
+		s := proto.Size(x.Metric)
+		n += proto.SizeVarint(8<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
 
 func init() {
 	proto.RegisterType((*NoticeReply)(nil), "edgeproto.NoticeReply")
@@ -237,7 +524,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for NotifyApi service
 
 type NotifyApiClient interface {
-	// Stream notice sends info from Server to Client
+	// Bidrectional stream for exchanging data between controller and DME/CRM
 	StreamNotice(ctx context.Context, opts ...grpc.CallOption) (NotifyApi_StreamNoticeClient, error)
 }
 
@@ -283,7 +570,7 @@ func (x *notifyApiStreamNoticeClient) Recv() (*NoticeReply, error) {
 // Server API for NotifyApi service
 
 type NotifyApiServer interface {
-	// Stream notice sends info from Server to Client
+	// Bidrectional stream for exchanging data between controller and DME/CRM
 	StreamNotice(NotifyApi_StreamNoticeServer) error
 }
 
@@ -395,6 +682,48 @@ func (m *NoticeReply_Cloudlet) MarshalTo(dAtA []byte) (int, error) {
 	}
 	return i, nil
 }
+func (m *NoticeReply_Flavor) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Flavor != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.Flavor.Size()))
+		n4, err := m.Flavor.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+func (m *NoticeReply_ClusterInst) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ClusterInst != nil {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.ClusterInst.Size()))
+		n5, err := m.ClusterInst.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
+	}
+	return i, nil
+}
+func (m *NoticeReply_ClusterFlavor) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ClusterFlavor != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.ClusterFlavor.Size()))
+		n6, err := m.ClusterFlavor.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n6
+	}
+	return i, nil
+}
 func (m *NoticeRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -430,9 +759,72 @@ func (m *NoticeRequest) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintNotice(dAtA, i, uint64(m.Revision))
 	}
+	if m.Data != nil {
+		nn7, err := m.Data.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += nn7
+	}
 	return i, nil
 }
 
+func (m *NoticeRequest_CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.CloudletInfo != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.CloudletInfo.Size()))
+		n8, err := m.CloudletInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n8
+	}
+	return i, nil
+}
+func (m *NoticeRequest_AppInstInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.AppInstInfo != nil {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.AppInstInfo.Size()))
+		n9, err := m.AppInstInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n9
+	}
+	return i, nil
+}
+func (m *NoticeRequest_ClusterInstInfo) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.ClusterInstInfo != nil {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.ClusterInstInfo.Size()))
+		n10, err := m.ClusterInstInfo.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n10
+	}
+	return i, nil
+}
+func (m *NoticeRequest_Metric) MarshalTo(dAtA []byte) (int, error) {
+	i := 0
+	if m.Metric != nil {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintNotice(dAtA, i, uint64(m.Metric.Size()))
+		n11, err := m.Metric.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n11
+	}
+	return i, nil
+}
 func encodeVarintNotice(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -452,6 +844,86 @@ func (m *NoticeRequest) CopyInFields(src *NoticeRequest) {
 	m.Version = src.Version
 	m.Requestor = src.Requestor
 	m.Revision = src.Revision
+}
+
+var NoticeActionStrings = []string{
+	"NONE",
+	"UPDATE",
+	"DELETE",
+	"VERSION",
+	"SENDALL_END",
+}
+
+const (
+	NoticeActionNONE        uint64 = 1 << 0
+	NoticeActionUPDATE      uint64 = 1 << 1
+	NoticeActionDELETE      uint64 = 1 << 2
+	NoticeActionVERSION     uint64 = 1 << 3
+	NoticeActionSENDALL_END uint64 = 1 << 4
+)
+
+func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := NoticeAction_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = NoticeAction_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NoticeAction(val)
+	return nil
+}
+
+func (e NoticeAction) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var NoticeRequestorStrings = []string{
+	"NoticeRequestorNone",
+	"NoticeRequestorDME",
+	"NoticeRequestorCRM",
+}
+
+const (
+	NoticeRequestorNoticeRequestorNone uint64 = 1 << 0
+	NoticeRequestorNoticeRequestorDME  uint64 = 1 << 1
+	NoticeRequestorNoticeRequestorCRM  uint64 = 1 << 2
+)
+
+func (e *NoticeRequestor) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := NoticeRequestor_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = NoticeRequestor_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NoticeRequestor(val)
+	return nil
+}
+
+func (e NoticeRequestor) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
 }
 
 func (m *NoticeReply) Size() (n int) {
@@ -487,6 +959,33 @@ func (m *NoticeReply_Cloudlet) Size() (n int) {
 	}
 	return n
 }
+func (m *NoticeReply_Flavor) Size() (n int) {
+	var l int
+	_ = l
+	if m.Flavor != nil {
+		l = m.Flavor.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
+func (m *NoticeReply_ClusterInst) Size() (n int) {
+	var l int
+	_ = l
+	if m.ClusterInst != nil {
+		l = m.ClusterInst.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
+func (m *NoticeReply_ClusterFlavor) Size() (n int) {
+	var l int
+	_ = l
+	if m.ClusterFlavor != nil {
+		l = m.ClusterFlavor.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
 func (m *NoticeRequest) Size() (n int) {
 	var l int
 	_ = l
@@ -501,6 +1000,46 @@ func (m *NoticeRequest) Size() (n int) {
 	}
 	if m.Revision != 0 {
 		n += 1 + sovNotice(uint64(m.Revision))
+	}
+	if m.Data != nil {
+		n += m.Data.Size()
+	}
+	return n
+}
+
+func (m *NoticeRequest_CloudletInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.CloudletInfo != nil {
+		l = m.CloudletInfo.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
+func (m *NoticeRequest_AppInstInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.AppInstInfo != nil {
+		l = m.AppInstInfo.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
+func (m *NoticeRequest_ClusterInstInfo) Size() (n int) {
+	var l int
+	_ = l
+	if m.ClusterInstInfo != nil {
+		l = m.ClusterInstInfo.Size()
+		n += 1 + l + sovNotice(uint64(l))
+	}
+	return n
+}
+func (m *NoticeRequest_Metric) Size() (n int) {
+	var l int
+	_ = l
+	if m.Metric != nil {
+		l = m.Metric.Size()
+		n += 1 + l + sovNotice(uint64(l))
 	}
 	return n
 }
@@ -649,6 +1188,102 @@ func (m *NoticeReply) Unmarshal(dAtA []byte) error {
 			}
 			m.Data = &NoticeReply_Cloudlet{v}
 			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Flavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Flavor{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeReply_Flavor{v}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInst", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &ClusterInst{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeReply_ClusterInst{v}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterFlavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &ClusterFlavor{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeReply_ClusterFlavor{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNotice(dAtA[iNdEx:])
@@ -775,6 +1410,134 @@ func (m *NoticeRequest) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &CloudletInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeRequest_CloudletInfo{v}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppInstInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &AppInstInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeRequest_AppInstInfo{v}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClusterInstInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &ClusterInstInfo{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeRequest_ClusterInstInfo{v}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metric", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowNotice
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthNotice
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			v := &Metric{}
+			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			m.Data = &NoticeRequest_Metric{v}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipNotice(dAtA[iNdEx:])
@@ -904,35 +1667,44 @@ var (
 func init() { proto.RegisterFile("notice.proto", fileDescriptorNotice) }
 
 var fileDescriptorNotice = []byte{
-	// 466 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x90, 0xcf, 0x6e, 0xd3, 0x40,
-	0x10, 0xc6, 0xbd, 0xa9, 0xc9, 0x9f, 0x49, 0x9a, 0x5a, 0x5b, 0xa9, 0xb5, 0x2c, 0x14, 0x45, 0x39,
-	0x45, 0x95, 0x6a, 0x43, 0xb8, 0xf4, 0xea, 0xd6, 0x46, 0xad, 0x94, 0xba, 0x68, 0x53, 0x38, 0x70,
-	0xa9, 0x36, 0xc9, 0xd6, 0x58, 0x72, 0xbc, 0x8b, 0xbd, 0xa9, 0xc8, 0x5b, 0xf1, 0x0e, 0x5c, 0x7a,
-	0xe4, 0x11, 0x20, 0x4f, 0x82, 0xbc, 0x8e, 0x83, 0x49, 0xe0, 0xc4, 0xc5, 0x9a, 0x6f, 0xe6, 0xf7,
-	0x8d, 0xe7, 0x5b, 0xe8, 0x24, 0x5c, 0x46, 0x33, 0x66, 0x8b, 0x94, 0x4b, 0x8e, 0x5b, 0x6c, 0x1e,
-	0x32, 0x55, 0x5a, 0x2f, 0x43, 0xce, 0xc3, 0x98, 0x39, 0x54, 0x44, 0x0e, 0x4d, 0x12, 0x2e, 0xa9,
-	0x8c, 0x78, 0x92, 0x15, 0xa0, 0x75, 0x11, 0x46, 0xf2, 0xd3, 0x72, 0x6a, 0xcf, 0xf8, 0xc2, 0x59,
-	0xf0, 0x69, 0x14, 0xe7, 0xc6, 0x2f, 0x4e, 0xfe, 0x3d, 0x9f, 0xc5, 0x7c, 0x39, 0x77, 0x14, 0x17,
-	0xb2, 0x64, 0x5b, 0x6c, 0x9c, 0x5d, 0x2a, 0xc4, 0x43, 0x94, 0x64, 0xb2, 0xd4, 0x0a, 0x8f, 0x59,
-	0xa9, 0xcf, 0x2b, 0x9b, 0x43, 0x1e, 0xf2, 0xc2, 0x3f, 0x5d, 0x3e, 0x2a, 0xa5, 0x84, 0xaa, 0x0a,
-	0x7c, 0xf0, 0x0d, 0x41, 0x3b, 0x50, 0x11, 0x08, 0x13, 0xf1, 0x0a, 0x3b, 0x50, 0xa7, 0xb3, 0xfc,
-	0x52, 0x13, 0xf5, 0xd1, 0xb0, 0x3b, 0x3a, 0xb5, 0xb7, 0x91, 0xec, 0x82, 0x73, 0xd5, 0x98, 0x6c,
-	0x30, 0x6c, 0x42, 0xe3, 0x89, 0xa5, 0x59, 0xee, 0x38, 0xe8, 0xa3, 0xe1, 0x21, 0x29, 0x25, 0xb6,
-	0xa1, 0x41, 0x85, 0xb8, 0x49, 0x32, 0x69, 0xea, 0x7d, 0x34, 0x6c, 0x8f, 0x70, 0x65, 0x97, 0x5b,
-	0x4c, 0xae, 0x35, 0x52, 0x42, 0xf8, 0x35, 0x34, 0xcb, 0x2c, 0xe6, 0x0b, 0x65, 0x38, 0xae, 0x18,
-	0xae, 0x36, 0xa3, 0x6b, 0x8d, 0x6c, 0xb1, 0xcb, 0x3a, 0xe8, 0x73, 0x2a, 0xe9, 0xe0, 0x2b, 0x82,
-	0xc3, 0x32, 0xc5, 0xe7, 0x25, 0xcb, 0xe4, 0x7f, 0xe5, 0xa8, 0xfd, 0x99, 0xe3, 0x02, 0x5a, 0x69,
-	0xb1, 0x95, 0xa7, 0x2a, 0x63, 0x77, 0x64, 0xed, 0x6d, 0x23, 0x25, 0x41, 0x7e, 0xc3, 0xd8, 0x82,
-	0x66, 0xca, 0x9e, 0x22, 0xb5, 0x34, 0x7f, 0x02, 0x9d, 0x6c, 0xf5, 0x59, 0x00, 0x9d, 0xea, 0x1d,
-	0xb8, 0x09, 0x7a, 0x70, 0x17, 0xf8, 0x86, 0x86, 0x01, 0xea, 0xef, 0xdf, 0x79, 0xee, 0xbd, 0x6f,
-	0xa0, 0xbc, 0xf6, 0xfc, 0xb1, 0x7f, 0xef, 0x1b, 0x35, 0xdc, 0x86, 0xc6, 0x07, 0x9f, 0x4c, 0x6e,
-	0xee, 0x02, 0xe3, 0x00, 0x1f, 0x41, 0x7b, 0xe2, 0x07, 0x9e, 0x3b, 0x1e, 0x3f, 0xf8, 0x81, 0x67,
-	0xe8, 0x67, 0x1f, 0xe1, 0x68, 0xe7, 0x12, 0x7c, 0x0a, 0xc7, 0x3b, 0xad, 0x80, 0x27, 0xcc, 0xd0,
-	0xf0, 0x09, 0xe0, 0x9d, 0x81, 0x77, 0x9b, 0xff, 0x6d, 0xbf, 0x7f, 0x45, 0x6e, 0x8d, 0xda, 0x68,
-	0x02, 0xad, 0xbc, 0xff, 0xb8, 0x72, 0x45, 0x84, 0xdf, 0x42, 0x67, 0x22, 0x53, 0x46, 0x17, 0x05,
-	0x8a, 0xcd, 0x7f, 0xbd, 0x85, 0x75, 0xf2, 0x97, 0x89, 0x88, 0x57, 0x03, 0x6d, 0x88, 0x5e, 0xa1,
-	0x4b, 0xe3, 0xf9, 0x67, 0x4f, 0x7b, 0x5e, 0xf7, 0xd0, 0xf7, 0x75, 0x0f, 0xfd, 0x58, 0xf7, 0xd0,
-	0xb4, 0xae, 0xd0, 0x37, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xbe, 0x3e, 0x96, 0x72, 0x54, 0x03,
-	0x00, 0x00,
+	// 619 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x53, 0xcd, 0x4e, 0xdb, 0x40,
+	0x18, 0xb4, 0x43, 0xea, 0x84, 0x2f, 0x01, 0xcc, 0x22, 0x81, 0x15, 0x55, 0x11, 0xe2, 0x14, 0x51,
+	0x11, 0xb7, 0xe9, 0x05, 0x55, 0xaa, 0x54, 0x43, 0x8c, 0x82, 0x04, 0xa6, 0xda, 0xd0, 0x1e, 0x7a,
+	0x41, 0x8e, 0xd9, 0xb8, 0x96, 0x1c, 0xaf, 0x6b, 0x6f, 0x50, 0x79, 0xa3, 0x3e, 0x0a, 0xc7, 0x3e,
+	0x42, 0xcb, 0x03, 0xf4, 0x19, 0xaa, 0xfd, 0xb1, 0x71, 0x12, 0x7a, 0xea, 0x25, 0xda, 0xd9, 0x99,
+	0xf9, 0x76, 0x33, 0xb3, 0x86, 0x76, 0x42, 0x59, 0x14, 0x90, 0x7e, 0x9a, 0x51, 0x46, 0xd1, 0x3a,
+	0xb9, 0x0d, 0x89, 0x58, 0x76, 0x5e, 0x86, 0x94, 0x86, 0x31, 0xb1, 0xfd, 0x34, 0xb2, 0xfd, 0x24,
+	0xa1, 0xcc, 0x67, 0x11, 0x4d, 0x72, 0x29, 0xec, 0x1c, 0x87, 0x11, 0xfb, 0x3a, 0x9f, 0xf4, 0x03,
+	0x3a, 0xb3, 0x67, 0x74, 0x12, 0xc5, 0xdc, 0xf8, 0xdd, 0xe6, 0xbf, 0x47, 0x41, 0x4c, 0xe7, 0xb7,
+	0xb6, 0xd0, 0x85, 0x24, 0x29, 0x17, 0xca, 0xb9, 0xe9, 0xa7, 0xe9, 0x4d, 0x94, 0xe4, 0xac, 0xc0,
+	0x42, 0x1e, 0x93, 0x02, 0xb7, 0xa7, 0xb1, 0x7f, 0x47, 0x33, 0x85, 0x76, 0x82, 0x78, 0x9e, 0x33,
+	0x92, 0x2d, 0x6c, 0x6e, 0xab, 0xcd, 0xca, 0x94, 0xf6, 0x8c, 0xb0, 0x2c, 0x0a, 0x14, 0x3a, 0xaa,
+	0xdc, 0x2e, 0xa4, 0x21, 0x95, 0x77, 0x98, 0xcc, 0xa7, 0x02, 0x09, 0x20, 0x56, 0x52, 0x7e, 0xf0,
+	0xa7, 0x06, 0x2d, 0x4f, 0xc4, 0x80, 0x49, 0x1a, 0xdf, 0x23, 0x1b, 0x0c, 0x3f, 0xe0, 0xff, 0xd6,
+	0xd2, 0xf7, 0xf5, 0xde, 0xe6, 0x60, 0xaf, 0x5f, 0xc6, 0xd2, 0x97, 0x3a, 0x47, 0xd0, 0x58, 0xc9,
+	0x90, 0x05, 0x8d, 0x3b, 0x92, 0xe5, 0xdc, 0xb1, 0xb6, 0xaf, 0xf7, 0x36, 0x70, 0x01, 0x51, 0x1f,
+	0x1a, 0x7e, 0x9a, 0x9e, 0x27, 0x39, 0xb3, 0xea, 0xfb, 0x7a, 0xaf, 0x35, 0x40, 0x95, 0x59, 0x8e,
+	0x64, 0x46, 0x1a, 0x2e, 0x44, 0xe8, 0x0d, 0x34, 0x8b, 0x3c, 0xac, 0x17, 0xc2, 0xb0, 0x53, 0x31,
+	0x9c, 0x2a, 0x6a, 0xa4, 0xe1, 0x52, 0x86, 0x5e, 0x81, 0x21, 0xd3, 0xb1, 0x0c, 0x61, 0xd8, 0xae,
+	0x18, 0xce, 0x04, 0x31, 0xd2, 0xb0, 0x92, 0xa0, 0x77, 0xd0, 0x52, 0xe1, 0x89, 0x3b, 0x35, 0x84,
+	0x63, 0x77, 0xe1, 0x88, 0x92, 0x1d, 0x69, 0xb8, 0x2a, 0x46, 0x1f, 0x60, 0x43, 0x41, 0x39, 0xd6,
+	0x6a, 0x0a, 0xb7, 0xb5, 0xea, 0x2e, 0x8f, 0x5d, 0x34, 0x9c, 0x18, 0x50, 0xbf, 0xf5, 0x99, 0x7f,
+	0xf0, 0x63, 0x0d, 0x36, 0x8a, 0xc0, 0xbf, 0xcd, 0x49, 0xce, 0xfe, 0x2b, 0xf2, 0xda, 0x62, 0xe4,
+	0xc7, 0xb0, 0x9e, 0xc9, 0xa9, 0x34, 0x13, 0x75, 0x6c, 0x0e, 0x3a, 0x2b, 0xd3, 0x70, 0xa1, 0xc0,
+	0x4f, 0x62, 0xd4, 0x81, 0x66, 0x46, 0xee, 0x22, 0x31, 0x94, 0xb7, 0x55, 0xc7, 0x25, 0x46, 0xef,
+	0xa1, 0x5d, 0x24, 0x7e, 0x9e, 0x4c, 0xa9, 0x2a, 0x67, 0xef, 0x99, 0x72, 0x38, 0x3d, 0xd2, 0xf0,
+	0x82, 0x9c, 0xe7, 0xae, 0x2a, 0x16, 0x6e, 0x63, 0x25, 0x77, 0xe7, 0x89, 0xe5, 0xb9, 0x57, 0xc4,
+	0xe8, 0x0c, 0xb6, 0x2a, 0x35, 0x08, 0xbf, 0xec, 0xad, 0xf3, 0x7c, 0x6f, 0x6a, 0xc6, 0xb2, 0x89,
+	0x3f, 0x14, 0xf9, 0x95, 0xa8, 0xe2, 0xaa, 0x0f, 0xe5, 0x52, 0x10, 0xfc, 0xa1, 0x48, 0x49, 0x51,
+	0xd5, 0xa1, 0x07, 0xed, 0x6a, 0xfe, 0xa8, 0x09, 0x75, 0xef, 0xca, 0x73, 0x4d, 0x0d, 0x01, 0x18,
+	0x9f, 0x3e, 0x0e, 0x9d, 0x6b, 0xd7, 0xd4, 0xf9, 0x7a, 0xe8, 0x5e, 0xb8, 0xd7, 0xae, 0x59, 0x43,
+	0x2d, 0x68, 0x7c, 0x76, 0xf1, 0xf8, 0xfc, 0xca, 0x33, 0xd7, 0xd0, 0x16, 0xb4, 0xc6, 0xae, 0x37,
+	0x74, 0x2e, 0x2e, 0x6e, 0x5c, 0x6f, 0x68, 0xd6, 0x0f, 0xbf, 0xc0, 0xd6, 0x52, 0x03, 0x68, 0x0f,
+	0x76, 0x96, 0xb6, 0x3c, 0x9a, 0x10, 0x53, 0x43, 0xbb, 0x80, 0x96, 0x88, 0xe1, 0x25, 0x3f, 0x6d,
+	0x75, 0xff, 0x14, 0x5f, 0x9a, 0xb5, 0xc1, 0x18, 0xd6, 0xf9, 0xfe, 0xf4, 0xde, 0x49, 0x23, 0x74,
+	0x06, 0xed, 0x31, 0xcb, 0x88, 0x3f, 0x93, 0x52, 0x64, 0xfd, 0xeb, 0x0d, 0x74, 0x76, 0x9f, 0x61,
+	0xd2, 0xf8, 0xfe, 0x40, 0xeb, 0xe9, 0xaf, 0xf5, 0x13, 0xf3, 0xe1, 0x77, 0x57, 0x7b, 0x78, 0xec,
+	0xea, 0x3f, 0x1f, 0xbb, 0xfa, 0xaf, 0xc7, 0xae, 0x3e, 0x31, 0x84, 0xf4, 0xed, 0xdf, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0xfa, 0xea, 0x46, 0xa8, 0x3b, 0x05, 0x00, 0x00,
 }

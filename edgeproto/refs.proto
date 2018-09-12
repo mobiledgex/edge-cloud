@@ -1,0 +1,76 @@
+// Cloudlet proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "cloudlet.proto";
+import "cluster.proto";
+import "clusterinst.proto";
+import "app.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+// Refs track ref counts of used resources, ports, etc.
+// They are not part of the base Cloudlet/Cluster objects because
+// there's no way in GRPC to prevent certain fields from being sent/marshalled,
+// and we don't need these fields being sent via the notify protocol
+// to the CRM.
+// On CloudletRefs, CloudletKey will be the same for all cluster insts,
+// so we use the cluster key rather than the cluster inst key.
+
+// CloudletRefs track used resources and Clusters instantiated on a Cloudlet. Used resources are compared against max resources for a Cloudlet to determine if resources are available for a new Cluster to be instantiated on the Cloudlet.
+message CloudletRefs {
+  // Cloudlet key
+  CloudletKey key = 1 [(gogoproto.nullable) = false];
+  // Clusters instantiated on the Cloudlet
+  repeated ClusterKey clusters = 2 [(gogoproto.nullable) = false];
+  // Used RAM in MB
+  uint64 used_ram = 4;
+  // Used VCPU cores
+  uint64 used_vcores = 5;
+  // Used disk in GB
+  uint64 used_disk = 6;
+  // Used ports on root load balancer. Map key is public port, value is unused.
+  map<int32, int32> root_lb_ports = 8;
+  // TODO track used static ips
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+}
+
+// Track app insts created on a ClusterInst.
+// These are used to calculated used resources.
+// Note that since CloudletKey will be the same for all app insts,
+// we use the app key rather than the app inst key.
+
+// ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst.
+message ClusterRefs {
+  // Cluster Instance key
+  ClusterInstKey key = 1 [(gogoproto.nullable) = false];
+  // Apps instances in the Cluster Instance
+  repeated AppKey apps = 2 [(gogoproto.nullable) = false];
+  // Used RAM in MB
+  uint64 used_ram = 4;
+  // Used VCPU cores
+  uint64 used_vcores = 5;
+  // Used disk in GB
+  uint64 used_disk = 6;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+}
+
+// This API should be admin-only
+service CloudletRefsApi {
+  // Show CloudletRefs (debug only)
+  rpc ShowCloudletRefs(CloudletRefs) returns (stream CloudletRefs) {}
+}
+
+service ClusterRefsApi {
+  // Show ClusterRefs (debug only)
+  rpc ShowClusterRefs(ClusterRefs) returns (stream ClusterRefs) {}
+}

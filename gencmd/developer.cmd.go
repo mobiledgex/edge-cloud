@@ -5,16 +5,13 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -31,6 +28,7 @@ var _ = math.Inf
 var DeveloperApiCmd edgeproto.DeveloperApiClient
 var DeveloperIn edgeproto.Developer
 var DeveloperFlagSet = pflag.NewFlagSet("Developer", pflag.ExitOnError)
+var DeveloperNoConfigFlagSet = pflag.NewFlagSet("DeveloperNoConfig", pflag.ExitOnError)
 
 func DeveloperKeySlicer(in *edgeproto.DeveloperKey) []string {
 	s := make([]string, 0, 1)
@@ -44,6 +42,29 @@ func DeveloperKeyHeaderSlicer() []string {
 	return s
 }
 
+func DeveloperKeyWriteOutputArray(objs []*edgeproto.DeveloperKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DeveloperKeyWriteOutputOne(obj *edgeproto.DeveloperKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DeveloperKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func DeveloperSlicer(in *edgeproto.Developer) []string {
 	s := make([]string, 0, 6)
 	if in.Fields == nil {
@@ -69,159 +90,101 @@ func DeveloperHeaderSlicer() []string {
 	return s
 }
 
+func DeveloperWriteOutputArray(objs []*edgeproto.Developer) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func DeveloperWriteOutputOne(obj *edgeproto.Developer) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+
 var CreateDeveloperCmd = &cobra.Command{
 	Use: "CreateDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			fmt.Println("CreateDeveloper failed: ", err)
-			return
+			return fmt.Errorf("CreateDeveloper failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteDeveloperCmd = &cobra.Command{
 	Use: "DeleteDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			fmt.Println("DeleteDeveloper failed: ", err)
-			return
+			return fmt.Errorf("DeleteDeveloper failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateDeveloperCmd = &cobra.Command{
 	Use: "UpdateDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
 		DeveloperSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
-		cancel()
+		ctx := context.Background()
+		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			fmt.Println("UpdateDeveloper failed: ", err)
-			return
+			return fmt.Errorf("UpdateDeveloper failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
-		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowDeveloperCmd = &cobra.Command{
 	Use: "ShowDeveloper",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if DeveloperApiCmd == nil {
-			fmt.Println("DeveloperApi client not initialized")
-			return
+			return fmt.Errorf("DeveloperApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		ctx := context.Background()
 		stream, err := DeveloperApiCmd.ShowDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			fmt.Println("ShowDeveloper failed: ", err)
-			return
+			return fmt.Errorf("ShowDeveloper failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.Developer, 0)
 		for {
@@ -230,45 +193,23 @@ var ShowDeveloperCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowDeveloper recv failed: ", err)
-				break
+				return fmt.Errorf("ShowDeveloper recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(DeveloperHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(DeveloperSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		DeveloperWriteOutputArray(objs)
+		return nil
 	},
+}
+
+var DeveloperApiCmds = []*cobra.Command{
+	CreateDeveloperCmd,
+	DeleteDeveloperCmd,
+	UpdateDeveloperCmd,
+	ShowDeveloperCmd,
 }
 
 func init() {
@@ -281,6 +222,13 @@ func init() {
 	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
 	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperFlagSet)
+}
+
+func DeveloperApiAllowNoConfig() {
+	CreateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	DeleteDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	UpdateDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
+	ShowDeveloperCmd.Flags().AddFlagSet(DeveloperNoConfigFlagSet)
 }
 
 func DeveloperSetFields() {

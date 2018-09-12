@@ -1,0 +1,177 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- vm1_internal_ip: 10.10.0.11
+- vm1_external_ip: 35.199.188.102
+- locverurl: "https://lvs.vse.telekom-dienste.de/verifyLocalisation"
+- toksrvurl: "http://35.199.188.102:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+
+tlscerts:
+- commonname: gcp_vm
+  ips:
+    - "{{vm1_internal_ip}}"
+    - "{{vm1_external_ip}}"
+  dnsnames:
+    - gcp1
+
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+    token: 0000000001
+  hostname: "{{vm1_external_ip}}"
+  
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: "http://{{vm1_internal_ip}}:30011"
+    clientaddrs: "http://{{vm1_internal_ip}}:30001"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: "http://{{vm1_internal_ip}}:30012"
+    clientaddrs: "http://{{vm1_internal_ip}}:30002"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: "http://{{vm1_internal_ip}}:30013"
+    clientaddrs: "http://{{vm1_internal_ip}}:30003"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
+    apiaddr: "0.0.0.0:55001"
+    httpaddr: "0.0.0.0:36001"
+    notifyaddr: "{{vm1_internal_ip}}:37001"
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: "0.0.0.0:50051"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    toksrvurl: "{{toksrvurl}}"
+    locverurl: "{{locverurl}}"
+    carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-1"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+  envvars:
+     - LOCAPI_USER: mexserver
+     - LOCAPI_PASSWD: seC2835!
+
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: "0.0.0.0:55091"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-1"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm2
+    apiaddr: "0.0.0.0:55092"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-2"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm3
+    apiaddr: "0.0.0.0:55093"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-3"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm4
+    apiaddr: "0.0.0.0:55094"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-4"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm5
+    apiaddr: "0.0.0.0:55095"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-5"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm6
+    apiaddr: "0.0.0.0:55096"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-6"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm7
+    apiaddr: "0.0.0.0:55097"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-7"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm8
+    apiaddr: "0.0.0.0:55098"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-8"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm9
+    apiaddr: "0.0.0.0:55099"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-9"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"
+
+- crmlocal:
+    name: crm10
+    apiaddr: "0.0.0.0:55100"
+    notifyaddrs: "{{vm1_internal_ip}}:37001,{{vm1_internal_ip}}:37002"
+    cloudletkey: '{"operator_key":{"name":"TMUS"},"name":"tmocloud-10"}'
+    tls:
+       servercert: "{{tlsoutdir}}/gcp_vm.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{vm1_external_ip}}"

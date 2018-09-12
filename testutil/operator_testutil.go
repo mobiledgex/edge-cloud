@@ -25,21 +25,21 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 
 type ShowOperator struct {
-	data map[string]edgeproto.Operator
+	Data map[string]edgeproto.Operator
 	grpc.ServerStream
 }
 
 func (x *ShowOperator) Init() {
-	x.data = make(map[string]edgeproto.Operator)
+	x.Data = make(map[string]edgeproto.Operator)
 }
 
 func (x *ShowOperator) Send(m *edgeproto.Operator) error {
-	x.data[m.Key.GetKeyString()] = *m
+	x.Data[m.Key.GetKeyString()] = *m
 	return nil
 }
 
 func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClient, err error) {
-	x.data = make(map[string]edgeproto.Operator)
+	x.Data = make(map[string]edgeproto.Operator)
 	if err != nil {
 		return
 	}
@@ -51,25 +51,30 @@ func (x *ShowOperator) ReadStream(stream edgeproto.OperatorApi_ShowOperatorClien
 		if err != nil {
 			break
 		}
-		x.data[obj.Key.GetKeyString()] = *obj
+		x.Data[obj.Key.GetKeyString()] = *obj
 	}
 }
 
 func (x *ShowOperator) CheckFound(obj *edgeproto.Operator) bool {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	return found
 }
 
 func (x *ShowOperator) AssertFound(t *testing.T, obj *edgeproto.Operator) {
-	check, found := x.data[obj.Key.GetKeyString()]
+	check, found := x.Data[obj.Key.GetKeyString()]
 	assert.True(t, found, "find Operator %s", obj.Key.GetKeyString())
-	if found {
+	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
 		assert.Equal(t, *obj, check, "Operator are equal")
+	}
+	if found {
+		// remove in case there are dups in the list, so the
+		// same object cannot be used again
+		delete(x.Data, obj.Key.GetKeyString())
 	}
 }
 
 func (x *ShowOperator) AssertNotFound(t *testing.T, obj *edgeproto.Operator) {
-	_, found := x.data[obj.Key.GetKeyString()]
+	_, found := x.Data[obj.Key.GetKeyString()]
 	assert.False(t, found, "do not find Operator %s", obj.Key.GetKeyString())
 }
 
@@ -144,18 +149,50 @@ func (x *OperatorCommonApi) ShowOperator(ctx context.Context, filter *edgeproto.
 	}
 }
 
-func InternalOperatorCudTest(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+func NewInternalOperatorApi(api edgeproto.OperatorApiServer) *OperatorCommonApi {
 	apiWrap := OperatorCommonApi{}
 	apiWrap.internal_api = api
-	basicOperatorCudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
-func ClientOperatorCudTest(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+func NewClientOperatorApi(api edgeproto.OperatorApiClient) *OperatorCommonApi {
 	apiWrap := OperatorCommonApi{}
 	apiWrap.client_api = api
-	basicOperatorCudTest(t, &apiWrap, testData)
+	return &apiWrap
 }
 
+func InternalOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	switch test {
+	case "cud":
+		basicOperatorCudTest(t, NewInternalOperatorApi(api), testData)
+	case "show":
+		basicOperatorShowTest(t, NewInternalOperatorApi(api), testData)
+	}
+}
+
+func ClientOperatorTest(t *testing.T, test string, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+	switch test {
+	case "cud":
+		basicOperatorCudTest(t, NewClientOperatorApi(api), testData)
+	case "show":
+		basicOperatorShowTest(t, NewClientOperatorApi(api), testData)
+	}
+}
+
+func basicOperatorShowTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowOperator{}
+	show.Init()
+	filterNone := edgeproto.Operator{}
+	err = api.ShowOperator(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show data")
+	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	for _, obj := range testData {
+		show.AssertFound(t, &obj)
+	}
+}
 func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
 	ctx := context.TODO()
@@ -166,31 +203,24 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	}
 
 	// test create
-	for _, obj := range testData {
-		_, err = api.CreateOperator(ctx, &obj)
-		assert.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
-	}
+	createOperatorData(t, api, testData)
+
+	// test duplicate create - should fail
 	_, err = api.CreateOperator(ctx, &testData[0])
 	assert.NotNil(t, err, "Create duplicate Operator")
 
 	// test show all items
+	basicOperatorShowTest(t, api, testData)
+
+	// test delete
+	_, err = api.DeleteOperator(ctx, &testData[0])
+	assert.Nil(t, err, "delete Operator %s", testData[0].Key.GetKeyString())
 	show := ShowOperator{}
 	show.Init()
 	filterNone := edgeproto.Operator{}
 	err = api.ShowOperator(ctx, &filterNone, &show)
 	assert.Nil(t, err, "show data")
-	for _, obj := range testData {
-		show.AssertFound(t, &obj)
-	}
-	assert.Equal(t, len(testData), len(show.data), "Show count")
-
-	// test delete
-	_, err = api.DeleteOperator(ctx, &testData[0])
-	assert.Nil(t, err, "delete Operator %s", testData[0].Key.GetKeyString())
-	show.Init()
-	err = api.ShowOperator(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.data), "Show count")
+	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateOperator(ctx, &testData[0])
@@ -204,4 +234,22 @@ func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgep
 	_, err = api.CreateOperator(ctx, &bad)
 	assert.NotNil(t, err, "Create Operator with no key info")
 
+}
+
+func InternalOperatorCreate(t *testing.T, api edgeproto.OperatorApiServer, testData []edgeproto.Operator) {
+	createOperatorData(t, NewInternalOperatorApi(api), testData)
+}
+
+func ClientOperatorCreate(t *testing.T, api edgeproto.OperatorApiClient, testData []edgeproto.Operator) {
+	createOperatorData(t, NewClientOperatorApi(api), testData)
+}
+
+func createOperatorData(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
+	var err error
+	ctx := context.TODO()
+
+	for _, obj := range testData {
+		_, err = api.CreateOperator(ctx, &obj)
+		assert.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
+	}
 }

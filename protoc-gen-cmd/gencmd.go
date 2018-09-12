@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 
 	"github.com/gogo/protobuf/gogoproto"
+	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
@@ -20,6 +22,7 @@ type EnumArg struct {
 	inVar     string
 	msgName   string
 	hierField string
+	repeated  bool
 }
 
 type GenCmd struct {
@@ -27,9 +30,12 @@ type GenCmd struct {
 	support            gensupport.PluginSupport
 	packageName        string
 	tmpl               *template.Template
+	outTmpl            *template.Template
 	fieldTmpl          *template.Template
 	inMessages         map[string]*generator.Descriptor
 	enumArgs           map[string][]*EnumArg
+	hideTags           map[string]struct{}
+	noconfigFields     map[string]struct{}
 	importTime         bool
 	importStrconv      bool
 	importStrings      bool
@@ -42,6 +48,7 @@ type GenCmd struct {
 	importPflag        bool
 	importErrors       bool
 	importOutputGen    bool
+	importCmdSup       bool
 }
 
 func (g *GenCmd) Name() string {
@@ -51,6 +58,7 @@ func (g *GenCmd) Name() string {
 func (g *GenCmd) Init(gen *generator.Generator) {
 	g.Generator = gen
 	g.tmpl = template.Must(template.New("cmd").Parse(tmpl))
+	g.outTmpl = template.Must(template.New("out").Parse(outTmpl))
 	g.fieldTmpl = template.Must(template.New("field").Parse(fieldTmpl))
 }
 
@@ -90,9 +98,10 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 		g.PrintImport("", "errors")
 	}
 	if g.importOutputGen {
-		g.PrintImport("", "encoding/json")
+		g.importCmdSup = true
+	}
+	if g.importCmdSup {
 		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
-		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml")
 	}
 }
 
@@ -111,10 +120,16 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.importPflag = false
 	g.importErrors = false
 	g.importOutputGen = false
+	g.importCmdSup = false
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
+	g.hideTags = make(map[string]struct{})
+	g.noconfigFields = make(map[string]struct{})
 	g.packageName = *file.FileDescriptorProto.Package
 	g.support.InitFile()
+	if !g.support.GenFile(*file.FileDescriptorProto.Name) {
+		return
+	}
 
 	g.P(gensupport.AutoGenComment)
 
@@ -127,12 +142,29 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	}
 	g.generateInputVars()
 
+	for _, en := range file.Enums() {
+		g.generateEnumValSlice(en)
+	}
+
 	// Generate slicer functions for writing output
 	for _, desc := range file.Messages() {
 		if desc.File() != file.FileDescriptorProto {
 			continue
 		}
 		g.generateSlicer(desc)
+		g.generateWriteOutput(desc)
+	}
+
+	// Generate hidetags functions
+	for _, desc := range file.Messages() {
+		if desc.File() != file.FileDescriptorProto {
+			continue
+		}
+		visited := make([]*generator.Descriptor, 0)
+		if g.hasHideTags(desc, visited) {
+			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
+			g.generateHideTags(desc)
+		}
 	}
 
 	// Generate cobra command definitions
@@ -156,16 +188,28 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			noconfig[str] = struct{}{}
 		}
 		visited := make([]*generator.Descriptor, 0)
-		g.generateVarFlags(msgName, make([]string, 0), desc, noconfig, visited)
+		parentNoConfig := false
+		g.generateVarFlags(msgName, make([]string, 0), make([]string, 0), desc, noconfig, visited, parentNoConfig)
 	}
 	// Add per input struct flag sets to the commands.
+	initNoConfig := false
 	if len(file.FileDescriptorProto.Service) > 0 {
 		for _, service := range file.FileDescriptorProto.Service {
-			g.addCmdFlags(service)
+			g.addCmdFlags(service, initNoConfig)
 		}
 	}
 	g.P("}")
 	g.P()
+
+	initNoConfig = true
+	if len(file.FileDescriptorProto.Service) > 0 {
+		for _, service := range file.FileDescriptorProto.Service {
+			g.P("func ", service.Name, "AllowNoConfig() {")
+			g.addCmdFlags(service, initNoConfig)
+			g.P("}")
+			g.P()
+		}
+	}
 
 	for _, desc := range file.Messages() {
 		msgName := *desc.DescriptorProto.Name
@@ -182,6 +226,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		visited := make([]*generator.Descriptor, 0)
 		g.generateSetFields(msgName, parents, nums, desc, visited)
 		g.P("}")
+		g.P()
 	}
 
 	// Because we cannot define a enum arg flag for enums,
@@ -191,10 +236,107 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	// defined within a message. They end up having a type name of
 	// .proto.AppInst.Liveness, for example. They also end up having
 	// a generated type of AppInst_Liveness.
-	for msgName, enumList := range g.enumArgs {
+	// sort array to prevent generated file from changing all the time
+	strs := make([]string, 0, len(g.enumArgs))
+	for msgName, _ := range g.enumArgs {
+		strs = append(strs, msgName)
+	}
+	sort.Strings(strs)
+	for _, msgName := range strs {
+		enumList := g.enumArgs[msgName]
 		g.generateParseEnums(msgName, enumList)
 	}
 	gensupport.RunParseCheck(g.Generator, file)
+}
+
+func (g *GenCmd) hasHideTags(desc *generator.Descriptor, visited []*generator.Descriptor) bool {
+	if gensupport.WasVisited(desc, visited) {
+		return false
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := g.GetDesc(field.GetTypeName())
+			if g.hasHideTags(subDesc, append(visited, desc)) {
+				return true
+			}
+		}
+		if GetHideTag(field) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func (g *GenCmd) generateHideTags(desc *generator.Descriptor) {
+	msgName := desc.DescriptorProto.Name
+	g.P("func ", msgName, "HideTags(in *", g.FQTypeName(desc), ") {")
+	g.P("if cmdsup.HideTags == \"\" { return }")
+	g.P("tags := make(map[string]struct{})")
+	g.P("for _, tag := range strings.Split(cmdsup.HideTags, \",\") {")
+	g.P("tags[tag] = struct{}{}")
+	g.P("}")
+	visited := make([]*generator.Descriptor, 0)
+	g.generateHideTagFields(make([]string, 0), desc, visited)
+	g.P("}")
+	g.P()
+	g.importStrings = true
+	g.importCmdSup = true
+}
+
+func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	if gensupport.WasVisited(desc, visited) {
+		return
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if !supportedField(field) {
+			continue
+		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
+		tag := GetHideTag(field)
+		if tag == "" {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		hierField := strings.Join(append(parents, name), ".")
+
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			idx := ""
+			if gensupport.IsRepeated(field) {
+				ii := fmt.Sprintf("i%d", len(parents))
+				g.P("for ", ii, " := 0; ", ii, " < len(in.", hierField, "); ", ii, "++ {")
+				idx = "[" + ii + "]"
+			}
+			subDesc := g.GetDesc(field.GetTypeName())
+			g.generateHideTagFields(append(parents, name+idx),
+				subDesc, append(visited, desc))
+			if gensupport.IsRepeated(field) {
+				g.P("}")
+			}
+		} else {
+			val := "0"
+			if gensupport.IsRepeated(field) {
+				val = "nil"
+			} else {
+				switch *field.Type {
+				case descriptor.FieldDescriptorProto_TYPE_BOOL:
+					val = "false"
+				case descriptor.FieldDescriptorProto_TYPE_STRING:
+					val = "\"\""
+				case descriptor.FieldDescriptorProto_TYPE_BYTES:
+					val = "nil"
+				}
+			}
+			g.P("if _, found := tags[\"", tag, "\"]; found {")
+			g.P("in.", hierField, " = ", val)
+			g.P("}")
+		}
+	}
 }
 
 func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
@@ -212,15 +354,36 @@ func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, servi
 }
 
 func (g *GenCmd) generateInputVars() {
-	for flatType, desc := range g.inMessages {
+	// sort array to prevent generated file from changing all the time
+	strs := make([]string, 0, len(g.inMessages))
+	for flatType, _ := range g.inMessages {
+		strs = append(strs, flatType)
+	}
+	sort.Strings(strs)
+	for _, flatType := range strs {
+		desc := g.inMessages[flatType]
 		g.importPflag = true
 		g.P("var ", flatType, "In ", g.FQTypeName(desc))
 		g.P("var ", flatType, "FlagSet = pflag.NewFlagSet(\"", flatType, "\", pflag.ExitOnError)")
-		g.generateEnumVars(flatType, desc, make([]string, 0), make([]*generator.Descriptor, 0))
+		g.P("var ", flatType, "NoConfigFlagSet = pflag.NewFlagSet(\"", flatType, "NoConfig\", pflag.ExitOnError)")
+		g.generateEnumVars(flatType, desc, make([]string, 0), make([]string, 0), make([]*generator.Descriptor, 0))
 	}
 }
 
-func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents []string, visited []*generator.Descriptor) {
+func (g *GenCmd) generateEnumValSlice(desc *generator.EnumDescriptor) {
+	// this code is a duplicate of code in protoc-gen-gomex to
+	// remove any dependency of gencmd on the protoc-gen-gomex,
+	// in case we want to open source gencmd as its own project.
+	en := desc.EnumDescriptorProto
+	g.P("var ", en.Name, "Strings = []string{")
+	for _, val := range en.Value {
+		g.P("\"", val.Name, "\",")
+	}
+	g.P("}")
+	g.P()
+}
+
+func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, parents, enumParents []string, visited []*generator.Descriptor) {
 	if gensupport.WasVisited(desc, visited) {
 		return
 	}
@@ -232,15 +395,21 @@ func (g *GenCmd) generateEnumVars(flatType string, desc *generator.Descriptor, p
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
-			g.generateEnumVars(flatType, subDesc, append(parents, name), append(visited, desc))
+			idx := ""
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				idx = "[0]"
+			}
+			g.generateEnumVars(flatType, subDesc, append(parents, name+idx), append(parents, name), append(visited, desc))
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			inVar := flatType + "In" + strings.Join(append(parents, name), "")
+			inVar := flatType + "In" + strings.Join(append(enumParents, name), "")
+			repeated := *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 			g.P("var ", inVar, " string")
 			enumArg := EnumArg{
 				field:     field,
 				inVar:     inVar,
 				msgName:   flatType,
 				hierField: strings.Join(append(parents, name), "."),
+				repeated:  repeated,
 			}
 			enumList, found := g.enumArgs[flatType]
 			if !found {
@@ -258,12 +427,13 @@ type fieldArgs struct {
 	Type     string
 	DefValue string
 	Arg      string
+	Usage    string
 }
 
-var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, "{{.Field}}")
+var fieldTmpl = `{{.MsgName}}FlagSet.{{.Type}}Var({{.Ref}}, "{{.Arg}}", {{.DefValue}}, {{.Usage}})
 `
 
-func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor) {
+func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string, desc *generator.Descriptor, noconfig map[string]struct{}, visited []*generator.Descriptor, parentNoConfig bool) {
 	if gensupport.WasVisited(desc, visited) {
 		// Break recursion. Googleapis HttpRule
 		// includes itself, so is a recursive
@@ -275,6 +445,21 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
+		// XXX repeated fields currently mess up show commands
+		// because if we create a size 1 array to hold a possible
+		// user input, the show command tries to match this size-1
+		// array against the back-end data. In reality we should not
+		// create any array (array should be nil) unless the user
+		// specifies some arg. For now just skip repeated fields.
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			continue
+		}
+
 		idx := ""
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			idx = "[0]"
@@ -285,9 +470,6 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			continue
 		}
 		hierField := strings.Join(append(parents, name), ".")
-		if _, found := noconfig[hierField]; found {
-			continue
-		}
 		fargs := &fieldArgs{
 			MsgName:  msgName,
 			Ref:      "&" + msgName + "In" + "." + hierField + idx,
@@ -295,6 +477,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			Arg:      argName(append(parents, name)),
 			Type:     "String",
 			DefValue: "\"\"",
+			Usage:    "\"" + hierField + "\"",
+		}
+		if _, found := noconfig[hierField]; found || parentNoConfig {
+			fargs.MsgName = msgName + "NoConfig"
+			g.noconfigFields[hierField] = struct{}{}
 		}
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
@@ -310,7 +497,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				subType := g.FQTypeName(subDesc)
 				g.P(msgName, "In.", hierField, idx, " = &", subType, "{}")
 			}
-			g.generateVarFlags(msgName, append(parents, name+idx), subDesc, noconfig, append(visited, desc))
+			subNoConfig := false
+			if _, found := noconfig[hierField]; found || parentNoConfig {
+				subNoConfig = true
+			}
+			g.generateVarFlags(msgName, append(parents, name+idx), append(enumParents, name), subDesc, noconfig, append(visited, desc), subNoConfig)
 			continue
 		case descriptor.FieldDescriptorProto_TYPE_SINT64:
 			fallthrough
@@ -337,8 +528,19 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 			fargs.Type = "Uint32"
 			fargs.DefValue = "0"
 		case descriptor.FieldDescriptorProto_TYPE_ENUM:
-			fargs.Field = msgName + "In" + strings.Join(append(parents, name), "")
+			fargs.Field = msgName + "In" + strings.Join(append(enumParents, name), "")
 			fargs.Ref = "&" + fargs.Field
+			enumDesc := g.GetEnumDesc(field.GetTypeName())
+			en := enumDesc.EnumDescriptorProto
+			strs := make([]string, 0, len(en.Value))
+			for _, val := range en.Value {
+				strs = append(strs, *val.Name)
+			}
+			text := "one of"
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				text = "comma-separated list of"
+			}
+			fargs.Usage = fmt.Sprintf("\"%s %v\"", text, strs)
 		case descriptor.FieldDescriptorProto_TYPE_BOOL:
 			fargs.Type = "Bool"
 			fargs.DefValue = "false"
@@ -355,6 +557,11 @@ func (g *GenCmd) generateVarFlags(msgName string, parents []string, desc *genera
 				fargs.Type = "BytesHex"
 			}
 			fargs.DefValue = "nil"
+		}
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED &&
+			*field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			typ := g.support.GoType(g.Generator, field)
+			g.P(msgName, "In.", hierField, " = make([]", typ, ", 1)")
 		}
 		err := g.fieldTmpl.Execute(g, fargs)
 		if err != nil {
@@ -374,18 +581,35 @@ func (g *GenCmd) generateSetFields(msgName string, parents, nums []string, desc 
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
+		// We have to skip repeated fields here because they are
+		// skipped in generateVarFlags().
+		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+			continue
+		}
+
 		name := generator.CamelCase(*field.Name)
 		if name == "Fields" {
 			continue
 		}
 		num := fmt.Sprintf("%d", *field.Number)
 
+		hierField := strings.Join(append(parents, name), ".")
+		flagSet := "FlagSet"
+		if _, found := g.noconfigFields[hierField]; found {
+			flagSet = "NoConfigFlagSet"
+		}
+
 		switch *field.Type {
 		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
 			subDesc := g.GetDesc(field.GetTypeName())
 			g.generateSetFields(msgName, append(parents, name), append(nums, num), subDesc, append(visited, desc))
 		default:
-			g.P("if ", msgName, "FlagSet.Lookup(\"", argName(append(parents, name)), "\").Changed {")
+			g.P("if ", msgName, flagSet, ".Lookup(\"", argName(append(parents, name)), "\").Changed {")
 			g.P(msgName, "In.Fields = append(", msgName, "In.Fields, \"", strings.Join(append(nums, num), "."), "\")")
 			g.P("}")
 		}
@@ -401,14 +625,29 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 		}
 		typeName := g.FQTypeName(en)
 		g.P("if ", enumArg.inVar, " != \"\" {")
-		g.P("switch ", enumArg.inVar, " {")
-		for _, val := range en.Value {
-			g.P("case \"", strings.ToLower(*val.Name), "\":")
-			g.P(enumArg.msgName, "In.", enumArg.hierField, " = ", typeName, "(", val.Number, ")")
+		enumVar := enumArg.msgName + "In." + enumArg.hierField
+		if enumArg.repeated {
+			g.P("for _, str := range strings.Split(", enumArg.inVar, ", \",\") {")
+			g.P("switch str {")
+			for _, val := range en.Value {
+				g.P("case \"", *val.Name, "\":")
+
+				g.P(enumVar, " = append(", enumVar, ", ", typeName, "(", val.Number, "))")
+			}
+			g.P("default:")
+			g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
+			g.P("}")
+			g.P("}")
+		} else {
+			g.P("switch ", enumArg.inVar, " {")
+			for _, val := range en.Value {
+				g.P("case \"", *val.Name, "\":")
+				g.P(enumVar, " = ", typeName, "(", val.Number, ")")
+			}
+			g.P("default:")
+			g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
+			g.P("}")
 		}
-		g.P("default:")
-		g.P("return errors.New(\"Invalid value for ", enumArg.inVar, "\")")
-		g.P("}")
 		g.P("}")
 		g.importErrors = true
 	}
@@ -418,6 +657,9 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 }
 
 func (g *GenCmd) generateSlicer(desc *generator.Descriptor) {
+	if desc.GetOptions().GetMapEntry() {
+		return
+	}
 	message := desc.DescriptorProto
 	g.P("func ", gensupport.GetMsgName(desc), "Slicer(in *", g.FQTypeName(desc), ") []string {")
 	g.P("s := make([]string, 0, ", len(message.Field), ")")
@@ -446,6 +688,11 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 		idx := ""
 		name := generator.CamelCase(*field.Name)
 		hierName := strings.Join(append(parents, name), ".")
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 
 		if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 			idx = "[0]"
@@ -525,6 +772,11 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 		if !supportedField(field) {
 			continue
 		}
+		mapType := g.support.GetMapType(g.Generator, field)
+		if mapType != nil {
+			// not supported
+			continue
+		}
 
 		name := generator.CamelCase(*field.Name)
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_GROUP {
@@ -540,139 +792,184 @@ func (g *GenCmd) generateHeaderSlicerFields(desc *generator.Descriptor, parents 
 }
 
 func (g *GenCmd) generateServiceCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto) {
-	if len(service.Method) > 0 {
-		for _, method := range service.Method {
-			g.generateMethodCmd(file, service, method)
+	if len(service.Method) == 0 {
+		return
+	}
+	count := 0
+	for _, method := range service.Method {
+		if g.generateMethodCmd(file, service, method) {
+			count++
 		}
+	}
+	if count > 0 {
+		g.P()
+		g.P("var ", service.Name, "Cmds = []*cobra.Command{")
+		for _, method := range service.Method {
+			g.P(method.Name, "Cmd,")
+		}
+		g.P("}")
+		g.P()
 	}
 }
 
 type tmplArgs struct {
-	Service      string
-	Method       string
-	InType       string
-	OutType      string
-	FQOutType    string
-	ServerStream bool
-	HasEnums     bool
-	SetFields    bool
+	Service              string
+	Method               string
+	InType               string
+	OutType              string
+	FQOutType            string
+	ServerStream         bool
+	HasEnums             bool
+	SetFields            bool
+	OutHideTags          bool
+	StreamOutIncremental bool
 }
 
 var tmpl = `
-
 var {{.Method}}Cmd = &cobra.Command{
 	Use: "{{.Method}}",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if {{.Service}}Cmd == nil {
-			fmt.Println("{{.Service}} client not initialized")
-			return
+			return fmt.Errorf("{{.Service}} client not initialized")
 		}
 		var err error
 {{- if .HasEnums}}
 		err = parse{{.InType}}Enums()
 		if err != nil {
-			fmt.Println("{{.Method}}: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
 {{- end}}
 {{- if .SetFields}}
 		{{.InType}}SetFields()
 {{- end}}
-		ctx, cancel := context.WithTimeout(context.Background(), 3 * time.Second)
+		ctx := context.Background()
 {{- if .ServerStream}}
-		defer cancel()
 		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			fmt.Println("{{.Method}} failed: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
+
+	{{- if not .StreamOutIncremental}}
 		objs := make([]*{{.FQOutType}}, 0)
+	{{- end}}
 		for {
 			obj, err := stream.Recv()
 			if err == io.EOF {
 				break
 			}
 			if err != nil {
-				fmt.Println("{{.Method}} recv failed: ", err)
-				break
+				return fmt.Errorf("{{.Method}} recv failed: %s", err.Error())
 			}
+	{{- if .OutHideTags}}
+			{{.OutType}}HideTags(obj)
+	{{- end}}
+	{{- if .StreamOutIncremental}}
+			{{.OutType}}WriteOutputOne(obj)
+		}
+	{{- else}}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
+		{{.OutType}}WriteOutputArray(objs)
+	{{- end}}
 {{- else}}
-		objs, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
-		cancel()
+		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			fmt.Println("{{.Method}} failed: ", err)
-			return
+			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
+	{{- if .OutHideTags}}
+		{{.OutType}}HideTags(obj)
+	{{- end}}
+		{{.OutType}}WriteOutputOne(obj)
 {{- end}}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
-{{- if .ServerStream}}
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
-			}
-{{- else}}
-			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(objs), "\t"))
-{{- end}}
-			output.Flush()
-		}
+		return nil
 	},
 }
 `
 
-func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
+type outTmplArgs struct {
+	Name      string
+	OutType   string
+	FQOutType string
+}
+
+var outTmpl = `
+func {{.Name}}WriteOutputArray(objs []*{{.FQOutType}}) {
+	if (cmdsup.OutputFormat == cmdsup.OutputFormatTable) {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func {{.Name}}WriteOutputOne(obj *{{.FQOutType}}) {
+	if (cmdsup.OutputFormat == cmdsup.OutputFormatTable) {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join({{.OutType}}HeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join({{.OutType}}Slicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+`
+
+func (g *GenCmd) generateWriteOutput(desc *generator.Descriptor) {
+	if desc.GetOptions().GetMapEntry() {
+		return
+	}
+	message := desc.DescriptorProto
+	args := outTmplArgs{
+		Name:      *message.Name,
+		OutType:   gensupport.GetMsgName(desc),
+		FQOutType: g.FQTypeName(desc),
+	}
+	err := g.outTmpl.Execute(g, &args)
+	if err != nil {
+		g.Fail("Failed to execute out template for ", *message.Name, ": ", err.Error(), "\n")
+	}
+	g.importCmdSup = true
+	g.importTabwriter = true
+	g.importStrings = true
+	g.importOS = true
+}
+
+func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) bool {
 	in := g.GetDesc(method.GetInputType())
+	out := g.GetDesc(method.GetOutputType())
 	if in == nil || clientStreaming(method) || hasOneof(in) {
 		// not supported yet
-		return
+		return false
 	}
 
 	g.importCobra = true
 	g.importContext = true
-	g.importTime = true
-	g.importTabwriter = true
-	g.importOS = true
-	g.importStrings = true
 	g.importOutputGen = true
 	_, hasEnums := g.enumArgs[*in.DescriptorProto.Name]
 	cmd := &tmplArgs{
-		Service:      *service.Name,
-		Method:       *method.Name,
-		InType:       g.flatTypeName(*method.InputType),
-		OutType:      g.flatTypeName(*method.OutputType),
-		FQOutType:    g.FQTypeName(g.GetDesc(*method.OutputType)),
-		ServerStream: serverStreaming(method),
-		HasEnums:     hasEnums,
+		Service:              *service.Name,
+		Method:               *method.Name,
+		InType:               g.flatTypeName(*method.InputType),
+		OutType:              g.flatTypeName(*method.OutputType),
+		FQOutType:            g.FQTypeName(out),
+		ServerStream:         serverStreaming(method),
+		HasEnums:             hasEnums,
+		StreamOutIncremental: GetStreamOutIncremental(method),
 	}
 	if strings.HasPrefix(*method.Name, "Update"+cmd.InType) && HasGrpcFields(in.DescriptorProto) {
 		cmd.SetFields = true
+	}
+	if _, found := g.hideTags[*out.DescriptorProto.Name]; found {
+		cmd.OutHideTags = true
 	}
 	if cmd.ServerStream {
 		g.importIO = true
@@ -680,11 +977,12 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	err := g.tmpl.Execute(g, cmd)
 	if err != nil {
 		g.Fail("Failed to execute cmdTemplate for ", *method.Name, ": ", err.Error(), "\n")
-		return
+		return false
 	}
+	return true
 }
 
-func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto) {
+func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto, initNoConfig bool) {
 	if len(service.Method) == 0 {
 		return
 	}
@@ -695,7 +993,13 @@ func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto) {
 			// not supported yet
 			continue
 		}
-		g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType, "FlagSet)")
+		if initNoConfig {
+			g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType,
+				"NoConfigFlagSet)")
+		} else {
+			g.P(method.Name, "Cmd.Flags().AddFlagSet(", flatType,
+				"FlagSet)")
+		}
 	}
 }
 
@@ -767,10 +1071,6 @@ func supportedField(field *descriptor.FieldDescriptorProto) bool {
 		// not supported yet
 		return false
 	}
-	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
-		// not supported yet
-		//return false
-	}
 	return true
 }
 
@@ -795,4 +1095,12 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 
 func GetNoConfig(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protocmd.E_Noconfig, "")
+}
+
+func GetHideTag(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
+}
+
+func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
+	return proto.GetBoolExtension(method.Options, protocmd.E_StreamOutIncremental, false)
 }

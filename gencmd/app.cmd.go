@@ -9,49 +9,73 @@ It is generated from these files:
 	app_inst.proto
 	cloud-resource-manager.proto
 	cloudlet.proto
+	cluster.proto
+	clusterflavor.proto
+	clusterinst.proto
+	common.proto
 	developer.proto
+	flavor.proto
+	metric.proto
 	notice.proto
 	operator.proto
+	refs.proto
 	result.proto
 
 It has these top-level messages:
 	AppKey
 	App
 	AppInstKey
+	AppPort
 	AppInst
+	AppInstInfo
+	AppInstMetrics
 	CloudResource
 	EdgeCloudApp
 	EdgeCloudApplication
 	CloudletKey
 	Cloudlet
+	CloudletInfo
+	CloudletMetrics
+	ClusterKey
+	Cluster
+	ClusterFlavorKey
+	ClusterFlavor
+	ClusterInstKey
+	ClusterInst
+	ClusterInstInfo
 	DeveloperKey
 	Developer
+	FlavorKey
+	Flavor
+	MetricTag
+	MetricVal
+	Metric
 	NoticeReply
 	NoticeRequest
-	OperatorCode
 	OperatorKey
 	Operator
+	CloudletRefs
+	ClusterRefs
 	Result
 */
 package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "time"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
 import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
-import "encoding/json"
+import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
-import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -63,6 +87,21 @@ var _ = math.Inf
 var AppApiCmd edgeproto.AppApiClient
 var AppIn edgeproto.App
 var AppFlagSet = pflag.NewFlagSet("App", pflag.ExitOnError)
+var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
+var AppInImageType string
+var AppInAccessLayer string
+var ImageTypeStrings = []string{
+	"ImageTypeUnknown",
+	"ImageTypeDocker",
+	"ImageTypeQCOW",
+}
+
+var AccessLayerStrings = []string{
+	"AccessLayerUnknown",
+	"AccessLayerL4",
+	"AccessLayerL7",
+	"AccessLayerL4L7",
+}
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
 	s := make([]string, 0, 3)
@@ -80,8 +119,31 @@ func AppKeyHeaderSlicer() []string {
 	return s
 }
 
+func AppKeyWriteOutputArray(objs []*edgeproto.AppKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppKeyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppKeySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppKeyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppKeySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 9)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -89,173 +151,143 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Key.DeveloperKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.Key.Version)
-	s = append(s, in.AppPath)
+	s = append(s, in.ImagePath)
+	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
+	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
+	s = append(s, in.AccessPorts)
+	s = append(s, in.Config)
+	s = append(s, in.DefaultFlavor.Name)
+	s = append(s, in.Cluster.Name)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 9)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Key-Version")
-	s = append(s, "AppPath")
+	s = append(s, "ImagePath")
+	s = append(s, "ImageType")
+	s = append(s, "AccessLayer")
+	s = append(s, "AccessPorts")
+	s = append(s, "Config")
+	s = append(s, "DefaultFlavor-Name")
+	s = append(s, "Cluster-Name")
 	return s
+}
+
+func AppWriteOutputArray(objs []*edgeproto.App) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppWriteOutputOne(obj *edgeproto.App) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
 }
 
 var CreateAppCmd = &cobra.Command{
 	Use: "CreateApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppApiCmd.CreateApp(ctx, &AppIn)
-		cancel()
+		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("CreateApp failed: ", err)
-			return
+			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		ctx := context.Background()
+		obj, err := AppApiCmd.CreateApp(ctx, &AppIn)
+		if err != nil {
+			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var DeleteAppCmd = &cobra.Command{
 	Use: "DeleteApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppApiCmd.DeleteApp(ctx, &AppIn)
-		cancel()
+		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("DeleteApp failed: ", err)
-			return
+			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		ctx := context.Background()
+		obj, err := AppApiCmd.DeleteApp(ctx, &AppIn)
+		if err != nil {
+			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var UpdateAppCmd = &cobra.Command{
 	Use: "UpdateApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
-		AppSetFields()
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		objs, err := AppApiCmd.UpdateApp(ctx, &AppIn)
-		cancel()
+		err = parseAppEnums()
 		if err != nil {
-			fmt.Println("UpdateApp failed: ", err)
-			return
+			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(ResultHeaderSlicer(), "\t"))
-			fmt.Fprintln(output, strings.Join(ResultSlicer(objs), "\t"))
-			output.Flush()
+		AppSetFields()
+		ctx := context.Background()
+		obj, err := AppApiCmd.UpdateApp(ctx, &AppIn)
+		if err != nil {
+			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
+		ResultWriteOutputOne(obj)
+		return nil
 	},
 }
 
 var ShowAppCmd = &cobra.Command{
 	Use: "ShowApp",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
 		if AppApiCmd == nil {
-			fmt.Println("AppApi client not initialized")
-			return
+			return fmt.Errorf("AppApi client not initialized")
 		}
 		var err error
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
+		err = parseAppEnums()
+		if err != nil {
+			return fmt.Errorf("ShowApp failed: %s", err.Error())
+		}
+		ctx := context.Background()
 		stream, err := AppApiCmd.ShowApp(ctx, &AppIn)
 		if err != nil {
-			fmt.Println("ShowApp failed: ", err)
-			return
+			return fmt.Errorf("ShowApp failed: %s", err.Error())
 		}
 		objs := make([]*edgeproto.App, 0)
 		for {
@@ -264,56 +296,47 @@ var ShowAppCmd = &cobra.Command{
 				break
 			}
 			if err != nil {
-				fmt.Println("ShowApp recv failed: ", err)
-				break
+				return fmt.Errorf("ShowApp recv failed: %s", err.Error())
 			}
 			objs = append(objs, obj)
 		}
 		if len(objs) == 0 {
-			return
+			return nil
 		}
-		switch cmdsup.OutputFormat {
-		case cmdsup.OutputFormatYaml:
-			output, err := yaml.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Yaml failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Print(string(output))
-		case cmdsup.OutputFormatJson:
-			output, err := json.MarshalIndent(objs, "", "  ")
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatJsonCompact:
-			output, err := json.Marshal(objs)
-			if err != nil {
-				fmt.Printf("Json failed to marshal: %s\n", err)
-				return
-			}
-			fmt.Println(string(output))
-		case cmdsup.OutputFormatTable:
-			output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-			fmt.Fprintln(output, strings.Join(AppHeaderSlicer(), "\t"))
-			for _, obj := range objs {
-				fmt.Fprintln(output, strings.Join(AppSlicer(obj), "\t"))
-			}
-			output.Flush()
-		}
+		AppWriteOutputArray(objs)
+		return nil
 	},
+}
+
+var AppApiCmds = []*cobra.Command{
+	CreateAppCmd,
+	DeleteAppCmd,
+	UpdateAppCmd,
+	ShowAppCmd,
 }
 
 func init() {
 	AppFlagSet.StringVar(&AppIn.Key.DeveloperKey.Name, "key-developerkey-name", "", "Key.DeveloperKey.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
-	AppFlagSet.StringVar(&AppIn.AppPath, "apppath", "", "AppPath")
+	AppNoConfigFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
+	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
+	AppFlagSet.StringVar(&AppInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
+	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
+	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
+	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
+	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	ShowAppCmd.Flags().AddFlagSet(AppFlagSet)
+}
+
+func AppApiAllowNoConfig() {
+	CreateAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
+	DeleteAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
+	UpdateAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
+	ShowAppCmd.Flags().AddFlagSet(AppNoConfigFlagSet)
 }
 
 func AppSetFields() {
@@ -327,7 +350,55 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("key-version").Changed {
 		AppIn.Fields = append(AppIn.Fields, "2.3")
 	}
-	if AppFlagSet.Lookup("apppath").Changed {
+	if AppNoConfigFlagSet.Lookup("imagepath").Changed {
 		AppIn.Fields = append(AppIn.Fields, "4")
 	}
+	if AppFlagSet.Lookup("imagetype").Changed {
+		AppIn.Fields = append(AppIn.Fields, "5")
+	}
+	if AppFlagSet.Lookup("accesslayer").Changed {
+		AppIn.Fields = append(AppIn.Fields, "6")
+	}
+	if AppFlagSet.Lookup("accessports").Changed {
+		AppIn.Fields = append(AppIn.Fields, "7")
+	}
+	if AppFlagSet.Lookup("config").Changed {
+		AppIn.Fields = append(AppIn.Fields, "8")
+	}
+	if AppFlagSet.Lookup("defaultflavor-name").Changed {
+		AppIn.Fields = append(AppIn.Fields, "9.1")
+	}
+	if AppFlagSet.Lookup("cluster-name").Changed {
+		AppIn.Fields = append(AppIn.Fields, "10.1")
+	}
+}
+
+func parseAppEnums() error {
+	if AppInImageType != "" {
+		switch AppInImageType {
+		case "ImageTypeUnknown":
+			AppIn.ImageType = edgeproto.ImageType(0)
+		case "ImageTypeDocker":
+			AppIn.ImageType = edgeproto.ImageType(1)
+		case "ImageTypeQCOW":
+			AppIn.ImageType = edgeproto.ImageType(2)
+		default:
+			return errors.New("Invalid value for AppInImageType")
+		}
+	}
+	if AppInAccessLayer != "" {
+		switch AppInAccessLayer {
+		case "AccessLayerUnknown":
+			AppIn.AccessLayer = edgeproto.AccessLayer(0)
+		case "AccessLayerL4":
+			AppIn.AccessLayer = edgeproto.AccessLayer(1)
+		case "AccessLayerL7":
+			AppIn.AccessLayer = edgeproto.AccessLayer(2)
+		case "AccessLayerL4L7":
+			AppIn.AccessLayer = edgeproto.AccessLayer(3)
+		default:
+			return errors.New("Invalid value for AppInAccessLayer")
+		}
+	}
+	return nil
 }

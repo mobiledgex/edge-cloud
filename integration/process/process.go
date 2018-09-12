@@ -26,6 +26,7 @@ type ProcessSetup struct {
 	Controllers []ControllerProcess
 	Dmes        []DmeProcess
 	Crms        []CrmProcess
+	Influxs     []InfluxProcess
 }
 
 type EtcdProcess interface {
@@ -41,15 +42,21 @@ type ControllerProcess interface {
 }
 
 type DmeProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
 }
 
 type CrmProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error)
+}
+
+type InfluxProcess interface {
+	Start(logfile string) error
+	Stop()
+	ResetData() error
 }
 
 // options
@@ -92,10 +99,22 @@ func RequireCrmCount(t *testing.T, setup *ProcessSetup, min int) {
 	require.True(t, count >= min, "check minimum number of Crms")
 }
 
+func RequireInfluxCount(t *testing.T, setup *ProcessSetup, min int) {
+	count := len(setup.Influxs)
+	require.True(t, count >= min, "check minimum number of Influxs")
+}
+
 func ResetEtcds(t *testing.T, setup *ProcessSetup, count int) {
 	for ii := 0; ii < count; ii++ {
 		err := setup.Etcds[ii].ResetData()
 		assert.Nil(t, err, "reset etcd ", ii)
+	}
+}
+
+func ResetInfluxs(t *testing.T, setup *ProcessSetup, count int) {
+	for ii := 0; ii < count; ii++ {
+		err := setup.Influxs[ii].ResetData()
+		assert.Nil(t, err, "reset influx ", ii)
 	}
 }
 

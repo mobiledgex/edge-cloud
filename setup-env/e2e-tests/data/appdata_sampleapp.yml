@@ -1,0 +1,151 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusters:
+- key:
+    name: SmallCluster
+  flavor:
+    name: x1.small
+  nodes: 3
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud1
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessStatic
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud2
+  flavor:
+    name: x1.small
+  nodes: 3
+  liveness: LivenessStatic
+
+operators:
+- key:
+    name: TDG
+
+developers:
+- key:
+    name: MEX
+  username: mex
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 735 Sand Hill Road, Menlo Park, CA 94025
+  email: mex@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TDG
+    name: tdgcloud1
+  accessuri: cloud1.tdg
+  location:
+    lat: 31
+    long: -91
+- key:
+    operatorkey:
+      name: TDG
+    name: tdgcloud2
+  accessuri: cloud2.tdg
+  location:
+    lat: 35
+    long: -95
+
+apps:
+- key:
+    developerkey:
+      name: MEX
+    name: sampleApplication
+    version: "1.0"
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/mexexample
+  imagetype: ImageTypeDocker
+  accesslayer: AccessLayerL7
+  flavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MEX
+      name: sampleApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud1
+    id: 123
+  cloudletloc:
+    lat: 31
+    long: -91
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud1
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MEX/sampleApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: sampleApplication
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+
+- key:
+    appkey:
+      developerkey:
+        name: MEX
+      name: sampleApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud2
+    id: 123
+  cloudletloc:
+    lat: 35
+    long: -95
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: tdgcloud2
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MEX/sampleApplication:1.0
+  imagetype: ImageTypeDocker
+  mappedpath: sampleApplication
+  flavor:
+    name: x1.small
+  accesslayer: AccessLayerL7
+

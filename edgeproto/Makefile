@@ -12,3 +12,9 @@ build:
 	protoc ${INCLUDE} --test_out=${BUILTIN}:../testutil *.proto
 	protoc ${INCLUDE} --grpc-gateway_out=${BUILTIN}:. *.proto
 	protoc ${INCLUDE} --cmd_out=${BUILTIN}:../gencmd *.proto
+
+# to use protodoc, make sure you run:
+# go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+protodoc:
+	protoc ${INCLUDE} --doc_out=./doc --doc_opt=html,index.html *.proto
+	protoc ${INCLUDE} --doc_out=./doc --doc_opt=markdown,README.md *.proto

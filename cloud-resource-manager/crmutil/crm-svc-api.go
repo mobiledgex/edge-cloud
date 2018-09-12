@@ -6,10 +6,10 @@ import (
 	"log"
 	"sync"
 
-	"github.com/bobbae/q"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
+//CloudResourceData contains resources
 type CloudResourceData struct {
 	CloudResources []*edgeproto.CloudResource
 }
@@ -39,7 +39,7 @@ var crs = []*edgeproto.CloudResource{
 	},
 }
 
-var resourceID int32 = 0
+var resourceID int32
 
 // CloudResourceManagerServer describes Cloud Resource Manager Server instance container
 type CloudResourceManagerServer struct {
@@ -53,18 +53,15 @@ func NewCloudResourceManagerServer(cd *ControllerData) (*CloudResourceManagerSer
 	return &CloudResourceManagerServer{CloudResourceData: crdb, ControllerData: cd}, nil
 }
 
-// List Cloud Resource
+//ListCloudResource lists resources
 func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudResource, cb edgeproto.CloudResourceManager_ListCloudResourceServer) error {
 	var err error
-	q.Q("ListCloudResource", *cr)
 
 	server.mux.Lock()
 	defer server.mux.Unlock()
 
 	for _, obj := range server.CloudResourceData.CloudResources {
-		q.Q(obj)
 		if cr.Category != 0 && cr.Category != obj.Category {
-			q.Q("skip")
 			continue
 		}
 
@@ -73,15 +70,13 @@ func (server *CloudResourceManagerServer) ListCloudResource(cr *edgeproto.CloudR
 			log.Printf("Can't strearm out resource, %v", err)
 			break
 		}
-		q.Q("stream out", *obj, err)
 	}
 
 	return err
 }
 
-// Add Cloud Resource
+// AddCloudResource adds new resource
 func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
-	q.Q("AddCloudResource", *cr)
 	server.mux.Lock()
 	defer server.mux.Unlock()
 
@@ -90,16 +85,18 @@ func (server *CloudResourceManagerServer) AddCloudResource(ctx context.Context, 
 
 	server.CloudResourceData.CloudResources = append(server.CloudResourceData.CloudResources, cr)
 	cloudlet := edgeproto.Cloudlet{}
-	found := server.ControllerData.GetCloudlet(cr.CloudletKey, &cloudlet)
+	found := server.ControllerData.CloudletCache.Get(cr.CloudletKey, &cloudlet)
 	if !found {
-		// controller has no such cloudlet, should fail
+		err := fmt.Errorf("cloudlet not found %v", cr)
+		errstr := fmt.Sprintf("error %v", err)
+		return &edgeproto.Result{Message: errstr}, err
 	}
 
 	return &edgeproto.Result{}, nil
 }
 
+//DeleteCloudResource removes a resource
 func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Context, cr *edgeproto.CloudResource) (*edgeproto.Result, error) {
-	q.Q("DeleteCloudResource", *cr)
 
 	server.mux.Lock()
 	defer server.mux.Unlock()
@@ -120,20 +117,25 @@ func (server *CloudResourceManagerServer) DeleteCloudResource(ctx context.Contex
 	return nil, fmt.Errorf("Resource not found")
 }
 
+//DeployApplication runs app
 func (server *CloudResourceManagerServer) DeployApplication(ctx context.Context, app *edgeproto.EdgeCloudApplication) (*edgeproto.Result, error) {
 	if err := RunApp(app); err != nil {
 		return nil, err
 	}
 
 	appInst := edgeproto.AppInst{}
-	found := server.ControllerData.GetAppInst(app.Apps[0].AppInstKey, &appInst)
+	found := server.ControllerData.AppInstCache.Get(app.Apps[0].AppInstKey, &appInst)
 	if !found {
 		// controller has no such app inst, should fail
+		err := fmt.Errorf("app not found %v", app)
+		errstr := fmt.Sprintf("error %v", err)
+		return &edgeproto.Result{Message: errstr}, err
 	}
 
 	return &edgeproto.Result{}, nil
 }
 
+// DeleteApplication removes app
 func (server *CloudResourceManagerServer) DeleteApplication(ctx context.Context, app *edgeproto.EdgeCloudApplication) (*edgeproto.Result, error) {
 	if err := KillApp(app); err != nil {
 		return nil, err

@@ -9,28 +9,53 @@
 		app_inst.proto
 		cloud-resource-manager.proto
 		cloudlet.proto
+		cluster.proto
+		clusterflavor.proto
+		clusterinst.proto
+		common.proto
 		developer.proto
+		flavor.proto
+		metric.proto
 		notice.proto
 		operator.proto
+		refs.proto
 		result.proto
 
 	It has these top-level messages:
 		AppKey
 		App
 		AppInstKey
+		AppPort
 		AppInst
+		AppInstInfo
+		AppInstMetrics
 		CloudResource
 		EdgeCloudApp
 		EdgeCloudApplication
 		CloudletKey
 		Cloudlet
+		CloudletInfo
+		CloudletMetrics
+		ClusterKey
+		Cluster
+		ClusterFlavorKey
+		ClusterFlavor
+		ClusterInstKey
+		ClusterInst
+		ClusterInstInfo
 		DeveloperKey
 		Developer
+		FlavorKey
+		Flavor
+		MetricTag
+		MetricVal
+		Metric
 		NoticeReply
 		NoticeRequest
-		OperatorCode
 		OperatorKey
 		Operator
+		CloudletRefs
+		ClusterRefs
 		Result
 */
 package edgeproto
@@ -40,6 +65,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import strings "strings"
@@ -50,8 +76,11 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "sync"
+import "github.com/coreos/etcd/clientv3/concurrency"
 import "github.com/mobiledgex/edge-cloud/util"
+import "github.com/mobiledgex/edge-cloud/log"
+import "errors"
+import "strconv"
 
 import io "io"
 
@@ -66,16 +95,73 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
-// key that uniquely identifies an application
-// It is important that embedded structs are not referenced by a
-// pointer, otherwise the enclosing struct cannot properly function
-// as the key to a hash table. Thus embedded structs have nullable false.
+// ImageType specifies the image type of the application.
+type ImageType int32
+
+const (
+	// Unknown image type
+	ImageType_ImageTypeUnknown ImageType = 0
+	// Docker container image type compatible with Kubernetes
+	ImageType_ImageTypeDocker ImageType = 1
+	// QCOW2 virtual machine image type
+	ImageType_ImageTypeQCOW ImageType = 2
+)
+
+var ImageType_name = map[int32]string{
+	0: "ImageTypeUnknown",
+	1: "ImageTypeDocker",
+	2: "ImageTypeQCOW",
+}
+var ImageType_value = map[string]int32{
+	"ImageTypeUnknown": 0,
+	"ImageTypeDocker":  1,
+	"ImageTypeQCOW":    2,
+}
+
+func (x ImageType) String() string {
+	return proto.EnumName(ImageType_name, int32(x))
+}
+func (ImageType) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
+
+// AccessLayer defines what layers are exposed for the application.
+type AccessLayer int32
+
+const (
+	// No external access for the application
+	AccessLayer_AccessLayerUnknown AccessLayer = 0
+	// Layer 4 (tcp/udp) access
+	AccessLayer_AccessLayerL4 AccessLayer = 1
+	// Layer 7 (https path) access
+	AccessLayer_AccessLayerL7 AccessLayer = 2
+	// Both layer 4 and layer 7 access
+	AccessLayer_AccessLayerL4L7 AccessLayer = 3
+)
+
+var AccessLayer_name = map[int32]string{
+	0: "AccessLayerUnknown",
+	1: "AccessLayerL4",
+	2: "AccessLayerL7",
+	3: "AccessLayerL4L7",
+}
+var AccessLayer_value = map[string]int32{
+	"AccessLayerUnknown": 0,
+	"AccessLayerL4":      1,
+	"AccessLayerL7":      2,
+	"AccessLayerL4L7":    3,
+}
+
+func (x AccessLayer) String() string {
+	return proto.EnumName(AccessLayer_name, int32(x))
+}
+func (AccessLayer) EnumDescriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
+
+// AppKey uniquely identifies an Application.
 type AppKey struct {
-	// developer key
+	// Developer key
 	DeveloperKey DeveloperKey `protobuf:"bytes,1,opt,name=developer_key,json=developerKey" json:"developer_key"`
-	// application name
+	// Application name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	// version of the app
+	// Version of the app
 	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
 }
 
@@ -84,14 +170,32 @@ func (m *AppKey) String() string            { return proto.CompactTextString(m) 
 func (*AppKey) ProtoMessage()               {}
 func (*AppKey) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{0} }
 
-// Applications are created and uploaded by developers
-// Only registered applications can access location and cloudlet services
+// Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
+// An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
 type App struct {
+	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
 	// Unique identifier key
 	Key AppKey `protobuf:"bytes,2,opt,name=key" json:"key"`
-	// Path to the application binary on shared storage
-	AppPath string `protobuf:"bytes,4,opt,name=app_path,json=appPath,proto3" json:"app_path,omitempty"`
+	// URI from which to download image
+	ImagePath string `protobuf:"bytes,4,opt,name=image_path,json=imagePath,proto3" json:"image_path,omitempty"`
+	// Image type (see ImageType)
+	ImageType ImageType `protobuf:"varint,5,opt,name=image_type,json=imageType,proto3,enum=edgeproto.ImageType" json:"image_type,omitempty"`
+	// Access layer(s) (see AccessLayer)
+	AccessLayer AccessLayer `protobuf:"varint,6,opt,name=access_layer,json=accessLayer,proto3,enum=edgeproto.AccessLayer" json:"access_layer,omitempty"`
+	// For Layer4 access, the ports the app listens on.
+	// This is a comma separated list of protocol:port pairs, i.e.
+	// tcp:80,tcp:443,udp:10002.
+	// Only tcp and udp protocols are supported.
+	AccessPorts string `protobuf:"bytes,7,opt,name=access_ports,json=accessPorts,proto3" json:"access_ports,omitempty"`
+	// URI of resource to be used to establish config for App.
+	Config string `protobuf:"bytes,8,opt,name=config,proto3" json:"config,omitempty"`
+	// Default flavor for the App, may be overridden by the AppInst
+	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
+	// Cluster on which the App can be instantiated.
+	// If not specified during create, a cluster will be automatically created.
+	// If specified, it must exist.
+	Cluster ClusterKey `protobuf:"bytes,10,opt,name=cluster" json:"cluster"`
 }
 
 func (m *App) Reset()                    { *m = App{} }
@@ -102,6 +206,8 @@ func (*App) Descriptor() ([]byte, []int) { return fileDescriptorApp, []int{1} }
 func init() {
 	proto.RegisterType((*AppKey)(nil), "edgeproto.AppKey")
 	proto.RegisterType((*App)(nil), "edgeproto.App")
+	proto.RegisterEnum("edgeproto.ImageType", ImageType_name, ImageType_value)
+	proto.RegisterEnum("edgeproto.AccessLayer", AccessLayer_name, AccessLayer_value)
 }
 func (this *AppKey) GoString() string {
 	if this == nil {
@@ -135,9 +241,13 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AppApi service
 
 type AppApiClient interface {
+	// Create an application
 	CreateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Delete an application
 	DeleteApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Update an application
 	UpdateApp(ctx context.Context, in *App, opts ...grpc.CallOption) (*Result, error)
+	// Show applications. Any fields specified will be used to filter results.
 	ShowApp(ctx context.Context, in *App, opts ...grpc.CallOption) (AppApi_ShowAppClient, error)
 }
 
@@ -211,9 +321,13 @@ func (x *appApiShowAppClient) Recv() (*App, error) {
 // Server API for AppApi service
 
 type AppApiServer interface {
+	// Create an application
 	CreateApp(context.Context, *App) (*Result, error)
+	// Delete an application
 	DeleteApp(context.Context, *App) (*Result, error)
+	// Update an application
 	UpdateApp(context.Context, *App) (*Result, error)
+	// Show applications. Any fields specified will be used to filter results.
 	ShowApp(*App, AppApi_ShowAppServer) error
 }
 
@@ -399,12 +513,50 @@ func (m *App) MarshalTo(dAtA []byte) (int, error) {
 		return 0, err
 	}
 	i += n2
-	if len(m.AppPath) > 0 {
+	if len(m.ImagePath) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintApp(dAtA, i, uint64(len(m.AppPath)))
-		i += copy(dAtA[i:], m.AppPath)
+		i = encodeVarintApp(dAtA, i, uint64(len(m.ImagePath)))
+		i += copy(dAtA[i:], m.ImagePath)
 	}
+	if m.ImageType != 0 {
+		dAtA[i] = 0x28
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(m.ImageType))
+	}
+	if m.AccessLayer != 0 {
+		dAtA[i] = 0x30
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(m.AccessLayer))
+	}
+	if len(m.AccessPorts) > 0 {
+		dAtA[i] = 0x3a
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(len(m.AccessPorts)))
+		i += copy(dAtA[i:], m.AccessPorts)
+	}
+	if len(m.Config) > 0 {
+		dAtA[i] = 0x42
+		i++
+		i = encodeVarintApp(dAtA, i, uint64(len(m.Config)))
+		i += copy(dAtA[i:], m.Config)
+	}
+	dAtA[i] = 0x4a
+	i++
+	i = encodeVarintApp(dAtA, i, uint64(m.DefaultFlavor.Size()))
+	n3, err := m.DefaultFlavor.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n3
+	dAtA[i] = 0x52
+	i++
+	i = encodeVarintApp(dAtA, i, uint64(m.Cluster.Size()))
+	n4, err := m.Cluster.MarshalTo(dAtA[i:])
+	if err != nil {
+		return 0, err
+	}
+	i += n4
 	return i, nil
 }
 
@@ -417,18 +569,27 @@ func encodeVarintApp(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *AppKey) Matches(filter *AppKey) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.DeveloperKey.Matches(&filter.DeveloperKey) {
+func (m *AppKey) Matches(o *AppKey, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.Name != "" && filter.Name != m.Name {
+	if !m.DeveloperKey.Matches(&o.DeveloperKey, fopts...) {
 		return false
 	}
-	if filter.Version != "" && filter.Version != m.Version {
-		return false
+	if !opts.Filter || o.Name != "" {
+		if o.Name != m.Name {
+			return false
+		}
+	}
+	if !opts.Filter || o.Version != "" {
+		if o.Version != m.Version {
+			return false
+		}
 	}
 	return true
 }
@@ -442,7 +603,7 @@ func (m *AppKey) CopyInFields(src *AppKey) {
 func (m *AppKey) GetKeyString() string {
 	key, err := json.Marshal(m)
 	if err != nil {
-		util.FatalLog("Failed to marshal AppKey key string", "obj", m)
+		log.FatalLog("Failed to marshal AppKey key string", "obj", m)
 	}
 	return string(key)
 }
@@ -450,48 +611,142 @@ func (m *AppKey) GetKeyString() string {
 func AppKeyStringParse(str string, key *AppKey) {
 	err := json.Unmarshal([]byte(str), key)
 	if err != nil {
-		util.FatalLog("Failed to unmarshal AppKey key string", "str", str)
+		log.FatalLog("Failed to unmarshal AppKey key string", "str", str)
 	}
 }
 
-func (m *App) Matches(filter *App) bool {
-	if filter == nil {
-		return true
-	}
-	if !m.Key.Matches(&filter.Key) {
+func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
+	opts := MatchOptions{}
+	applyMatchOptions(&opts, fopts...)
+	if o == nil {
+		if opts.Filter {
+			return true
+		}
 		return false
 	}
-	if filter.AppPath != "" && filter.AppPath != m.AppPath {
+	if !m.Key.Matches(&o.Key, fopts...) {
 		return false
+	}
+	if !opts.IgnoreBackend {
+		if !opts.Filter || o.ImagePath != "" {
+			if o.ImagePath != m.ImagePath {
+				return false
+			}
+		}
+	}
+	if !opts.Filter || o.ImageType != 0 {
+		if o.ImageType != m.ImageType {
+			return false
+		}
+	}
+	if !opts.Filter || o.AccessLayer != 0 {
+		if o.AccessLayer != m.AccessLayer {
+			return false
+		}
+	}
+	if !opts.Filter || o.AccessPorts != "" {
+		if o.AccessPorts != m.AccessPorts {
+			return false
+		}
+	}
+	if !opts.Filter || o.Config != "" {
+		if o.Config != m.Config {
+			return false
+		}
+	}
+	if !m.DefaultFlavor.Matches(&o.DefaultFlavor, fopts...) {
+		return false
+	}
+	if !opts.IgnoreBackend {
+		if !m.Cluster.Matches(&o.Cluster, fopts...) {
+			return false
+		}
 	}
 	return true
 }
 
+const AppFieldKey = "2"
+const AppFieldKeyDeveloperKey = "2.1"
 const AppFieldKeyDeveloperKeyName = "2.1.2"
 const AppFieldKeyName = "2.2"
 const AppFieldKeyVersion = "2.3"
-const AppFieldAppPath = "4"
+const AppFieldImagePath = "4"
+const AppFieldImageType = "5"
+const AppFieldAccessLayer = "6"
+const AppFieldAccessPorts = "7"
+const AppFieldConfig = "8"
+const AppFieldDefaultFlavor = "9"
+const AppFieldDefaultFlavorName = "9.1"
+const AppFieldCluster = "10"
+const AppFieldClusterName = "10.1"
 
 var AppAllFields = []string{
 	AppFieldKeyDeveloperKeyName,
 	AppFieldKeyName,
 	AppFieldKeyVersion,
-	AppFieldAppPath,
+	AppFieldImagePath,
+	AppFieldImageType,
+	AppFieldAccessLayer,
+	AppFieldAccessPorts,
+	AppFieldConfig,
+	AppFieldDefaultFlavorName,
+	AppFieldClusterName,
+}
+
+var AppAllFieldsMap = map[string]struct{}{
+	AppFieldKeyDeveloperKeyName: struct{}{},
+	AppFieldKeyName:             struct{}{},
+	AppFieldKeyVersion:          struct{}{},
+	AppFieldImagePath:           struct{}{},
+	AppFieldImageType:           struct{}{},
+	AppFieldAccessLayer:         struct{}{},
+	AppFieldAccessPorts:         struct{}{},
+	AppFieldConfig:              struct{}{},
+	AppFieldDefaultFlavorName:   struct{}{},
+	AppFieldClusterName:         struct{}{},
+}
+
+func (m *App) DiffFields(o *App, fields map[string]struct{}) {
+	if m.Key.DeveloperKey.Name != o.Key.DeveloperKey.Name {
+		fields[AppFieldKeyDeveloperKeyName] = struct{}{}
+		fields[AppFieldKeyDeveloperKey] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.Key.Name != o.Key.Name {
+		fields[AppFieldKeyName] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.Key.Version != o.Key.Version {
+		fields[AppFieldKeyVersion] = struct{}{}
+		fields[AppFieldKey] = struct{}{}
+	}
+	if m.ImagePath != o.ImagePath {
+		fields[AppFieldImagePath] = struct{}{}
+	}
+	if m.ImageType != o.ImageType {
+		fields[AppFieldImageType] = struct{}{}
+	}
+	if m.AccessLayer != o.AccessLayer {
+		fields[AppFieldAccessLayer] = struct{}{}
+	}
+	if m.AccessPorts != o.AccessPorts {
+		fields[AppFieldAccessPorts] = struct{}{}
+	}
+	if m.Config != o.Config {
+		fields[AppFieldConfig] = struct{}{}
+	}
+	if m.DefaultFlavor.Name != o.DefaultFlavor.Name {
+		fields[AppFieldDefaultFlavorName] = struct{}{}
+		fields[AppFieldDefaultFlavor] = struct{}{}
+	}
+	if m.Cluster.Name != o.Cluster.Name {
+		fields[AppFieldClusterName] = struct{}{}
+		fields[AppFieldCluster] = struct{}{}
+	}
 }
 
 func (m *App) CopyInFields(src *App) {
-	fmap := make(map[string]struct{})
-	// add specified fields and parent fields
-	for _, set := range src.Fields {
-		for {
-			fmap[set] = struct{}{}
-			idx := strings.LastIndex(set, ".")
-			if idx == -1 {
-				break
-			}
-			set = set[:idx]
-		}
-	}
+	fmap := MakeFieldMap(src.Fields)
 	if _, set := fmap["2"]; set {
 		if _, set := fmap["2.1"]; set {
 			if _, set := fmap["2.1.2"]; set {
@@ -506,7 +761,29 @@ func (m *App) CopyInFields(src *App) {
 		}
 	}
 	if _, set := fmap["4"]; set {
-		m.AppPath = src.AppPath
+		m.ImagePath = src.ImagePath
+	}
+	if _, set := fmap["5"]; set {
+		m.ImageType = src.ImageType
+	}
+	if _, set := fmap["6"]; set {
+		m.AccessLayer = src.AccessLayer
+	}
+	if _, set := fmap["7"]; set {
+		m.AccessPorts = src.AccessPorts
+	}
+	if _, set := fmap["8"]; set {
+		m.Config = src.Config
+	}
+	if _, set := fmap["9"]; set {
+		if _, set := fmap["9.1"]; set {
+			m.DefaultFlavor.Name = src.DefaultFlavor.Name
+		}
+	}
+	if _, set := fmap["10"]; set {
+		if _, set := fmap["10.1"]; set {
+			m.Cluster.Name = src.Cluster.Name
+		}
 	}
 }
 
@@ -515,32 +792,24 @@ func (s *App) HasFields() bool {
 }
 
 type AppStore struct {
-	objstore objstore.ObjStore
-	listApp  map[AppKey]struct{}
+	kvstore objstore.KVStore
 }
 
-func NewAppStore(objstore objstore.ObjStore) AppStore {
-	return AppStore{objstore: objstore}
-}
-
-type AppCacher interface {
-	SyncAppUpdate(m *App, rev int64)
-	SyncAppDelete(m *App, rev int64)
-	SyncAppPrune(current map[AppKey]struct{})
-	SyncAppRevOnly(rev int64)
+func NewAppStore(kvstore objstore.KVStore) AppStore {
+	return AppStore{kvstore: kvstore}
 }
 
 func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	err := m.Validate(AppAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("App", m.GetKey())
 	val, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Create(key, string(val))
+	rev, err := s.kvstore.Create(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -551,13 +820,14 @@ func (s *AppStore) Create(m *App, wait func(int64)) (*Result, error) {
 }
 
 func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
-	err := m.Validate()
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
+	key := objstore.DbKeyString("App", m.GetKey())
 	var vers int64 = 0
-	curBytes, vers, err := s.objstore.Get(key)
+	curBytes, vers, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, err
 	}
@@ -573,7 +843,43 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.objstore.Update(key, string(val), vers)
+	rev, err := s.kvstore.Update(key, string(val), vers)
+	if err != nil {
+		return nil, err
+	}
+	if wait != nil {
+		wait(rev)
+	}
+	return &Result{}, err
+}
+
+func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	key := objstore.DbKeyString("App", m.GetKey())
+	var val []byte
+	curBytes, _, _, err := s.kvstore.Get(key)
+	if err == nil {
+		var cur App
+		err = json.Unmarshal(curBytes, &cur)
+		if err != nil {
+			return nil, err
+		}
+		cur.CopyInFields(m)
+		// never save fields
+		cur.Fields = nil
+		val, err = json.Marshal(cur)
+	} else {
+		m.Fields = nil
+		val, err = json.Marshal(m)
+	}
+	if err != nil {
+		return nil, err
+	}
+	rev, err := s.kvstore.Put(key, string(val))
 	if err != nil {
 		return nil, err
 	}
@@ -588,8 +894,8 @@ func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString(m.GetKey())
-	rev, err := s.objstore.Delete(key)
+	key := objstore.DbKeyString("App", m.GetKey())
+	rev, err := s.kvstore.Delete(key)
 	if err != nil {
 		return nil, err
 	}
@@ -599,128 +905,74 @@ func (s *AppStore) Delete(m *App, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-type AppCb func(m *App) error
-
-func (s *AppStore) LoadAll(cb AppCb) error {
-	loadkey := objstore.DbKeyPrefixString(&AppKey{})
-	err := s.objstore.List(loadkey, func(key, val []byte, rev int64) error {
-		var obj App
-		err := json.Unmarshal(val, &obj)
-		if err != nil {
-			util.WarnLog("Failed to parse App data", "val", string(val))
-			return nil
-		}
-		err = cb(&obj)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-	return err
-}
-
 func (s *AppStore) LoadOne(key string) (*App, int64, error) {
-	val, rev, err := s.objstore.Get(key)
+	val, rev, _, err := s.kvstore.Get(key)
 	if err != nil {
 		return nil, 0, err
 	}
 	var obj App
 	err = json.Unmarshal(val, &obj)
 	if err != nil {
-		util.DebugLog(util.DebugLevelApi, "Failed to parse App data", "val", string(val))
+		log.DebugLog(log.DebugLevelApi, "Failed to parse App data", "val", string(val))
 		return nil, 0, err
 	}
 	return &obj, rev, nil
 }
 
-// Sync will sync changes for any App objects.
-func (s *AppStore) Sync(ctx context.Context, cacher AppCacher) error {
-	str := objstore.DbKeyPrefixString(&AppKey{})
-	return s.objstore.Sync(ctx, str, func(in *objstore.SyncCbData) {
-		obj := App{}
-		// Even on parse error, we should still call back to keep
-		// the revision numbers in sync so no caller hangs on wait.
-		action := in.Action
-		if action == objstore.SyncUpdate || action == objstore.SyncList {
-			err := json.Unmarshal(in.Value, &obj)
-			if err != nil {
-				util.WarnLog("Failed to parse App data", "val", string(in.Value))
-				action = objstore.SyncRevOnly
-			}
-		} else if action == objstore.SyncDelete {
-			keystr := objstore.DbKeyPrefixRemove(string(in.Key))
-			AppKeyStringParse(keystr, obj.GetKey())
+func (s *AppStore) STMGet(stm concurrency.STM, key *AppKey, buf *App) bool {
+	keystr := objstore.DbKeyString("App", key)
+	valstr := stm.Get(keystr)
+	if valstr == "" {
+		return false
+	}
+	if buf != nil {
+		err := json.Unmarshal([]byte(valstr), buf)
+		if err != nil {
+			return false
 		}
-		util.DebugLog(util.DebugLevelApi, "Sync cb", "action", objstore.SyncActionStrs[in.Action], "key", string(in.Key), "value", string(in.Value), "rev", in.Rev)
-		switch action {
-		case objstore.SyncUpdate:
-			cacher.SyncAppUpdate(&obj, in.Rev)
-		case objstore.SyncDelete:
-			cacher.SyncAppDelete(&obj, in.Rev)
-		case objstore.SyncListStart:
-			s.listApp = make(map[AppKey]struct{})
-		case objstore.SyncList:
-			s.listApp[obj.Key] = struct{}{}
-			cacher.SyncAppUpdate(&obj, in.Rev)
-		case objstore.SyncListEnd:
-			cacher.SyncAppPrune(s.listApp)
-			s.listApp = nil
-		case objstore.SyncRevOnly:
-			cacher.SyncAppRevOnly(in.Rev)
-		}
-	})
+	}
+	return true
+}
+
+func (s *AppStore) STMPut(stm concurrency.STM, obj *App) {
+	keystr := objstore.DbKeyString("App", obj.GetKey())
+	val, _ := json.Marshal(obj)
+	stm.Put(keystr, string(val))
+}
+
+func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
+	keystr := objstore.DbKeyString("App", key)
+	stm.Del(keystr)
+}
+
+type AppKeyWatcher struct {
+	cb func()
 }
 
 // AppCache caches App objects in memory in a hash table
 // and keeps them in sync with the database.
 type AppCache struct {
-	Store      *AppStore
-	Objs       map[AppKey]*App
-	Rev        int64
-	Mux        util.Mutex
-	Cond       sync.Cond
-	initWait   bool
-	syncDone   bool
-	syncCancel context.CancelFunc
-	notifyCb   func(obj *AppKey)
+	Objs        map[AppKey]*App
+	Mux         util.Mutex
+	List        map[AppKey]struct{}
+	NotifyCb    func(obj *AppKey, old *App)
+	UpdatedCb   func(old *App, new *App)
+	KeyWatchers map[AppKey][]*AppKeyWatcher
 }
 
-func NewAppCache(store *AppStore) *AppCache {
-	cache := AppCache{
-		Store:    store,
-		Objs:     make(map[AppKey]*App),
-		initWait: true,
-	}
-	cache.Mux.InitCond(&cache.Cond)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cache.syncCancel = cancel
-	go func() {
-		err := cache.Store.Sync(ctx, &cache)
-		if err != nil {
-			util.WarnLog("App Sync failed", "err", err)
-		}
-		cache.syncDone = true
-		cache.Cond.Broadcast()
-	}()
+func NewAppCache() *AppCache {
+	cache := AppCache{}
+	InitAppCache(&cache)
 	return &cache
 }
 
-func (c *AppCache) WaitInitSyncDone() {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for c.initWait {
-		c.Cond.Wait()
-	}
+func InitAppCache(cache *AppCache) {
+	cache.Objs = make(map[AppKey]*App)
+	cache.KeyWatchers = make(map[AppKey][]*AppKeyWatcher)
 }
 
-func (c *AppCache) Done() {
-	c.syncCancel()
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for !c.syncDone {
-		c.Cond.Wait()
-	}
+func (c *AppCache) GetTypeString() string {
+	return "App"
 }
 
 func (c *AppCache) Get(key *AppKey, valbuf *App) bool {
@@ -748,77 +1000,72 @@ func (c *AppCache) GetAllKeys(keys map[AppKey]struct{}) {
 	}
 }
 
-func (c *AppCache) SyncAppUpdate(in *App, rev int64) {
+func (c *AppCache) Update(in *App, rev int64) {
 	c.Mux.Lock()
-	c.Objs[*in.GetKey()] = in
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "obj", in, "rev", rev)
-	c.Cond.Broadcast()
-	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.UpdatedCb != nil || c.NotifyCb != nil {
+		old := c.Objs[in.Key]
+		if c.UpdatedCb != nil {
+			new := &App{}
+			*new = *in
+			defer c.UpdatedCb(old, new)
+		}
+		if c.NotifyCb != nil {
+			defer c.NotifyCb(&in.Key, old)
+		}
 	}
+	c.Objs[in.Key] = in
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", in, "rev", rev)
+	c.Mux.Unlock()
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *AppCache) SyncAppDelete(in *App, rev int64) {
+func (c *AppCache) Delete(in *App, rev int64) {
 	c.Mux.Lock()
-	delete(c.Objs, *in.GetKey())
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncUpdate", "key", in.GetKey(), "rev", rev)
-	c.Cond.Broadcast()
+	old := c.Objs[in.Key]
+	delete(c.Objs, in.Key)
+	log.DebugLog(log.DebugLevelApi, "SyncDelete App", "key", in.Key, "rev", rev)
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		c.notifyCb(in.GetKey())
+	if c.NotifyCb != nil {
+		c.NotifyCb(&in.Key, old)
 	}
+	c.TriggerKeyWatchers(&in.Key)
 }
 
-func (c *AppCache) SyncAppPrune(current map[AppKey]struct{}) {
-	deleted := make(map[AppKey]struct{})
+func (c *AppCache) Prune(validKeys map[AppKey]struct{}) {
+	notify := make(map[AppKey]*App)
 	c.Mux.Lock()
 	for key, _ := range c.Objs {
-		if _, found := current[key]; !found {
+		if _, ok := validKeys[key]; !ok {
+			if c.NotifyCb != nil {
+				notify[key] = c.Objs[key]
+			}
 			delete(c.Objs, key)
-			deleted[key] = struct{}{}
 		}
-	}
-	if c.initWait {
-		c.initWait = false
-		c.Cond.Broadcast()
 	}
 	c.Mux.Unlock()
-	if c.notifyCb != nil {
-		for key, _ := range deleted {
-			c.notifyCb(&key)
+	for key, old := range notify {
+		if c.NotifyCb != nil {
+			c.NotifyCb(&key, old)
 		}
+		c.TriggerKeyWatchers(&key)
 	}
 }
 
-func (c *AppCache) SyncAppRevOnly(rev int64) {
+func (c *AppCache) GetCount() int {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
-	c.Rev = rev
-	util.DebugLog(util.DebugLevelApi, "SyncRevOnly", "rev", rev)
-	c.Cond.Broadcast()
-}
-
-func (c *AppCache) SyncWait(rev int64) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	util.DebugLog(util.DebugLevelApi, "SyncWait", "cache-rev", c.Rev, "wait-rev", rev)
-	for c.Rev < rev {
-		c.Cond.Wait()
-	}
+	return len(c.Objs)
 }
 
 func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
-	util.DebugLog(util.DebugLevelApi, "Show App", "count", len(c.Objs))
+	log.DebugLog(log.DebugLevelApi, "Show App", "count", len(c.Objs))
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	for _, obj := range c.Objs {
-		if !obj.Matches(filter) {
+		if !obj.Matches(filter, MatchFilter()) {
 			continue
 		}
-		util.DebugLog(util.DebugLevelApi, "Show App", "obj", obj)
+		log.DebugLog(log.DebugLevelApi, "Show App", "obj", obj)
 		err := cb(obj)
 		if err != nil {
 			return err
@@ -827,12 +1074,225 @@ func (c *AppCache) Show(filter *App, cb func(ret *App) error) error {
 	return nil
 }
 
-func (c *AppCache) SetNotifyCb(fn func(obj *AppKey)) {
-	c.notifyCb = fn
+func AppGenericNotifyCb(fn func(key *AppKey, old *App)) func(objstore.ObjKey, objstore.Obj) {
+	return func(objkey objstore.ObjKey, obj objstore.Obj) {
+		fn(objkey.(*AppKey), obj.(*App))
+	}
 }
 
-func (m *App) GetKey() *AppKey {
+func (c *AppCache) SetNotifyCb(fn func(obj *AppKey, old *App)) {
+	c.NotifyCb = fn
+}
+
+func (c *AppCache) SetUpdatedCb(fn func(old *App, new *App)) {
+	c.UpdatedCb = fn
+}
+
+func (c *AppCache) WatchKey(key *AppKey, cb func()) context.CancelFunc {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	list, ok := c.KeyWatchers[*key]
+	if !ok {
+		list = make([]*AppKeyWatcher, 0)
+	}
+	watcher := AppKeyWatcher{cb: cb}
+	c.KeyWatchers[*key] = append(list, &watcher)
+	log.DebugLog(log.DebugLevelApi, "Watching App", "key", key)
+	return func() {
+		c.Mux.Lock()
+		defer c.Mux.Unlock()
+		list, ok := c.KeyWatchers[*key]
+		if !ok {
+			return
+		}
+		for ii, _ := range list {
+			if list[ii] != &watcher {
+				continue
+			}
+			if len(list) == 1 {
+				delete(c.KeyWatchers, *key)
+				return
+			}
+			list[ii] = list[len(list)-1]
+			list[len(list)-1] = nil
+			c.KeyWatchers[*key] = list[:len(list)-1]
+			return
+		}
+	}
+}
+
+func (c *AppCache) TriggerKeyWatchers(key *AppKey) {
+	watchers := make([]*AppKeyWatcher, 0)
+	c.Mux.Lock()
+	if list, ok := c.KeyWatchers[*key]; ok {
+		watchers = append(watchers, list...)
+	}
+	c.Mux.Unlock()
+	for ii, _ := range watchers {
+		watchers[ii].cb()
+	}
+}
+func (c *AppCache) SyncUpdate(key, val []byte, rev int64) {
+	obj := App{}
+	err := json.Unmarshal(val, &obj)
+	if err != nil {
+		log.WarnLog("Failed to parse App data", "val", string(val))
+		return
+	}
+	c.Update(&obj, rev)
+	c.Mux.Lock()
+	if c.List != nil {
+		c.List[obj.Key] = struct{}{}
+	}
+	c.Mux.Unlock()
+}
+
+func (c *AppCache) SyncDelete(key []byte, rev int64) {
+	obj := App{}
+	keystr := objstore.DbKeyPrefixRemove(string(key))
+	AppKeyStringParse(keystr, &obj.Key)
+	c.Delete(&obj, rev)
+}
+
+func (c *AppCache) SyncListStart() {
+	c.List = make(map[AppKey]struct{})
+}
+
+func (c *AppCache) SyncListEnd() {
+	deleted := make(map[AppKey]*App)
+	c.Mux.Lock()
+	for key, val := range c.Objs {
+		if _, found := c.List[key]; !found {
+			deleted[key] = val
+			delete(c.Objs, key)
+		}
+	}
+	c.List = nil
+	c.Mux.Unlock()
+	if c.NotifyCb != nil {
+		for key, val := range deleted {
+			c.NotifyCb(&key, val)
+			c.TriggerKeyWatchers(&key)
+		}
+	}
+}
+
+func (m *App) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+var ImageTypeStrings = []string{
+	"ImageTypeUnknown",
+	"ImageTypeDocker",
+	"ImageTypeQCOW",
+}
+
+const (
+	ImageTypeImageTypeUnknown uint64 = 1 << 0
+	ImageTypeImageTypeDocker  uint64 = 1 << 1
+	ImageTypeImageTypeQCOW    uint64 = 1 << 2
+)
+
+func (e *ImageType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := ImageType_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = ImageType_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ImageType(val)
+	return nil
+}
+
+func (e ImageType) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var AccessLayerStrings = []string{
+	"AccessLayerUnknown",
+	"AccessLayerL4",
+	"AccessLayerL7",
+	"AccessLayerL4L7",
+}
+
+const (
+	AccessLayerAccessLayerUnknown uint64 = 1 << 0
+	AccessLayerAccessLayerL4      uint64 = 1 << 1
+	AccessLayerAccessLayerL7      uint64 = 1 << 2
+	AccessLayerAccessLayerL4L7    uint64 = 1 << 3
+)
+
+func (e *AccessLayer) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := AccessLayer_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = AccessLayer_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = AccessLayer(val)
+	return nil
+}
+
+func (e AccessLayer) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+type MatchOptions struct {
+	// Filter will ignore 0 or nil fields on the passed in object
+	Filter bool
+	// IgnoreBackend will ignore fields that were marked backend in .proto
+	IgnoreBackend bool
+	// Sort repeated (arrays) of Key objects so matching does not
+	// fail due to order.
+	SortArrayedKeys bool
+}
+
+type MatchOpt func(*MatchOptions)
+
+func MatchFilter() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.Filter = true
+	}
+}
+
+func MatchIgnoreBackend() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.IgnoreBackend = true
+	}
+}
+
+func MatchSortArrayedKeys() MatchOpt {
+	return func(opts *MatchOptions) {
+		opts.SortArrayedKeys = true
+	}
+}
+
+func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
+	for _, f := range args {
+		f(opts)
+	}
 }
 
 func (m *AppKey) Size() (n int) {
@@ -862,10 +1322,28 @@ func (m *App) Size() (n int) {
 	}
 	l = m.Key.Size()
 	n += 1 + l + sovApp(uint64(l))
-	l = len(m.AppPath)
+	l = len(m.ImagePath)
 	if l > 0 {
 		n += 1 + l + sovApp(uint64(l))
 	}
+	if m.ImageType != 0 {
+		n += 1 + sovApp(uint64(m.ImageType))
+	}
+	if m.AccessLayer != 0 {
+		n += 1 + sovApp(uint64(m.AccessLayer))
+	}
+	l = len(m.AccessPorts)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = len(m.Config)
+	if l > 0 {
+		n += 1 + l + sovApp(uint64(l))
+	}
+	l = m.DefaultFlavor.Size()
+	n += 1 + l + sovApp(uint64(l))
+	l = m.Cluster.Size()
+	n += 1 + l + sovApp(uint64(l))
 	return n
 }
 
@@ -1110,7 +1588,7 @@ func (m *App) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppPath", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ImagePath", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -1135,7 +1613,163 @@ func (m *App) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AppPath = string(dAtA[iNdEx:postIndex])
+			m.ImagePath = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ImageType", wireType)
+			}
+			m.ImageType = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ImageType |= (ImageType(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessLayer", wireType)
+			}
+			m.AccessLayer = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AccessLayer |= (AccessLayer(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccessPorts", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccessPorts = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Config", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Config = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DefaultFlavor", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.DefaultFlavor.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Cluster", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApp
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApp
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Cluster.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -1266,34 +1900,49 @@ var (
 func init() { proto.RegisterFile("app.proto", fileDescriptorApp) }
 
 var fileDescriptorApp = []byte{
-	// 449 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x91, 0x31, 0x6f, 0xd3, 0x40,
-	0x14, 0xc7, 0xfb, 0x92, 0x28, 0xc1, 0xd7, 0x50, 0xca, 0x09, 0x95, 0x53, 0x84, 0x92, 0xc8, 0x53,
-	0x40, 0x6a, 0x8c, 0xca, 0x82, 0xba, 0x25, 0x54, 0x2c, 0x5d, 0x90, 0x11, 0x73, 0x75, 0x89, 0x5f,
-	0x6d, 0x0b, 0xc7, 0xf7, 0x64, 0x9f, 0x1b, 0xb2, 0x21, 0xa6, 0xee, 0x7c, 0x01, 0x24, 0xbe, 0x00,
-	0x1f, 0x23, 0x23, 0x12, 0x3b, 0x82, 0x88, 0x81, 0x11, 0x29, 0x1d, 0x18, 0x91, 0xcf, 0x4e, 0x64,
-	0x10, 0x53, 0x16, 0xeb, 0xfd, 0x9f, 0xdf, 0xff, 0xf7, 0xfe, 0x77, 0xc7, 0x2c, 0x49, 0x34, 0xa4,
-	0x44, 0x69, 0xc5, 0x2d, 0xf4, 0x7c, 0x34, 0x65, 0xe7, 0x81, 0xaf, 0x94, 0x1f, 0xa1, 0x23, 0x29,
-	0x74, 0x64, 0x1c, 0x2b, 0x2d, 0x75, 0xa8, 0xe2, 0xb4, 0x18, 0xec, 0xb4, 0x13, 0x4c, 0xb3, 0x48,
-	0x97, 0xea, 0xa9, 0x1f, 0xea, 0x20, 0x9b, 0x0c, 0xa7, 0x6a, 0xe6, 0xcc, 0xd4, 0x24, 0x8c, 0x72,
-	0xcc, 0x1b, 0x27, 0xff, 0x1e, 0x4f, 0x23, 0x95, 0x79, 0x8e, 0x99, 0xf3, 0x31, 0xde, 0x16, 0xa5,
-	0xf3, 0x8e, 0x87, 0x57, 0x18, 0x29, 0xc2, 0xa4, 0x6c, 0x1c, 0x57, 0x50, 0xbe, 0xf2, 0x55, 0x61,
-	0x98, 0x64, 0x97, 0x46, 0x19, 0x61, 0xaa, 0x62, 0xdc, 0xbe, 0x06, 0xd6, 0x1c, 0x11, 0x9d, 0xe3,
-	0x82, 0x8f, 0xd9, 0xed, 0x2d, 0xec, 0xe2, 0x35, 0x2e, 0x04, 0xf4, 0x61, 0xb0, 0x7f, 0x72, 0x7f,
-	0xb8, 0x3d, 0xd3, 0xf0, 0x6c, 0xf3, 0xff, 0x1c, 0x17, 0xe3, 0xc6, 0xf2, 0x6b, 0x6f, 0xcf, 0x6d,
-	0x7b, 0x95, 0x1e, 0xe7, 0xac, 0x11, 0xcb, 0x19, 0x8a, 0x5a, 0x1f, 0x06, 0x96, 0x6b, 0x6a, 0x2e,
-	0x58, 0xeb, 0x0a, 0x93, 0x34, 0x54, 0xb1, 0xa8, 0x9b, 0xf6, 0x46, 0x9e, 0xb6, 0x7f, 0xae, 0x05,
-	0xfc, 0x5e, 0x0b, 0xf8, 0xf4, 0xa1, 0x07, 0xf6, 0x9c, 0xd5, 0x47, 0x44, 0xfc, 0x88, 0x35, 0x2f,
-	0x43, 0x8c, 0xbc, 0x54, 0x40, 0xbf, 0x3e, 0xb0, 0xdc, 0x52, 0xf1, 0x87, 0xac, 0x9e, 0x87, 0xaa,
-	0x99, 0x50, 0x77, 0x2b, 0xa1, 0x8a, 0xf8, 0x65, 0x9c, 0x7c, 0x86, 0xf7, 0xd8, 0x2d, 0x49, 0x74,
-	0x41, 0x52, 0x07, 0xa2, 0x91, 0xaf, 0x1c, 0x37, 0xae, 0x6f, 0x04, 0xb8, 0x2d, 0x49, 0xf4, 0x42,
-	0xea, 0xa0, 0x58, 0xfc, 0x6b, 0x2d, 0xe0, 0xed, 0x8d, 0x80, 0x93, 0x8f, 0x35, 0x73, 0x07, 0x23,
-	0x0a, 0xf9, 0x73, 0x66, 0x3d, 0x4b, 0x50, 0x6a, 0xcc, 0x93, 0x1c, 0xfc, 0xbd, 0xa4, 0x53, 0x5d,
-	0xea, 0x9a, 0xe7, 0xb3, 0x8f, 0xde, 0x7d, 0xf9, 0xf1, 0xbe, 0x76, 0x68, 0xef, 0x3b, 0x53, 0x63,
-	0x73, 0x24, 0xd1, 0x29, 0x3c, 0xca, 0x39, 0x67, 0x18, 0xe1, 0x0e, 0x1c, 0xcf, 0xd8, 0x2a, 0x9c,
-	0x57, 0xe4, 0xed, 0x92, 0x27, 0x33, 0xb6, 0x0d, 0x67, 0xc4, 0x5a, 0x2f, 0x03, 0x35, 0xff, 0x1f,
-	0xe5, 0x1f, 0x6d, 0xdf, 0x33, 0x88, 0x03, 0xdb, 0x72, 0xd2, 0x40, 0xcd, 0x4b, 0xc0, 0x63, 0x18,
-	0x1f, 0x2e, 0xbf, 0x77, 0xf7, 0x96, 0xab, 0x2e, 0x7c, 0x5e, 0x75, 0xe1, 0xdb, 0xaa, 0x0b, 0x93,
-	0xa6, 0x31, 0x3d, 0xf9, 0x13, 0x00, 0x00, 0xff, 0xff, 0x11, 0x4f, 0xd2, 0xd6, 0x00, 0x03, 0x00,
-	0x00,
+	// 700 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x54, 0xcf, 0x4f, 0x13, 0x41,
+	0x14, 0x66, 0xda, 0xda, 0xb2, 0xd3, 0x1f, 0x2c, 0x23, 0xd6, 0x91, 0x68, 0xa9, 0xf5, 0x52, 0x49,
+	0xda, 0x35, 0x60, 0x82, 0x70, 0x6b, 0x21, 0x18, 0x02, 0x89, 0x58, 0x25, 0x1e, 0xeb, 0x74, 0x77,
+	0xba, 0xdd, 0xb0, 0xdd, 0x99, 0xec, 0x0f, 0xb0, 0x37, 0xe3, 0xc9, 0x78, 0xf5, 0xe2, 0xd1, 0xc4,
+	0x8b, 0x47, 0x63, 0xe2, 0xff, 0xc0, 0xd1, 0xc4, 0xbb, 0x51, 0xe2, 0xc1, 0xa3, 0x09, 0x1c, 0x3c,
+	0x9a, 0x99, 0xfd, 0xc1, 0x62, 0x3c, 0x18, 0x2e, 0xe4, 0x7d, 0xdf, 0x7b, 0xdf, 0x37, 0x1f, 0x6f,
+	0x5f, 0x0a, 0x15, 0xc2, 0x79, 0x9b, 0xbb, 0xcc, 0x67, 0x48, 0xa1, 0x86, 0x49, 0x65, 0x39, 0x7f,
+	0xdd, 0x64, 0xcc, 0xb4, 0xa9, 0x46, 0xb8, 0xa5, 0x11, 0xc7, 0x61, 0x3e, 0xf1, 0x2d, 0xe6, 0x78,
+	0xe1, 0xe0, 0x7c, 0xc9, 0xa5, 0x5e, 0x60, 0xfb, 0x11, 0xba, 0x67, 0x5a, 0xfe, 0x28, 0x18, 0xb4,
+	0x75, 0x36, 0xd6, 0xc6, 0x6c, 0x60, 0xd9, 0xc2, 0xe6, 0x99, 0x26, 0xfe, 0xb6, 0x74, 0x9b, 0x05,
+	0x86, 0x26, 0xe7, 0x4c, 0xea, 0x24, 0x45, 0xa4, 0xbc, 0xff, 0x7f, 0x4a, 0xbd, 0x65, 0x52, 0xa7,
+	0xa5, 0x8f, 0x63, 0x98, 0x2a, 0x22, 0xa3, 0x19, 0x83, 0x1e, 0x50, 0x9b, 0x71, 0xea, 0xc6, 0x09,
+	0x87, 0x36, 0x39, 0x60, 0x31, 0x2a, 0xeb, 0x76, 0xe0, 0xf9, 0x49, 0xb3, 0x95, 0x7a, 0xd6, 0x64,
+	0x26, 0x0b, 0xdd, 0x06, 0xc1, 0x50, 0x22, 0x09, 0x64, 0x15, 0x8e, 0x37, 0x5e, 0x02, 0x98, 0xef,
+	0x70, 0xbe, 0x4d, 0x27, 0xa8, 0x0b, 0xcb, 0xc9, 0x4b, 0xfd, 0x7d, 0x3a, 0xc1, 0xa0, 0x0e, 0x9a,
+	0xc5, 0xa5, 0xab, 0xed, 0x64, 0x73, 0xed, 0x8d, 0xb8, 0xbf, 0x4d, 0x27, 0xdd, 0xdc, 0xd1, 0xd7,
+	0x85, 0xa9, 0x5e, 0xc9, 0x48, 0x71, 0x08, 0xc1, 0x9c, 0x43, 0xc6, 0x14, 0x67, 0xea, 0xa0, 0xa9,
+	0xf4, 0x64, 0x8d, 0x30, 0x2c, 0x1c, 0x50, 0xd7, 0xb3, 0x98, 0x83, 0xb3, 0x92, 0x8e, 0xe1, 0x5a,
+	0xe9, 0xe7, 0x09, 0x06, 0xbf, 0x4f, 0x30, 0xf8, 0xf0, 0x76, 0x01, 0x34, 0x3e, 0x65, 0x61, 0xb6,
+	0xc3, 0x39, 0xaa, 0xc2, 0xfc, 0xd0, 0xa2, 0xb6, 0xe1, 0x61, 0x50, 0xcf, 0x36, 0x95, 0x5e, 0x84,
+	0xd0, 0x6d, 0x98, 0x15, 0xa9, 0x32, 0x32, 0xd5, 0x6c, 0x2a, 0x55, 0x98, 0x3f, 0xca, 0x23, 0x66,
+	0xd0, 0x2d, 0x08, 0xad, 0x31, 0x31, 0x69, 0x9f, 0x13, 0x7f, 0x84, 0x73, 0xe2, 0xd5, 0x6e, 0xee,
+	0xfd, 0x29, 0x06, 0x3d, 0x45, 0xf2, 0xbb, 0xc4, 0x1f, 0xa1, 0xe5, 0x78, 0xc8, 0x9f, 0x70, 0x8a,
+	0x2f, 0xd5, 0x41, 0xb3, 0xb2, 0x34, 0x97, 0xb2, 0xdd, 0x12, 0xcd, 0xc7, 0x13, 0x4e, 0x23, 0x91,
+	0x28, 0xd1, 0x2a, 0x2c, 0x11, 0x5d, 0xa7, 0x9e, 0xd7, 0xb7, 0xc9, 0x84, 0xba, 0x38, 0x2f, 0x65,
+	0xd5, 0x74, 0x1a, 0xd9, 0xde, 0x11, 0xdd, 0x5e, 0x91, 0x9c, 0x01, 0x74, 0x33, 0x91, 0x72, 0xe6,
+	0xfa, 0x1e, 0x2e, 0xc8, 0x65, 0x44, 0x23, 0xbb, 0x82, 0x12, 0xff, 0xba, 0xce, 0x9c, 0xa1, 0x65,
+	0xe2, 0x69, 0xd9, 0x8c, 0x10, 0xea, 0xc0, 0x8a, 0x41, 0x87, 0x24, 0xb0, 0xfd, 0x7e, 0xf8, 0xed,
+	0xb1, 0x22, 0xb7, 0x90, 0x8e, 0xbb, 0x29, 0x1b, 0x67, 0x8b, 0x28, 0x47, 0x8a, 0x90, 0x47, 0xab,
+	0xb0, 0x10, 0x1d, 0x0a, 0x86, 0x52, 0x7b, 0x25, 0xa5, 0x5d, 0x0f, 0x3b, 0x42, 0x3c, 0x2d, 0xd6,
+	0x24, 0x0d, 0xe2, 0xf9, 0xb5, 0x1b, 0xe2, 0x33, 0xfd, 0x3a, 0xc1, 0xe0, 0xf9, 0x29, 0x06, 0x6f,
+	0x4e, 0x31, 0x78, 0xf5, 0xf1, 0x9a, 0xb2, 0x15, 0xef, 0x71, 0x71, 0x0b, 0x2a, 0xc9, 0xaa, 0xd0,
+	0x1c, 0x54, 0x13, 0xb0, 0xe7, 0xec, 0x3b, 0xec, 0xd0, 0x51, 0xa7, 0xd0, 0x65, 0x38, 0x93, 0xb0,
+	0x1b, 0x4c, 0xdf, 0xa7, 0xae, 0x0a, 0xd0, 0x2c, 0x2c, 0x27, 0xe4, 0xc3, 0xf5, 0x07, 0x4f, 0xd4,
+	0xcc, 0xe2, 0x53, 0x58, 0x4c, 0xad, 0x0f, 0x55, 0x21, 0x4a, 0xc1, 0x33, 0xbb, 0x59, 0x58, 0x4e,
+	0xf1, 0x3b, 0x77, 0x43, 0xb3, 0x34, 0xb5, 0xa2, 0x66, 0xc4, 0xa3, 0xe7, 0xa6, 0x76, 0x56, 0xd4,
+	0xec, 0xd2, 0xbb, 0x8c, 0xbc, 0xf7, 0x0e, 0xb7, 0xd0, 0x26, 0x54, 0xd6, 0x5d, 0x4a, 0x7c, 0x2a,
+	0x8e, 0xae, 0x72, 0xfe, 0x9e, 0xe6, 0xd3, 0xf7, 0xd5, 0x93, 0x3f, 0x08, 0x8d, 0xea, 0x8b, 0x2f,
+	0x3f, 0x5e, 0x67, 0xd4, 0x46, 0x51, 0xd3, 0xa5, 0x4c, 0x23, 0x9c, 0xaf, 0x81, 0x45, 0xe1, 0xb3,
+	0x41, 0x6d, 0x7a, 0x01, 0x1f, 0x43, 0xca, 0x52, 0x3e, 0x7b, 0xdc, 0xb8, 0x48, 0x9e, 0x40, 0xca,
+	0x62, 0x9f, 0x0e, 0x2c, 0x3c, 0x1a, 0xb1, 0xc3, 0x7f, 0xb9, 0xfc, 0x85, 0x1b, 0x73, 0xd2, 0xa2,
+	0xd2, 0x50, 0x34, 0x6f, 0xc4, 0x0e, 0x23, 0x83, 0x3b, 0xa0, 0xab, 0x1e, 0x7d, 0xaf, 0x4d, 0x1d,
+	0x1d, 0xd7, 0xc0, 0xe7, 0xe3, 0x1a, 0xf8, 0x76, 0x5c, 0x03, 0x83, 0xbc, 0x14, 0x2d, 0xff, 0x09,
+	0x00, 0x00, 0xff, 0xff, 0x48, 0x96, 0x56, 0x3f, 0x52, 0x05, 0x00, 0x00,
 }
