@@ -6,13 +6,11 @@ import (
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
 	CRMRootLB            *MEXRootLB
-	WorkMgr              *notify.WorkMgr
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
@@ -21,12 +19,12 @@ type ControllerData struct {
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
+	NodeCache            edgeproto.NodeCache
 }
 
 // NewControllerData creates a new instance to track data from the controller
 func NewControllerData() *ControllerData {
 	cd := &ControllerData{}
-	cd.WorkMgr = notify.NewWorkMgr()
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
@@ -35,6 +33,7 @@ func NewControllerData() *ControllerData {
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
 	edgeproto.InitClusterFlavorCache(&cd.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
+	edgeproto.InitNodeCache(&cd.NodeCache)
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetNotifyCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetNotifyCb(cd.appInstChanged)

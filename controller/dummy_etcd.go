@@ -87,7 +87,7 @@ func (e *dummyEtcd) Update(key, val string, version int64) (int64, error) {
 	return e.rev, nil
 }
 
-func (e *dummyEtcd) Put(key, val string) (int64, error) {
+func (e *dummyEtcd) Put(key, val string, ops ...objstore.KVOp) (int64, error) {
 	e.mux.Lock()
 	defer e.mux.Unlock()
 	if e.db == nil {
@@ -211,6 +211,14 @@ func (e *dummyEtcd) triggerWatcher(action objstore.SyncCbAction, key, val string
 			watch.cb(&data)
 		}
 	}
+}
+
+func (e *dummyEtcd) Grant(ctx context.Context, ttl int64) (int64, error) {
+	return 0, errors.New("unsupported")
+}
+
+func (e *dummyEtcd) KeepAlive(ctx context.Context, leaseID int64) error {
+	return errors.New("unsupported")
 }
 
 // Based on clientv3/concurrency/stm.go

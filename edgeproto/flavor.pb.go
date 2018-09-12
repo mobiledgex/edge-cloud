@@ -564,7 +564,7 @@ func (s *FlavorStore) Update(m *Flavor, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *FlavorStore) Put(m *Flavor, wait func(int64)) (*Result, error) {
+func (s *FlavorStore) Put(m *Flavor, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -590,7 +590,7 @@ func (s *FlavorStore) Put(m *Flavor, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}

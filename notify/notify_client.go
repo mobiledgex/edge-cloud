@@ -42,6 +42,7 @@ type Client struct {
 	appInstInfos     map[edgeproto.AppInstKey]struct{}
 	clusterInstInfos map[edgeproto.ClusterInstKey]struct{}
 	cloudletInfos    map[edgeproto.CloudletKey]struct{}
+	nodes            map[edgeproto.NodeKey]struct{}
 	metrics          []*edgeproto.Metric
 }
 
@@ -65,6 +66,11 @@ type SendCloudletInfoHandler interface {
 type SendClusterInstInfoHandler interface {
 	GetAllKeys(keys map[edgeproto.ClusterInstKey]struct{})
 	Get(key *edgeproto.ClusterInstKey, buf *edgeproto.ClusterInstInfo) bool
+}
+
+type SendNodeHandler interface {
+	GetAllKeys(keys map[edgeproto.NodeKey]struct{})
+	Get(key *edgeproto.NodeKey, buf *edgeproto.Node) bool
 }
 
 type RecvAppInstHandler interface {
@@ -101,6 +107,7 @@ type ClientHandler interface {
 	SendAppInstInfoHandler() SendAppInstInfoHandler
 	SendCloudletInfoHandler() SendCloudletInfoHandler
 	SendClusterInstInfoHandler() SendClusterInstInfoHandler
+	SendNodeHandler() SendNodeHandler
 	RecvAppInstHandler() RecvAppInstHandler
 	RecvCloudletHandler() RecvCloudletHandler
 	RecvFlavorHandler() RecvFlavorHandler
@@ -117,6 +124,7 @@ type ClientStats struct {
 	AppInstInfosSent     uint64
 	ClusterInstInfosSent uint64
 	CloudletInfosSent    uint64
+	NodesSent            uint64
 	MetricsSent          uint64
 	MetricsDropped       uint64
 	AppInstRecv          uint64
@@ -147,6 +155,7 @@ func newClient(addrs []string, tlsCertFile string, handler ClientHandler, reques
 	s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
 	s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 	s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
+	s.nodes = make(map[edgeproto.NodeKey]struct{})
 	s.metrics = make([]*edgeproto.Metric, 0)
 	return &s
 }
@@ -450,18 +459,22 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	var nClusterInstInfo edgeproto.NoticeRequest_ClusterInstInfo
 	var nCloudletInfo edgeproto.NoticeRequest_CloudletInfo
 	var nMetric edgeproto.NoticeRequest_Metric
+	var nNode edgeproto.NoticeRequest_Node
 	var appInstInfo edgeproto.AppInstInfo
 	var clusterInstInfo edgeproto.ClusterInstInfo
 	var cloudletInfo edgeproto.CloudletInfo
+	var node edgeproto.Node
 	var err error
 
 	sendAll := true
 	nAppInstInfo.AppInstInfo = &appInstInfo
 	nClusterInstInfo.ClusterInstInfo = &clusterInstInfo
 	nCloudletInfo.CloudletInfo = &cloudletInfo
+	nNode.Node = &node
 	sendAppInstInfo := s.handler.SendAppInstInfoHandler()
 	sendClusterInstInfo := s.handler.SendClusterInstInfoHandler()
 	sendCloudletInfo := s.handler.SendCloudletInfoHandler()
+	sendNode := s.handler.SendNodeHandler()
 	// trigger initial sendAll
 	s.wakeupSend()
 
@@ -473,6 +486,7 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		s.mux.Lock()
 		if len(s.appInstInfos) == 0 && len(s.cloudletInfos) == 0 &&
 			len(s.clusterInstInfos) == 0 && len(s.metrics) == 0 &&
+			len(s.nodes) == 0 &&
 			!s.done && !sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
@@ -481,9 +495,11 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		clusterInstInfos := s.clusterInstInfos
 		cloudletInfos := s.cloudletInfos
 		metrics := s.metrics
+		nodes := s.nodes
 		s.appInstInfos = make(map[edgeproto.AppInstKey]struct{})
 		s.clusterInstInfos = make(map[edgeproto.ClusterInstKey]struct{})
 		s.cloudletInfos = make(map[edgeproto.CloudletKey]struct{})
+		s.nodes = make(map[edgeproto.NodeKey]struct{})
 		s.metrics = make([]*edgeproto.Metric, 0)
 		s.mux.Unlock()
 		if s.done || stream.Context().Err() != nil {
@@ -502,6 +518,35 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			if sendClusterInstInfo != nil {
 				sendClusterInstInfo.GetAllKeys(clusterInstInfos)
 			}
+			if sendNode != nil {
+				sendNode.GetAllKeys(nodes)
+			}
+		}
+
+		if sendNode != nil {
+			notice.Data = &nNode
+			for key, _ := range nodes {
+				found := sendNode.Get(&key, &node)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					node.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send Node",
+					"server", s.GetServerAddr(),
+					"action", notice.Action,
+					"key", node.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.NodesSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
 		}
 
 		if sendClusterInstInfo != nil {
@@ -604,6 +649,7 @@ func (s *Client) send(stream edgeproto.NotifyApi_StreamNoticeClient) {
 		clusterInstInfos = nil
 		cloudletInfos = nil
 		metrics = nil
+		nodes = nil
 	}
 	close(s.sendRunning)
 }
@@ -639,6 +685,13 @@ func (s *Client) UpdateCloudletInfo(key *edgeproto.CloudletKey, old *edgeproto.C
 	s.mux.Lock()
 	defer s.mux.Unlock()
 	s.cloudletInfos[*key] = struct{}{}
+	s.wakeupSend()
+}
+
+func (s *Client) UpdateNode(key *edgeproto.NodeKey, old *edgeproto.Node) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.nodes[*key] = struct{}{}
 	s.wakeupSend()
 }
 
