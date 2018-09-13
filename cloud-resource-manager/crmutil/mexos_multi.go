@@ -16,6 +16,7 @@ import (
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 var yamlMEXCluster = `apiVersion: v1
@@ -75,7 +76,7 @@ func fillClusterTemplateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.Clus
 		Name:          clusterInst.Key.ClusterKey.Name,
 		Tags:          clusterInst.Key.ClusterKey.Name + "-tag",
 		Tenant:        clusterInst.Key.ClusterKey.Name + "-tenant",
-		Operator:      clusterInst.Key.CloudletKey.OperatorKey.Name,
+		Operator:      util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
 		Key:           clusterInst.Key.ClusterKey.Name,
 		Kind:          clusterInst.Flavor.Name,
 		ResourceGroup: clusterInst.Key.CloudletKey.Name + "_" + clusterInst.Key.ClusterKey.Name,
@@ -158,7 +159,7 @@ func azureCreateAKS(mf *Manifest) error {
 	if err = azure.CreateAKSCluster(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 		return err
 	}
-        //race condition exists where the config file is not ready until just after the cluster create is done
+	//race condition exists where the config file is not ready until just after the cluster create is done
 	time.Sleep(3 * time.Second)
 	saveKubeconfig()
 	if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
@@ -357,9 +358,9 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 	data := templateFill{
 		Name:            clk.Name,
 		Tags:            clk.Name + "-tag",
-		Key:             clk.Name + "-" + clk.OperatorKey.Name,
+		Key:             clk.Name + "-" + util.K8SSanitize(clk.OperatorKey.Name),
 		Flavor:          "x1.medium",
-		Operator:        clk.OperatorKey.Name,
+		Operator:        util.K8SSanitize(clk.OperatorKey.Name),
 		Location:        "bonn",
 		Region:          "eu-central-1",
 		Zone:            "eu-central-1c",
@@ -572,16 +573,16 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	case "ImageTypeDocker": //XXX assume kubernetes
 		data = templateFill{
 			Kind:        clusterInst.Flavor.Name,
-			Name:        appInst.Key.AppKey.Name,
-			Tags:        appInst.Key.AppKey.Name + "-kubernetes-tag",
+			Name:        util.K8SSanitize(appInst.Key.AppKey.Name),
+			Tags:        util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
 			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      appInst.Key.AppKey.Name + "-tenant",
-			Operator:    clusterInst.Key.CloudletKey.OperatorKey.Name,
+			Tenant:      util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
+			Operator:    util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
 			RootLB:      rootLB.Name,
 			Image:       appInst.ImagePath,
 			ImageType:   imageType,
 			ImageFlavor: appInst.Flavor.Name,
-			ProxyPath:   appInst.Key.AppKey.Name,
+			ProxyPath:   util.K8SSanitize(appInst.Key.AppKey.Name),
 			AppURI:      appInst.Uri,
 			//PortMap:      appInst.MappedPorts,
 			PathMap:      appInst.MappedPath,
