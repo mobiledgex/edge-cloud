@@ -48,7 +48,7 @@ operators:
 - key:
     name: ATT
 - key:
-    name: DMUUS
+    name: dmuus
 
 developers:
 - key:
@@ -61,7 +61,7 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: DMUUS
+      name: dmuus
     name: tmocloud-1
   accessuri: cloud1.tmo
   location:
@@ -71,7 +71,7 @@ cloudlets:
   numdynamicips: 254
 - key:
     operatorkey:
-      name: DMUUS
+      name: dmuus
     name: tmocloud-2
   accessuri: cloud2.tmo
   location:
@@ -84,9 +84,9 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someApplication
+    name: someapplication
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
@@ -97,42 +97,42 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someApplication
+      name: someapplication
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: DMUUS
+        name: dmuus
       name: tmocloud-1
     id: 123
   cloudletloc:
     lat: 31
     long: -91
-  uri: someApplication.tmocloud-1.mobiledgex.net
+  uri: someapplication.tmocloud-1.mobiledgex.net
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someApplication
+  mappedpath: someapplication
   flavor:
     name: x1.small
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someApplication
+      name: someapplication
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: DMUUS
+        name: dmuus
       name: tmocloud-2
     id: 123
   cloudletloc:
     lat: 35
     long: -95
-  uri: someApplication.tmocloud-2.mobiledgex.net
+  uri: someapplication.tmocloud-2.mobiledgex.net
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someApplication
+  mappedpath: someapplication
   flavor:
     name: x1.small
 
