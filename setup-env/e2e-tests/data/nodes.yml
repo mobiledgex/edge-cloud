@@ -1,86 +1,74 @@
 nodes:
 - key:
-    name: crm1
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-1
-- key:
-    name: crm2
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-2
-- key:
-    name: crm5
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-5
-- key:
-    name: crm4
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-4
-- key:
-    name: Jon-Mex.local
     nodetype: NodeDME
     cloudletkey:
       operatorkey:
         name: TMUS
       name: tmocloud-1
 - key:
-    name: crm9
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
         name: TMUS
-      name: tmocloud-9
+      name: tmocloud-1
 - key:
-    name: crm10
     nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-10
-- key:
-    name: Jon-Mex.local
-    nodetype: NodeDME
     cloudletkey:
       operatorkey:
         name: TMUS
       name: tmocloud-2
 - key:
-    name: crm3
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-3
-- key:
-    name: crm6
-    nodetype: NodeCRM
-    cloudletkey:
-      operatorkey:
-        name: TMUS
-      name: tmocloud-6
-- key:
-    name: crm7
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
         name: TMUS
       name: tmocloud-7
 - key:
-    name: crm8
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
         name: TMUS
       name: tmocloud-8
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-6
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-5
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-9
+- key:
+    nodetype: NodeDME
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-2
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-4
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-3
+- key:
+    nodetype: NodeCRM
+    cloudletkey:
+      operatorkey:
+        name: TMUS
+      name: tmocloud-10
 
