@@ -87,6 +87,12 @@ type RecvMetricHandler interface {
 	Recv(metric *edgeproto.Metric)
 }
 
+type RecvNodeHandler interface {
+	Update(in *edgeproto.Node, notifyId int64)
+	Delete(in *edgeproto.Node, notifyId int64)
+	Flush(notifyId int64)
+}
+
 type ServerHandler interface {
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
@@ -97,6 +103,7 @@ type ServerHandler interface {
 	RecvCloudletInfoHandler() RecvCloudletInfoHandler
 	RecvClusterInstInfoHandler() RecvClusterInstInfoHandler
 	RecvMetricHandler() RecvMetricHandler
+	RecvNodeHandler() RecvNodeHandler
 }
 
 type ServerStats struct {
@@ -259,6 +266,10 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	recvClusterInstInfo := server.handler.RecvClusterInstInfoHandler()
 	if recvClusterInstInfo != nil {
 		recvClusterInstInfo.Flush(server.notifyId)
+	}
+	recvNode := server.handler.RecvNodeHandler()
+	if recvNode != nil {
+		recvNode.Flush(server.notifyId)
 	}
 
 	close(server.running)
@@ -674,6 +685,7 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	recvCloudletInfo := s.handler.RecvCloudletInfoHandler()
 	recvClusterInstInfo := s.handler.RecvClusterInstInfoHandler()
 	recvMetric := s.handler.RecvMetricHandler()
+	recvNode := s.handler.RecvNodeHandler()
 	for !s.done {
 		req, err := stream.Recv()
 		if s.done {
@@ -736,6 +748,19 @@ func (s *Server) recv(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		if recvMetric != nil && metric != nil {
 			recvMetric.Recv(metric)
 		}
+		node := req.GetNode()
+		if recvNode != nil && node != nil {
+			node.NotifyId = s.notifyId
+			log.DebugLog(log.DebugLevelNotify, "Recv node",
+				"client", s.peerAddr,
+				"action", req.Action,
+				"node", node)
+			if req.Action == edgeproto.NoticeAction_UPDATE {
+				recvNode.Update(node, s.notifyId)
+			} else if req.Action == edgeproto.NoticeAction_DELETE {
+				recvNode.Delete(node, s.notifyId)
+			}
+		}
 	}
 }
 
@@ -773,6 +798,12 @@ func (s *Server) updateTrackedCloudlets(key *edgeproto.CloudletKey, action regis
 		delete(s.trackedCloudlets, *key)
 	}
 	s.mux.Unlock()
+
+	if s.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+		// DMEs also send cloudletInfo but it's just to register
+		// the tracked cloudlet key.
+		return
+	}
 
 	cloudlets := make(map[edgeproto.CloudletKey]struct{})
 	cloudlets[*key] = struct{}{}

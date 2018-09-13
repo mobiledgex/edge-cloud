@@ -22,6 +22,7 @@ type ApplicationData struct {
 	CloudletInfos    []CloudletInfo    `yaml:"cloudletinfos"`
 	AppInstInfos     []AppInstInfo     `yaml:"appinstinfos"`
 	ClusterInstInfos []ClusterInstInfo `yaml:"clusterinstinfos"`
+	Nodes            []Node            `yaml:"nodes"`
 }
 
 // sort each slice by key
@@ -61,6 +62,9 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.ClusterInstInfos[:], func(i, j int) bool {
 		return a.ClusterInstInfos[i].Key.GetKeyString() < a.ClusterInstInfos[j].Key.GetKeyString()
+	})
+	sort.Slice(a.Nodes[:], func(i, j int) bool {
+		return a.Nodes[i].Key.GetKeyString() < a.Nodes[j].Key.GetKeyString()
 	})
 }
 
@@ -191,6 +195,28 @@ func (s *AppInst) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	return nil
+}
+
+func (key *ControllerKey) Validate() error {
+	if key.Addr == "" {
+		return errors.New("Invalid address")
+	}
+	return nil
+}
+
+func (s *Controller) Validate(fields map[string]struct{}) error {
+	return s.GetKey().Validate()
+}
+
+func (key *NodeKey) Validate() error {
+	if key.Name == "" {
+		return errors.New("Invalid node name")
+	}
+	return key.CloudletKey.Validate()
+}
+
+func (s *Node) Validate(fields map[string]struct{}) error {
+	return s.GetKey().Validate()
 }
 
 func (s *AppInstInfo) Validate(fields map[string]struct{}) error {

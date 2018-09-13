@@ -214,6 +214,10 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.Name != "" {
+		args = append(args, "--hostname")
+		args = append(args, p.Name)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {

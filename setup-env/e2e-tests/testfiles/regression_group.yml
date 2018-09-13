@@ -1,6 +1,7 @@
 tests:
   - includefile: stop_cleanup.yml
   - includefile: deploy_start.yml
+  - includefile: check_nodes.yml
   - includefile: add_delete.yml
     loops: 2
   - includefile: add_delete_2apps.yml
@@ -20,4 +21,5 @@ tests:
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 
   - includefile: fetchlogs.yml
+  - includefile: check_nodes.yml
   - includefile: stop_cleanup.yml

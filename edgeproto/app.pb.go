@@ -13,9 +13,11 @@
 		clusterflavor.proto
 		clusterinst.proto
 		common.proto
+		controller.proto
 		developer.proto
 		flavor.proto
 		metric.proto
+		node.proto
 		notice.proto
 		operator.proto
 		refs.proto
@@ -43,6 +45,8 @@
 		ClusterInstKey
 		ClusterInst
 		ClusterInstInfo
+		ControllerKey
+		Controller
 		DeveloperKey
 		Developer
 		FlavorKey
@@ -50,6 +54,8 @@
 		MetricTag
 		MetricVal
 		Metric
+		NodeKey
+		Node
 		NoticeReply
 		NoticeRequest
 		OperatorKey
@@ -853,7 +859,7 @@ func (s *AppStore) Update(m *App, wait func(int64)) (*Result, error) {
 	return &Result{}, err
 }
 
-func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
+func (s *AppStore) Put(m *App, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
 	fmap := MakeFieldMap(m.Fields)
 	err := m.Validate(fmap)
 	if err != nil {
@@ -879,7 +885,7 @@ func (s *AppStore) Put(m *App, wait func(int64)) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	rev, err := s.kvstore.Put(key, string(val))
+	rev, err := s.kvstore.Put(key, string(val), ops...)
 	if err != nil {
 		return nil, err
 	}

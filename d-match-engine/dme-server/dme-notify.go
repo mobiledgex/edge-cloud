@@ -24,15 +24,20 @@ func (s *AppInstHandler) Prune(keys map[edgeproto.AppInstKey]struct{}) {
 	pruneApps(keys)
 }
 
+var nodeCache edgeproto.NodeCache
+
 func NewNotifyHandler() *notify.DefaultHandler {
 	handler := notify.DefaultHandler{}
 	handler.RecvAppInst = &AppInstHandler{}
+	edgeproto.InitNodeCache(&nodeCache)
+	handler.SendNode = &nodeCache
 	return &handler
 }
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	handler := NewNotifyHandler()
 	notifyClient := notify.NewDMEClient(strings.Split(addrs, ","), tlsCertFile, handler)
+	nodeCache.SetNotifyCb(notifyClient.UpdateNode)
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }
