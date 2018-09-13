@@ -86,6 +86,7 @@ func main() {
 			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "Error running MEX Agent", "error", err)
+				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "init platform with cloudlet key ok")
 			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?

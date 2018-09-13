@@ -42,7 +42,7 @@ func DockerSanitize(name string) string {
 }
 
 // DNSSanitize santizies the name string to make it usable in
-// a DNS name. Valid chars are only 0-9, a-z (both cases), and '-'.
+// a DNS name. Valid chars are only 0-9, a-z, and '-'.
 func DNSSanitize(name string) string {
 	r := strings.NewReplacer(
 		"_", "-",
@@ -51,7 +51,7 @@ func DNSSanitize(name string) string {
 		",", "",
 		".", "",
 		"!", "")
-	return r.Replace(name)
+	return strings.ToLower(r.Replace(name))
 }
 
 func K8SSanitize(name string) string {
@@ -61,5 +61,5 @@ func K8SSanitize(name string) string {
 		"&", "",
 		",", "",
 		"!", "")
-	return r.Replace(name)
+	return strings.ToLower(r.Replace(name))
 }
