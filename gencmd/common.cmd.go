@@ -47,5 +47,11 @@ var TrackedStateStrings = []string{
 	"DeleteError",
 }
 
+var CRMOverrideStrings = []string{
+	"NoOverride",
+	"IgnoreCRMErrors",
+	"IgnoreCRM",
+}
+
 func init() {
 }

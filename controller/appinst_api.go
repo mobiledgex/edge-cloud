@@ -138,6 +138,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Liveness == edgeproto.Liveness_LivenessUnknown {
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
+	cctx.SetOverride(&in.CrmOverride)
 
 	var autocluster bool
 	// See if we need to create auto-cluster.
@@ -208,7 +209,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
-			return objstore.ErrKVStoreKeyExists
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError {
+				if in.State == edgeproto.TrackedState_CreateError {
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to fix CreateError state"})
+				}
+				return objstore.ErrKVStoreKeyExists
+			}
+			in.Errors = nil
 		}
 
 		// cache location of cloudlet in app inst
@@ -285,15 +292,28 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 
-		in.State = edgeproto.TrackedState_CreateRequested
+		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+			in.State = edgeproto.TrackedState_Ready
+		} else {
+			in.State = edgeproto.TrackedState_CreateRequested
+		}
 		s.store.STMPut(stm, in)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		return nil
+	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateAppInstTransitions, edgeproto.TrackedState_CreateError, CreateAppInstTimeout, "Created successfully", cb.Send)
-	if err != nil && !cctx.Undo {
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IgnoreCRMErrors {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Create AppInst ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_Ready)
+		cb.Send(&edgeproto.Result{Message: "Created AppInst successfully"})
+		err = nil
+	}
+	if err != nil {
 		// XXX should probably track mod revision ID and only undo
 		// if no other changes were made to appInst in the meantime.
 		// crm failed or some other err, undo
@@ -330,14 +350,18 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 }
 
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
+	cctx.SetOverride(&in.CrmOverride)
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if in.State != edgeproto.TrackedState_Ready && !cctx.Undo {
-			return errors.New("AppInst not ready, cannot delete")
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError {
+			if in.State == edgeproto.TrackedState_DeleteError {
+				cb.Send(&edgeproto.Result{Message: "Use CreateAppInst to fix DeleteError state"})
+			}
+			return errors.New("AppInst busy, cannot delete")
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -356,15 +380,31 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 		// delete app inst
-		in.State = edgeproto.TrackedState_DeleteRequested
-		s.store.STMPut(stm, in)
+		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+			// CRM state should be the same as before the
+			// operation failed, so just need to clean up
+			// controller state.
+			s.store.STMDel(stm, &in.Key)
+		} else {
+			in.State = edgeproto.TrackedState_DeleteRequested
+			s.store.STMPut(stm, in)
+		}
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		return nil
+	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteAppInstTransitions, edgeproto.TrackedState_DeleteError, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
-	if err != nil && !cctx.Undo {
+	if err != nil && cctx.Override == edgeproto.CRMOverride_IgnoreCRMErrors {
+		cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Delete AppInst ignoring CRM failure: %s", err.Error())})
+		s.ReplaceErrorState(in, edgeproto.TrackedState_NotPresent)
+		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
+		err = nil
+	}
+	if err != nil {
 		// crm failed or some other err, undo
 		cb.Send(&edgeproto.Result{Message: "Recreating AppInst due to failure"})
 		undoErr := s.createAppInstInternal(cctx.WithUndo(), in, cb)
@@ -438,6 +478,29 @@ func (s *AppInstApi) DeleteFromInfo(in *edgeproto.AppInstInfo) {
 			return nil
 		}
 		s.store.STMDel(stm, &in.Key)
+		return nil
+	})
+}
+
+func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto.TrackedState) {
+	s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !s.store.STMGet(stm, &in.Key, &inst) {
+			// got deleted in the meantime
+			return nil
+		}
+		if inst.State != edgeproto.TrackedState_CreateError &&
+			inst.State != edgeproto.TrackedState_DeleteError &&
+			inst.State != edgeproto.TrackedState_UpdateError {
+			return nil
+		}
+		if newState == edgeproto.TrackedState_NotPresent {
+			s.store.STMDel(stm, &in.Key)
+		} else {
+			inst.State = newState
+			inst.Errors = nil
+			s.store.STMPut(stm, &inst)
+		}
 		return nil
 	})
 }
