@@ -127,6 +127,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if in.Flavor.Name == "" {
 			in.Flavor = cluster.DefaultFlavor
 		}
+		if in.Flavor.Name == "" {
+			return errors.New("No ClusterFlavor specified and no default ClusterFlavor for Cluster")
+		}
 		clusterFlavor := edgeproto.ClusterFlavor{}
 		if !clusterFlavorApi.store.STMGet(stm, &in.Flavor, &clusterFlavor) {
 			return fmt.Errorf("Cluster flavor %s not found", in.Flavor.Name)
