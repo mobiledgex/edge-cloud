@@ -1,7 +1,7 @@
 cloudlets:
 - key:
     operatorkey:
-      name: TMUS
+      name: tmus
     name: tmocloud-1
   accessuri: cloud1.tmo
   location:

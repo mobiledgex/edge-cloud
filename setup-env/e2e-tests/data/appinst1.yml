@@ -3,10 +3,10 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someApplication
+      name: someapplication
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
     id: 123

@@ -4,15 +4,15 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someApplication
+      name: someapplication
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
     id: 123
   ip: [10, 100, 10, 4]
-  uri: /apps/someApplication
+  uri: /apps/someapplication
   liveness: 1
   apppath: /usr/bin/someapp
 

@@ -1,121 +1,121 @@
 cloudlets:
-- carriername: TMUS
+- carriername: tmus
   cloudletname: tmocloud-1
   gpslocation:
     long: -175
   distance: 9020.118223772786
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-1.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-1.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-1.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-1.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-10
   gpslocation:
     long: -166
   distance: 8221.379797628093
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-10.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-10.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-10.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-10.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-2
   gpslocation:
     long: -174
   distance: 8930.796498002217
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-2.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-2.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-2.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-2.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-3
   gpslocation:
     long: -173
   distance: 8841.592529594249
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-3.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-3.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-3.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-3.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-4
   gpslocation:
     long: -172
   distance: 8752.516924767822
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-4.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-4.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-4.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-4.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-5
   gpslocation:
     long: -171
   distance: 8663.580485753291
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-5.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-5.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-5.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-5.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-6
   gpslocation:
     long: -170
   distance: 8574.794228073193
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-6.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-6.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-6.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-6.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-7
   gpslocation:
     long: -169
   distance: 8486.16939832425
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-7.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-7.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-7.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-7.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-8
   gpslocation:
     long: -168
   distance: 8397.717492500102
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-8.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-8.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-8.TMUS.mobiledgex.net
-- carriername: TMUS
+    uri: tmocloud-8.tmus.mobiledgex.net
+- carriername: tmus
   cloudletname: tmocloud-9
   gpslocation:
     long: -167
   distance: 8309.450274894869
   appinstances:
-  - appname: someApplication1
+  - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-9.TMUS.mobiledgex.net
-  - appname: someApplication2
+    uri: tmocloud-9.tmus.mobiledgex.net
+  - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-9.TMUS.mobiledgex.net
+    uri: tmocloud-9.tmus.mobiledgex.net
