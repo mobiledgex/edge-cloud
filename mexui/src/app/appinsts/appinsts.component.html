@@ -3,31 +3,31 @@
   
   <ul>
       <li *ngFor="let appinst of  appinsts$">
-        <ul>
-          <li> Id                     :  {{ appinst.result.key.id }}</li>
-          <li> Developer Name          : {{ appinst.result.key.app_key.developer_key.name }}</li>
-          <li> Application Name        : {{ appinst.result.key.app_key.name }}</li>
-          <li> Version                 : {{ appinst.result.key.app_key.version }}</li>
-          <li> ImagePath               : {{ appinst.result.image_path }}</li>
-          <li> ImageType               : {{ appinst.result.image_type }}</li>
-          <li> Uri                     : {{ appinst.result.uri }}</li>
-          <li> Liveness                : {{ appinst.result.liveness }}</li>
-          <li> Mapped Ports            : {{ appinst.result.mapped_ports }}</li>
-          <li> Mapped Path             : {{ appinst.result.mapped_path }}</li>
-          <li> Flavor                  : {{ appinst.result.flavor.name }}</li>
-          <li> Cloudlet Key            : {{ appinst.result.key.cloudlet_key.operator_key.name }}</li>
-          <li> Cloudlet Name            : {{appinst.result.key.cloudlet_key.name }}</li>
-          <li> Cloudlet Lat            : {{ appinst.result.cloudlet_loc.lat }}</li>
-          <li> Cloudlet Long            : {{appinst.result.cloudlet_loc.long }}</li>
-          <li> Cluster                 : {{ appinst.result.cluster_inst_key.cluster_key.name }} </li>
-          <!-- <li><a href="http://{{ user.website }}">{{ user.website }}</a></li> -->
           <table style="width:65%">
+       
+          <tr><td> Id                     </td><td>  {{ appinst.result.key.id }}</td></tr>
+          <tr><td> Developer Name          </td><td> {{ appinst.result.key.app_key.developer_key.name }}</td></tr>
+          <tr><td> Apptrcation Name        </td><td> {{ appinst.result.key.app_key.name }}</td></tr>
+          <tr><td> Version                 </td><td> {{ appinst.result.key.app_key.version }}</td></tr>
+          <tr><td> ImagePath               </td><td> {{ appinst.result.image_path }}</td></tr>
+          <tr><td> ImageType               </td><td> {{ appinst.result.image_type }}</td></tr>
+          <tr><td> Uri                     </td><td> {{ appinst.result.uri }}</td></tr>
+          <tr><td> Liveness                </td><td> {{ appinst.result.trveness }}</td></tr>
+          <tr><td> Mapped Ports            </td><td> {{ appinst.result.mapped_ports }}</td></tr>
+          <tr><td> Mapped Path             </td><td> {{ appinst.result.mapped_path }}</td></tr>
+          <tr><td> Flavor                  </td><td> {{ appinst.result.flavor.name }}</td></tr>
+          <tr><td> Cloudlet Key            </td><td> {{ appinst.result.key.cloudlet_key.operator_key.name }}</td></tr>
+          <tr><td> Cloudlet Name            </td><td> {{appinst.result.key.cloudlet_key.name }}</td></tr>
+          <tr><td> Cloudlet Lat            </td><td> {{ appinst.result.cloudlet_loc.lat }}</td></tr>
+          <tr><td> Cloudlet Long            </td><td> {{appinst.result.cloudlet_loc.long }}</td></tr>
+          <tr><td> Cluster                 </td><td> {{ appinst.result.cluster_inst_key.cluster_key.name }}</td> </tr>
+          <!-- <tr><td><a href="http</td><td>//{{ user.website }}</td>">{{ user.website }}</a></tr> -->
               <tr>
                 <td><button type="button" class="btn btn-danger" (click)="onDelete(i)">Delete</button></td>
                 <td><button type="button" class="btn btn-info" (click)="onEdit(i)">Edit</button></td>
               </tr>
             </table>
-        </ul>
+        
       </li>
     </ul>
 

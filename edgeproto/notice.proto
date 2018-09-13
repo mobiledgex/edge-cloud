@@ -11,6 +11,7 @@ import "flavor.proto";
 import "clusterflavor.proto";
 import "clusterinst.proto";
 import "metric.proto";
+import "node.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 // NoticeAction denotes what kind of action this notification is for.
@@ -69,6 +70,7 @@ message NoticeRequest {
     AppInstInfo appInstInfo = 6;
     ClusterInstInfo clusterInstInfo = 7;
     Metric metric = 8;
+    Node node = 9;
   }
 }
 

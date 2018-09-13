@@ -27,6 +27,10 @@ var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testi
 var region = flag.Uint("region", 1, "Region")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
 var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
+
+// external API Addr is registered with etcd so other controllers can connect
+// directly to this controller.
+var externalApiAddr = flag.String("externalApiAddr", "", "External API listener address if behind proxy/LB. Defaults to apiAddr")
 var httpAddr = flag.String("httpAddr", "127.0.0.1:8091", "HTTP listener address")
 var notifyAddr = flag.String("notifyAddr", "127.0.0.1:50001", "Notify listener address")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
@@ -49,7 +53,11 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 
-	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr)
+	if *externalApiAddr == "" {
+		*externalApiAddr = *apiAddr
+	}
+
+	log.InfoLog("Start up", "rootDir", *rootDir, "apiAddr", *apiAddr, "externalApiAddr", *externalApiAddr)
 	objstore.InitRegion(uint32(*region))
 
 	if *localEtcd {
@@ -62,11 +70,11 @@ func main() {
 	}
 	objStore, err := GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
-		log.FatalLog("Failed to initialize Object Store")
+		log.FatalLog("Failed to initialize Object Store", "err", err)
 	}
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
-		log.FatalLog("Failed to connect to etcd servers")
+		log.FatalLog("Failed to connect to etcd servers", "err", err)
 	}
 
 	lis, err := net.Listen("tcp", *apiAddr)
@@ -79,6 +87,11 @@ func main() {
 	InitApis(sync)
 	sync.Start()
 	defer sync.Done()
+
+	err = controllerApi.registerController()
+	if err != nil {
+		log.FatalLog("Failed to register controller", "err", err)
+	}
 
 	influxQ := NewInfluxQ()
 	err = influxQ.Start(*influxAddr)
@@ -108,6 +121,8 @@ func main() {
 	edgeproto.RegisterAppInstApiServer(server, &appInstApi)
 	edgeproto.RegisterCloudletInfoApiServer(server, &cloudletInfoApi)
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
+	edgeproto.RegisterControllerApiServer(server, &controllerApi)
+	edgeproto.RegisterNodeApiServer(server, &nodeApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -164,4 +179,6 @@ func InitApis(sync *Sync) {
 	InitAppInstInfoApi(sync)
 	InitClusterInstInfoApi(sync)
 	InitCloudletRefsApi(sync)
+	InitControllerApi(sync)
+	InitNodeApi(sync)
 }
