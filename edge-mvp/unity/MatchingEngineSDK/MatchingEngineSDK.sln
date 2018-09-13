@@ -1,7 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngineLibrary", "MatchingEngineLibrary\MatchingEngineLibrary.csproj", "{CDB7BF58-8CAC-4603-AF5E-83CD74371A84}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngineGrpcLibrary", "MatchingEngineGrpcLibrary\MatchingEngineGrpcLibrary.csproj", "{CDB7BF58-8CAC-4603-AF5E-83CD74371A84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

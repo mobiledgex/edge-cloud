@@ -8,7 +8,7 @@ PROTOC := protoc
 # Run "brew install coreutils" to get "grealpath" for protoc's requirement of absolute paths
 ABSOLUTEPATH := $(shell grealpath ../..)
 VSPROJECTROOT := "MatchingEngineSDK"
-APPCLIENTOUT := "$(VSPROJECTROOT)/MatchingEngineLibrary"
+APPCLIENTOUT := "$(VSPROJECTROOT)/MatchingEngineGrpcLibrary"
 
 MACOSX_PLATFORM := "macosx_x64"
 LINUX_PLATFORM := "linux_x64"
