@@ -1,7 +1,7 @@
 match-engine-request:
-  carriername: TMUS
+  carriername: tmus
   gpslocation: 
     lat: 36.00
     long: -96.00
-  appname: someApplication1 
+  appname: someapplication1 
 
