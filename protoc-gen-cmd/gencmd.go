@@ -299,7 +299,7 @@ func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descrip
 			continue
 		}
 		tag := GetHideTag(field)
-		if tag == "" {
+		if tag == "" && *field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
 			continue
 		}
 		name := generator.CamelCase(*field.Name)
