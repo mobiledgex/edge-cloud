@@ -380,12 +380,6 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			s.stats.Recv++
 		}
 		clusterflavor := reply.GetClusterFlavor()
-		if clusterflavor != nil {
-			log.DebugLog(log.DebugLevelNotify,
-				"client cluster flavor update",
-				"key", clusterflavor.Key.GetKeyString(),
-				"recv", recvClusterFlavor)
-		}
 		if recvClusterFlavor != nil && clusterflavor != nil {
 			if reply.Action == edgeproto.NoticeAction_UPDATE {
 				log.DebugLog(log.DebugLevelNotify,
