@@ -128,6 +128,19 @@ func NodeWriteOutputOne(obj *edgeproto.Node) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func NodeKeyHideTags(in *edgeproto.NodeKey) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Name = ""
+	}
+}
+
 func NodeHideTags(in *edgeproto.Node) {
 	if cmdsup.HideTags == "" {
 		return
@@ -135,6 +148,9 @@ func NodeHideTags(in *edgeproto.Node) {
 	tags := make(map[string]struct{})
 	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
 		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Key.Name = ""
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
