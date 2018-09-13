@@ -54,7 +54,7 @@ operators:
 - key:
     name: ATT
 - key:
-    name: DMUUS
+    name: dmuus
 
 clusterinsts:
 - key:
@@ -62,7 +62,7 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: DMUUS
+        name: dmuus
       name: tmocloud-1
   flavor:
     name: c1.small
@@ -72,7 +72,7 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: DMUUS
+        name: dmuus
       name: tmocloud-2
   flavor:
     name: c1.small
@@ -89,7 +89,7 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: DMUUS
+      name: dmuus
     name: tmocloud-1
   accessuri: cloud1.tmo
   location:
@@ -99,7 +99,7 @@ cloudlets:
   numdynamicips: 254
 - key:
     operatorkey:
-      name: DMUUS
+      name: dmuus
     name: tmocloud-2
   accessuri: cloud2.tmo
   location:
@@ -112,9 +112,9 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someApplication
+    name: someapplication
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
