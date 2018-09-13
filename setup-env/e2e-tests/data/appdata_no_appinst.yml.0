@@ -9,7 +9,7 @@ operators:
 - key:
     name: ATT
 - key:
-    name: TMUS
+    name: tmus
 
 developers:
 - key:
@@ -22,7 +22,7 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: TMUS
+      name: tmus
     name: tmocloud1
   accessuri: cloud1.tmo
   location:
@@ -30,7 +30,7 @@ cloudlets:
     long: -91
 - key:
     operatorkey:
-      name: TMUS
+      name: tmus
     name: tmocloud2
   accessuri: cloud2.tmo
   location:
@@ -41,7 +41,7 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someApplication
+    name: someapplication
     version: "1.0"
   imagetype: ImageTypeDocker
   flavor:
