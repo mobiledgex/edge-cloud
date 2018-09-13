@@ -71,7 +71,6 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
-	log.InfoLog("Update cloudlet", "in", in)
 	_, err := s.store.Update(in, s.sync.syncWait)
 
 	// after the cloudlet change is committed, if the location changed,
