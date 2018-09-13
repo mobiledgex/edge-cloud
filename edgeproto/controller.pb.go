@@ -30,6 +30,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ControllerKey uniquely defines a Controller
 type ControllerKey struct {
 	// external API address
 	Addr string `protobuf:"bytes,1,opt,name=addr,proto3" json:"addr,omitempty"`
@@ -40,6 +41,7 @@ func (m *ControllerKey) String() string            { return proto.CompactTextStr
 func (*ControllerKey) ProtoMessage()               {}
 func (*ControllerKey) Descriptor() ([]byte, []int) { return fileDescriptorController, []int{0} }
 
+// A Controller is a service that manages the edge-cloud data and controls other edge-cloud micro-services.
 type Controller struct {
 	// Fields are used for the Update API to specify which fields to apply
 	Fields []string `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
@@ -86,6 +88,7 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for ControllerApi service
 
 type ControllerApiClient interface {
+	// Show Controllers
 	ShowController(ctx context.Context, in *Controller, opts ...grpc.CallOption) (ControllerApi_ShowControllerClient, error)
 }
 
@@ -132,6 +135,7 @@ func (x *controllerApiShowControllerClient) Recv() (*Controller, error) {
 // Server API for ControllerApi service
 
 type ControllerApiServer interface {
+	// Show Controllers
 	ShowController(*Controller, ControllerApi_ShowControllerServer) error
 }
 

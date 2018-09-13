@@ -21,7 +21,6 @@ func InitCloudletApi(sync *Sync) {
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
 	cloudletApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateCloudlet)
-	cloudletApi.cache.SetUpdatedCb(cloudletApi.UpdatedCb)
 	sync.RegisterCache(&cloudletApi.cache)
 }
 
@@ -73,6 +72,10 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
 	_, err := s.store.Update(in, s.sync.syncWait)
+
+	// after the cloudlet change is committed, if the location changed,
+	// update app insts as well.
+	s.UpdateAppInstLocations(in)
 	return err
 }
 
@@ -127,24 +130,53 @@ func (s *CloudletApi) ShowCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudlet
 	return err
 }
 
-func (s *CloudletApi) UpdatedCb(old *edgeproto.Cloudlet, new *edgeproto.Cloudlet) {
-	if old == nil {
+func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
+	fmap := edgeproto.MakeFieldMap(in.Fields)
+	if _, found := fmap[edgeproto.CloudletFieldLocation]; !found {
+		// no location fields updated
 		return
 	}
-	if old.Location.Lat != new.Location.Lat ||
-		old.Location.Long != new.Location.Long ||
-		old.Location.Altitude != new.Location.Altitude {
 
-		appInstApi.cache.Mux.Lock()
-		for _, inst := range appInstApi.cache.Objs {
-			if inst.Key.CloudletKey.Matches(&new.Key) {
-				old := inst
-				inst.CloudletLoc = new.Location
-				if appInstApi.cache.NotifyCb != nil {
-					appInstApi.cache.NotifyCb(&inst.Key, old)
-				}
+	// find all appinsts associated with the cloudlet
+	keys := make([]edgeproto.AppInstKey, 0)
+	appInstApi.cache.Mux.Lock()
+	for _, inst := range appInstApi.cache.Objs {
+		if inst.Key.CloudletKey.Matches(&in.Key) {
+			keys = append(keys, inst.Key)
+		}
+	}
+	appInstApi.cache.Mux.Unlock()
+
+	first := true
+	inst := edgeproto.AppInst{}
+	for ii, _ := range keys {
+		inst.Key = keys[ii]
+		if first {
+			inst.Fields = make([]string, 0)
+		}
+		if _, found := fmap[edgeproto.CloudletFieldLocationLat]; found {
+			inst.CloudletLoc.Lat = in.Location.Lat
+			if first {
+				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLat)
 			}
 		}
-		appInstApi.cache.Mux.Unlock()
+		if _, found := fmap[edgeproto.CloudletFieldLocationLong]; found {
+			inst.CloudletLoc.Long = in.Location.Long
+			if first {
+				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLong)
+			}
+		}
+		if first {
+			if len(inst.Fields) == 0 {
+				break
+			}
+			first = false
+		}
+
+		err := appInstApi.updateAppInstInternal(DefCallContext, &inst, nil)
+		if err != nil {
+			log.DebugLog(log.DebugLevelApi, "Update AppInst Location",
+				"inst", inst, "err", err)
+		}
 	}
 }

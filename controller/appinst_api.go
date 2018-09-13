@@ -306,6 +306,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	return err
 }
 
+func (s *AppInstApi) updateAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
+	_, err := s.store.Update(in, s.sync.syncWait)
+	return err
+}
+
 func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
 	// don't allow updates to cached fields
 	if in.Fields != nil {
