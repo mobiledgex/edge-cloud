@@ -76,6 +76,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -223,7 +224,12 @@ var CreateAppCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := AppApiCmd.CreateApp(ctx, &AppIn)
 		if err != nil {
-			return fmt.Errorf("CreateApp failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateApp failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -246,7 +252,12 @@ var DeleteAppCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := AppApiCmd.DeleteApp(ctx, &AppIn)
 		if err != nil {
-			return fmt.Errorf("DeleteApp failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteApp failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -270,7 +281,12 @@ var UpdateAppCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := AppApiCmd.UpdateApp(ctx, &AppIn)
 		if err != nil {
-			return fmt.Errorf("UpdateApp failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateApp failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -293,7 +309,12 @@ var ShowAppCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppApiCmd.ShowApp(ctx, &AppIn)
 		if err != nil {
-			return fmt.Errorf("ShowApp failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowApp failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.App, 0)
 		for {

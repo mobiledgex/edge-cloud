@@ -14,6 +14,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -240,7 +241,12 @@ var CreateClusterInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.CreateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
-			return fmt.Errorf("CreateClusterInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateClusterInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -272,7 +278,12 @@ var DeleteClusterInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.DeleteClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
-			return fmt.Errorf("DeleteClusterInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteClusterInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -305,7 +316,12 @@ var UpdateClusterInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.UpdateClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
-			return fmt.Errorf("UpdateClusterInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateClusterInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -337,7 +353,12 @@ var ShowClusterInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterInstApiCmd.ShowClusterInst(ctx, &ClusterInstIn)
 		if err != nil {
-			return fmt.Errorf("ShowClusterInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterInst failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.ClusterInst, 0)
 		for {
@@ -382,7 +403,12 @@ var ShowClusterInstInfoCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterInstInfoApiCmd.ShowClusterInstInfo(ctx, &ClusterInstInfoIn)
 		if err != nil {
-			return fmt.Errorf("ShowClusterInstInfo failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterInstInfo failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.ClusterInstInfo, 0)
 		for {
