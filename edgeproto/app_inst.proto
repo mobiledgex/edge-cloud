@@ -75,6 +75,8 @@ message AppInst {
   TrackedState state = 14 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Any errors trying to create, update, or delete the AppInst on the Cloudlet
   repeated string errors = 15 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Override actions to CRM
+  CRMOverride crm_override = 16 [(protocmd.hidetag) = "nocmp"];
   
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

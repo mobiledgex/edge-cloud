@@ -32,7 +32,7 @@ clusterflavors:
 
 clusters:
 - key:
-    name: AutoClustersomeApplication
+    name: autoclustersomeapplication
   defaultflavor:
     name: c1.small
   auto: true
@@ -40,10 +40,10 @@ clusters:
 clusterinsts:
 - key:
     clusterkey:
-      name: AutoClustersomeApplication
+      name: autoclustersomeapplication
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
   flavor:
     name: c1.small
@@ -52,7 +52,7 @@ clusterinsts:
 
 operators:
 - key:
-    name: TMUS
+    name: tmus
 
 developers:
 - key:
@@ -65,9 +65,9 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: TMUS
+      name: tmus
     name: tmocloud-1
-  accessuri: TMUS.tmocloud-1
+  accessuri: tmus.tmocloud-1
   location:
     long: -175
   ipsupport: IpSupportDynamic
@@ -77,41 +77,41 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someApplication
+    name: someapplication
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
   cluster:
-    name: AutoClustersomeApplication
+    name: autoclustersomeapplication
 
 appinstances:
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someApplication
+      name: someapplication
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
     id: 1
   cloudletloc:
     long: -175
   clusterinstkey:
     clusterkey:
-      name: AutoClustersomeApplication
+      name: autoclustersomeapplication
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someApplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someApplication
+  mappedpath: someapplication
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7

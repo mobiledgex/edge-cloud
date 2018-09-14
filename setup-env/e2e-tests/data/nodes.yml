@@ -3,72 +3,72 @@ nodes:
     nodetype: NodeDME
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-1
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-2
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-7
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-8
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-6
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-5
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-9
 - key:
     nodetype: NodeDME
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-2
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-4
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-3
 - key:
     nodetype: NodeCRM
     cloudletkey:
       operatorkey:
-        name: TMUS
+        name: tmus
       name: tmocloud-10
 

@@ -1058,9 +1058,6 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		if successMsg != "" {
 			send(&Result{Message: successMsg})
 		}
-	case <-ctx.Done():
-		log.DebugLog(log.DebugLevelApi, "Watch for {{.Name}} cancelled by user", "key", key)
-		err = nil // caller cancelled
 	case <-failed:
 		if c.Get(key, &info) {
 			err = fmt.Errorf("Encountered failures: %v", info.Errors)
