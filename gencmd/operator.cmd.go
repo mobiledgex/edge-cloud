@@ -12,6 +12,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -118,7 +119,12 @@ var CreateOperatorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
 		if err != nil {
-			return fmt.Errorf("CreateOperator failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateOperator failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -137,7 +143,12 @@ var DeleteOperatorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
 		if err != nil {
-			return fmt.Errorf("DeleteOperator failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteOperator failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -157,7 +168,12 @@ var UpdateOperatorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
 		if err != nil {
-			return fmt.Errorf("UpdateOperator failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateOperator failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -176,7 +192,12 @@ var ShowOperatorCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := OperatorApiCmd.ShowOperator(ctx, &OperatorIn)
 		if err != nil {
-			return fmt.Errorf("ShowOperator failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowOperator failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Operator, 0)
 		for {

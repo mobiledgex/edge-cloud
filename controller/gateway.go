@@ -40,7 +40,6 @@ func grpcGateway(addr string, tlsCertFile string) (http.Handler, error) {
 		edgeproto.RegisterDeveloperApiHandler,
 		edgeproto.RegisterAppApiHandler,
 		edgeproto.RegisterAppInstApiHandler,
-		edgeproto.RegisterAppInstInfoApiHandler,
 		edgeproto.RegisterOperatorApiHandler,
 		edgeproto.RegisterCloudletApiHandler,
 		edgeproto.RegisterCloudletInfoApiHandler,
@@ -48,7 +47,8 @@ func grpcGateway(addr string, tlsCertFile string) (http.Handler, error) {
 		edgeproto.RegisterClusterFlavorApiHandler,
 		edgeproto.RegisterClusterApiHandler,
 		edgeproto.RegisterClusterInstApiHandler,
-		edgeproto.RegisterClusterInstInfoApiHandler,
+		edgeproto.RegisterControllerApiHandler,
+		edgeproto.RegisterNodeApiHandler,
 	} {
 		if err := f(ctx, mux, conn); err != nil {
 			return nil, err

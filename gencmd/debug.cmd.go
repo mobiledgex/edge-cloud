@@ -23,6 +23,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -141,7 +142,12 @@ var EnableDebugLevelsCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
 		if err != nil {
-			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("EnableDebugLevels failed: %s", errstr)
 		}
 		DebugResultWriteOutputOne(obj)
 		return nil
@@ -164,7 +170,12 @@ var DisableDebugLevelsCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
 		if err != nil {
-			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DisableDebugLevels failed: %s", errstr)
 		}
 		DebugResultWriteOutputOne(obj)
 		return nil
@@ -187,7 +198,12 @@ var ShowDebugLevelsCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
 		if err != nil {
-			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowDebugLevels failed: %s", errstr)
 		}
 		DebugLevelsWriteOutputOne(obj)
 		return nil

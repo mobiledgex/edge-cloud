@@ -16,6 +16,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -392,7 +393,12 @@ var CreateAppInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
 		if err != nil {
-			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateAppInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -424,7 +430,12 @@ var DeleteAppInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
 		if err != nil {
-			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteAppInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -457,7 +468,12 @@ var UpdateAppInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
 		if err != nil {
-			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateAppInst failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -489,7 +505,12 @@ var ShowAppInstCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstApiCmd.ShowAppInst(ctx, &AppInstIn)
 		if err != nil {
-			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInst failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.AppInst, 0)
 		for {
@@ -534,7 +555,12 @@ var ShowAppInstInfoCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
 		if err != nil {
-			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstInfo failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.AppInstInfo, 0)
 		for {
@@ -572,7 +598,12 @@ var ShowAppInstMetricsCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, &AppInstMetricsIn)
 		if err != nil {
-			return fmt.Errorf("ShowAppInstMetrics failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowAppInstMetrics failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.AppInstMetrics, 0)
 		for {

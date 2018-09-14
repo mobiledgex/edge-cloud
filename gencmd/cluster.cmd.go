@@ -13,6 +13,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -124,7 +125,12 @@ var CreateClusterCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterApiCmd.CreateCluster(ctx, &ClusterIn)
 		if err != nil {
-			return fmt.Errorf("CreateCluster failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateCluster failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -143,7 +149,12 @@ var DeleteClusterCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterApiCmd.DeleteCluster(ctx, &ClusterIn)
 		if err != nil {
-			return fmt.Errorf("DeleteCluster failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteCluster failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -163,7 +174,12 @@ var UpdateClusterCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterApiCmd.UpdateCluster(ctx, &ClusterIn)
 		if err != nil {
-			return fmt.Errorf("UpdateCluster failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateCluster failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -182,7 +198,12 @@ var ShowClusterCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterApiCmd.ShowCluster(ctx, &ClusterIn)
 		if err != nil {
-			return fmt.Errorf("ShowCluster failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCluster failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Cluster, 0)
 		for {
