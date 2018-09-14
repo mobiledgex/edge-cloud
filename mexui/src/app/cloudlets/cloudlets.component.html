@@ -10,6 +10,7 @@
             <th>OperatorName</th>
             <th>CloudletName</th>
             <th>Uri</th>
+            <th>DMEname</th>
             <th>Location Lattitude</th>
             <th>Location Longitude</th>
             <th>IpSupport Type</th>
@@ -22,6 +23,7 @@
             <td>{{ cloudlet.operatorName }}</td>
             <td>{{ cloudlet.cloudletName }}</td>
             <td>{{ cloudlet.uri}}</td>
+            <td>{{ cloudlet.dmeName}}</td>
             <td>{{ cloudlet.locationLat }}</td>
             <td>{{ cloudlet.locationLong }}</td>
             <td>{{ cloudlet.ipSupport }}</td>
@@ -62,6 +64,13 @@
               <input class="form-control" type="text" [(ngModel)]="cldModel.uri" name="uri">
             </div>
         </div>
+
+        <div class="form-group row">
+          <label for="dme-input" class="col-2 col-form-label">dmeName</label>
+          <div class="col-10">
+            <input class="form-control" type="text" [(ngModel)]="cldModel.dmeName" name="dmeName" readonly>
+          </div>
+      </div>
   
         <div class="form-group row">
           <label for="locationLat-input" class="col-2 col-form-label">location Lattitude</label>
