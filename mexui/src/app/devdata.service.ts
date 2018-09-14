@@ -559,5 +559,9 @@ export class DevdataService {
       catchError(this.handleError)
     );
   }
+
+  getNodes() {
+    return this.http.post(`${ctrlUrl}/show/node`,"",{responseType:'text'});
+  }
 }
- 
+
