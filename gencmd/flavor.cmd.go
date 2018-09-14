@@ -13,6 +13,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -126,7 +127,12 @@ var CreateFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
 		if err != nil {
-			return fmt.Errorf("CreateFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -145,7 +151,12 @@ var DeleteFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
 		if err != nil {
-			return fmt.Errorf("DeleteFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -165,7 +176,12 @@ var UpdateFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
 		if err != nil {
-			return fmt.Errorf("UpdateFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -184,7 +200,12 @@ var ShowFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := FlavorApiCmd.ShowFlavor(ctx, &FlavorIn)
 		if err != nil {
-			return fmt.Errorf("ShowFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowFlavor failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Flavor, 0)
 		for {

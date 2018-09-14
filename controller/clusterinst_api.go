@@ -87,6 +87,17 @@ func (s *ClusterInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[ed
 	return static
 }
 
+func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, val := range s.cache.Objs {
+		if val.Key.ClusterKey.Matches(key) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *ClusterInstApi) GetClusterInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}, clusterInsts map[edgeproto.ClusterInstKey]struct{}) {
 	s.cache.GetClusterInstsForCloudlets(cloudlets, clusterInsts)
 }
@@ -110,6 +121,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				return objstore.ErrKVStoreKeyExists
 			}
 			in.Errors = nil
+		} else {
+			err := in.Validate(edgeproto.ClusterInstAllFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 		if in.Liveness == edgeproto.Liveness_LivenessUnknown {
 			in.Liveness = edgeproto.Liveness_LivenessDynamic
