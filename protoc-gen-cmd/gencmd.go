@@ -49,6 +49,7 @@ type GenCmd struct {
 	importErrors       bool
 	importOutputGen    bool
 	importCmdSup       bool
+	importStatus       bool
 }
 
 func (g *GenCmd) Name() string {
@@ -103,6 +104,9 @@ func (g *GenCmd) GenerateImports(file *generator.FileDescriptor) {
 	if g.importCmdSup {
 		g.PrintImport("", "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup")
 	}
+	if g.importStatus {
+		g.PrintImport("", "google.golang.org/grpc/status")
+	}
 }
 
 func (g *GenCmd) Generate(file *generator.FileDescriptor) {
@@ -121,6 +125,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 	g.importErrors = false
 	g.importOutputGen = false
 	g.importCmdSup = false
+	g.importStatus = false
 	g.inMessages = make(map[string]*generator.Descriptor)
 	g.enumArgs = make(map[string][]*EnumArg)
 	g.hideTags = make(map[string]struct{})
@@ -848,7 +853,12 @@ var {{.Method}}Cmd = &cobra.Command{
 {{- if .ServerStream}}
 		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("{{.Method}} failed: %s", errstr)
 		}
 
 	{{- if not .StreamOutIncremental}}
@@ -879,7 +889,12 @@ var {{.Method}}Cmd = &cobra.Command{
 {{- else}}
 		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("{{.Method}} failed: %s", errstr)
 		}
 	{{- if .OutHideTags}}
 		{{.OutType}}HideTags(obj)
@@ -954,6 +969,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 	g.importCobra = true
 	g.importContext = true
 	g.importOutputGen = true
+	g.importStatus = true
 	_, hasEnums := g.enumArgs[*in.DescriptorProto.Name]
 	cmd := &tmplArgs{
 		Service:              *service.Name,

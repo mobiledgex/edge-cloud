@@ -115,8 +115,6 @@ func main() {
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
 	controllerCmd.AddCommand(gencmd.AppInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.DebugApiCmds...)
-	controllerCmd.AddCommand(gencmd.AppInstInfoApiCmds...)
-	controllerCmd.AddCommand(gencmd.ClusterInstInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletInfoApiCmds...)
 	controllerCmd.AddCommand(gencmd.ControllerApiCmds...)
 	controllerCmd.AddCommand(gencmd.NodeApiCmds...)
@@ -124,8 +122,9 @@ func main() {
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)
 
-	crmCmd.AddCommand(gencmd.CloudResourceManagerCmds...)
 	crmCmd.AddCommand(gencmd.DebugApiCmds...)
+	crmCmd.AddCommand(gencmd.ClusterInstInfoApiCmds...)
+	crmCmd.AddCommand(gencmd.AppInstInfoApiCmds...)
 
 	err := rootCmd.Execute()
 	if err != nil {
