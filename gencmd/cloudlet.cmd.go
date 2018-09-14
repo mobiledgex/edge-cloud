@@ -16,6 +16,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -269,7 +270,12 @@ var CreateCloudletCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
 		if err != nil {
-			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateCloudlet failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Result, 0)
 		for {
@@ -306,7 +312,12 @@ var DeleteCloudletCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
 		if err != nil {
-			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteCloudlet failed: %s", errstr)
 		}
 		for {
 			obj, err := stream.Recv()
@@ -339,7 +350,12 @@ var UpdateCloudletCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
 		if err != nil {
-			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateCloudlet failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Result, 0)
 		for {
@@ -376,7 +392,12 @@ var ShowCloudletCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletApiCmd.ShowCloudlet(ctx, &CloudletIn)
 		if err != nil {
-			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudlet failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Cloudlet, 0)
 		for {
@@ -420,7 +441,12 @@ var ShowCloudletInfoCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletInfoApiCmd.ShowCloudletInfo(ctx, &CloudletInfoIn)
 		if err != nil {
-			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletInfo failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.CloudletInfo, 0)
 		for {
@@ -457,7 +483,12 @@ var InjectCloudletInfoCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
 		if err != nil {
-			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("InjectCloudletInfo failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -480,7 +511,12 @@ var EvictCloudletInfoCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
 		if err != nil {
-			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("EvictCloudletInfo failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -505,7 +541,12 @@ var ShowCloudletMetricsCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletMetricsApiCmd.ShowCloudletMetrics(ctx, &CloudletMetricsIn)
 		if err != nil {
-			return fmt.Errorf("ShowCloudletMetrics failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletMetrics failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.CloudletMetrics, 0)
 		for {

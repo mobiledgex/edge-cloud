@@ -13,6 +13,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -130,7 +131,12 @@ var CreateClusterFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
-			return fmt.Errorf("CreateClusterFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateClusterFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -149,7 +155,12 @@ var DeleteClusterFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
-			return fmt.Errorf("DeleteClusterFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteClusterFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -169,7 +180,12 @@ var UpdateClusterFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
-			return fmt.Errorf("UpdateClusterFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateClusterFlavor failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -188,7 +204,12 @@ var ShowClusterFlavorCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterFlavorApiCmd.ShowClusterFlavor(ctx, &ClusterFlavorIn)
 		if err != nil {
-			return fmt.Errorf("ShowClusterFlavor failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterFlavor failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.ClusterFlavor, 0)
 		for {

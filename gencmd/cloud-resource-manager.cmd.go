@@ -14,6 +14,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -280,7 +281,12 @@ var ListCloudResourceCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ListCloudResource failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.CloudResource, 0)
 		for {
@@ -317,7 +323,12 @@ var AddCloudResourceCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("AddCloudResource failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -340,7 +351,12 @@ var DeleteCloudResourceCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
 		if err != nil {
-			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteCloudResource failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -359,7 +375,12 @@ var DeployApplicationCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
 		if err != nil {
-			return fmt.Errorf("DeployApplication failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeployApplication failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -378,7 +399,12 @@ var DeleteApplicationCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
 		if err != nil {
-			return fmt.Errorf("DeleteApplication failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteApplication failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil

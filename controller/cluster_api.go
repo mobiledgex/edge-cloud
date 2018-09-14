@@ -66,6 +66,9 @@ func (s *ClusterApi) DeleteCluster(ctx context.Context, in *edgeproto.Cluster) (
 	if appApi.UsesCluster(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Cluster in use by Application")
 	}
+	if clusterInstApi.UsesCluster(&in.Key) {
+		return &edgeproto.Result{}, errors.New("Cluster in use by ClusterInst")
+	}
 	return s.store.Delete(in, s.sync.syncWait)
 }
 
