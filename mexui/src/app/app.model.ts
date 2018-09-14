@@ -137,6 +137,7 @@ export class Cloudlet {
     public operatorName :string = '',
     public cloudletName :string = '',
     public uri :string = '',
+    public dmeName: string = 'none',
     public locationLat :number = 0,
     public locationLong :number = 0,
     public ipSupport :string = 'IpSupportDynamic',
@@ -162,5 +163,32 @@ export class Cluster {
   constructor(
     public name :string = '',
     public defaultFlavor :string = 'c1.small'
+  ){}
+}
+
+
+// Node fields
+// {
+//   "result": {
+//    "fields": [],
+//    "key": {
+//     "name": "mex-plat-1.novalocal",
+//     "node_type": "NodeDME",
+//     "cloudlet_key": {
+//      "operator_key": {
+//       "name": "TDG"
+//      },
+//      "name": "bonncloudlet"
+//     }
+//    },
+//    "notify_id": "0"
+//   }
+//  }
+export class Node {
+  constructor(
+  public nodeName :string,
+  public nodeType:string,
+  public operatorName: string,
+  public cloudletName:string
   ){}
 }
