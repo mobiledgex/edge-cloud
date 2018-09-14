@@ -42,6 +42,7 @@ var AppInstInImageType string
 var AppInstInMappedPortsProto string
 var AppInstInAccessLayer string
 var AppInstInState string
+var AppInstInCrmOverride string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
@@ -135,7 +136,7 @@ func AppPortWriteOutputOne(obj *edgeproto.AppPort) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 16)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -180,11 +181,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
+	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 15)
+	s := make([]string, 0, 16)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -216,6 +218,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "AccessLayer")
 	s = append(s, "State")
 	s = append(s, "Errors")
+	s = append(s, "CrmOverride")
 	return s
 }
 
@@ -354,6 +357,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.Errors = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.CrmOverride = 0
 	}
 }
 
@@ -620,6 +626,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
+	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -735,6 +742,9 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("state").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "14")
 	}
+	if AppInstFlagSet.Lookup("crmoverride").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "16")
+	}
 }
 
 func AppInstInfoSetFields() {
@@ -844,6 +854,18 @@ func parseAppInstEnums() error {
 			AppInstIn.State = edgeproto.TrackedState(11)
 		default:
 			return errors.New("Invalid value for AppInstInState")
+		}
+	}
+	if AppInstInCrmOverride != "" {
+		switch AppInstInCrmOverride {
+		case "NoOverride":
+			AppInstIn.CrmOverride = edgeproto.CRMOverride(0)
+		case "IgnoreCRMErrors":
+			AppInstIn.CrmOverride = edgeproto.CRMOverride(1)
+		case "IgnoreCRM":
+			AppInstIn.CrmOverride = edgeproto.CRMOverride(2)
+		default:
+			return errors.New("Invalid value for AppInstInCrmOverride")
 		}
 	}
 	return nil
