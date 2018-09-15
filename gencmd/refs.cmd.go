@@ -13,6 +13,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -151,7 +152,12 @@ var ShowCloudletRefsCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := CloudletRefsApiCmd.ShowCloudletRefs(ctx, &CloudletRefsIn)
 		if err != nil {
-			return fmt.Errorf("ShowCloudletRefs failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowCloudletRefs failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.CloudletRefs, 0)
 		for {
@@ -188,7 +194,12 @@ var ShowClusterRefsCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, &ClusterRefsIn)
 		if err != nil {
-			return fmt.Errorf("ShowClusterRefs failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowClusterRefs failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.ClusterRefs, 0)
 		for {

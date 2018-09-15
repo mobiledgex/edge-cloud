@@ -37,6 +37,7 @@ import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "errors"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -721,7 +722,12 @@ var FindCloudletCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
 		if err != nil {
-			return fmt.Errorf("FindCloudlet failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("FindCloudlet failed: %s", errstr)
 		}
 		Match_Engine_ReplyWriteOutputOne(obj)
 		return nil
@@ -744,7 +750,12 @@ var VerifyLocationCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
 		if err != nil {
-			return fmt.Errorf("VerifyLocation failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("VerifyLocation failed: %s", errstr)
 		}
 		Match_Engine_Loc_VerifyWriteOutputOne(obj)
 		return nil
@@ -767,7 +778,12 @@ var GetLocationCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
 		if err != nil {
-			return fmt.Errorf("GetLocation failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("GetLocation failed: %s", errstr)
 		}
 		Match_Engine_LocWriteOutputOne(obj)
 		return nil
@@ -790,7 +806,12 @@ var RegisterClientCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
 		if err != nil {
-			return fmt.Errorf("RegisterClient failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("RegisterClient failed: %s", errstr)
 		}
 		Match_Engine_StatusWriteOutputOne(obj)
 		return nil
@@ -813,7 +834,12 @@ var AddUserToGroupCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
 		if err != nil {
-			return fmt.Errorf("AddUserToGroup failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("AddUserToGroup failed: %s", errstr)
 		}
 		Match_Engine_StatusWriteOutputOne(obj)
 		return nil
@@ -836,7 +862,12 @@ var GetCloudletsCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
 		if err != nil {
-			return fmt.Errorf("GetCloudlets failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("GetCloudlets failed: %s", errstr)
 		}
 		Match_Engine_Cloudlet_ListWriteOutputOne(obj)
 		return nil

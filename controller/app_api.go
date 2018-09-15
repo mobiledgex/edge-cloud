@@ -108,6 +108,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	// This is a separate STM to avoid ordering issues between
 	// auto-cluster create and app create in watch cb.
 	if in.Cluster.Name == "" {
+		if in.DefaultFlavor.Name == "" {
+			return &edgeproto.Result{}, errors.New("DefaultFlavor is required if Cluster is not specified")
+		}
 		err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 			if s.store.STMGet(stm, &in.Key, nil) {
 				return objstore.ErrKVStoreKeyExists
@@ -145,6 +148,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if err := in.Validate(edgeproto.AppAllFieldsMap); err != nil {
+			return err
+		}
 		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
 			return errors.New("Specified developer not found")
 		}
@@ -297,7 +303,6 @@ func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.Clust
 	clusterFlavorApi.cache.Mux.Lock()
 	defer clusterFlavorApi.cache.Mux.Unlock()
 	for _, val := range clusterFlavorApi.cache.Objs {
-		fmt.Printf("Matching %v and %v\n", val, flavorKey)
 		if val.NodeFlavor.Matches(flavorKey) {
 			matchingFlavors = append(matchingFlavors, val)
 		}

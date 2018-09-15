@@ -12,6 +12,7 @@ import "io"
 import "text/tabwriter"
 import "github.com/spf13/pflag"
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/cmdsup"
+import "google.golang.org/grpc/status"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -126,7 +127,12 @@ var CreateDeveloperCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			return fmt.Errorf("CreateDeveloper failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("CreateDeveloper failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -145,7 +151,12 @@ var DeleteDeveloperCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			return fmt.Errorf("DeleteDeveloper failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("DeleteDeveloper failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -165,7 +176,12 @@ var UpdateDeveloperCmd = &cobra.Command{
 		ctx := context.Background()
 		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			return fmt.Errorf("UpdateDeveloper failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("UpdateDeveloper failed: %s", errstr)
 		}
 		ResultWriteOutputOne(obj)
 		return nil
@@ -184,7 +200,12 @@ var ShowDeveloperCmd = &cobra.Command{
 		ctx := context.Background()
 		stream, err := DeveloperApiCmd.ShowDeveloper(ctx, &DeveloperIn)
 		if err != nil {
-			return fmt.Errorf("ShowDeveloper failed: %s", err.Error())
+			errstr := err.Error()
+			st, ok := status.FromError(err)
+			if ok {
+				errstr = st.Message()
+			}
+			return fmt.Errorf("ShowDeveloper failed: %s", errstr)
 		}
 		objs := make([]*edgeproto.Developer, 0)
 		for {
