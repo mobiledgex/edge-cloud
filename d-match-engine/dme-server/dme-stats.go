@@ -1,12 +1,12 @@
 package main
 
 import (
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/cespare/xxhash"
 	"github.com/gogo/protobuf/types"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
@@ -175,11 +175,8 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 	resp, err := handler(ctx, req)
 
 	call := ApiStatCall{}
-	if i := strings.LastIndexByte(info.FullMethod, '/'); i > 0 {
-		call.key.method = info.FullMethod[i+1:]
-	} else {
-		call.key.method = info.FullMethod
-	}
+	_, call.key.method = cloudcommon.ParseGrpcMethod(info.FullMethod)
+
 	switch typ := req.(type) {
 	case *dme.Match_Engine_Request:
 		call.key.AppKey.DeveloperKey.Name = typ.DevName
