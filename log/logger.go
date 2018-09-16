@@ -39,6 +39,30 @@ func FatalLog(msg string, keysAndValues ...interface{}) {
 	slogger.Fatalw(msg, keysAndValues...)
 }
 
+func AuditLogStart(id uint64, cmd, client, user string, keysAndValues ...interface{}) {
+	args := make([]interface{}, 0)
+	args = append(args, "id")
+	args = append(args, id)
+	args = append(args, "cmd")
+	args = append(args, cmd)
+	args = append(args, "client")
+	args = append(args, client)
+	args = append(args, "user")
+	args = append(args, user)
+	args = append(args, keysAndValues...)
+	slogger.Infow("Audit start", args...)
+}
+
+func AuditLogEnd(id uint64, err error) {
+	res := "success"
+	msg := ""
+	if err != nil {
+		res = "failure"
+		msg = err.Error()
+	}
+	slogger.Infow("Audit end", "id", id, "result", res, "msg", msg)
+}
+
 func enumToBit(in DebugLevel) uint64 {
 	return uint64(1) << uint(in)
 }
