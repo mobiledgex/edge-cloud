@@ -3,7 +3,7 @@
 <ul>
   <li *ngFor="let ap of apps$; let i = index">
     <table style="width:65%">
- 
+    <tr><td> Index                   </td><td>  {{ i+1 }}</td></tr>
     <tr>
           <td>Developer Name</td>         
           <td>{{ ap.result.key.developer_key.name }}</td>

@@ -216,6 +216,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return objstore.ErrKVStoreKeyExists
 			}
 			in.Errors = nil
+		} else {
+			err := in.Validate(edgeproto.AppInstAllFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 
 		// cache location of cloudlet in app inst

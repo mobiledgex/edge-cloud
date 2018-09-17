@@ -125,7 +125,20 @@ func (key *FlavorKey) Validate() error {
 }
 
 func (s *Flavor) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	err := s.GetKey().Validate()
+	if err != nil {
+		return err
+	}
+	if _, found := fields[FlavorFieldRam]; found && s.Ram == 0 {
+		return errors.New("Ram cannot be 0")
+	}
+	if _, found := fields[FlavorFieldVcpus]; found && s.Vcpus == 0 {
+		return errors.New("Vcpus cannot be 0")
+	}
+	if _, found := fields[FlavorFieldDisk]; found && s.Disk == 0 {
+		return errors.New("Disk cannot be 0")
+	}
+	return nil
 }
 
 func (key *ClusterFlavorKey) Validate() error {
@@ -136,7 +149,26 @@ func (key *ClusterFlavorKey) Validate() error {
 }
 
 func (s *ClusterFlavor) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	err := s.GetKey().Validate()
+	if err != nil {
+		return err
+	}
+	if _, found := fields[ClusterFlavorFieldNodeFlavor]; found && s.NodeFlavor.Name == "" {
+		return errors.New("Invalid empty string for Node Flavor")
+	}
+	if _, found := fields[ClusterFlavorFieldMasterFlavor]; found && s.MasterFlavor.Name == "" {
+		return errors.New("Invalid empty string for Master Flavor")
+	}
+	if _, found := fields[ClusterFlavorFieldNumNodes]; found && s.NumNodes == 0 {
+		return errors.New("Number of nodes cannot be 0")
+	}
+	if _, found := fields[ClusterFlavorFieldMaxNodes]; found && s.MaxNodes == 0 {
+		return errors.New("Number of maximum nodes cannot be 0")
+	}
+	if _, found := fields[ClusterFlavorFieldNumMasters]; found && s.NumMasters == 0 {
+		return errors.New("Number of master nodes cannot be 0")
+	}
+	return nil
 }
 
 func (key *AppKey) Validate() error {
