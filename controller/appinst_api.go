@@ -129,7 +129,7 @@ func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 
 func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
-	return s.createAppInstInternal(DefCallContext, in, cb)
+	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
 // createAppInstInternal is used to create dynamic app insts internally,
@@ -146,7 +146,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
-			return objstore.ErrKVStoreKeyExists
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError {
+				if in.State == edgeproto.TrackedState_CreateError {
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to fix CreateError state"})
+				}
+				return objstore.ErrKVStoreKeyExists
+			}
+			in.Errors = nil
+		} else {
+			err := in.Validate(edgeproto.AppInstAllFieldsMap)
+			if err != nil {
+				return err
+			}
 		}
 		// make sure cloudlet exists
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, nil) {
@@ -351,7 +362,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 }
 
 func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	return s.deleteAppInstInternal(DefCallContext, in, cb)
+	return s.deleteAppInstInternal(DefCallContext(), in, cb)
 }
 
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
