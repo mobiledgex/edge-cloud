@@ -105,7 +105,7 @@ func (s *ClusterInstApi) GetClusterInstsForCloudlets(cloudlets map[edgeproto.Clo
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
 	in.Auto = false
-	return s.createClusterInstInternal(DefCallContext, in, cb)
+	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
@@ -231,7 +231,7 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 }
 
 func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	return s.deleteClusterInstInternal(DefCallContext, in, cb)
+	return s.deleteClusterInstInternal(DefCallContext(), in, cb)
 }
 
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
