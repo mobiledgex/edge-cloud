@@ -126,6 +126,8 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	if !found {
 		return
 	}
+	log.DebugLog(log.DebugLevelMexos, "clusterInst state", "state", clusterInst.State)
+
 	// If CRM crashes or reconnects to controller, controller will resend
 	// current state. This is needed to:
 	// -restart actions that were lost due to a crash
@@ -136,7 +138,9 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	// the info state which can tell us if a thread is in progress.
 	info := edgeproto.ClusterInstInfo{}
 	if infoFound := cd.ClusterInstInfoCache.Get(key, &info); infoFound {
+
 		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
+			log.DebugLog(log.DebugLevelMexos, "clusterInst conflicting state", "state", info.State)
 			return
 		}
 	}
@@ -214,6 +218,20 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	}
 }
 
+// makes sure we have a valid kubeconfig file for the cluster instance
+func updateKubeConfig(clusterInst *edgeproto.ClusterInst, rootlb *MEXRootLB) error {
+	// make sure we have a valid kubeconfig file; we need the cluster instance manifest for this
+	clusterMf, err := fillClusterTemplateClustInst(rootlb, clusterInst)
+	if err != nil {
+		return err
+	}
+	_, err = getKconf(clusterMf, true)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
 	log.DebugLog(log.DebugLevelMexos, "app inst changed", "key", key)
 	appInst := edgeproto.AppInst{}
@@ -248,6 +266,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
 			return
 		}
+
 		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
 			if !IsValidMEXOSEnv {
@@ -256,7 +275,15 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "create app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
-			err := MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+
+			err := updateKubeConfig(&clusterInst, cd.CRMRootLB)
+			if err != nil {
+				errstr := fmt.Sprintf("updateKubeConfig failed: %s", err)
+				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
+				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
+			}
+			err = MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
@@ -287,7 +314,14 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
-			err := MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			err := updateKubeConfig(&clusterInst, cd.CRMRootLB)
+			if err != nil {
+				errstr := fmt.Sprintf("updateKubeConfig failed: %s", err)
+				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)
+				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
+				return
+			}
+			err = MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)
