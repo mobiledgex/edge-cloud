@@ -10,9 +10,10 @@ ABSOLUTEPATH := $(shell grealpath ../..)
 VSPROJECTROOT := "MatchingEngineSDK"
 APPCLIENTOUT := "$(VSPROJECTROOT)/MatchingEngineGrpcLibrary"
 
-MACOSX_PLATFORM := "macosx_x64"
+# Host OS platform tools:
+MACOS_PLATFORM := "macosx_x64"
 LINUX_PLATFORM := "linux_x64"
-PLATFORM := $(MACOSX_PLATFORM)
+PLATFORM := $(MACOS_PLATFORM)
 
 GETOUTPUT := $(shell mkdir -p $(TEMP_DIR) && cd $(TEMP_DIR) && curl -sL $(CURL_URL) > tmp.zip; unzip tmp.zip && cd .. && cp -r tmp/tools . && rm -rf tmp && cd ../..)
 OUTPUT := $(shell chmod 750 packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/protoc)
@@ -25,7 +26,6 @@ packageRestore:
 
 build:
 	@echo "Absolute Path for Proto files are: $(ABSOLUTEPATH)"
-	rm -rf $(APPCLIENTOUT)
-	mkdir $(APPCLIENTOUT)
+	mkdir -p $(APPCLIENTOUT)
 	$(PROTOC) -I$(ABSOLUTEPATH)/d-match-engine/dme-proto/ --csharp_out $(APPCLIENTOUT) --grpc_out $(APPCLIENTOUT) $(ABSOLUTEPATH)/d-match-engine/dme-proto/*.proto --plugin=protoc-gen-grpc=packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/grpc_csharp_plugin
-
+	$(shell MSBuild MatchingEngineSDK/MatchingEngineSDK.sln > /tmp/MatchingEngineSDK_out.log)
