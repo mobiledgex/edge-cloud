@@ -190,22 +190,35 @@ func UpdateAPIAddrs() bool {
 	//for k8s deployments, get the ip from the service
 	if util.IsK8sDeployment() {
 		if len(util.Deployment.Controllers) > 0 {
-			addr, err := util.GetK8sServiceAddr("controller", maxWaitForServiceSeconds)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "unable to get controller service ")
-				return false
+			if util.Deployment.Controllers[0].ApiAddr != "" {
+				for i, ctrl := range util.Deployment.Controllers {
+					util.Deployment.Controllers[i].ApiAddr = getExternalApiAddress(ctrl.ApiAddr, ctrl.Hostname)
+					log.Printf("set controller API addr to %s\n", util.Deployment.Controllers[i].ApiAddr)
+				}
+			} else {
+				addr, err := util.GetK8sServiceAddr("controller", maxWaitForServiceSeconds)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "unable to get controller service ")
+					return false
+				}
+				util.Deployment.Controllers[0].ApiAddr = addr
+				log.Printf("set controller API addr from k8s service to %s\n", addr)
+
 			}
-			addr = getDNSNameForAddr(addr)
-			util.Deployment.Controllers[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Dmes) > 0 {
-			addr, err := util.GetK8sServiceAddr("dme", maxWaitForServiceSeconds)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "unable to get dme service ")
-				return false
+			if util.Deployment.Dmes[0].ApiAddr != "" {
+				for i, dme := range util.Deployment.Dmes {
+					util.Deployment.Dmes[i].ApiAddr = getExternalApiAddress(dme.ApiAddr, dme.Hostname)
+				}
+			} else {
+				addr, err := util.GetK8sServiceAddr("dme", maxWaitForServiceSeconds)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "unable to get dme service ")
+					return false
+				}
+				util.Deployment.Dmes[0].ApiAddr = addr
 			}
-			addr = getDNSNameForAddr(addr)
-			util.Deployment.Dmes[0].ApiAddr = addr
 		}
 		if len(util.Deployment.Crms) > 0 {
 			addr, err := util.GetK8sServiceAddr("crm", maxWaitForServiceSeconds)
