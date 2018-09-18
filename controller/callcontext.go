@@ -4,11 +4,13 @@ import "github.com/mobiledgex/edge-cloud/edgeproto"
 
 // Generic caller context
 
-var DefCallContext = &CallContext{}
-
 type CallContext struct {
 	Undo     bool
 	Override edgeproto.CRMOverride
+}
+
+func DefCallContext() *CallContext {
+	return &CallContext{}
 }
 
 func (c *CallContext) WithUndo() *CallContext {
