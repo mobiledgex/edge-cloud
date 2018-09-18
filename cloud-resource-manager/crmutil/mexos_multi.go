@@ -669,10 +669,10 @@ func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 	name := mexEnv["MEX_DIR"] + "/" + mf.Spec.Key + ".kubeconfig"
 	log.DebugLog(log.DebugLevelMexos, "get kubeconfig name", "mf", mf, "name", name)
 
-	if _, err := os.Stat(name); os.IsNotExist(err) {
-		// if kubeconfig does not exist, optionally create it.  It is possible it was
-		// created on a different container or we had a restart of the container
-		if createIfMissing {
+	if createIfMissing {
+		if _, err := os.Stat(name); os.IsNotExist(err) {
+			// if kubeconfig does not exist, optionally create it.  It is possible it was
+			// created on a different container or we had a restart of the container
 			log.DebugLog(log.DebugLevelMexos, "creating missing kconf file", "name", name)
 			switch mf.Metadata.Operator {
 			case "gcp":
