@@ -165,7 +165,11 @@ func azureCreateAKS(mf *Manifest) error {
 	if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 		return err
 	}
-	if err = copy(defaultKubeconfig(), getKconf(mf)); err != nil {
+	kconf, err := getKconf(mf, false)
+	if err != nil {
+		return fmt.Errorf("cannot get kconf, %v, %v, %v", mf, kconf, err)
+	}
+	if err = copy(defaultKubeconfig(), kconf); err != nil {
 		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "created aks", "name", mf.Spec.Key)
@@ -199,11 +203,17 @@ func gcloudCreateGKE(mf *Manifest) error {
 	if err = gcloud.CreateGKECluster(mf.Metadata.Name); err != nil {
 		return err
 	}
+	//race condition exists where the config file is not ready until just after the cluster create is done
+	time.Sleep(3 * time.Second)
 	saveKubeconfig()
 	if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
 		return err
 	}
-	if err = copy(defaultKubeconfig(), getKconf(mf)); err != nil {
+	kconf, err := getKconf(mf, false)
+	if err != nil {
+		return fmt.Errorf("cannot get kconf, %v, %v, %v", mf, kconf, err)
+	}
+	if err = copy(defaultKubeconfig(), kconf); err != nil {
 		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "created gke", "name", mf.Spec.Key)
@@ -653,20 +663,49 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 	}
 }
 
-func getKconf(mf *Manifest) string {
+func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 	name := mexEnv["MEX_DIR"] + "/" + mf.Spec.Key + ".kubeconfig"
 	log.DebugLog(log.DebugLevelMexos, "get kubeconfig name", "mf", mf, "name", name)
-	return name
+
+	if createIfMissing {
+		if _, err := os.Stat(name); os.IsNotExist(err) {
+			// if kubeconfig does not exist, optionally create it.  It is possible it was
+			// created on a different container or we had a restart of the container
+			log.DebugLog(log.DebugLevelMexos, "creating missing kconf file", "name", name)
+			switch mf.Metadata.Operator {
+			case "gcp":
+				if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
+					return "", fmt.Errorf("unable to get GKE credentials %v", err)
+				}
+				if err = copy(defaultKubeconfig(), name); err != nil {
+					return "", fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
+				}
+			case "azure":
+				if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
+					return "", fmt.Errorf("unable to get AKS credentials %v", err)
+				}
+				if err = copy(defaultKubeconfig(), name); err != nil {
+					return "", fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
+				}
+			}
+		}
+	}
+	return name, nil
 }
 
 func runKubectlCreateApp(mf *Manifest) error {
-	out, err := sh.Command("kubectl", "create", "secret", "docker-registry", "mexregistrysecret", "--docker-server="+mexEnv["MEX_DOCKER_REGISTRY"], "--docker-username=mobiledgex", "--docker-password="+mexEnv["MEX_DOCKER_REG_PASS"], "--docker-email=docker@mobiledgex.com", "--kubeconfig="+getKconf(mf)).Output()
+	kconf, err := getKconf(mf, false)
+	if err != nil {
+		return fmt.Errorf("error creating app due to kconf %v, %v", mf, err)
+	}
+	out, err := sh.Command("kubectl", "create", "secret", "docker-registry", "mexregistrysecret", "--docker-server="+mexEnv["MEX_DOCKER_REGISTRY"], "--docker-username=mobiledgex", "--docker-password="+mexEnv["MEX_DOCKER_REG_PASS"], "--docker-email=docker@mobiledgex.com", "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		if !strings.Contains(string(out), "AlreadyExists") {
 			return fmt.Errorf("can't add docker registry secret, %s, %v", out, err)
 		}
 	}
-	out, err = sh.Command("kubectl", "create", "-f", mf.Spec.KubeManifest, "--kubeconfig="+getKconf(mf)).Output()
+
+	out, err = sh.Command("kubectl", "create", "-f", mf.Spec.KubeManifest, "--kubeconfig="+kconf).Output()
 	if err != nil {
 		return fmt.Errorf("error creating app, %s, %v, %v", out, mf, err)
 	}
@@ -704,7 +743,11 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 }
 
 func runKubectlDeleteApp(mf *Manifest) error {
-	out, err := sh.Command("kubectl", "delete", "-f", mf.Spec.KubeManifest, "--kubeconfig="+getKconf(mf)).Output()
+	kconf, err := getKconf(mf, false)
+	if err != nil {
+		return fmt.Errorf("error deleting app due to kconf,  %v, %v", mf, err)
+	}
+	out, err := sh.Command("kubectl", "delete", "-f", mf.Spec.KubeManifest, "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
 	}
