@@ -216,9 +216,6 @@ func (key *AppInstKey) Validate() error {
 	if err := key.CloudletKey.Validate(); err != nil {
 		return err
 	}
-	if key.Id == 0 {
-		return errors.New("AppInst Id cannot be zero")
-	}
 	return nil
 }
 
