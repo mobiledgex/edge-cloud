@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="MatchingEngineGrpcLibrary">
+      <HintPath>..\..\MatchingEngineSDK\MatchingEngineGrpcLibrary\bin\Debug\netstandard2.0\MatchingEngineGrpcLibrary.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.6.1" />
+    <PackageReference Include="Grpc" Version="1.14.2" />
+  </ItemGroup>
+</Project>
