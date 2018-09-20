@@ -822,6 +822,7 @@ type tmplArgs struct {
 	Method               string
 	InType               string
 	OutType              string
+	FQInType             string
 	FQOutType            string
 	ServerStream         bool
 	HasEnums             bool
@@ -836,12 +837,8 @@ var {{.Method}}Cmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if {{.Service}}Cmd == nil {
-			return fmt.Errorf("{{.Service}} client not initialized")
-		}
-		var err error
 {{- if .HasEnums}}
-		err = parse{{.InType}}Enums()
+		err := parse{{.InType}}Enums()
 		if err != nil {
 			return fmt.Errorf("{{.Method}} failed: %s", err.Error())
 		}
@@ -849,61 +846,83 @@ var {{.Method}}Cmd = &cobra.Command{
 {{- if .SetFields}}
 		{{.InType}}SetFields()
 {{- end}}
-		ctx := context.Background()
+		return {{.Method}}(&{{.InType}}In)
+	},
+}
+
+func {{.Method}}(in *{{.FQInType}}) error {
+	if {{.Service}}Cmd == nil {
+		return fmt.Errorf("{{.Service}} client not initialized")
+	}
+	ctx := context.Background()
 {{- if .ServerStream}}
-		stream, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("{{.Method}} failed: %s", errstr)
+	stream, err := {{.Service}}Cmd.{{.Method}}(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
 		}
+		return fmt.Errorf("{{.Method}} failed: %s", errstr)
+	}
 
 	{{- if not .StreamOutIncremental}}
-		objs := make([]*{{.FQOutType}}, 0)
+	objs := make([]*{{.FQOutType}}, 0)
 	{{- end}}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("{{.Method}} recv failed: %s", err.Error())
-			}
-	{{- if .OutHideTags}}
-			{{.OutType}}HideTags(obj)
-	{{- end}}
-	{{- if .StreamOutIncremental}}
-			{{.OutType}}WriteOutputOne(obj)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
 		}
-	{{- else}}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		{{.OutType}}WriteOutputArray(objs)
-	{{- end}}
-{{- else}}
-		obj, err := {{.Service}}Cmd.{{.Method}}(ctx, &{{.InType}}In)
 		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("{{.Method}} failed: %s", errstr)
+			return fmt.Errorf("{{.Method}} recv failed: %s", err.Error())
 		}
 	{{- if .OutHideTags}}
 		{{.OutType}}HideTags(obj)
 	{{- end}}
+	{{- if .StreamOutIncremental}}
 		{{.OutType}}WriteOutputOne(obj)
-{{- end}}
+	}
+	{{- else}}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
 		return nil
-	},
+	}
+	{{.OutType}}WriteOutputArray(objs)
+	{{- end}}
+{{- else}}
+	obj, err := {{.Service}}Cmd.{{.Method}}(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("{{.Method}} failed: %s", errstr)
+	}
+	{{- if .OutHideTags}}
+	{{.OutType}}HideTags(obj)
+	{{- end}}
+	{{.OutType}}WriteOutputOne(obj)
+{{- end}}
+	return nil
 }
+
+func {{.Method}}s(data []{{.FQInType}}, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("{{.Method}} %v\n", data[ii])
+		myerr := {{.Method}}(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 `
 
 type outTmplArgs struct {
@@ -976,6 +995,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		Method:               *method.Name,
 		InType:               g.flatTypeName(*method.InputType),
 		OutType:              g.flatTypeName(*method.OutputType),
+		FQInType:             g.FQTypeName(in),
 		FQOutType:            g.FQTypeName(out),
 		ServerStream:         serverStreaming(method),
 		HasEnums:             hasEnums,

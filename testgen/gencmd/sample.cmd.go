@@ -518,27 +518,44 @@ var RequestCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if TestApiCmd == nil {
-			return fmt.Errorf("TestApi client not initialized")
-		}
-		var err error
-		err = parseTestGenEnums()
+		err := parseTestGenEnums()
 		if err != nil {
 			return fmt.Errorf("Request failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := TestApiCmd.Request(ctx, &TestGenIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("Request failed: %s", errstr)
-		}
-		TestGenWriteOutputOne(obj)
-		return nil
+		return Request(&TestGenIn)
 	},
+}
+
+func Request(in *testgen.TestGen) error {
+	if TestApiCmd == nil {
+		return fmt.Errorf("TestApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := TestApiCmd.Request(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("Request failed: %s", errstr)
+	}
+	TestGenWriteOutputOne(obj)
+	return nil
+}
+
+func Requests(data []testgen.TestGen, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("Request %v\n", data[ii])
+		myerr := Request(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var TestApiCmds = []*cobra.Command{

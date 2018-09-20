@@ -113,37 +113,54 @@ var ShowControllerCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ControllerApiCmd == nil {
-			return fmt.Errorf("ControllerApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := ControllerApiCmd.ShowController(ctx, &ControllerIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowController failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Controller, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowController recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ControllerWriteOutputArray(objs)
-		return nil
+		return ShowController(&ControllerIn)
 	},
+}
+
+func ShowController(in *edgeproto.Controller) error {
+	if ControllerApiCmd == nil {
+		return fmt.Errorf("ControllerApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ControllerApiCmd.ShowController(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowController failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Controller, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowController recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ControllerWriteOutputArray(objs)
+	return nil
+}
+
+func ShowControllers(data []edgeproto.Controller, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowController %v\n", data[ii])
+		myerr := ShowController(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ControllerApiCmds = []*cobra.Command{

@@ -711,27 +711,44 @@ var FindCloudletCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
 			return fmt.Errorf("FindCloudlet failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, &Match_Engine_RequestIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("FindCloudlet failed: %s", errstr)
-		}
-		Match_Engine_ReplyWriteOutputOne(obj)
-		return nil
+		return FindCloudlet(&Match_Engine_RequestIn)
 	},
+}
+
+func FindCloudlet(in *distributed_match_engine.Match_Engine_Request) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("FindCloudlet failed: %s", errstr)
+	}
+	Match_Engine_ReplyWriteOutputOne(obj)
+	return nil
+}
+
+func FindCloudlets(data []distributed_match_engine.Match_Engine_Request, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("FindCloudlet %v\n", data[ii])
+		myerr := FindCloudlet(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var VerifyLocationCmd = &cobra.Command{
@@ -739,27 +756,44 @@ var VerifyLocationCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
 			return fmt.Errorf("VerifyLocation failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, &Match_Engine_RequestIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("VerifyLocation failed: %s", errstr)
-		}
-		Match_Engine_Loc_VerifyWriteOutputOne(obj)
-		return nil
+		return VerifyLocation(&Match_Engine_RequestIn)
 	},
+}
+
+func VerifyLocation(in *distributed_match_engine.Match_Engine_Request) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("VerifyLocation failed: %s", errstr)
+	}
+	Match_Engine_Loc_VerifyWriteOutputOne(obj)
+	return nil
+}
+
+func VerifyLocations(data []distributed_match_engine.Match_Engine_Request, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("VerifyLocation %v\n", data[ii])
+		myerr := VerifyLocation(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var GetLocationCmd = &cobra.Command{
@@ -767,27 +801,44 @@ var GetLocationCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
 			return fmt.Errorf("GetLocation failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.GetLocation(ctx, &Match_Engine_RequestIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("GetLocation failed: %s", errstr)
-		}
-		Match_Engine_LocWriteOutputOne(obj)
-		return nil
+		return GetLocation(&Match_Engine_RequestIn)
 	},
+}
+
+func GetLocation(in *distributed_match_engine.Match_Engine_Request) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.GetLocation(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetLocation failed: %s", errstr)
+	}
+	Match_Engine_LocWriteOutputOne(obj)
+	return nil
+}
+
+func GetLocations(data []distributed_match_engine.Match_Engine_Request, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetLocation %v\n", data[ii])
+		myerr := GetLocation(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var RegisterClientCmd = &cobra.Command{
@@ -795,27 +846,44 @@ var RegisterClientCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
 			return fmt.Errorf("RegisterClient failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, &Match_Engine_RequestIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("RegisterClient failed: %s", errstr)
-		}
-		Match_Engine_StatusWriteOutputOne(obj)
-		return nil
+		return RegisterClient(&Match_Engine_RequestIn)
 	},
+}
+
+func RegisterClient(in *distributed_match_engine.Match_Engine_Request) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("RegisterClient failed: %s", errstr)
+	}
+	Match_Engine_StatusWriteOutputOne(obj)
+	return nil
+}
+
+func RegisterClients(data []distributed_match_engine.Match_Engine_Request, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("RegisterClient %v\n", data[ii])
+		myerr := RegisterClient(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AddUserToGroupCmd = &cobra.Command{
@@ -823,27 +891,44 @@ var AddUserToGroupCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseDynamicLocGroupAddEnums()
+		err := parseDynamicLocGroupAddEnums()
 		if err != nil {
 			return fmt.Errorf("AddUserToGroup failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, &DynamicLocGroupAddIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("AddUserToGroup failed: %s", errstr)
-		}
-		Match_Engine_StatusWriteOutputOne(obj)
-		return nil
+		return AddUserToGroup(&DynamicLocGroupAddIn)
 	},
+}
+
+func AddUserToGroup(in *distributed_match_engine.DynamicLocGroupAdd) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddUserToGroup failed: %s", errstr)
+	}
+	Match_Engine_StatusWriteOutputOne(obj)
+	return nil
+}
+
+func AddUserToGroups(data []distributed_match_engine.DynamicLocGroupAdd, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddUserToGroup %v\n", data[ii])
+		myerr := AddUserToGroup(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var GetCloudletsCmd = &cobra.Command{
@@ -851,27 +936,44 @@ var GetCloudletsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if Match_Engine_ApiCmd == nil {
-			return fmt.Errorf("Match_Engine_Api client not initialized")
-		}
-		var err error
-		err = parseMatch_Engine_RequestEnums()
+		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
 			return fmt.Errorf("GetCloudlets failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, &Match_Engine_RequestIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("GetCloudlets failed: %s", errstr)
-		}
-		Match_Engine_Cloudlet_ListWriteOutputOne(obj)
-		return nil
+		return GetCloudlets(&Match_Engine_RequestIn)
 	},
+}
+
+func GetCloudlets(in *distributed_match_engine.Match_Engine_Request) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetCloudlets failed: %s", errstr)
+	}
+	Match_Engine_Cloudlet_ListWriteOutputOne(obj)
+	return nil
+}
+
+func GetCloudletss(data []distributed_match_engine.Match_Engine_Request, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetCloudlets %v\n", data[ii])
+		myerr := GetCloudlets(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var Match_Engine_ApiCmds = []*cobra.Command{

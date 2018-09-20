@@ -494,3 +494,13 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	log.Println("Comparison success")
 	return true
 }
+
+func ControllerCLI(ctrl *ControllerProcess, args ...string) ([]byte, error) {
+	cmdargs := []string{"--addr", ctrl.ApiAddr, "controller"}
+	if ctrl.TLS.ClientCert != "" {
+		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
+	}
+	cmdargs = append(cmdargs, args...)
+	cmd := exec.Command("edgectl", cmdargs...)
+	return cmd.CombinedOutput()
+}
