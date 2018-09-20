@@ -259,41 +259,58 @@ var CreateCloudletCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletApiCmd == nil {
-			return fmt.Errorf("CloudletApi client not initialized")
-		}
-		var err error
-		err = parseCloudletEnums()
+		err := parseCloudletEnums()
 		if err != nil {
 			return fmt.Errorf("CreateCloudlet failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := CloudletApiCmd.CreateCloudlet(ctx, &CloudletIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateCloudlet failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Result, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ResultWriteOutputArray(objs)
-		return nil
+		return CreateCloudlet(&CloudletIn)
 	},
+}
+
+func CreateCloudlet(in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.CreateCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateCloudlet failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("CreateCloudlet recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ResultWriteOutputArray(objs)
+	return nil
+}
+
+func CreateCloudlets(data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateCloudlet %v\n", data[ii])
+		myerr := CreateCloudlet(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteCloudletCmd = &cobra.Command{
@@ -301,36 +318,53 @@ var DeleteCloudletCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletApiCmd == nil {
-			return fmt.Errorf("CloudletApi client not initialized")
-		}
-		var err error
-		err = parseCloudletEnums()
+		err := parseCloudletEnums()
 		if err != nil {
 			return fmt.Errorf("DeleteCloudlet failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := CloudletApiCmd.DeleteCloudlet(ctx, &CloudletIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteCloudlet failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("DeleteCloudlet recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return DeleteCloudlet(&CloudletIn)
 	},
+}
+
+func DeleteCloudlet(in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.DeleteCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteCloudlet failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("DeleteCloudlet recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func DeleteCloudlets(data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteCloudlet %v\n", data[ii])
+		myerr := DeleteCloudlet(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateCloudletCmd = &cobra.Command{
@@ -338,42 +372,59 @@ var UpdateCloudletCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletApiCmd == nil {
-			return fmt.Errorf("CloudletApi client not initialized")
-		}
-		var err error
-		err = parseCloudletEnums()
+		err := parseCloudletEnums()
 		if err != nil {
 			return fmt.Errorf("UpdateCloudlet failed: %s", err.Error())
 		}
 		CloudletSetFields()
-		ctx := context.Background()
-		stream, err := CloudletApiCmd.UpdateCloudlet(ctx, &CloudletIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateCloudlet failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Result, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ResultWriteOutputArray(objs)
-		return nil
+		return UpdateCloudlet(&CloudletIn)
 	},
+}
+
+func UpdateCloudlet(in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.UpdateCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateCloudlet failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Result, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("UpdateCloudlet recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ResultWriteOutputArray(objs)
+	return nil
+}
+
+func UpdateCloudlets(data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateCloudlet %v\n", data[ii])
+		myerr := UpdateCloudlet(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowCloudletCmd = &cobra.Command{
@@ -381,41 +432,58 @@ var ShowCloudletCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletApiCmd == nil {
-			return fmt.Errorf("CloudletApi client not initialized")
-		}
-		var err error
-		err = parseCloudletEnums()
+		err := parseCloudletEnums()
 		if err != nil {
 			return fmt.Errorf("ShowCloudlet failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := CloudletApiCmd.ShowCloudlet(ctx, &CloudletIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudlet failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Cloudlet, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowCloudlet recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		CloudletWriteOutputArray(objs)
-		return nil
+		return ShowCloudlet(&CloudletIn)
 	},
+}
+
+func ShowCloudlet(in *edgeproto.Cloudlet) error {
+	if CloudletApiCmd == nil {
+		return fmt.Errorf("CloudletApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletApiCmd.ShowCloudlet(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowCloudlet failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Cloudlet, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowCloudlet recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	CloudletWriteOutputArray(objs)
+	return nil
+}
+
+func ShowCloudlets(data []edgeproto.Cloudlet, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowCloudlet %v\n", data[ii])
+		myerr := ShowCloudlet(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var CloudletApiCmds = []*cobra.Command{
@@ -430,41 +498,58 @@ var ShowCloudletInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletInfoApiCmd == nil {
-			return fmt.Errorf("CloudletInfoApi client not initialized")
-		}
-		var err error
-		err = parseCloudletInfoEnums()
+		err := parseCloudletInfoEnums()
 		if err != nil {
 			return fmt.Errorf("ShowCloudletInfo failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := CloudletInfoApiCmd.ShowCloudletInfo(ctx, &CloudletInfoIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudletInfo failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.CloudletInfo, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowCloudletInfo recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		CloudletInfoWriteOutputArray(objs)
-		return nil
+		return ShowCloudletInfo(&CloudletInfoIn)
 	},
+}
+
+func ShowCloudletInfo(in *edgeproto.CloudletInfo) error {
+	if CloudletInfoApiCmd == nil {
+		return fmt.Errorf("CloudletInfoApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletInfoApiCmd.ShowCloudletInfo(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowCloudletInfo failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.CloudletInfo, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowCloudletInfo recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	CloudletInfoWriteOutputArray(objs)
+	return nil
+}
+
+func ShowCloudletInfos(data []edgeproto.CloudletInfo, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowCloudletInfo %v\n", data[ii])
+		myerr := ShowCloudletInfo(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var InjectCloudletInfoCmd = &cobra.Command{
@@ -472,27 +557,44 @@ var InjectCloudletInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletInfoApiCmd == nil {
-			return fmt.Errorf("CloudletInfoApi client not initialized")
-		}
-		var err error
-		err = parseCloudletInfoEnums()
+		err := parseCloudletInfoEnums()
 		if err != nil {
 			return fmt.Errorf("InjectCloudletInfo failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, &CloudletInfoIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("InjectCloudletInfo failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return InjectCloudletInfo(&CloudletInfoIn)
 	},
+}
+
+func InjectCloudletInfo(in *edgeproto.CloudletInfo) error {
+	if CloudletInfoApiCmd == nil {
+		return fmt.Errorf("CloudletInfoApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletInfoApiCmd.InjectCloudletInfo(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("InjectCloudletInfo failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func InjectCloudletInfos(data []edgeproto.CloudletInfo, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("InjectCloudletInfo %v\n", data[ii])
+		myerr := InjectCloudletInfo(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var EvictCloudletInfoCmd = &cobra.Command{
@@ -500,27 +602,44 @@ var EvictCloudletInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletInfoApiCmd == nil {
-			return fmt.Errorf("CloudletInfoApi client not initialized")
-		}
-		var err error
-		err = parseCloudletInfoEnums()
+		err := parseCloudletInfoEnums()
 		if err != nil {
 			return fmt.Errorf("EvictCloudletInfo failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, &CloudletInfoIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("EvictCloudletInfo failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return EvictCloudletInfo(&CloudletInfoIn)
 	},
+}
+
+func EvictCloudletInfo(in *edgeproto.CloudletInfo) error {
+	if CloudletInfoApiCmd == nil {
+		return fmt.Errorf("CloudletInfoApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudletInfoApiCmd.EvictCloudletInfo(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("EvictCloudletInfo failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func EvictCloudletInfos(data []edgeproto.CloudletInfo, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("EvictCloudletInfo %v\n", data[ii])
+		myerr := EvictCloudletInfo(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var CloudletInfoApiCmds = []*cobra.Command{
@@ -534,37 +653,54 @@ var ShowCloudletMetricsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletMetricsApiCmd == nil {
-			return fmt.Errorf("CloudletMetricsApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := CloudletMetricsApiCmd.ShowCloudletMetrics(ctx, &CloudletMetricsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudletMetrics failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.CloudletMetrics, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowCloudletMetrics recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		CloudletMetricsWriteOutputArray(objs)
-		return nil
+		return ShowCloudletMetrics(&CloudletMetricsIn)
 	},
+}
+
+func ShowCloudletMetrics(in *edgeproto.CloudletMetrics) error {
+	if CloudletMetricsApiCmd == nil {
+		return fmt.Errorf("CloudletMetricsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletMetricsApiCmd.ShowCloudletMetrics(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowCloudletMetrics failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.CloudletMetrics, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowCloudletMetrics recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	CloudletMetricsWriteOutputArray(objs)
+	return nil
+}
+
+func ShowCloudletMetricss(data []edgeproto.CloudletMetrics, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowCloudletMetrics %v\n", data[ii])
+		myerr := ShowCloudletMetrics(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var CloudletMetricsApiCmds = []*cobra.Command{

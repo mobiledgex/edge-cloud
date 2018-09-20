@@ -120,23 +120,40 @@ var CreateFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if FlavorApiCmd == nil {
-			return fmt.Errorf("FlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := FlavorApiCmd.CreateFlavor(ctx, &FlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return CreateFlavor(&FlavorIn)
 	},
+}
+
+func CreateFlavor(in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := FlavorApiCmd.CreateFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func CreateFlavors(data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateFlavor %v\n", data[ii])
+		myerr := CreateFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteFlavorCmd = &cobra.Command{
@@ -144,23 +161,40 @@ var DeleteFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if FlavorApiCmd == nil {
-			return fmt.Errorf("FlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := FlavorApiCmd.DeleteFlavor(ctx, &FlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteFlavor(&FlavorIn)
 	},
+}
+
+func DeleteFlavor(in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := FlavorApiCmd.DeleteFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteFlavors(data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteFlavor %v\n", data[ii])
+		myerr := DeleteFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateFlavorCmd = &cobra.Command{
@@ -168,24 +202,41 @@ var UpdateFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if FlavorApiCmd == nil {
-			return fmt.Errorf("FlavorApi client not initialized")
-		}
-		var err error
 		FlavorSetFields()
-		ctx := context.Background()
-		obj, err := FlavorApiCmd.UpdateFlavor(ctx, &FlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return UpdateFlavor(&FlavorIn)
 	},
+}
+
+func UpdateFlavor(in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := FlavorApiCmd.UpdateFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func UpdateFlavors(data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateFlavor %v\n", data[ii])
+		myerr := UpdateFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowFlavorCmd = &cobra.Command{
@@ -193,37 +244,54 @@ var ShowFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if FlavorApiCmd == nil {
-			return fmt.Errorf("FlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := FlavorApiCmd.ShowFlavor(ctx, &FlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowFlavor failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Flavor, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowFlavor recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		FlavorWriteOutputArray(objs)
-		return nil
+		return ShowFlavor(&FlavorIn)
 	},
+}
+
+func ShowFlavor(in *edgeproto.Flavor) error {
+	if FlavorApiCmd == nil {
+		return fmt.Errorf("FlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := FlavorApiCmd.ShowFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowFlavor failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Flavor, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowFlavor recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	FlavorWriteOutputArray(objs)
+	return nil
+}
+
+func ShowFlavors(data []edgeproto.Flavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowFlavor %v\n", data[ii])
+		myerr := ShowFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var FlavorApiCmds = []*cobra.Command{

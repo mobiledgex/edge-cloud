@@ -382,36 +382,53 @@ var CreateAppInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstApiCmd == nil {
-			return fmt.Errorf("AppInstApi client not initialized")
-		}
-		var err error
-		err = parseAppInstEnums()
+		err := parseAppInstEnums()
 		if err != nil {
 			return fmt.Errorf("CreateAppInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := AppInstApiCmd.CreateAppInst(ctx, &AppInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateAppInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return CreateAppInst(&AppInstIn)
 	},
+}
+
+func CreateAppInst(in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstApiCmd.CreateAppInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateAppInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("CreateAppInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func CreateAppInsts(data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateAppInst %v\n", data[ii])
+		myerr := CreateAppInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteAppInstCmd = &cobra.Command{
@@ -419,36 +436,53 @@ var DeleteAppInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstApiCmd == nil {
-			return fmt.Errorf("AppInstApi client not initialized")
-		}
-		var err error
-		err = parseAppInstEnums()
+		err := parseAppInstEnums()
 		if err != nil {
 			return fmt.Errorf("DeleteAppInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := AppInstApiCmd.DeleteAppInst(ctx, &AppInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteAppInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return DeleteAppInst(&AppInstIn)
 	},
+}
+
+func DeleteAppInst(in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstApiCmd.DeleteAppInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteAppInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("DeleteAppInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func DeleteAppInsts(data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteAppInst %v\n", data[ii])
+		myerr := DeleteAppInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateAppInstCmd = &cobra.Command{
@@ -456,37 +490,54 @@ var UpdateAppInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstApiCmd == nil {
-			return fmt.Errorf("AppInstApi client not initialized")
-		}
-		var err error
-		err = parseAppInstEnums()
+		err := parseAppInstEnums()
 		if err != nil {
 			return fmt.Errorf("UpdateAppInst failed: %s", err.Error())
 		}
 		AppInstSetFields()
-		ctx := context.Background()
-		stream, err := AppInstApiCmd.UpdateAppInst(ctx, &AppInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateAppInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return UpdateAppInst(&AppInstIn)
 	},
+}
+
+func UpdateAppInst(in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstApiCmd.UpdateAppInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateAppInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("UpdateAppInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func UpdateAppInsts(data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateAppInst %v\n", data[ii])
+		myerr := UpdateAppInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowAppInstCmd = &cobra.Command{
@@ -494,42 +545,59 @@ var ShowAppInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstApiCmd == nil {
-			return fmt.Errorf("AppInstApi client not initialized")
-		}
-		var err error
-		err = parseAppInstEnums()
+		err := parseAppInstEnums()
 		if err != nil {
 			return fmt.Errorf("ShowAppInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := AppInstApiCmd.ShowAppInst(ctx, &AppInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowAppInst failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.AppInst, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowAppInst recv failed: %s", err.Error())
-			}
-			AppInstHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		AppInstWriteOutputArray(objs)
-		return nil
+		return ShowAppInst(&AppInstIn)
 	},
+}
+
+func ShowAppInst(in *edgeproto.AppInst) error {
+	if AppInstApiCmd == nil {
+		return fmt.Errorf("AppInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstApiCmd.ShowAppInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowAppInst failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.AppInst, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowAppInst recv failed: %s", err.Error())
+		}
+		AppInstHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	AppInstWriteOutputArray(objs)
+	return nil
+}
+
+func ShowAppInsts(data []edgeproto.AppInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowAppInst %v\n", data[ii])
+		myerr := ShowAppInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AppInstApiCmds = []*cobra.Command{
@@ -544,42 +612,59 @@ var ShowAppInstInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstInfoApiCmd == nil {
-			return fmt.Errorf("AppInstInfoApi client not initialized")
-		}
-		var err error
-		err = parseAppInstInfoEnums()
+		err := parseAppInstInfoEnums()
 		if err != nil {
 			return fmt.Errorf("ShowAppInstInfo failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, &AppInstInfoIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowAppInstInfo failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.AppInstInfo, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowAppInstInfo recv failed: %s", err.Error())
-			}
-			AppInstInfoHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		AppInstInfoWriteOutputArray(objs)
-		return nil
+		return ShowAppInstInfo(&AppInstInfoIn)
 	},
+}
+
+func ShowAppInstInfo(in *edgeproto.AppInstInfo) error {
+	if AppInstInfoApiCmd == nil {
+		return fmt.Errorf("AppInstInfoApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstInfoApiCmd.ShowAppInstInfo(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowAppInstInfo failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.AppInstInfo, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowAppInstInfo recv failed: %s", err.Error())
+		}
+		AppInstInfoHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	AppInstInfoWriteOutputArray(objs)
+	return nil
+}
+
+func ShowAppInstInfos(data []edgeproto.AppInstInfo, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowAppInstInfo %v\n", data[ii])
+		myerr := ShowAppInstInfo(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AppInstInfoApiCmds = []*cobra.Command{
@@ -591,37 +676,54 @@ var ShowAppInstMetricsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppInstMetricsApiCmd == nil {
-			return fmt.Errorf("AppInstMetricsApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, &AppInstMetricsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowAppInstMetrics failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.AppInstMetrics, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowAppInstMetrics recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		AppInstMetricsWriteOutputArray(objs)
-		return nil
+		return ShowAppInstMetrics(&AppInstMetricsIn)
 	},
+}
+
+func ShowAppInstMetrics(in *edgeproto.AppInstMetrics) error {
+	if AppInstMetricsApiCmd == nil {
+		return fmt.Errorf("AppInstMetricsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppInstMetricsApiCmd.ShowAppInstMetrics(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowAppInstMetrics failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.AppInstMetrics, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowAppInstMetrics recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	AppInstMetricsWriteOutputArray(objs)
+	return nil
+}
+
+func ShowAppInstMetricss(data []edgeproto.AppInstMetrics, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowAppInstMetrics %v\n", data[ii])
+		myerr := ShowAppInstMetrics(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AppInstMetricsApiCmds = []*cobra.Command{
