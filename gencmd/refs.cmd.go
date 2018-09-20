@@ -145,37 +145,54 @@ var ShowCloudletRefsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudletRefsApiCmd == nil {
-			return fmt.Errorf("CloudletRefsApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := CloudletRefsApiCmd.ShowCloudletRefs(ctx, &CloudletRefsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowCloudletRefs failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.CloudletRefs, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowCloudletRefs recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		CloudletRefsWriteOutputArray(objs)
-		return nil
+		return ShowCloudletRefs(&CloudletRefsIn)
 	},
+}
+
+func ShowCloudletRefs(in *edgeproto.CloudletRefs) error {
+	if CloudletRefsApiCmd == nil {
+		return fmt.Errorf("CloudletRefsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudletRefsApiCmd.ShowCloudletRefs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowCloudletRefs failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.CloudletRefs, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowCloudletRefs recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	CloudletRefsWriteOutputArray(objs)
+	return nil
+}
+
+func ShowCloudletRefss(data []edgeproto.CloudletRefs, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowCloudletRefs %v\n", data[ii])
+		myerr := ShowCloudletRefs(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var CloudletRefsApiCmds = []*cobra.Command{
@@ -187,37 +204,54 @@ var ShowClusterRefsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterRefsApiCmd == nil {
-			return fmt.Errorf("ClusterRefsApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, &ClusterRefsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowClusterRefs failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.ClusterRefs, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowClusterRefs recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ClusterRefsWriteOutputArray(objs)
-		return nil
+		return ShowClusterRefs(&ClusterRefsIn)
 	},
+}
+
+func ShowClusterRefs(in *edgeproto.ClusterRefs) error {
+	if ClusterRefsApiCmd == nil {
+		return fmt.Errorf("ClusterRefsApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterRefsApiCmd.ShowClusterRefs(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowClusterRefs failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.ClusterRefs, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowClusterRefs recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ClusterRefsWriteOutputArray(objs)
+	return nil
+}
+
+func ShowClusterRefss(data []edgeproto.ClusterRefs, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowClusterRefs %v\n", data[ii])
+		myerr := ShowClusterRefs(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ClusterRefsApiCmds = []*cobra.Command{

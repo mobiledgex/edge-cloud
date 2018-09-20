@@ -131,27 +131,44 @@ var EnableDebugLevelsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DebugApiCmd == nil {
-			return fmt.Errorf("DebugApi client not initialized")
-		}
-		var err error
-		err = parseDebugLevelsEnums()
+		err := parseDebugLevelsEnums()
 		if err != nil {
 			return fmt.Errorf("EnableDebugLevels failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := DebugApiCmd.EnableDebugLevels(ctx, &DebugLevelsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("EnableDebugLevels failed: %s", errstr)
-		}
-		DebugResultWriteOutputOne(obj)
-		return nil
+		return EnableDebugLevels(&DebugLevelsIn)
 	},
+}
+
+func EnableDebugLevels(in *log.DebugLevels) error {
+	if DebugApiCmd == nil {
+		return fmt.Errorf("DebugApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DebugApiCmd.EnableDebugLevels(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("EnableDebugLevels failed: %s", errstr)
+	}
+	DebugResultWriteOutputOne(obj)
+	return nil
+}
+
+func EnableDebugLevelss(data []log.DebugLevels, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("EnableDebugLevels %v\n", data[ii])
+		myerr := EnableDebugLevels(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DisableDebugLevelsCmd = &cobra.Command{
@@ -159,27 +176,44 @@ var DisableDebugLevelsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DebugApiCmd == nil {
-			return fmt.Errorf("DebugApi client not initialized")
-		}
-		var err error
-		err = parseDebugLevelsEnums()
+		err := parseDebugLevelsEnums()
 		if err != nil {
 			return fmt.Errorf("DisableDebugLevels failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := DebugApiCmd.DisableDebugLevels(ctx, &DebugLevelsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DisableDebugLevels failed: %s", errstr)
-		}
-		DebugResultWriteOutputOne(obj)
-		return nil
+		return DisableDebugLevels(&DebugLevelsIn)
 	},
+}
+
+func DisableDebugLevels(in *log.DebugLevels) error {
+	if DebugApiCmd == nil {
+		return fmt.Errorf("DebugApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DebugApiCmd.DisableDebugLevels(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DisableDebugLevels failed: %s", errstr)
+	}
+	DebugResultWriteOutputOne(obj)
+	return nil
+}
+
+func DisableDebugLevelss(data []log.DebugLevels, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DisableDebugLevels %v\n", data[ii])
+		myerr := DisableDebugLevels(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowDebugLevelsCmd = &cobra.Command{
@@ -187,27 +221,44 @@ var ShowDebugLevelsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DebugApiCmd == nil {
-			return fmt.Errorf("DebugApi client not initialized")
-		}
-		var err error
-		err = parseDebugLevelsEnums()
+		err := parseDebugLevelsEnums()
 		if err != nil {
 			return fmt.Errorf("ShowDebugLevels failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := DebugApiCmd.ShowDebugLevels(ctx, &DebugLevelsIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowDebugLevels failed: %s", errstr)
-		}
-		DebugLevelsWriteOutputOne(obj)
-		return nil
+		return ShowDebugLevels(&DebugLevelsIn)
 	},
+}
+
+func ShowDebugLevels(in *log.DebugLevels) error {
+	if DebugApiCmd == nil {
+		return fmt.Errorf("DebugApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DebugApiCmd.ShowDebugLevels(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowDebugLevels failed: %s", errstr)
+	}
+	DebugLevelsWriteOutputOne(obj)
+	return nil
+}
+
+func ShowDebugLevelss(data []log.DebugLevels, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowDebugLevels %v\n", data[ii])
+		myerr := ShowDebugLevels(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DebugApiCmds = []*cobra.Command{

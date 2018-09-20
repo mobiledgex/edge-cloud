@@ -270,41 +270,58 @@ var ListCloudResourceCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudResourceManagerCmd == nil {
-			return fmt.Errorf("CloudResourceManager client not initialized")
-		}
-		var err error
-		err = parseCloudResourceEnums()
+		err := parseCloudResourceEnums()
 		if err != nil {
 			return fmt.Errorf("ListCloudResource failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, &CloudResourceIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ListCloudResource failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.CloudResource, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ListCloudResource recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		CloudResourceWriteOutputArray(objs)
-		return nil
+		return ListCloudResource(&CloudResourceIn)
 	},
+}
+
+func ListCloudResource(in *edgeproto.CloudResource) error {
+	if CloudResourceManagerCmd == nil {
+		return fmt.Errorf("CloudResourceManager client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := CloudResourceManagerCmd.ListCloudResource(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ListCloudResource failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.CloudResource, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ListCloudResource recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	CloudResourceWriteOutputArray(objs)
+	return nil
+}
+
+func ListCloudResources(data []edgeproto.CloudResource, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ListCloudResource %v\n", data[ii])
+		myerr := ListCloudResource(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AddCloudResourceCmd = &cobra.Command{
@@ -312,27 +329,44 @@ var AddCloudResourceCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudResourceManagerCmd == nil {
-			return fmt.Errorf("CloudResourceManager client not initialized")
-		}
-		var err error
-		err = parseCloudResourceEnums()
+		err := parseCloudResourceEnums()
 		if err != nil {
 			return fmt.Errorf("AddCloudResource failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := CloudResourceManagerCmd.AddCloudResource(ctx, &CloudResourceIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("AddCloudResource failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return AddCloudResource(&CloudResourceIn)
 	},
+}
+
+func AddCloudResource(in *edgeproto.CloudResource) error {
+	if CloudResourceManagerCmd == nil {
+		return fmt.Errorf("CloudResourceManager client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudResourceManagerCmd.AddCloudResource(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("AddCloudResource failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func AddCloudResources(data []edgeproto.CloudResource, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("AddCloudResource %v\n", data[ii])
+		myerr := AddCloudResource(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteCloudResourceCmd = &cobra.Command{
@@ -340,27 +374,44 @@ var DeleteCloudResourceCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudResourceManagerCmd == nil {
-			return fmt.Errorf("CloudResourceManager client not initialized")
-		}
-		var err error
-		err = parseCloudResourceEnums()
+		err := parseCloudResourceEnums()
 		if err != nil {
 			return fmt.Errorf("DeleteCloudResource failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, &CloudResourceIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteCloudResource failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteCloudResource(&CloudResourceIn)
 	},
+}
+
+func DeleteCloudResource(in *edgeproto.CloudResource) error {
+	if CloudResourceManagerCmd == nil {
+		return fmt.Errorf("CloudResourceManager client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudResourceManagerCmd.DeleteCloudResource(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteCloudResource failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteCloudResources(data []edgeproto.CloudResource, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteCloudResource %v\n", data[ii])
+		myerr := DeleteCloudResource(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeployApplicationCmd = &cobra.Command{
@@ -368,23 +419,40 @@ var DeployApplicationCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudResourceManagerCmd == nil {
-			return fmt.Errorf("CloudResourceManager client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := CloudResourceManagerCmd.DeployApplication(ctx, &EdgeCloudApplicationIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeployApplication failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeployApplication(&EdgeCloudApplicationIn)
 	},
+}
+
+func DeployApplication(in *edgeproto.EdgeCloudApplication) error {
+	if CloudResourceManagerCmd == nil {
+		return fmt.Errorf("CloudResourceManager client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudResourceManagerCmd.DeployApplication(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeployApplication failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeployApplications(data []edgeproto.EdgeCloudApplication, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeployApplication %v\n", data[ii])
+		myerr := DeployApplication(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteApplicationCmd = &cobra.Command{
@@ -392,23 +460,40 @@ var DeleteApplicationCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if CloudResourceManagerCmd == nil {
-			return fmt.Errorf("CloudResourceManager client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := CloudResourceManagerCmd.DeleteApplication(ctx, &EdgeCloudApplicationIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteApplication failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteApplication(&EdgeCloudApplicationIn)
 	},
+}
+
+func DeleteApplication(in *edgeproto.EdgeCloudApplication) error {
+	if CloudResourceManagerCmd == nil {
+		return fmt.Errorf("CloudResourceManager client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := CloudResourceManagerCmd.DeleteApplication(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteApplication failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteApplications(data []edgeproto.EdgeCloudApplication, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteApplication %v\n", data[ii])
+		myerr := DeleteApplication(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var CloudResourceManagerCmds = []*cobra.Command{
