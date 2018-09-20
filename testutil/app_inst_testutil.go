@@ -236,6 +236,24 @@ func basicAppInstShowTest(t *testing.T, api *AppInstCommonApi, testData []edgepr
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetAppInst(t *testing.T, api *AppInstCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInst) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowAppInst{}
+	show.Init()
+	filter := edgeproto.AppInst{}
+	filter.Key = *key
+	err = api.ShowAppInst(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgeproto.AppInst) {
 	var err error
 	ctx := context.TODO()
@@ -439,4 +457,21 @@ func basicAppInstInfoShowTest(t *testing.T, api *AppInstInfoCommonApi, testData 
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
+}
+
+func GetAppInstInfo(t *testing.T, api *AppInstInfoCommonApi, key *edgeproto.AppInstKey, out *edgeproto.AppInstInfo) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowAppInstInfo{}
+	show.Init()
+	filter := edgeproto.AppInstInfo{}
+	filter.Key = *key
+	err = api.ShowAppInstInfo(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
 }

@@ -194,6 +194,24 @@ func basicFlavorShowTest(t *testing.T, api *FlavorCommonApi, testData []edgeprot
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetFlavor(t *testing.T, api *FlavorCommonApi, key *edgeproto.FlavorKey, out *edgeproto.Flavor) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowFlavor{}
+	show.Init()
+	filter := edgeproto.Flavor{}
+	filter.Key = *key
+	err = api.ShowFlavor(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicFlavorCudTest(t *testing.T, api *FlavorCommonApi, testData []edgeproto.Flavor) {
 	var err error
 	ctx := context.TODO()

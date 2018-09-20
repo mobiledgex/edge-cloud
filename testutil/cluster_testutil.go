@@ -194,6 +194,24 @@ func basicClusterShowTest(t *testing.T, api *ClusterCommonApi, testData []edgepr
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetCluster(t *testing.T, api *ClusterCommonApi, key *edgeproto.ClusterKey, out *edgeproto.Cluster) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCluster{}
+	show.Init()
+	filter := edgeproto.Cluster{}
+	filter.Key = *key
+	err = api.ShowCluster(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgeproto.Cluster) {
 	var err error
 	ctx := context.TODO()
