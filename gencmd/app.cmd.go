@@ -213,27 +213,44 @@ var CreateAppCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppApiCmd == nil {
-			return fmt.Errorf("AppApi client not initialized")
-		}
-		var err error
-		err = parseAppEnums()
+		err := parseAppEnums()
 		if err != nil {
 			return fmt.Errorf("CreateApp failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := AppApiCmd.CreateApp(ctx, &AppIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateApp failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return CreateApp(&AppIn)
 	},
+}
+
+func CreateApp(in *edgeproto.App) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.CreateApp(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateApp failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func CreateApps(data []edgeproto.App, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateApp %v\n", data[ii])
+		myerr := CreateApp(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteAppCmd = &cobra.Command{
@@ -241,27 +258,44 @@ var DeleteAppCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppApiCmd == nil {
-			return fmt.Errorf("AppApi client not initialized")
-		}
-		var err error
-		err = parseAppEnums()
+		err := parseAppEnums()
 		if err != nil {
 			return fmt.Errorf("DeleteApp failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := AppApiCmd.DeleteApp(ctx, &AppIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteApp failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteApp(&AppIn)
 	},
+}
+
+func DeleteApp(in *edgeproto.App) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.DeleteApp(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteApp failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteApps(data []edgeproto.App, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteApp %v\n", data[ii])
+		myerr := DeleteApp(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateAppCmd = &cobra.Command{
@@ -269,28 +303,45 @@ var UpdateAppCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppApiCmd == nil {
-			return fmt.Errorf("AppApi client not initialized")
-		}
-		var err error
-		err = parseAppEnums()
+		err := parseAppEnums()
 		if err != nil {
 			return fmt.Errorf("UpdateApp failed: %s", err.Error())
 		}
 		AppSetFields()
-		ctx := context.Background()
-		obj, err := AppApiCmd.UpdateApp(ctx, &AppIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateApp failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return UpdateApp(&AppIn)
 	},
+}
+
+func UpdateApp(in *edgeproto.App) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := AppApiCmd.UpdateApp(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateApp failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func UpdateApps(data []edgeproto.App, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateApp %v\n", data[ii])
+		myerr := UpdateApp(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowAppCmd = &cobra.Command{
@@ -298,41 +349,58 @@ var ShowAppCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if AppApiCmd == nil {
-			return fmt.Errorf("AppApi client not initialized")
-		}
-		var err error
-		err = parseAppEnums()
+		err := parseAppEnums()
 		if err != nil {
 			return fmt.Errorf("ShowApp failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := AppApiCmd.ShowApp(ctx, &AppIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowApp failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.App, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowApp recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		AppWriteOutputArray(objs)
-		return nil
+		return ShowApp(&AppIn)
 	},
+}
+
+func ShowApp(in *edgeproto.App) error {
+	if AppApiCmd == nil {
+		return fmt.Errorf("AppApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := AppApiCmd.ShowApp(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowApp failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.App, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowApp recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	AppWriteOutputArray(objs)
+	return nil
+}
+
+func ShowApps(data []edgeproto.App, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowApp %v\n", data[ii])
+		myerr := ShowApp(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var AppApiCmds = []*cobra.Command{

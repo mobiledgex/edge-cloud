@@ -63,6 +63,7 @@ var actionChoices = map[string]string{
 	"stop":          "procname",
 	"status":        "procname",
 	"ctrlapi":       "procname",
+	"ctrlcli":       "procname",
 	"ctrlinfo":      "procname",
 	"dmeapi":        "procname",
 	"deploy":        "",
@@ -284,6 +285,16 @@ func main() {
 					log.Printf("Unable to run api for %s\n", action)
 					errorsFound++
 					errors = append(errors, "controller api failed")
+				}
+			}
+		case "ctrlcli":
+			if !setupmex.UpdateAPIAddrs() {
+				errorsFound++
+			} else {
+				if !apis.RunControllerCLI(actionSubtype, actionParam, *apiFile, *outputDir) {
+					log.Printf("Unable to run edgectl for %s\n", action)
+					errorsFound++
+					errors = append(errors, "controller cli failed")
 				}
 			}
 		case "dmeapi":

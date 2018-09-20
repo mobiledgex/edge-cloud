@@ -119,6 +119,9 @@ func main() {
 	controllerCmd.AddCommand(gencmd.ControllerApiCmds...)
 	controllerCmd.AddCommand(gencmd.NodeApiCmds...)
 
+	controllerCmd.AddCommand(createCmd)
+	controllerCmd.AddCommand(deleteCmd)
+
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)
 

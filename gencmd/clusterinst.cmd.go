@@ -230,36 +230,53 @@ var CreateClusterInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterInstApiCmd == nil {
-			return fmt.Errorf("ClusterInstApi client not initialized")
-		}
-		var err error
-		err = parseClusterInstEnums()
+		err := parseClusterInstEnums()
 		if err != nil {
 			return fmt.Errorf("CreateClusterInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := ClusterInstApiCmd.CreateClusterInst(ctx, &ClusterInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateClusterInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("CreateClusterInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return CreateClusterInst(&ClusterInstIn)
 	},
+}
+
+func CreateClusterInst(in *edgeproto.ClusterInst) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterInstApiCmd.CreateClusterInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateClusterInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("CreateClusterInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func CreateClusterInsts(data []edgeproto.ClusterInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateClusterInst %v\n", data[ii])
+		myerr := CreateClusterInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteClusterInstCmd = &cobra.Command{
@@ -267,36 +284,53 @@ var DeleteClusterInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterInstApiCmd == nil {
-			return fmt.Errorf("ClusterInstApi client not initialized")
-		}
-		var err error
-		err = parseClusterInstEnums()
+		err := parseClusterInstEnums()
 		if err != nil {
 			return fmt.Errorf("DeleteClusterInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := ClusterInstApiCmd.DeleteClusterInst(ctx, &ClusterInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteClusterInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("DeleteClusterInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return DeleteClusterInst(&ClusterInstIn)
 	},
+}
+
+func DeleteClusterInst(in *edgeproto.ClusterInst) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterInstApiCmd.DeleteClusterInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteClusterInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("DeleteClusterInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func DeleteClusterInsts(data []edgeproto.ClusterInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteClusterInst %v\n", data[ii])
+		myerr := DeleteClusterInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateClusterInstCmd = &cobra.Command{
@@ -304,37 +338,54 @@ var UpdateClusterInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterInstApiCmd == nil {
-			return fmt.Errorf("ClusterInstApi client not initialized")
-		}
-		var err error
-		err = parseClusterInstEnums()
+		err := parseClusterInstEnums()
 		if err != nil {
 			return fmt.Errorf("UpdateClusterInst failed: %s", err.Error())
 		}
 		ClusterInstSetFields()
-		ctx := context.Background()
-		stream, err := ClusterInstApiCmd.UpdateClusterInst(ctx, &ClusterInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateClusterInst failed: %s", errstr)
-		}
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("UpdateClusterInst recv failed: %s", err.Error())
-			}
-			ResultWriteOutputOne(obj)
-		}
-		return nil
+		return UpdateClusterInst(&ClusterInstIn)
 	},
+}
+
+func UpdateClusterInst(in *edgeproto.ClusterInst) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterInstApiCmd.UpdateClusterInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateClusterInst failed: %s", errstr)
+	}
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("UpdateClusterInst recv failed: %s", err.Error())
+		}
+		ResultWriteOutputOne(obj)
+	}
+	return nil
+}
+
+func UpdateClusterInsts(data []edgeproto.ClusterInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateClusterInst %v\n", data[ii])
+		myerr := UpdateClusterInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowClusterInstCmd = &cobra.Command{
@@ -342,42 +393,59 @@ var ShowClusterInstCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterInstApiCmd == nil {
-			return fmt.Errorf("ClusterInstApi client not initialized")
-		}
-		var err error
-		err = parseClusterInstEnums()
+		err := parseClusterInstEnums()
 		if err != nil {
 			return fmt.Errorf("ShowClusterInst failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := ClusterInstApiCmd.ShowClusterInst(ctx, &ClusterInstIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowClusterInst failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.ClusterInst, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowClusterInst recv failed: %s", err.Error())
-			}
-			ClusterInstHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ClusterInstWriteOutputArray(objs)
-		return nil
+		return ShowClusterInst(&ClusterInstIn)
 	},
+}
+
+func ShowClusterInst(in *edgeproto.ClusterInst) error {
+	if ClusterInstApiCmd == nil {
+		return fmt.Errorf("ClusterInstApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterInstApiCmd.ShowClusterInst(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowClusterInst failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.ClusterInst, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowClusterInst recv failed: %s", err.Error())
+		}
+		ClusterInstHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ClusterInstWriteOutputArray(objs)
+	return nil
+}
+
+func ShowClusterInsts(data []edgeproto.ClusterInst, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowClusterInst %v\n", data[ii])
+		myerr := ShowClusterInst(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ClusterInstApiCmds = []*cobra.Command{
@@ -392,42 +460,59 @@ var ShowClusterInstInfoCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterInstInfoApiCmd == nil {
-			return fmt.Errorf("ClusterInstInfoApi client not initialized")
-		}
-		var err error
-		err = parseClusterInstInfoEnums()
+		err := parseClusterInstInfoEnums()
 		if err != nil {
 			return fmt.Errorf("ShowClusterInstInfo failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := ClusterInstInfoApiCmd.ShowClusterInstInfo(ctx, &ClusterInstInfoIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowClusterInstInfo failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.ClusterInstInfo, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowClusterInstInfo recv failed: %s", err.Error())
-			}
-			ClusterInstInfoHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ClusterInstInfoWriteOutputArray(objs)
-		return nil
+		return ShowClusterInstInfo(&ClusterInstInfoIn)
 	},
+}
+
+func ShowClusterInstInfo(in *edgeproto.ClusterInstInfo) error {
+	if ClusterInstInfoApiCmd == nil {
+		return fmt.Errorf("ClusterInstInfoApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterInstInfoApiCmd.ShowClusterInstInfo(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowClusterInstInfo failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.ClusterInstInfo, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowClusterInstInfo recv failed: %s", err.Error())
+		}
+		ClusterInstInfoHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ClusterInstInfoWriteOutputArray(objs)
+	return nil
+}
+
+func ShowClusterInstInfos(data []edgeproto.ClusterInstInfo, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowClusterInstInfo %v\n", data[ii])
+		myerr := ShowClusterInstInfo(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ClusterInstInfoApiCmds = []*cobra.Command{
