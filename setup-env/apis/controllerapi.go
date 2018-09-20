@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"strings"
 	"time"
 
@@ -39,17 +38,13 @@ func runShow(ctrl *util.ControllerProcess, showCmds []string, outputDir string, 
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
 		cmdstr := strings.Split(c, " ")[1]
-		var cmdargs = []string{"--addr", ctrl.ApiAddr, "controller", cmdstr}
-		if ctrl.TLS.ClientCert != "" {
-			cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)
-		}
+		var cmdargs = []string{cmdstr}
 		if cmp == HideCmp {
 			cmdargs = append(cmdargs, "--hidetags")
 			cmdargs = append(cmdargs, "nocmp")
 		}
-		cmd := exec.Command("edgectl", cmdargs[0:]...)
 		log.Printf("generating output for %s\n", label)
-		out, _ := cmd.CombinedOutput()
+		out, _ := util.ControllerCLI(ctrl, cmdargs...)
 		truncate := false
 		//truncate the file for the first command output, afterwards append
 		if i == 0 {
@@ -487,4 +482,47 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	}
 	ctrlapi.Close()
 	return rc
+}
+
+func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string) bool {
+	log.Printf("Applying data via CLI for %s\n", apiFile)
+
+	ctrl := util.GetController(ctrlname)
+
+	if api == "show" {
+		return runShowCommands(ctrl, outputDir, HideCmp)
+	}
+	if api == "showcmp" {
+		return runShowCommands(ctrl, outputDir, ShowCmp)
+	}
+	if api == "nodeshow" {
+		return runNodeShow(ctrl, outputDir, HideCmp)
+	}
+
+	if apiFile == "" {
+		log.Println("Error: Cannot run controller APIs without API file")
+		return false
+	}
+
+	log.Printf("Using controller %v at address %v", ctrl.Name, ctrl.ApiAddr)
+	switch api {
+	case "create":
+		out, err := util.ControllerCLI(ctrl, "Create", "-f", apiFile)
+		log.Println(string(out))
+		if err != nil {
+			log.Printf("Error running Create CLI %v\n", err)
+			return false
+		}
+	case "delete":
+		out, err := util.ControllerCLI(ctrl, "Delete", "-f", apiFile)
+		log.Println(string(out))
+		if err != nil {
+			log.Printf("Error running Delete CLI %v\n", err)
+			return false
+		}
+	default:
+		log.Printf("Error: unsupported controller CLI %s\n", api)
+		return false
+	}
+	return true
 }

@@ -163,42 +163,59 @@ var ShowNodeLocalCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if NodeApiCmd == nil {
-			return fmt.Errorf("NodeApi client not initialized")
-		}
-		var err error
-		err = parseNodeEnums()
+		err := parseNodeEnums()
 		if err != nil {
 			return fmt.Errorf("ShowNodeLocal failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := NodeApiCmd.ShowNodeLocal(ctx, &NodeIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowNodeLocal failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Node, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowNodeLocal recv failed: %s", err.Error())
-			}
-			NodeHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		NodeWriteOutputArray(objs)
-		return nil
+		return ShowNodeLocal(&NodeIn)
 	},
+}
+
+func ShowNodeLocal(in *edgeproto.Node) error {
+	if NodeApiCmd == nil {
+		return fmt.Errorf("NodeApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := NodeApiCmd.ShowNodeLocal(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowNodeLocal failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Node, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowNodeLocal recv failed: %s", err.Error())
+		}
+		NodeHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	NodeWriteOutputArray(objs)
+	return nil
+}
+
+func ShowNodeLocals(data []edgeproto.Node, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowNodeLocal %v\n", data[ii])
+		myerr := ShowNodeLocal(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowNodeCmd = &cobra.Command{
@@ -206,42 +223,59 @@ var ShowNodeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if NodeApiCmd == nil {
-			return fmt.Errorf("NodeApi client not initialized")
-		}
-		var err error
-		err = parseNodeEnums()
+		err := parseNodeEnums()
 		if err != nil {
 			return fmt.Errorf("ShowNode failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		stream, err := NodeApiCmd.ShowNode(ctx, &NodeIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowNode failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Node, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowNode recv failed: %s", err.Error())
-			}
-			NodeHideTags(obj)
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		NodeWriteOutputArray(objs)
-		return nil
+		return ShowNode(&NodeIn)
 	},
+}
+
+func ShowNode(in *edgeproto.Node) error {
+	if NodeApiCmd == nil {
+		return fmt.Errorf("NodeApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := NodeApiCmd.ShowNode(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowNode failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Node, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowNode recv failed: %s", err.Error())
+		}
+		NodeHideTags(obj)
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	NodeWriteOutputArray(objs)
+	return nil
+}
+
+func ShowNodes(data []edgeproto.Node, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowNode %v\n", data[ii])
+		myerr := ShowNode(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var NodeApiCmds = []*cobra.Command{

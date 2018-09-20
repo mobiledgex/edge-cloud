@@ -120,23 +120,40 @@ var CreateDeveloperCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DeveloperApiCmd == nil {
-			return fmt.Errorf("DeveloperApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := DeveloperApiCmd.CreateDeveloper(ctx, &DeveloperIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateDeveloper failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return CreateDeveloper(&DeveloperIn)
 	},
+}
+
+func CreateDeveloper(in *edgeproto.Developer) error {
+	if DeveloperApiCmd == nil {
+		return fmt.Errorf("DeveloperApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DeveloperApiCmd.CreateDeveloper(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateDeveloper failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func CreateDevelopers(data []edgeproto.Developer, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateDeveloper %v\n", data[ii])
+		myerr := CreateDeveloper(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteDeveloperCmd = &cobra.Command{
@@ -144,23 +161,40 @@ var DeleteDeveloperCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DeveloperApiCmd == nil {
-			return fmt.Errorf("DeveloperApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, &DeveloperIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteDeveloper failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteDeveloper(&DeveloperIn)
 	},
+}
+
+func DeleteDeveloper(in *edgeproto.Developer) error {
+	if DeveloperApiCmd == nil {
+		return fmt.Errorf("DeveloperApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DeveloperApiCmd.DeleteDeveloper(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteDeveloper failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteDevelopers(data []edgeproto.Developer, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteDeveloper %v\n", data[ii])
+		myerr := DeleteDeveloper(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateDeveloperCmd = &cobra.Command{
@@ -168,24 +202,41 @@ var UpdateDeveloperCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DeveloperApiCmd == nil {
-			return fmt.Errorf("DeveloperApi client not initialized")
-		}
-		var err error
 		DeveloperSetFields()
-		ctx := context.Background()
-		obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, &DeveloperIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateDeveloper failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return UpdateDeveloper(&DeveloperIn)
 	},
+}
+
+func UpdateDeveloper(in *edgeproto.Developer) error {
+	if DeveloperApiCmd == nil {
+		return fmt.Errorf("DeveloperApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DeveloperApiCmd.UpdateDeveloper(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateDeveloper failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func UpdateDevelopers(data []edgeproto.Developer, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateDeveloper %v\n", data[ii])
+		myerr := UpdateDeveloper(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowDeveloperCmd = &cobra.Command{
@@ -193,37 +244,54 @@ var ShowDeveloperCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DeveloperApiCmd == nil {
-			return fmt.Errorf("DeveloperApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := DeveloperApiCmd.ShowDeveloper(ctx, &DeveloperIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowDeveloper failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Developer, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowDeveloper recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		DeveloperWriteOutputArray(objs)
-		return nil
+		return ShowDeveloper(&DeveloperIn)
 	},
+}
+
+func ShowDeveloper(in *edgeproto.Developer) error {
+	if DeveloperApiCmd == nil {
+		return fmt.Errorf("DeveloperApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := DeveloperApiCmd.ShowDeveloper(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowDeveloper failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Developer, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowDeveloper recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	DeveloperWriteOutputArray(objs)
+	return nil
+}
+
+func ShowDevelopers(data []edgeproto.Developer, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowDeveloper %v\n", data[ii])
+		myerr := ShowDeveloper(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeveloperApiCmds = []*cobra.Command{

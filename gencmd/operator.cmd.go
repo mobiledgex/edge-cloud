@@ -112,23 +112,40 @@ var CreateOperatorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if OperatorApiCmd == nil {
-			return fmt.Errorf("OperatorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := OperatorApiCmd.CreateOperator(ctx, &OperatorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateOperator failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return CreateOperator(&OperatorIn)
 	},
+}
+
+func CreateOperator(in *edgeproto.Operator) error {
+	if OperatorApiCmd == nil {
+		return fmt.Errorf("OperatorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := OperatorApiCmd.CreateOperator(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateOperator failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func CreateOperators(data []edgeproto.Operator, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateOperator %v\n", data[ii])
+		myerr := CreateOperator(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteOperatorCmd = &cobra.Command{
@@ -136,23 +153,40 @@ var DeleteOperatorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if OperatorApiCmd == nil {
-			return fmt.Errorf("OperatorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := OperatorApiCmd.DeleteOperator(ctx, &OperatorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteOperator failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteOperator(&OperatorIn)
 	},
+}
+
+func DeleteOperator(in *edgeproto.Operator) error {
+	if OperatorApiCmd == nil {
+		return fmt.Errorf("OperatorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := OperatorApiCmd.DeleteOperator(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteOperator failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteOperators(data []edgeproto.Operator, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteOperator %v\n", data[ii])
+		myerr := DeleteOperator(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateOperatorCmd = &cobra.Command{
@@ -160,24 +194,41 @@ var UpdateOperatorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if OperatorApiCmd == nil {
-			return fmt.Errorf("OperatorApi client not initialized")
-		}
-		var err error
 		OperatorSetFields()
-		ctx := context.Background()
-		obj, err := OperatorApiCmd.UpdateOperator(ctx, &OperatorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateOperator failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return UpdateOperator(&OperatorIn)
 	},
+}
+
+func UpdateOperator(in *edgeproto.Operator) error {
+	if OperatorApiCmd == nil {
+		return fmt.Errorf("OperatorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := OperatorApiCmd.UpdateOperator(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateOperator failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func UpdateOperators(data []edgeproto.Operator, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateOperator %v\n", data[ii])
+		myerr := UpdateOperator(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowOperatorCmd = &cobra.Command{
@@ -185,37 +236,54 @@ var ShowOperatorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if OperatorApiCmd == nil {
-			return fmt.Errorf("OperatorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := OperatorApiCmd.ShowOperator(ctx, &OperatorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowOperator failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.Operator, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowOperator recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		OperatorWriteOutputArray(objs)
-		return nil
+		return ShowOperator(&OperatorIn)
 	},
+}
+
+func ShowOperator(in *edgeproto.Operator) error {
+	if OperatorApiCmd == nil {
+		return fmt.Errorf("OperatorApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := OperatorApiCmd.ShowOperator(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowOperator failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.Operator, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowOperator recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	OperatorWriteOutputArray(objs)
+	return nil
+}
+
+func ShowOperators(data []edgeproto.Operator, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowOperator %v\n", data[ii])
+		myerr := ShowOperator(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var OperatorApiCmds = []*cobra.Command{

@@ -124,23 +124,40 @@ var CreateClusterFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterFlavorApiCmd == nil {
-			return fmt.Errorf("ClusterFlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, &ClusterFlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("CreateClusterFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return CreateClusterFlavor(&ClusterFlavorIn)
 	},
+}
+
+func CreateClusterFlavor(in *edgeproto.ClusterFlavor) error {
+	if ClusterFlavorApiCmd == nil {
+		return fmt.Errorf("ClusterFlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ClusterFlavorApiCmd.CreateClusterFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateClusterFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func CreateClusterFlavors(data []edgeproto.ClusterFlavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("CreateClusterFlavor %v\n", data[ii])
+		myerr := CreateClusterFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DeleteClusterFlavorCmd = &cobra.Command{
@@ -148,23 +165,40 @@ var DeleteClusterFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterFlavorApiCmd == nil {
-			return fmt.Errorf("ClusterFlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, &ClusterFlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("DeleteClusterFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return DeleteClusterFlavor(&ClusterFlavorIn)
 	},
+}
+
+func DeleteClusterFlavor(in *edgeproto.ClusterFlavor) error {
+	if ClusterFlavorApiCmd == nil {
+		return fmt.Errorf("ClusterFlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ClusterFlavorApiCmd.DeleteClusterFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("DeleteClusterFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func DeleteClusterFlavors(data []edgeproto.ClusterFlavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("DeleteClusterFlavor %v\n", data[ii])
+		myerr := DeleteClusterFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var UpdateClusterFlavorCmd = &cobra.Command{
@@ -172,24 +206,41 @@ var UpdateClusterFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterFlavorApiCmd == nil {
-			return fmt.Errorf("ClusterFlavorApi client not initialized")
-		}
-		var err error
 		ClusterFlavorSetFields()
-		ctx := context.Background()
-		obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, &ClusterFlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("UpdateClusterFlavor failed: %s", errstr)
-		}
-		ResultWriteOutputOne(obj)
-		return nil
+		return UpdateClusterFlavor(&ClusterFlavorIn)
 	},
+}
+
+func UpdateClusterFlavor(in *edgeproto.ClusterFlavor) error {
+	if ClusterFlavorApiCmd == nil {
+		return fmt.Errorf("ClusterFlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := ClusterFlavorApiCmd.UpdateClusterFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("UpdateClusterFlavor failed: %s", errstr)
+	}
+	ResultWriteOutputOne(obj)
+	return nil
+}
+
+func UpdateClusterFlavors(data []edgeproto.ClusterFlavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("UpdateClusterFlavor %v\n", data[ii])
+		myerr := UpdateClusterFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ShowClusterFlavorCmd = &cobra.Command{
@@ -197,37 +248,54 @@ var ShowClusterFlavorCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if ClusterFlavorApiCmd == nil {
-			return fmt.Errorf("ClusterFlavorApi client not initialized")
-		}
-		var err error
-		ctx := context.Background()
-		stream, err := ClusterFlavorApiCmd.ShowClusterFlavor(ctx, &ClusterFlavorIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("ShowClusterFlavor failed: %s", errstr)
-		}
-		objs := make([]*edgeproto.ClusterFlavor, 0)
-		for {
-			obj, err := stream.Recv()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return fmt.Errorf("ShowClusterFlavor recv failed: %s", err.Error())
-			}
-			objs = append(objs, obj)
-		}
-		if len(objs) == 0 {
-			return nil
-		}
-		ClusterFlavorWriteOutputArray(objs)
-		return nil
+		return ShowClusterFlavor(&ClusterFlavorIn)
 	},
+}
+
+func ShowClusterFlavor(in *edgeproto.ClusterFlavor) error {
+	if ClusterFlavorApiCmd == nil {
+		return fmt.Errorf("ClusterFlavorApi client not initialized")
+	}
+	ctx := context.Background()
+	stream, err := ClusterFlavorApiCmd.ShowClusterFlavor(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("ShowClusterFlavor failed: %s", errstr)
+	}
+	objs := make([]*edgeproto.ClusterFlavor, 0)
+	for {
+		obj, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("ShowClusterFlavor recv failed: %s", err.Error())
+		}
+		objs = append(objs, obj)
+	}
+	if len(objs) == 0 {
+		return nil
+	}
+	ClusterFlavorWriteOutputArray(objs)
+	return nil
+}
+
+func ShowClusterFlavors(data []edgeproto.ClusterFlavor, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("ShowClusterFlavor %v\n", data[ii])
+		myerr := ShowClusterFlavor(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var ClusterFlavorApiCmds = []*cobra.Command{

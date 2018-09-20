@@ -125,27 +125,44 @@ var SendToGroupCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
-		if DynamicLocGroupApiCmd == nil {
-			return fmt.Errorf("DynamicLocGroupApi client not initialized")
-		}
-		var err error
-		err = parseDlgMessageEnums()
+		err := parseDlgMessageEnums()
 		if err != nil {
 			return fmt.Errorf("SendToGroup failed: %s", err.Error())
 		}
-		ctx := context.Background()
-		obj, err := DynamicLocGroupApiCmd.SendToGroup(ctx, &DlgMessageIn)
-		if err != nil {
-			errstr := err.Error()
-			st, ok := status.FromError(err)
-			if ok {
-				errstr = st.Message()
-			}
-			return fmt.Errorf("SendToGroup failed: %s", errstr)
-		}
-		DlgReplyWriteOutputOne(obj)
-		return nil
+		return SendToGroup(&DlgMessageIn)
 	},
+}
+
+func SendToGroup(in *distributed_match_engine.DlgMessage) error {
+	if DynamicLocGroupApiCmd == nil {
+		return fmt.Errorf("DynamicLocGroupApi client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := DynamicLocGroupApiCmd.SendToGroup(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("SendToGroup failed: %s", errstr)
+	}
+	DlgReplyWriteOutputOne(obj)
+	return nil
+}
+
+func SendToGroups(data []distributed_match_engine.DlgMessage, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("SendToGroup %v\n", data[ii])
+		myerr := SendToGroup(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
 }
 
 var DynamicLocGroupApiCmds = []*cobra.Command{
