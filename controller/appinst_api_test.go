@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -74,6 +75,56 @@ func TestAppInstApi(t *testing.T) {
 	// after app insts create, check that cloudlet refs data is correct.
 	// Note this refs data is a second set after app insts were created.
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsWithAppInstsData)
+
+	commonApi := testutil.NewInternalAppInstApi(&appInstApi)
+
+	// Set responder to fail delete.
+	responder.SetSimulateDeleteFailure(true)
+	obj := testutil.AppInstData[0]
+	err := appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.NotNil(t, err, "Delete AppInst responder failure")
+	responder.SetSimulateDeleteFailure(false)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+
+	// check override of error DeleteError
+	err = forceAppInstState(&obj, edgeproto.TrackedState_DeleteError)
+	assert.Nil(t, err, "force state")
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_DeleteError)
+	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "create overrides delete error")
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+
+	// check override of error CreateError
+	err = forceAppInstState(&obj, edgeproto.TrackedState_CreateError)
+	assert.Nil(t, err, "force state")
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_CreateError)
+	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "delete overrides create error")
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_NotPresent)
+
+	// override CRM error
+	responder.SetSimulateCreateFailure(true)
+	responder.SetSimulateDeleteFailure(true)
+	obj = testutil.AppInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "override crm error")
+	obj = testutil.AppInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "override crm error")
+
+	// ignore CRM
+	obj = testutil.AppInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "ignore crm")
+	obj = testutil.AppInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	assert.Nil(t, err, "ignore crm")
+	responder.SetSimulateCreateFailure(false)
+	responder.SetSimulateDeleteFailure(false)
 
 	dummy.Stop()
 }
@@ -177,4 +228,28 @@ func TestAutoClusterInst(t *testing.T) {
 	assert.False(t, found, "get auto-clusterinst")
 
 	dummy.Stop()
+}
+
+func checkAppInstState(t *testing.T, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
+	out := edgeproto.AppInst{}
+	found := testutil.GetAppInst(t, api, &in.Key, &out)
+	if state == edgeproto.TrackedState_NotPresent {
+		assert.False(t, found, "get app inst")
+	} else {
+		assert.True(t, found, "get app inst")
+		assert.Equal(t, state, out.State, "app inst state")
+	}
+}
+
+func forceAppInstState(in *edgeproto.AppInst, state edgeproto.TrackedState) error {
+	err := appInstApi.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		obj := edgeproto.AppInst{}
+		if !appInstApi.store.STMGet(stm, &in.Key, &obj) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		obj.State = state
+		appInstApi.store.STMPut(stm, &obj)
+		return nil
+	})
+	return err
 }

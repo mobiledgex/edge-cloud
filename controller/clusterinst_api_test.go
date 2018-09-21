@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -56,6 +58,56 @@ func TestClusterInstApi(t *testing.T) {
 	// after cluster insts create, check that cloudlet refs data is correct.
 	testutil.InternalCloudletRefsTest(t, "show", &cloudletRefsApi, testutil.CloudletRefsData)
 
+	commonApi := testutil.NewInternalClusterInstApi(&clusterInstApi)
+
+	// Set responder to fail delete.
+	responder.SetSimulateDeleteFailure(true)
+	obj := testutil.ClusterInstData[0]
+	err := clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.NotNil(t, err, "Delete ClusterInst responder failure")
+	responder.SetSimulateDeleteFailure(false)
+	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+
+	// check override of error DeleteError
+	err = forceClusterInstState(&obj, edgeproto.TrackedState_DeleteError)
+	assert.Nil(t, err, "force state")
+	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_DeleteError)
+	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "create overrides delete error")
+	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+
+	// check override of error CreateError
+	err = forceClusterInstState(&obj, edgeproto.TrackedState_CreateError)
+	assert.Nil(t, err, "force state")
+	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_CreateError)
+	err = clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "delete overrides create error")
+	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_NotPresent)
+
+	// override CRM error
+	responder.SetSimulateCreateFailure(true)
+	responder.SetSimulateDeleteFailure(true)
+	obj = testutil.ClusterInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "override crm error")
+	obj = testutil.ClusterInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	err = clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "override crm error")
+
+	// ignore CRM
+	obj = testutil.ClusterInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "ignore crm")
+	obj = testutil.ClusterInstData[0]
+	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	err = clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.Nil(t, err, "ignore crm")
+	responder.SetSimulateCreateFailure(false)
+	responder.SetSimulateDeleteFailure(false)
+
 	dummy.Stop()
 }
 
@@ -67,4 +119,28 @@ func reduceInfoTimeouts() {
 	CreateAppInstTimeout = 1 * time.Second
 	UpdateAppInstTimeout = 1 * time.Second
 	DeleteAppInstTimeout = 1 * time.Second
+}
+
+func checkClusterInstState(t *testing.T, api *testutil.ClusterInstCommonApi, in *edgeproto.ClusterInst, state edgeproto.TrackedState) {
+	out := edgeproto.ClusterInst{}
+	found := testutil.GetClusterInst(t, api, &in.Key, &out)
+	if state == edgeproto.TrackedState_NotPresent {
+		assert.False(t, found, "get cluster inst")
+	} else {
+		assert.True(t, found, "get cluster inst")
+		assert.Equal(t, state, out.State, "cluster inst state")
+	}
+}
+
+func forceClusterInstState(in *edgeproto.ClusterInst, state edgeproto.TrackedState) error {
+	err := clusterInstApi.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		obj := edgeproto.ClusterInst{}
+		if !clusterInstApi.store.STMGet(stm, &in.Key, &obj) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		obj.State = state
+		clusterInstApi.store.STMPut(stm, &obj)
+		return nil
+	})
+	return err
 }

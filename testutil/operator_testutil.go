@@ -193,6 +193,24 @@ func basicOperatorShowTest(t *testing.T, api *OperatorCommonApi, testData []edge
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetOperator(t *testing.T, api *OperatorCommonApi, key *edgeproto.OperatorKey, out *edgeproto.Operator) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowOperator{}
+	show.Init()
+	filter := edgeproto.Operator{}
+	filter.Key = *key
+	err = api.ShowOperator(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicOperatorCudTest(t *testing.T, api *OperatorCommonApi, testData []edgeproto.Operator) {
 	var err error
 	ctx := context.TODO()

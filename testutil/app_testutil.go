@@ -257,6 +257,24 @@ func basicAppShowTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App)
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetApp(t *testing.T, api *AppCommonApi, key *edgeproto.AppKey, out *edgeproto.App) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowApp{}
+	show.Init()
+	filter := edgeproto.App{}
+	filter.Key = *key
+	err = api.ShowApp(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
 	var err error
 	ctx := context.TODO()
