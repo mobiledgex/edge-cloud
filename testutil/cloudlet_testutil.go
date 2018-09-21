@@ -236,6 +236,24 @@ func basicCloudletShowTest(t *testing.T, api *CloudletCommonApi, testData []edge
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetCloudlet(t *testing.T, api *CloudletCommonApi, key *edgeproto.CloudletKey, out *edgeproto.Cloudlet) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCloudlet{}
+	show.Init()
+	filter := edgeproto.Cloudlet{}
+	filter.Key = *key
+	err = api.ShowCloudlet(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgeproto.Cloudlet) {
 	var err error
 	ctx := context.TODO()
@@ -459,4 +477,21 @@ func basicCloudletInfoShowTest(t *testing.T, api *CloudletInfoCommonApi, testDat
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
+}
+
+func GetCloudletInfo(t *testing.T, api *CloudletInfoCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletInfo) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCloudletInfo{}
+	show.Init()
+	filter := edgeproto.CloudletInfo{}
+	filter.Key = *key
+	err = api.ShowCloudletInfo(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
 }

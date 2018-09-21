@@ -193,6 +193,24 @@ func basicDeveloperShowTest(t *testing.T, api *DeveloperCommonApi, testData []ed
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetDeveloper(t *testing.T, api *DeveloperCommonApi, key *edgeproto.DeveloperKey, out *edgeproto.Developer) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowDeveloper{}
+	show.Init()
+	filter := edgeproto.Developer{}
+	filter.Key = *key
+	err = api.ShowDeveloper(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edgeproto.Developer) {
 	var err error
 	ctx := context.TODO()
