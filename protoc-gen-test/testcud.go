@@ -16,6 +16,7 @@ const edgeproto = "edgeproto"
 
 type TestCud struct {
 	*generator.Generator
+	support gensupport.PluginSupport
 	cudTmpl *template.Template
 }
 
@@ -25,6 +26,7 @@ func (t *TestCud) Name() string {
 
 func (t *TestCud) Init(g *generator.Generator) {
 	t.Generator = g
+	t.support.Init(g.Request)
 	t.cudTmpl = template.Must(template.New("cud").Parse(tmpl))
 }
 
@@ -256,7 +258,24 @@ func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{
 	}
 }
 
-{{- if not .ShowOnly}}
+func Get{{.Name}}(t *testing.T, api *{{.Name}}CommonApi, key *{{.KeyName}}, out *{{.Pkg}}.{{.Name}}) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := Show{{.Name}}{}
+	show.Init()
+	filter := {{.Pkg}}.{{.Name}}{}
+	filter.Key = *key
+	err = api.Show{{.Name}}(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
+{{ if not .ShowOnly}}
 func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pkg}}.{{.Name}}) {
 	var err error
 	ctx := context.TODO()
@@ -363,6 +382,10 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
+	t.support.InitFile()
+	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
+		return
+	}
 	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
 		if GetGenerateCudTest(msg.DescriptorProto) ||
@@ -383,10 +406,14 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 }
 
 func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
+	keystr, err := t.support.GetMessageKeyName(t.Generator, message)
+	if err != nil {
+		keystr = "key not found"
+	}
 	args := tmplArgs{
 		Pkg:       edgeproto,
 		Name:      *message.Name,
-		KeyName:   *message.Name + "Key",
+		KeyName:   keystr,
 		ShowOnly:  GetGenerateShowTest(message),
 		Streamout: GetGenerateCudStreamout(message),
 	}
