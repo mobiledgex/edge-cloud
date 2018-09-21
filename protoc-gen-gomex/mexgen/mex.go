@@ -1113,7 +1113,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 	}
-	if HasGrpcFields(message) {
+	if gensupport.HasGrpcFields(message) {
 		m.generateFields([]string{*message.Name + "Field"}, []string{}, desc)
 		m.P("")
 		m.P("var ", *message.Name, "AllFields = []string{")
@@ -1135,15 +1135,15 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 	msgtyp := m.gen.TypeName(desc)
 	m.P("func (m *", msgtyp, ") CopyInFields(src *", msgtyp, ") {")
-	if HasGrpcFields(message) {
+	if gensupport.HasGrpcFields(message) {
 		m.P("fmap := MakeFieldMap(src.Fields)")
 	}
-	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), HasGrpcFields(message))
+	m.generateCopyIn(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), gensupport.HasGrpcFields(message))
 	m.P("}")
 	m.P("")
 
 	if GetGenerateCud(message) {
-		keyField := GetMessageKey(message)
+		keyField := gensupport.GetMessageKey(message)
 		if keyField == nil {
 			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
@@ -1151,12 +1151,12 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			Name:      *message.Name,
 			CudName:   *message.Name + "Cud",
 			KeyType:   m.support.GoType(m.gen, keyField),
-			HasFields: HasGrpcFields(message),
+			HasFields: gensupport.HasGrpcFields(message),
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
 	}
 	if GetGenerateCache(message) {
-		keyField := GetMessageKey(message)
+		keyField := gensupport.GetMessageKey(message)
 		if keyField == nil {
 			m.gen.Fail("message", *message.Name, "needs a unique key field named key of type", *message.Name+"Key", "for option generate_cud")
 		}
@@ -1193,7 +1193,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("")
 		m.importUtil = true
 	}
-	if field := GetMessageKey(message); field != nil {
+	if field := gensupport.GetMessageKey(message); field != nil {
 		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
 		m.P("func (m *", message.Name, ") GetKey() objstore.ObjKey {")
 		m.P("return &m.Key")
@@ -1212,26 +1212,6 @@ func (m *mex) generateService(file *generator.FileDescriptor, service *descripto
 
 func (m *mex) generateMethod(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) {
 
-}
-
-func HasGrpcFields(message *descriptor.DescriptorProto) bool {
-	if message.Field != nil && len(message.Field) > 0 && *message.Field[0].Name == "fields" && *message.Field[0].Type == descriptor.FieldDescriptorProto_TYPE_STRING {
-		return true
-	}
-	return false
-}
-
-func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescriptorProto {
-	if message.Field == nil {
-		return nil
-	}
-	if len(message.Field) > 0 && *message.Field[0].Name == "key" {
-		return message.Field[0]
-	}
-	if len(message.Field) > 1 && HasGrpcFields(message) && *message.Field[1].Name == "key" {
-		return message.Field[1]
-	}
-	return nil
 }
 
 func GetGenerateMatches(message *descriptor.DescriptorProto) bool {

@@ -167,6 +167,23 @@ func basicCloudletRefsShowTest(t *testing.T, api *CloudletRefsCommonApi, testDat
 	}
 }
 
+func GetCloudletRefs(t *testing.T, api *CloudletRefsCommonApi, key *edgeproto.CloudletKey, out *edgeproto.CloudletRefs) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowCloudletRefs{}
+	show.Init()
+	filter := edgeproto.CloudletRefs{}
+	filter.Key = *key
+	err = api.ShowCloudletRefs(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 // Auto-generated code: DO NOT EDIT
 
 type ShowClusterRefs struct {
@@ -309,4 +326,21 @@ func basicClusterRefsShowTest(t *testing.T, api *ClusterRefsCommonApi, testData 
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
+}
+
+func GetClusterRefs(t *testing.T, api *ClusterRefsCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterRefs) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterRefs{}
+	show.Init()
+	filter := edgeproto.ClusterRefs{}
+	filter.Key = *key
+	err = api.ShowClusterRefs(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
 }

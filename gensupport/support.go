@@ -259,6 +259,34 @@ func IsRepeated(field *descriptor.FieldDescriptorProto) bool {
 	return *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED
 }
 
+func HasGrpcFields(message *descriptor.DescriptorProto) bool {
+	if message.Field != nil && len(message.Field) > 0 && *message.Field[0].Name == "fields" && *message.Field[0].Type == descriptor.FieldDescriptorProto_TYPE_STRING {
+		return true
+	}
+	return false
+}
+
+func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescriptorProto {
+	if message.Field == nil {
+		return nil
+	}
+	if len(message.Field) > 0 && *message.Field[0].Name == "key" {
+		return message.Field[0]
+	}
+	if len(message.Field) > 1 && HasGrpcFields(message) && *message.Field[1].Name == "key" {
+		return message.Field[1]
+	}
+	return nil
+}
+
+func (s *PluginSupport) GetMessageKeyName(g *generator.Generator, message *descriptor.DescriptorProto) (string, error) {
+	field := GetMessageKey(message)
+	if field == nil {
+		return "", fmt.Errorf("No Key field for %s", *message.Name)
+	}
+	return s.GoType(g, field), nil
+}
+
 type MapType struct {
 	KeyField     *descriptor.FieldDescriptorProto
 	ValField     *descriptor.FieldDescriptorProto

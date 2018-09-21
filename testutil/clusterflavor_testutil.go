@@ -194,6 +194,24 @@ func basicClusterFlavorShowTest(t *testing.T, api *ClusterFlavorCommonApi, testD
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetClusterFlavor(t *testing.T, api *ClusterFlavorCommonApi, key *edgeproto.ClusterFlavorKey, out *edgeproto.ClusterFlavor) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterFlavor{}
+	show.Init()
+	filter := edgeproto.ClusterFlavor{}
+	filter.Key = *key
+	err = api.ShowClusterFlavor(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicClusterFlavorCudTest(t *testing.T, api *ClusterFlavorCommonApi, testData []edgeproto.ClusterFlavor) {
 	var err error
 	ctx := context.TODO()

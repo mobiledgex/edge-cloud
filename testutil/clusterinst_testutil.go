@@ -235,6 +235,24 @@ func basicClusterInstShowTest(t *testing.T, api *ClusterInstCommonApi, testData 
 		show.AssertFound(t, &obj)
 	}
 }
+
+func GetClusterInst(t *testing.T, api *ClusterInstCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInst) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterInst{}
+	show.Init()
+	filter := edgeproto.ClusterInst{}
+	filter.Key = *key
+	err = api.ShowClusterInst(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
+}
+
 func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData []edgeproto.ClusterInst) {
 	var err error
 	ctx := context.TODO()
@@ -438,4 +456,21 @@ func basicClusterInstInfoShowTest(t *testing.T, api *ClusterInstInfoCommonApi, t
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
+}
+
+func GetClusterInstInfo(t *testing.T, api *ClusterInstInfoCommonApi, key *edgeproto.ClusterInstKey, out *edgeproto.ClusterInstInfo) bool {
+	var err error
+	ctx := context.TODO()
+
+	show := ShowClusterInstInfo{}
+	show.Init()
+	filter := edgeproto.ClusterInstInfo{}
+	filter.Key = *key
+	err = api.ShowClusterInstInfo(ctx, &filter, &show)
+	assert.Nil(t, err, "show data")
+	obj, found := show.Data[key.GetKeyString()]
+	if found {
+		*out = obj
+	}
+	return found
 }
