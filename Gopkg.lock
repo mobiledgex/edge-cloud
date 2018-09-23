@@ -291,7 +291,7 @@
     "openstack-prov/oscliapi",
     "openstack-tenant/agent/cloudflare"
   ]
-  revision = "5b7ea1a90aa14ace910b639c53e9368ff27f458b"
+  revision = "17c07acd1df191432ed7a96a9a4c88fb9dc60662"
 
 [[projects]]
   name = "github.com/modern-go/concurrent"
