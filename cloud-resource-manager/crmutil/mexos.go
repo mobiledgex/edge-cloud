@@ -298,7 +298,8 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 		return fmt.Errorf("missing external network in platform config")
 	}
 	if err = LBAddRoute(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, kvmname); err != nil {
-		return err
+		log.DebugLog(log.DebugLevelMexos, "cannot add route on rootlb")
+		//return err
 	}
 	if err = oscli.SetServerProperty(kvmname, "mex-flavor="+mf.Spec.Flavor); err != nil {
 		return err
