@@ -4,11 +4,11 @@ resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
 metadata:
   kind: mex-tdg-platform
   name: testcloudlet.mex-tdg.mobiledgex.net
-  tags: mex-tdg-testlocation-tdg
+  tags: mex-tdg-test-location-tdg
   tenant: testtenant
   region: eu-central-1
   zone: eu-central-1c
-  location: testlocation
+  location: test-location
   openrc: ~/.mobiledgex/openrc
   dnszone: mobiledgex.net
   operator: mex-tdg
