@@ -57,21 +57,21 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request
 	return mreq, nil
 }
 
-func (s *server) GetCloudlets(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Cloudlet_List, error) {
+func (s *server) GetAppInstList(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_AppInst_List, error) {
 	_, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
 		return nil, err
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "GetCloudlets", "carrier", req.CarrierName, "app", req.AppName)
+	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "app", req.AppName)
 
 	if req.GpsLocation == nil {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid GetCloudlets request", "Error", "Missing GpsLocation")
+		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
 		return nil, fmt.Errorf("missing GPS location")
 	}
-	clist := new(dme.Match_Engine_Cloudlet_List)
-	getCloudlets(req, clist)
-	return clist, nil
+	alist := new(dme.Match_Engine_AppInst_List)
+	getAppInstList(req, alist)
+	return alist, nil
 }
 
 func (s *server) VerifyLocation(ctx context.Context,
