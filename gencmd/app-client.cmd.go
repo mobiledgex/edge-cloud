@@ -17,7 +17,7 @@ It has these top-level messages:
 	Match_Engine_Status
 	Appinstance
 	CloudletLocation
-	Match_Engine_Cloudlet_List
+	Match_Engine_AppInst_List
 	DynamicLocGroupAdd
 	DlgMessage
 	DlgReply
@@ -100,10 +100,10 @@ var ME_StatusStrings = []string{
 	"ME_FAIL",
 }
 
-var CL_StatusStrings = []string{
-	"CL_UNDEFINED",
-	"CL_SUCCESS",
-	"CL_FAIL",
+var AI_StatusStrings = []string{
+	"AI_UNDEFINED",
+	"AI_SUCCESS",
+	"AI_FAIL",
 }
 
 var DlgCommTypeStrings = []string{
@@ -543,10 +543,10 @@ func CloudletLocationWriteOutputOne(obj *distributed_match_engine.CloudletLocati
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func Match_Engine_Cloudlet_ListSlicer(in *distributed_match_engine.Match_Engine_Cloudlet_List) []string {
+func Match_Engine_AppInst_ListSlicer(in *distributed_match_engine.Match_Engine_AppInst_List) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.Match_Engine_Cloudlet_List_CL_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.Match_Engine_AppInst_List_AI_Status_name[int32(in.Status)])
 	if in.Cloudlets == nil {
 		in.Cloudlets = make([]*distributed_match_engine.CloudletLocation, 1)
 	}
@@ -583,7 +583,7 @@ func Match_Engine_Cloudlet_ListSlicer(in *distributed_match_engine.Match_Engine_
 	return s
 }
 
-func Match_Engine_Cloudlet_ListHeaderSlicer() []string {
+func Match_Engine_AppInst_ListHeaderSlicer() []string {
 	s := make([]string, 0, 3)
 	s = append(s, "Ver")
 	s = append(s, "Status")
@@ -604,12 +604,12 @@ func Match_Engine_Cloudlet_ListHeaderSlicer() []string {
 	return s
 }
 
-func Match_Engine_Cloudlet_ListWriteOutputArray(objs []*distributed_match_engine.Match_Engine_Cloudlet_List) {
+func Match_Engine_AppInst_ListWriteOutputArray(objs []*distributed_match_engine.Match_Engine_AppInst_List) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_AppInst_ListHeaderSlicer(), "\t"))
 		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(obj), "\t"))
+			fmt.Fprintln(output, strings.Join(Match_Engine_AppInst_ListSlicer(obj), "\t"))
 		}
 		output.Flush()
 	} else {
@@ -617,11 +617,11 @@ func Match_Engine_Cloudlet_ListWriteOutputArray(objs []*distributed_match_engine
 	}
 }
 
-func Match_Engine_Cloudlet_ListWriteOutputOne(obj *distributed_match_engine.Match_Engine_Cloudlet_List) {
+func Match_Engine_AppInst_ListWriteOutputOne(obj *distributed_match_engine.Match_Engine_AppInst_List) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(Match_Engine_Cloudlet_ListSlicer(obj), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_AppInst_ListHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(Match_Engine_AppInst_ListSlicer(obj), "\t"))
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
@@ -931,44 +931,44 @@ func AddUserToGroups(data []distributed_match_engine.DynamicLocGroupAdd, err *er
 	}
 }
 
-var GetCloudletsCmd = &cobra.Command{
-	Use: "GetCloudlets",
+var GetAppInstListCmd = &cobra.Command{
+	Use: "GetAppInstList",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
 		err := parseMatch_Engine_RequestEnums()
 		if err != nil {
-			return fmt.Errorf("GetCloudlets failed: %s", err.Error())
+			return fmt.Errorf("GetAppInstList failed: %s", err.Error())
 		}
-		return GetCloudlets(&Match_Engine_RequestIn)
+		return GetAppInstList(&Match_Engine_RequestIn)
 	},
 }
 
-func GetCloudlets(in *distributed_match_engine.Match_Engine_Request) error {
+func GetAppInstList(in *distributed_match_engine.Match_Engine_Request) error {
 	if Match_Engine_ApiCmd == nil {
 		return fmt.Errorf("Match_Engine_Api client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.GetCloudlets(ctx, in)
+	obj, err := Match_Engine_ApiCmd.GetAppInstList(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
 			errstr = st.Message()
 		}
-		return fmt.Errorf("GetCloudlets failed: %s", errstr)
+		return fmt.Errorf("GetAppInstList failed: %s", errstr)
 	}
-	Match_Engine_Cloudlet_ListWriteOutputOne(obj)
+	Match_Engine_AppInst_ListWriteOutputOne(obj)
 	return nil
 }
 
-func GetCloudletss(data []distributed_match_engine.Match_Engine_Request, err *error) {
+func GetAppInstLists(data []distributed_match_engine.Match_Engine_Request, err *error) {
 	if *err != nil {
 		return
 	}
 	for ii, _ := range data {
-		fmt.Printf("GetCloudlets %v\n", data[ii])
-		myerr := GetCloudlets(&data[ii])
+		fmt.Printf("GetAppInstList %v\n", data[ii])
+		myerr := GetAppInstList(&data[ii])
 		if myerr != nil {
 			*err = myerr
 			break
@@ -982,7 +982,7 @@ var Match_Engine_ApiCmds = []*cobra.Command{
 	GetLocationCmd,
 	RegisterClientCmd,
 	AddUserToGroupCmd,
-	GetCloudletsCmd,
+	GetAppInstListCmd,
 }
 
 func init() {
@@ -1039,7 +1039,7 @@ func init() {
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddFlagSet)
-	GetCloudletsCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
+	GetAppInstListCmd.Flags().AddFlagSet(Match_Engine_RequestFlagSet)
 }
 
 func Match_Engine_ApiAllowNoConfig() {
@@ -1048,7 +1048,7 @@ func Match_Engine_ApiAllowNoConfig() {
 	GetLocationCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 	RegisterClientCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupAddNoConfigFlagSet)
-	GetCloudletsCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
+	GetAppInstListCmd.Flags().AddFlagSet(Match_Engine_RequestNoConfigFlagSet)
 }
 
 func parseDynamicLocGroupAddEnums() error {

@@ -8,7 +8,7 @@ tests:
     loops: 2
   - includefile: add_delete_2apps.yml
     loops: 2
-  - includefile: get_cloudlets.yml
+  - includefile: get_appinstlist.yml
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: verify_loc.yml
