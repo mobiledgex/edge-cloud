@@ -1,0 +1,43 @@
+##
+##
+description: adds dataset with 10 appinstlist and 2 apps. Does get appinstlist for all or just one app
+
+tests:
+
+- name: create and verify provisioning 10 appinstlist 
+  actions: [ctrlapi-create,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_10.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/show10.yml"
+    filetype: appdata
+
+- includefile: register.yml
+
+- name: get appinstlist
+  actions: [dmeapi-getappinstlist] 
+  apifile: "{{datadir}}/mer_get_appinstlist_all.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getappinstlist.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_all.yml"
+     filetype: getappinstlist
+
+- name: stop and restart dme
+  actions: [stop=dme1,start=dme1,sleep=1]
+
+- name: get appinstlist
+  actions: [dmeapi-getappinstlist]
+  apifile: "{{datadir}}/mer_get_appinstlist_all.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getappinstlist.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_all.yml"
+     filetype: getappinstlist
+ 
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_10.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
