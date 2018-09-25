@@ -103,11 +103,11 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		}
 		apiRequest.MatchEngineRequest.VerifyLocToken = token
 		dmereply, dmeerror = client.VerifyLocation(ctx, &apiRequest.MatchEngineRequest)
-	case "getcloudlets":
+	case "getappinstlist":
 		// unlike the other responses, this is a slice of multiple entries which needs
 		// to be sorted to allow a consistent yaml compare
 		log.Printf("DME REQUEST: %+v\n", apiRequest.MatchEngineRequest)
-		mel, err := client.GetCloudlets(ctx, &apiRequest.MatchEngineRequest)
+		mel, err := client.GetAppInstList(ctx, &apiRequest.MatchEngineRequest)
 		if err == nil {
 			sort.Slice((*mel).Cloudlets, func(i, j int) bool {
 				return (*mel).Cloudlets[i].CloudletName < (*mel).Cloudlets[j].CloudletName
