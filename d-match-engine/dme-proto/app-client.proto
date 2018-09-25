@@ -145,15 +145,15 @@ message CloudletLocation {
      repeated Appinstance Appinstances = 5;
 }
 
-message Match_Engine_Cloudlet_List {
+message Match_Engine_AppInst_List {
   uint32 ver = 1;
   // Status of the reply
-  enum CL_Status {
-    CL_UNDEFINED = 0;
-    CL_SUCCESS = 1;
-    CL_FAIL = 2;
+  enum AI_Status {
+    AI_UNDEFINED = 0;
+    AI_SUCCESS = 1;
+    AI_FAIL = 2;
   }
-  CL_Status Status = 2;
+  AI_Status Status = 2;
   repeated CloudletLocation Cloudlets = 3;
 }
 
@@ -194,7 +194,7 @@ service Match_Engine_Api {
   rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
   rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
   rpc AddUserToGroup(DynamicLocGroupAdd) returns (Match_Engine_Status) {}
-  rpc GetCloudlets(Match_Engine_Request) returns (Match_Engine_Cloudlet_List) {}
+  rpc GetAppInstList(Match_Engine_Request) returns (Match_Engine_AppInst_List) {}
 }
 
 

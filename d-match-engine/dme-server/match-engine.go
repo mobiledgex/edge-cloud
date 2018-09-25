@@ -282,7 +282,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 
 }
 
-func getCloudlets(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_Cloudlet_List) {
+func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppInst_List) {
 	var tbl *carrierApps
 	tbl = carrierAppTbl
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
