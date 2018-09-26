@@ -87,12 +87,12 @@ type ControllerProcess struct {
 type DmeProcess struct {
 	process.DmeLocal
 	Hostname string
-	EnvVars  []map[string]string
+	EnvVars  map[string]string
 }
 type CrmProcess struct {
 	process.CrmLocal
 	Hostname string
-	EnvVars  []map[string]string
+	EnvVars  map[string]string
 }
 type LocSimProcess struct {
 	process.LocApiSimLocal
