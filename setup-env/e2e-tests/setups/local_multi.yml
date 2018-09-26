@@ -132,6 +132,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm2
@@ -142,6 +144,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm3
@@ -152,6 +156,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm4
@@ -162,6 +168,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm5
@@ -172,6 +180,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm6
@@ -182,6 +192,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm7
@@ -192,6 +204,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm8
@@ -202,6 +216,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm9
@@ -212,6 +228,8 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm10
@@ -222,4 +240,6 @@ crms:
        servercert: "{{tlsoutdir}}/localserver.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     - OS_AUTH_URL: ""
 
