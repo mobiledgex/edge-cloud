@@ -899,6 +899,11 @@ func StartProcesses(processName string, outputDir string) bool {
 			continue
 		}
 		if crm.Hostname == "localhost" || crm.Hostname == "127.0.0.1" {
+			for k, v := range crm.EnvVars {
+				//doing it this way means the variable is set for other commands too.
+				// Not ideal but not problematic, and only will happen on local process deploy
+				os.Setenv(k, v)
+			}
 			log.Printf("Starting CRM %+v\n", crm)
 			logfile := getLogFile(crm.Name, outputDir)
 			err := crm.Start(logfile, process.WithDebug("api,notify,mexos"))
@@ -912,13 +917,12 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != dme.Name {
 			continue
 		}
+
 		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
-			for _, e := range dme.EnvVars {
-				for k, v := range e {
-					//doing it this way means the variable is set for other commands too.
-					// Not ideal but not problematic, and only will happen on local process deploy
-					os.Setenv(k, v)
-				}
+			for k, v := range dme.EnvVars {
+				//doing it this way means the variable is set for other commands too.
+				// Not ideal but not problematic, and only will happen on local process deploy
+				os.Setenv(k, v)
 			}
 
 			log.Printf("Starting DME %+v\n", dme)
