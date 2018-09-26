@@ -84,8 +84,8 @@ dmes:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm2_external_ip}}"
   envvars:
-     - LOCAPI_USER: mexserver
-     - LOCAPI_PASSWD: seC2835!
+     LOCAPI_USER: mexserver
+     LOCAPI_PASSWD: seC2835!
 
 crms:
 - crmlocal:
