@@ -92,6 +92,7 @@ type DmeProcess struct {
 type CrmProcess struct {
 	process.CrmLocal
 	Hostname string
+	EnvVars  []map[string]string
 }
 type LocSimProcess struct {
 	process.LocApiSimLocal
