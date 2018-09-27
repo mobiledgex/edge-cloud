@@ -41,7 +41,9 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		ctrlp := ctrl.ControllerLocal
-		pnames = append(pnames, ctrlp.Name)
+		if ctrl.Hostname == "localhost" && ctrl.Hostname != "127.0.0.1" {
+			pnames = append(pnames, ctrlp.Name)
+		}
 		go util.ConnectController(&ctrlp, c)
 	}
 	for _, dme := range util.Deployment.Dmes {
@@ -50,7 +52,9 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		dmep := dme.DmeLocal
-		pnames = append(pnames, dmep.Name)
+		if dme.Hostname == "localhost" && dme.Hostname != "127.0.0.1" {
+			pnames = append(pnames, dmep.Name)
+		}
 		go util.ConnectDme(&dmep, c)
 	}
 	for _, crm := range util.Deployment.Crms {
@@ -59,7 +63,9 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		crmp := crm.CrmLocal
-		pnames = append(pnames, crmp.Name)
+		if crm.Hostname == "localhost" && crm.Hostname != "127.0.0.1" {
+			pnames = append(pnames, crmp.Name)
+		}
 		go util.ConnectCrm(&crmp, c)
 	}
 	allpass := true
