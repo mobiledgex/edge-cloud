@@ -170,6 +170,10 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
+			if cd.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "can't create cluster inst, crmRootLB is null")
+				return
+			}
 			err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
@@ -203,6 +207,10 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "remove cluster inst", "clusterinst", clusterInst)
+			if cd.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "can't remove cluster inst, crmRootLB is null")
+				return
+			}
 			err = MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
@@ -274,7 +282,11 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "create app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
+			if cd.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "can't create app inst, crmRootLB is null")
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "update kube config", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
 
 			err := updateKubeConfig(&clusterInst, cd.CRMRootLB)
 			if err != nil {
@@ -311,6 +323,10 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
 				info := edgeproto.AppInstInfo{Key: *key}
 				cd.AppInstInfoCache.Delete(&info, 0)
+				return
+			}
+			if cd.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "can't delete app inst, crmRootLB is null")
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "rootlb", cd.CRMRootLB, "appinst", appInst, "clusterinst", clusterInst)
