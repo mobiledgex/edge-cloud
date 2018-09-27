@@ -3,7 +3,7 @@ vars:
 - vm1_internal_ip: 127.0.0.1 
 - vm1_external_ip: 37.50.143.118
 - locverurl: "https://lvs.vse.telekom-dienste.de/verifyLocalisation"
-- toksrvurl: "https://mobile-token.telekom.de/its?followURL=https://dme.mobiledgex.net/verifyLoc"
+- toksrvurl: "https://mobile-token.telekom.de/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 
 cloudflare:
   zone: mobiledgex.net
