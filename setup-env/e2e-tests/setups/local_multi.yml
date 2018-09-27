@@ -103,8 +103,8 @@ dmes:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - LOCAPI_USER: mexserver
-     - LOCAPI_PASSWD: eC2835!
+     LOCAPI_USER: mexserver
+     LOCAPI_PASSWD: eC2835!
 
 - dmelocal:
     name: dme2
@@ -119,8 +119,8 @@ dmes:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - LOCAPI_USER: mexserver
-     - LOCAPI_PASSWD: eC2835!
+     LOCAPI_USER: mexserver
+     LOCAPI_PASSWD: eC2835!
   
 crms:
 - crmlocal:
@@ -133,7 +133,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm2
@@ -145,7 +145,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm3
@@ -157,7 +157,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm4
@@ -169,7 +169,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm5
@@ -181,7 +181,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm6
@@ -193,7 +193,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm7
@@ -205,7 +205,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm8
@@ -217,7 +217,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm9
@@ -229,7 +229,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm10
@@ -241,5 +241,5 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - OS_AUTH_URL: ""
+     OS_AUTH_URL: ""
 
