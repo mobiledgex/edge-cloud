@@ -30,6 +30,10 @@ var tlsOutDir = ""
 // this happens much faster, but occasionally it takes longer
 var maxWaitForServiceSeconds = 900 //15 min
 
+func isLocalIP(hostname string) bool {
+	return hostname == "localhost" || hostname == "127.0.0.1"
+}
+
 func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan util.ReturnCodeWithText)
@@ -41,7 +45,7 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		ctrlp := ctrl.ControllerLocal
-		if ctrl.Hostname == "localhost" && ctrl.Hostname != "127.0.0.1" {
+		if isLocalIP(ctrl.Hostname) {
 			pnames = append(pnames, ctrlp.Name)
 		}
 		go util.ConnectController(&ctrlp, c)
@@ -52,7 +56,7 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		dmep := dme.DmeLocal
-		if dme.Hostname == "localhost" && dme.Hostname != "127.0.0.1" {
+		if isLocalIP(dme.Hostname) {
 			pnames = append(pnames, dmep.Name)
 		}
 		go util.ConnectDme(&dmep, c)
@@ -63,7 +67,7 @@ func WaitForProcesses(processName string) bool {
 		}
 		numProcs += 1
 		crmp := crm.CrmLocal
-		if crm.Hostname == "localhost" && crm.Hostname != "127.0.0.1" {
+		if isLocalIP(crm.Hostname) {
 			pnames = append(pnames, crmp.Name)
 		}
 		go util.ConnectCrm(&crmp, c)
@@ -328,7 +332,7 @@ func StopProcesses(processName string) bool {
 			log.Printf("Error: unable to find process name %v in setup\n", processName)
 			return false
 		}
-		if hostName == "localhost" || hostName == "127.0.0.1" {
+		if isLocalIP(hostName) {
 			//passing zero wait time to kill forcefully
 			go util.KillProcessesByName(processExeName, maxWait, processArgs, c)
 			log.Printf("kill result: %v\n", <-c)
@@ -451,7 +455,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			etcdRemoteServers[p.Hostname] = p.Name
 			foundServer = true
@@ -461,7 +465,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			influxRemoteServers[p.Hostname] = p.Name
 			foundServer = true
@@ -471,7 +475,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			ctrlRemoteServers[p.Hostname] = p.Name
 			foundServer = true
@@ -481,7 +485,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			crmRemoteServers[p.Hostname] = p.Name
 			foundServer = true
@@ -491,7 +495,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			dmeRemoteServers[p.Hostname] = p.Name
 			foundServer = true
@@ -501,7 +505,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			locApiSimulators[p.Hostname] = p.Name
 			foundServer = true
@@ -515,7 +519,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			tokSrvSimulators[p.Hostname] = p.Name
 			foundServer = true
@@ -525,7 +529,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
-		if p.Hostname != "" && p.Hostname != "localhost" && p.Hostname != "127.0.0.1" {
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			allRemoteServers[p.Hostname] = p.Name
 			sampleApps[p.Hostname] = p.Name
 			foundServer = true
@@ -816,7 +820,7 @@ func StopRemoteProcesses(processName string) bool {
 	if processName != "" {
 		hostName, processExeName, processArgs := findProcess(processName)
 
-		if hostName == "localHost" || hostName == "127.0.0.1" {
+		if isLocalIP(hostName) {
 			log.Printf("process %v is not remote\n", processName)
 			return true
 		}
@@ -854,7 +858,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != etcd.Name {
 			continue
 		}
-		if etcd.Hostname == "localhost" || etcd.Hostname == "127.0.0.1" {
+		if isLocalIP(etcd.Hostname) {
 			log.Printf("Starting Etcd %+v", etcd)
 			if processName == "" {
 				//only reset the data if this is a full start of all etcds
@@ -872,7 +876,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != influx.Name {
 			continue
 		}
-		if influx.Hostname == "localhost" || influx.Hostname == "127.0.0.1" {
+		if isLocalIP(influx.Hostname) {
 			log.Printf("Starting InfluxDB +%v", influx)
 			if processName == "" {
 				// only reset the data if this is a full start of all
@@ -890,7 +894,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != ctrl.Name {
 			continue
 		}
-		if ctrl.Hostname == "localhost" || ctrl.Hostname == "127.0.0.1" {
+		if isLocalIP(ctrl.Hostname) {
 			log.Printf("Starting Controller %+v\n", ctrl)
 			logfile := getLogFile(ctrl.Name, outputDir)
 			err := ctrl.Start(logfile, process.WithDebug("etcd,api,notify"))
@@ -904,7 +908,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != crm.Name {
 			continue
 		}
-		if crm.Hostname == "localhost" || crm.Hostname == "127.0.0.1" {
+		if isLocalIP(crm.Hostname) {
 			for k, v := range crm.EnvVars {
 				//doing it this way means the variable is set for other commands too.
 				// Not ideal but not problematic, and only will happen on local process deploy
@@ -924,7 +928,7 @@ func StartProcesses(processName string, outputDir string) bool {
 			continue
 		}
 
-		if dme.Hostname == "localhost" || dme.Hostname == "127.0.0.1" {
+		if isLocalIP(dme.Hostname) {
 			for k, v := range dme.EnvVars {
 				//doing it this way means the variable is set for other commands too.
 				// Not ideal but not problematic, and only will happen on local process deploy
@@ -944,7 +948,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != loc.Name {
 			continue
 		}
-		if loc.Hostname == "localhost" || loc.Hostname == "127.0.0.1" {
+		if isLocalIP(loc.Hostname) {
 			log.Printf("Starting LocSim %+v\n", loc)
 			if loc.Locfile != "" {
 				stageLocDbFile(loc.Locfile, "/var/tmp")
@@ -962,7 +966,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != tok.Name {
 			continue
 		}
-		if tok.Hostname == "localhost" || tok.Hostname == "127.0.0.1" {
+		if isLocalIP(tok.Hostname) {
 			log.Printf("Starting TokSim %+v\n", tok)
 			logfile := getLogFile(tok.Name, outputDir)
 			err := tok.Start(logfile)
@@ -976,7 +980,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != sam.Name {
 			continue
 		}
-		if sam.Hostname == "localhost" || sam.Hostname == "127.0.0.1" {
+		if isLocalIP(sam.Hostname) {
 			log.Printf("Starting Sample app %+v\n", sam)
 			logfile := getLogFile(sam.Name, outputDir)
 			err := sam.Start(logfile)
