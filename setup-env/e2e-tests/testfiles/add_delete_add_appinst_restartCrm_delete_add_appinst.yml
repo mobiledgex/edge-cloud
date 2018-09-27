@@ -1,0 +1,75 @@
+##
+##
+description: delete app instance after a crm restart
+
+tests:
+
+- name: deploy and start services
+  actions: [deploy,start,sleep=1]
+
+- name: verify services are running
+  actions: [status]
+
+- name: verify provisioning is empty to start
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
+
+- name: Add and show provisioning and verify it is there
+  apifile: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+    filetype: appdata
+
+
+- name: delete app instance, verify it is gone
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appinst1.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst0.yml"
+    filetype: appdata
+
+- name: add app back and verify it is there
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+    filetype: appdata
+
+- name: restart crm
+  actions: [stop=crm1,start=crm1]
+
+- name: show provisioning after restart and verify it is there
+  apifile: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+    filetype: appdata
+
+- name: delete one appinst
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-delete]
+
+- name: show provisioning after delete of appinst and verify it gone
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst0.yml"
+    filetype: appdata
+
+- name: re-add one appinst, verify it is there
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_clusterInst1_cloudlet1_appInst1.yml"
+    filetype: appdata
+
+
