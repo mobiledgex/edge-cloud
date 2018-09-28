@@ -1,0 +1,28 @@
+// proto-gen-cmd options
+// This is a separate file in case we plan to open source
+// the proto-gen-cmd code as it's own repo.
+
+syntax = "proto3";
+package protocmd;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MessageOptions {
+  // comma separated list of hierarchical paths for fields to
+  // not generate argument flags for Create/Delete/Update commands.
+  string noconfig = 52001;
+}
+
+extend google.protobuf.FieldOptions {
+  // hidetag is a string that can be used to hide fields on output objects.
+  // it will zero-out the field before generating output, which typically
+  // hides it (for json and our custom yaml)
+  string hidetag = 52002;
+}
+
+extend google.protobuf.MethodOptions {
+  // show stream output objects incrementally as they come, rather than
+  // collecting them into one output format. Only applies to commands
+  // that return a stream.
+  bool stream_out_incremental = 52003;
+}

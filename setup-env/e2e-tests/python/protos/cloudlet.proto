@@ -1,0 +1,152 @@
+// Cloudlet proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "annotations.proto";
+import "protogen.proto";
+import "protocmd.proto";
+import "operator.proto";
+import "result.proto";
+import "common.proto";
+import "loc.proto";
+import "gogo.proto";
+
+// CloudletKey uniquely identifies a Cloudlet.
+message CloudletKey {
+  // Operator of the cloudlet site
+  OperatorKey operator_key = 1 [(gogoproto.nullable) = false];
+  // Name of the cloudlet
+  string name = 2;
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
+// A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.
+message Cloudlet {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // URI to use to connect to and create and administer the Cloudlet. This is not the URI for applications clients to access their back-end instances.
+  string access_uri = 4 [(protogen.test_update) = true];
+  // Location of the Cloudlet site
+  distributed_match_engine.Loc location = 5 [(gogoproto.nullable) = false];
+  // Type of IP support provided by Cloudlet (see IpSupport)
+  IpSupport ip_support = 6;
+  // List of static IPs for static IP support
+  string static_ips = 7;
+  // Number of dynamic IPs available for dynamic IP support
+  int32 num_dynamic_ips = 8;
+  // Certs for accessing cloudlet site
+
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cud_test) = true;
+  option (protogen.generate_cud_streamout) = true;
+  option (protogen.generate_cache) = true;
+  option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
+}
+
+service CloudletApi {
+  // Create a Cloudlet
+  rpc CreateCloudlet(Cloudlet) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/create/cloudlet"
+      body: "*"
+    };
+  }
+  // Delete a Cloudlet
+  rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/delete/cloudet"
+      body: "*"
+    };
+    option (protocmd.stream_out_incremental) = true;
+  }
+  // Update a Cloudlet
+  rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
+    option (google.api.http) = {
+      post: "/update/cloudlet"
+      body: "*"
+    };
+  }
+  // Show Cloudlets
+  rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
+    option (google.api.http) = {
+      post: "/show/cloudlet"
+      body: "*"
+    };
+  }
+}
+
+// CloudletState is the state of the Cloudlet.
+enum CloudletState {
+  // Unknown
+  CloudletStateUnknown = 0;
+  // Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
+  CloudletStateErrors = 1;
+  // Cloudlet is created and ready
+  CloudletStateReady = 2;
+  // Cloudlet is offline (unreachable)
+  CloudletStateOffline = 3;
+  // Cloudlet is not present
+  CloudletStateNotPresent = 4;
+}
+
+// CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
+message CloudletInfo {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  CloudletKey key = 2 [(gogoproto.nullable) = false];
+  // State of cloudlet
+  CloudletState state = 3;
+  // Id of client assigned by server (internal use only)
+  int64 notify_id = 4;
+  // Maximum Ram in MB on the Cloudlet
+  uint64 os_max_ram = 6;
+  // Maximum number of VCPU cores on the Cloudlet
+  uint64 os_max_vcores = 7;
+  // Maximum amount of disk in GB on the Cloudlet
+  uint64 os_max_vol_gb = 8;
+  // Any errors encountered while making changes to the Cloudlet
+  repeated string errors = 9;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_cud) = true;
+  option (protogen.generate_cache) = true;
+  option (protogen.generate_show_test) = true;
+  option (protogen.notify_cache) = true;
+}
+
+service CloudletInfoApi {
+  // Show CloudletInfos
+  rpc ShowCloudletInfo(CloudletInfo) returns (stream CloudletInfo) {
+    option (google.api.http) = {
+      post: "/show/cloudletinfo"
+      body: "*"
+    };
+  }
+  // Inject (create) a CloudletInfo for regression testing
+  rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}
+  // Evict (delete) a CloudletInfo for regression testing
+  rpc EvictCloudletInfo(CloudletInfo) returns (Result) {}
+}
+
+// (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
+message CloudletMetrics {
+  // what goes here?
+  uint64 foo = 5;
+}
+
+service CloudletMetricsApi {
+  // Show Cloudlet metrics
+  rpc ShowCloudletMetrics(CloudletMetrics) returns (stream CloudletMetrics) {
+    option (google.api.http) = {
+      post: "/show/cloudletmetrics"
+      body: "*"
+    };
+  }
+}
