@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dme
+  labels:
+    app: dme
+spec:
+  selector:
+    matchLabels:
+      app: dme
+  template:
+    metadata:
+      labels:
+        app: dme
+    spec:
+      containers:
+      - name: dme
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0919
+        imagePullPolicy: Always
+        command:
+         - "dme-server"
+         - "--apiAddr"
+         - "0.0.0.0:50051"
+         - "--notifyAddrs"
+         - "controller:37001"
+         - "--d"
+         - "locapi,dmedb,dmereq"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"tef\"},\"name\":\"opennebulacloudlet\"}"
+        ports:
+         - containerPort: 50051
+           hostPort: 50051
+      imagePullSecrets:
+       - name: mexregistrysecret
+
