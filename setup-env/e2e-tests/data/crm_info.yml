@@ -121,7 +121,8 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  accesslayer: AccessLayerL7
+  ipaccess: IpAccessShared
+  accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
   cluster:
@@ -153,10 +154,20 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
+  mappedports:
+  - proto: LProtoTCP
+    internalport: 80
+    publicport: 10000
+  - proto: LProtoHTTP
+    internalport: 443
+    publicport: 443
+    publicpath: acmeappco/someapplication10/http443
+  - proto: LProtoUDP
+    internalport: 10002
+    publicport: 10002
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
+  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -183,9 +194,19 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
+  mappedports:
+  - proto: LProtoTCP
+    internalport: 80
+    publicport: 10000
+  - proto: LProtoHTTP
+    internalport: 443
+    publicport: 443
+    publicpath: acmeappco/someapplication10/http443
+  - proto: LProtoUDP
+    internalport: 10002
+    publicport: 10002
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
+  ipaccess: IpAccessShared
   state: Ready
 

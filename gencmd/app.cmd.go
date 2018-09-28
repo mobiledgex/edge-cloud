@@ -27,7 +27,6 @@ It has these top-level messages:
 	AppKey
 	App
 	AppInstKey
-	AppPort
 	AppInst
 	AppInstInfo
 	AppInstMetrics
@@ -96,18 +95,11 @@ var AppIn edgeproto.App
 var AppFlagSet = pflag.NewFlagSet("App", pflag.ExitOnError)
 var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
 var AppInImageType string
-var AppInAccessLayer string
+var AppInIpAccess string
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",
 	"ImageTypeQCOW",
-}
-
-var AccessLayerStrings = []string{
-	"AccessLayerUnknown",
-	"AccessLayerL4",
-	"AccessLayerL7",
-	"AccessLayerL4L7",
 }
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
@@ -160,7 +152,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Key.Version)
 	s = append(s, in.ImagePath)
 	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
-	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
+	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, in.AccessPorts)
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
@@ -176,7 +168,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Key-Version")
 	s = append(s, "ImagePath")
 	s = append(s, "ImageType")
-	s = append(s, "AccessLayer")
+	s = append(s, "IpAccess")
 	s = append(s, "AccessPorts")
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
@@ -414,9 +406,9 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Key.DeveloperKey.Name, "key-developerkey-name", "", "Key.DeveloperKey.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
-	AppNoConfigFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
+	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
 	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
-	AppFlagSet.StringVar(&AppInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
+	AppFlagSet.StringVar(&AppInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
@@ -445,13 +437,13 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("key-version").Changed {
 		AppIn.Fields = append(AppIn.Fields, "2.3")
 	}
-	if AppNoConfigFlagSet.Lookup("imagepath").Changed {
+	if AppFlagSet.Lookup("imagepath").Changed {
 		AppIn.Fields = append(AppIn.Fields, "4")
 	}
 	if AppFlagSet.Lookup("imagetype").Changed {
 		AppIn.Fields = append(AppIn.Fields, "5")
 	}
-	if AppFlagSet.Lookup("accesslayer").Changed {
+	if AppFlagSet.Lookup("ipaccess").Changed {
 		AppIn.Fields = append(AppIn.Fields, "6")
 	}
 	if AppFlagSet.Lookup("accessports").Changed {
@@ -481,18 +473,18 @@ func parseAppEnums() error {
 			return errors.New("Invalid value for AppInImageType")
 		}
 	}
-	if AppInAccessLayer != "" {
-		switch AppInAccessLayer {
-		case "AccessLayerUnknown":
-			AppIn.AccessLayer = edgeproto.AccessLayer(0)
-		case "AccessLayerL4":
-			AppIn.AccessLayer = edgeproto.AccessLayer(1)
-		case "AccessLayerL7":
-			AppIn.AccessLayer = edgeproto.AccessLayer(2)
-		case "AccessLayerL4L7":
-			AppIn.AccessLayer = edgeproto.AccessLayer(3)
+	if AppInIpAccess != "" {
+		switch AppInIpAccess {
+		case "IpAccessUnknown":
+			AppIn.IpAccess = edgeproto.IpAccess(0)
+		case "IpAccessDedicated":
+			AppIn.IpAccess = edgeproto.IpAccess(1)
+		case "IpAccessDedicatedOrShared":
+			AppIn.IpAccess = edgeproto.IpAccess(2)
+		case "IpAccessShared":
+			AppIn.IpAccess = edgeproto.IpAccess(3)
 		default:
-			return errors.New("Invalid value for AppInAccessLayer")
+			return errors.New("Invalid value for AppInIpAccess")
 		}
 	}
 	return nil

@@ -14,6 +14,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
@@ -47,10 +48,11 @@ type templateFill struct {
 	ImageFlavor, Location, RootLB, ResourceGroup            string
 	StorageSpec, NetworkScheme, MasterFlavor, Topology      string
 	NodeFlavor, Operator, Key, Image, Options               string
-	ImageType, AppURI, ProxyPath, PortMap, PathMap          string
-	AccessLayer, ExternalNetwork, Project                   string
-	ExternalRouter, Flags, KubeManifest                     string
+	ImageType, AppURI, ProxyPath                            string
+	ExternalNetwork, Project                                string
+	ExternalRouter, Flags, IpAccess                         string
 	NumMasters, NumNodes                                    int
+	Command                                                 []string
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
@@ -420,6 +422,33 @@ func templateUnmarshal(data *templateFill, yamltext string) (*Manifest, error) {
 	return mf, nil
 }
 
+func addPorts(mf *Manifest, appInst *edgeproto.AppInst) error {
+	for ii, _ := range appInst.MappedPorts {
+		port := &appInst.MappedPorts[ii]
+		if mf.Spec.Ports == nil {
+			mf.Spec.Ports = make([]PortDetail, 0)
+		}
+		mexproto, ok := dme.LProto_name[int32(port.Proto)]
+		if !ok {
+			return fmt.Errorf("invalid LProto %d", port.Proto)
+		}
+		proto := "UDP"
+		if port.Proto != dme.LProto_LProtoUDP {
+			proto = "TCP"
+		}
+		p := PortDetail{
+			Name:         fmt.Sprintf("%s%d", strings.ToLower(mexproto), port.InternalPort),
+			MexProto:     mexproto,
+			Proto:        proto,
+			InternalPort: int(port.InternalPort),
+			PublicPort:   int(port.PublicPort),
+			PublicPath:   port.PublicPath,
+		}
+		mf.Spec.Ports = append(mf.Spec.Ports, p)
+	}
+	return nil
+}
+
 func checkEnvironment() error {
 	cfkey := os.Getenv("MEX_CF_KEY")
 	if cfkey == "" {
@@ -500,13 +529,14 @@ spec:
   imagetype: {{.ImageType}}
   imageflavor: {{.ImageFlavor}}
   proxypath: {{.ProxyPath}}
-  portmap: {{.PortMap}} 
-  pathmap: {{.PathMap}}
   flavor: {{.Flavor}}
   uri: {{.AppURI}}
-  kubemanifest: {{.KubeManifest}}
-  accesslayer: {{.AccessLayer}}
+  ipaccess: {{.IpAccess}}
   networkscheme: {{.NetworkScheme}}
+  command:
+{{- range .Command}}
+  - {{.}}
+{{- end}}
 `
 
 var yamlMEXAppQcow2 = `apiVersion: v1
@@ -526,12 +556,9 @@ spec:
   imagetype: {{.ImageType}}
   imageflavor: {{.ImageFlavor}}
   proxypath: {{.ProxyPath}}
-  portmap: {{.PortMap}} 
-  pathmap: {{.PathMap}}
   flavor: {{.Flavor}}
   uri: {{.AppURI}}
-  kubemanifest: {{.KubeManifest}}
-  accesslayer: {{.AccessLayer}}
+  ipaccess: {{.IpAccess}}
   networkscheme: {{.NetworkScheme}}
 `
 
@@ -563,10 +590,6 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	if !ok {
 		return nil, fmt.Errorf("cannot find imagetype in map")
 	}
-	accessLayer, aok := edgeproto.AccessLayer_name[int32(appInst.AccessLayer)]
-	if !aok {
-		return nil, fmt.Errorf("cannot find accesslayer in map")
-	}
 	if clusterInst.Flavor.Name == "" {
 		return nil, fmt.Errorf("will not fill app template, invalid cluster flavor name")
 	}
@@ -575,6 +598,10 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	}
 	if appInst.Key.AppKey.Name == "" {
 		return nil, fmt.Errorf("will not fill app template, invalid appkey name")
+	}
+	ipAccess, ok := edgeproto.IpAccess_name[int32(appInst.IpAccess)]
+	if !ok {
+		return nil, fmt.Errorf("cannot find ipaccess in map")
 	}
 	if len(appInst.Key.AppKey.Name) < 3 {
 		log.DebugLog(log.DebugLevelMexos, "warning, very short appkey name", "name", appInst.Key.AppKey.Name)
@@ -594,10 +621,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 			ImageFlavor: appInst.Flavor.Name,
 			ProxyPath:   util.K8SSanitize(appInst.Key.AppKey.Name),
 			AppURI:      appInst.Uri,
-			//PortMap:      appInst.MappedPorts,
-			PathMap:      appInst.MappedPath,
-			AccessLayer:  accessLayer,
-			KubeManifest: appInst.Config, // 'Config' not the same as Kubernetes ConfigMap. Here, used by controller to send kubemanifest
+			IpAccess:    ipAccess,
+			Command:     strings.Split(appInst.Config, " "), //TODO: honor quote-escaped sequences
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {
@@ -605,21 +630,18 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 		}
 	case "ImageTypeQCOW":
 		data = templateFill{
-			Kind:        clusterInst.Flavor.Name,
-			Name:        appInst.Key.AppKey.Name,
-			Tags:        appInst.Key.AppKey.Name + "-qcow-tag",
-			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      appInst.Key.AppKey.Name + "-tenant",
-			Operator:    clusterInst.Key.CloudletKey.OperatorKey.Name,
-			RootLB:      rootLB.Name,
-			Image:       appInst.ImagePath,
-			ImageFlavor: appInst.Flavor.Name,
-			ImageType:   imageType,
-			ProxyPath:   appInst.Key.AppKey.Name,
-			AppURI:      appInst.Uri,
-			//PortMap:       appInst.MappedPorts,
-			PathMap:       appInst.MappedPath,
-			AccessLayer:   accessLayer,
+			Kind:          clusterInst.Flavor.Name,
+			Name:          appInst.Key.AppKey.Name,
+			Tags:          appInst.Key.AppKey.Name + "-qcow-tag",
+			Key:           clusterInst.Key.ClusterKey.Name,
+			Tenant:        appInst.Key.AppKey.Name + "-tenant",
+			Operator:      clusterInst.Key.CloudletKey.OperatorKey.Name,
+			RootLB:        rootLB.Name,
+			Image:         appInst.ImagePath,
+			ImageFlavor:   appInst.Flavor.Name,
+			ImageType:     imageType,
+			ProxyPath:     appInst.Key.AppKey.Name,
+			AppURI:        appInst.Uri,
 			NetworkScheme: "external-ip,external-network-shared",
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppQcow2)
@@ -628,6 +650,10 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 		}
 	default:
 		return nil, fmt.Errorf("unknown image type %s", imageType)
+	}
+	err = addPorts(mf, appInst)
+	if err != nil {
+		return nil, err
 	}
 	return mf, nil
 }
@@ -704,8 +730,13 @@ func runKubectlCreateApp(mf *Manifest) error {
 			return fmt.Errorf("can't add docker registry secret, %s, %v", out, err)
 		}
 	}
+	deploymentFile, err := genDeploymentFile(mf)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(deploymentFile)
 
-	out, err = sh.Command("kubectl", "create", "-f", mf.Spec.KubeManifest, "--kubeconfig="+kconf).Output()
+	out, err = sh.Command("kubectl", "create", "-f", deploymentFile, "--kubeconfig="+kconf).Output()
 	if err != nil {
 		return fmt.Errorf("error creating app, %s, %v, %v", out, mf, err)
 	}
@@ -747,7 +778,13 @@ func runKubectlDeleteApp(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("error deleting app due to kconf,  %v, %v", mf, err)
 	}
-	out, err := sh.Command("kubectl", "delete", "-f", mf.Spec.KubeManifest, "--kubeconfig="+kconf).CombinedOutput()
+	deploymentFile, err := genDeploymentFile(mf)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(deploymentFile)
+
+	out, err := sh.Command("kubectl", "delete", "-f", deploymentFile, "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
 	}

@@ -114,7 +114,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	cctx.SetOverride(&in.CrmOverride)
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CreateError {
 					cb.Send(&edgeproto.Result{Message: "Use DeleteClusterInst to fix CreateError state"})
 				}
@@ -243,7 +243,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DeleteError {
 				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to fix DeleteError state"})
 			}
@@ -358,6 +358,17 @@ func crmTransitionOk(cur edgeproto.TrackedState, next edgeproto.TrackedState) bo
 		}
 	case edgeproto.TrackedState_Deleting:
 		if next == edgeproto.TrackedState_NotPresent || next == edgeproto.TrackedState_DeleteError {
+			return true
+		}
+	}
+	return false
+}
+
+func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
+	if cctx.Override == edgeproto.CRMOverride_IgnoreTransientState {
+		if state == edgeproto.TrackedState_Creating ||
+			state == edgeproto.TrackedState_Updating ||
+			state == edgeproto.TrackedState_Deleting {
 			return true
 		}
 	}

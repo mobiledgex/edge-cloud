@@ -58,6 +58,15 @@ type FlavorDetailInfo struct {
 	Topology      string `json:"topology"`
 }
 
+type PortDetail struct {
+	Name         string `json:"name"`
+	MexProto     string `json:"mexproto"`
+	Proto        string `json:"proto"`
+	InternalPort int    `json:"internalport"`
+	PublicPort   int    `json:"publicport"`
+	PublicPath   string `json:"publicpath"`
+}
+
 //SpecDetail holds spec block
 type SpecDetail struct {
 	Flavor          string           `json:"flavor"` // appInst flavor?
@@ -67,17 +76,16 @@ type SpecDetail struct {
 	Image           string           `json:"image"`
 	ImageFlavor     string           `json:"imageflavor"`
 	ImageType       string           `json:"imagetype"`
-	AccessLayer     string           `json:"accesslayer"`
 	DockerRegistry  string           `json:"dockerregistry"`
 	ExternalNetwork string           `json:"externalnetwork"`
 	ExternalRouter  string           `json:"externalrouter"`
 	Options         string           `json:"options"`
 	ProxyPath       string           `json:"proxypath"`
-	PortMap         string           `json:"portmap"`
-	PathMap         string           `json:"pathmap"`
+	Ports           []PortDetail     `json:"ports"`
+	Command         []string         `json:"command"`
+	IpAccess        string           `json:"ipaccess"`
 	URI             string           `json:"uri"`
 	Key             string           `json:"key"`
-	KubeManifest    string           `json:"kubemanifest"`
 	NetworkScheme   string           `json:"networkscheme"`
 	Agent           AgentDetail      `json:"agent"`
 }

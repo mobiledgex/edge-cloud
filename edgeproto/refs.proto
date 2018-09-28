@@ -34,7 +34,10 @@ message CloudletRefs {
   uint64 used_disk = 6;
   // Used ports on root load balancer. Map key is public port, value is unused.
   map<int32, int32> root_lb_ports = 8;
-  // TODO track used static ips
+  // Used dynamic IPs
+  int32 used_dynamic_ips = 9;
+  // Used static IPs
+  string used_static_ips = 10;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

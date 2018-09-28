@@ -1,6 +1,7 @@
 package crmutil
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,16 +12,19 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/ghodss/yaml"
 
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 
 	"github.com/nanobox-io/golang-ssh"
@@ -143,6 +147,10 @@ func MEXInit() {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "mex environment", "mexEnv", mexEnv)
+}
+
+func init() {
+	k8sDeploymentSharedTmpl = template.Must(template.New("shared").Parse(yamlK8SDeploymentShared))
 }
 
 //MEXCheckEnvVars sets up environment vars and checks for credentials required for running
@@ -800,7 +808,11 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if err == nil {
 		if sd.Name == fqdn {
 			log.DebugLog(log.DebugLevelMexos, "mex agent exists", "fqdn", fqdn)
-			return nil
+			rootLB, err := getRootLB(fqdn)
+			if err != nil {
+				return fmt.Errorf("cannot find rootlb %s", fqdn)
+			}
+			return RunMEXOSAgentContainer(mf, rootLB)
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "proceed to create mex agent", "fqdn", fqdn)
@@ -831,6 +843,19 @@ func RunMEXAgentManifest(mf *Manifest) error {
 		log.DebugLog(log.DebugLevelMexos, "timeout waiting for agent to run", "name", rootLB.Name)
 		return fmt.Errorf("Error waiting for rootLB %v", err)
 	}
+	if err = ActivateFQDNA(mf, rootLB, rootLB.Name); err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "FQDN A record activated", "name", rootLB.Name)
+	err = AcquireCertificates(mf, rootLB, rootLB.Name) //fqdn name may be different than rootLB.Name
+	if err != nil {
+		return fmt.Errorf("can't acquire certificate for %s, %v", rootLB.Name, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "acquired certificates from letsencrypt", "name", rootLB.Name)
+	return RunMEXOSAgentContainer(mf, rootLB)
+}
+
+func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
 	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
 	if err != nil {
 		return err
@@ -844,15 +869,6 @@ func RunMEXAgentManifest(mf *Manifest) error {
 		log.DebugLog(log.DebugLevelMexos, "agent docker instance already running")
 		return nil
 	}
-	if err = ActivateFQDNA(mf, rootLB, rootLB.Name); err != nil {
-		return err
-	}
-	log.DebugLog(log.DebugLevelMexos, "FQDN A record activated", "name", rootLB.Name)
-	err = AcquireCertificates(mf, rootLB, rootLB.Name) //fqdn name may be different than rootLB.Name
-	if err != nil {
-		return fmt.Errorf("can't acquire certificate for %s, %v", rootLB.Name, err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "acquired certificates from letsencrypt", "name", rootLB.Name)
 	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
 		return fmt.Errorf("empty docker registry pass env var")
 	}
@@ -1355,6 +1371,57 @@ type kubernetesServiceAbbrev struct {
 	Spec ksaSpec `json:"spec"`
 }
 
+var k8sDeploymentSharedTmpl *template.Template
+
+var yamlK8SDeploymentShared = `apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Metadata.Name}}-service
+  labels:
+    run: {{.Metadata.Name}}
+spec:
+  type: LoadBalancer
+  ports:
+{{- range .Spec.Ports}}
+  - name: {{.Name}}
+    protocol: {{.Proto}}
+    port: {{.InternalPort}}
+    targetPort: {{.InternalPort}}
+{{- end}}
+  selector:
+    run: {{.Metadata.Name}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Metadata.Name}}-deployment
+spec:
+  selector:
+    matchLabels:
+      run: {{.Metadata.Name}}
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: {{.Metadata.Name}}
+    spec:
+      volumes:
+      imagePullSecrets:
+      - name: mexregistrysecret
+      containers:
+      - name: {{.Metadata.Name}}
+        image: {{.Spec.Image}}
+        imagePullPolicy: Always
+        ports:
+{{- range .Spec.Ports}}
+        - containerPort: {{.InternalPort}}
+{{- end}}
+        command:
+{{- range .Spec.Command}}
+        - "{{.}}"
+{{- end}}
+`
+
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
 func CreateKubernetesAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes app", "mf", mf)
@@ -1365,16 +1432,8 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if rootLB == nil {
 		return fmt.Errorf("cannot create kubernetes app manifest, rootLB is null")
 	}
-	if mf.Spec.KubeManifest == "" {
-		return fmt.Errorf("missing kubernetes spec")
-	}
 	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
 		return fmt.Errorf("empty app URI")
-	}
-	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
-	if !strings.HasPrefix(mf.Spec.KubeManifest, "http://") &&
-		!strings.HasPrefix(mf.Spec.KubeManifest, "https://") {
-		return fmt.Errorf("unsupported kubernetes spec %s", mf.Spec.KubeManifest)
 	}
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name for kubernetes deployment")
@@ -1395,6 +1454,11 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
+	deployment, err := genDeploymentString(mf)
+	if err != nil {
+		return err
+	}
+
 	log.DebugLog(log.DebugLevelMexos, "will launch app into existing cluster", "kubeconfig", kp.kubeconfig, "ipaddr", kp.ipaddr)
 	var cmd string
 	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
@@ -1428,31 +1492,29 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "created mexregistrysecret docker secret")
-	cmd = fmt.Sprintf("%s kubectl create -f %s", kp.kubeconfig, mf.Spec.KubeManifest)
+	cmd = fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, deployment)
+	out, err = kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error writing deployment, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "wrote deployment file")
+	cmd = fmt.Sprintf("%s kubectl create -f %s", kp.kubeconfig, mf.Metadata.Name)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest", "kubemanifest", mf.Spec.KubeManifest)
-	cmd = fmt.Sprintf("%s kubectl get svc %s-service -o json", kp.kubeconfig, mf.Metadata.Name)
-	out, err = kp.client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
-	}
-	svcData := &kubernetesServiceAbbrev{}
-	err = json.Unmarshal([]byte(out), svcData)
-	if err != nil {
-		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
-	for _, port := range svcData.Spec.Ports {
-		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.Port)
-		proxypath := mf.Spec.ProxyPath + port.Name
-		errs := AddPathReverseProxy(rootLB.Name, proxypath, origin)
+	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest")
+	for _, port := range mf.Spec.Ports {
+		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
+			// only handling L7 right now
+			continue
+		}
+		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
+		errs := AddPathReverseProxy(rootLB.Name, port.PublicPath, origin)
 		if errs != nil {
 			errmsg := fmt.Sprintf("%v", errs)
 			if strings.Contains(errmsg, "exists") {
-				log.DebugLog(log.DebugLevelMexos, "rproxy path already exists", "path", proxypath, "origin", origin)
+				log.DebugLog(log.DebugLevelMexos, "rproxy path already exists", "path", port.PublicPath, "origin", origin)
 			} else {
 				return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
 			}
@@ -1464,6 +1526,36 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", mf.Metadata.Name, "externalIPs", kp.ipaddr)
+	return nil
+}
+
+func genDeploymentString(mf *Manifest) (string, error) {
+	buf := &bytes.Buffer{}
+	err := genDeployment(mf, buf)
+	return buf.String(), err
+}
+
+func genDeploymentFile(mf *Manifest) (string, error) {
+	filename := mf.Metadata.Name + ".yaml"
+	outFile, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", fmt.Errorf("unable to write k8s deployment file %s: %s", filename, err.Error())
+	}
+	defer outFile.Close()
+	err = genDeployment(mf, outFile)
+	outFile.Sync()
+	return filename, err
+}
+
+func genDeployment(mf *Manifest, out io.Writer) error {
+	if mf.Spec.IpAccess == edgeproto.IpAccess_name[int32(edgeproto.IpAccess_IpAccessShared)] {
+		err := k8sDeploymentSharedTmpl.Execute(out, mf)
+		if err != nil {
+			return fmt.Errorf("unable to generate k8s deployment file: %s", err.Error())
+		}
+	} else {
+		return fmt.Errorf("MEX only supports shared ip access at this time")
+	}
 	return nil
 }
 
@@ -1520,8 +1612,18 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl apply -f %s", kp.kubeconfig, mf.Spec.KubeManifest)
+	deployment, err := genDeploymentString(mf)
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, deployment)
 	out, err := kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error writing deployment, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "wrote deployment file")
+	cmd = fmt.Sprintf("%s kubectl apply -f %s", kp.kubeconfig, mf.Metadata.Name)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error applying kubernetes manifest, %s, %s, %v", cmd, out, err)
 	}
@@ -1692,17 +1794,11 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if rootLB == nil {
 		return fmt.Errorf("cannot destroy kubernetes app manifest, rootLB is null")
 	}
-	if mf.Spec.KubeManifest == "" {
-		return fmt.Errorf("missing kubernetes spec")
-	}
 	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
 		return fmt.Errorf("empty app URI")
 	}
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
-	if !strings.HasPrefix(mf.Spec.KubeManifest, "http://") &&
-		!strings.HasPrefix(mf.Spec.KubeManifest, "https://") {
-		return fmt.Errorf("unsupported kubernetes spec %s", mf.Spec.KubeManifest)
-	}
+
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name for kubernetes deployment")
 	}
@@ -1722,27 +1818,19 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl get svc %s-service -o json", kp.kubeconfig, mf.Metadata.Name)
-	out, err := kp.client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error getting port for kubernetes service, %s, %s, %v", cmd, out, err)
-	}
-	svcData := &kubernetesServiceAbbrev{}
-	err = json.Unmarshal([]byte(out), svcData)
-	if err != nil {
-		return fmt.Errorf("can't unmarshall kubernetes service data, %v", err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "got ports for kubernetes service", "kubemanifest", mf.Spec.KubeManifest, "ports", svcData.Spec.Ports)
-	for _, port := range svcData.Spec.Ports {
-		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.Port)
-		proxypath := mf.Spec.ProxyPath + port.Name
-		errs := DeletePathReverseProxy(rootLB.Name, proxypath, origin)
+	for _, port := range mf.Spec.Ports {
+		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
+			// only handling L7 now
+			continue
+		}
+		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
+		errs := DeletePathReverseProxy(rootLB.Name, port.PublicPath, origin)
 		if errs != nil {
 			return fmt.Errorf("Errors deleting reverse proxy path, %v", errs)
 		}
 	}
-	cmd = fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, mf.Metadata.Name+"-service")
-	out, err = kp.client.Output(cmd)
+	cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, mf.Metadata.Name+"-service")
+	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes service, %s, %s, %v", cmd, out, err)
 	}
