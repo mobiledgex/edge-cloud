@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: controller
+  labels:
+    app: controller
+spec:
+  selector:
+    matchLabels:
+      app: controller
+  template:
+    metadata:
+      labels:
+        app: controller
+    spec:
+      containers:
+      - name: controller
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0919
+        imagePullPolicy: Always
+        command:
+         - "controller"
+         - "--apiAddr"
+         - "0.0.0.0:55001"
+         - "--httpAddr"
+         - "0.0.0.0:36001"
+         - "--notifyAddr"
+         - "0.0.0.0:37001"
+         - "--etcdUrls"  
+         - "mex-etcd-cluster:2379"
+         - "--d" 
+         - "etcd,api,notify"
+        ports:
+         - containerPort: 55001 
+           hostPort: 55001
+
+      imagePullSecrets:
+       - name: mexregistrysecret 
+
