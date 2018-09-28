@@ -1,0 +1,2 @@
+root@dev-instance-new-1:~/go/src/github.com/mobiledgex/edge-cloud/edgeproto# python3 -m grpc_tools.protoc -I. -I/root/go/src/github.com/mobiledgex/edge-cloud/vendor/github.com/gogo/googleapis -I/root/go/src/github.com/mobiledgex/edge-cloud/vendor -I/root/go/src --python_out=. --grpc_python_out=. cluster.proto
+
