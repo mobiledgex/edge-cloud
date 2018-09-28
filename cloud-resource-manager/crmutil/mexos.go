@@ -178,6 +178,9 @@ func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
 		return nil, err
 	}
 	setPlatConf(rootLB, mf)
+	if rootLB == nil {
+		log.DebugLog(log.DebugLevelMexos, "newrootlbmanifest, rootLB is null")
+	}
 	return rootLB, nil
 }
 
@@ -219,6 +222,9 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("can't create kubernetes cluster, rootLB is null")
 	}
 	if mf.Spec.Flavor == "" {
 		return fmt.Errorf("empty flavor")
@@ -475,6 +481,9 @@ func getRootLB(name string) (*MEXRootLB, error) {
 	if !ok {
 		return nil, fmt.Errorf("can't find rootlb %s", name)
 	}
+	if rootLB == nil {
+		log.DebugLog(log.DebugLevelMexos, "getrootlb, rootLB is null")
+	}
 	return rootLB, nil
 }
 
@@ -484,6 +493,9 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("can't delete kubernetes cluster, rootLB is null")
 	}
 	name := mf.Metadata.Name
 	if name == "" {
@@ -593,6 +605,9 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 //  It also sets up first basic network router and subnet, ready for running first MEX agent.
 func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	log.DebugLog(log.DebugLevelMexos, "enable rootlb", "name", rootLB)
+	if rootLB == nil {
+		return fmt.Errorf("cannot enable rootLB, rootLB is null")
+	}
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("enable rootlb, missing external network in manifest")
 	}
@@ -714,6 +729,10 @@ func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) 
 //  Idempotent, but don't call all the time.
 func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	log.DebugLog(log.DebugLevelMexos, "wait for rootlb", "name", rootLB)
+	if rootLB == nil {
+		return fmt.Errorf("cannot wait for lb, rootLB is null")
+	}
+
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("waiting for lb, missing external network in manifest")
 	}
@@ -747,12 +766,19 @@ func setPlatConfManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot set platform config manifest, rootLB is null")
+	}
 	setPlatConf(rootLB, mf)
 	return nil
 }
 
 func setPlatConf(rootLB *MEXRootLB, mf *Manifest) {
 	log.DebugLog(log.DebugLevelMexos, "rootlb platconf set", "rootlb", rootLB, "platconf", mf)
+	if rootLB == nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot set platconf, rootLB is null")
+	}
+
 	rootLB.PlatConf = mf
 }
 
@@ -781,6 +807,9 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	rootLB, err := getRootLB(fqdn)
 	if err != nil {
 		return fmt.Errorf("cannot find rootlb %s", fqdn)
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot run mex agent manifest, rootLB is null")
 	}
 	if mf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("missing external network")
@@ -959,6 +988,9 @@ func checkPEMFile(fn string) error {
 //AcquireCertificates obtains certficates from Letsencrypt over ACME. It should be used carefully. The API calls have quota.
 func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	log.DebugLog(log.DebugLevelMexos, "acquiring certificates for FQDN", "FQDN", fqdn)
+	if rootLB == nil {
+		return fmt.Errorf("cannot acquire certs, rootLB is null")
+	}
 	certRegistryURL := "http://registry.mobiledgex.net:8080/certs/" + fqdn //XXX parameterize this
 	url := certRegistryURL + "/fullchain.cer"                              // some clients require fullchain cert
 	certfile := "cert.pem"                                                 //XXX better file location
@@ -1046,6 +1078,10 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 
 //ActivateFQDNA updates and ensures FQDN is registered properly
 func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
+	if rootLB == nil {
+		return fmt.Errorf("cannot activate certs, rootLB is null")
+	}
+
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return fmt.Errorf("activate fqdn A record, missing external network in manifest")
 	}
@@ -1098,6 +1134,9 @@ type genericItems struct {
 //IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	log.DebugLog(log.DebugLevelMexos, "checking if cluster is ready", "rootLB", rootLB, "platconf", *rootLB.PlatConf)
+	if rootLB == nil {
+		return false, fmt.Errorf("cannot check if cluster is ready, rootLB is null")
+	}
 	cf, err := GetClusterFlavor(mf)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "invalid flavor kind can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
@@ -1193,6 +1232,9 @@ type clusterKubeconfig struct {
 //CopyKubeConfig copies over kubeconfig from the cluster
 func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
 	log.DebugLog(log.DebugLevelMexos, "copying kubeconfig", "name", name)
+	if rootLB == nil {
+		return fmt.Errorf("cannot copy kubeconfig, rootLB is null")
+	}
 	ipaddr, err := FindNodeIP(name)
 	if err != nil {
 		return err
@@ -1225,6 +1267,9 @@ func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
 //ProcessKubeconfig validates kubeconfig and saves it and creates a copy for proxy access
 func ProcessKubeconfig(rootLB *MEXRootLB, name string, port int, dat []byte) error {
 	log.DebugLog(log.DebugLevelMexos, "process kubeconfig file", "name", name)
+	if rootLB == nil {
+		return fmt.Errorf("cannot process kubeconfig, rootLB is null")
+	}
 	kc := &clusterKubeconfig{}
 	err := yaml.Unmarshal(dat, kc)
 	if err != nil {
@@ -1316,6 +1361,9 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot create kubernetes app manifest, rootLB is null")
 	}
 	if mf.Spec.KubeManifest == "" {
 		return fmt.Errorf("missing kubernetes spec")
@@ -1430,6 +1478,9 @@ type kubeParam struct {
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (*kubeParam, error) {
 	log.DebugLog(log.DebugLevelMexos, "validate kubernetes parameters rootLB", "rootLB", rootLB, "cluster", clustName)
+	if rootLB == nil {
+		return nil, fmt.Errorf("cannot validate kubernetes parameters, rootLB is null")
+	}
 	if rootLB.PlatConf == nil {
 		return nil, fmt.Errorf("validate kubernetes parameters, missing platform config")
 	}
@@ -1458,6 +1509,9 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot apply kubernetes manifest, rootLB is null")
 	}
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
@@ -1495,6 +1549,9 @@ func SetKubernetesConfigmapValues(rootLBName string, clustername string, confign
 	if err != nil {
 		return err
 	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot set kubeconfig map values, rootLB is null")
+	}
 	kp, err := ValidateKubernetesParameters(rootLB, clustername)
 	if err != nil {
 		return err
@@ -1525,6 +1582,9 @@ func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname strin
 	rootLB, err := getRootLB(rootLBName)
 	if err != nil {
 		return "", err
+	}
+	if rootLB == nil {
+		return "", fmt.Errorf("cannot get kubeconfigmap yaml, rootLB is null")
 	}
 	kp, err := ValidateKubernetesParameters(rootLB, clustername)
 	if err != nil {
@@ -1568,6 +1628,9 @@ func AddPathReverseProxy(rootLBName, path, origin string) []error {
 //  To be called after copying over the kubeconfig file from cluster to rootLB.
 func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 	log.DebugLog(log.DebugLevelMexos, "start kubectl proxy", "rootlb", rootLB, "kubeconfig", kubeconfig)
+	if rootLB == nil {
+		return 0, fmt.Errorf("cannot kubectl proxy, rootLB is null")
+	}
 	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
 		return 0, fmt.Errorf("start kubectl proxy, missing external network in platform config")
 	}
@@ -1625,6 +1688,9 @@ func DestroyKubernetesAppManifest(mf *Manifest) error {
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot destroy kubernetes app manifest, rootLB is null")
 	}
 	if mf.Spec.KubeManifest == "" {
 		return fmt.Errorf("missing kubernetes spec")

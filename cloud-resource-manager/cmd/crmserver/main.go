@@ -51,6 +51,7 @@ func main() {
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
 	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+	log.DebugLog(log.DebugLevelMexos, "rootlb name", "rootLBName", rootLBName)
 
 	OSEnvValid = ValidateOSEnv()
 
@@ -74,22 +75,10 @@ func main() {
 		log.DebugLog(log.DebugLevelMexos, "OS env valid")
 		crmutil.MEXInit()
 		go func() {
-			log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", rootLBName)
-			crmRootLB, cerr := crmutil.NewRootLB(rootLBName)
-			if cerr != nil {
-				log.DebugLog(log.DebugLevelMexos, "Can't get crm mex rootlb", "error", cerr)
-				return
+			initializePlatform(rootLBName)
+			if controllerData.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, crmRootLB is null")
 			}
-			log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
-			controllerData.CRMRootLB = crmRootLB
-			log.DebugLog(log.DebugLevelMexos, "init platform with key", "cloudletkeystr", *cloudletKeyStr)
-			err = crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "Error running MEX Agent", "error", err)
-				return
-			}
-			log.DebugLog(log.DebugLevelMexos, "init platform with cloudlet key ok")
-			//XXX we initialize platform when crmserver starts. But when do we clean up the platform?
 		}()
 	} else {
 		log.DebugLog(log.DebugLevelMexos, "OS env invalid")
@@ -198,4 +187,32 @@ func ValidateOSEnv() bool {
 	log.DebugLog(log.DebugLevelMexos, "Invalid environment, you may need to set OS_USERNAME, OS_PASSWORD, OS_TENANT_NAME, OS_AUTH_URL, OS_REGION_NAME, OS_CACERT")
 	//log.DebugLog(log.DebugLevelMexos, "Set", "osUser", osUser, "osPass", osPass, "osTenant", osTenant, "osAuthURL", osAuthURL, "osRegion", osRegion, "osCACert", osCACert)
 	return false
+}
+
+//initializePlatform creates a new basis anchor environment for a given
+//platform.
+//Must be called as a seperate goroutine.
+//we initialize platform when crmserver starts.
+//But when do we clean up the platform? There seems to be no
+//concept of platform cleanup in controller API.
+func initializePlatform(rootLBName string) {
+	log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", rootLBName)
+	crmRootLB, cerr := crmutil.NewRootLB(rootLBName)
+	if cerr != nil {
+		log.DebugLog(log.DebugLevelMexos, "Can't get crm mex rootlb", "error", cerr)
+		return
+	}
+	if crmRootLB == nil {
+		log.DebugLog(log.DebugLevelMexos, "crmRootLB is null")
+		return
+	}
+	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
+	controllerData.CRMRootLB = crmRootLB
+	log.DebugLog(log.DebugLevelMexos, "init platform with key", "cloudletkeystr", *cloudletKeyStr)
+	err := crmutil.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "Error running MEX Agent", "error", err)
+		return
+	}
+	log.DebugLog(log.DebugLevelMexos, "init platform with cloudlet key ok")
 }
