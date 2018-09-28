@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	ctls "crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -142,14 +144,35 @@ func main() {
 		log.FatalLog("Failed to create grpc gateway", "error", err)
 	}
 	mux.Handle("/", gw)
+	tlscfg := &ctls.Config{
+		MinVersion:               ctls.VersionTLS12,
+		CurvePreferences:         []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		},
+	}
+
 	httpServer := &http.Server{
-		Addr:    *httpAddr,
-		Handler: mux,
+		Addr:      *httpAddr,
+		Handler:   mux,
+		TLSConfig: tlscfg,
 	}
 	go func() {
 		// Serve REST gateway
-		if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
-			log.FatalLog("Failed to serve HTTP", "error", err)
+		if *tlsCertFile != "" {
+			tlsKeyFile := strings.Replace(*tlsCertFile, ".crt", ".key", -1)
+			if err := httpServer.ListenAndServeTLS(*tlsCertFile, tlsKeyFile); err != http.ErrServerClosed {
+				log.FatalLog("Failed to serve HTTP TLS", "error", err)
+			}
+		} else {
+			if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
+				log.FatalLog("Failed to serve HTTP", "error", err)
+			}
 		}
 	}()
 	defer httpServer.Shutdown(context.Background())
