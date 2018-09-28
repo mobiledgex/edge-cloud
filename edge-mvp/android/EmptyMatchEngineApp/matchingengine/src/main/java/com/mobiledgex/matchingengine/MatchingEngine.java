@@ -549,14 +549,14 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Cloudlet_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public AppClient.Match_Engine_AppInst_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return getCloudletList.call();
     }
 
-    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_AppInst_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return submit(getCloudletList);
