@@ -145,7 +145,11 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 			if namestr == "" && t.IncludeFile != "" {
 				namestr = "include: " + t.IncludeFile
 			}
-			fmt.Printf("%-30s %-50s ", indentstr+fileName, namestr+loopStr)
+			f := indentstr + fileName
+			if len(f) > 30 {
+				f = f[0:27] + "..."
+			}
+			fmt.Printf("%-30s %-60s ", f, namestr+loopStr)
 			if t.IncludeFile != "" {
 				if len(t.Actions) > 0 || t.Compareyaml.Yaml1 != "" {
 					log.Fatalf("Test %s cannot have both included files and actions or yaml compares\n", t.Name)
@@ -216,8 +220,8 @@ func main() {
 	validateArgs()
 	*outputDir = util.CreateOutputDir(!*notimestamp, *outputDir, commandName+".log")
 
-	fmt.Printf("\n%-30s %-50s Result\n", "Testfile", "Test")
-	fmt.Printf("-------------------------------------------------------------------------------------------\n")
+	fmt.Printf("\n%-30s %-60s Result\n", "Testfile", "Test")
+	fmt.Printf("-----------------------------------------------------------------------------------------------------\n")
 	if *testFile != "" {
 		dirName := path.Dir(*testFile)
 		fileName := path.Base(*testFile)
