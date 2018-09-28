@@ -1,0 +1,30 @@
+// Locations
+// For IOS, see:
+// https://developer.apple.com/documentation/corelocation/cllocation/1423718-init
+// For Android, see:
+// https://developer.android.com/reference/android/location/Location.html
+
+syntax = "proto3";
+package distributed_match_engine;
+
+import "timestamp.proto";
+
+message Loc {
+  // latitude in WGS 84 coordinates
+  double lat = 1;
+  // longitude in WGS 84 coordinates
+  double long = 2;
+  // horizontal accuracy (radius in meters)
+  double horizontal_accuracy = 3;
+  // veritical accuracy (meters)
+  double vertical_accuracy = 4;
+  // On android only lat and long are guaranteed to be supplied
+  // altitude in meters
+  double altitude = 5;
+  // course (IOS) / bearing (Android) (degrees east relative to true north)
+  double course = 6;
+  // speed (IOS) / velocity (Android) (meters/sec)
+  double speed = 7;
+  // timestamp
+  google.protobuf.Timestamp timestamp = 8;
+}

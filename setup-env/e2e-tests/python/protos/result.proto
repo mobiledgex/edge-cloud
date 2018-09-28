@@ -1,0 +1,14 @@
+// result
+
+syntax = "proto3";
+package edgeproto;
+
+import "annotations.proto";
+
+// Result is a generic object for returning the result of an API call. In general, result is not used. The error value returned by the GRPC API call is used instead.
+message Result {
+  // Message, may be success or failure message
+  string message = 1;
+  // Error code, 0 indicates success, non-zero indicates failure (not implemented)
+  int32 code = 2;
+}
