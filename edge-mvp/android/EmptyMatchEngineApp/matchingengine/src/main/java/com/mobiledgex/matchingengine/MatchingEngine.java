@@ -650,9 +650,9 @@ public class MatchingEngine {
         String outputDir = mContext.getFilesDir().getAbsolutePath();
         OkHttpSSLChannelHelper.copyAssets(mContext, "certs", outputDir);
 
-        String trustCaFilePath = outputDir+ "/mex-ca.crt";
-        String clientCertFilePath = outputDir+"/mex-client.crt";
-        String privateKeyFilePath = outputDir+ "/mex-client.key";
+        String trustCaFilePath = outputDir + "/mex-ca.crt";
+        String clientCertFilePath = outputDir + "/mex-client.crt";
+        String privateKeyFilePath = outputDir + "/mex-client.key";
 
         FileInputStream trustCAFis = null;
         FileInputStream clientCertFis = null;
