@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-nginx
+ 
+
+spec:
+  # tls:
+  # This assumes tls-secret exists.
+  #- secretName: mex-server-tls-secret
+  rules:
+  - http:
+      paths:
+      -  path: "/getdata"
+         backend:
+          serviceName: mobiledgexsdkdemo-service
+          servicePort: 80
+
+
