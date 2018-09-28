@@ -1,0 +1,13 @@
+tlscerts:
+- commonname: mex-server
+  dnsnames:
+    - localhost
+    - controller
+    - "*.mobiledgex.net"
+    - "*.dme.mobiledgex.net"
+    - "*.crm.mobiledgex.net"
+    - "*.ctrl.mobiledgex.net"
+  ips:
+    - 127.0.0.1
+    - 0.0.0.0
+
