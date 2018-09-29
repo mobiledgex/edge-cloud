@@ -549,14 +549,14 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Cloudlet_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public AppClient.Match_Engine_AppInst_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return getCloudletList.call();
     }
 
-    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<AppClient.Match_Engine_AppInst_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
         GetCloudletList getCloudletList = new GetCloudletList(this);
         getCloudletList.setRequest(request, timeoutInMilliseconds);
         return submit(getCloudletList);
@@ -648,11 +648,11 @@ public class MatchingEngine {
         // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
         // First, copy asset files to local storage
         String outputDir = mContext.getFilesDir().getAbsolutePath();
-        OkHttpSSLChannelHelper.copyAssets(mContext, "certs", outputDir);
+        OkHttpSSLChannelHelper.copyAssets(mContext, "mexcerts", outputDir);
 
-        String trustCaFilePath = outputDir+ "/mex-ca.crt";
-        String clientCertFilePath = outputDir+"/mex-client.crt";
-        String privateKeyFilePath = outputDir+ "/mex-client.key";
+        String trustCaFilePath = outputDir + "/mex-ca.crt";
+        String clientCertFilePath = outputDir + "/mex-client.crt";
+        String privateKeyFilePath = outputDir + "/mex-client.key";
 
         FileInputStream trustCAFis = null;
         FileInputStream clientCertFis = null;

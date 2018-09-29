@@ -324,6 +324,10 @@ public class NetworkManager {
     }
 
     private void logTransportCapabilities(NetworkCapabilities networkCapabilities) {
+        if (networkCapabilities == null) {
+            Log.w(TAG, " -- Network Capabilities: None/Null!");
+            return;
+        }
         Log.d(TAG, " -- networkCapabilities: TRANSPORT_CELLULAR: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR));
         Log.d(TAG, " -- networkCapabilities: TRANSPORT_WIFI: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI));
         Log.d(TAG, " -- networkCapabilities: TRANSPORT_BLUETOOTH: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_BLUETOOTH));
