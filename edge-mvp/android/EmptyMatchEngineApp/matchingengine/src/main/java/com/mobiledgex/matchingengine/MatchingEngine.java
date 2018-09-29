@@ -648,7 +648,7 @@ public class MatchingEngine {
         // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
         // First, copy asset files to local storage
         String outputDir = mContext.getFilesDir().getAbsolutePath();
-        OkHttpSSLChannelHelper.copyAssets(mContext, "certs", outputDir);
+        OkHttpSSLChannelHelper.copyAssets(mContext, "mexcerts", outputDir);
 
         String trustCaFilePath = outputDir + "/mex-ca.crt";
         String clientCertFilePath = outputDir + "/mex-client.crt";

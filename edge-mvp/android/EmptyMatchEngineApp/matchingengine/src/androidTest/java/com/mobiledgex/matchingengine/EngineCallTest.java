@@ -91,7 +91,6 @@ public class EngineCallTest {
         }
     }
 
-    @Before
     public void installTestCertificates() {
         Context context = InstrumentationRegistry.getTargetContext();
 
