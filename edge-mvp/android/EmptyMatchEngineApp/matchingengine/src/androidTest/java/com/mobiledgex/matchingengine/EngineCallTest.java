@@ -1,6 +1,7 @@
 package com.mobiledgex.matchingengine;
 
 import android.content.Context;
+import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -14,7 +15,12 @@ import org.junit.runner.RunWith;
 
 import android.os.Build;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -34,7 +40,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import javax.net.ssl.SSLException;
-
 
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
@@ -56,6 +61,57 @@ public class EngineCallTest {
                             + " android.permission.ACCESS_COARSE_LOCATION");
 
         }
+    }
+
+    private void copyFile(File source, File destination) {
+        FileChannel inputChannel = null;
+        FileChannel outputChannel = null;
+        try {
+            inputChannel = new FileInputStream(source).getChannel();
+            outputChannel = new FileOutputStream(destination).getChannel();
+            outputChannel.transferFrom(inputChannel, 0, inputChannel.size());
+        } catch (IOException ioe) {
+            assertFalse(ioe.getMessage(), true);
+        } finally {
+            try {
+                if (inputChannel != null) {
+                    inputChannel.close();
+                }
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+            try {
+                if (outputChannel != null) {
+                    outputChannel.close();
+                }
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+
+        }
+    }
+
+    public void installTestCertificates() {
+        Context context = InstrumentationRegistry.getTargetContext();
+
+        // Open and write some certs the test "App" needs.
+        File filesDir = context.getFilesDir();
+        File externalFilesDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS).getPath());
+
+        // Read test only certs from Downloads folder, and copy them to filesDir.
+        String [] fileNames = {
+                "mex-ca.crt",
+                "mex-client.crt",
+                "mex-client.key"
+        };
+        for (int i = 0; i < fileNames.length; i++) {
+            File srcFile = new File(externalFilesDir.getAbsolutePath() + "/" + fileNames[i]);
+            File destFile = new File(filesDir.getAbsolutePath() + "/" + fileNames[i]);
+            copyFile(srcFile, destFile);
+        }
+
+
     }
 
     /**
@@ -235,7 +291,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location loc = createLocation("registerClientTest", -122.149349, 37.459609);
+        Location loc = createLocation("registerClientTest", 122.3321, 47.6062);
 
         try {
             setMockLocation(context, loc);
@@ -282,7 +338,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location loc = createLocation("RegisterClientFutureTest", -122.149349, 37.459609);
+        Location loc = createLocation("RegisterClientFutureTest", 122.3321, 47.6062);
 
         try {
             setMockLocation(context, loc);
@@ -318,7 +374,7 @@ public class EngineCallTest {
         me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
-        Location loc = createLocation("mexDisabledTest", -122.149349, 37.459609);
+        Location loc = createLocation("mexDisabledTest", 122.3321, 47.6062);
         boolean allRun = false;
 
         try {
@@ -386,7 +442,7 @@ public class EngineCallTest {
         me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
-        Location loc = createLocation("mexNetworkingDisabledTest", -122.149349, 37.459609);
+        Location loc = createLocation("mexNetworkingDisabledTest", 122.3321, 47.6062);
         boolean allRun = false;
 
         try {
@@ -404,8 +460,8 @@ public class EngineCallTest {
                     location);
 
             AppClient.Match_Engine_Status registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
-            if (registerStatusResponse.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS) {
-                assertFalse("mexNetworkDisabledTest: registerClient failed!", true);
+            if (registerStatusResponse.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_FAIL) {
+                assertFalse("mexNetworkDisabledTest: registerClient somehow succeeded!", true);
             }
         } catch (ExecutionException ee) {
             Log.e(TAG, Log.getStackTraceString(ee));
@@ -432,7 +488,7 @@ public class EngineCallTest {
         me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
-        Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
+        Location loc = createLocation("findCloudletTest", 122.3321, 47.6062);
 
 
         try {
@@ -478,7 +534,7 @@ public class EngineCallTest {
         me.setUUID(UUID.randomUUID());
         MexLocation mexLoc = new MexLocation(me);
 
-        Location loc = createLocation("findCloudletTest", -122.149349, 37.459609);
+        Location loc = createLocation("findCloudletTest", 122.3321, 47.6062);
 
         try {
             enableMockLocation(context, true);
@@ -519,7 +575,7 @@ public class EngineCallTest {
 
         try {
             enableMockLocation(context, true);
-            Location mockLoc = createLocation("verifyLocationTest", -122.149349, 37.459609);
+            Location mockLoc = createLocation("verifyLocationTest", 122.3321, 47.6062);
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
@@ -566,7 +622,7 @@ public class EngineCallTest {
 
         try {
             enableMockLocation(context, true);
-            Location mockLoc = createLocation("verifyLocationFutureTest", -122.149349, 37.459609);
+            Location mockLoc = createLocation("verifyLocationFutureTest", 122.3321, 47.6062);
             setMockLocation(context, mockLoc);
             Location location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
 
@@ -655,7 +711,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Loc response = null;
 
         enableMockLocation(context,true);
-        Location loc = createLocation("getLocationTest", -122.149349, 37.459609);
+        Location loc = createLocation("getLocationTest", 122.3321, 47.6062);
 
         String carrierName = getCarrierName(context);
         try {
@@ -712,7 +768,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Loc response = null;
 
         enableMockLocation(context,true);
-        Location loc = createLocation("getLocationTest", -122.149349, 37.459609);
+        Location loc = createLocation("getLocationTest", 122.3321, 47.6062);
 
         String carrierName = getCarrierName(context);
         try {
@@ -764,7 +820,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location location = createLocation("createDynamicLocationGroupAddTest", -122.149349, 37.459609);
+        Location location = createLocation("createDynamicLocationGroupAddTest", 122.3321, 47.6062);
         MexLocation mexLoc = new MexLocation(me);
 
         String carrierName = getCarrierName(context);
@@ -810,7 +866,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location location = createLocation("createDynamicLocationGroupAddTest", -122.149349, 37.459609);
+        Location location = createLocation("createDynamicLocationGroupAddTest", 122.3321, 47.6062);
         MexLocation mexLoc = new MexLocation(me);
 
         String carrierName = getCarrierName(context);
@@ -857,7 +913,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location location = createLocation("getCloudletListTest", -122.149349, 37.459609);
+        Location location = createLocation("getCloudletListTest", 122.3321, 47.6062);
         MexLocation mexLoc = new MexLocation(me);
 
         try {
@@ -868,10 +924,10 @@ public class EngineCallTest {
             registerClient(me.retrieveNetworkCarrierName(context), me, location);
             MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
-            AppClient.Match_Engine_Cloudlet_List list = me.getCloudletList(request, GRPC_TIMEOUT_MS);
+            AppClient.Match_Engine_AppInst_List list = me.getCloudletList(request, GRPC_TIMEOUT_MS);
 
             assertEquals(list.getVer(), 0);
-            assertEquals(list.getStatus(), AppClient.Match_Engine_Cloudlet_List.CL_Status.CL_UNDEFINED);
+            assertEquals(list.getStatus(), AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED);
             assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
@@ -902,7 +958,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location location = createLocation("getCloudletListFutureTest", -122.149349, 37.459609);
+        Location location = createLocation("getCloudletListFutureTest", 122.3321, 47.6062);
         MexLocation mexLoc = new MexLocation(me);
 
         try {
@@ -913,11 +969,11 @@ public class EngineCallTest {
             registerClient(me.retrieveNetworkCarrierName(context), me, location);
             MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
-            Future<AppClient.Match_Engine_Cloudlet_List> listFuture = me.getCloudletListFuture(request, GRPC_TIMEOUT_MS);
-            AppClient.Match_Engine_Cloudlet_List list = listFuture.get();
+            Future<AppClient.Match_Engine_AppInst_List> listFuture = me.getCloudletListFuture(request, GRPC_TIMEOUT_MS);
+            AppClient.Match_Engine_AppInst_List list = listFuture.get();
 
             assertEquals(list.getVer(), 0);
-            assertEquals(list.getStatus(), AppClient.Match_Engine_Cloudlet_List.CL_Status.CL_UNDEFINED);
+            assertEquals(list.getStatus(), AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED);
             assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
