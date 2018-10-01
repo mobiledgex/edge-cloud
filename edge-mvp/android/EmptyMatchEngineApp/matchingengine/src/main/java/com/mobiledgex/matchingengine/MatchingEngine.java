@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
-import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -17,11 +16,8 @@ import android.telephony.TelephonyManager;
 import com.google.protobuf.ByteString;
 import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
 
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.security.Key;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -544,22 +540,22 @@ public class MatchingEngine {
     }
 
     /**
-     * Retrieve nearby Cloudlets (or AppInsts) for registered application. This is a blocking call.
+     * Retrieve nearby AppInsts for registered application. This is a blocking call.
      * @param request
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Cloudlet_List getCloudletList(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public AppClient.Match_Engine_AppInst_List getAppInstList(MatchingEngineRequest request, long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
-        GetCloudletList getCloudletList = new GetCloudletList(this);
-        getCloudletList.setRequest(request, timeoutInMilliseconds);
-        return getCloudletList.call();
+        GetAppInstList getAppInstList = new GetAppInstList(this);
+        getAppInstList.setRequest(request, timeoutInMilliseconds);
+        return getAppInstList.call();
     }
 
-    public Future<AppClient.Match_Engine_Cloudlet_List> getCloudletListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
-        GetCloudletList getCloudletList = new GetCloudletList(this);
-        getCloudletList.setRequest(request, timeoutInMilliseconds);
-        return submit(getCloudletList);
+    public Future<AppClient.Match_Engine_AppInst_List> getAppInstListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+        GetAppInstList getAppInstList = new GetAppInstList(this);
+        getAppInstList.setRequest(request, timeoutInMilliseconds);
+        return submit(getAppInstList);
     }
 
     //
@@ -588,7 +584,7 @@ public class MatchingEngine {
     /**
      * Checks if the Carrier + Phone combination supports WiFiCalling. This does not return whether it is enabled.
      * If under roaming conditions, WiFi Calling may disable cellular network data interfaces needed by
-     * cellular data only Distributed Matching Enigne and Cloudlet network operations.
+     * cellular data only Distributed Matching Engine and Cloudlet network operations.
      *
      * @return
      */
@@ -648,11 +644,11 @@ public class MatchingEngine {
         // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
         // First, copy asset files to local storage
         String outputDir = mContext.getFilesDir().getAbsolutePath();
-        OkHttpSSLChannelHelper.copyAssets(mContext, "certs", outputDir);
+        OkHttpSSLChannelHelper.copyAssets(mContext, "mexcerts", outputDir);
 
-        String trustCaFilePath = outputDir+ "/mex-ca.crt";
-        String clientCertFilePath = outputDir+"/mex-client.crt";
-        String privateKeyFilePath = outputDir+ "/mex-client.key";
+        String trustCaFilePath = outputDir + "/mex-ca.crt";
+        String clientCertFilePath = outputDir + "/mex-client.crt";
+        String privateKeyFilePath = outputDir + "/mex-client.key";
 
         FileInputStream trustCAFis = null;
         FileInputStream clientCertFis = null;
