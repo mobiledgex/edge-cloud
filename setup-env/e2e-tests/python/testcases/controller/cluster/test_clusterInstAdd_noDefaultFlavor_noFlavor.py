@@ -5,7 +5,7 @@
 #
 # create a cluster without a default flavor.
 # create a cluster instance without a flavor name.
-# verify error "Cluster flavor  not found" is returned because there is no flavor to add
+# verify error 'No ClusterFlavor specified and no default ClusterFlavor for Cluster' is returned because there is no flavor to add
 #
 import unittest
 import grpc
