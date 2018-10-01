@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# EDGECLOUD-172 able to delete a cluster which is in use by a cluster instance
+# EDGECLOUD-172 able to delete a cluster which is in use by a cluster instance - fixed
 
 #
 # create a cluster and cluster instance
@@ -37,10 +37,6 @@ class tc(unittest.TestCase):
                                                     key = mex_key,
                                                     client_cert = mex_cert
                                                    ) 
-        #self.operator = mex_controller.Operator(operator_name = operator_name)
-        #self.cloudlet = mex_controller.Cloudlet(cloudlet_name = cloud_name,
-        #                                        operator_name = operator_name,
-        #                                        number_of_dynamic_ips = 254)
 
         self.cluster = mex_controller.Cluster(cluster_name=self.cluster_name,
                                          default_flavor_name=flavor_name)
@@ -49,9 +45,6 @@ class tc(unittest.TestCase):
                                                              operator_name=operator_name,
                                                              flavor_name=flavor_name)
 
-        #self.controller.create_operator(self.operator.operator)
-        #self.controller.create_cloudlet(self.cloudlet.cloudlet)
-        
     def test_DeleteClusterBeforeClusterInstance(self):
         # print the existing cluster instances
         self.controller.show_cluster_instances()
@@ -86,8 +79,6 @@ class tc(unittest.TestCase):
     def tearDown(self):
         self.controller.delete_cluster_instance(self.cluster_instance.cluster_instance)
         self.controller.delete_cluster(self.cluster.cluster)
-    #    self.controller.delete_cloudlet(self.cloudlet.cloudlet)
-    #    self.controller.create_operator(self.operator.operator)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(tc)
