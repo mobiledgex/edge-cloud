@@ -14,14 +14,14 @@ import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
-public class GetCloudletList implements Callable {
+public class GetAppInstList implements Callable {
     public static final String TAG = "GetLocation";
 
     private MatchingEngine mMatchingEngine;
     private MatchingEngineRequest mRequest;
     private long mTimeoutInMilliseconds = -1;
 
-    GetCloudletList(MatchingEngine matchingEngine) {
+    GetAppInstList(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 

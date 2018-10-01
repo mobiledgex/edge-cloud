@@ -17,7 +17,6 @@ import android.os.Build;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -26,7 +25,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
-import distributed_match_engine.DynamicLocationGroup;
 import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
@@ -38,8 +36,6 @@ import static org.junit.Assert.assertTrue;
 import android.location.Location;
 import android.telephony.TelephonyManager;
 import android.util.Log;
-
-import javax.net.ssl.SSLException;
 
 @RunWith(AndroidJUnit4.class)
 public class EngineCallTest {
@@ -247,7 +243,7 @@ public class EngineCallTest {
                 .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
                 .setDevName("EmptyMatchEngineApp") // From signing certificate?
                 .setAppName("EmptyMatchEngineApp")
-                .setAppVers("1") // Or versionName, which is visual name?
+                .setAppVers("1.0") // Or versionName, which is visual name?
                 .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
                 .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
                 .build();
@@ -321,8 +317,8 @@ public class EngineCallTest {
         assertEquals("Sessions must be equal.", response.getSessionCookie(), me.getSessionCookie());
         // Temporary.
         Log.i(TAG, "registerClientTest response: " + response.toString());
-        assertEquals(response.getVer(), 0);
-        assertEquals(response.getStatus(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
+        assertEquals(0, response.getVer());
+        assertEquals(AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS, response.getStatus());
     }
 
     @Test
@@ -362,8 +358,8 @@ public class EngineCallTest {
         assertEquals("Sessions must be equal.", response.getSessionCookie(), me.getSessionCookie());
         // Temporary.
         Log.i(TAG, "registerClientFutureTest() response: " + response.toString());
-        assertEquals(response.getVer(), 0);
-        assertEquals(response.getStatus(), AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS);
+        assertEquals(0, response.getVer());
+        assertEquals(AppClient.Match_Engine_Status.ME_Status.ME_SUCCESS, response.getStatus());
     }
 
     @Test
@@ -443,8 +439,8 @@ public class EngineCallTest {
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = createLocation("mexNetworkingDisabledTest", 122.3321, 47.6062);
-        boolean allRun = false;
 
+        AppClient.Match_Engine_Status registerStatusResponse = null;
         try {
             enableMockLocation(context, true);
             setMockLocation(context, loc);
@@ -459,7 +455,7 @@ public class EngineCallTest {
                     50051,
                     location);
 
-            AppClient.Match_Engine_Status registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
+            registerStatusResponse = me.registerClient(request, GRPC_TIMEOUT_MS);
             if (registerStatusResponse.getStatus() != AppClient.Match_Engine_Status.ME_Status.ME_FAIL) {
                 assertFalse("mexNetworkDisabledTest: registerClient somehow succeeded!", true);
             }
@@ -468,7 +464,7 @@ public class EngineCallTest {
             assertFalse("mexNetworkingDisabledTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.e(TAG, Log.getStackTraceString(sre));
-            assertFalse("mexNetworkingDisabledTest: StatusRuntimeException!", true);
+            assertTrue("mexNetworkDisabledTest: registerClient non-null, and somehow succeeded!",registerStatusResponse == null);
         } catch (InterruptedException ie) {
             Log.e(TAG, Log.getStackTraceString(ie));
             assertFalse("mexNetworkingDisabledTest: InterruptedException!", true);
@@ -479,7 +475,7 @@ public class EngineCallTest {
     }
 
     @Test
-    public void findCloudletTest() {
+    public void findAppInstTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         AppClient.Match_Engine_Status registerResponse;
         FindCloudletResponse cloudletResponse = null;
@@ -517,8 +513,7 @@ public class EngineCallTest {
 
         if (cloudletResponse != null) {
             // Temporary.
-            assertEquals(cloudletResponse.service_ip, cloudletResponse.service_ip);
-            assertEquals("Sessions must match.", cloudletResponse.sessionCookie, "");
+            assertEquals("Sessions must match.", "", cloudletResponse.sessionCookie);
         } else {
             assertFalse("No findCloudlet response!", false);
         }
@@ -558,8 +553,7 @@ public class EngineCallTest {
         }
 
         // Temporary.
-        assertEquals(result.service_ip, result.service_ip);
-        assertEquals("SessionCookies must match.", result.sessionCookie, "");
+        assertEquals("SessionCookies must match.", "", result.sessionCookie);
 
     }
 
@@ -603,10 +597,9 @@ public class EngineCallTest {
 
 
         // Temporary.
-        assertEquals(response.getVer(), 0);
-        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH);
-    }
+        assertEquals(0, response.getVer());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN, response.getTowerStatus());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER, response.getGpsLocationStatus());    }
 
     @Test
     public void verifyLocationFutureTest() {
@@ -644,9 +637,9 @@ public class EngineCallTest {
 
 
         // Temporary.
-        assertEquals(response.getVer(), 0);
-        assertEquals(response.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(response.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH);
+        assertEquals(0, response.getVer());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN, response.getTowerStatus());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER, response.getGpsLocationStatus());
     }
 
 
@@ -693,9 +686,9 @@ public class EngineCallTest {
         }
 
         // Temporary.
-        assertEquals(verifyLocationResult.getVer(), 0);
-        assertEquals(verifyLocationResult.getTowerStatus(), AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN);
-        assertEquals(verifyLocationResult.getGpsLocationStatus(), AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH); // Based on test data.
+        assertEquals(0, verifyLocationResult.getVer());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.Tower_Status.TOWER_UNKNOWN, verifyLocationResult.getTowerStatus());
+        assertEquals(AppClient.Match_Engine_Loc_Verify.GPS_Location_Status.LOC_ERROR_OTHER, verifyLocationResult.getGpsLocationStatus()); // Based on test data.
 
     }
 
@@ -740,18 +733,18 @@ public class EngineCallTest {
 
         // Temporary.
         Log.i(TAG, "getLocation() response: " + response.toString());
-        assertEquals(response.getVer(), 0);
+        assertEquals(0, response.getVer());
 
-        assertEquals(response.getCarrierName(), carrierName);
-        assertEquals(response.getStatus(), AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND);
+        assertEquals(carrierName, response.getCarrierName());
+        assertEquals(AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND, response.getStatus());
 
-        assertEquals(response.getTower(), 0);
+        assertEquals(0, response.getTower());
         // FIXME: Server is currently a pure echo of client location.
-        assertEquals((int) response.getNetworkLocation().getLat(), (int) loc.getLatitude());
-        assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
+        assertEquals((int) loc.getLatitude(), (int) response.getNetworkLocation().getLat());
+        assertEquals((int) loc.getLongitude(), (int) response.getNetworkLocation().getLong());
 
         // Expected Invalid:
-        assertEquals("SessionCookies must match", response.getSessionCookie(), "");
+        assertEquals("SessionCookies must match", "", response.getSessionCookie());
 
     }
 
@@ -797,14 +790,14 @@ public class EngineCallTest {
 
         // Temporary.
         Log.i(TAG, "getLocationFutureTest() response: " + response.toString());
-        assertEquals(response.getVer(), 0);
-        assertEquals(response.getCarrierName(), carrierName);
-        assertEquals(response.getStatus(), AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND);
+        assertEquals(0, response.getVer());
+        assertEquals(carrierName, response.getCarrierName());
+        assertEquals(AppClient.Match_Engine_Loc.Loc_Status.LOC_FOUND, response.getStatus());
 
         assertEquals(response.getTower(), 0);
         // FIXME: Server is currently a pure echo of client location.
-        assertEquals((int) response.getNetworkLocation().getLat(), (int) loc.getLatitude());
-        assertEquals((int) response.getNetworkLocation().getLong(), (int) loc.getLongitude());
+        assertEquals((int) loc.getLatitude(), (int) response.getNetworkLocation().getLat());
+        assertEquals((int) loc.getLongitude(), (int) response.getNetworkLocation().getLong());
 
         assertEquals("SessionCookies must match", response.getSessionCookie(), "");
     }
@@ -903,7 +896,7 @@ public class EngineCallTest {
     }
 
     @Test
-    public void getCloudletListTest() {
+    public void getAppInstListTest() {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
@@ -924,31 +917,31 @@ public class EngineCallTest {
             registerClient(me.retrieveNetworkCarrierName(context), me, location);
             MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
-            AppClient.Match_Engine_AppInst_List list = me.getCloudletList(request, GRPC_TIMEOUT_MS);
+            AppClient.Match_Engine_AppInst_List list = me.getAppInstList(request, GRPC_TIMEOUT_MS);
 
-            assertEquals(list.getVer(), 0);
-            assertEquals(list.getStatus(), AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED);
-            assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
+            assertEquals(0, list.getVer());
+            assertEquals(AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
 
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("getCloudletListTest: ExecutionException!", true);
+            assertFalse("getAppInstListTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("getCloudletListTest: StatusRuntimeException!", true);
+            assertFalse("getAppInstListTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("getCloudletListTest: InterruptedException!", true);
+            assertFalse("getAppInstListTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
     }
 
     @Test
-    public void getCloudletListFutureTest() {
+    public void getAppInstListFutureTest() {
         Context context = InstrumentationRegistry.getContext();
 
         MatchingEngine me = new MatchingEngine(context);
@@ -958,7 +951,7 @@ public class EngineCallTest {
         AppClient.Match_Engine_Status response = null;
 
         enableMockLocation(context,true);
-        Location location = createLocation("getCloudletListFutureTest", 122.3321, 47.6062);
+        Location location = createLocation("getAppInstListFutureTest", 122.3321, 47.6062);
         MexLocation mexLoc = new MexLocation(me);
 
         try {
@@ -969,25 +962,25 @@ public class EngineCallTest {
             registerClient(me.retrieveNetworkCarrierName(context), me, location);
             MatchingEngineRequest request = createMockMatchingEngineRequest(me.retrieveNetworkCarrierName(context), me, location);
 
-            Future<AppClient.Match_Engine_AppInst_List> listFuture = me.getCloudletListFuture(request, GRPC_TIMEOUT_MS);
+            Future<AppClient.Match_Engine_AppInst_List> listFuture = me.getAppInstListFuture(request, GRPC_TIMEOUT_MS);
             AppClient.Match_Engine_AppInst_List list = listFuture.get();
 
-            assertEquals(list.getVer(), 0);
-            assertEquals(list.getStatus(), AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED);
-            assertEquals(list.getCloudletsCount(), 0); // NOTE: This is entirely test server dependent.
+            assertEquals(0, list.getVer());
+            assertEquals(AppClient.Match_Engine_AppInst_List.AI_Status.AI_UNDEFINED, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
 
         } catch (ExecutionException ee) {
             Log.i(TAG, Log.getStackTraceString(ee));
-            assertFalse("getCloudletListFutureTest: ExecutionException!", true);
+            assertFalse("getAppInstListFutureTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
             Log.i(TAG, Log.getStackTraceString(sre));
-            assertFalse("getCloudletListFutureTest: StatusRuntimeException!", true);
+            assertFalse("getAppInstListFutureTest: StatusRuntimeException!", true);
         } catch (InterruptedException ie) {
             Log.i(TAG, Log.getStackTraceString(ie));
-            assertFalse("getCloudletListFutureTest: InterruptedException!", true);
+            assertFalse("getAppInstListFutureTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);
         }
