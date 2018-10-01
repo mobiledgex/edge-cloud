@@ -14,14 +14,14 @@ import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
-public class GetCloudletList implements Callable {
+public class GetAppInstList implements Callable {
     public static final String TAG = "GetLocation";
 
     private MatchingEngine mMatchingEngine;
     private MatchingEngineRequest mRequest;
     private long mTimeoutInMilliseconds = -1;
 
-    GetCloudletList(MatchingEngine matchingEngine) {
+    GetAppInstList(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
@@ -43,13 +43,13 @@ public class GetCloudletList implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Cloudlet_List call()
+    public AppClient.Match_Engine_AppInst_List call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null || mRequest.matchEngineRequest == null) {
             throw new MissingRequestException("Usage error: GetCloudletList does not have a request object!");
         }
 
-        AppClient.Match_Engine_Cloudlet_List reply;
+        AppClient.Match_Engine_AppInst_List reply;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
@@ -60,7 +60,7 @@ public class GetCloudletList implements Callable {
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .getCloudlets(mRequest.matchEngineRequest);
+                    .getAppInstList(mRequest.matchEngineRequest);
 
 
 
