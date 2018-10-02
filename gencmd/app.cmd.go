@@ -157,7 +157,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
-	s = append(s, in.KubeTemplate)
+	s = append(s, in.AppTemplate)
 	return s
 }
 
@@ -174,7 +174,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
-	s = append(s, "KubeTemplate")
+	s = append(s, "AppTemplate")
 	return s
 }
 
@@ -415,7 +415,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
-	AppFlagSet.StringVar(&AppIn.KubeTemplate, "kubetemplate", "", "KubeTemplate")
+	AppFlagSet.StringVar(&AppIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -461,7 +461,7 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("cluster-name").Changed {
 		AppIn.Fields = append(AppIn.Fields, "10.1")
 	}
-	if AppFlagSet.Lookup("kubetemplate").Changed {
+	if AppFlagSet.Lookup("apptemplate").Changed {
 		AppIn.Fields = append(AppIn.Fields, "11")
 	}
 }

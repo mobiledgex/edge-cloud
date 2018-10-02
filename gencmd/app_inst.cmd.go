@@ -147,7 +147,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
-	s = append(s, in.KubeTemplate)
+	s = append(s, in.AppTemplate)
 	return s
 }
 
@@ -186,7 +186,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
-	s = append(s, "KubeTemplate")
+	s = append(s, "AppTemplate")
 	return s
 }
 
@@ -337,7 +337,7 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.AllocatedIp = ""
 	}
 	if _, found := tags["nocmp"]; found {
-		in.KubeTemplate = ""
+		in.AppTemplate = ""
 	}
 }
 
@@ -737,7 +737,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.KubeTemplate, "kubetemplate", "", "KubeTemplate")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -856,7 +856,7 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("allocatedip").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "17")
 	}
-	if AppInstNoConfigFlagSet.Lookup("kubetemplate").Changed {
+	if AppInstNoConfigFlagSet.Lookup("apptemplate").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "18")
 	}
 }

@@ -236,7 +236,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.ImagePath != new.ImagePath || old.ImageType != new.ImageType ||
-		old.Config != new.Config || old.KubeTemplate != new.KubeTemplate {
+		old.Config != new.Config || old.AppTemplate != new.AppTemplate {
 		log.DebugLog(log.DebugLevelApi, "updating image path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
@@ -245,7 +245,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 				inst.ImagePath = new.ImagePath
 				inst.ImageType = new.ImageType
 				inst.Config = new.Config
-				inst.KubeTemplate = new.KubeTemplate
+				inst.AppTemplate = new.AppTemplate
 				// TODO: update mapped ports if needed
 				if appInstApi.cache.NotifyCb != nil {
 					appInstApi.cache.NotifyCb(&inst.Key, old)

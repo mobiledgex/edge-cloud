@@ -50,7 +50,7 @@ type templateFill struct {
 	StorageSpec, NetworkScheme, MasterFlavor, Topology      string
 	NodeFlavor, Operator, Key, Image, Options               string
 	ImageType, AppURI, ProxyPath                            string
-	ExternalNetwork, Project, KubeTemplate                  string
+	ExternalNetwork, Project, AppTemplate                   string
 	ExternalRouter, Flags, IpAccess                         string
 	NumMasters, NumNodes                                    int
 	Command                                                 []string
@@ -534,7 +534,7 @@ spec:
   uri: {{.AppURI}}
   ipaccess: {{.IpAccess}}
   networkscheme: {{.NetworkScheme}}
-  kubemanifesttemplate: {{.KubeTemplate}}
+  kubemanifesttemplate: {{.AppTemplate}}
   command:
 {{- range .Command}}
   - {{.}}
@@ -611,21 +611,21 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	switch imageType {
 	case "ImageTypeDocker": //XXX assume kubernetes
 		data = templateFill{
-			Kind:         clusterInst.Flavor.Name,
-			Name:         util.K8SSanitize(appInst.Key.AppKey.Name),
-			Tags:         util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
-			Key:          clusterInst.Key.ClusterKey.Name,
-			Tenant:       util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
-			Operator:     util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
-			RootLB:       rootLB.Name,
-			Image:        appInst.ImagePath,
-			ImageType:    imageType,
-			ImageFlavor:  appInst.Flavor.Name,
-			ProxyPath:    util.K8SSanitize(appInst.Key.AppKey.Name),
-			AppURI:       appInst.Uri,
-			IpAccess:     ipAccess,
-			KubeTemplate: appInst.KubeTemplate,
-			Command:      strings.Split(appInst.Config, " "), //TODO: honor quote-escaped sequences
+			Kind:        clusterInst.Flavor.Name,
+			Name:        util.K8SSanitize(appInst.Key.AppKey.Name),
+			Tags:        util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
+			Key:         clusterInst.Key.ClusterKey.Name,
+			Tenant:      util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
+			Operator:    util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
+			RootLB:      rootLB.Name,
+			Image:       appInst.ImagePath,
+			ImageType:   imageType,
+			ImageFlavor: appInst.Flavor.Name,
+			ProxyPath:   util.K8SSanitize(appInst.Key.AppKey.Name),
+			AppURI:      appInst.Uri,
+			IpAccess:    ipAccess,
+			AppTemplate: appInst.AppTemplate,
+			Command:     strings.Split(appInst.Config, " "), //TODO: honor quote-escaped sequences
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {

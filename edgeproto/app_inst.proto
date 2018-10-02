@@ -68,14 +68,14 @@ message AppInst {
   // allocated IP for dedicated access
   string allocated_ip = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Template of kubernetes deployment yaml, from App definition
-  string kube_template = 18 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  string app_template = 18 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_wait_for_state) = "TrackedState";
-  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Uri,Liveness,ClusterInstKey,PublicIp,KubeTemplate";
+  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Uri,Liveness,ClusterInstKey,PublicIp,AppTemplate";
 }
 
 service AppInstApi {
