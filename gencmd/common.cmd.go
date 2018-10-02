@@ -26,10 +26,11 @@ var IpSupportStrings = []string{
 	"IpSupportDynamic",
 }
 
-var L4ProtoStrings = []string{
-	"L4ProtoUnknown",
-	"L4ProtoTCP",
-	"L4ProtoUDP",
+var IpAccessStrings = []string{
+	"IpAccessUnknown",
+	"IpAccessDedicated",
+	"IpAccessDedicatedOrShared",
+	"IpAccessShared",
 }
 
 var TrackedStateStrings = []string{
@@ -51,6 +52,7 @@ var CRMOverrideStrings = []string{
 	"NoOverride",
 	"IgnoreCRMErrors",
 	"IgnoreCRM",
+	"IgnoreTransientState",
 }
 
 func init() {

@@ -311,13 +311,24 @@ func (g *GenCmd) generateHideTagFields(parents []string, desc *generator.Descrip
 		hierField := strings.Join(append(parents, name), ".")
 
 		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := g.GetDesc(field.GetTypeName())
+			if tag != "" {
+				g.P("if _, found := tags[\"", tag, "\"]; found {")
+				if gensupport.IsRepeated(field) || gogoproto.IsNullable(field) {
+					g.P("in.", hierField, " = nil")
+				} else {
+					subType := g.FQTypeName(subDesc)
+					g.P("in.", hierField, " = ", subType, "{}")
+				}
+				g.P("}")
+				continue
+			}
 			idx := ""
 			if gensupport.IsRepeated(field) {
 				ii := fmt.Sprintf("i%d", len(parents))
 				g.P("for ", ii, " := 0; ", ii, " < len(in.", hierField, "); ", ii, "++ {")
 				idx = "[" + ii + "]"
 			}
-			subDesc := g.GetDesc(field.GetTypeName())
 			g.generateHideTagFields(append(parents, name+idx),
 				subDesc, append(visited, desc))
 			if gensupport.IsRepeated(field) {
