@@ -3,6 +3,7 @@ Install python3 and needed modules:
 ```sh
 $ brew install python
 $ pip3 install grpcio grpcio-tools googleapis-common-protos
+```
 
 Export environment variable to find protos, modules, and certificates
 ```sh
