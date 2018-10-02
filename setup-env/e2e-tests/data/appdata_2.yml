@@ -80,7 +80,8 @@ apps:
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accesslayer: AccessLayerL7
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessShared
 
 - key:
     developerkey:
@@ -90,7 +91,8 @@ apps:
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accesslayer: AccessLayerL7
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessShared
 
 appinstances:
 - key:

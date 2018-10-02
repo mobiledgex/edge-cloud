@@ -38,7 +38,7 @@ var ClusterRefsFlagSet = pflag.NewFlagSet("ClusterRefs", pflag.ExitOnError)
 var ClusterRefsNoConfigFlagSet = pflag.NewFlagSet("ClusterRefsNoConfig", pflag.ExitOnError)
 
 func CloudletRefsSlicer(in *edgeproto.CloudletRefs) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 8)
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
 	if in.Clusters == nil {
@@ -48,17 +48,21 @@ func CloudletRefsSlicer(in *edgeproto.CloudletRefs) []string {
 	s = append(s, strconv.FormatUint(uint64(in.UsedRam), 10))
 	s = append(s, strconv.FormatUint(uint64(in.UsedVcores), 10))
 	s = append(s, strconv.FormatUint(uint64(in.UsedDisk), 10))
+	s = append(s, strconv.FormatUint(uint64(in.UsedDynamicIps), 10))
+	s = append(s, in.UsedStaticIps)
 	return s
 }
 
 func CloudletRefsHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 8)
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Clusters-Name")
 	s = append(s, "UsedRam")
 	s = append(s, "UsedVcores")
 	s = append(s, "UsedDisk")
+	s = append(s, "UsedDynamicIps")
+	s = append(s, "UsedStaticIps")
 	return s
 }
 
@@ -264,6 +268,8 @@ func init() {
 	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedRam, "usedram", 0, "UsedRam")
 	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedVcores, "usedvcores", 0, "UsedVcores")
 	CloudletRefsFlagSet.Uint64Var(&CloudletRefsIn.UsedDisk, "useddisk", 0, "UsedDisk")
+	CloudletRefsFlagSet.Int32Var(&CloudletRefsIn.UsedDynamicIps, "useddynamicips", 0, "UsedDynamicIps")
+	CloudletRefsFlagSet.StringVar(&CloudletRefsIn.UsedStaticIps, "usedstaticips", "", "UsedStaticIps")
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")

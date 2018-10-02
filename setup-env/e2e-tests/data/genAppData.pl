@@ -233,7 +233,9 @@ sub genApp{
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accesslayer: AccessLayerL7\n\n")
+  accessports: tcp:80,http:443,udp:10002
+  ipaccess: IpAccessShared
+\n")
 }
 
 

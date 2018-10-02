@@ -2,9 +2,12 @@ package crmutil
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -73,7 +76,6 @@ var AppData = []edgeproto.App{ //nolint
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		AccessLayer:   edgeproto.AccessLayer_AccessLayerL7,
 		DefaultFlavor: FlavorData[0].Key,
 		Cluster:       ClusterData[0].Key,
 		ImagePath:     "pokemon/go:1.0.0",
@@ -185,4 +187,126 @@ func TestGetKubernetesConfigmapYAML(t *testing.T) {
 		return
 	}
 	fmt.Println(out)
+}
+
+func TestGenDeployment(t *testing.T) {
+	rootLB := &MEXRootLB{
+		Name: "rootLB",
+	}
+	clusterInst := &edgeproto.ClusterInst{
+		Key: edgeproto.ClusterInstKey{
+			ClusterKey: edgeproto.ClusterKey{
+				Name: "cluster1",
+			},
+			CloudletKey: edgeproto.CloudletKey{
+				OperatorKey: edgeproto.OperatorKey{
+					Name: "op1",
+				},
+				Name: "cloudlet1",
+			},
+		},
+		Flavor: edgeproto.ClusterFlavorKey{
+			Name: "c1.medium",
+		},
+	}
+	appInst := &edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: edgeproto.AppKey{
+				DeveloperKey: edgeproto.DeveloperKey{
+					Name: "dev1",
+				},
+				Name:    "app1",
+				Version: "1.0.0",
+			},
+			CloudletKey: edgeproto.CloudletKey{
+				OperatorKey: edgeproto.OperatorKey{
+					Name: "op1",
+				},
+				Name: "cloudlet1",
+			},
+		},
+		ClusterInstKey: clusterInst.Key,
+		Uri:            "cloudlet1.op1.mobiledgex.net",
+		ImagePath:      "registry.mobiledgex.net:5000/dev1/app1/image",
+		ImageType:      edgeproto.ImageType_ImageTypeDocker,
+		MappedPorts: []dme.AppPort{
+			dme.AppPort{
+				Proto:        dme.LProto_LProtoUDP,
+				InternalPort: 10001,
+				PublicPort:   3001,
+			},
+			dme.AppPort{
+				Proto:        dme.LProto_LProtoTCP,
+				InternalPort: 55,
+				PublicPort:   3002,
+			},
+			dme.AppPort{
+				Proto:        dme.LProto_LProtoHTTP,
+				InternalPort: 8080,
+				PublicPort:   443,
+				PublicPath:   "dev1/app11000/http8080",
+			},
+		},
+		Config:   "app1 -d -v",
+		IpAccess: edgeproto.IpAccess_IpAccessShared,
+	}
+	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	fmt.Printf("mf: %v\n", mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	kubeManifest, err := genKubeManifest(mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(kubeManifest)
+
+	// check template read from file
+	file, err := os.Create("template")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = file.WriteString(kubeManifestSimpleShared)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	file.Sync()
+	file.Close()
+	defer os.Remove("template")
+	mf.Spec.KubeManifestTemplate = "file://template"
+	kubeManifest2, err := genKubeManifest(mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if strings.Compare(kubeManifest, kubeManifest2) != 0 {
+		t.Error("file template not equal")
+		fmt.Println(kubeManifest2)
+		return
+	}
+
+	// check template read from http
+	go func() {
+		http.HandleFunc("/template", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(kubeManifestSimpleShared))
+		})
+		if err := http.ListenAndServe(":12345", nil); err != nil {
+			t.Error(err)
+		}
+	}()
+	mf.Spec.KubeManifestTemplate = "http://localhost:12345/template"
+	kubeManifest3, err := genKubeManifest(mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if strings.Compare(kubeManifest, kubeManifest3) != 0 {
+		t.Error("http template not equal")
+		fmt.Println(kubeManifest3)
+		return
+	}
 }

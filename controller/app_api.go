@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -80,12 +81,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
 		return &edgeproto.Result{}, errors.New("Please specify Image Type")
 	}
-	if in.AccessLayer == edgeproto.AccessLayer_AccessLayerUnknown {
-		// default to L7
-		in.AccessLayer = edgeproto.AccessLayer_AccessLayerL7
+	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
+		// default to shared
+		in.IpAccess = edgeproto.IpAccess_IpAccessShared
 	}
-	if in.AccessPorts == "" && (in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4 || in.AccessLayer == edgeproto.AccessLayer_AccessLayerL4L7) {
-		return &edgeproto.Result{}, errors.New("Please specify ports for L4 access types")
+	if in.AccessPorts == "" {
+		return &edgeproto.Result{}, errors.New("Please specify access ports")
 	}
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
@@ -97,11 +98,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			in.ImagePath = "qcow path not determined yet"
 		}
 	}
-	if in.AccessPorts != "" {
-		_, err := parseAppPorts(in.AccessPorts)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
+	_, err = parseAppPorts(in.AccessPorts)
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
 
 	// make sure cluster exists
@@ -237,7 +236,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		return
 	}
 	if old.ImagePath != new.ImagePath || old.ImageType != new.ImageType ||
-		old.Config != new.Config {
+		old.Config != new.Config || old.AppTemplate != new.AppTemplate {
 		log.DebugLog(log.DebugLevelApi, "updating image path")
 		appInstApi.cache.Mux.Lock()
 		for _, inst := range appInstApi.cache.Objs {
@@ -246,6 +245,7 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 				inst.ImagePath = new.ImagePath
 				inst.ImageType = new.ImageType
 				inst.Config = new.Config
+				inst.AppTemplate = new.AppTemplate
 				// TODO: update mapped ports if needed
 				if appInstApi.cache.NotifyCb != nil {
 					appInstApi.cache.NotifyCb(&inst.Key, old)
@@ -256,26 +256,28 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 	}
 }
 
-func GetL4Proto(s string) (edgeproto.L4Proto, error) {
+func GetLProto(s string) (dme.LProto, error) {
 	s = strings.ToLower(s)
 	switch s {
 	case "tcp":
-		return edgeproto.L4Proto_L4ProtoTCP, nil
+		return dme.LProto_LProtoTCP, nil
 	case "udp":
-		return edgeproto.L4Proto_L4ProtoUDP, nil
+		return dme.LProto_LProtoUDP, nil
+	case "http":
+		return dme.LProto_LProtoHTTP, nil
 	}
-	return 0, fmt.Errorf("%s is not a supported L4 Protocol", s)
+	return 0, fmt.Errorf("%s is not a supported Protocol", s)
 }
 
-func parseAppPorts(ports string) ([]edgeproto.AppPort, error) {
-	appports := make([]edgeproto.AppPort, 0)
+func parseAppPorts(ports string) ([]dme.AppPort, error) {
+	appports := make([]dme.AppPort, 0)
 	strs := strings.Split(ports, ",")
 	for _, str := range strs {
 		vals := strings.Split(str, ":")
 		if len(vals) != 2 {
 			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
 		}
-		proto, err := GetL4Proto(vals[0])
+		proto, err := GetLProto(vals[0])
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +288,7 @@ func parseAppPorts(ports string) ([]edgeproto.AppPort, error) {
 		if port < 1 || port > 65535 {
 			return nil, fmt.Errorf("Port %s out of range", vals[1])
 		}
-		p := edgeproto.AppPort{
+		p := dme.AppPort{
 			Proto:        proto,
 			InternalPort: int32(port),
 		}

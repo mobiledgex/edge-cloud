@@ -8,11 +8,11 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/util"
 )
 
 type AppInstApi struct {
@@ -146,7 +146,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		autocluster = false
 		if s.store.STMGet(stm, &in.Key, in) {
-			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError {
+			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CreateError {
 					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to fix CreateError state"})
 				}
@@ -249,7 +249,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.ImagePath = app.ImagePath
 		in.ImageType = app.ImageType
 		in.Config = app.Config
-		in.AccessLayer = app.AccessLayer
+		in.IpAccess = app.IpAccess
+		in.AppTemplate = app.AppTemplate
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -270,6 +271,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
 			return errors.New("Info for cloudlet not found")
 		}
+		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
+			if in.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorGCP || in.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
+				return errors.New("IpAccess Shared is not supported by the given public cloud Operator")
+			}
+		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
@@ -277,18 +283,31 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			initCloudletRefs(&cloudletRefs, &in.Key.CloudletKey)
 		}
 
+		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		err := allocateIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
+		if err != nil {
+			return err
+		}
+
 		ports, _ := parseAppPorts(app.AccessPorts)
 
-		// shared root load balancer
-		// dedicated load balancer not supported yet
-		in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
-		if len(ports) > 0 {
+		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
+			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
 			ii := 0
 			p := RootLBSharedPortBegin
 			for ; p < 65000 && ii < len(ports); p++ {
+				if ports[ii].Proto == dme.LProto_LProtoHTTP {
+					// L7 access, don't need to allocate
+					// a public port, but rather an L7 path.
+					ports[ii].PublicPort = int32(cloudcommon.RootLBL7Port)
+					ports[ii].PublicPath = cloudcommon.GetL7Path(&in.Key, &ports[ii])
+					ii++
+					continue
+				}
+				// L4 access
 				if _, found := cloudletRefs.RootLbPorts[p]; found {
 					continue
 				}
@@ -297,8 +316,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				ii++
 				cloudletRefsChanged = true
 			}
+		} else {
+			in.Uri = cloudcommon.GetAppFQDN(&in.Key)
+			for ii, _ := range ports {
+				ports[ii].PublicPort = ports[ii].InternalPort
+			}
 		}
-		in.MappedPath = util.DNSSanitize(app.Key.Name)
 		if len(ports) > 0 {
 			in.MappedPorts = ports
 		}
@@ -373,11 +396,16 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DeleteError {
 				cb.Send(&edgeproto.Result{Message: "Use CreateAppInst to fix DeleteError state"})
 			}
 			return errors.New("AppInst busy, cannot delete")
+		}
+
+		var cloudlet edgeproto.Cloudlet
+		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
+			return errors.New("Specified cloudlet not found")
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -390,6 +418,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		}
+		freeIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
 
 		clusterInstKey = in.ClusterInstKey
 		if cloudletRefsChanged {
@@ -519,4 +548,50 @@ func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto
 		}
 		return nil
 	})
+}
+
+func allocateIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) error {
+	if inst.IpAccess == edgeproto.IpAccess_IpAccessShared {
+		// shared, so no allocation needed
+		return nil
+	}
+	// Allocate a dedicated IP
+	var err error
+	if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+		// TODO:
+		// parse cloudlet.StaticIps and refs.UsedStaticIps.
+		// pick a free one, put it in refs.UsedStaticIps, and
+		// set inst.AllocatedIp to the Ip.
+		err = errors.New("Static IPs not supported yet")
+	} else if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportDynamic {
+		// Note one dynamic IP is reserved for Global Reverse Proxy LB.
+		if refs.UsedDynamicIps+1 >= cloudlet.NumDynamicIps {
+			err = errors.New("No more dynamic IPs left")
+		} else {
+			refs.UsedDynamicIps++
+			inst.AllocatedIp = cloudcommon.AllocatedIpDynamic
+			*refsChanged = true
+		}
+	} else {
+		return errors.New("Invalid IpSupport type")
+	}
+	if err != nil && inst.IpAccess == edgeproto.IpAccess_IpAccessDedicatedOrShared {
+		// downgrade to shared; no allocation needed
+		inst.IpAccess = edgeproto.IpAccess_IpAccessShared
+		err = nil
+	}
+	return err
+}
+
+func freeIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) {
+	if inst.IpAccess == edgeproto.IpAccess_IpAccessShared {
+		return
+	}
+	if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+		// TODO: free static ip in inst.AllocatedIp from refs.
+	} else if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportDynamic {
+		refs.UsedDynamicIps--
+		inst.AllocatedIp = ""
+		*refsChanged = true
+	}
 }
