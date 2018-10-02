@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"testing"
 	"time"
@@ -21,10 +22,14 @@ func TestInfluxQ(t *testing.T) {
 	InfluxQPushInterval = 10 * time.Millisecond
 	InfluxQReconnectDelay = 10 * time.Millisecond
 
-	db := NewInfluxDBServer()
-	err := db.Start(addr)
-	require.Nil(t, err, "start InfluxDB server")
-	defer db.Stop()
+	// start influxd if not already running
+	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
+	if err != nil {
+		db := NewInfluxDBServer()
+		err := db.Start(addr)
+		require.Nil(t, err, "start InfluxDB server")
+		defer db.Stop()
+	}
 
 	q := NewInfluxQ()
 	err = q.Start(addr)
