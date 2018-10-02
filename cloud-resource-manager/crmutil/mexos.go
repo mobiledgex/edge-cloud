@@ -1,7 +1,6 @@
 package crmutil
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/ghodss/yaml"
@@ -24,7 +22,6 @@ import (
 	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 
 	"github.com/nanobox-io/golang-ssh"
@@ -147,10 +144,6 @@ func MEXInit() {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "mex environment", "mexEnv", mexEnv)
-}
-
-func init() {
-	k8sDeploymentSharedTmpl = template.Must(template.New("shared").Parse(yamlK8SDeploymentShared))
 }
 
 //MEXCheckEnvVars sets up environment vars and checks for credentials required for running
@@ -1371,59 +1364,8 @@ type kubernetesServiceAbbrev struct {
 	Spec ksaSpec `json:"spec"`
 }
 
-var k8sDeploymentSharedTmpl *template.Template
-
-var yamlK8SDeploymentShared = `apiVersion: v1
-kind: Service
-metadata:
-  name: {{.Metadata.Name}}-service
-  labels:
-    run: {{.Metadata.Name}}
-spec:
-  type: LoadBalancer
-  ports:
-{{- range .Spec.Ports}}
-  - name: {{.Name}}
-    protocol: {{.Proto}}
-    port: {{.InternalPort}}
-    targetPort: {{.InternalPort}}
-{{- end}}
-  selector:
-    run: {{.Metadata.Name}}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{.Metadata.Name}}-deployment
-spec:
-  selector:
-    matchLabels:
-      run: {{.Metadata.Name}}
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        run: {{.Metadata.Name}}
-    spec:
-      volumes:
-      imagePullSecrets:
-      - name: mexregistrysecret
-      containers:
-      - name: {{.Metadata.Name}}
-        image: {{.Spec.Image}}
-        imagePullPolicy: Always
-        ports:
-{{- range .Spec.Ports}}
-        - containerPort: {{.InternalPort}}
-{{- end}}
-        command:
-{{- range .Spec.Command}}
-        - "{{.}}"
-{{- end}}
-`
-
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
-func CreateKubernetesAppManifest(mf *Manifest) error {
+func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes app", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
@@ -1451,10 +1393,6 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		return fmt.Errorf("empty kubernetes proxy path")
 	}
 	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
-	if err != nil {
-		return err
-	}
-	deployment, err := genDeploymentString(mf)
 	if err != nil {
 		return err
 	}
@@ -1492,12 +1430,12 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "created mexregistrysecret docker secret")
-	cmd = fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, deployment)
+	cmd = fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, kubeManifest)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error writing deployment, %s, %s, %v", cmd, out, err)
+		return fmt.Errorf("error writing KubeManifest, %s, %s, %v", cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "wrote deployment file")
+	log.DebugLog(log.DebugLevelMexos, "wrote Kube Manifest file")
 	cmd = fmt.Sprintf("%s kubectl create -f %s", kp.kubeconfig, mf.Metadata.Name)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
@@ -1526,36 +1464,6 @@ func CreateKubernetesAppManifest(mf *Manifest) error {
 		return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", mf.Metadata.Name, "externalIPs", kp.ipaddr)
-	return nil
-}
-
-func genDeploymentString(mf *Manifest) (string, error) {
-	buf := &bytes.Buffer{}
-	err := genDeployment(mf, buf)
-	return buf.String(), err
-}
-
-func genDeploymentFile(mf *Manifest) (string, error) {
-	filename := mf.Metadata.Name + ".yaml"
-	outFile, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return "", fmt.Errorf("unable to write k8s deployment file %s: %s", filename, err.Error())
-	}
-	defer outFile.Close()
-	err = genDeployment(mf, outFile)
-	outFile.Sync()
-	return filename, err
-}
-
-func genDeployment(mf *Manifest, out io.Writer) error {
-	if mf.Spec.IpAccess == edgeproto.IpAccess_name[int32(edgeproto.IpAccess_IpAccessShared)] {
-		err := k8sDeploymentSharedTmpl.Execute(out, mf)
-		if err != nil {
-			return fmt.Errorf("unable to generate k8s deployment file: %s", err.Error())
-		}
-	} else {
-		return fmt.Errorf("MEX only supports shared ip access at this time")
-	}
 	return nil
 }
 
@@ -1612,11 +1520,11 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	deployment, err := genDeploymentString(mf)
+	kubeManifest, err := genKubeManifest(mf)
 	if err != nil {
 		return err
 	}
-	cmd := fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, deployment)
+	cmd := fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, kubeManifest)
 	out, err := kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error writing deployment, %s, %s, %v", cmd, out, err)
@@ -1785,7 +1693,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 }
 
 //DestroyKubernetesAppManifest destroys kubernetes app
-func DestroyKubernetesAppManifest(mf *Manifest) error {
+func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	log.DebugLog(log.DebugLevelMexos, "delete kubernetes app", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {

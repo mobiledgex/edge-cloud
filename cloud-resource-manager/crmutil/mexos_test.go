@@ -2,7 +2,9 @@ package crmutil
 
 import (
 	"fmt"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -254,10 +256,57 @@ func TestGenDeployment(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	deployment, err := genDeploymentString(mf)
+	kubeManifest, err := genKubeManifest(mf)
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	fmt.Println(deployment)
+	fmt.Println(kubeManifest)
+
+	// check template read from file
+	file, err := os.Create("template")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = file.WriteString(kubeManifestSimpleShared)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	file.Sync()
+	file.Close()
+	defer os.Remove("template")
+	mf.Spec.KubeManifestTemplate = "file://template"
+	kubeManifest2, err := genKubeManifest(mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if strings.Compare(kubeManifest, kubeManifest2) != 0 {
+		t.Error("file template not equal")
+		fmt.Println(kubeManifest2)
+		return
+	}
+
+	// check template read from http
+	go func() {
+		http.HandleFunc("/template", func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte(kubeManifestSimpleShared))
+		})
+		if err := http.ListenAndServe(":12345", nil); err != nil {
+			t.Error(err)
+		}
+	}()
+	mf.Spec.KubeManifestTemplate = "http://localhost:12345/template"
+	kubeManifest3, err := genKubeManifest(mf)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	if strings.Compare(kubeManifest, kubeManifest3) != 0 {
+		t.Error("http template not equal")
+		fmt.Println(kubeManifest3)
+		return
+	}
 }

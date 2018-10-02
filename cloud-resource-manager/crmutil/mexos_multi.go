@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strings"
 	"text/template"
@@ -658,13 +659,117 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	return mf, nil
 }
 
+var kubeManifestSimpleShared = `apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Metadata.Name}}-service
+  labels:
+    run: {{.Metadata.Name}}
+spec:
+  type: LoadBalancer
+  ports:
+{{- range .Spec.Ports}}
+  - name: {{.Name}}
+    protocol: {{.Proto}}
+    port: {{.InternalPort}}
+    targetPort: {{.InternalPort}}
+{{- end}}
+  selector:
+    run: {{.Metadata.Name}}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Metadata.Name}}-deployment
+spec:
+  selector:
+    matchLabels:
+      run: {{.Metadata.Name}}
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        run: {{.Metadata.Name}}
+    spec:
+      volumes:
+      imagePullSecrets:
+      - name: mexregistrysecret
+      containers:
+      - name: {{.Metadata.Name}}
+        image: {{.Spec.Image}}
+        imagePullPolicy: Always
+        ports:
+{{- range .Spec.Ports}}
+        - containerPort: {{.InternalPort}}
+{{- end}}
+        command:
+{{- range .Spec.Command}}
+        - "{{.}}"
+{{- end}}
+`
+
+func genKubeManifest(mf *Manifest) (string, error) {
+	if mf.Spec.KubeManifestTemplate == "" {
+		// Who/What generates the template, and where it comes from
+		// is TBD. If no template, use a default simple template.
+		if mf.Spec.IpAccess == edgeproto.IpAccess_name[int32(edgeproto.IpAccess_IpAccessShared)] {
+			mf.Spec.KubeManifestTemplate = kubeManifestSimpleShared
+		} else {
+			return "", fmt.Errorf("No default template for dedicated IpAccess. Please specify template.")
+		}
+	}
+	// Template string is assumed to be contents of template unless
+	// it starts with http:// or file://
+	tmplDef := mf.Spec.KubeManifestTemplate
+	if strings.HasPrefix(mf.Spec.KubeManifestTemplate, "http://") {
+		resp, err := http.Get(tmplDef)
+		if err != nil {
+			return "", fmt.Errorf("can't get http template, %s", err.Error())
+		}
+		defer resp.Body.Close()
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("can't read http template, %s", err.Error())
+		}
+		tmplDef = string(bytes)
+	} else if strings.HasPrefix(mf.Spec.KubeManifestTemplate, "file://") {
+		filename := mf.Spec.KubeManifestTemplate[7:]
+		bytes, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return "", fmt.Errorf("can't read template file, %s", err.Error())
+		}
+		tmplDef = string(bytes)
+	}
+	tmpl, err := template.New("kubemanifest").Parse(tmplDef)
+	if err != nil {
+		return "", fmt.Errorf("unable to compile Kube Manifest Template: %s", err.Error())
+	}
+	buf := &bytes.Buffer{}
+	err = tmpl.Execute(buf, mf)
+	if err != nil {
+		return "", fmt.Errorf("unable to generate k8s deployment file: %s", err.Error())
+	}
+	return buf.String(), err
+}
+
 //MEXAppCreateAppManifest creates app instances on the cluster platform
 func MEXAppCreateAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "create app from manifest", "mf", mf)
+
+	kubeManifest := ""
+	if mf.Spec.ImageType == "ImageTypeDocker" {
+		// Generate deployment file
+		var err error
+		kubeManifest, err = genKubeManifest(mf)
+		if err != nil {
+			return err
+		}
+	}
+
 	switch mf.Metadata.Operator {
 	case "gcp":
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlCreateApp(mf)
+			return runKubectlCreateApp(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" { // XXX gcp requires raw
 			return fmt.Errorf("not yet supported")
 		} else {
@@ -672,7 +777,7 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 		}
 	case "azure":
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlCreateApp(mf)
+			return runKubectlCreateApp(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" { // XXX azure requires vhd
 			return fmt.Errorf("not yet supported")
 		} else {
@@ -680,7 +785,7 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 		}
 	default:
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return CreateKubernetesAppManifest(mf)
+			return CreateKubernetesAppManifest(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
 			return CreateQCOW2AppManifest(mf)
 		} else {
@@ -719,7 +824,7 @@ func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 	return name, nil
 }
 
-func runKubectlCreateApp(mf *Manifest) error {
+func runKubectlCreateApp(mf *Manifest, kubeManifest string) error {
 	kconf, err := getKconf(mf, false)
 	if err != nil {
 		return fmt.Errorf("error creating app due to kconf %v, %v", mf, err)
@@ -730,13 +835,14 @@ func runKubectlCreateApp(mf *Manifest) error {
 			return fmt.Errorf("can't add docker registry secret, %s, %v", out, err)
 		}
 	}
-	deploymentFile, err := genDeploymentFile(mf)
+	kfile := mf.Metadata.Name + ".yaml"
+	err = writeKubeManifest(kubeManifest, kfile)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(deploymentFile)
+	defer os.Remove(kfile)
 
-	out, err = sh.Command("kubectl", "create", "-f", deploymentFile, "--kubeconfig="+kconf).Output()
+	out, err = sh.Command("kubectl", "create", "-f", kfile, "--kubeconfig="+kconf).Output()
 	if err != nil {
 		return fmt.Errorf("error creating app, %s, %v, %v", out, mf, err)
 	}
@@ -746,10 +852,21 @@ func runKubectlCreateApp(mf *Manifest) error {
 //MEXAppDeleteManifest kills app
 func MEXAppDeleteAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "delete app", "mf", mf)
+
+	kubeManifest := ""
+	if mf.Spec.ImageType == "ImageTypeDocker" {
+		// Generate deployment file
+		var err error
+		kubeManifest, err = genKubeManifest(mf)
+		if err != nil {
+			return err
+		}
+	}
+
 	switch mf.Metadata.Operator {
 	case "gcp":
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlDeleteApp(mf)
+			return runKubectlDeleteApp(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
 			return fmt.Errorf("not yet supported")
 		} else {
@@ -757,7 +874,7 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 		}
 	case "azure":
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlDeleteApp(mf)
+			return runKubectlDeleteApp(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
 			return fmt.Errorf("not yet supported")
 		} else {
@@ -765,7 +882,7 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 		}
 	default:
 		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return DestroyKubernetesAppManifest(mf)
+			return DestroyKubernetesAppManifest(mf, kubeManifest)
 		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
 			return DestroyQCOW2AppManifest(mf)
 		}
@@ -773,18 +890,19 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 	}
 }
 
-func runKubectlDeleteApp(mf *Manifest) error {
+func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
 	kconf, err := getKconf(mf, false)
 	if err != nil {
 		return fmt.Errorf("error deleting app due to kconf,  %v, %v", mf, err)
 	}
-	deploymentFile, err := genDeploymentFile(mf)
+	kfile := mf.Metadata.Name + ".yaml"
+	err = writeKubeManifest(kubeManifest, kfile)
 	if err != nil {
 		return err
 	}
-	defer os.Remove(deploymentFile)
+	defer os.Remove(kfile)
 
-	out, err := sh.Command("kubectl", "delete", "-f", deploymentFile, "--kubeconfig="+kconf).CombinedOutput()
+	out, err := sh.Command("kubectl", "delete", "-f", kfile, "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
 	}
@@ -802,5 +920,21 @@ func validateClusterKind(kind string) error {
 		return nil
 	}
 	log.DebugLog(log.DebugLevelMexos, "warning, cluster kind, operator has no mex- prefix", "kind", kind)
+	return nil
+}
+
+func writeKubeManifest(kubeManifest string, filename string) error {
+	outFile, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("unable to open k8s deployment file %s: %s", filename, err.Error())
+	}
+	_, err = outFile.WriteString(kubeManifest)
+	if err != nil {
+		outFile.Close()
+		os.Remove(filename)
+		return fmt.Errorf("unable to write k8s deployment file %s: %s", filename, err.Error())
+	}
+	outFile.Sync()
+	outFile.Close()
 	return nil
 }
