@@ -26,6 +26,8 @@ type carrierAppInst struct {
 	// Location of the cloudlet site (lat, long?)
 	location dme.Loc
 	id       uint64
+	// Ports and L7 Paths
+	ports []dme.AppPort
 }
 
 type carrierAppKey struct {
@@ -93,6 +95,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		// update existing carrier app inst
 		c.uri = appInst.Uri
 		c.location = appInst.CloudletLoc
+		c.ports = appInst.MappedPorts
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.key.appKey.Name,
 			"appVersion", app.key.appKey.Version,
@@ -106,6 +109,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
 		cNew.id = appInst.Key.Id
+		cNew.ports = appInst.MappedPorts
 		app.insts[cNew.cloudletKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.key.appKey.Name,
@@ -214,6 +218,7 @@ func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mre
 			mreply.ServiceIp = c.ip
 			mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
 			*mreply.CloudletLocation = c.location
+			mreply.Ports = copyPorts(c)
 		}
 	}
 	if found != nil {
@@ -350,4 +355,17 @@ func listAppinstTbl() {
 		}
 	}
 	tbl.RUnlock()
+}
+
+func copyPorts(cappInst *carrierAppInst) []*dme.AppPort {
+	if cappInst.ports == nil || len(cappInst.ports) == 0 {
+		return nil
+	}
+	ports := make([]*dme.AppPort, len(cappInst.ports))
+	for ii, _ := range cappInst.ports {
+		p := dme.AppPort{}
+		p = cappInst.ports[ii]
+		ports[ii] = &p
+	}
+	return ports
 }

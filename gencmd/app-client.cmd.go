@@ -6,6 +6,7 @@ Package gencmd is a generated protocol buffer package.
 
 It is generated from these files:
 	app-client.proto
+	appcommon.proto
 	dynamic-location-group.proto
 	loc.proto
 
@@ -19,6 +20,7 @@ It has these top-level messages:
 	CloudletLocation
 	Match_Engine_AppInst_List
 	DynamicLocGroupAdd
+	AppPort
 	DlgMessage
 	DlgReply
 	Loc
@@ -205,7 +207,7 @@ func Match_Engine_RequestWriteOutputOne(obj *distributed_match_engine.Match_Engi
 	}
 }
 func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.Uri)
 	s = append(s, "")
@@ -231,13 +233,23 @@ func Match_Engine_ReplySlicer(in *distributed_match_engine.Match_Engine_Reply) [
 	}
 	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
 	s = append(s, _CloudletLocation_TimestampTime.String())
+	if in.Ports == nil {
+		in.Ports = make([]*distributed_match_engine.AppPort, 1)
+	}
+	if in.Ports[0] == nil {
+		in.Ports[0] = &distributed_match_engine.AppPort{}
+	}
+	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
+	s = append(s, in.Ports[0].PublicPath)
 	s = append(s, distributed_match_engine.Match_Engine_Reply_Find_Status_name[int32(in.Status)])
 	s = append(s, in.SessionCookie)
 	return s
 }
 
 func Match_Engine_ReplyHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, "Ver")
 	s = append(s, "Uri")
 	s = append(s, "ServiceIp")
@@ -250,6 +262,10 @@ func Match_Engine_ReplyHeaderSlicer() []string {
 	s = append(s, "CloudletLocation-Course")
 	s = append(s, "CloudletLocation-Speed")
 	s = append(s, "CloudletLocation-Timestamp")
+	s = append(s, "Ports-Proto")
+	s = append(s, "Ports-InternalPort")
+	s = append(s, "Ports-PublicPort")
+	s = append(s, "Ports-PublicPath")
 	s = append(s, "Status")
 	s = append(s, "SessionCookie")
 	return s

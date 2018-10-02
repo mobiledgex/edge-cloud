@@ -3,6 +3,7 @@
 
 package gencmd
 
+import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
@@ -24,6 +25,7 @@ import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
 import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+import _ "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -41,7 +43,7 @@ var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnErr
 var AppInstInLiveness string
 var AppInstInImageType string
 var AppInstInMappedPortsProto string
-var AppInstInAccessLayer string
+var AppInstInIpAccess string
 var AppInstInState string
 var AppInstInCrmOverride string
 var AppInstInfoIn edgeproto.AppInstInfo
@@ -97,47 +99,8 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func AppPortSlicer(in *edgeproto.AppPort) []string {
-	s := make([]string, 0, 3)
-	s = append(s, edgeproto.L4Proto_name[int32(in.Proto)])
-	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
-	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
-	return s
-}
-
-func AppPortHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "Proto")
-	s = append(s, "InternalPort")
-	s = append(s, "PublicPort")
-	return s
-}
-
-func AppPortWriteOutputArray(objs []*edgeproto.AppPort) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func AppPortWriteOutputOne(obj *edgeproto.AppPort) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(AppPortHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(AppPortSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -168,26 +131,28 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.ImagePath)
 	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
 	if in.MappedPorts == nil {
-		in.MappedPorts = make([]edgeproto.AppPort, 1)
+		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
 	}
-	s = append(s, edgeproto.L4Proto_name[int32(in.MappedPorts[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_name[int32(in.MappedPorts[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
-	s = append(s, in.MappedPath)
+	s = append(s, in.MappedPorts[0].PublicPath)
 	s = append(s, in.Config)
 	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.AccessLayer_name[int32(in.AccessLayer)])
+	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
+	s = append(s, in.AllocatedIp)
+	s = append(s, in.AppTemplate)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -213,13 +178,15 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-Proto")
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
-	s = append(s, "MappedPath")
+	s = append(s, "MappedPorts-PublicPath")
 	s = append(s, "Config")
 	s = append(s, "Flavor-Name")
-	s = append(s, "AccessLayer")
+	s = append(s, "IpAccess")
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
+	s = append(s, "AllocatedIp")
+	s = append(s, "AppTemplate")
 	return s
 }
 
@@ -351,7 +318,11 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.Uri = ""
 	}
-	for i0 := 0; i0 < len(in.MappedPorts); i0++ {
+	if _, found := tags["nocmp"]; found {
+		in.MappedPorts = nil
+	}
+	if _, found := tags["nocmp"]; found {
+		in.IpAccess = 0
 	}
 	if _, found := tags["nocmp"]; found {
 		in.State = 0
@@ -361,6 +332,12 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AllocatedIp = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AppTemplate = ""
 	}
 }
 
@@ -754,12 +731,13 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ImagePath, "imagepath", "", "ImagePath")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.MappedPath, "mappedpath", "", "MappedPath")
 	AppInstFlagSet.StringVar(&AppInstIn.Config, "config", "", "Config")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	AppInstFlagSet.StringVar(&AppInstInAccessLayer, "accesslayer", "", "one of [AccessLayerUnknown AccessLayerL4 AccessLayerL7 AccessLayerL4L7]")
+	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
-	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM]")
+	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState]")
+	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -860,16 +838,13 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("imagetype").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "8")
 	}
-	if AppInstNoConfigFlagSet.Lookup("mappedpath").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "10")
-	}
 	if AppInstFlagSet.Lookup("config").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "11")
 	}
 	if AppInstFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
-	if AppInstFlagSet.Lookup("accesslayer").Changed {
+	if AppInstFlagSet.Lookup("ipaccess").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "13")
 	}
 	if AppInstFlagSet.Lookup("state").Changed {
@@ -877,6 +852,12 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("crmoverride").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "16")
+	}
+	if AppInstFlagSet.Lookup("allocatedip").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "17")
+	}
+	if AppInstNoConfigFlagSet.Lookup("apptemplate").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "18")
 	}
 }
 
@@ -935,28 +916,30 @@ func parseAppInstEnums() error {
 	}
 	if AppInstInMappedPortsProto != "" {
 		switch AppInstInMappedPortsProto {
-		case "L4ProtoUnknown":
-			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(0)
-		case "L4ProtoTCP":
-			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(1)
-		case "L4ProtoUDP":
-			AppInstIn.MappedPorts[0].Proto = edgeproto.L4Proto(2)
+		case "LProtoUnknown":
+			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(0)
+		case "LProtoTCP":
+			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(1)
+		case "LProtoUDP":
+			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(2)
+		case "LProtoHTTP":
+			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(3)
 		default:
 			return errors.New("Invalid value for AppInstInMappedPortsProto")
 		}
 	}
-	if AppInstInAccessLayer != "" {
-		switch AppInstInAccessLayer {
-		case "AccessLayerUnknown":
-			AppInstIn.AccessLayer = edgeproto.AccessLayer(0)
-		case "AccessLayerL4":
-			AppInstIn.AccessLayer = edgeproto.AccessLayer(1)
-		case "AccessLayerL7":
-			AppInstIn.AccessLayer = edgeproto.AccessLayer(2)
-		case "AccessLayerL4L7":
-			AppInstIn.AccessLayer = edgeproto.AccessLayer(3)
+	if AppInstInIpAccess != "" {
+		switch AppInstInIpAccess {
+		case "IpAccessUnknown":
+			AppInstIn.IpAccess = edgeproto.IpAccess(0)
+		case "IpAccessDedicated":
+			AppInstIn.IpAccess = edgeproto.IpAccess(1)
+		case "IpAccessDedicatedOrShared":
+			AppInstIn.IpAccess = edgeproto.IpAccess(2)
+		case "IpAccessShared":
+			AppInstIn.IpAccess = edgeproto.IpAccess(3)
 		default:
-			return errors.New("Invalid value for AppInstInAccessLayer")
+			return errors.New("Invalid value for AppInstInIpAccess")
 		}
 	}
 	if AppInstInState != "" {
@@ -997,6 +980,8 @@ func parseAppInstEnums() error {
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(1)
 		case "IgnoreCRM":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(2)
+		case "IgnoreTransientState":
+			AppInstIn.CrmOverride = edgeproto.CRMOverride(3)
 		default:
 			return errors.New("Invalid value for AppInstInCrmOverride")
 		}
