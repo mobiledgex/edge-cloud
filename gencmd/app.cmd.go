@@ -142,7 +142,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -157,11 +157,12 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
+	s = append(s, in.KubeTemplate)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -173,6 +174,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
+	s = append(s, "KubeTemplate")
 	return s
 }
 
@@ -413,6 +415,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
+	AppFlagSet.StringVar(&AppIn.KubeTemplate, "kubetemplate", "", "KubeTemplate")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -457,6 +460,9 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("cluster-name").Changed {
 		AppIn.Fields = append(AppIn.Fields, "10.1")
+	}
+	if AppFlagSet.Lookup("kubetemplate").Changed {
+		AppIn.Fields = append(AppIn.Fields, "11")
 	}
 }
 

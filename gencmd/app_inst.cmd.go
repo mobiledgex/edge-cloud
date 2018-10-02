@@ -100,7 +100,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -147,11 +147,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
+	s = append(s, in.KubeTemplate)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 16)
+	s := make([]string, 0, 17)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -185,6 +186,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
+	s = append(s, "KubeTemplate")
 	return s
 }
 
@@ -333,6 +335,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.KubeTemplate = ""
 	}
 }
 
@@ -732,6 +737,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.KubeTemplate, "kubetemplate", "", "KubeTemplate")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -849,6 +855,9 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("allocatedip").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "17")
+	}
+	if AppInstNoConfigFlagSet.Lookup("kubetemplate").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "18")
 	}
 }
 

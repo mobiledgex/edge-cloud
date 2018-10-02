@@ -67,6 +67,12 @@ message App {
   // If not specified during create, a cluster will be automatically created.
   // If specified, it must exist.
   ClusterKey cluster = 10 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Template of kubernetes deployment yaml.
+  // Who/What sets this is TDB, but it should not be directly
+  // exposed to the user, because we do not want to expose
+  // kubernetes to the user. However, because we currently don't have any
+  // other way to set it, for flexibility, for now it is exposed to the user.
+  string kube_template = 11;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

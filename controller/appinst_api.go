@@ -250,6 +250,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.ImageType = app.ImageType
 		in.Config = app.Config
 		in.IpAccess = app.IpAccess
+		in.KubeTemplate = app.KubeTemplate
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
