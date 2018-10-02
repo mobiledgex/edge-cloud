@@ -4,12 +4,14 @@ syntax = "proto3";
 package distributed_match_engine;
 
 import "loc.proto";
-  enum IDTypes {
-    ID_UNDEFINED = 0;
-	  IMEI = 1;
-	  MSISDN = 2;
-	  IPADDR = 3;
-  }
+import "appcommon.proto";
+
+enum IDTypes {
+  ID_UNDEFINED = 0;
+  IMEI = 1;
+  MSISDN = 2;
+  IPADDR = 3;
+}
 
 message Match_Engine_Request {
   uint32 ver = 1;
@@ -50,11 +52,13 @@ message Match_Engine_Reply {
   // domain name
   string uri = 2;
   // ip of the app service
-  bytes service_ip = 3;
+  bytes service_ip = 3; // deprecated
   // port of the app service?
-  uint32 service_port = 4;
+  uint32 service_port = 4; // deprecated
   // location of the cloudlet?
   Loc cloudlet_location = 5;
+  // list of ports and L7 paths
+  repeated AppPort ports = 8;
   enum Find_Status {
     FIND_UNKNOWN = 0;
     FIND_FOUND = 1;

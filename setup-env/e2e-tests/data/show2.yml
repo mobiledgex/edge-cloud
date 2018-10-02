@@ -128,11 +128,12 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
   cluster:
     name: autoclustersomeapplication1
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessShared
 - key:
     developerkey:
       name: AcmeAppCo
@@ -140,11 +141,12 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
-  accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
   cluster:
     name: autoclustersomeapplication2
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessShared
 
 appinstances:
 - key:
@@ -170,10 +172,8 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication1
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
 - key:
     appkey:
       developerkey:
@@ -197,10 +197,8 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication2
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
 - key:
     appkey:
       developerkey:
@@ -224,10 +222,8 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication1
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
 - key:
     appkey:
       developerkey:
@@ -251,8 +247,6 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication2
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
 

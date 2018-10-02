@@ -27,7 +27,6 @@ It has these top-level messages:
 	AppKey
 	App
 	AppInstKey
-	AppPort
 	AppInst
 	AppInstInfo
 	AppInstMetrics

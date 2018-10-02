@@ -88,9 +88,10 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessShared
 
 appinstances:
 - key:
@@ -111,7 +112,6 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
   flavor:
     name: x1.small
 - key:
@@ -132,7 +132,6 @@ appinstances:
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
   flavor:
     name: x1.small
 
