@@ -14,9 +14,27 @@ spec:
   image: registry.mobiledgex.net:5000/mobiledgex/mexexample
   imagetype: ImageTypeDocker
   proxypath: testapp
-  portmap: 
-  pathmap: /etc:/mexexample
   flavor: x1.medium
   uri: https://testapp.testcloudlet.mex-gddt.mobiledgex.net
-  kubemanifest: http://registry.mobiledgex.net:8080/mobiledgex/testapp.yaml
-  accesslayer: L7
+  kubemanifesttemplate: 
+  ports:
+  - name: lprotohttp1
+    mexproto: LProtoHTTP
+    proto: TCP
+    internalport: 27272
+    publicport: 27272
+    publicpath: testappgrpc
+  - name: lprotohttp2
+    mexproto: LProtoHTTP
+    proto: TCP
+    internalport: 27273
+    publicport: 27273
+    publicpath: testapprest
+  - name: lprotohttp3
+    mexproto: LProtoHTTP
+    proto: TCP
+    internalport: 27274
+    publicport: 27274
+    publicpath: testapphttp
+  command:
+
