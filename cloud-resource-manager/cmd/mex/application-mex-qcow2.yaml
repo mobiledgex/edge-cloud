@@ -15,10 +15,7 @@ spec:
   imageflavor: m1.tiny
   imagetype: ImageTypeQCOW
   proxypath: testapp-vm
-  portmap: 
-  pathmap: /etc:/testapp
   flavor: x1.medium
   uri: https://testapp.testcloudlet.mex-gddt.mobiledgex.net
   networkscheme: external-ip,external-network-shared,dhcp
-  kubemanifest: 
-  accesslayer: L7
+  kubemanifesttemplate: 
