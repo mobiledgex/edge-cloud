@@ -175,7 +175,7 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if !appApi.HasApp(&in.Key) {
 		// key doesn't exist
-		return &edgeproto.Result{}, errors.New("Application does not exist")
+		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
 	}
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
 	if appInstApi.UsesApp(&in.Key, dynInsts) {
