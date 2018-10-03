@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmberlin
+  name: crmhamburg
   labels:
-    app: crmberlin
+    app: crmhamburg
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmberlin
+      app: crmhamburg
   template:
     metadata:
       labels:
-        app: crmberlin
+        app: crmhamburg
     spec:
       containers:
-      - name: crmberlin
+      - name: crmhamburg
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1001
         imagePullPolicy: Always
         env:
@@ -30,13 +30,13 @@ spec:
          - name: MEX_DIR
            value: /root/.mobiledgex
          - name: OS_AUTH_URL
-           value: https://beredgecloud.telekom.de:5000/v2.0
+           value: https://hamedgecloud.telekom.de:5000/v2.0
          - name: OS_CACERT
-           value: /root/.mobiledgex/beredgecloudtelekomde.crt
+           value: /root/.mobiledgex/telesec_chain.crt
          - name: OS_USERNAME
            value: mexadmin
          - name: OS_PASSWORD
-           value: 8nb-A#CUQ>Ldh=GE
+           value: ED2%jdB7-Ef]b8^x
          - name: OS_REGION_NAME
            value: RegionOne
          - name: OS_TENANT_NAME
@@ -47,7 +47,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"berlindemocloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburgdemocloudlet\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
