@@ -1442,9 +1442,11 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest")
+	log.DebugLog(log.DebugLevelMexos, "add spec ports", "ports", mf.Spec.Ports)
 	for _, port := range mf.Spec.Ports {
 		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
 			// only handling L7 right now
+			log.DebugLog(log.DebugLevelMexos, "skip unsupported proto", "port", port)
 			continue
 		}
 		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
@@ -1726,9 +1728,11 @@ func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if err != nil {
 		return err
 	}
+	log.DebugLog(log.DebugLevelMexos, "delete spec ports", "ports", mf.Spec.Ports)
 	for _, port := range mf.Spec.Ports {
 		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
 			// only handling L7 now
+			log.DebugLog(log.DebugLevelMexos, "skip unsupported proto", "port", port)
 			continue
 		}
 		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
@@ -1754,6 +1758,7 @@ func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 
 //DeletePathReverseProxy Deletes a new route to origin on the reverse proxy
 func DeletePathReverseProxy(rootLBName, path, origin string) []error {
+	log.DebugLog(log.DebugLevelMexos, "delete path reverse proxy", "path", path, "origin", origin)
 	//TODO
 	return nil
 }

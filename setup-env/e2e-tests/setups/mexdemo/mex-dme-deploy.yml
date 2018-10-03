@@ -5,7 +5,7 @@ metadata:
   labels:
     app: dme
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dme
@@ -16,14 +16,14 @@ spec:
     spec:
       containers:
       - name: dme
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0910
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1001
         imagePullPolicy: Always
         command:
          - "dme-server"
          - "--apiAddr"
          - "0.0.0.0:50051"
          - "--notifyAddrs"
-         - "controller-notify:37001"
+         - "controller:37001"
          - "--locverurl"
          - "http://mexdemo.locsim.mobiledgex.net:8888/verifyLocation"
          - "--carrier"
@@ -33,7 +33,7 @@ spec:
          - "--toksrvurl"
          - "http://mexdemo.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
          - "--tls"
-         - "/root/tls/mexdemo.crt"
+         - "/root/tls/mex-server.crt"
          - "--cloudletKey"
          - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"centraluscloudlet\"}"
         env:

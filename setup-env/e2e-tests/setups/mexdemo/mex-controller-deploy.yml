@@ -5,7 +5,7 @@ metadata:
   labels:
     app: controller
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: controller
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0910
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1001
         imagePullPolicy: Always
         command:
          - "controller"
@@ -31,7 +31,7 @@ spec:
          - "--influxAddr"
          - "monitoring-influxdb:8086"
          - "--tls"
-         - "/root/tls/mexdemo.crt"
+         - "/root/tls/mex-server.crt"
          - "--d" 
          - "etcd,api,notify"
 

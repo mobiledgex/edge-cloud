@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata_mexdemo_bonn_appinst.yml"
+  actions: [ctrlapi-delete]
