@@ -73,7 +73,7 @@ dmes:
     locverurl: "http://{{vm1_internal_ip}}:8888"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tdgcloud1"}'
     tls:
        servercert: "{{tlsoutdir}}/bonn_vm1.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -87,7 +87,7 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tdgcloud1"}'
     tls:
        servercert: "{{tlsoutdir}}/bonn_vm1.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"

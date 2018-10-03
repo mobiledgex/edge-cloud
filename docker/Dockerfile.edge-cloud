@@ -35,6 +35,12 @@ COPY --from=build /go/bin/loc-api-sim /usr/local/bin
 ADD docker/mex-docker.env /root/mex-docker.env
 ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
 ADD docker/test-edgectl.sh /usr/local/bin
+ADD tls/out/mex-ca.crt /root/tls/mex-ca.crt
+ADD tls/out/mex-server.crt /root/tls/mex-server.crt
+ADD tls/out/mex-server.key /root/tls/mex-server.key
+ADD docker/beredgecloudtelekomde.crt /root/.mobiledgex/beredgecloudtelekomde.crt
+ADD docker/bonnedgecloudtelekomde.crt /root/.mobiledgex/bonnedgecloudtelekomde.crt
+ADD docker/telesec_chain.crt /root/.mobiledgex/telesec_chain.crt
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh /usr/local/bin/test-edgectl.sh
 RUN apt -y install openssh-server
 

@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata_mexdemo_azcentralus_cloudlet.yml"
+  actions: [ctrlapi-delete]
