@@ -56,7 +56,7 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: GDDT
+        name: xmobx
       name: gddtcloud1
   flavor:
     name: c1.small
@@ -64,7 +64,7 @@ clusterinsts:
 
 operators:
 - key:
-    name: GDDT
+    name: xmobx
 
 developers:
 - key:
@@ -77,7 +77,7 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: GDDT
+      name: xmobx
     name: gddtcloud1
   accessuri: cloud1.gddt
   location:
@@ -92,7 +92,7 @@ apps:
     developerkey:
       name: EmptyMatchEngineApp
     name: EmptyMatchEngineApp
-    version: "1"
+    version: "1.0"
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
@@ -107,10 +107,10 @@ appinstances:
       developerkey:
         name: EmptyMatchEngineApp
       name: EmptyMatchEngineApp
-      version: "1"
+      version: "1.0"
     cloudletkey:
       operatorkey:
-        name: GDDT
+        name: xmobx
       name: gddtcloud1
     id: 5011
   cloudletloc:
@@ -121,7 +121,7 @@ appinstances:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: GDDT
+        name: xmobx
       name: gddtcloud1
   liveness: LivenessStatic
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
