@@ -29,13 +29,16 @@ class tc(unittest.TestCase):
                                                     client_cert = mex_cert
                                                    )
 
-    def test_createOperator(self):
+    def test_updateOperator(self):
         # print operators before add
         operator_pre = self.controller.show_operators()
 
         # create operator
         self.operator = mex_controller.Operator(operator_name = operator_name)
         self.controller.create_operator(self.operator.operator)
+
+        # update the operator
+        self.controller.update_operator(self.operator.operator)
 
         # print operators after add
         operator_post = self.controller.show_operators()
@@ -46,7 +49,7 @@ class tc(unittest.TestCase):
         expect_equal(found_operator, True, 'find operator')
         assert_expectations()
 
-    def test_createOperatorSpace(self):
+    def test_updateOperatorSpace(self):
         # print operators before add
         operator_pre = self.controller.show_operators()
 
