@@ -1,0 +1,116 @@
+#!/usr/local/bin/python3
+
+#
+# create developer with invalid name. should match "^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$"
+# verify 'Invalid developer name' is created
+# 
+
+import unittest
+import grpc
+import sys
+import time
+from delayedassert import expect, expect_equal, assert_expectations
+
+import mex_controller
+
+controller_address = '127.0.0.1:55001'
+
+mex_root_cert = 'mex-ca.crt'
+mex_cert = 'localserver.crt'
+mex_key = 'localserver.key'
+
+class tc(unittest.TestCase):
+    def setUp(self):
+        self.controller = mex_controller.Controller(controller_address = controller_address,
+                                                    root_cert = mex_root_cert,
+                                                    key = mex_key,
+                                                    client_cert = mex_cert
+                                                   )
+
+    def test_createDeveloperStartUnderscore(self):
+        # print developers before add
+        developer_pre = self.controller.show_developers()
+
+        # create developer
+        error = None
+        self.developer = mex_controller.Developer(developer_name = '_mydeveloper')
+        try:
+            self.controller.create_developer(self.developer.developer)
+        except grpc.RpcError as e:
+            print('got exception', e)
+            error = e
+
+        # print developers after add
+        developer_post = self.controller.show_developers()
+        
+        expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
+        expect_equal(error.details(), 'Invalid developer name', 'error details')
+        expect_equal(len(developer_post), len(developer_pre), 'num developer')
+
+        assert_expectations()
+
+    def test_createDeveloperParenthesis(self):
+        # print developers before add
+        developer_pre = self.controller.show_developers()
+
+        # create developer
+        error = None
+        self.developer = mex_controller.Developer(developer_name='my(developer)')
+        try:
+            self.controller.create_developer(self.developer.developer)
+        except grpc.RpcError as e:
+            print('got exception', e)
+            error = e
+
+        # print developers after add
+        developer_post = self.controller.show_developers()
+        
+        expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
+        expect_equal(error.details(), 'Invalid developer name', 'error details')
+        expect_equal(len(developer_post), len(developer_pre), 'num developer')
+
+    def test_createDeveloperDollarsign(self):
+        # print developers before add
+        developer_pre = self.controller.show_developers()
+
+        # create developer
+        error = None
+        self.developer = mex_controller.Developer(developer_name='my$developer')
+        try:
+            self.controller.create_developer(self.developer.developer)
+        except grpc.RpcError as e:
+            print('got exception', e)
+            error = e
+
+        # print developers after add
+        developer_post = self.controller.show_developers()
+        
+        expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
+        expect_equal(error.details(), 'Invalid developer name', 'error details')
+        expect_equal(len(developer_post), len(developer_pre), 'num developer')
+
+    def test_createDeveloperOtherInvalidChars(self):
+        # print developers before add
+        developer_pre = self.controller.show_developers()
+
+        # create developer
+        error = None
+        self.developer = mex_controller.Developer(developer_name='my@#%^*<>developer')
+        try:
+            self.controller.create_developer(self.developer.developer)
+        except grpc.RpcError as e:
+            print('got exception', e)
+            error = e
+
+        # print developers after add
+        developer_post = self.controller.show_developers()
+        
+        expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
+        expect_equal(error.details(), 'Invalid developer name', 'error details')
+        expect_equal(len(developer_post), len(developer_pre), 'num developer')
+
+
+if __name__ == '__main__':
+    suite = unittest.TestLoader().loadTestsFromTestCase(tc)
+    sys.exit(not unittest.TextTestRunner().run(suite).wasSuccessful())
+

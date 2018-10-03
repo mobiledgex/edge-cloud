@@ -39,11 +39,11 @@ class tc(unittest.TestCase):
         self.controller.create_operator(self.operator.operator)
         self.controller.create_cloudlet(self.cloudlet.cloudlet)
 
-    def test_DeleteOperatorUnknown(self):
-        # print operators before add
+    def test_DeleteOperatorBeforeCloudlet(self):
+        # print operators before delete
         operator_pre = self.controller.show_operators()
 
-        # create operator
+        # delete operator
         error = None
         try:
             self.controller.delete_operator(self.operator.operator)
@@ -51,7 +51,7 @@ class tc(unittest.TestCase):
             print('got exception', e)
             error = e
 
-        # print operators after add
+        # print operators after delete
         operator_post = self.controller.show_operators()
         
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')

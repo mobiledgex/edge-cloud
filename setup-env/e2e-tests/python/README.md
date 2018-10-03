@@ -22,6 +22,7 @@ There is a seperate directory for each testcase type. This is the structure
     |  |--cluster  - cluster and cluster instance testcases
     |  |--app      - app testcases
     |  |--operator - operator testcases
+    |  |--developer- developer testcases
     |--dme         - dme testcases
        |--cloudlet - cloudlet testcases 
        |--location - location testcases
