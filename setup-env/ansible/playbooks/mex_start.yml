@@ -33,7 +33,7 @@
  
   - name: set tls option
     set_fact:
-       tlsopt: "{% if controllers[0].controllerlocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{controllers[0].controllerlocal.tls.servercert|basename}} {% endif %}"
+       tlsopt: "{% if controllers[0].controllerlocal.tls.servercert == '' %}  {% else %} --tls {{remote_tls_path}}/{{controllers[0].controllerlocal.tls.servercert|basename}} {% endif %}"
  
   - name: start up controller process
     shell: "nohup {{ controller_remote_bin }} --etcdUrls {{ item.controllerlocal.etcdaddrs }} --apiAddr {{ item.controllerlocal.apiaddr }} --notifyAddr {{ item.controllerlocal.notifyaddr }} --httpAddr {{ item.controllerlocal.httpaddr }} {{ tlsopt }}  -d etcd,api,notify > {{ remote_log_path }}/{{ item.controllerlocal.name }}.log 2>&1 &"
@@ -51,16 +51,40 @@
   - "{{ setupfile }}"
 
   tasks:
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
 
-  - name: check dme binary installed
-    stat:
-      path: "{{ dme_remote_bin }}"
-    register: dme_stat
-    failed_when: dme_stat.stat.exists == False
+  - name: docker login to mex repo
+    docker_login:
+      registry: registry.mobiledgex.net:5000
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
 
   - name: set tls option
     set_fact:
-       tlsopt: "{% if dmes[0].dmelocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{dmes[0].dmelocal.tls.servercert|basename}} {% endif %}"
+       tlsopt: "{% if dmes[0].dmelocal.tls.servercert == '' %}  {% else %} --tls {{remote_tls_path}}/{{dmes[0].dmelocal.tls.servercert|basename}} {% endif %}"
+
+  - name: create remote log dir
+    file:
+       state: directory
+       path: "{{ remote_log_path }}"
+
+  - name: make dme env file
+    copy: content="{{ item.envvars|to_nice_yaml|regex_replace(':\\s', '=') }}" dest="{{remote_log_path}}/{{item.dmelocal.name}}.env"
+    when: item.dockerimage != "" and item.envvars|length >0
+    with_items:
+      - "{{dmes}}"
+
+  - name: start up dme-server container
+    docker_container:
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.dmelocal.name }}"
+       env_file: "{{remote_log_path}}//{{item.dmelocal.name}}.env"
+       command: "dme-server --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq"
+       network_mode: host
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ dmes }}"
 
   - name: set creds from variables
     set_fact:
@@ -68,7 +92,7 @@
 
   - name: start up dme-server process
     shell: "{{ envvar }} && nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
-    when: item.hostname == inventory_hostname 
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ dmes }}"
    
@@ -82,21 +106,46 @@
   - mex_vars.yml
   - "{{ setupfile }}"
 
-  tasks: 
+  tasks:
+ 
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
 
-  - name: check crm binary exists
-    stat:
-      path: "{{ crm_remote_bin }}"
-    register: crm_stat
-    failed_when: crm_stat.stat.exists == False
+  - name: docker login to mex repo
+    docker_login:
+      registry: registry.mobiledgex.net:5000
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
 
   - name: set tls option
     set_fact:
-       tlsopt: "{% if crms[0].crmlocal.tls.servercert == '' %}  {% else %} --tls {{remote_log_path}}/{{crms[0].crmlocal.tls.servercert|basename}} {% endif %}"
+       tlsopt: "{% if crms[0].crmlocal.tls.servercert == '' %}  {% else %} --tls {{remote_tls_path}}/{{crms[0].crmlocal.tls.servercert|basename}} {% endif %}"
+
+  - name: create remote log dir
+    file:
+       state: directory
+       path: "{{ remote_log_path }}"
+
+
+  - name: make crm env file
+    copy: content="{{ item.envvars|to_nice_yaml|regex_replace(':\\s', '=') }}" dest="{{remote_log_path}}/{{item.crmlocal.name}}.env"
+    when: item.dockerimage != "" and item.envvars|length >0
+    with_items:
+      - "{{crms}}"
+
+  - name: start up crmserver container
+    docker_container:
+      image: "{{ item.dockerimage }}"
+      name: "{{ item.crmlocal.name }}"
+      env_file: "{{remote_log_path}}/{{item.crmlocal.name}}.env"
+      command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ crms }}"
 
   - name: start up crmserver process
     shell: "nohup {{ crm_remote_bin }} --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos > {{ remote_log_path }}/{{ item.crmlocal.name }}.log 2>&1 &"
-    when: item.hostname == inventory_hostname
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ crms }}"
 
