@@ -712,22 +712,33 @@ func (c *FlavorCache) GetAllKeys(keys map[FlavorKey]struct{}) {
 }
 
 func (c *FlavorCache) Update(in *Flavor, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Flavor) (*Flavor, bool) {
+		return in, true
+	})
+}
+
+func (c *FlavorCache) UpdateModFunc(key *FlavorKey, rev int64, modFunc func(old *Flavor) (new *Flavor, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Flavor{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Flavor{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Flavor", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *FlavorCache) Delete(in *Flavor, rev int64) {

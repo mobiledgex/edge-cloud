@@ -764,22 +764,33 @@ func (c *ClusterFlavorCache) GetAllKeys(keys map[ClusterFlavorKey]struct{}) {
 }
 
 func (c *ClusterFlavorCache) Update(in *ClusterFlavor, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *ClusterFlavor) (*ClusterFlavor, bool) {
+		return in, true
+	})
+}
+
+func (c *ClusterFlavorCache) UpdateModFunc(key *ClusterFlavorKey, rev int64, modFunc func(old *ClusterFlavor) (new *ClusterFlavor, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &ClusterFlavor{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &ClusterFlavor{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterFlavor", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterFlavor", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ClusterFlavorCache) Delete(in *ClusterFlavor, rev int64) {

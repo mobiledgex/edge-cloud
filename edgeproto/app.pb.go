@@ -1000,22 +1000,33 @@ func (c *AppCache) GetAllKeys(keys map[AppKey]struct{}) {
 }
 
 func (c *AppCache) Update(in *App, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *App) (*App, bool) {
+		return in, true
+	})
+}
+
+func (c *AppCache) UpdateModFunc(key *AppKey, rev int64, modFunc func(old *App) (new *App, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &App{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &App{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate App", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *AppCache) Delete(in *App, rev int64) {

@@ -191,7 +191,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
 
-		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_Ready
 		} else {
 			in.State = edgeproto.TrackedState_CreateRequested
@@ -202,7 +202,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+	if ignoreCRM(cctx) {
 		return nil
 	}
 	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateClusterInstTransitions, edgeproto.TrackedState_CreateError, CreateClusterInstTimeout, "Created successfully", cb.Send)
@@ -288,7 +288,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			refs.UsedDisk -= nodeFlavor.Disk * uint64(clusterFlavor.MaxNodes)
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
-		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		if ignoreCRM(cctx) {
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -302,7 +302,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err != nil {
 		return err
 	}
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+	if ignoreCRM(cctx) {
 		return nil
 	}
 	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteClusterInstTransitions, edgeproto.TrackedState_DeleteError, DeleteClusterInstTimeout, "Deleted ClusterInst successfully", cb.Send)
@@ -365,12 +365,24 @@ func crmTransitionOk(cur edgeproto.TrackedState, next edgeproto.TrackedState) bo
 }
 
 func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
-	if cctx.Override == edgeproto.CRMOverride_IgnoreTransientState {
+	if cctx.Override == edgeproto.CRMOverride_IgnoreTransientState ||
+		cctx.Override == edgeproto.CRMOverride_IgnoreCRMandTransientState {
 		if state == edgeproto.TrackedState_Creating ||
+			state == edgeproto.TrackedState_CreateRequested ||
+			state == edgeproto.TrackedState_UpdateRequested ||
+			state == edgeproto.TrackedState_DeleteRequested ||
 			state == edgeproto.TrackedState_Updating ||
 			state == edgeproto.TrackedState_Deleting {
 			return true
 		}
+	}
+	return false
+}
+
+func ignoreCRM(cctx *CallContext) bool {
+	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM ||
+		cctx.Override == edgeproto.CRMOverride_IgnoreCRMandTransientState {
+		return true
 	}
 	return false
 }
