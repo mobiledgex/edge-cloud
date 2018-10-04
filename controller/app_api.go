@@ -81,6 +81,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
 		return &edgeproto.Result{}, errors.New("Please specify Image Type")
 	}
+	_, ok := edgeproto.ImageType_name[int32(in.ImageType)]
+	if !ok {
+		return &edgeproto.Result{}, errors.New("invalid Image Type")
+	}
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
