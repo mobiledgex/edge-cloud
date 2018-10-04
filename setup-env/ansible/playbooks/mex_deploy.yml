@@ -1,4 +1,4 @@
-- name: setup log dir
+- name: setup remote dir
   gather_facts: no
   user: root
   hosts: mexservers
@@ -10,11 +10,16 @@
     file:
        state: directory
        path: "{{ remote_log_path }}"
+
+  - name: create remote tls dir
+    file:
+       state: directory
+       path: "{{ remote_tls_path }}"
   
   - name: copy mex-ca.crt
     copy: 
       src: "{{ tlsoutdir }}/mex-ca.crt"
-      dest: "{{ remote_log_path }}"
+      dest: "{{ remote_tls_path }}"
       mode: 0444
   
 - name: deploy binary to remote controllers
@@ -36,13 +41,13 @@
   - name: copy tls cert
     copy:
        src: "{{ controllers[0].controllerlocal.tls.servercert }}"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0444
 
   - name: copy tls key
     copy:
        src: "{{ (controllers[0].controllerlocal.tls.servercert|splitext)[0] }}.key"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0440
 
 - name: deploy binary to remote crms
@@ -64,13 +69,13 @@
   - name: copy tls cert
     copy:
        src: "{{ crms[0].crmlocal.tls.servercert }}"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0444
   
   - name: copy tls key
     copy:
        src: "{{ (crms[0].crmlocal.tls.servercert|splitext)[0] }}.key"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0440
 
 
@@ -89,17 +94,17 @@
        src: "{{ dme_bin }}"
        dest: "{{ remote_bin_path }}"
        mode: 0755
-
+ 
   - name: copy tls cert
     copy:
        src: "{{ dmes[0].dmelocal.tls.servercert }}"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0444
   
   - name: copy tls key
     copy:
        src: "{{ (dmes[0].dmelocal.tls.servercert|splitext)[0] }}.key"
-       dest: "{{ remote_log_path }}"
+       dest: "{{ remote_tls_path }}"
        mode: 0440
 
 - name: deploy binary to remote locsims

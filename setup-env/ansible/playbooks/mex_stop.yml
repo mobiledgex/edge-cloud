@@ -53,7 +53,14 @@
 
   - name: stop dme-server process
     shell: "pkill -9 dme-server||true"
-    when: item.hostname == inventory_hostname 
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
+    with_items:
+       -  "{{ dmes }}"
+    when: item.dockerimage == ""
+
+  - name: stop dme docker container
+    shell: "docker kill $(docker ps|grep {{item.dmelocal.name}}|cut -d' ' -f 1)"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ dmes }}"
        
@@ -69,10 +76,15 @@
   tasks:
   - name: stop crmserver process
     shell: "pkill -9 crmserver||true"
-    when: item.hostname == inventory_hostname 
+    when: item.hostname == inventory_hostname and item.dockerimage == "" 
     with_items:
        -  "{{ crms }}"
 
+  - name: stop crm docker container
+    shell: "docker kill $(docker ps|grep {{item.crmlocal.name}}|cut -d' ' -f 1)"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ crms }}"
 
 - name: stop locsims
   gather_facts: no
