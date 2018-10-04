@@ -425,6 +425,16 @@ func stageLocDbFile(srcFile string, destDir string) {
 	}
 }
 
+// for ansible we need to ssh to the ip address if available as the DNS record may not yet exist
+func hostNameToAnsible(hostname string) string {
+	for _, r := range util.Deployment.Cloudflare.Records {
+		if r.Name == hostname {
+			return hostname + " ansible_ssh_host=" + r.Content
+		}
+	}
+	return hostname
+}
+
 func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	log.Printf("Creating inventory file in ANSIBLE_DIR:%s using procname filter: %s\n", ansHome, procNameFilter)
@@ -441,6 +451,10 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	}
 	defer invfile.Close()
 
+	//use the mobiledgex ssh key
+	fmt.Fprintln(invfile, "[all:vars]")
+	fmt.Fprintln(invfile, "ansible_ssh_private_key_file=~/.mobiledgex/id_rsa_mobiledgex")
+
 	allRemoteServers := make(map[string]string)
 	etcdRemoteServers := make(map[string]string)
 	influxRemoteServers := make(map[string]string)
@@ -456,8 +470,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			etcdRemoteServers[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			etcdRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -466,8 +481,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			influxRemoteServers[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			influxRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -476,8 +492,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			ctrlRemoteServers[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			ctrlRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -486,8 +503,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			crmRemoteServers[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			crmRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -496,8 +514,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			dmeRemoteServers[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			dmeRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -506,8 +525,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			locApiSimulators[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			locApiSimulators[i] = p.Name
 			foundServer = true
 
 			if p.Locfile != "" {
@@ -520,8 +540,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			tokSrvSimulators[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			tokSrvSimulators[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -530,8 +551,9 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			allRemoteServers[p.Hostname] = p.Name
-			sampleApps[p.Hostname] = p.Name
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			sampleApps[i] = p.Name
 			foundServer = true
 		}
 	}
