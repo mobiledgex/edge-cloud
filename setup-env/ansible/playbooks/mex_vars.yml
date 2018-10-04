@@ -22,6 +22,7 @@
   - locsim_remote_data_file: "{{ locsim_remote_data_dir }}/{{ locsim_data_file }}"
   - toksim_remote_bin: "{{ remote_bin_path }}/tok-srv-sim"
   - remote_log_path: /var/log/mex
+  - remote_tls_path: /root/tls
   - setupfile: setup.yml
   - etcd_url: https://github.com/coreos/etcd/releases/download
   - etcd_version: v3.3.8
