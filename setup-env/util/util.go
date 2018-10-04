@@ -82,25 +82,30 @@ type EtcdProcess struct {
 }
 type ControllerProcess struct {
 	process.ControllerLocal
-	Hostname string
+	Hostname    string
+	DockerImage string
 }
 type DmeProcess struct {
 	process.DmeLocal
-	Hostname string
-	EnvVars  map[string]string
+	Hostname    string
+	DockerImage string
+	EnvVars     map[string]string
 }
 type CrmProcess struct {
 	process.CrmLocal
-	Hostname string
-	EnvVars  map[string]string
+	Hostname    string
+	DockerImage string
+	EnvVars     map[string]string
 }
 type LocSimProcess struct {
 	process.LocApiSimLocal
-	Hostname string
+	Hostname    string
+	DockerImage string
 }
 type TokSimProcess struct {
 	process.TokSrvSimLocal
-	Hostname string
+	Hostname    string
+	DockerImage string
 }
 type SampleAppProcess struct {
 	process.SampleAppLocal

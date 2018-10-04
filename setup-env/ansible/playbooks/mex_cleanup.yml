@@ -128,7 +128,7 @@
        -  "{{ sampleapps }}"
 
 
-- name: cleanup logs
+- name: cleanup remote files
   gather_facts: no
   user: root
   hosts: mexservers
@@ -142,4 +142,9 @@
   - name: delete logfile dir
     file:
       path: "{{ remote_log_path }}"
-      state: absent 
+      state: absent
+ 
+  - name: delete tls dir
+    file:
+      path: "{{ remote_tls_path }}"
+      state: absent
