@@ -7,7 +7,8 @@ import { catchError, retry } from 'rxjs/operators';
 import 'rxjs/add/observable/of';
 import { Developer, App, AppInst, Flavor, Oprator, Cloudlet, Cluster } from './app.model';
 
-const ctrlUrl="http://mexdemo.ctrl-http.mobiledgex.net:36001";
+const ctrlUrl="https://mexdemo.ctrl.mobiledgex.net:36001";
+//const ctrlUrl="http://mexdemo.ctrl-http.mobiledgex.net:36001";
 // const ctrlUrl="http://0.0.0.0:36002";
 
 
