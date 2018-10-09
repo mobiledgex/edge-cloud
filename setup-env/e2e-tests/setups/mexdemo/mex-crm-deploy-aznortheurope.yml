@@ -14,13 +14,9 @@ spec:
       labels:
         app: crmaznortheurope
     spec:
-      hostAliases:
-       - ip: "37.50.143.121"
-         hostnames:
-         - "fmbncisrs101.tacn.detemobil.de"
       containers:
-      - name: aznortheurope
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+      - name: crmaznortheurope
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0919
         imagePullPolicy: Always
         env:
          - name: MEX_CF_USER
@@ -33,24 +29,20 @@ spec:
            value: sandhill
          - name: MEX_DIR
            value: /root/.mobiledgex
+         - name: PATH
+           value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin 
          - name: OS_AUTH_URL
-           value: https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
+           value: DUMMY
          - name: OS_CACERT
-           value: /root/.mobiledgex/haproxy-ca.crt
+           value: DUMMY
          - name: OS_USERNAME
-           value: mexadmin
+           value: DUMMY
          - name: OS_PASSWORD
-           value: MEX$Admin12345
-         - name: OS_REGION_NAME
-           value: RegionOne
+           value: DUMMY
          - name: OS_TENANT_NAME
-           value: MEX
-         - name: OS_TENANT_ID
-           value: fbeaf83f155445cdb6cb3a1a6e067be5
-         - name: OS_ENDPOINT_TYPE
-           value: publicURL
-         - name: OS_IDENTITY_API_VERSION
-           value: "2"
+           value: DUMMY
+         - name: OS_REGION_NAME
+           value: DUMMY
          - name: CLOUDLET_REGION
            value: northeurope
          - name: CLOUDLET_ZONE
@@ -58,10 +50,10 @@ spec:
          - name: CLOUDLET_LOCATION
            value: northeurope
         command:
-         - bash 
+         - bash
         args:
          - "-c"
-         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"aznortheuropecloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller-notify:37001 --tls /root/tls/mexdemo.crt --d mexos"
+         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"aznortheuropecloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller:37001 --tls /root/tls/mex-server.crt --d mexos"
       imagePullSecrets:
        - name: mexreg-secret 
 

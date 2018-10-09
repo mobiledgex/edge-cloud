@@ -1,0 +1,12 @@
+clusterinsts:
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: hamburgdemocloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
