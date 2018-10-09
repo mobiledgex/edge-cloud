@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 #
 # create app with no cluster and default flavor not found in ShowFlavor
@@ -10,16 +10,20 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
 controller_address = '127.0.0.1:55001'
 
+access_ports = 'tcp:1'
+
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -35,11 +39,13 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeDocker', default_flavor_name='flavorNotFound')
+        app = mex_controller.App(image_type='ImageTypeDocker',
+                                 default_flavor_name='flavorNotFound',
+                                 access_ports=access_ports)
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error

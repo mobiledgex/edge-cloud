@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 # EDGECLOUD-208 - now has lower case 'autocluster'
 # create app with empty cluster and no cluster parm  
@@ -10,8 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -30,10 +29,14 @@ master_flavor_name = 'x1.small'
 number_nodes = 1
 max_nodes = 1
 number_masters = 9
+access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -44,8 +47,8 @@ class tc(unittest.TestCase):
                                                    )
 
         self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
+                                                  developer_address=developer_address,
+                                                  developer_email=developer_email)
         self.cluster_flavor = mex_controller.ClusterFlavor(cluster_flavor_name=cluster_flavor_name,
                                                            node_flavor_name=node_flavor_name,
                                                            master_flavor_name=master_flavor_name,
@@ -68,7 +71,7 @@ class tc(unittest.TestCase):
         self.app = mex_controller.App(image_type='ImageTypeDocker',
                                       app_name=app_name,
                                       app_version=app_version,
-                                      access_layer='AccessLayerL7',
+                                      access_ports=access_ports,
                                       #cluster_name='',
                                       developer_name=developer_name,
                                       default_flavor_name=flavor)
@@ -108,7 +111,7 @@ class tc(unittest.TestCase):
         self.app = mex_controller.App(image_type='ImageTypeQCOW',
                                       app_name=app_name,
                                       app_version=app_version,
-                                      access_layer='AccessLayerL7',
+                                      access_ports=access_ports,
                                       cluster_name='',
                                       developer_name=developer_name,
                                       default_flavor_name=flavor)

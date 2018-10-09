@@ -1,8 +1,8 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 #
-# create app with unsupported port protocol AccessLayerL4 and AccessLayerL4L7
-# verify '%s is not a supported L4 Protocol' is received
+# create app with port out of range
+# verify 'Port out of range' is received
 # 
 
 import unittest
@@ -10,8 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -21,6 +20,9 @@ mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 class tc(unittest.TestCase):
     def setUp(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
@@ -29,19 +31,19 @@ class tc(unittest.TestCase):
                                                     client_cert = mex_cert
                                                    )
 
-    def test_CreateAppPortRangeL4_1(self):
+    def test_CreateAppPortRangeDedicated_1(self):
         # print the existing apps 
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker', 
-                                 access_layer='AccessLayerL4',
+                                 ip_access='IpAccessDedicated',
                                  access_ports='tcp:0')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -52,19 +54,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4_2(self):
+    def test_CreateAppPortRangeDedicated_2(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4',
+                                 ip_access='IpAccessDedicated',
                                  access_ports='tcp:-1')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -75,19 +77,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4_3(self):
+    def test_CreateAppPortRangeDedicated_3(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4',
+                                 ip_access='IpAccessDedicated',
                                  access_ports='tcp:65536')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -98,19 +100,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4_4(self):
+    def test_CreateAppPortRangeDedicated_4(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4',
+                                 ip_access='IpAccessDedicated',
                                  access_ports='tcp:1,tcp:65537,tcp:65535')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -121,20 +123,20 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4L7_1(self):
+    def test_CreateAppPortRangeDedicatedShared_1(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker', 
-                                 access_layer='AccessLayerL4L7',
+                                 ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:0')
 
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -145,19 +147,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4L7_2(self):
+    def test_CreateAppPortRangeDedicateShared_2(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4L7',
+                                 ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:-1')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -168,19 +170,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4L7_3(self):
+    def test_CreateAppPortRangeDedicatedShared_3(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4L7',
+                                 ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:65536')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -191,19 +193,19 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def test_CreateAppPortRangeL4L7_4(self):
+    def test_CreateAppPortRangeDedicatedShared_4(self):
         # print the existing apps
         app_pre = self.controller.show_apps()
 
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
-                                 access_layer='AccessLayerL4L7',
+                                 ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:1,udp:65537,udp:65535')
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception' + str(e))
             error = e
 
         # print the cluster instances after error

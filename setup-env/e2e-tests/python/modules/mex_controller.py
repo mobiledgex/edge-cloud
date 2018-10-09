@@ -2,6 +2,8 @@ import grpc
 import sys
 import copy
 import os
+import logging
+from pprint import pprint
 import cluster_pb2
 import cluster_pb2_grpc
 import clusterflavor_pb2
@@ -22,27 +24,116 @@ import clusterflavor_pb2_grpc
 import app_inst_pb2
 import app_inst_pb2_grpc
 
+logging.basicConfig(format='%(asctime)s %(levelname)s %(funcName)s line:%(lineno)d - %(message)s',datefmt='%d-%b-%y %H:%M:%S')
+logger = logging.getLogger('mex_controller')
+
 class Developer():
-    def __init__(self, developer_name=None, address=None, email=None):
+    def __init__(self, developer_name=None, developer_address=None, developer_email=None, developer_passhash=None, developer_username=None, include_fields=False):
         dev_dict = {}
+        _fields_list = []
 
-        if developer_name:
+        self.developer_name = developer_name
+        self.developer_address = developer_address
+        self.developer_email = developer_email
+        self.developer_passhash = developer_passhash
+        self.developer_username = developer_username
+
+        # used for UpdateDeveloper - hardcoded from proto
+        self._developer_name_field = str(developer_pb2.Developer.KEY_FIELD_NUMBER) + '.' + str(developer_pb2.DeveloperKey.NAME_FIELD_NUMBER)
+        self._developer_username_field = str(developer_pb2.Developer.USERNAME_FIELD_NUMBER)
+        self._developer_passhash_field = str(developer_pb2.Developer.PASSHASH_FIELD_NUMBER)
+        self._developer_address_field = str(developer_pb2.Developer.ADDRESS_FIELD_NUMBER)
+        self._developer_email_field = str(developer_pb2.Developer.EMAIL_FIELD_NUMBER)
+
+        #print('key', vars(developer_pb2.Developer))
+        #print('fields', developer_pb2.DeveloperKey._fields, dir(developer_pb2.DeveloperKey))
+        #pprint(vars(developer_pb2.Developer))
+        ##pprint(vars(developer_pb2.Developer.fields))
+        #print('emailfield', developer_pb2.Developer.KEY_FIELD_NUMBER, developer_pb2.DeveloperKey.NAME_FIELD_NUMBER)
+        #print('devfield', self._developer_name_field)
+        #sys.exit(1)
+        
+        if developer_name is not None:
             dev_dict['key'] = developer_pb2.DeveloperKey(name=developer_name)
-        if address:
-            dev_dict['address'] = address
-        if email:
-            dev_dict['email'] = email
+            _fields_list.append(self._developer_name_field)
+        if developer_address is not None:
+            dev_dict['address'] = developer_address
+            _fields_list.append(self._developer_address_field)
+        else:
+            self.developer_address = ''
+        if developer_email is not None:
+            dev_dict['email'] = developer_email
+            _fields_list.append(self._developer_email_field)
+        else:
+            self.developer_email = ''
+        if developer_passhash is not None:
+            dev_dict['passhash'] = developer_passhash
+            _fields_list.append(self._developer_passhash_field)
+        else:
+            self.developer_passhash = ''
+        if developer_username is not None:
+            dev_dict['username'] = developer_username
+            _fields_list.append(self._developer_username_field)
+        else:
+            self.developer_username = ''
+        #dev_dict['fields'] = 'andy'
+        #print(dev_dict)
+        self.developer = developer_pb2.Developer(**dev_dict)
+        
+        if include_fields:
+            for field in _fields_list:
+                self.developer.fields.append(field)
+        
+    def __eq__(self, c):
+        #print('c',c.address, 'a',self.developer_address)
+        if c.key.name == self.developer_name and c.address == self.developer_address and c.email == self.developer_email and c.username == self.developer_username and c.passhash == self.developer_passhash:
+            print('contains')
+            return True
 
-        self.developer= developer_pb2.Developer(**dev_dict)
+    def exists(self, op_list):
+        print('looking for developer=', self.developer)
+        
+        found = False
+        for c in op_list:
+            #print('xxxx', c)
+            #print('dddddd', self.developer)
+            if self.__eq__(c):
+                found = True
+                print('foundkey')
+                break
+        if not found:
+            print('ERROR: developer NOT found')
+        return found
 
 class Operator():
     def __init__(self, operator_name=None):
         op_dict = {}
-
+        self.operator_name = operator_name
+        
         if operator_name is not None:
             op_dict['key'] = operator_pb2.OperatorKey(name = operator_name)
 
         self.operator= operator_pb2.Operator(**op_dict)
+
+    def __eq__(self, c):
+        if c.key.name == self.operator_name:
+            print('contains')
+            return True
+
+    def exists(self, op_list):
+        print('looking for operator=', self.operator)
+        
+        found = False
+        for c in op_list:
+            print('xxxx', c)
+            print('dddddd', self.operator)
+            if self.__eq__(c):
+                found = True
+                print('foundkey')
+                break
+        if not found:
+            print('ERROR: operator NOT found')
+        return found
 
 class Flavor():
     def __init__(self, flavor_name=None, ram=None, vcpus=None, disk=None):
@@ -99,20 +190,20 @@ class Cluster():
             return True
 
     def exists(self, cluster_list):
-        print('looking for cluster=', self.cluster)
+        logger.info('checking cluster exists')
         
         found_cluster = False
         #self.cluster_instance.state = 5 # Ready
         for c in cluster_list:
-            print('xxxx', c)
-            print('dddddd', self.cluster)
+            #print('xxxx', c)
+            #print('dddddd', self.cluster)
             #if self.cluster_instance == c:
             if self.__eq__(c):
                 found_cluster = True
-                print('foundkey')
+                logging.info('found cluster')
                 break
         if not found_cluster:
-            print('ERROR: cluster NOT found')
+            logger.error('ERROR: cluster NOT found')
         return found_cluster
 
 class ClusterInstance():
@@ -227,8 +318,7 @@ class Cloudlet():
                                      )
 
 class App():
-    def __init__(self, app_name=None, app_version=None, access_layer=None, access_ports=None, image_type=None, image_path=None, cluster_name=None, developer_name=None, default_flavor_name=None, config=None):
-
+    def __init__(self, app_name=None, app_version=None, ip_access=None, access_ports=None, image_type=None, image_path=None, cluster_name=None, developer_name=None, default_flavor_name=None, config=None, app_template=None):
         self.app_name = app_name
         self.app_version = app_version
         self.developer_name = developer_name
@@ -239,7 +329,8 @@ class App():
         if self.image_type == 'ImageTypeDocker':
             if not self.image_path:
                 try:
-                    self.image_path = 'mobiledgex_' + developer_name + '/' + app_name + ':' + app_version
+                    new_app_name = self._docker_sanitize(app_name)
+                    self.image_path = 'mobiledgex_' + developer_name + '/' + new_app_name + ':' + app_version
                 except:
                     self.image_path = 'failed_to_set'
             self.image_type = 1
@@ -247,13 +338,15 @@ class App():
             if not self.image_path:
                 self.image_path = 'qcow path not determined yet'
             self.image_type = 2
-        self.access_layer = access_layer
-        if self.access_layer == 'AccessLayerL4':
-            self.access_layer = 1
-        elif self.access_layer == 'AccessLayerL7':
-            self.access_layer = 2
-        elif self.access_layer == 'AccessLayerL4L7':
-            self.access_layer = 3
+            
+        self.ip_access = 3 # default to shared
+        if ip_access == 'IpAccessDedicated':
+            self.ip_access = 1
+        elif ip_access == 'IpAccessDedicatedOrShared':
+            self.ip_access = 2
+        elif ip_access == 'IpAccessShared':
+            self.ip_access = 3
+            
         self.default_flavor_name = default_flavor_name
         self.cluster_name = cluster_name
 
@@ -278,8 +371,8 @@ class App():
             app_dict['image_type'] = image_type
         if image_path is not None:
             app_dict['image_path'] = image_path
-        if access_layer:
-            app_dict['access_layer'] = access_layer
+        if ip_access:
+            app_dict['ip_access'] = ip_access
         if cluster_name is not None:
             app_dict['cluster'] = cluster_pb2.ClusterKey(name = cluster_name)
         if default_flavor_name is not None:
@@ -304,26 +397,37 @@ class App():
         #sys.exit(1) 
 
     def __eq__(self, a):
-        if a.key.name == self.app_name and a.key.version == self.app_version and a.image_path == self.image_path and a.access_layer == self.access_layer and a.access_ports == self.access_ports and a.default_flavor.name == self.default_flavor_name and a.cluster.name == self.cluster_name and a.image_type == self.image_type and a.config == self.config:
-            print('contains')
+        if a.key.name == self.app_name and a.key.version == self.app_version and a.image_path == self.image_path and a.ip_access == self.ip_access and a.access_ports == self.access_ports and a.default_flavor.name == self.default_flavor_name and a.cluster.name == self.cluster_name and a.image_type == self.image_type and a.config == self.config:
+            #print('contains')
             return True
         
 
     def exists(self, app_list):
+        logger.info('checking app exists')
+
         found_app = False
         
         for a in app_list:
-            print('xxxx', a.config,'s',self.config)
-            print('appp', a)
-            print('dddddd', self.app)
+            #print('xxxx', a.ip_access,'s',self.ip_access)
+            #print('appp', a)
+            #print('dddddd', self.app)
             if self.__eq__(a):
                 found_app = True
-                print('foundkey')
+                logger.info('found app')
                 break
         if not found_app:
-            print('ERROR: app NOT found')
+            logger.error('ERROR: app NOT found')
         return found_app
 
+    def _docker_sanitize(self, name):
+        str = name
+        str = str.replace(' ', '')
+        str = str.replace('&', '-')
+        str = str.replace(',', '')
+        str = str.replace('!', '.')
+
+        return str
+    
 class AppInstance():
     def __init__(self, appinst_id = None, app_name=None, app_version=None, developer_name=None, cloudlet_name=None, operator_name=None, image_type=None, image_path=None, cluster_name=None, default_flavor_name=None, config=None):
         self.appinst_id = appinst_id
@@ -378,14 +482,14 @@ class Controller():
             key_real = self._findFile(key)
             client_cert_real = self._findFile(client_cert)
             with open(root_cert_real, 'rb') as f:
-                print('using root_cert =',root_cert_real)
+                logger.debug('using root_cert=' + root_cert_real)
                 #trusted_certs = f.read().encode()
                 trusted_certs = f.read()
             with open(key_real,'rb') as f:
-                print('using key =',key_real)
+                logger.debug('using key='+key_real)
                 trusted_key = f.read()
             with open(client_cert_real, 'rb') as f:
-                print('using client cert =', client_cert_real)
+                logger.debug('using client cert=' + client_cert_real)
                 cert = f.read()
             # create credentials
             credentials = grpc.ssl_channel_credentials(root_certificates=trusted_certs, private_key=trusted_key, certificate_chain=cert)
@@ -402,38 +506,44 @@ class Controller():
         self.dev_stub = developer_pb2_grpc.DeveloperApiStub(controller_channel)
         self.appinst_stub = app_inst_pb2_grpc.AppInstApiStub(controller_channel)
         self.operator_stub = operator_pb2_grpc.OperatorApiStub(controller_channel)
+        self.developer_stub = developer_pb2_grpc.DeveloperApiStub(controller_channel)
 
     def create_cluster_flavor(self, cluster_flavor):
-        print('create cluster flavor on {}. clusterflavor={}'.format(self.address, str(cluster_flavor)))
+        logger.info('create cluster on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
+
         resp = self.cluster_flavor_stub.CreateClusterFlavor(cluster_flavor)
 
         return resp
 
     def delete_cluster_flavor(self, cluster_flavor):
-        print('delete cluster flavor on {}. clusterflavor={}'.format(self.address, str(cluster_flavor)))
+        logger.info('delete cluster flavor on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
+
         resp = self.cluster_flavor_stub.DeleteClusterFlavor(cluster_flavor)
 
         return resp
 
     def create_cluster(self, cluster):
-        print('create cluster on {}. cluster={}'.format(self.address, str(cluster)))
+        logger.info('create cluster on {}. \n\t{}'.format(self.address, str(cluster).replace('\n','\n\t')))
+
         resp = self.cluster_stub.CreateCluster(cluster)
 
         return resp
 
     def delete_cluster(self, cluster):
-        print('delete cluster {} on {}'.format(str(cluster), self.address))
+        logger.info('delete cluster on {}. \n\t{}'.format(self.address, str(cluster).replace('\n','\n\t')))
 
         resp = self.cluster_stub.DeleteCluster(cluster)
 
         return resp
 
     def show_clusters(self):
-        print('show clusters on {}'.format(self.address))
+        logger.info('show clusters on {}'.format(self.address))
 
         resp = list(self.cluster_stub.ShowCluster(cluster_pb2.Cluster()))
-        for c in resp:
-            print('cluster=', c)
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('cluster list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
@@ -514,34 +624,36 @@ class Controller():
         return resp
 
     def delete_flavor(self, flavor_instance):
-        print('delete flavor on {}. flavor={}'.format(self.address, str(flavor_instance)))
+        logger.info('delete flavor on {}. \n\t{}'.format(self.address, str(flavor_instance).replace('\n','\n\t')))
 
         resp = self.flavor_stub.DeleteFlavor(flavor_instance)
 
         return resp
 
     def show_apps(self, app_instance=None):
-        print('show apps on {}'.format(self.address))
+        logger.info('show apps on {}'.format(self.address))
 
         resp = None
         if app_instance:
             resp = list(self.app_stub.ShowApp(app_instance))
         else:
             resp = list(self.app_stub.ShowApp(app_pb2.App()))
-        for c in resp:
-            print('app=', c)
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('apps list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
     def create_app(self, app_instance):
-        print('create app on {}. app={}'.format(self.address, str(app_instance)))
+        logger.info('create app on {}. \n\t{}'.format(self.address, str(app_instance).replace('\n','\n\t')))
 
         resp = self.app_stub.CreateApp(app_instance)
   
         return resp
 
     def delete_app(self, app_instance):
-        print('delete app on {}. app={}'.format(self.address, str(app_instance)))
+        logger.info('delete app on {}. \n\t{}'.format(self.address, str(app_instance).replace('\n','\n\t')))
 
         resp = self.app_stub.DeleteApp(app_instance)
 
@@ -584,19 +696,19 @@ class Controller():
 
         return resp
 
-    def create_developer(self, dev_instance):
-        print('create developer on {}. app={}'.format(self.address, str(dev_instance)))
+    #def create_developer(self, dev_instance):
+    #    logger.info('create dddeveloper on {}. app={}'.format(self.address, str(dev_instance)))
 
-        resp = self.dev_stub.CreateDeveloper(dev_instance)
+    #    resp = self.dev_stub.CreateDeveloper(dev_instance)
         
-        return resp
+    #    return resp
 
-    def delete_developer(self, dev_instance):
-        print('delete developer on {}. app={}'.format(self.address, str(dev_instance)))
+    #def delete_developer(self, dev_instance):
+    #    print('delete developer on {}. app={}'.format(self.address, str(dev_instance)))
 
-        resp = self.dev_stub.DeleteDeveloper(dev_instance)
+    #    resp = self.dev_stub.DeleteDeveloper(dev_instance)
 
-        return resp
+    #    return resp
 
     def create_operator(self, op_instance):
         print('create operator on {}. operator={}'.format(self.address, str(op_instance)))
@@ -605,11 +717,64 @@ class Controller():
 
         return resp
 
+    def update_operator(self, op_instance):
+        print('update operator on {}. operator={}'.format(self.address, str(op_instance)))
+
+        resp = self.operator_stub.UpdateOperator(op_instance)
+
+        return resp
+
     def delete_operator(self, op_instance):
         print('delete operator on {}. operator={}'.format(self.address, str(op_instance)))
 
         resp = self.operator_stub.DeleteOperator(op_instance)
 
+        return resp
+
+    def show_operators(self, op_instance=None):
+        print('show operators on {}. operator={}'.format(self.address, str(op_instance)))
+
+        resp = None
+        if op_instance:
+            resp = list(self.operator_stub.ShowOperator(op_instance))
+        else:
+            resp = list(self.operator_stub.ShowOperator(operator_pb2.Operator()))
+
+        return resp
+
+    def create_developer(self, op_instance):
+        logger.info('create developer on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
+        
+        resp = self.developer_stub.CreateDeveloper(op_instance)
+
+        return resp
+
+    def update_developer(self, op_instance):
+        print('update developer on {}. developer={}'.format(self.address, str(op_instance)))
+
+        resp = self.developer_stub.UpdateDeveloper(op_instance)
+
+        return resp
+
+    def delete_developer(self, op_instance):
+        logger.info('delete developer on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
+
+        resp = self.developer_stub.DeleteDeveloper(op_instance)
+
+        return resp
+
+    def show_developers(self, op_instance=None):
+        print('show developers on {}. developer={}'.format(self.address, str(op_instance)))
+
+        resp = None
+        if op_instance:
+            resp = list(self.developer_stub.ShowDeveloper(op_instance))
+        else:
+            resp = list(self.developer_stub.ShowDeveloper(developer_pb2.Developer()))
+
+        for dev in resp:
+            print('RRRRRRR', dev)
+                  
         return resp
 
     def _build_cluster(self, operator_name, cluster_name, cloud_name, flavor_name):

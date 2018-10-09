@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package edgeproto;
+
+import "cloudlet.proto";
+import "result.proto";
+import "app_inst.proto";
+
+service CloudResourceManager {
+  rpc ListCloudResource(CloudResource) returns (stream CloudResource) {}
+  rpc AddCloudResource(CloudResource) returns (Result) {}
+  rpc DeleteCloudResource(CloudResource) returns (Result) {}
+  rpc DeployApplication(EdgeCloudApplication) returns (Result) {}
+  rpc DeleteApplication(EdgeCloudApplication) returns (Result) {}
+}
+
+enum CloudResourceCategory {
+  option allow_alias = true;
+  AllCloudResources = 0;
+  Kubernetes = 200;
+  k8s = 200;
+  Mesos = 201;
+  AWS = 202;
+  GCP = 203;
+  Azure = 204;
+  DigitalOcean = 205;
+  PacketNet = 206;
+  OpenStack = 300;
+  Docker = 301;
+  EKS = 400;
+  AKS = 402;
+  GKS = 403;
+}
+
+message CloudResource {
+  string name = 1;
+  CloudResourceCategory category = 2;
+  CloudletKey cloudletKey = 3;
+  bool active = 4;
+  int32 id = 5;
+  // AccessIp should come from the cloudlet, but for testing it
+  // is configurable here. This will need to be removed later.
+  bytes access_ip = 100;
+}
+
+message EdgeCloudApp {
+  string name = 1;
+  string repository = 2;
+  string image = 3;
+  string cpu = 5;
+  string memory = 6;
+  int32 limitfactor = 7;
+  string exposure = 8;
+  int32 replicas = 9;
+  string context = 10;
+  string namespace = 11;
+  string region = 12;
+  string flavor = 13;
+  string network = 14;
+  AppInstKey appInstKey = 15;
+}
+
+message EdgeCloudApplication {
+  string manifest = 1;
+  string kind = 2;
+  repeated EdgeCloudApp apps = 3;
+}
+

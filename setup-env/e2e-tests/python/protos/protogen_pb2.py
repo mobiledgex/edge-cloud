@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -20,6 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='protogen.proto',
   package='protogen',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x0eprotogen.proto\x12\x08protogen\x1a google/protobuf/descriptor.proto:;\n\x10generate_matches\x12\x1f.google.protobuf.MessageOptions\x18\xbd\x8e\x03 \x01(\x08:7\n\x0cgenerate_cud\x12\x1f.google.protobuf.MessageOptions\x18\xbe\x8e\x03 \x01(\x08:2\n\x07obj_key\x12\x1f.google.protobuf.MessageOptions\x18\xbf\x8e\x03 \x01(\x08:9\n\x0egenerate_cache\x12\x1f.google.protobuf.MessageOptions\x18\xc0\x8e\x03 \x01(\x08:7\n\x0cnotify_cache\x12\x1f.google.protobuf.MessageOptions\x18\xc2\x8e\x03 \x01(\x08:<\n\x11generate_cud_test\x12\x1f.google.protobuf.MessageOptions\x18\xc3\x8e\x03 \x01(\x08:=\n\x12generate_show_test\x12\x1f.google.protobuf.MessageOptions\x18\xc4\x8e\x03 \x01(\x08:A\n\x16generate_cud_streamout\x12\x1f.google.protobuf.MessageOptions\x18\xc6\x8e\x03 \x01(\x08:B\n\x17generate_wait_for_state\x12\x1f.google.protobuf.MessageOptions\x18\xc7\x8e\x03 \x01(\t:4\n\x0btest_update\x12\x1d.google.protobuf.FieldOptions\x18\xc1\x8e\x03 \x01(\x08:0\n\x07\x62\x61\x63kend\x12\x1d.google.protobuf.FieldOptions\x18\xc5\x8e\x03 \x01(\x08\x62\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_descriptor__pb2.DESCRIPTOR,])
@@ -32,7 +32,7 @@ generate_matches = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_CUD_FIELD_NUMBER = 51006
 generate_cud = _descriptor.FieldDescriptor(
   name='generate_cud', full_name='protogen.generate_cud', index=1,
@@ -40,7 +40,7 @@ generate_cud = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 OBJ_KEY_FIELD_NUMBER = 51007
 obj_key = _descriptor.FieldDescriptor(
   name='obj_key', full_name='protogen.obj_key', index=2,
@@ -48,7 +48,7 @@ obj_key = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_CACHE_FIELD_NUMBER = 51008
 generate_cache = _descriptor.FieldDescriptor(
   name='generate_cache', full_name='protogen.generate_cache', index=3,
@@ -56,7 +56,7 @@ generate_cache = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 NOTIFY_CACHE_FIELD_NUMBER = 51010
 notify_cache = _descriptor.FieldDescriptor(
   name='notify_cache', full_name='protogen.notify_cache', index=4,
@@ -64,7 +64,7 @@ notify_cache = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_CUD_TEST_FIELD_NUMBER = 51011
 generate_cud_test = _descriptor.FieldDescriptor(
   name='generate_cud_test', full_name='protogen.generate_cud_test', index=5,
@@ -72,7 +72,7 @@ generate_cud_test = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_SHOW_TEST_FIELD_NUMBER = 51012
 generate_show_test = _descriptor.FieldDescriptor(
   name='generate_show_test', full_name='protogen.generate_show_test', index=6,
@@ -80,7 +80,7 @@ generate_show_test = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_CUD_STREAMOUT_FIELD_NUMBER = 51014
 generate_cud_streamout = _descriptor.FieldDescriptor(
   name='generate_cud_streamout', full_name='protogen.generate_cud_streamout', index=7,
@@ -88,7 +88,7 @@ generate_cud_streamout = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 GENERATE_WAIT_FOR_STATE_FIELD_NUMBER = 51015
 generate_wait_for_state = _descriptor.FieldDescriptor(
   name='generate_wait_for_state', full_name='protogen.generate_wait_for_state', index=8,
@@ -96,7 +96,7 @@ generate_wait_for_state = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=_b("").decode('utf-8'),
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 TEST_UPDATE_FIELD_NUMBER = 51009
 test_update = _descriptor.FieldDescriptor(
   name='test_update', full_name='protogen.test_update', index=9,
@@ -104,7 +104,7 @@ test_update = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 BACKEND_FIELD_NUMBER = 51013
 backend = _descriptor.FieldDescriptor(
   name='backend', full_name='protogen.backend', index=10,
@@ -112,7 +112,7 @@ backend = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 
 DESCRIPTOR.extensions_by_name['generate_matches'] = generate_matches
 DESCRIPTOR.extensions_by_name['generate_cud'] = generate_cud

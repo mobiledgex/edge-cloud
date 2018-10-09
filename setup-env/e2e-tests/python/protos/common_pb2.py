@@ -8,7 +8,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -21,7 +20,8 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='common.proto',
   package='edgeproto',
   syntax='proto3',
-  serialized_pb=_b('\n\x0c\x63ommon.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto*H\n\x08Liveness\x12\x13\n\x0fLivenessUnknown\x10\x00\x12\x12\n\x0eLivenessStatic\x10\x01\x12\x13\n\x0fLivenessDynamic\x10\x02*L\n\tIpSupport\x12\x14\n\x10IpSupportUnknown\x10\x00\x12\x13\n\x0fIpSupportStatic\x10\x01\x12\x14\n\x10IpSupportDynamic\x10\x02*=\n\x07L4Proto\x12\x12\n\x0eL4ProtoUnknown\x10\x00\x12\x0e\n\nL4ProtoTCP\x10\x01\x12\x0e\n\nL4ProtoUDP\x10\x02*\xde\x01\n\x0cTrackedState\x12\x17\n\x13TrackedStateUnknown\x10\x00\x12\x0e\n\nNotPresent\x10\x01\x12\x13\n\x0f\x43reateRequested\x10\x02\x12\x0c\n\x08\x43reating\x10\x03\x12\x0f\n\x0b\x43reateError\x10\x04\x12\t\n\x05Ready\x10\x05\x12\x13\n\x0fUpdateRequested\x10\x06\x12\x0c\n\x08Updating\x10\x07\x12\x0f\n\x0bUpdateError\x10\x08\x12\x13\n\x0f\x44\x65leteRequested\x10\t\x12\x0c\n\x08\x44\x65leting\x10\n\x12\x0f\n\x0b\x44\x65leteError\x10\x0b\x62\x06proto3')
+  serialized_options=None,
+  serialized_pb=_b('\n\x0c\x63ommon.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto*H\n\x08Liveness\x12\x13\n\x0fLivenessUnknown\x10\x00\x12\x12\n\x0eLivenessStatic\x10\x01\x12\x13\n\x0fLivenessDynamic\x10\x02*L\n\tIpSupport\x12\x14\n\x10IpSupportUnknown\x10\x00\x12\x13\n\x0fIpSupportStatic\x10\x01\x12\x14\n\x10IpSupportDynamic\x10\x02*i\n\x08IpAccess\x12\x13\n\x0fIpAccessUnknown\x10\x00\x12\x15\n\x11IpAccessDedicated\x10\x01\x12\x1d\n\x19IpAccessDedicatedOrShared\x10\x02\x12\x12\n\x0eIpAccessShared\x10\x03*\xde\x01\n\x0cTrackedState\x12\x17\n\x13TrackedStateUnknown\x10\x00\x12\x0e\n\nNotPresent\x10\x01\x12\x13\n\x0f\x43reateRequested\x10\x02\x12\x0c\n\x08\x43reating\x10\x03\x12\x0f\n\x0b\x43reateError\x10\x04\x12\t\n\x05Ready\x10\x05\x12\x13\n\x0fUpdateRequested\x10\x06\x12\x0c\n\x08Updating\x10\x07\x12\x0f\n\x0bUpdateError\x10\x08\x12\x13\n\x0f\x44\x65leteRequested\x10\t\x12\x0c\n\x08\x44\x65leting\x10\n\x12\x0f\n\x0b\x44\x65leteError\x10\x0b*[\n\x0b\x43RMOverride\x12\x0e\n\nNoOverride\x10\x00\x12\x13\n\x0fIgnoreCRMErrors\x10\x01\x12\r\n\tIgnoreCRM\x10\x02\x12\x18\n\x14IgnoreTransientState\x10\x03\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,])
 
@@ -33,19 +33,19 @@ _LIVENESS = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='LivenessUnknown', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='LivenessStatic', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='LivenessDynamic', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
+  serialized_options=None,
   serialized_start=46,
   serialized_end=118,
 )
@@ -60,52 +60,56 @@ _IPSUPPORT = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='IpSupportUnknown', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='IpSupportStatic', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='IpSupportDynamic', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
+  serialized_options=None,
   serialized_start=120,
   serialized_end=196,
 )
 _sym_db.RegisterEnumDescriptor(_IPSUPPORT)
 
 IpSupport = enum_type_wrapper.EnumTypeWrapper(_IPSUPPORT)
-_L4PROTO = _descriptor.EnumDescriptor(
-  name='L4Proto',
-  full_name='edgeproto.L4Proto',
+_IPACCESS = _descriptor.EnumDescriptor(
+  name='IpAccess',
+  full_name='edgeproto.IpAccess',
   filename=None,
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='L4ProtoUnknown', index=0, number=0,
-      options=None,
+      name='IpAccessUnknown', index=0, number=0,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='L4ProtoTCP', index=1, number=1,
-      options=None,
+      name='IpAccessDedicated', index=1, number=1,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='L4ProtoUDP', index=2, number=2,
-      options=None,
+      name='IpAccessDedicatedOrShared', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='IpAccessShared', index=3, number=3,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
+  serialized_options=None,
   serialized_start=198,
-  serialized_end=259,
+  serialized_end=303,
 )
-_sym_db.RegisterEnumDescriptor(_L4PROTO)
+_sym_db.RegisterEnumDescriptor(_IPACCESS)
 
-L4Proto = enum_type_wrapper.EnumTypeWrapper(_L4PROTO)
+IpAccess = enum_type_wrapper.EnumTypeWrapper(_IPACCESS)
 _TRACKEDSTATE = _descriptor.EnumDescriptor(
   name='TrackedState',
   full_name='edgeproto.TrackedState',
@@ -114,70 +118,102 @@ _TRACKEDSTATE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='TrackedStateUnknown', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='NotPresent', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CreateRequested', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='Creating', index=3, number=3,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CreateError', index=4, number=4,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='Ready', index=5, number=5,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='UpdateRequested', index=6, number=6,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='Updating', index=7, number=7,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='UpdateError', index=8, number=8,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='DeleteRequested', index=9, number=9,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='Deleting', index=10, number=10,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='DeleteError', index=11, number=11,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
-  serialized_start=262,
-  serialized_end=484,
+  serialized_options=None,
+  serialized_start=306,
+  serialized_end=528,
 )
 _sym_db.RegisterEnumDescriptor(_TRACKEDSTATE)
 
 TrackedState = enum_type_wrapper.EnumTypeWrapper(_TRACKEDSTATE)
+_CRMOVERRIDE = _descriptor.EnumDescriptor(
+  name='CRMOverride',
+  full_name='edgeproto.CRMOverride',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='NoOverride', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='IgnoreCRMErrors', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='IgnoreCRM', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='IgnoreTransientState', index=3, number=3,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=530,
+  serialized_end=621,
+)
+_sym_db.RegisterEnumDescriptor(_CRMOVERRIDE)
+
+CRMOverride = enum_type_wrapper.EnumTypeWrapper(_CRMOVERRIDE)
 LivenessUnknown = 0
 LivenessStatic = 1
 LivenessDynamic = 2
 IpSupportUnknown = 0
 IpSupportStatic = 1
 IpSupportDynamic = 2
-L4ProtoUnknown = 0
-L4ProtoTCP = 1
-L4ProtoUDP = 2
+IpAccessUnknown = 0
+IpAccessDedicated = 1
+IpAccessDedicatedOrShared = 2
+IpAccessShared = 3
 TrackedStateUnknown = 0
 NotPresent = 1
 CreateRequested = 2
@@ -190,12 +226,17 @@ UpdateError = 8
 DeleteRequested = 9
 Deleting = 10
 DeleteError = 11
+NoOverride = 0
+IgnoreCRMErrors = 1
+IgnoreCRM = 2
+IgnoreTransientState = 3
 
 
 DESCRIPTOR.enum_types_by_name['Liveness'] = _LIVENESS
 DESCRIPTOR.enum_types_by_name['IpSupport'] = _IPSUPPORT
-DESCRIPTOR.enum_types_by_name['L4Proto'] = _L4PROTO
+DESCRIPTOR.enum_types_by_name['IpAccess'] = _IPACCESS
 DESCRIPTOR.enum_types_by_name['TrackedState'] = _TRACKEDSTATE
+DESCRIPTOR.enum_types_by_name['CRMOverride'] = _CRMOVERRIDE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 

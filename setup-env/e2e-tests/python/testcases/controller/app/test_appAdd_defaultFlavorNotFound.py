@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 #
 # create app with default empty not found in ShowFlavor 
@@ -10,8 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -24,10 +23,14 @@ developer_email = 'dev@dev.com'
 
 app_name = 'app' + stamp
 app_version = '1.0'
+access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -38,8 +41,8 @@ class tc(unittest.TestCase):
                                                    )
 
         self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
+                                                  developer_address=developer_address,
+                                                  developer_email=developer_email)
         self.controller.create_developer(self.developer.developer) 
     def test_CreateAppDefaultFlavorNotFound(self):
         # print the existing apps 
@@ -49,6 +52,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
                                  cluster_name='dummyCluster',
+                                 access_ports=access_ports,
                                  app_name=app_name,
                                  app_version=app_version,
                                  developer_name=developer_name,
@@ -75,6 +79,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeQCOW',
                                  cluster_name='dummyCluster',
+                                 access_ports=access_ports,
                                  app_name=app_name,
                                  app_version=app_version,
                                  developer_name=developer_name,

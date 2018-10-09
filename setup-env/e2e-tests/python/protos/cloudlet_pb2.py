@@ -8,7 +8,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -28,6 +27,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='cloudlet.proto',
   package='edgeproto',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x0e\x63loudlet.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0eoperator.proto\x1a\x0cresult.proto\x1a\x0c\x63ommon.proto\x1a\tloc.proto\x1a\ngogo.proto\"]\n\x0b\x43loudletKey\x12\x32\n\x0coperator_key\x18\x01 \x01(\x0b\x32\x16.edgeproto.OperatorKeyB\x04\xc8\xde\x1f\x00\x12\x0c\n\x04name\x18\x02 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\xee\x02\n\x08\x43loudlet\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12)\n\x03key\x18\x02 \x01(\x0b\x32\x16.edgeproto.CloudletKeyB\x04\xc8\xde\x1f\x00\x12\x18\n\naccess_uri\x18\x04 \x01(\tB\x04\x88\xf4\x18\x01\x12\x35\n\x08location\x18\x05 \x01(\x0b\x32\x1d.distributed_match_engine.LocB\x04\xc8\xde\x1f\x00\x12(\n\nip_support\x18\x06 \x01(\x0e\x32\x14.edgeproto.IpSupport\x12\x12\n\nstatic_ips\x18\x07 \x01(\t\x12\x17\n\x0fnum_dynamic_ips\x18\x08 \x01(\x05:\x7f\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\xb0\xf4\x18\x01\x80\xf4\x18\x01\x8a\xb2\x19gLocation.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp\"\xed\x01\n\x0c\x43loudletInfo\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12)\n\x03key\x18\x02 \x01(\x0b\x32\x16.edgeproto.CloudletKeyB\x04\xc8\xde\x1f\x00\x12\'\n\x05state\x18\x03 \x01(\x0e\x32\x18.edgeproto.CloudletState\x12\x11\n\tnotify_id\x18\x04 \x01(\x03\x12\x12\n\nos_max_ram\x18\x06 \x01(\x04\x12\x15\n\ros_max_vcores\x18\x07 \x01(\x04\x12\x15\n\ros_max_vol_gb\x18\x08 \x01(\x04\x12\x0e\n\x06\x65rrors\x18\t \x03(\t:\x14\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x80\xf4\x18\x01\xa0\xf4\x18\x01\x90\xf4\x18\x01\"\x1e\n\x0f\x43loudletMetrics\x12\x0b\n\x03\x66oo\x18\x05 \x01(\x04*\x91\x01\n\rCloudletState\x12\x18\n\x14\x43loudletStateUnknown\x10\x00\x12\x17\n\x13\x43loudletStateErrors\x10\x01\x12\x16\n\x12\x43loudletStateReady\x10\x02\x12\x18\n\x14\x43loudletStateOffline\x10\x03\x12\x1b\n\x17\x43loudletStateNotPresent\x10\x04\x32\xf2\x02\n\x0b\x43loudletApi\x12W\n\x0e\x43reateCloudlet\x12\x13.edgeproto.Cloudlet\x1a\x11.edgeproto.Result\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/create/cloudlet:\x01*0\x01\x12Z\n\x0e\x44\x65leteCloudlet\x12\x13.edgeproto.Cloudlet\x1a\x11.edgeproto.Result\"\x1e\x82\xd3\xe4\x93\x02\x14\"\x0f/delete/cloudet:\x01*\x98\xb2\x19\x01\x30\x01\x12W\n\x0eUpdateCloudlet\x12\x13.edgeproto.Cloudlet\x1a\x11.edgeproto.Result\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/update/cloudlet:\x01*0\x01\x12U\n\x0cShowCloudlet\x12\x13.edgeproto.Cloudlet\x1a\x13.edgeproto.Cloudlet\"\x19\x82\xd3\xe4\x93\x02\x13\"\x0e/show/cloudlet:\x01*0\x01\x32\xff\x01\n\x0f\x43loudletInfoApi\x12\x65\n\x10ShowCloudletInfo\x12\x17.edgeproto.CloudletInfo\x1a\x17.edgeproto.CloudletInfo\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/show/cloudletinfo:\x01*0\x01\x12\x42\n\x12InjectCloudletInfo\x12\x17.edgeproto.CloudletInfo\x1a\x11.edgeproto.Result\"\x00\x12\x41\n\x11\x45victCloudletInfo\x12\x17.edgeproto.CloudletInfo\x1a\x11.edgeproto.Result\"\x00\x32\x87\x01\n\x12\x43loudletMetricsApi\x12q\n\x13ShowCloudletMetrics\x12\x1a.edgeproto.CloudletMetrics\x1a\x1a.edgeproto.CloudletMetrics\" \x82\xd3\xe4\x93\x02\x1a\"\x15/show/cloudletmetrics:\x01*0\x01\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,operator__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,loc__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
@@ -40,27 +40,27 @@ _CLOUDLETSTATE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='CloudletStateUnknown', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CloudletStateErrors', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CloudletStateReady', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CloudletStateOffline', index=3, number=3,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='CloudletStateNotPresent', index=4, number=4,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
+  serialized_options=None,
   serialized_start=884,
   serialized_end=1029,
 )
@@ -88,21 +88,21 @@ _CLOUDLETKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='name', full_name='edgeproto.CloudletKey.name', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -126,56 +126,56 @@ _CLOUDLET = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.Cloudlet.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='access_uri', full_name='edgeproto.Cloudlet.access_uri', index=2,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\210\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\210\364\030\001'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='location', full_name='edgeproto.Cloudlet.location', index=3,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='ip_support', full_name='edgeproto.Cloudlet.ip_support', index=4,
       number=6, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='static_ips', full_name='edgeproto.Cloudlet.static_ips', index=5,
       number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='num_dynamic_ips', full_name='edgeproto.Cloudlet.num_dynamic_ips', index=6,
       number=8, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031gLocation.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031gLocation.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -199,63 +199,63 @@ _CLOUDLETINFO = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.CloudletInfo.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='state', full_name='edgeproto.CloudletInfo.state', index=2,
       number=3, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='notify_id', full_name='edgeproto.CloudletInfo.notify_id', index=3,
       number=4, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='os_max_ram', full_name='edgeproto.CloudletInfo.os_max_ram', index=4,
       number=6, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='os_max_vcores', full_name='edgeproto.CloudletInfo.os_max_vcores', index=5,
       number=7, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='os_max_vol_gb', full_name='edgeproto.CloudletInfo.os_max_vol_gb', index=6,
       number=8, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='errors', full_name='edgeproto.CloudletInfo.errors', index=7,
       number=9, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -279,14 +279,14 @@ _CLOUDLETMETRICS = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=None,
+  serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -338,29 +338,21 @@ CloudletMetrics = _reflection.GeneratedProtocolMessageType('CloudletMetrics', (_
 _sym_db.RegisterMessage(CloudletMetrics)
 
 
-_CLOUDLETKEY.fields_by_name['operator_key'].has_options = True
-_CLOUDLETKEY.fields_by_name['operator_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLOUDLETKEY.has_options = True
-_CLOUDLETKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_CLOUDLET.fields_by_name['key'].has_options = True
-_CLOUDLET.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLOUDLET.fields_by_name['access_uri'].has_options = True
-_CLOUDLET.fields_by_name['access_uri']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\210\364\030\001'))
-_CLOUDLET.fields_by_name['location'].has_options = True
-_CLOUDLET.fields_by_name['location']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLOUDLET.has_options = True
-_CLOUDLET._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031gLocation.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp'))
-_CLOUDLETINFO.fields_by_name['key'].has_options = True
-_CLOUDLETINFO.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLOUDLETINFO.has_options = True
-_CLOUDLETINFO._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001'))
+_CLOUDLETKEY.fields_by_name['operator_key']._options = None
+_CLOUDLETKEY._options = None
+_CLOUDLET.fields_by_name['key']._options = None
+_CLOUDLET.fields_by_name['access_uri']._options = None
+_CLOUDLET.fields_by_name['location']._options = None
+_CLOUDLET._options = None
+_CLOUDLETINFO.fields_by_name['key']._options = None
+_CLOUDLETINFO._options = None
 
 _CLOUDLETAPI = _descriptor.ServiceDescriptor(
   name='CloudletApi',
   full_name='edgeproto.CloudletApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
+  serialized_options=None,
   serialized_start=1032,
   serialized_end=1402,
   methods=[
@@ -371,7 +363,7 @@ _CLOUDLETAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLET,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\025\"\020/create/cloudlet:\001*')),
+    serialized_options=_b('\202\323\344\223\002\025\"\020/create/cloudlet:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteCloudlet',
@@ -380,7 +372,7 @@ _CLOUDLETAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLET,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\024\"\017/delete/cloudet:\001*\230\262\031\001')),
+    serialized_options=_b('\202\323\344\223\002\024\"\017/delete/cloudet:\001*\230\262\031\001'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateCloudlet',
@@ -389,7 +381,7 @@ _CLOUDLETAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLET,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\025\"\020/update/cloudlet:\001*')),
+    serialized_options=_b('\202\323\344\223\002\025\"\020/update/cloudlet:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowCloudlet',
@@ -398,7 +390,7 @@ _CLOUDLETAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLET,
     output_type=_CLOUDLET,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\023\"\016/show/cloudlet:\001*')),
+    serialized_options=_b('\202\323\344\223\002\023\"\016/show/cloudlet:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLOUDLETAPI)
@@ -411,7 +403,7 @@ _CLOUDLETINFOAPI = _descriptor.ServiceDescriptor(
   full_name='edgeproto.CloudletInfoApi',
   file=DESCRIPTOR,
   index=1,
-  options=None,
+  serialized_options=None,
   serialized_start=1405,
   serialized_end=1660,
   methods=[
@@ -422,7 +414,7 @@ _CLOUDLETINFOAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLETINFO,
     output_type=_CLOUDLETINFO,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\027\"\022/show/cloudletinfo:\001*')),
+    serialized_options=_b('\202\323\344\223\002\027\"\022/show/cloudletinfo:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='InjectCloudletInfo',
@@ -431,7 +423,7 @@ _CLOUDLETINFOAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLETINFO,
     output_type=result__pb2._RESULT,
-    options=None,
+    serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
     name='EvictCloudletInfo',
@@ -440,7 +432,7 @@ _CLOUDLETINFOAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLETINFO,
     output_type=result__pb2._RESULT,
-    options=None,
+    serialized_options=None,
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLOUDLETINFOAPI)
@@ -453,7 +445,7 @@ _CLOUDLETMETRICSAPI = _descriptor.ServiceDescriptor(
   full_name='edgeproto.CloudletMetricsApi',
   file=DESCRIPTOR,
   index=2,
-  options=None,
+  serialized_options=None,
   serialized_start=1663,
   serialized_end=1798,
   methods=[
@@ -464,7 +456,7 @@ _CLOUDLETMETRICSAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLOUDLETMETRICS,
     output_type=_CLOUDLETMETRICS,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\032\"\025/show/cloudletmetrics:\001*')),
+    serialized_options=_b('\202\323\344\223\002\032\"\025/show/cloudletmetrics:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLOUDLETMETRICSAPI)

@@ -1,0 +1,43 @@
+// Generic metric data
+
+syntax = "proto3";
+package edgeproto;
+
+import "annotations.proto";
+import "protogen.proto";
+import "protocmd.proto";
+import "gogo.proto";
+//import "result.proto";
+import "timestamp.proto";
+
+
+// MetricTag is used as a tag or label to look up the metric, beyond just the name of the metric.
+message MetricTag {
+  // Metric tag name
+  string name = 1;
+  // Metric tag value
+  string val = 2;
+}
+
+// MetricVal is a value associated with the metric.
+message MetricVal {
+  // Name of the value
+  string name = 1;
+  // Value of the Value.
+  oneof value {
+    double dval = 2;
+    uint64 ival = 3;
+  }
+}
+
+// Metric is an entry/point in a time series of values for Analytics/Billing.
+message Metric {
+  // Metric name
+  string name = 1;
+  // Timestamp when the metric was captured
+  google.protobuf.Timestamp timestamp = 2 [(gogoproto.nullable) = false];
+  // Tags associated with the metric for searching/filtering
+  repeated MetricTag tags = 3;
+  // Values associated with the metric
+  repeated MetricVal vals = 4;
+}

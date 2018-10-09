@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -25,6 +24,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='clusterflavor.proto',
   package='edgeproto',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x13\x63lusterflavor.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0cresult.proto\x1a\x0c\x66lavor.proto\x1a\ngogo.proto\".\n\x10\x43lusterFlavorKey\x12\x0c\n\x04name\x18\x01 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\x80\x02\n\rClusterFlavor\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12.\n\x03key\x18\x02 \x01(\x0b\x32\x1b.edgeproto.ClusterFlavorKeyB\x04\xc8\xde\x1f\x00\x12/\n\x0bnode_flavor\x18\x03 \x01(\x0b\x32\x14.edgeproto.FlavorKeyB\x04\xc8\xde\x1f\x00\x12\x31\n\rmaster_flavor\x18\x04 \x01(\x0b\x32\x14.edgeproto.FlavorKeyB\x04\xc8\xde\x1f\x00\x12\x11\n\tnum_nodes\x18\x05 \x01(\r\x12\x11\n\tmax_nodes\x18\x06 \x01(\r\x12\x13\n\x0bnum_masters\x18\x07 \x01(\r:\x10\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\x80\xf4\x18\x01\x32\xaf\x03\n\x10\x43lusterFlavorApi\x12\x64\n\x13\x43reateClusterFlavor\x12\x18.edgeproto.ClusterFlavor\x1a\x11.edgeproto.Result\" \x82\xd3\xe4\x93\x02\x1a\"\x15/create/clusterflavor:\x01*\x12\x64\n\x13\x44\x65leteClusterFlavor\x12\x18.edgeproto.ClusterFlavor\x1a\x11.edgeproto.Result\" \x82\xd3\xe4\x93\x02\x1a\"\x15/delete/clusterflavor:\x01*\x12\x64\n\x13UpdateClusterFlavor\x12\x18.edgeproto.ClusterFlavor\x1a\x11.edgeproto.Result\" \x82\xd3\xe4\x93\x02\x1a\"\x15/update/clusterflavor:\x01*\x12i\n\x11ShowClusterFlavor\x12\x18.edgeproto.ClusterFlavor\x1a\x18.edgeproto.ClusterFlavor\"\x1e\x82\xd3\xe4\x93\x02\x18\"\x13/show/clusterflavor:\x01*0\x01\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,flavor__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
@@ -45,14 +45,14 @@ _CLUSTERFLAVORKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -76,56 +76,56 @@ _CLUSTERFLAVOR = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.ClusterFlavor.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='node_flavor', full_name='edgeproto.ClusterFlavor.node_flavor', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='master_flavor', full_name='edgeproto.ClusterFlavor.master_flavor', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='num_nodes', full_name='edgeproto.ClusterFlavor.num_nodes', index=4,
       number=5, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='max_nodes', full_name='edgeproto.ClusterFlavor.max_nodes', index=5,
       number=6, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='num_masters', full_name='edgeproto.ClusterFlavor.num_masters', index=6,
       number=7, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -157,23 +157,18 @@ ClusterFlavor = _reflection.GeneratedProtocolMessageType('ClusterFlavor', (_mess
 _sym_db.RegisterMessage(ClusterFlavor)
 
 
-_CLUSTERFLAVORKEY.has_options = True
-_CLUSTERFLAVORKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_CLUSTERFLAVOR.fields_by_name['key'].has_options = True
-_CLUSTERFLAVOR.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERFLAVOR.fields_by_name['node_flavor'].has_options = True
-_CLUSTERFLAVOR.fields_by_name['node_flavor']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERFLAVOR.fields_by_name['master_flavor'].has_options = True
-_CLUSTERFLAVOR.fields_by_name['master_flavor']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERFLAVOR.has_options = True
-_CLUSTERFLAVOR._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'))
+_CLUSTERFLAVORKEY._options = None
+_CLUSTERFLAVOR.fields_by_name['key']._options = None
+_CLUSTERFLAVOR.fields_by_name['node_flavor']._options = None
+_CLUSTERFLAVOR.fields_by_name['master_flavor']._options = None
+_CLUSTERFLAVOR._options = None
 
 _CLUSTERFLAVORAPI = _descriptor.ServiceDescriptor(
   name='ClusterFlavorApi',
   full_name='edgeproto.ClusterFlavorApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
+  serialized_options=None,
   serialized_start=433,
   serialized_end=864,
   methods=[
@@ -184,7 +179,7 @@ _CLUSTERFLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERFLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\032\"\025/create/clusterflavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\032\"\025/create/clusterflavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteClusterFlavor',
@@ -193,7 +188,7 @@ _CLUSTERFLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERFLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\032\"\025/delete/clusterflavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\032\"\025/delete/clusterflavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateClusterFlavor',
@@ -202,7 +197,7 @@ _CLUSTERFLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERFLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\032\"\025/update/clusterflavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\032\"\025/update/clusterflavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowClusterFlavor',
@@ -211,7 +206,7 @@ _CLUSTERFLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERFLAVOR,
     output_type=_CLUSTERFLAVOR,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\030\"\023/show/clusterflavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\030\"\023/show/clusterflavor:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLUSTERFLAVORAPI)
