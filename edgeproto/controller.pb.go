@@ -544,22 +544,33 @@ func (c *ControllerCache) GetAllKeys(keys map[ControllerKey]struct{}) {
 }
 
 func (c *ControllerCache) Update(in *Controller, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Controller) (*Controller, bool) {
+		return in, true
+	})
+}
+
+func (c *ControllerCache) UpdateModFunc(key *ControllerKey, rev int64, modFunc func(old *Controller) (new *Controller, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Controller{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Controller{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Controller", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Controller", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ControllerCache) Delete(in *Controller, rev int64) {

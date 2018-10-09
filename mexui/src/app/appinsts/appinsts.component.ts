@@ -452,12 +452,14 @@ export class AppinstsComponent implements OnInit {
      (data) => {
          // console.log("Delete called with index = ${index}");
          this.appinsts.splice(index,1);
+         this.ngOnInit();
      },
      error =>  {
        // Temporary solution: need to understand this error better.
        // console.log('oops', error);
        // console.log("Got Error on Delete  with index = " + index);
        this.appinsts.splice(index,1);
+       this.ngOnInit();
      }
    );
  }
