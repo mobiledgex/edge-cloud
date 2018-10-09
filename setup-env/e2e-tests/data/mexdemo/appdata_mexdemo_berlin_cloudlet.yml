@@ -1,0 +1,14 @@
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TDG
+    name: berlindemocloudlet
+  accessuri:
+  location:
+    lat: 52.5200
+    long: 13.4050
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+
+

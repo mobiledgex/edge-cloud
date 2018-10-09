@@ -17,13 +17,7 @@ cloudflare:
     content: 40.113.219.126
   - name: mexdemo.ctrl.mobiledgex.net
     type: A
-    content: 168.61.185.109
-  - name: mexdemo.ctrl-http.mobiledgex.net
-    type: A
-    content: 104.43.134.79
-  - name: mexdemo.ctrl-not.mobiledgex.net
-    type: A
-    content: 104.43.211.39
+    content: 40.122.66.18
   - name: mobiledgexsdkdemo.centraluscloudlet.tdg.mobiledgex.net
     type: A
     content: 40.113.219.126
@@ -38,7 +32,7 @@ cloudflare:
     content: 40.113.226.72
   - name: mobiledgexsdkdemo.aznortheuropecloudlet.azure.mobiledgex.net
     type: A
-    content: 40.112.91.229
+    content: 40.113.70.39
   - name: mobiledgexsdkdemo.berlincloudlet.tdg.mobiledgex.net
     type: A
     content: 80.187.128.15
@@ -55,8 +49,6 @@ tlscerts:
     - mobiledgexsdkdemo.westuscloudlet.tdg.mobiledgex.net
     - mobiledgexsdkdemo.bonncloudlet.tdg.mobiledgex.net
     - mexdemo.ctrl.mobiledgex.net
-    - mexdemo.ctrl-http.mobiledgex.net
-    - mexdemo.ctrl-not.mobiledgex.net
     - mexdemo.dme.mobiledgex.net
   ips:
     - 127.0.0.1
@@ -88,45 +80,21 @@ k8s-deployment:
      description: deploys the controllers
      waitforpods:
       - podname: controller
-        podcount: 2
+        podcount: 1
         maxwait: 180
 
    - file: mex-controller-lb.yml
      description: create a load balancer for controllers
 
-   - file: mex-controller-notify-lb.yml
-     description: expose controller notify port via lb 
-
    - file: mex-dme-deploy.yml
      description: deploys the dmes
      waitforpods:
       - podname: dme
-        podcount: 2
+        podcount: 1
         maxwait: 180
 
    - file: mex-dme-lb.yml
      description: create a load balancer for dmes
-
-   - file: mex-crm-deploy-centralus.yml
-     description: deploys the cluster in azure central
-     waitforpods:
-      - podname: crmcentralus
-        podcount: 1
-        maxwait: 180
-
-   - file: mex-crm-deploy-westus.yml
-     description: deploys the cluster in azure west
-     waitforpods:
-      - podname: crmwestus
-        podcount: 1
-        maxwait: 180
-
-   - file: mex-crm-deploy-bonn.yml
-     description: deploys the cluster in bonn
-     waitforpods:
-      - podname: crmbonn
-        podcount: 1
-        maxwait: 180
 
 
 controllers:
