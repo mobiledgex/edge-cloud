@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 #
 # create app with default empty and missing 
@@ -10,8 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -23,10 +22,14 @@ developer_address = 'allen tx'
 developer_email = 'dev@dev.com'
 app_name = 'app' + stamp
 app_version = '1.0'
+access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -37,8 +40,8 @@ class tc(unittest.TestCase):
                                                    )
 
         self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
+                                                  developer_address=developer_address,
+                                                  developer_email=developer_email)
         self.controller.create_developer(self.developer.developer) 
     def test_CreateAppDefaultFlavorEmpty(self):
         # print the existing apps 
@@ -48,6 +51,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
                                  app_name=app_name,
+                                 access_ports=access_ports,
                                  app_version=app_version,
                                  cluster_name='dummyCluster',
                                  developer_name=developer_name,
@@ -55,7 +59,7 @@ class tc(unittest.TestCase):
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logging.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -74,6 +78,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeQCOW',
                                  app_name=app_name,
+                                 access_ports=access_ports,
                                  app_version=app_version,
                                  cluster_name='dummyCluster',
                                  developer_name=developer_name,
@@ -81,7 +86,7 @@ class tc(unittest.TestCase):
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -100,6 +105,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
                                  app_name=app_name,
+                                 access_ports=access_ports,
                                  app_version=app_version,
                                  cluster_name='dummyCluster',
                                  developer_name=developer_name,
@@ -107,7 +113,7 @@ class tc(unittest.TestCase):
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error
@@ -126,6 +132,7 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeQCOW',
                                  app_name=app_name,
+                                 access_ports=access_ports,
                                  app_version=app_version,
                                  cluster_name='dummyCluster',
                                  developer_name=developer_name,
@@ -133,7 +140,7 @@ class tc(unittest.TestCase):
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print the cluster instances after error

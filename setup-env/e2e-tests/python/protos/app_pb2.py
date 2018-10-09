@@ -8,7 +8,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -21,6 +20,7 @@ import protocmd_pb2 as protocmd__pb2
 import developer_pb2 as developer__pb2
 import flavor_pb2 as flavor__pb2
 import cluster_pb2 as cluster__pb2
+import common_pb2 as common__pb2
 import gogo_pb2 as gogo__pb2
 
 
@@ -28,9 +28,10 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='app.proto',
   package='edgeproto',
   syntax='proto3',
-  serialized_pb=_b('\n\tapp.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0cresult.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0f\x64\x65veloper.proto\x1a\x0c\x66lavor.proto\x1a\rcluster.proto\x1a\ngogo.proto\"k\n\x06\x41ppKey\x12\x34\n\rdeveloper_key\x18\x01 \x01(\x0b\x32\x17.edgeproto.DeveloperKeyB\x04\xc8\xde\x1f\x00\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07version\x18\x03 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\xd8\x02\n\x03\x41pp\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12$\n\x03key\x18\x02 \x01(\x0b\x32\x11.edgeproto.AppKeyB\x04\xc8\xde\x1f\x00\x12\x18\n\nimage_path\x18\x04 \x01(\tB\x04\xa8\xf4\x18\x01\x12(\n\nimage_type\x18\x05 \x01(\x0e\x32\x14.edgeproto.ImageType\x12,\n\x0c\x61\x63\x63\x65ss_layer\x18\x06 \x01(\x0e\x32\x16.edgeproto.AccessLayer\x12\x14\n\x0c\x61\x63\x63\x65ss_ports\x18\x07 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x08 \x01(\t\x12\x32\n\x0e\x64\x65\x66\x61ult_flavor\x18\t \x01(\x0b\x32\x14.edgeproto.FlavorKeyB\x04\xc8\xde\x1f\x00\x12\x30\n\x07\x63luster\x18\n \x01(\x0b\x32\x15.edgeproto.ClusterKeyB\x08\xc8\xde\x1f\x00\xa8\xf4\x18\x01:\x1d\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\x80\xf4\x18\x01\x8a\xb2\x19\tImagePath*I\n\tImageType\x12\x14\n\x10ImageTypeUnknown\x10\x00\x12\x13\n\x0fImageTypeDocker\x10\x01\x12\x11\n\rImageTypeQCOW\x10\x02*`\n\x0b\x41\x63\x63\x65ssLayer\x12\x16\n\x12\x41\x63\x63\x65ssLayerUnknown\x10\x00\x12\x11\n\rAccessLayerL4\x10\x01\x12\x11\n\rAccessLayerL7\x10\x02\x12\x13\n\x0f\x41\x63\x63\x65ssLayerL4L7\x10\x03\x32\xa3\x02\n\x06\x41ppApi\x12\x46\n\tCreateApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/create/app:\x01*\x12\x46\n\tDeleteApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/delete/app:\x01*\x12\x46\n\tUpdateApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/update/app:\x01*\x12\x41\n\x07ShowApp\x12\x0e.edgeproto.App\x1a\x0e.edgeproto.App\"\x14\x82\xd3\xe4\x93\x02\x0e\"\t/show/app:\x01*0\x01\x62\x06proto3')
+  serialized_options=None,
+  serialized_pb=_b('\n\tapp.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0cresult.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0f\x64\x65veloper.proto\x1a\x0c\x66lavor.proto\x1a\rcluster.proto\x1a\x0c\x63ommon.proto\x1a\ngogo.proto\"k\n\x06\x41ppKey\x12\x34\n\rdeveloper_key\x18\x01 \x01(\x0b\x32\x17.edgeproto.DeveloperKeyB\x04\xc8\xde\x1f\x00\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0f\n\x07version\x18\x03 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\xdb\x02\n\x03\x41pp\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12$\n\x03key\x18\x02 \x01(\x0b\x32\x11.edgeproto.AppKeyB\x04\xc8\xde\x1f\x00\x12\x18\n\nimage_path\x18\x04 \x01(\tB\x04\xa8\xf4\x18\x01\x12(\n\nimage_type\x18\x05 \x01(\x0e\x32\x14.edgeproto.ImageType\x12&\n\tip_access\x18\x06 \x01(\x0e\x32\x13.edgeproto.IpAccess\x12\x14\n\x0c\x61\x63\x63\x65ss_ports\x18\x07 \x01(\t\x12\x0e\n\x06\x63onfig\x18\x08 \x01(\t\x12\x32\n\x0e\x64\x65\x66\x61ult_flavor\x18\t \x01(\x0b\x32\x14.edgeproto.FlavorKeyB\x04\xc8\xde\x1f\x00\x12\x30\n\x07\x63luster\x18\n \x01(\x0b\x32\x15.edgeproto.ClusterKeyB\x08\xc8\xde\x1f\x00\xa8\xf4\x18\x01\x12\x14\n\x0c\x61pp_template\x18\x0b \x01(\t:\x10\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\x80\xf4\x18\x01*I\n\tImageType\x12\x14\n\x10ImageTypeUnknown\x10\x00\x12\x13\n\x0fImageTypeDocker\x10\x01\x12\x11\n\rImageTypeQCOW\x10\x02\x32\xa3\x02\n\x06\x41ppApi\x12\x46\n\tCreateApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/create/app:\x01*\x12\x46\n\tDeleteApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/delete/app:\x01*\x12\x46\n\tUpdateApp\x12\x0e.edgeproto.App\x1a\x11.edgeproto.Result\"\x16\x82\xd3\xe4\x93\x02\x10\"\x0b/update/app:\x01*\x12\x41\n\x07ShowApp\x12\x0e.edgeproto.App\x1a\x0e.edgeproto.App\"\x14\x82\xd3\xe4\x93\x02\x0e\"\t/show/app:\x01*0\x01\x62\x06proto3')
   ,
-  dependencies=[annotations__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,developer__pb2.DESCRIPTOR,flavor__pb2.DESCRIPTOR,cluster__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
+  dependencies=[annotations__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,developer__pb2.DESCRIPTOR,flavor__pb2.DESCRIPTOR,cluster__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
 
 _IMAGETYPE = _descriptor.EnumDescriptor(
   name='ImageType',
@@ -40,63 +41,28 @@ _IMAGETYPE = _descriptor.EnumDescriptor(
   values=[
     _descriptor.EnumValueDescriptor(
       name='ImageTypeUnknown', index=0, number=0,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='ImageTypeDocker', index=1, number=1,
-      options=None,
+      serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
       name='ImageTypeQCOW', index=2, number=2,
-      options=None,
+      serialized_options=None,
       type=None),
   ],
   containing_type=None,
-  options=None,
-  serialized_start=603,
-  serialized_end=676,
+  serialized_options=None,
+  serialized_start=620,
+  serialized_end=693,
 )
 _sym_db.RegisterEnumDescriptor(_IMAGETYPE)
 
 ImageType = enum_type_wrapper.EnumTypeWrapper(_IMAGETYPE)
-_ACCESSLAYER = _descriptor.EnumDescriptor(
-  name='AccessLayer',
-  full_name='edgeproto.AccessLayer',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='AccessLayerUnknown', index=0, number=0,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='AccessLayerL4', index=1, number=1,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='AccessLayerL7', index=2, number=2,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='AccessLayerL4L7', index=3, number=3,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=678,
-  serialized_end=774,
-)
-_sym_db.RegisterEnumDescriptor(_ACCESSLAYER)
-
-AccessLayer = enum_type_wrapper.EnumTypeWrapper(_ACCESSLAYER)
 ImageTypeUnknown = 0
 ImageTypeDocker = 1
 ImageTypeQCOW = 2
-AccessLayerUnknown = 0
-AccessLayerL4 = 1
-AccessLayerL7 = 2
-AccessLayerL4L7 = 3
 
 
 
@@ -113,35 +79,35 @@ _APPKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='name', full_name='edgeproto.AppKey.name', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='version', full_name='edgeproto.AppKey.version', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=147,
-  serialized_end=254,
+  serialized_start=161,
+  serialized_end=268,
 )
 
 
@@ -158,89 +124,95 @@ _APP = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.App.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='image_path', full_name='edgeproto.App.image_path', index=2,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\250\364\030\001'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='image_type', full_name='edgeproto.App.image_type', index=3,
       number=5, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='access_layer', full_name='edgeproto.App.access_layer', index=4,
+      name='ip_access', full_name='edgeproto.App.ip_access', index=4,
       number=6, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='access_ports', full_name='edgeproto.App.access_ports', index=5,
       number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='config', full_name='edgeproto.App.config', index=6,
       number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='default_flavor', full_name='edgeproto.App.default_flavor', index=7,
       number=9, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='cluster', full_name='edgeproto.App.cluster', index=8,
       number=10, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000\250\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000\250\364\030\001'), file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='app_template', full_name='edgeproto.App.app_template', index=9,
+      number=11, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001\212\262\031\tImagePath')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=257,
-  serialized_end=601,
+  serialized_start=271,
+  serialized_end=618,
 )
 
 _APPKEY.fields_by_name['developer_key'].message_type = developer__pb2._DEVELOPERKEY
 _APP.fields_by_name['key'].message_type = _APPKEY
 _APP.fields_by_name['image_type'].enum_type = _IMAGETYPE
-_APP.fields_by_name['access_layer'].enum_type = _ACCESSLAYER
+_APP.fields_by_name['ip_access'].enum_type = common__pb2._IPACCESS
 _APP.fields_by_name['default_flavor'].message_type = flavor__pb2._FLAVORKEY
 _APP.fields_by_name['cluster'].message_type = cluster__pb2._CLUSTERKEY
 DESCRIPTOR.message_types_by_name['AppKey'] = _APPKEY
 DESCRIPTOR.message_types_by_name['App'] = _APP
 DESCRIPTOR.enum_types_by_name['ImageType'] = _IMAGETYPE
-DESCRIPTOR.enum_types_by_name['AccessLayer'] = _ACCESSLAYER
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 AppKey = _reflection.GeneratedProtocolMessageType('AppKey', (_message.Message,), dict(
@@ -258,29 +230,22 @@ App = _reflection.GeneratedProtocolMessageType('App', (_message.Message,), dict(
 _sym_db.RegisterMessage(App)
 
 
-_APPKEY.fields_by_name['developer_key'].has_options = True
-_APPKEY.fields_by_name['developer_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_APPKEY.has_options = True
-_APPKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_APP.fields_by_name['key'].has_options = True
-_APP.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_APP.fields_by_name['image_path'].has_options = True
-_APP.fields_by_name['image_path']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001'))
-_APP.fields_by_name['default_flavor'].has_options = True
-_APP.fields_by_name['default_flavor']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_APP.fields_by_name['cluster'].has_options = True
-_APP.fields_by_name['cluster']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000\250\364\030\001'))
-_APP.has_options = True
-_APP._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001\212\262\031\tImagePath'))
+_APPKEY.fields_by_name['developer_key']._options = None
+_APPKEY._options = None
+_APP.fields_by_name['key']._options = None
+_APP.fields_by_name['image_path']._options = None
+_APP.fields_by_name['default_flavor']._options = None
+_APP.fields_by_name['cluster']._options = None
+_APP._options = None
 
 _APPAPI = _descriptor.ServiceDescriptor(
   name='AppApi',
   full_name='edgeproto.AppApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
-  serialized_start=777,
-  serialized_end=1068,
+  serialized_options=None,
+  serialized_start=696,
+  serialized_end=987,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateApp',
@@ -289,7 +254,7 @@ _APPAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_APP,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\020\"\013/create/app:\001*')),
+    serialized_options=_b('\202\323\344\223\002\020\"\013/create/app:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteApp',
@@ -298,7 +263,7 @@ _APPAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_APP,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\020\"\013/delete/app:\001*')),
+    serialized_options=_b('\202\323\344\223\002\020\"\013/delete/app:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateApp',
@@ -307,7 +272,7 @@ _APPAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_APP,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\020\"\013/update/app:\001*')),
+    serialized_options=_b('\202\323\344\223\002\020\"\013/update/app:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowApp',
@@ -316,7 +281,7 @@ _APPAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_APP,
     output_type=_APP,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\016\"\t/show/app:\001*')),
+    serialized_options=_b('\202\323\344\223\002\016\"\t/show/app:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_APPAPI)
