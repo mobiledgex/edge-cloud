@@ -10,6 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
+import logging
 
 import mex_controller
 
@@ -18,6 +19,9 @@ controller_address = '127.0.0.1:55001'
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -37,7 +41,7 @@ class tc(unittest.TestCase):
         try:
             self.controller.create_developer(self.developer.developer)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print developers after add
@@ -59,7 +63,7 @@ class tc(unittest.TestCase):
         try:
             self.controller.create_developer(self.developer.developer)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print developers after add

@@ -10,6 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
+import logging
 
 import mex_controller
 
@@ -27,6 +28,9 @@ developer_passhash = 'sdfasfadfafasfafafafafaeffsdffasfafafafadafafafafdafafafae
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
