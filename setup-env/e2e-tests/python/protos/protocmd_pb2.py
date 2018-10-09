@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -20,6 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='protocmd.proto',
   package='protocmd',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x0eprotocmd.proto\x12\x08protocmd\x1a google/protobuf/descriptor.proto:3\n\x08noconfig\x12\x1f.google.protobuf.MessageOptions\x18\xa1\x96\x03 \x01(\t:0\n\x07hidetag\x12\x1d.google.protobuf.FieldOptions\x18\xa2\x96\x03 \x01(\t:@\n\x16stream_out_incremental\x12\x1e.google.protobuf.MethodOptions\x18\xa3\x96\x03 \x01(\x08\x62\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_descriptor__pb2.DESCRIPTOR,])
@@ -32,7 +32,7 @@ noconfig = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=_b("").decode('utf-8'),
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 HIDETAG_FIELD_NUMBER = 52002
 hidetag = _descriptor.FieldDescriptor(
   name='hidetag', full_name='protocmd.hidetag', index=1,
@@ -40,7 +40,7 @@ hidetag = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=_b("").decode('utf-8'),
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 STREAM_OUT_INCREMENTAL_FIELD_NUMBER = 52003
 stream_out_incremental = _descriptor.FieldDescriptor(
   name='stream_out_incremental', full_name='protocmd.stream_out_incremental', index=2,
@@ -48,7 +48,7 @@ stream_out_incremental = _descriptor.FieldDescriptor(
   has_default_value=False, default_value=False,
   message_type=None, enum_type=None, containing_type=None,
   is_extension=True, extension_scope=None,
-  options=None, file=DESCRIPTOR)
+  serialized_options=None, file=DESCRIPTOR)
 
 DESCRIPTOR.extensions_by_name['noconfig'] = noconfig
 DESCRIPTOR.extensions_by_name['hidetag'] = hidetag

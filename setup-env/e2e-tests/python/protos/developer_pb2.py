@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -23,6 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='developer.proto',
   package='edgeproto',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x0f\x64\x65veloper.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0cresult.proto\x1a\ngogo.proto\"*\n\x0c\x44\x65veloperKey\x12\x0c\n\x04name\x18\x02 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\xa3\x01\n\tDeveloper\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12*\n\x03key\x18\x02 \x01(\x0b\x32\x17.edgeproto.DeveloperKeyB\x04\xc8\xde\x1f\x00\x12\x10\n\x08username\x18\x03 \x01(\t\x12\x10\n\x08passhash\x18\x04 \x01(\t\x12\x0f\n\x07\x61\x64\x64ress\x18\x05 \x01(\t\x12\x13\n\x05\x65mail\x18\x06 \x01(\tB\x04\x88\xf4\x18\x01:\x10\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\x80\xf4\x18\x01\x32\xf7\x02\n\x0c\x44\x65veloperApi\x12X\n\x0f\x43reateDeveloper\x12\x14.edgeproto.Developer\x1a\x11.edgeproto.Result\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/create/developer:\x01*\x12X\n\x0f\x44\x65leteDeveloper\x12\x14.edgeproto.Developer\x1a\x11.edgeproto.Result\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/delete/developer:\x01*\x12X\n\x0fUpdateDeveloper\x12\x14.edgeproto.Developer\x1a\x11.edgeproto.Result\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/update/developer:\x01*\x12Y\n\rShowDeveloper\x12\x14.edgeproto.Developer\x1a\x14.edgeproto.Developer\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/show/developer:\x01*0\x01\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
@@ -43,14 +43,14 @@ _DEVELOPERKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -74,49 +74,49 @@ _DEVELOPER = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.Developer.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='username', full_name='edgeproto.Developer.username', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='passhash', full_name='edgeproto.Developer.passhash', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='address', full_name='edgeproto.Developer.address', index=4,
       number=5, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='email', full_name='edgeproto.Developer.email', index=5,
       number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\210\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\210\364\030\001'), file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -146,21 +146,17 @@ Developer = _reflection.GeneratedProtocolMessageType('Developer', (_message.Mess
 _sym_db.RegisterMessage(Developer)
 
 
-_DEVELOPERKEY.has_options = True
-_DEVELOPERKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_DEVELOPER.fields_by_name['key'].has_options = True
-_DEVELOPER.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_DEVELOPER.fields_by_name['email'].has_options = True
-_DEVELOPER.fields_by_name['email']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\210\364\030\001'))
-_DEVELOPER.has_options = True
-_DEVELOPER._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'))
+_DEVELOPERKEY._options = None
+_DEVELOPER.fields_by_name['key']._options = None
+_DEVELOPER.fields_by_name['email']._options = None
+_DEVELOPER._options = None
 
 _DEVELOPERAPI = _descriptor.ServiceDescriptor(
   name='DeveloperApi',
   full_name='edgeproto.DeveloperApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
+  serialized_options=None,
   serialized_start=302,
   serialized_end=677,
   methods=[
@@ -171,7 +167,7 @@ _DEVELOPERAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_DEVELOPER,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/create/developer:\001*')),
+    serialized_options=_b('\202\323\344\223\002\026\"\021/create/developer:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteDeveloper',
@@ -180,7 +176,7 @@ _DEVELOPERAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_DEVELOPER,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/delete/developer:\001*')),
+    serialized_options=_b('\202\323\344\223\002\026\"\021/delete/developer:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateDeveloper',
@@ -189,7 +185,7 @@ _DEVELOPERAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_DEVELOPER,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/update/developer:\001*')),
+    serialized_options=_b('\202\323\344\223\002\026\"\021/update/developer:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowDeveloper',
@@ -198,7 +194,7 @@ _DEVELOPERAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_DEVELOPER,
     output_type=_DEVELOPER,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\024\"\017/show/developer:\001*')),
+    serialized_options=_b('\202\323\344\223\002\024\"\017/show/developer:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_DEVELOPERAPI)

@@ -1,9 +1,9 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
-# EDGECLOUD-192 - able to create an app with invalid imagetype and accesslayer
+# EDGECLOUD-192 - able to create an app with invalid imagetype and accesslayer - fixed
 #
-# create app with image_type=ImageTypeQCOW  
-# verify image_path='qcow path not determined yet' 
+# create app with invalid image_type
+# verify error of 'invalid Image Type' is received
 # 
 
 import unittest
@@ -11,8 +11,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -25,10 +24,14 @@ flavor = 'x1.small'
 cluster_name = 'cluster' + stamp
 app_name = 'app' + stamp
 app_version = '1.0'
+access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -38,44 +41,38 @@ class tc(unittest.TestCase):
                                                     client_cert = mex_cert
                                                    )
 
-        self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
-        self.cluster = mex_controller.Cluster(cluster_name=cluster_name,
-                                              default_flavor_name=flavor)
+    def test_CreateInvalidImageType(self):
+        # print the existing apps 
+        apps_pre = self.controller.show_apps()
 
-        # contains image_type=QCOW
+        # create the app
         self.app = mex_controller.App(image_type=9,
                                       app_name=app_name,
                                       app_version=app_version,
-                                      access_layer=7,
+                                      access_ports=access_ports,
                                       cluster_name=cluster_name,
                                       developer_name=developer_name,
                                       default_flavor_name=flavor)
 
-        self.controller.create_developer(self.developer.developer) 
-        self.controller.create_cluster(self.cluster.cluster)
-
-    def test_CreateAppNoAccessLayer(self):
-        # print the existing apps 
-        app_pre = self.controller.show_apps()
-
-        # create the app
-        resp = self.controller.create_app(self.app.app)
+        error = None
+        try:                               
+            resp = self.controller.create_app(self.app.app)
+        except grpc.RpcError as e:
+            print('got exception', e)
+            error = e
 
         # print the cluster instances after error
-        app_post = self.controller.show_apps()
+        apps_post = self.controller.show_apps()
 
         # find app in list
-        found_app = self.app.exists(app_post)
+        found_app = self.app.exists(apps_post)
 
-        expect_equal(found_app, True, 'find app')
+        expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
+        expect_equal(error.details(), 'invalid Image Type', 'error details')
+        expect_equal(found_app, False, 'find app')
+        expect_equal(len(apps_post), len(apps_pre), 'num developer')
+                
         assert_expectations()
-
-#    def tearDown(self):
-#        self.controller.delete_app(self.app.app)
-#        self.controller.delete_cluster(self.cluster.cluster)
-#        self.controller.delete_developer(self.developer.developer)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(tc)

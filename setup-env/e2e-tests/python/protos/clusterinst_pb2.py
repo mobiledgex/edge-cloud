@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -28,7 +27,8 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='clusterinst.proto',
   package='edgeproto',
   syntax='proto3',
-  serialized_pb=_b('\n\x11\x63lusterinst.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0cresult.proto\x1a\x13\x63lusterflavor.proto\x1a\rcluster.proto\x1a\x0e\x63loudlet.proto\x1a\x0c\x63ommon.proto\x1a\ngogo.proto\"\x84\x01\n\x0e\x43lusterInstKey\x12\x30\n\x0b\x63luster_key\x18\x01 \x01(\x0b\x32\x15.edgeproto.ClusterKeyB\x04\xc8\xde\x1f\x00\x12\x32\n\x0c\x63loudlet_key\x18\x02 \x01(\x0b\x32\x16.edgeproto.CloudletKeyB\x04\xc8\xde\x1f\x00:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\xd6\x02\n\x0b\x43lusterInst\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12,\n\x03key\x18\x02 \x01(\x0b\x32\x19.edgeproto.ClusterInstKeyB\x04\xc8\xde\x1f\x00\x12\x35\n\x06\x66lavor\x18\x03 \x01(\x0b\x32\x1b.edgeproto.ClusterFlavorKeyB\x08\xc8\xde\x1f\x00\xa8\xf4\x18\x01\x12+\n\x08liveness\x18\t \x01(\x0e\x32\x13.edgeproto.LivenessB\x04\xa8\xf4\x18\x01\x12\x12\n\x04\x61uto\x18\n \x01(\x08\x42\x04\xa8\xf4\x18\x01\x12\x35\n\x05state\x18\x04 \x01(\x0e\x32\x17.edgeproto.TrackedStateB\r\xa8\xf4\x18\x01\x92\xb2\x19\x05nocmp\x12\x1d\n\x06\x65rrors\x18\x05 \x03(\tB\r\xa8\xf4\x18\x01\x92\xb2\x19\x05nocmp:;\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\xb0\xf4\x18\x01\x80\xf4\x18\x01\x8a\xb2\x19\x13Nodes,Liveness,Auto\xba\xf4\x18\x0cTrackedState\"\xbb\x01\n\x0f\x43lusterInstInfo\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12,\n\x03key\x18\x02 \x01(\x0b\x32\x19.edgeproto.ClusterInstKeyB\x04\xc8\xde\x1f\x00\x12\x1c\n\tnotify_id\x18\x03 \x01(\x03\x42\t\x92\xb2\x19\x05nocmp\x12&\n\x05state\x18\x04 \x01(\x0e\x32\x17.edgeproto.TrackedState\x12\x0e\n\x06\x65rrors\x18\x05 \x03(\t:\x14\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x80\xf4\x18\x01\xa0\xf4\x18\x01\x90\xf4\x18\x01\x32\xa5\x03\n\x0e\x43lusterInstApi\x12\x64\n\x11\x43reateClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/create/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x64\n\x11\x44\x65leteClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/delete/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x64\n\x11UpdateClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/update/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x61\n\x0fShowClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x16.edgeproto.ClusterInst\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/show/clusterinst:\x01*0\x01\x32\x87\x01\n\x12\x43lusterInstInfoApi\x12q\n\x13ShowClusterInstInfo\x12\x1a.edgeproto.ClusterInstInfo\x1a\x1a.edgeproto.ClusterInstInfo\" \x82\xd3\xe4\x93\x02\x1a\"\x15/show/clusterinstinfo:\x01*0\x01\x62\x06proto3')
+  serialized_options=None,
+  serialized_pb=_b('\n\x11\x63lusterinst.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0cresult.proto\x1a\x13\x63lusterflavor.proto\x1a\rcluster.proto\x1a\x0e\x63loudlet.proto\x1a\x0c\x63ommon.proto\x1a\ngogo.proto\"\x84\x01\n\x0e\x43lusterInstKey\x12\x30\n\x0b\x63luster_key\x18\x01 \x01(\x0b\x32\x15.edgeproto.ClusterKeyB\x04\xc8\xde\x1f\x00\x12\x32\n\x0c\x63loudlet_key\x18\x02 \x01(\x0b\x32\x16.edgeproto.CloudletKeyB\x04\xc8\xde\x1f\x00:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"\x8f\x03\n\x0b\x43lusterInst\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12,\n\x03key\x18\x02 \x01(\x0b\x32\x19.edgeproto.ClusterInstKeyB\x04\xc8\xde\x1f\x00\x12\x35\n\x06\x66lavor\x18\x03 \x01(\x0b\x32\x1b.edgeproto.ClusterFlavorKeyB\x08\xc8\xde\x1f\x00\xa8\xf4\x18\x01\x12+\n\x08liveness\x18\t \x01(\x0e\x32\x13.edgeproto.LivenessB\x04\xa8\xf4\x18\x01\x12\x12\n\x04\x61uto\x18\n \x01(\x08\x42\x04\xa8\xf4\x18\x01\x12\x35\n\x05state\x18\x04 \x01(\x0e\x32\x17.edgeproto.TrackedStateB\r\xa8\xf4\x18\x01\x92\xb2\x19\x05nocmp\x12\x1d\n\x06\x65rrors\x18\x05 \x03(\tB\r\xa8\xf4\x18\x01\x92\xb2\x19\x05nocmp\x12\x37\n\x0c\x63rm_override\x18\x06 \x01(\x0e\x32\x16.edgeproto.CRMOverrideB\t\x92\xb2\x19\x05nocmp:;\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\xb0\xf4\x18\x01\x80\xf4\x18\x01\x8a\xb2\x19\x13Nodes,Liveness,Auto\xba\xf4\x18\x0cTrackedState\"\xbb\x01\n\x0f\x43lusterInstInfo\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12,\n\x03key\x18\x02 \x01(\x0b\x32\x19.edgeproto.ClusterInstKeyB\x04\xc8\xde\x1f\x00\x12\x1c\n\tnotify_id\x18\x03 \x01(\x03\x42\t\x92\xb2\x19\x05nocmp\x12&\n\x05state\x18\x04 \x01(\x0e\x32\x17.edgeproto.TrackedState\x12\x0e\n\x06\x65rrors\x18\x05 \x03(\t:\x14\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x80\xf4\x18\x01\xa0\xf4\x18\x01\x90\xf4\x18\x01\x32\xa5\x03\n\x0e\x43lusterInstApi\x12\x64\n\x11\x43reateClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/create/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x64\n\x11\x44\x65leteClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/delete/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x64\n\x11UpdateClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x11.edgeproto.Result\"\"\x82\xd3\xe4\x93\x02\x18\"\x13/update/clusterinst:\x01*\x98\xb2\x19\x01\x30\x01\x12\x61\n\x0fShowClusterInst\x12\x16.edgeproto.ClusterInst\x1a\x16.edgeproto.ClusterInst\"\x1c\x82\xd3\xe4\x93\x02\x16\"\x11/show/clusterinst:\x01*0\x01\x32\x87\x01\n\x12\x43lusterInstInfoApi\x12q\n\x13ShowClusterInstInfo\x12\x1a.edgeproto.ClusterInstInfo\x1a\x1a.edgeproto.ClusterInstInfo\" \x82\xd3\xe4\x93\x02\x1a\"\x15/show/clusterinstinfo:\x01*0\x01\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,clusterflavor__pb2.DESCRIPTOR,cluster__pb2.DESCRIPTOR,cloudlet__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
 
@@ -48,21 +48,21 @@ _CLUSTERINSTKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='cloudlet_key', full_name='edgeproto.ClusterInstKey.cloudlet_key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -86,63 +86,70 @@ _CLUSTERINST = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.ClusterInst.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='flavor', full_name='edgeproto.ClusterInst.flavor', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000\250\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000\250\364\030\001'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='liveness', full_name='edgeproto.ClusterInst.liveness', index=3,
       number=9, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\250\364\030\001'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='auto', full_name='edgeproto.ClusterInst.auto', index=4,
       number=10, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001')), file=DESCRIPTOR),
+      serialized_options=_b('\250\364\030\001'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='state', full_name='edgeproto.ClusterInst.state', index=5,
       number=4, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001\222\262\031\005nocmp')), file=DESCRIPTOR),
+      serialized_options=_b('\250\364\030\001\222\262\031\005nocmp'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='errors', full_name='edgeproto.ClusterInst.errors', index=6,
       number=5, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001\222\262\031\005nocmp')), file=DESCRIPTOR),
+      serialized_options=_b('\250\364\030\001\222\262\031\005nocmp'), file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='crm_override', full_name='edgeproto.ClusterInst.crm_override', index=7,
+      number=6, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=_b('\222\262\031\005nocmp'), file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031\023Nodes,Liveness,Auto\272\364\030\014TrackedState')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031\023Nodes,Liveness,Auto\272\364\030\014TrackedState'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
   serialized_start=311,
-  serialized_end=653,
+  serialized_end=710,
 )
 
 
@@ -159,49 +166,49 @@ _CLUSTERINSTINFO = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.ClusterInstInfo.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='notify_id', full_name='edgeproto.ClusterInstInfo.notify_id', index=2,
       number=3, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\222\262\031\005nocmp')), file=DESCRIPTOR),
+      serialized_options=_b('\222\262\031\005nocmp'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='state', full_name='edgeproto.ClusterInstInfo.state', index=3,
       number=4, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='errors', full_name='edgeproto.ClusterInstInfo.errors', index=4,
       number=5, type=9, cpp_type=9, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=656,
-  serialized_end=843,
+  serialized_start=713,
+  serialized_end=900,
 )
 
 _CLUSTERINSTKEY.fields_by_name['cluster_key'].message_type = cluster__pb2._CLUSTERKEY
@@ -210,6 +217,7 @@ _CLUSTERINST.fields_by_name['key'].message_type = _CLUSTERINSTKEY
 _CLUSTERINST.fields_by_name['flavor'].message_type = clusterflavor__pb2._CLUSTERFLAVORKEY
 _CLUSTERINST.fields_by_name['liveness'].enum_type = common__pb2._LIVENESS
 _CLUSTERINST.fields_by_name['state'].enum_type = common__pb2._TRACKEDSTATE
+_CLUSTERINST.fields_by_name['crm_override'].enum_type = common__pb2._CRMOVERRIDE
 _CLUSTERINSTINFO.fields_by_name['key'].message_type = _CLUSTERINSTKEY
 _CLUSTERINSTINFO.fields_by_name['state'].enum_type = common__pb2._TRACKEDSTATE
 DESCRIPTOR.message_types_by_name['ClusterInstKey'] = _CLUSTERINSTKEY
@@ -239,41 +247,29 @@ ClusterInstInfo = _reflection.GeneratedProtocolMessageType('ClusterInstInfo', (_
 _sym_db.RegisterMessage(ClusterInstInfo)
 
 
-_CLUSTERINSTKEY.fields_by_name['cluster_key'].has_options = True
-_CLUSTERINSTKEY.fields_by_name['cluster_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERINSTKEY.fields_by_name['cloudlet_key'].has_options = True
-_CLUSTERINSTKEY.fields_by_name['cloudlet_key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERINSTKEY.has_options = True
-_CLUSTERINSTKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_CLUSTERINST.fields_by_name['key'].has_options = True
-_CLUSTERINST.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERINST.fields_by_name['flavor'].has_options = True
-_CLUSTERINST.fields_by_name['flavor']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000\250\364\030\001'))
-_CLUSTERINST.fields_by_name['liveness'].has_options = True
-_CLUSTERINST.fields_by_name['liveness']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001'))
-_CLUSTERINST.fields_by_name['auto'].has_options = True
-_CLUSTERINST.fields_by_name['auto']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001'))
-_CLUSTERINST.fields_by_name['state'].has_options = True
-_CLUSTERINST.fields_by_name['state']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001\222\262\031\005nocmp'))
-_CLUSTERINST.fields_by_name['errors'].has_options = True
-_CLUSTERINST.fields_by_name['errors']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\250\364\030\001\222\262\031\005nocmp'))
-_CLUSTERINST.has_options = True
-_CLUSTERINST._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\260\364\030\001\200\364\030\001\212\262\031\023Nodes,Liveness,Auto\272\364\030\014TrackedState'))
-_CLUSTERINSTINFO.fields_by_name['key'].has_options = True
-_CLUSTERINSTINFO.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_CLUSTERINSTINFO.fields_by_name['notify_id'].has_options = True
-_CLUSTERINSTINFO.fields_by_name['notify_id']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\222\262\031\005nocmp'))
-_CLUSTERINSTINFO.has_options = True
-_CLUSTERINSTINFO._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\200\364\030\001\240\364\030\001\220\364\030\001'))
+_CLUSTERINSTKEY.fields_by_name['cluster_key']._options = None
+_CLUSTERINSTKEY.fields_by_name['cloudlet_key']._options = None
+_CLUSTERINSTKEY._options = None
+_CLUSTERINST.fields_by_name['key']._options = None
+_CLUSTERINST.fields_by_name['flavor']._options = None
+_CLUSTERINST.fields_by_name['liveness']._options = None
+_CLUSTERINST.fields_by_name['auto']._options = None
+_CLUSTERINST.fields_by_name['state']._options = None
+_CLUSTERINST.fields_by_name['errors']._options = None
+_CLUSTERINST.fields_by_name['crm_override']._options = None
+_CLUSTERINST._options = None
+_CLUSTERINSTINFO.fields_by_name['key']._options = None
+_CLUSTERINSTINFO.fields_by_name['notify_id']._options = None
+_CLUSTERINSTINFO._options = None
 
 _CLUSTERINSTAPI = _descriptor.ServiceDescriptor(
   name='ClusterInstApi',
   full_name='edgeproto.ClusterInstApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
-  serialized_start=846,
-  serialized_end=1267,
+  serialized_options=None,
+  serialized_start=903,
+  serialized_end=1324,
   methods=[
   _descriptor.MethodDescriptor(
     name='CreateClusterInst',
@@ -282,7 +278,7 @@ _CLUSTERINSTAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERINST,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\030\"\023/create/clusterinst:\001*\230\262\031\001')),
+    serialized_options=_b('\202\323\344\223\002\030\"\023/create/clusterinst:\001*\230\262\031\001'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteClusterInst',
@@ -291,7 +287,7 @@ _CLUSTERINSTAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERINST,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\030\"\023/delete/clusterinst:\001*\230\262\031\001')),
+    serialized_options=_b('\202\323\344\223\002\030\"\023/delete/clusterinst:\001*\230\262\031\001'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateClusterInst',
@@ -300,7 +296,7 @@ _CLUSTERINSTAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERINST,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\030\"\023/update/clusterinst:\001*\230\262\031\001')),
+    serialized_options=_b('\202\323\344\223\002\030\"\023/update/clusterinst:\001*\230\262\031\001'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowClusterInst',
@@ -309,7 +305,7 @@ _CLUSTERINSTAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERINST,
     output_type=_CLUSTERINST,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\026\"\021/show/clusterinst:\001*')),
+    serialized_options=_b('\202\323\344\223\002\026\"\021/show/clusterinst:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLUSTERINSTAPI)
@@ -322,9 +318,9 @@ _CLUSTERINSTINFOAPI = _descriptor.ServiceDescriptor(
   full_name='edgeproto.ClusterInstInfoApi',
   file=DESCRIPTOR,
   index=1,
-  options=None,
-  serialized_start=1270,
-  serialized_end=1405,
+  serialized_options=None,
+  serialized_start=1327,
+  serialized_end=1462,
   methods=[
   _descriptor.MethodDescriptor(
     name='ShowClusterInstInfo',
@@ -333,7 +329,7 @@ _CLUSTERINSTINFOAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_CLUSTERINSTINFO,
     output_type=_CLUSTERINSTINFO,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\032\"\025/show/clusterinstinfo:\001*')),
+    serialized_options=_b('\202\323\344\223\002\032\"\025/show/clusterinstinfo:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_CLUSTERINSTINFOAPI)

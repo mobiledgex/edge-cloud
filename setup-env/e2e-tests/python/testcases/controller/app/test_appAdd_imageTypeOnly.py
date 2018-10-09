@@ -1,9 +1,8 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
-#  EDGECLOUD-178 - fixed
 #
 # create app with imageType only 
-# verify 'DefaultFlavor is required if Cluster is not specified' is received
+# verify proper error is received
 # 
 
 import unittest
@@ -11,16 +10,20 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
 controller_address = '127.0.0.1:55001'
 
+access_ports = 'tcp:1'
+
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -70,7 +73,7 @@ class tc(unittest.TestCase):
         app_post = self.controller.show_apps()
 
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(error.details(), 'DefaultFlavor is required if Cluster is not specified', 'error details')
+        expect_equal(error.details(), 'Please specify access ports', 'error details')
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
@@ -92,7 +95,7 @@ class tc(unittest.TestCase):
         app_post = self.controller.show_apps()
 
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(error.details(), 'DefaultFlavor is required if Cluster is not specified', 'error details')
+        expect_equal(error.details(), 'Please specify access ports', 'error details')
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
@@ -114,7 +117,7 @@ class tc(unittest.TestCase):
         app_post = self.controller.show_apps()
 
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(error.details(), 'DefaultFlavor is required if Cluster is not specified', 'error details')
+        expect_equal(error.details(), 'invalid Image Type', 'error details')
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 

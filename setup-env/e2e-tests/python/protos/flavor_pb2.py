@@ -7,7 +7,6 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -24,6 +23,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='flavor.proto',
   package='edgeproto',
   syntax='proto3',
+  serialized_options=None,
   serialized_pb=_b('\n\x0c\x66lavor.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto\x1a\x0eprotogen.proto\x1a\x0eprotocmd.proto\x1a\x0cresult.proto\x1a\ngogo.proto\"\'\n\tFlavorKey\x12\x0c\n\x04name\x18\x01 \x01(\t:\x0c\xe8\xf3\x18\x01\xf8\xf3\x18\x01\xb0\xa0\x1f\x01\"}\n\x06\x46lavor\x12\x0e\n\x06\x66ields\x18\x01 \x03(\t\x12\'\n\x03key\x18\x02 \x01(\x0b\x32\x14.edgeproto.FlavorKeyB\x04\xc8\xde\x1f\x00\x12\x0b\n\x03ram\x18\x03 \x01(\x04\x12\r\n\x05vcpus\x18\x04 \x01(\x04\x12\x0c\n\x04\x64isk\x18\x05 \x01(\x04:\x10\xe8\xf3\x18\x01\xf0\xf3\x18\x01\x98\xf4\x18\x01\x80\xf4\x18\x01\x32\xcd\x02\n\tFlavorApi\x12O\n\x0c\x43reateFlavor\x12\x11.edgeproto.Flavor\x1a\x11.edgeproto.Result\"\x19\x82\xd3\xe4\x93\x02\x13\"\x0e/create/flavor:\x01*\x12O\n\x0c\x44\x65leteFlavor\x12\x11.edgeproto.Flavor\x1a\x11.edgeproto.Result\"\x19\x82\xd3\xe4\x93\x02\x13\"\x0e/delete/flavor:\x01*\x12O\n\x0cUpdateFlavor\x12\x11.edgeproto.Flavor\x1a\x11.edgeproto.Result\"\x19\x82\xd3\xe4\x93\x02\x13\"\x0e/update/flavor:\x01*\x12M\n\nShowFlavor\x12\x11.edgeproto.Flavor\x1a\x11.edgeproto.Flavor\"\x17\x82\xd3\xe4\x93\x02\x11\"\x0c/show/flavor:\x01*0\x01\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,protogen__pb2.DESCRIPTOR,protocmd__pb2.DESCRIPTOR,result__pb2.DESCRIPTOR,gogo__pb2.DESCRIPTOR,])
@@ -44,14 +44,14 @@ _FLAVORKEY = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001')),
+  serialized_options=_b('\350\363\030\001\370\363\030\001\260\240\037\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -75,42 +75,42 @@ _FLAVOR = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='edgeproto.Flavor.key', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000')), file=DESCRIPTOR),
+      serialized_options=_b('\310\336\037\000'), file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='ram', full_name='edgeproto.Flavor.ram', index=2,
       number=3, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='vcpus', full_name='edgeproto.Flavor.vcpus', index=3,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='disk', full_name='edgeproto.Flavor.disk', index=4,
       number=5, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None, file=DESCRIPTOR),
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
   nested_types=[],
   enum_types=[
   ],
-  options=_descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001')),
+  serialized_options=_b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
@@ -140,19 +140,16 @@ Flavor = _reflection.GeneratedProtocolMessageType('Flavor', (_message.Message,),
 _sym_db.RegisterMessage(Flavor)
 
 
-_FLAVORKEY.has_options = True
-_FLAVORKEY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\370\363\030\001\260\240\037\001'))
-_FLAVOR.fields_by_name['key'].has_options = True
-_FLAVOR.fields_by_name['key']._options = _descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\310\336\037\000'))
-_FLAVOR.has_options = True
-_FLAVOR._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('\350\363\030\001\360\363\030\001\230\364\030\001\200\364\030\001'))
+_FLAVORKEY._options = None
+_FLAVOR.fields_by_name['key']._options = None
+_FLAVOR._options = None
 
 _FLAVORAPI = _descriptor.ServiceDescriptor(
   name='FlavorApi',
   full_name='edgeproto.FlavorApi',
   file=DESCRIPTOR,
   index=0,
-  options=None,
+  serialized_options=None,
   serialized_start=273,
   serialized_end=606,
   methods=[
@@ -163,7 +160,7 @@ _FLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_FLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\023\"\016/create/flavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\023\"\016/create/flavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='DeleteFlavor',
@@ -172,7 +169,7 @@ _FLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_FLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\023\"\016/delete/flavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\023\"\016/delete/flavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='UpdateFlavor',
@@ -181,7 +178,7 @@ _FLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_FLAVOR,
     output_type=result__pb2._RESULT,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\023\"\016/update/flavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\023\"\016/update/flavor:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='ShowFlavor',
@@ -190,7 +187,7 @@ _FLAVORAPI = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_FLAVOR,
     output_type=_FLAVOR,
-    options=_descriptor._ParseOptions(descriptor_pb2.MethodOptions(), _b('\202\323\344\223\002\021\"\014/show/flavor:\001*')),
+    serialized_options=_b('\202\323\344\223\002\021\"\014/show/flavor:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_FLAVORAPI)

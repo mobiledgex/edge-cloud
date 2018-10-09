@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 #
 # create app with image_type=ImageTypeQCOW and empty/no imagepath
@@ -9,9 +9,8 @@ import unittest
 import grpc
 import sys
 import time
+import logging
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
 
 import mex_controller
 
@@ -24,10 +23,14 @@ flavor = 'x1.small'
 cluster_name = 'cluster' + stamp
 app_name = 'app' + stamp
 app_version = '1.0'
+access_ports = 'udp:2'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -38,8 +41,8 @@ class tc(unittest.TestCase):
                                                    )
 
         self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
+                                                  developer_address=developer_address,
+                                                  developer_email=developer_email)
         self.cluster = mex_controller.Cluster(cluster_name=cluster_name,
                                               default_flavor_name=flavor)
 
@@ -55,7 +58,8 @@ class tc(unittest.TestCase):
         self.app = mex_controller.App(image_type='ImageTypeQCOW',
                                       app_name=app_name,
                                       app_version=app_version,
-                                      access_layer='AccessLayerL7',
+                                      ip_access='IpAccessDedicatedOrShared',
+                                      access_ports=access_ports,
                                       cluster_name=cluster_name,
                                       developer_name=developer_name,
                                       default_flavor_name=flavor)
@@ -80,7 +84,8 @@ class tc(unittest.TestCase):
                                       image_path='',
                                       app_name=app_name,
                                       app_version=app_version,
-                                      access_layer='AccessLayerL7',
+                                      ip_access='IpAccessDedicated',
+                                      access_ports=access_ports,
                                       cluster_name=cluster_name,
                                       developer_name=developer_name,
                                       default_flavor_name=flavor)
