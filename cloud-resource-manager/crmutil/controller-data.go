@@ -138,7 +138,6 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	// the info state which can tell us if a thread is in progress.
 	info := edgeproto.ClusterInstInfo{}
 	if infoFound := cd.ClusterInstInfoCache.Get(key, &info); infoFound {
-
 		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
 			log.DebugLog(log.DebugLevelMexos, "clusterInst conflicting state", "state", info.State)
 			return
@@ -223,6 +222,18 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 			info := edgeproto.ClusterInstInfo{Key: *key}
 			cd.ClusterInstInfoCache.Delete(&info, 0)
 		}()
+	} else if clusterInst.State == edgeproto.TrackedState_Creating {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Creating,
+			edgeproto.TrackedState_Ready,
+			edgeproto.TrackedState_CreateError)
+	} else if clusterInst.State == edgeproto.TrackedState_Updating {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Updating,
+			edgeproto.TrackedState_Ready,
+			edgeproto.TrackedState_UpdateError)
+	} else if clusterInst.State == edgeproto.TrackedState_Deleting {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Deleting,
+			edgeproto.TrackedState_NotPresent,
+			edgeproto.TrackedState_DeleteError)
 	}
 }
 
@@ -350,8 +361,24 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			info := edgeproto.AppInstInfo{Key: *key}
 			cd.AppInstInfoCache.Delete(&info, 0)
 		}()
+	} else if appInst.State == edgeproto.TrackedState_Creating {
+		// Controller may send a CRM transitional state after a
+		// disconnect or crash. Controller thinks CRM is creating
+		// the appInst, and Controller is waiting for a new state from
+		// the CRM. If CRM is not creating, or has not just finished
+		// creating (ready), set an error state.
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Creating,
+			edgeproto.TrackedState_Ready,
+			edgeproto.TrackedState_CreateError)
+	} else if appInst.State == edgeproto.TrackedState_Updating {
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Updating,
+			edgeproto.TrackedState_Ready,
+			edgeproto.TrackedState_UpdateError)
+	} else if appInst.State == edgeproto.TrackedState_Deleting {
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Deleting,
+			edgeproto.TrackedState_NotPresent,
+			edgeproto.TrackedState_DeleteError)
 	}
-
 }
 
 func (cd *ControllerData) clusterInstInfoError(key *edgeproto.ClusterInstKey, errState edgeproto.TrackedState, err string) {
@@ -368,4 +395,47 @@ func (cd *ControllerData) appInstInfoError(key *edgeproto.AppInstKey, errState e
 
 func (cd *ControllerData) appInstInfoState(key *edgeproto.AppInstKey, state edgeproto.TrackedState) {
 	cd.AppInstInfoCache.SetState(key, state)
+}
+
+// CheckState checks that the info is either in the transState or finalState.
+// If not, it is an unexpected state, so we set it to the error state.
+// This is used when the controller sends CRM a state that implies the
+// controller is waiting for the CRM to send back the next state, but the
+// CRM does not have any change in progress.
+func (cd *ControllerData) clusterInstInfoCheckState(key *edgeproto.ClusterInstKey, transState, finalState, errState edgeproto.TrackedState) {
+	cd.ClusterInstInfoCache.UpdateModFunc(key, 0, func(old *edgeproto.ClusterInstInfo) (newObj *edgeproto.ClusterInstInfo, changed bool) {
+		if old == nil {
+			if transState == edgeproto.TrackedState_NotPresent || finalState == edgeproto.TrackedState_NotPresent {
+				return old, false
+			}
+			old = &edgeproto.ClusterInstInfo{Key: *key}
+		}
+		if old.State != transState && old.State != finalState {
+			new := &edgeproto.ClusterInstInfo{}
+			*new = *old
+			new.State = errState
+			new.Errors = append(new.Errors, "inconsistent Controller vs CRM state")
+			return new, true
+		}
+		return old, false
+	})
+}
+
+func (cd *ControllerData) appInstInfoCheckState(key *edgeproto.AppInstKey, transState, finalState, errState edgeproto.TrackedState) {
+	cd.AppInstInfoCache.UpdateModFunc(key, 0, func(old *edgeproto.AppInstInfo) (newObj *edgeproto.AppInstInfo, changed bool) {
+		if old == nil {
+			if transState == edgeproto.TrackedState_NotPresent || finalState == edgeproto.TrackedState_NotPresent {
+				return old, false
+			}
+			old = &edgeproto.AppInstInfo{Key: *key}
+		}
+		if old.State != transState && old.State != finalState {
+			new := &edgeproto.AppInstInfo{}
+			*new = *old
+			new.State = errState
+			new.Errors = append(new.Errors, "inconsistent Controller vs CRM state")
+			return new, true
+		}
+		return old, false
+	})
 }

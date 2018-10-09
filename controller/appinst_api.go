@@ -331,7 +331,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 
-		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		if ignoreCRM(cctx) {
 			in.State = edgeproto.TrackedState_Ready
 		} else {
 			in.State = edgeproto.TrackedState_CreateRequested
@@ -342,7 +342,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+	if ignoreCRM(cctx) {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateAppInstTransitions, edgeproto.TrackedState_CreateError, CreateAppInstTimeout, "Created successfully", cb.Send)
@@ -425,7 +425,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 		// delete app inst
-		if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+		if ignoreCRM(cctx) {
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -439,7 +439,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if cctx.Undo || cctx.Override == edgeproto.CRMOverride_IgnoreCRM {
+	if ignoreCRM(cctx) {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteAppInstTransitions, edgeproto.TrackedState_DeleteError, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
