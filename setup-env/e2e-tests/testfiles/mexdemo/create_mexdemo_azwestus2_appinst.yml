@@ -4,5 +4,5 @@
 tests:
 
 - name: create provisioning
-  apifile: "{{datadir}}/appdata_mexdemo_azwestus2_appinst.yml"
+  apifile: "{{datadir}}/mexdemo/appdata_mexdemo_azwestus2_appinst.yml"
   actions: [ctrlapi-create]

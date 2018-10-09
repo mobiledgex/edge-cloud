@@ -649,22 +649,33 @@ func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
 }
 
 func (c *OperatorCache) Update(in *Operator, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Operator) (*Operator, bool) {
+		return in, true
+	})
+}
+
+func (c *OperatorCache) UpdateModFunc(key *OperatorKey, rev int64, modFunc func(old *Operator) (new *Operator, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Operator{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Operator{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Operator", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Operator", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *OperatorCache) Delete(in *Operator, rev int64) {

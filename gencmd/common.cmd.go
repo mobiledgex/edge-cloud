@@ -53,6 +53,7 @@ var CRMOverrideStrings = []string{
 	"IgnoreCRMErrors",
 	"IgnoreCRM",
 	"IgnoreTransientState",
+	"IgnoreCRMandTransientState",
 }
 
 func init() {
