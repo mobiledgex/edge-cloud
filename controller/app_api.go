@@ -76,21 +76,41 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
+// helper function to help with the fields validation of the App object
+func (s *AppApi) validateApp(app *edgeproto.App) error {
+	var err error
+	if app.ImageType == edgeproto.ImageType_ImageTypeUnknown {
+		return errors.New("Please specify Image Type")
+	}
+	_, ok := edgeproto.ImageType_name[int32(app.ImageType)]
+	if !ok {
+		return errors.New("invalid Image Type")
+	}
+	_, ok = edgeproto.IpAccess_name[int32(app.IpAccess)]
+	if !ok {
+		return errors.New("invalid IpAccess Type")
+	}
+	if app.AccessPorts == "" {
+		return errors.New("Please specify access ports")
+	}
+	_, err = parseAppPorts(app.AccessPorts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	var err error
-	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
-		return &edgeproto.Result{}, errors.New("Please specify Image Type")
+	err = appApi.validateApp(in)
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
-	_, ok := edgeproto.ImageType_name[int32(in.ImageType)]
-	if !ok {
-		return &edgeproto.Result{}, errors.New("invalid Image Type")
-	}
+
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
-	}
-	if in.AccessPorts == "" {
-		return &edgeproto.Result{}, errors.New("Please specify access ports")
 	}
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
@@ -101,10 +121,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		} else {
 			in.ImagePath = "qcow path not determined yet"
 		}
-	}
-	_, err = parseAppPorts(in.AccessPorts)
-	if err != nil {
-		return &edgeproto.Result{}, err
 	}
 
 	// make sure cluster exists
