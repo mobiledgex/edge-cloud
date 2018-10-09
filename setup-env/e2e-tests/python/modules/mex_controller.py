@@ -87,11 +87,11 @@ class Developer():
     def __eq__(self, c):
         #print('c',c.address, 'a',self.developer_address)
         if c.key.name == self.developer_name and c.address == self.developer_address and c.email == self.developer_email and c.username == self.developer_username and c.passhash == self.developer_passhash:
-            print('contains')
+            #print('contains')
             return True
 
     def exists(self, op_list):
-        print('looking for developer=', self.developer)
+        logger.info('checking developer exists')
         
         found = False
         for c in op_list:
@@ -99,10 +99,10 @@ class Developer():
             #print('dddddd', self.developer)
             if self.__eq__(c):
                 found = True
-                print('foundkey')
+                logger.info('found developer')
                 break
         if not found:
-            print('ERROR: developer NOT found')
+            logger.error('ERROR: developer NOT found')
         return found
 
 class Operator():
@@ -117,22 +117,20 @@ class Operator():
 
     def __eq__(self, c):
         if c.key.name == self.operator_name:
-            print('contains')
+            #print('contains')
             return True
 
     def exists(self, op_list):
-        print('looking for operator=', self.operator)
+        logger.info('checking operator exists')
         
         found = False
         for c in op_list:
-            print('xxxx', c)
-            print('dddddd', self.operator)
             if self.__eq__(c):
                 found = True
-                print('foundkey')
+                logger.info('operator found')
                 break
         if not found:
-            print('ERROR: operator NOT found')
+            logger.error('ERROR: operator NOT found')
         return found
 
 class Flavor():
@@ -144,7 +142,6 @@ class Flavor():
 
         flavor_dict = {}
         for a in passed_args:
-            print(a)
             if passed_args[a] is not None:
                 if a == 'flavor_name':
                     flavor_dict['key'] = key = flavor_pb2.FlavorKey(name = flavor_name)
@@ -154,13 +151,10 @@ class Flavor():
                     flavor_dict['vcus'] = vcpus
                 elif a == 'disk':
                     flavor_dict['disk'] = disk
-        print('fd',flavor_dict)
-        #print('flavor_dict',**flavor_dict)
-#        sys.exit(1)
 
         self.flavor = flavor_pb2.Flavor(**flavor_dict
                                      )
-        print(self.flavor)
+        #print(self.flavor)
 
 class ClusterFlavor():
     def __init__(self, cluster_flavor_name=None, node_flavor_name=None, master_flavor_name=None, number_nodes=None,max_nodes=None, number_masters=None):
@@ -186,7 +180,7 @@ class Cluster():
                                      )
     def __eq__(self, c):
         if c.key.name == self.cluster_name and c.default_flavor.name == self.flavor_name:
-            print('contains')
+            #print('contains')
             return True
 
     def exists(self, cluster_list):
@@ -280,29 +274,26 @@ class ClusterInstance():
             self.cluster_instance = clusterinst_pb2.ClusterInst(key = clusterinst_key)
         else:
              self.cluster_instance = clusterinst_pb2.ClusterInst()
-        print(self.cluster_instance)
+        #print(self.cluster_instance)
 
     def __eq__(self, c):
-        print('cn',self.cluster_name, self.flavor_name)
         if c.key.cluster_key.name == self.cluster_name and c.key.cloudlet_key.operator_key.name == self.operator_name and c.key.cloudlet_key.name == self.cloud_name and c.flavor.name == self.flavor_name and c.state == self.state and c.liveness == self.liveness:
-            print('contains')
+            #print('contains')
 
             return True
 
     def exists(self, cluster_instance_list):
+        logger.info('checking cluster instance exists')
         found_cluster = False
         #self.cluster_instance.state = 5 # Ready
         for c in cluster_instance_list:
-            print('xxxx', c)
-            print(c.state,c.liveness)
-            print('dddddd', self.cluster_instance)
             #if self.cluster_instance == c:
             if self.__eq__(c):
                 found_cluster = True
-                print('foundkey')
+                logger.info('found cluster instance')
                 break
         if not found_cluster:
-            print('ERROR: clusterinst NOT found')
+            logger.error('ERROR: clusterinst NOT found')
         return found_cluster
 
 class Cloudlet():
@@ -548,34 +539,35 @@ class Controller():
         return resp
 
     def show_cluster_instances(self):
-        print('show cluster instance on {}'.format(self.address))
+        logger.info('show cluster instance on {}'.format(self.address))
 
         resp = list(self.clusterinst_stub.ShowClusterInst(clusterinst_pb2.ClusterInst()))
-        for c in resp:
-            print('clusterInstance=', c)
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('cluster list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
     def create_cluster_instance(self, cluster_instance):
-        print('create cluster instance on {}. clusterInst={}'.format(self.address, str(cluster_instance)))
+        logger.info('create cluster instance on {}. \n\t{}'.format(self.address, str(cluster_instance).replace('\n','\n\t')))
 
         resp = None
         success = False
         try:
             resp = self.clusterinst_stub.CreateClusterInst(cluster_instance)
-            print('RRRRRRRRR',resp)
         except:
-            print("Unexpected error0:", sys.exc_info()[0])
+            #print("Unexpected error0:", sys.exc_info()[0])
             resp = sys.exc_info()[0]
-            print("Unexpected error1:", sys.exc_info()[1])
-            print("Unexpected error2:", sys.exc_info()[2])
+            #print("Unexpected error1:", sys.exc_info()[1])
+            #print("Unexpected error2:", sys.exc_info()[2])
 
-            print('typeerror')
-        print('xxxxxxxxxxx',str(resp))
+            #print('typeerror')
+        #print('xxxxxxxxxxx',str(resp))
         #sys.exit(1)
         self.response = resp
         for s in resp:
-            print('SSSSSSSSSS=',s)
+            #print('SSSSSSSSSS=',s)
             if "Created successfully" in str(s):
                 success = True            
         if not success:
@@ -584,7 +576,7 @@ class Controller():
         return resp
 
     def delete_cluster_instance(self, cluster_instance):
-        print('delete cluster instance {} on {}'.format(str(cluster_instance), self.address))
+        logger.info('delete cluster instance on {}. \n\t{}'.format(self.address, str(cluster_instance).replace('\n','\n\t')))
         resp = self.clusterinst_stub.DeleteClusterInst(cluster_instance)
         
         self.response = resp
@@ -595,31 +587,32 @@ class Controller():
             raise Exception('Error deleting cluster instance:{}'.format(str(resp)))
 
     def update_cluster_instance(self, cluster_instance):
-        print('update cluster instance {} on {}'.format(str(cluster_instance), self.address))
+        logger.info('update cluster instance on {}. \n\t{}'.format(self.address, str(cluster_instance).replace('\n','\n\t')))
         resp = self.clusterinst_stub.UpdateClusterInst(cluster_instance)
         return resp
 
     def create_cloudlet(self, cloudlet_instance):
-        print('create cloudlet on {}. cloudlet={}'.format(self.address, str(cloudlet_instance)))
-
+        logger.info('create cloudlet on {}. \n\t{}'.format(self.address, str(cloudlet_instance).replace('\n','\n\t')))
         resp = self.cloudlet_stub.CreateCloudlet(cloudlet_instance)
         for s in resp:
             print(s)
         return resp
 
     def delete_cloudlet(self, cloudlet_instance):
-        print('delete cloudlet on {}. cloudlet={}'.format(self.address, str(cloudlet_instance)))
+        logger.info('delete cloudlet on {}. \n\t{}'.format(self.address, str(cloudlet_instance).replace('\n','\n\t')))
 
         resp = self.cloudlet_stub.DeleteCloudlet(cloudlet_instance)
 
         return resp
 
     def show_flavors(self):
-        print('show flavors on {}'.format(self.address))
+        logger.info('show flavors on {}.'.format(self.address))
 
         resp = list(self.flavor_stub.ShowFlavor(flavor_pb2.Flavor()))
-        for c in resp:
-            print('flavorr=', c)
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('cluster list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
@@ -660,20 +653,22 @@ class Controller():
         return resp
 
     def show_app_instances(self, app_instance=None):
-        print('show app instacnes on {}'.format(self.address))
+        logger.info('show app instance on {}'.format(self.address))
 
         resp = None
         if app_instance:
             resp = list(self.appinst_stub.ShowAppInst(app_instance))
         else:
             resp = list(self.appinst_stub.ShowAppInst(app_inst_pb2.AppInst()))
-        for c in resp:
-            print('appinst=', c)
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('app instance list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
     def create_app_instance(self, app_instance):
-        print('create app instnce on {}. appinst={}'.format(self.address, str(app_instance)))
+        logger.info('create app instance on {}. \n\t{}'.format(self.address, str(app_instance).replace('\n','\n\t')))
 
         success = False
 
@@ -681,7 +676,6 @@ class Controller():
 
         self.response = resp
         for s in resp:
-            print('AAAAAA=',s)
             if "Created successfully" in str(s):
                 success = True
         if not success:
@@ -690,8 +684,7 @@ class Controller():
         return resp
 
     def delete_app_instance(self, app_instance):
-        print('delete app instance on {}. app={}'.format(self.address, str(app_instance)))
-
+        logger.info('delete app instance on {}. \n\t{}'.format(self.address, str(app_instance).replace('\n','\n\t')))
         resp = self.appinst_stub.DeleteAppInst(app_instance)
 
         return resp
@@ -711,28 +704,28 @@ class Controller():
     #    return resp
 
     def create_operator(self, op_instance):
-        print('create operator on {}. operator={}'.format(self.address, str(op_instance)))
+        logger.info('create operator on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
 
         resp = self.operator_stub.CreateOperator(op_instance)
 
         return resp
 
     def update_operator(self, op_instance):
-        print('update operator on {}. operator={}'.format(self.address, str(op_instance)))
+        logger.info('update operator on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
 
         resp = self.operator_stub.UpdateOperator(op_instance)
 
         return resp
 
     def delete_operator(self, op_instance):
-        print('delete operator on {}. operator={}'.format(self.address, str(op_instance)))
+        logger.info('delete operator on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
 
         resp = self.operator_stub.DeleteOperator(op_instance)
 
         return resp
 
     def show_operators(self, op_instance=None):
-        print('show operators on {}. operator={}'.format(self.address, str(op_instance)))
+        logger.info('show operator on {}'.format(self.address))
 
         resp = None
         if op_instance:
@@ -750,7 +743,7 @@ class Controller():
         return resp
 
     def update_developer(self, op_instance):
-        print('update developer on {}. developer={}'.format(self.address, str(op_instance)))
+        logger.info('update developer on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
 
         resp = self.developer_stub.UpdateDeveloper(op_instance)
 
@@ -764,17 +757,18 @@ class Controller():
         return resp
 
     def show_developers(self, op_instance=None):
-        print('show developers on {}. developer={}'.format(self.address, str(op_instance)))
+        logger.info('show developers on {}. \n\t{}'.format(self.address, str(op_instance).replace('\n','\n\t')))
 
         resp = None
         if op_instance:
             resp = list(self.developer_stub.ShowDeveloper(op_instance))
         else:
             resp = list(self.developer_stub.ShowDeveloper(developer_pb2.Developer()))
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('developer list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
-        for dev in resp:
-            print('RRRRRRR', dev)
-                  
         return resp
 
     def _build_cluster(self, operator_name, cluster_name, cloud_name, flavor_name):
