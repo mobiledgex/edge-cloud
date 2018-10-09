@@ -739,22 +739,33 @@ func (c *DeveloperCache) GetAllKeys(keys map[DeveloperKey]struct{}) {
 }
 
 func (c *DeveloperCache) Update(in *Developer, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Developer) (*Developer, bool) {
+		return in, true
+	})
+}
+
+func (c *DeveloperCache) UpdateModFunc(key *DeveloperKey, rev int64, modFunc func(old *Developer) (new *Developer, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Developer{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Developer{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Developer", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *DeveloperCache) Delete(in *Developer, rev int64) {

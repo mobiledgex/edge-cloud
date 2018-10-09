@@ -735,7 +735,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
-	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState]")
+	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
@@ -982,6 +982,8 @@ func parseAppInstEnums() error {
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(2)
 		case "IgnoreTransientState":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(3)
+		case "IgnoreCRMandTransientState":
+			AppInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for AppInstInCrmOverride")
 		}
