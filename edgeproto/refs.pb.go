@@ -700,22 +700,33 @@ func (c *CloudletRefsCache) GetAllKeys(keys map[CloudletKey]struct{}) {
 }
 
 func (c *CloudletRefsCache) Update(in *CloudletRefs, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *CloudletRefs) (*CloudletRefs, bool) {
+		return in, true
+	})
+}
+
+func (c *CloudletRefsCache) UpdateModFunc(key *CloudletKey, rev int64, modFunc func(old *CloudletRefs) (new *CloudletRefs, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &CloudletRefs{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &CloudletRefs{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletRefs", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletRefs", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *CloudletRefsCache) Delete(in *CloudletRefs, rev int64) {
@@ -1135,22 +1146,33 @@ func (c *ClusterRefsCache) GetAllKeys(keys map[ClusterInstKey]struct{}) {
 }
 
 func (c *ClusterRefsCache) Update(in *ClusterRefs, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *ClusterRefs) (*ClusterRefs, bool) {
+		return in, true
+	})
+}
+
+func (c *ClusterRefsCache) UpdateModFunc(key *ClusterInstKey, rev int64, modFunc func(old *ClusterRefs) (new *ClusterRefs, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &ClusterRefs{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &ClusterRefs{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterRefs", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterRefs", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ClusterRefsCache) Delete(in *ClusterRefs, rev int64) {

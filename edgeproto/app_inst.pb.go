@@ -1723,22 +1723,33 @@ func (c *AppInstCache) GetAllKeys(keys map[AppInstKey]struct{}) {
 }
 
 func (c *AppInstCache) Update(in *AppInst, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *AppInst) (*AppInst, bool) {
+		return in, true
+	})
+}
+
+func (c *AppInstCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc func(old *AppInst) (new *AppInst, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &AppInst{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &AppInst{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInst", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *AppInstCache) Delete(in *AppInst, rev int64) {
@@ -2363,22 +2374,33 @@ func (c *AppInstInfoCache) GetAllKeys(keys map[AppInstKey]struct{}) {
 }
 
 func (c *AppInstInfoCache) Update(in *AppInstInfo, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *AppInstInfo) (*AppInstInfo, bool) {
+		return in, true
+	})
+}
+
+func (c *AppInstInfoCache) UpdateModFunc(key *AppInstKey, rev int64, modFunc func(old *AppInstInfo) (new *AppInstInfo, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &AppInstInfo{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &AppInstInfo{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate AppInstInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *AppInstInfoCache) Delete(in *AppInstInfo, rev int64) {
