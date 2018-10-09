@@ -10,6 +10,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
+import logging
 
 import mex_controller
 
@@ -20,6 +21,9 @@ operator_name = 'dummyOperator'
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -39,7 +43,7 @@ class tc(unittest.TestCase):
         try:
             self.controller.delete_operator(self.operator.operator)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' + str(e))
             error = e
 
         # print operators after add
