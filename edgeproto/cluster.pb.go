@@ -706,22 +706,33 @@ func (c *ClusterCache) GetAllKeys(keys map[ClusterKey]struct{}) {
 }
 
 func (c *ClusterCache) Update(in *Cluster, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Cluster) (*Cluster, bool) {
+		return in, true
+	})
+}
+
+func (c *ClusterCache) UpdateModFunc(key *ClusterKey, rev int64, modFunc func(old *Cluster) (new *Cluster, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Cluster{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Cluster{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cluster", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cluster", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ClusterCache) Delete(in *Cluster, rev int64) {
