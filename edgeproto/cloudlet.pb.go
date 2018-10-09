@@ -1395,22 +1395,33 @@ func (c *CloudletCache) GetAllKeys(keys map[CloudletKey]struct{}) {
 }
 
 func (c *CloudletCache) Update(in *Cloudlet, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *Cloudlet) (*Cloudlet, bool) {
+		return in, true
+	})
+}
+
+func (c *CloudletCache) UpdateModFunc(key *CloudletKey, rev int64, modFunc func(old *Cloudlet) (new *Cloudlet, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &Cloudlet{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &Cloudlet{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate Cloudlet", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *CloudletCache) Delete(in *Cloudlet, rev int64) {
@@ -1948,22 +1959,33 @@ func (c *CloudletInfoCache) GetAllKeys(keys map[CloudletKey]struct{}) {
 }
 
 func (c *CloudletInfoCache) Update(in *CloudletInfo, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *CloudletInfo) (*CloudletInfo, bool) {
+		return in, true
+	})
+}
+
+func (c *CloudletInfoCache) UpdateModFunc(key *CloudletKey, rev int64, modFunc func(old *CloudletInfo) (new *CloudletInfo, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &CloudletInfo{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &CloudletInfo{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate CloudletInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *CloudletInfoCache) Delete(in *CloudletInfo, rev int64) {
