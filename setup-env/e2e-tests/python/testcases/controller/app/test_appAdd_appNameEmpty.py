@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 
 # EDGECLOUD-179 - fixed
 #
@@ -11,8 +11,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import mex_controller
 
@@ -23,10 +22,14 @@ developer_address = 'allen tx'
 developer_email = 'dev@dev.com'
 flavor = 'x1.small'
 cluster_name = 'cluster' + stamp
+access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
@@ -37,8 +40,8 @@ class tc(unittest.TestCase):
                                                    )
 
         self.developer = mex_controller.Developer(developer_name=developer_name,
-                                                  address=developer_address,
-                                                  email=developer_email)
+                                                  developer_address=developer_address,
+                                                  developer_email=developer_email)
         self.cluster = mex_controller.Cluster(cluster_name=cluster_name,
                                               default_flavor_name=flavor)
 
@@ -53,13 +56,14 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
                                  app_name='',
+                                 access_ports=access_ports,
                                  cluster_name=cluster_name,
                                  developer_name=developer_name,
                                  default_flavor_name=flavor)
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' +  str(e))
             error = e
 
         # print the cluster instances after error
@@ -78,12 +82,13 @@ class tc(unittest.TestCase):
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
                                  cluster_name=cluster_name,
+                                 access_ports=access_ports,
                                  developer_name=developer_name,
                                  default_flavor_name=flavor)
         try:
             resp = self.controller.create_app(app.app)
         except grpc.RpcError as e:
-            print('got exception', e)
+            logger.info('got exception ' +  str(e))
             error = e
 
         # print the cluster instances after error

@@ -25,14 +25,15 @@ enum IpSupport {
   IpSupportDynamic = 2;
 }
 
-// L4Proto indicates which L4 protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.
-enum L4Proto {
-  // Unknown protocol
-  L4ProtoUnknown = 0;
-  // TCP protocol
-  L4ProtoTCP = 1;
-  // UDP protocol
-  L4ProtoUDP = 2;
+enum IpAccess {
+  // Unknown IP access
+  IpAccessUnknown = 0;
+  // Dedicated IP access
+  IpAccessDedicated = 1;
+  // Dedicated or shared (prefers dedicated) access
+  IpAccessDedicatedOrShared = 2;
+  // Shared IP access
+  IpAccessShared = 3;
 }
 
 // TrackedState is used to track the state of an object on a remote node,
@@ -63,4 +64,19 @@ enum TrackedState {
   // Delete error
   DeleteError = 11;
 }
-  
+
+// CRMOverride can be applied to commands that issue requests to the CRM.
+// It should only be used by administrators when bugs have caused the
+// Controller and CRM to get out of sync. It allows commands from the
+// Controller to ignore errors from the CRM, or ignore the CRM completely
+// (messages will not be sent to CRM).
+enum CRMOverride {
+  // No override
+  NoOverride = 0;
+  // Ignore errors from CRM
+  IgnoreCRMErrors = 1;
+  // Ignore CRM completely (does not inform CRM of operation)
+  IgnoreCRM = 2;
+  // Ignore Transient State (only admin should use if CRM crashed)
+  IgnoreTransientState = 3;
+}
