@@ -1136,22 +1136,33 @@ func (c *ClusterInstCache) GetAllKeys(keys map[ClusterInstKey]struct{}) {
 }
 
 func (c *ClusterInstCache) Update(in *ClusterInst, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *ClusterInst) (*ClusterInst, bool) {
+		return in, true
+	})
+}
+
+func (c *ClusterInstCache) UpdateModFunc(key *ClusterInstKey, rev int64, modFunc func(old *ClusterInst) (new *ClusterInst, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &ClusterInst{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &ClusterInst{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInst", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInst", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ClusterInstCache) Delete(in *ClusterInst, rev int64) {
@@ -1740,22 +1751,33 @@ func (c *ClusterInstInfoCache) GetAllKeys(keys map[ClusterInstKey]struct{}) {
 }
 
 func (c *ClusterInstInfoCache) Update(in *ClusterInstInfo, rev int64) {
+	c.UpdateModFunc(&in.Key, rev, func(old *ClusterInstInfo) (*ClusterInstInfo, bool) {
+		return in, true
+	})
+}
+
+func (c *ClusterInstInfoCache) UpdateModFunc(key *ClusterInstKey, rev int64, modFunc func(old *ClusterInstInfo) (new *ClusterInstInfo, changed bool)) {
 	c.Mux.Lock()
+	old := c.Objs[*key]
+	new, changed := modFunc(old)
+	if !changed {
+		c.Mux.Unlock()
+		return
+	}
 	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		old := c.Objs[in.Key]
 		if c.UpdatedCb != nil {
-			new := &ClusterInstInfo{}
-			*new = *in
-			defer c.UpdatedCb(old, new)
+			newCopy := &ClusterInstInfo{}
+			*newCopy = *new
+			defer c.UpdatedCb(old, newCopy)
 		}
 		if c.NotifyCb != nil {
-			defer c.NotifyCb(&in.Key, old)
+			defer c.NotifyCb(&new.Key, old)
 		}
 	}
-	c.Objs[in.Key] = in
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInstInfo", "obj", in, "rev", rev)
+	c.Objs[new.Key] = new
+	log.DebugLog(log.DebugLevelApi, "SyncUpdate ClusterInstInfo", "obj", new, "rev", rev)
 	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&in.Key)
+	c.TriggerKeyWatchers(&new.Key)
 }
 
 func (c *ClusterInstInfoCache) Delete(in *ClusterInstInfo, rev int64) {
