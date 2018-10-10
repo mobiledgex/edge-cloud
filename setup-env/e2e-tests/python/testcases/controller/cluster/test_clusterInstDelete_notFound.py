@@ -11,9 +11,7 @@ import grpc
 import sys
 import time
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
-print(sys.path)
+import logging
 
 import mex_controller
 
@@ -25,6 +23,9 @@ flavor_name = 'c1.small'
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
