@@ -11,8 +11,7 @@ import sys
 import time
 import os
 from delayedassert import expect, expect_equal, assert_expectations
-
-sys.path.append('/root/andy/python/protos')
+import logging
 
 import cluster_pb2
 import cluster_pb2_grpc
@@ -23,6 +22,9 @@ controller_address = '127.0.0.1:55001'
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
+
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
     def setUp(self):
