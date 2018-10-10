@@ -6,22 +6,66 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 )
 
 var (
 	port        = flag.Int("port", 8080, "listen port")
 	indexpath   = "/"
 	getdatapath = "/getdata"
+	getfilepath = "/getfile"
+	filedir     = "/root/downloadfiles/"
 )
 
 func showIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("doing showIndex")
-	rc := getdatapath + "\n"
+	log.Printf("doing showIndex req: %+v\n", r)
+	rc := getdatapath + "\n" + getfilepath + "\n"
+
 	w.Write([]byte(rc))
 }
+
+func getFile(w http.ResponseWriter, r *http.Request) {
+	log.Printf("doing getFile %+v\n", r)
+
+	filename := r.URL.Query().Get("filename")
+
+	//do not allow any other paths
+	if strings.Contains(filename, "/") {
+		log.Printf("cannot specify directory %s\n", filename)
+		http.Error(w, "bad request", 400)
+		return
+	}
+
+	if filename == "" {
+		log.Println("no filename")
+		http.Error(w, "bad request", 400)
+		return
+	}
+
+	f, err := os.Open(filedir + filename)
+	if err != nil {
+		log.Printf("not found file %s - %v\n", filename+filename, err)
+		http.Error(w, "not found", 404)
+		return
+	}
+	defer f.Close()
+	fi, err := f.Stat()
+	if err != nil {
+		log.Printf("file stat failed %s - %v\n", filename+filename, err)
+		http.Error(w, "file stat failed", 500)
+		return
+	}
+
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+	io.Copy(w, f)
+
+}
+
 func getData(w http.ResponseWriter, r *http.Request) {
 	log.Printf("doing getData %+v\n", r)
 
@@ -47,6 +91,7 @@ func getData(w http.ResponseWriter, r *http.Request) {
 func run() {
 	http.HandleFunc(indexpath, showIndex)
 	http.HandleFunc(getdatapath, getData)
+	http.HandleFunc(getfilepath, getFile)
 
 	portstr := fmt.Sprintf(":%d", *port)
 
