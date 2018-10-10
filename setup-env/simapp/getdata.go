@@ -22,6 +22,31 @@ var (
 	filedir     = "/root/downloadfiles/"
 )
 
+func generateFiles() {
+	if _, err := os.Stat(filedir); os.IsNotExist(err) {
+		log.Printf("creating dir %s\n", filedir)
+		err := os.Mkdir(filedir, 0755)
+		if err != nil {
+			log.Fatalf("unable to create %s -- %v\n", filedir, err)
+		}
+	}
+	sizes := [4]uint32{1, 5, 10, 20}
+	for _, s := range sizes {
+		filename := fmt.Sprintf("%sdownload_%dMB.txt", filedir, s)
+
+		//the file will never exist on startup
+		ofile, err := os.Create(filename)
+		log.Printf("Writing file %s\n", filename)
+		defer ofile.Close()
+		if err != nil {
+			log.Fatalf("unable to create file: %s, err: %v\n", filename, err)
+		}
+		b := []byte("Z")
+		contents := string(bytes.Repeat(b, 1024*1024*int(s)))
+		fmt.Fprintf(ofile, contents)
+	}
+}
+
 func showIndex(w http.ResponseWriter, r *http.Request) {
 	log.Printf("doing showIndex req: %+v\n", r)
 	rc := getdatapath + "\n" + getfilepath + "\n"
@@ -31,7 +56,6 @@ func showIndex(w http.ResponseWriter, r *http.Request) {
 
 func getFile(w http.ResponseWriter, r *http.Request) {
 	log.Printf("doing getFile %+v\n", r)
-
 	filename := r.URL.Query().Get("filename")
 
 	//do not allow any other paths
@@ -109,5 +133,6 @@ func validateArgs() {
 
 func main() {
 	validateArgs()
+	generateFiles()
 	run()
 }
