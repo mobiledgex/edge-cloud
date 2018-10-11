@@ -1,6 +1,8 @@
 package util
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -18,6 +20,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+	"github.com/mobiledgex/edge-cloud/testutil"
+	"google.golang.org/grpc"
 )
 
 var Deployment DeploymentData
@@ -269,9 +273,16 @@ func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
 	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
 		c <- ReturnCodeWithText{false, "Failed to connect to " + p.Name}
+		return
+	}
+	api.Close()
+	// check that controller sees crm online (has received cloudletinfo),
+	// which is required before create clusterinst/appinst will work.
+	err = checkCloudletState(p, 10*time.Second)
+	if err != nil {
+		c <- ReturnCodeWithText{false, "Ok connect to " + p.Name + " but " + err.Error()}
 	} else {
 		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
-		api.Close()
 	}
 }
 
@@ -284,6 +295,64 @@ func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
 		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
 		api.Close()
 	}
+}
+
+func checkCloudletState(p *process.CrmLocal, timeout time.Duration) error {
+	filter := edgeproto.CloudletInfo{}
+	err := json.Unmarshal([]byte(p.CloudletKey), &filter.Key)
+	if err != nil {
+		return fmt.Errorf("unable to parse CloudletKey")
+	}
+
+	conn := connectOnlineController(timeout)
+	if conn == nil {
+		return fmt.Errorf("unable to connect to online controller")
+	}
+
+	infoapi := edgeproto.NewCloudletInfoApiClient(conn)
+	show := testutil.ShowCloudletInfo{}
+	startTimeMs := time.Now().UnixNano() / int64(time.Millisecond)
+	maxTimeMs := int64(timeout/time.Millisecond) + startTimeMs
+	wait := 20 * time.Millisecond
+	err = fmt.Errorf("unable to check CloudletInfo")
+	for {
+		timeout -= wait
+		time.Sleep(wait)
+		currTimeMs := time.Now().UnixNano() / int64(time.Millisecond)
+		if currTimeMs > maxTimeMs {
+			err = fmt.Errorf("timed out, last error was %s", err.Error())
+			break
+		}
+		show.Init()
+		stream, showErr := infoapi.ShowCloudletInfo(context.Background(), &filter)
+		show.ReadStream(stream, showErr)
+		if showErr != nil {
+			err = fmt.Errorf("show CloudletInfo failed: %s", showErr.Error())
+			continue
+		}
+		info, found := show.Data[filter.Key.GetKeyString()]
+		if !found {
+			err = fmt.Errorf("CloudletInfo not found")
+			continue
+		}
+		if info.State != edgeproto.CloudletState_CloudletStateReady && info.State != edgeproto.CloudletState_CloudletStateErrors {
+			err = fmt.Errorf("CloudletInfo bad state %s", edgeproto.CloudletState_name[int32(info.State)])
+			continue
+		}
+		err = nil
+		break
+	}
+	return err
+}
+
+func connectOnlineController(delay time.Duration) *grpc.ClientConn {
+	for _, ctrl := range Deployment.Controllers {
+		conn, err := ctrl.ControllerLocal.ConnectAPI(delay)
+		if err == nil {
+			return conn
+		}
+	}
+	return nil
 }
 
 //first tries to kill process with SIGINT, then waits up to maxwait time

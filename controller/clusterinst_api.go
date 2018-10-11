@@ -112,6 +112,9 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
+	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+		return err
+	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
@@ -237,6 +240,9 @@ func (s *ClusterInstApi) DeleteClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
+	}
+	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+		return err
 	}
 	cctx.SetOverride(&in.CrmOverride)
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {

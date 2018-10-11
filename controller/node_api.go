@@ -26,12 +26,12 @@ func InitNodeApi(sync *Sync) {
 	sync.RegisterCache(&nodeApi.cache)
 }
 
-func (s *NodeApi) Update(in *edgeproto.Node, notifyId int64) {
-	s.cache.Update(in, 0)
+func (s *NodeApi) Update(in *edgeproto.Node, rev int64) {
+	s.cache.Update(in, rev)
 }
 
-func (s *NodeApi) Delete(in *edgeproto.Node, notifyId int64) {
-	s.cache.Delete(in, 0)
+func (s *NodeApi) Delete(in *edgeproto.Node, rev int64) {
+	s.cache.Delete(in, rev)
 }
 
 func (s *NodeApi) Flush(notifyId int64) {

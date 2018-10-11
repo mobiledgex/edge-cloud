@@ -16,11 +16,11 @@ func InitAppInstInfoApi(sync *Sync) {
 	appInstInfoApi.store = edgeproto.NewAppInstInfoStore(sync.store)
 }
 
-func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, notifyId int64) {
+func (s *AppInstInfoApi) Update(in *edgeproto.AppInstInfo, rev int64) {
 	appInstApi.UpdateFromInfo(in)
 }
 
-func (s *AppInstInfoApi) Delete(in *edgeproto.AppInstInfo, notifyId int64) {
+func (s *AppInstInfoApi) Delete(in *edgeproto.AppInstInfo, rev int64) {
 	appInstApi.DeleteFromInfo(in)
 }
 
