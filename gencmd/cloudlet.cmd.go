@@ -162,7 +162,7 @@ func CloudletWriteOutputOne(obj *edgeproto.Cloudlet) {
 	}
 }
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 9)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -171,6 +171,7 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s = append(s, in.Key.Name)
 	s = append(s, edgeproto.CloudletState_name[int32(in.State)])
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
+	s = append(s, in.Controller)
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxRam), 10))
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxVcores), 10))
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxVolGb), 10))
@@ -182,12 +183,13 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 9)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "State")
 	s = append(s, "NotifyId")
+	s = append(s, "Controller")
 	s = append(s, "OsMaxRam")
 	s = append(s, "OsMaxVcores")
 	s = append(s, "OsMaxVolGb")
@@ -728,6 +730,7 @@ func init() {
 	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletInfoFlagSet.StringVar(&CloudletInfoInState, "state", "", "one of [CloudletStateUnknown CloudletStateErrors CloudletStateReady CloudletStateOffline CloudletStateNotPresent]")
 	CloudletInfoFlagSet.Int64Var(&CloudletInfoIn.NotifyId, "notifyid", 0, "NotifyId")
+	CloudletInfoFlagSet.StringVar(&CloudletInfoIn.Controller, "controller", "", "Controller")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxRam, "osmaxram", 0, "OsMaxRam")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVcores, "osmaxvcores", 0, "OsMaxVcores")
 	CloudletInfoFlagSet.Uint64Var(&CloudletInfoIn.OsMaxVolGb, "osmaxvolgb", 0, "OsMaxVolGb")
@@ -821,6 +824,9 @@ func CloudletInfoSetFields() {
 	}
 	if CloudletInfoFlagSet.Lookup("notifyid").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "4")
+	}
+	if CloudletInfoFlagSet.Lookup("controller").Changed {
+		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "5")
 	}
 	if CloudletInfoFlagSet.Lookup("osmaxram").Changed {
 		CloudletInfoIn.Fields = append(CloudletInfoIn.Fields, "6")

@@ -39,6 +39,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
+var ControllerId = ""
 
 func GetRootDir() string {
 	return *rootDir
@@ -206,4 +207,9 @@ func InitApis(sync *Sync) {
 	InitCloudletRefsApi(sync)
 	InitControllerApi(sync)
 	InitNodeApi(sync)
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "nohostname"
+	}
+	ControllerId = hostname + "@" + *externalApiAddr
 }
