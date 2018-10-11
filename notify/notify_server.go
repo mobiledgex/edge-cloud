@@ -66,20 +66,20 @@ type SendClusterInstHandler interface {
 }
 
 type RecvAppInstInfoHandler interface {
-	Update(in *edgeproto.AppInstInfo, notifyId int64)
-	Delete(in *edgeproto.AppInstInfo, notifyId int64)
+	Update(in *edgeproto.AppInstInfo, rev int64)
+	Delete(in *edgeproto.AppInstInfo, rev int64)
 	Flush(notifyId int64)
 }
 
 type RecvCloudletInfoHandler interface {
-	Update(in *edgeproto.CloudletInfo, notifyId int64)
-	Delete(in *edgeproto.CloudletInfo, notifyId int64)
+	Update(in *edgeproto.CloudletInfo, rev int64)
+	Delete(in *edgeproto.CloudletInfo, rev int64)
 	Flush(notifyId int64)
 }
 
 type RecvClusterInstInfoHandler interface {
-	Update(in *edgeproto.ClusterInstInfo, notifyId int64)
-	Delete(in *edgeproto.ClusterInstInfo, notifyId int64)
+	Update(in *edgeproto.ClusterInstInfo, rev int64)
+	Delete(in *edgeproto.ClusterInstInfo, rev int64)
 	Flush(notifyId int64)
 }
 
@@ -88,8 +88,8 @@ type RecvMetricHandler interface {
 }
 
 type RecvNodeHandler interface {
-	Update(in *edgeproto.Node, notifyId int64)
-	Delete(in *edgeproto.Node, notifyId int64)
+	Update(in *edgeproto.Node, rev int64)
+	Delete(in *edgeproto.Node, rev int64)
 	Flush(notifyId int64)
 }
 

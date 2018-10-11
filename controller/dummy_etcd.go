@@ -214,11 +214,11 @@ func (e *dummyEtcd) triggerWatcher(action objstore.SyncCbAction, key, val string
 }
 
 func (e *dummyEtcd) Grant(ctx context.Context, ttl int64) (int64, error) {
-	return 0, errors.New("unsupported")
+	return 0, errors.New("dummy etcd grant unsupported")
 }
 
 func (e *dummyEtcd) KeepAlive(ctx context.Context, leaseID int64) error {
-	return errors.New("unsupported")
+	return errors.New("dummy etcd keepalive unsupported")
 }
 
 // Based on clientv3/concurrency/stm.go
