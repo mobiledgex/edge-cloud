@@ -43,7 +43,7 @@ func (s *CloudletInfoApi) ShowCloudletInfo(in *edgeproto.CloudletInfo, cb edgepr
 func (s *CloudletInfoApi) Update(in *edgeproto.CloudletInfo, rev int64) {
 	// for now assume all fields have been specified
 	in.Fields = edgeproto.CloudletInfoAllFields
-	in.Controller = *externalApiAddr
+	in.Controller = ControllerId
 	s.store.Put(in, nil)
 }
 
@@ -64,7 +64,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 	matches := make([]edgeproto.CloudletKey, 0)
 	s.cache.Mux.Lock()
 	for _, val := range s.cache.Objs {
-		if val.NotifyId != notifyId || val.Controller != *externalApiAddr {
+		if val.NotifyId != notifyId || val.Controller != ControllerId {
 			continue
 		}
 		matches = append(matches, val.Key)
@@ -76,7 +76,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 		info.Key = matches[ii]
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 			if s.store.STMGet(stm, &info.Key, &info) {
-				if info.NotifyId != notifyId || info.Controller != *externalApiAddr {
+				if info.NotifyId != notifyId || info.Controller != ControllerId {
 					// Updated by another thread or controller
 					return nil
 				}
