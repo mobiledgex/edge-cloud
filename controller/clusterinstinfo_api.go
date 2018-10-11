@@ -16,11 +16,11 @@ func InitClusterInstInfoApi(sync *Sync) {
 	clusterInstInfoApi.store = edgeproto.NewClusterInstInfoStore(sync.store)
 }
 
-func (s *ClusterInstInfoApi) Update(in *edgeproto.ClusterInstInfo, notifyId int64) {
+func (s *ClusterInstInfoApi) Update(in *edgeproto.ClusterInstInfo, rev int64) {
 	clusterInstApi.UpdateFromInfo(in)
 }
 
-func (s *ClusterInstInfoApi) Delete(in *edgeproto.ClusterInstInfo, notifyId int64) {
+func (s *ClusterInstInfoApi) Delete(in *edgeproto.ClusterInstInfo, rev int64) {
 	clusterInstApi.DeleteFromInfo(in)
 }
 
