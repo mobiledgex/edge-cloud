@@ -233,6 +233,7 @@ func main() {
 				fmt.Printf("  %s: failures %d\n", t, f)
 			}
 			fmt.Printf("Logs in %s\n", *outputDir)
+                        os.Exit(1)
 		}
 	}
 
