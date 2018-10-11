@@ -2177,6 +2177,19 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 	}
 }
 
+func (m *TestGen) ValidateEnums() error {
+	var ok bool
+	_, ok = OuterEnum_name[int32(m.OuterEn)]
+	if !ok {
+		return errors.New("invalid OuterEn")
+	}
+	_, ok = TestGen_InnerEnum_name[int32(m.InnerEn)]
+	if !ok {
+		return errors.New("invalid InnerEn")
+	}
+	return nil
+}
+
 func (m *TestGen_InnerMessage) CopyInFields(src *TestGen_InnerMessage) {
 	m.Url = src.Url
 	m.Id = src.Id

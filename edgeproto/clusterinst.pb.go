@@ -1401,6 +1401,23 @@ func (m *ClusterInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func (m *ClusterInst) ValidateEnums() error {
+	var ok bool
+	_, ok = TrackedState_name[int32(m.State)]
+	if !ok {
+		return errors.New("invalid State")
+	}
+	_, ok = CRMOverride_name[int32(m.CrmOverride)]
+	if !ok {
+		return errors.New("invalid CrmOverride")
+	}
+	_, ok = Liveness_name[int32(m.Liveness)]
+	if !ok {
+		return errors.New("invalid Liveness")
+	}
+	return nil
+}
+
 func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1960,6 +1977,15 @@ func (c *ClusterInstInfoCache) SyncListEnd() {
 
 func (m *ClusterInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func (m *ClusterInstInfo) ValidateEnums() error {
+	var ok bool
+	_, ok = TrackedState_name[int32(m.State)]
+	if !ok {
+		return errors.New("invalid State")
+	}
+	return nil
 }
 
 func (m *ClusterInstKey) Size() (n int) {

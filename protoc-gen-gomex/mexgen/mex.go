@@ -1211,6 +1211,47 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 	}
+
+	//Generate enum values validation
+	m.generateEnumValidation(message, desc)
+}
+
+// Generate a single check for an enum
+func (m *mex) generateEnumCheck(field *descriptor.FieldDescriptorProto, elem string) {
+	m.P("_, ok = ", m.support.GoType(m.gen, field), "_name[int32(", elem,
+		")]")
+	m.P("if !ok {")
+	m.P("return errors.New(\"invalid ", generator.CamelCase(*field.Name),
+		"\")")
+	m.P("}")
+}
+
+func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *generator.Descriptor) {
+	firstenum := true
+	for _, field := range message.Field {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_ENUM {
+			// Print header first
+			if firstenum {
+				m.P("func (m *", message.Name, ") ValidateEnums() error {")
+				m.P("var ok bool")
+				firstenum = false
+			}
+			// could be an array of enums
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
+				m.generateEnumCheck(field, "e")
+				m.P("}")
+			} else {
+				m.generateEnumCheck(field, "m."+generator.CamelCase(*field.Name))
+			}
+		}
+	}
+	if !firstenum {
+		m.P("return nil")
+		m.P("}")
+		m.P("")
+
+	}
 }
 
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {

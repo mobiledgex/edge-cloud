@@ -319,6 +319,17 @@ func (m *DebugLevels) CopyInFields(src *DebugLevels) {
 	copy(m.Levels, src.Levels)
 }
 
+func (m *DebugLevels) ValidateEnums() error {
+	var ok bool
+	for _, e := range m.Levels {
+		_, ok = DebugLevel_name[int32(e)]
+		if !ok {
+			return errors.New("invalid Levels")
+		}
+	}
+	return nil
+}
+
 func (m *DebugResult) CopyInFields(src *DebugResult) {
 	m.Status = src.Status
 	m.Code = src.Code

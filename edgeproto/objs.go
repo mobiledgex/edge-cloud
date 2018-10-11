@@ -2,9 +2,12 @@ package edgeproto
 
 import (
 	"errors"
+	fmt "fmt"
 	"sort"
+	"strconv"
 	strings "strings"
 
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -185,7 +188,24 @@ func (key *AppKey) Validate() error {
 }
 
 func (s *App) Validate(fields map[string]struct{}) error {
-	return s.GetKey().Validate()
+	var err error
+	if err = s.GetKey().Validate(); err != nil {
+		return err
+	}
+	if s.ImageType == ImageType_ImageTypeUnknown {
+		return errors.New("Please specify Image Type")
+	}
+	if err = s.ValidateEnums(); err != nil {
+		return err
+	}
+	if s.AccessPorts == "" {
+		return errors.New("Please specify access ports")
+	}
+	_, err = ParseAppPorts(s.AccessPorts)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (key *CloudletKey) Validate() error {
@@ -302,4 +322,45 @@ func (m *Metric) AddIntVal(name string, ival uint64) {
 	val := MetricVal{Name: name}
 	val.Value = &MetricVal_Ival{Ival: ival}
 	m.Vals = append(m.Vals, &val)
+}
+
+func GetLProto(s string) (dme.LProto, error) {
+	s = strings.ToLower(s)
+	switch s {
+	case "tcp":
+		return dme.LProto_LProtoTCP, nil
+	case "udp":
+		return dme.LProto_LProtoUDP, nil
+	case "http":
+		return dme.LProto_LProtoHTTP, nil
+	}
+	return 0, fmt.Errorf("%s is not a supported Protocol", s)
+}
+
+func ParseAppPorts(ports string) ([]dme.AppPort, error) {
+	appports := make([]dme.AppPort, 0)
+	strs := strings.Split(ports, ",")
+	for _, str := range strs {
+		vals := strings.Split(str, ":")
+		if len(vals) != 2 {
+			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
+		}
+		proto, err := GetLProto(vals[0])
+		if err != nil {
+			return nil, err
+		}
+		port, err := strconv.ParseInt(vals[1], 10, 32)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to convert port %s to integer: %s", vals[1], err)
+		}
+		if port < 1 || port > 65535 {
+			return nil, fmt.Errorf("Port %s out of range", vals[1])
+		}
+		p := dme.AppPort{
+			Proto:        proto,
+			InternalPort: int32(port),
+		}
+		appports = append(appports, p)
+	}
+	return appports, nil
 }

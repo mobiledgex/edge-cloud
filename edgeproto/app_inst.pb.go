@@ -1988,6 +1988,31 @@ func (m *AppInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func (m *AppInst) ValidateEnums() error {
+	var ok bool
+	_, ok = Liveness_name[int32(m.Liveness)]
+	if !ok {
+		return errors.New("invalid Liveness")
+	}
+	_, ok = ImageType_name[int32(m.ImageType)]
+	if !ok {
+		return errors.New("invalid ImageType")
+	}
+	_, ok = IpAccess_name[int32(m.IpAccess)]
+	if !ok {
+		return errors.New("invalid IpAccess")
+	}
+	_, ok = TrackedState_name[int32(m.State)]
+	if !ok {
+		return errors.New("invalid State")
+	}
+	_, ok = CRMOverride_name[int32(m.CrmOverride)]
+	if !ok {
+		return errors.New("invalid CrmOverride")
+	}
+	return nil
+}
+
 func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2583,6 +2608,15 @@ func (c *AppInstInfoCache) SyncListEnd() {
 
 func (m *AppInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func (m *AppInstInfo) ValidateEnums() error {
+	var ok bool
+	_, ok = TrackedState_name[int32(m.State)]
+	if !ok {
+		return errors.New("invalid State")
+	}
+	return nil
 }
 
 func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) {

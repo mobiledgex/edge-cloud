@@ -1586,6 +1586,15 @@ func (m *Cloudlet) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func (m *Cloudlet) ValidateEnums() error {
+	var ok bool
+	_, ok = IpSupport_name[int32(m.IpSupport)]
+	if !ok {
+		return errors.New("invalid IpSupport")
+	}
+	return nil
+}
+
 func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2168,6 +2177,15 @@ func (c *CloudletInfoCache) SyncListEnd() {
 
 func (m *CloudletInfo) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func (m *CloudletInfo) ValidateEnums() error {
+	var ok bool
+	_, ok = CloudletState_name[int32(m.State)]
+	if !ok {
+		return errors.New("invalid State")
+	}
+	return nil
 }
 
 func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) {

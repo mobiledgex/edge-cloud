@@ -418,6 +418,15 @@ func NodeKeyStringParse(str string, key *NodeKey) {
 	}
 }
 
+func (m *NodeKey) ValidateEnums() error {
+	var ok bool
+	_, ok = NodeType_name[int32(m.NodeType)]
+	if !ok {
+		return errors.New("invalid NodeType")
+	}
+	return nil
+}
+
 func (m *Node) Matches(o *Node, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)

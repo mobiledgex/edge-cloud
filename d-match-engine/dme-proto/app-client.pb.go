@@ -1323,6 +1323,15 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.VerifyLocToken = src.VerifyLocToken
 }
 
+func (m *Match_Engine_Request) ValidateEnums() error {
+	var ok bool
+	_, ok = IDTypes_name[int32(m.IdType)]
+	if !ok {
+		return errors.New("invalid IdType")
+	}
+	return nil
+}
+
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	m.Ver = src.Ver
 	m.Uri = src.Uri
@@ -1362,11 +1371,33 @@ func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	}
 }
 
+func (m *Match_Engine_Reply) ValidateEnums() error {
+	var ok bool
+	_, ok = Match_Engine_Reply_Find_Status_name[int32(m.Status)]
+	if !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
 func (m *Match_Engine_Loc_Verify) CopyInFields(src *Match_Engine_Loc_Verify) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
 	m.GpsLocationStatus = src.GpsLocationStatus
 	m.GPS_Location_Accuracy_KM = src.GPS_Location_Accuracy_KM
+}
+
+func (m *Match_Engine_Loc_Verify) ValidateEnums() error {
+	var ok bool
+	_, ok = Match_Engine_Loc_Verify_Tower_Status_name[int32(m.TowerStatus)]
+	if !ok {
+		return errors.New("invalid TowerStatus")
+	}
+	_, ok = Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(m.GpsLocationStatus)]
+	if !ok {
+		return errors.New("invalid GpsLocationStatus")
+	}
+	return nil
 }
 
 func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
@@ -1392,6 +1423,15 @@ func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
 	m.SessionCookie = src.SessionCookie
 }
 
+func (m *Match_Engine_Loc) ValidateEnums() error {
+	var ok bool
+	_, ok = Match_Engine_Loc_Loc_Status_name[int32(m.Status)]
+	if !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
 func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
 	m.Ver = src.Ver
 	m.Status = src.Status
@@ -1399,6 +1439,15 @@ func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
 	m.SessionCookie = src.SessionCookie
 	m.GroupCookie = src.GroupCookie
 	m.TokenServerURI = src.TokenServerURI
+}
+
+func (m *Match_Engine_Status) ValidateEnums() error {
+	var ok bool
+	_, ok = Match_Engine_Status_ME_Status_name[int32(m.Status)]
+	if !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
 }
 
 func (m *Appinstance) CopyInFields(src *Appinstance) {
@@ -1481,6 +1530,15 @@ func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List)
 	}
 }
 
+func (m *Match_Engine_AppInst_List) ValidateEnums() error {
+	var ok bool
+	_, ok = Match_Engine_AppInst_List_AI_Status_name[int32(m.Status)]
+	if !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
 func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
 	m.Ver = src.Ver
 	m.IdType = src.IdType
@@ -1508,6 +1566,19 @@ func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
 	m.SessionCookie = src.SessionCookie
 	m.CommType = src.CommType
 	m.UserData = src.UserData
+}
+
+func (m *DynamicLocGroupAdd) ValidateEnums() error {
+	var ok bool
+	_, ok = IDTypes_name[int32(m.IdType)]
+	if !ok {
+		return errors.New("invalid IdType")
+	}
+	_, ok = DynamicLocGroupAdd_DlgCommType_name[int32(m.CommType)]
+	if !ok {
+		return errors.New("invalid CommType")
+	}
+	return nil
 }
 
 var IDTypesStrings = []string{

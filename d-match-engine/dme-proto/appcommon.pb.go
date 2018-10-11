@@ -125,6 +125,15 @@ func (m *AppPort) CopyInFields(src *AppPort) {
 	m.PublicPath = src.PublicPath
 }
 
+func (m *AppPort) ValidateEnums() error {
+	var ok bool
+	_, ok = LProto_name[int32(m.Proto)]
+	if !ok {
+		return errors.New("invalid Proto")
+	}
+	return nil
+}
+
 var LProtoStrings = []string{
 	"LProtoUnknown",
 	"LProtoTCP",

@@ -604,6 +604,15 @@ func (m *CloudResource) CopyInFields(src *CloudResource) {
 	copy(m.AccessIp, src.AccessIp)
 }
 
+func (m *CloudResource) ValidateEnums() error {
+	var ok bool
+	_, ok = CloudResourceCategory_name[int32(m.Category)]
+	if !ok {
+		return errors.New("invalid Category")
+	}
+	return nil
+}
+
 func (m *EdgeCloudApp) CopyInFields(src *EdgeCloudApp) {
 	m.Name = src.Name
 	m.Repository = src.Repository

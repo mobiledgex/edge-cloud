@@ -1191,6 +1191,19 @@ func (m *App) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func (m *App) ValidateEnums() error {
+	var ok bool
+	_, ok = ImageType_name[int32(m.ImageType)]
+	if !ok {
+		return errors.New("invalid ImageType")
+	}
+	_, ok = IpAccess_name[int32(m.IpAccess)]
+	if !ok {
+		return errors.New("invalid IpAccess")
+	}
+	return nil
+}
+
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",

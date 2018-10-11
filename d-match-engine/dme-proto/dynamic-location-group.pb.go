@@ -258,6 +258,15 @@ func (m *DlgMessage) CopyInFields(src *DlgMessage) {
 	m.Message = src.Message
 }
 
+func (m *DlgMessage) ValidateEnums() error {
+	var ok bool
+	_, ok = DlgMessage_DlgAck_name[int32(m.AckType)]
+	if !ok {
+		return errors.New("invalid AckType")
+	}
+	return nil
+}
+
 func (m *DlgReply) CopyInFields(src *DlgReply) {
 	m.Ver = src.Ver
 	m.AckId = src.AckId
