@@ -22,6 +22,12 @@ var AllocatedIpDynamic = "dynamic"
 
 var RootLBL7Port = 443
 
+// nonMexOperator is a special value used by the public cloud based cloudlet
+var nonMexOperator = edgeproto.OperatorKey{Name: "nonmex"}
+
+//PublicCloudletKey is a special value for the public cloud based default cloudlet for each app
+var PublicCloudletKey = edgeproto.CloudletKey{OperatorKey: nonMexOperator, Name: "public"}
+
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
 func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
