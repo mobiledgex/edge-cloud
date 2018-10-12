@@ -164,7 +164,7 @@
        "{{ sampleapps }}"
 
 - name: install etcd to remote etcd nodes
-  gather_facts: no
+  gather_facts: yes
   user: root
   hosts: etcds
 
@@ -182,7 +182,7 @@
        name: etcd
        state: latest
     when: ansible_distribution != "Ubuntu"
-    
+
   - name: download etcd via wget for ubuntu
     get_url:
        url: "{{ etcd_url }}/{{ etcd_version }}/{{ etcd_tarfile }}"
