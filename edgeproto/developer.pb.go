@@ -427,6 +427,11 @@ func DeveloperKeyStringParse(str string, key *DeveloperKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *DeveloperKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *Developer) Matches(o *Developer, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -928,6 +933,15 @@ func (c *DeveloperCache) SyncListEnd() {
 
 func (m *Developer) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Developer) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *DeveloperKey) Size() (n int) {

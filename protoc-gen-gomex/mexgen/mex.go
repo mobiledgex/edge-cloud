@@ -1218,24 +1218,32 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 // Generate a single check for an enum
 func (m *mex) generateEnumCheck(field *descriptor.FieldDescriptorProto, elem string) {
-	m.P("_, ok = ", m.support.GoType(m.gen, field), "_name[int32(", elem,
-		")]")
-	m.P("if !ok {")
+	m.P("if _, ok := ", m.support.GoType(m.gen, field), "_name[int32(", elem,
+		")]; !ok {")
 	m.P("return errors.New(\"invalid ", generator.CamelCase(*field.Name),
 		"\")")
 	m.P("}")
 }
 
+func (m *mex) generateMessageEnumCheck(elem string) {
+	m.P("if err := ", elem, ".ValidateEnums(); err != nil {")
+	m.P("return err")
+	m.P("}")
+}
+
+// Generate enum validation method for each message
+// NOTE: we don't check for set fields. This is ok as
+// long as enums start at 0 and unset fields are zeroed out
 func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *generator.Descriptor) {
-	firstenum := true
+	m.P("// Helper method to check that enums have valid values")
+	if gensupport.HasGrpcFields(message) {
+		m.P("// NOTE: ValidateEnums checks all Fields even if some are not set")
+	}
+	msgtyp := m.gen.TypeName(desc)
+	m.P("func (m *", msgtyp, ") ValidateEnums() error {")
 	for _, field := range message.Field {
-		if *field.Type == descriptor.FieldDescriptorProto_TYPE_ENUM {
-			// Print header first
-			if firstenum {
-				m.P("func (m *", message.Name, ") ValidateEnums() error {")
-				m.P("var ok bool")
-				firstenum = false
-			}
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
 			// could be an array of enums
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
 				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
@@ -1244,14 +1252,28 @@ func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *
 			} else {
 				m.generateEnumCheck(field, "m."+generator.CamelCase(*field.Name))
 			}
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			// Don't try to generate a call to a vlidation for external package
+			if _, ok := m.support.MessageTypesGen[field.GetTypeName()]; !ok {
+				continue
+			}
+			// Not supported OneOf types
+			if field.OneofIndex != nil {
+				continue
+			}
+			// could be an array of messages
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
+				m.generateMessageEnumCheck("e")
+				m.P("}")
+			} else {
+				m.generateMessageEnumCheck("m." + generator.CamelCase(*field.Name))
+			}
 		}
 	}
-	if !firstenum {
-		m.P("return nil")
-		m.P("}")
-		m.P("")
-
-	}
+	m.P("return nil")
+	m.P("}")
+	m.P("")
 }
 
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {

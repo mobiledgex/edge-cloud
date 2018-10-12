@@ -600,6 +600,14 @@ func AppKeyStringParse(str string, key *AppKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *AppKey) ValidateEnums() error {
+	if err := m.DeveloperKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *App) Matches(o *App, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1191,15 +1199,23 @@ func (m *App) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *App) ValidateEnums() error {
-	var ok bool
-	_, ok = ImageType_name[int32(m.ImageType)]
-	if !ok {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := ImageType_name[int32(m.ImageType)]; !ok {
 		return errors.New("invalid ImageType")
 	}
-	_, ok = IpAccess_name[int32(m.IpAccess)]
-	if !ok {
+	if _, ok := IpAccess_name[int32(m.IpAccess)]; !ok {
 		return errors.New("invalid IpAccess")
+	}
+	if err := m.DefaultFlavor.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Cluster.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }

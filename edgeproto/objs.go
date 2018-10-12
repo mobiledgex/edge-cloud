@@ -201,8 +201,7 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	if s.AccessPorts == "" {
 		return errors.New("Please specify access ports")
 	}
-	_, err = ParseAppPorts(s.AccessPorts)
-	if err != nil {
+	if _, err = ParseAppPorts(s.AccessPorts); err != nil {
 		return err
 	}
 	return nil

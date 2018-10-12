@@ -884,10 +884,9 @@ func (m *NoticeReply) CopyInFields(src *NoticeReply) {
 	m.Version = src.Version
 }
 
+// Helper method to check that enums have valid values
 func (m *NoticeReply) ValidateEnums() error {
-	var ok bool
-	_, ok = NoticeAction_name[int32(m.Action)]
-	if !ok {
+	if _, ok := NoticeAction_name[int32(m.Action)]; !ok {
 		return errors.New("invalid Action")
 	}
 	return nil
@@ -900,14 +899,12 @@ func (m *NoticeRequest) CopyInFields(src *NoticeRequest) {
 	m.Revision = src.Revision
 }
 
+// Helper method to check that enums have valid values
 func (m *NoticeRequest) ValidateEnums() error {
-	var ok bool
-	_, ok = NoticeAction_name[int32(m.Action)]
-	if !ok {
+	if _, ok := NoticeAction_name[int32(m.Action)]; !ok {
 		return errors.New("invalid Action")
 	}
-	_, ok = NoticeRequestor_name[int32(m.Requestor)]
-	if !ok {
+	if _, ok := NoticeRequestor_name[int32(m.Requestor)]; !ok {
 		return errors.New("invalid Requestor")
 	}
 	return nil

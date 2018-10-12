@@ -414,6 +414,11 @@ func FlavorKeyStringParse(str string, key *FlavorKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *FlavorKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *Flavor) Matches(o *Flavor, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -901,6 +906,15 @@ func (c *FlavorCache) SyncListEnd() {
 
 func (m *Flavor) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Flavor) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *FlavorKey) Size() (n int) {

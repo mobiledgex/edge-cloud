@@ -604,11 +604,13 @@ func (m *CloudResource) CopyInFields(src *CloudResource) {
 	copy(m.AccessIp, src.AccessIp)
 }
 
+// Helper method to check that enums have valid values
 func (m *CloudResource) ValidateEnums() error {
-	var ok bool
-	_, ok = CloudResourceCategory_name[int32(m.Category)]
-	if !ok {
+	if _, ok := CloudResourceCategory_name[int32(m.Category)]; !ok {
 		return errors.New("invalid Category")
+	}
+	if err := m.CloudletKey.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -636,6 +638,14 @@ func (m *EdgeCloudApp) CopyInFields(src *EdgeCloudApp) {
 		m.AppInstKey.CloudletKey.Name = src.AppInstKey.CloudletKey.Name
 		m.AppInstKey.Id = src.AppInstKey.Id
 	}
+}
+
+// Helper method to check that enums have valid values
+func (m *EdgeCloudApp) ValidateEnums() error {
+	if err := m.AppInstKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *EdgeCloudApplication) CopyInFields(src *EdgeCloudApplication) {
@@ -671,6 +681,16 @@ func (m *EdgeCloudApplication) CopyInFields(src *EdgeCloudApplication) {
 			}
 		}
 	}
+}
+
+// Helper method to check that enums have valid values
+func (m *EdgeCloudApplication) ValidateEnums() error {
+	for _, e := range m.Apps {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 var CloudResourceCategoryStrings = []string{

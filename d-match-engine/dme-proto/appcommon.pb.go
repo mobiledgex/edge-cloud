@@ -125,10 +125,9 @@ func (m *AppPort) CopyInFields(src *AppPort) {
 	m.PublicPath = src.PublicPath
 }
 
+// Helper method to check that enums have valid values
 func (m *AppPort) ValidateEnums() error {
-	var ok bool
-	_, ok = LProto_name[int32(m.Proto)]
-	if !ok {
+	if _, ok := LProto_name[int32(m.Proto)]; !ok {
 		return errors.New("invalid Proto")
 	}
 	return nil
