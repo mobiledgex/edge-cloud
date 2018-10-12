@@ -252,7 +252,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", key.carrierName, "app", key.appKey.Name, "developer", key.appKey.DeveloperKey.Name, "version", key.appKey.Version)
 
 	// first find carrier cloudlet with 10k
-	bestDistance, updated := findClosestForKey(key, mreq.GpsLocation, 10000, mreply)
+	bestDistance, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
 
 	if updated {
 		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "uri", mreply.Uri, "distance", bestDistance)
@@ -318,7 +318,7 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 	//stored as appinst->cloudlet and we need the opposite mapping.
 	for _, a := range tbl.apps {
 		//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
-		if mreq.CarrierName != "" && !isPublicCarrier(mreq.CarrierName) && mreq.CarrierName != a.key.carrierName {
+		if mreq.CarrierName != "" && !isPublicCarrier(a.key.carrierName) && mreq.CarrierName != a.key.carrierName {
 			log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "app.CarrierName", a.key.carrierName)
 			continue
 		}
