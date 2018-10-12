@@ -5,6 +5,7 @@ import (
 	"net"
 	"sync"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -261,7 +262,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		paddedCarrierDistance := bestDistance - publicCloudPadding
 
 		// look for an azure cloud closer than the carrier distance minus padding
-		key.carrierName = "azure"
+		key.carrierName = cloudcommon.OperatorAzure
 		azDistance, updated := findClosestForKey(key, mreq.GpsLocation, paddedCarrierDistance, mreply)
 		if updated {
 			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "uri", mreply.Uri, "distance", azDistance)
@@ -269,12 +270,23 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		}
 
 		// look for a gcp cloud closer than either the azure cloud or the carrier cloud
-		key.carrierName = "gcp"
+		key.carrierName = cloudcommon.OperatorGCP
 		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
 		gcpDistance, updated := findClosestForKey(key, mreq.GpsLocation, maxGCPDistance, mreply)
 		if updated {
 			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "uri", mreply.Uri, "distance", gcpDistance)
 			bestDistance = gcpDistance
+		}
+	}
+	if mreply.Status == dme.Match_Engine_Reply_FIND_NOTFOUND {
+		key.carrierName = cloudcommon.OperatorNonMEX
+		// nonmex cloudlet is at lat:0, long:0.  Look at any distance distance
+		_, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
+		if updated {
+			log.DebugLog(log.DebugLevelDmereq, "found nonmex cloudlet", "uri", mreply.Uri)
+			bestDistance = -1 //not used except in log
+		} else {
+			log.DebugLog(log.DebugLevelDmedb, "no nonmex cloudlet for app", "appkey", key.appKey)
 		}
 	}
 
@@ -284,7 +296,15 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
 
 	}
+}
 
+func isPublicCarrier(carriername string) bool {
+	if carriername == cloudcommon.OperatorAzure ||
+		carriername == cloudcommon.OperatorGCP ||
+		carriername == cloudcommon.OperatorNonMEX {
+		return true
+	}
+	return false
 }
 
 func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppInst_List) {
@@ -298,7 +318,7 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 	//stored as appinst->cloudlet and we need the opposite mapping.
 	for _, a := range tbl.apps {
 		//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
-		if mreq.CarrierName != "" && a.key.carrierName != "azure" && a.key.carrierName != "gcp" && mreq.CarrierName != a.key.carrierName {
+		if mreq.CarrierName != "" && !isPublicCarrier(mreq.CarrierName) && mreq.CarrierName != a.key.carrierName {
 			log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "app.CarrierName", a.key.carrierName)
 			continue
 		}
@@ -311,7 +331,13 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 			cloc, exists := foundCloudlets[i.cloudletKey]
 			if !exists {
 				cloc = new(dme.CloudletLocation)
-				d := dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+				var d float64
+				if mreq.CarrierName == cloudcommon.OperatorNonMEX {
+					// there is no real distance as this is a fake cloudlet.
+					d = dmecommon.InfiniteDistance
+				} else {
+					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+				}
 				cloc.GpsLocation = &i.location
 				cloc.CarrierName = i.carrierName
 				cloc.CloudletName = i.cloudletKey.Name

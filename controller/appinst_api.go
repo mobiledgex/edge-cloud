@@ -147,15 +147,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	// indicates special public cloud cloudlet
-	var publicCloudlet bool
+	// indicates special default cloudlet not maintained by MEX
+	var nonMEXCloudlet bool
 
-	if in.Key.CloudletKey == cloudcommon.PublicCloudletKey {
+	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
-		publicCloudlet = true
+		nonMEXCloudlet = true
 	}
 
-	if !publicCloudlet {
+	if !nonMEXCloudlet {
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 			autocluster = false
 			if s.store.STMGet(stm, &in.Key, in) {
@@ -251,7 +251,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// cache location of cloudlet in app inst
 		var cloudlet edgeproto.Cloudlet
 
-		if !publicCloudlet {
+		if !nonMEXCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 				return errors.New("Specified cloudlet not found")
 			}
@@ -276,7 +276,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
-		if !publicCloudlet {
+		if !nonMEXCloudlet {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
 				return errors.New("Cluster instance does not exist for app")
@@ -350,7 +350,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 
-		if ignoreCRM(cctx) || publicCloudlet {
+		if ignoreCRM(cctx) || nonMEXCloudlet {
 			in.State = edgeproto.TrackedState_Ready
 		} else {
 			in.State = edgeproto.TrackedState_CreateRequested
@@ -361,7 +361,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || publicCloudlet {
+	if ignoreCRM(cctx) || nonMEXCloudlet {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateAppInstTransitions, edgeproto.TrackedState_CreateError, CreateAppInstTimeout, "Created successfully", cb.Send)
@@ -414,7 +414,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	log.DebugLog(log.DebugLevelApi, "createAppInstInternal", "appinst", in)
 
-	if in.Key.CloudletKey == cloudcommon.PublicCloudletKey {
+	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
 		publicCloudlet = true
 	}
