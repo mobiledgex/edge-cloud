@@ -35,10 +35,15 @@
 
   - name: stop controller process
     shell: "pkill -9 controller|| true"
-    when: item.hostname == inventory_hostname 
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ controllers }}"
-
+    
+  - name: stop controller docker container
+    shell: "docker kill $(docker ps|grep {{item.controllerlocal.name}}|cut -d' ' -f 1)|| true"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ controllers }}"
 
 - name: stop dmes
   gather_facts: no
@@ -56,10 +61,9 @@
     when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ dmes }}"
-    when: item.dockerimage == ""
 
   - name: stop dme docker container
-    shell: "docker kill $(docker ps|grep {{item.dmelocal.name}}|cut -d' ' -f 1)"
+    shell: "docker kill $(docker ps|grep {{item.dmelocal.name}}|cut -d' ' -f 1)||true"
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ dmes }}"
@@ -81,7 +85,7 @@
        -  "{{ crms }}"
 
   - name: stop crm docker container
-    shell: "docker kill $(docker ps|grep {{item.crmlocal.name}}|cut -d' ' -f 1)"
+    shell: "docker kill $(docker ps|grep {{item.crmlocal.name}}|cut -d' ' -f 1)||true"
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ crms }}"
