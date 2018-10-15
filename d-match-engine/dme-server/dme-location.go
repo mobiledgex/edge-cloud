@@ -55,7 +55,7 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
-		distance = 10000
+		distance = dmecommon.InfiniteDistance
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
 			"appName", key.appKey.Name,
 			"carrier", key.carrierName,

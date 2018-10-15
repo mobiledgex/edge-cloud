@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -93,6 +94,9 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 }
 
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
+	if *key == cloudcommon.NonMEXCloudletKey {
+		return edgeproto.CloudletState_CloudletStateReady
+	}
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, obj := range s.cache.Objs {
