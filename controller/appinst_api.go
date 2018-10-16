@@ -256,6 +256,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Specified cloudlet not found")
 			}
 			in.CloudletLoc = cloudlet.Location
+		} else {
+			in.CloudletLoc = dme.Loc{}
 		}
 
 		// cache app path in app inst

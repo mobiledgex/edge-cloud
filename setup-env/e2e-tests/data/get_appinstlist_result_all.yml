@@ -1,4 +1,15 @@
 cloudlets:
+- carriername: nonmex
+  cloudletname: public
+  gpslocation: {}
+  distance: 10546.953164702378
+  appinstances:
+  - appname: someapplication1
+    appversion: "1.0"
+    uri: public.nonmex.mobiledgex.net
+  - appname: someapplication2
+    appversion: "1.0"
+    uri: public.nonmex.mobiledgex.net
 - carriername: tmus
   cloudletname: tmocloud-1
   gpslocation:

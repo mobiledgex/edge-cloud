@@ -898,3 +898,37 @@ appinstances:
   flavor:
     name: x1.small
 
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: nonmex
+      name: public
+    id: 123
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: nonmex
+      name: public
+    id: 123
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+

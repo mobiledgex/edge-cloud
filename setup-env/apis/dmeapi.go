@@ -74,7 +74,12 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 
 	switch api {
 	case "findcloudlet":
-		dmereply, dmeerror = client.FindCloudlet(ctx, &apiRequest.MatchEngineRequest)
+		fc, err := client.FindCloudlet(ctx, &apiRequest.MatchEngineRequest)
+		sort.Slice(fc.Ports, func(i, j int) bool {
+			return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
+		})
+		dmereply = fc
+		dmeerror = err
 	case "register":
 		dmereply, dmeerror = client.RegisterClient(ctx, &apiRequest.MatchEngineRequest)
 	case "verifylocation":
@@ -118,6 +123,7 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 					return c.Appinstances[i].Appname < c.Appinstances[j].Appname
 				})
 			}
+
 		}
 		dmereply = mel
 		dmeerror = err
