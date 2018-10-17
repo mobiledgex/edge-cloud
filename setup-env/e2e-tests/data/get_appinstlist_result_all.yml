@@ -1,4 +1,15 @@
 cloudlets:
+- carriername: developer
+  cloudletname: default
+  gpslocation: {}
+  distance: 10546.953164702378
+  appinstances:
+  - appname: someapplication1
+    appversion: "1.0"
+    uri: default.developer.mobiledgex.net
+  - appname: someapplication2
+    appversion: "1.0"
+    uri: default.developer.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-1
   gpslocation:

@@ -17,10 +17,18 @@ var AppDNSRoot = "mobiledgex.net"
 
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
+var OperatorDeveloper = "developer"
 
 var AllocatedIpDynamic = "dynamic"
 
 var RootLBL7Port = 443
+
+// OperatorDeveloper is a special value used by the public cloud based cloudlet
+var operatorDeveloper = edgeproto.OperatorKey{Name: OperatorDeveloper}
+
+//DefaultCloudletKey is a special value for the public cloud based default cloudlet for each app
+// is for an appinst deployment maintained by the developer, not Mobiledgex
+var DefaultCloudletKey = edgeproto.CloudletKey{OperatorKey: operatorDeveloper, Name: "default"}
 
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
