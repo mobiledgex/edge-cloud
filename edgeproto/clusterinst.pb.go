@@ -732,6 +732,17 @@ func ClusterInstKeyStringParse(str string, key *ClusterInstKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *ClusterInstKey) ValidateEnums() error {
+	if err := m.ClusterKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.CloudletKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *ClusterInst) Matches(o *ClusterInst, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1401,6 +1412,27 @@ func (m *ClusterInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *ClusterInst) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.Flavor.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	if _, ok := CRMOverride_name[int32(m.CrmOverride)]; !ok {
+		return errors.New("invalid CrmOverride")
+	}
+	if _, ok := Liveness_name[int32(m.Liveness)]; !ok {
+		return errors.New("invalid Liveness")
+	}
+	return nil
+}
+
 func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1960,6 +1992,18 @@ func (c *ClusterInstInfoCache) SyncListEnd() {
 
 func (m *ClusterInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *ClusterInstInfo) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	return nil
 }
 
 func (m *ClusterInstKey) Size() (n int) {

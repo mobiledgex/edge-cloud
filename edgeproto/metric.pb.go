@@ -320,8 +320,18 @@ func (m *MetricTag) CopyInFields(src *MetricTag) {
 	m.Val = src.Val
 }
 
+// Helper method to check that enums have valid values
+func (m *MetricTag) ValidateEnums() error {
+	return nil
+}
+
 func (m *MetricVal) CopyInFields(src *MetricVal) {
 	m.Name = src.Name
+}
+
+// Helper method to check that enums have valid values
+func (m *MetricVal) ValidateEnums() error {
+	return nil
 }
 
 func (m *Metric) CopyInFields(src *Metric) {
@@ -347,6 +357,21 @@ func (m *Metric) CopyInFields(src *Metric) {
 			m.Vals[i0].Name = src.Vals[i0].Name
 		}
 	}
+}
+
+// Helper method to check that enums have valid values
+func (m *Metric) ValidateEnums() error {
+	for _, e := range m.Tags {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.Vals {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *MetricTag) Size() (n int) {

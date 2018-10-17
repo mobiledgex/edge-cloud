@@ -418,6 +418,11 @@ func ClusterKeyStringParse(str string, key *ClusterKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *ClusterKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *Cluster) Matches(o *Cluster, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -895,6 +900,18 @@ func (c *ClusterCache) SyncListEnd() {
 
 func (m *Cluster) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Cluster) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.DefaultFlavor.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *ClusterKey) Size() (n int) {

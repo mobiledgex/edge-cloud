@@ -74,6 +74,11 @@ func (m *Result) CopyInFields(src *Result) {
 	m.Code = src.Code
 }
 
+// Helper method to check that enums have valid values
+func (m *Result) ValidateEnums() error {
+	return nil
+}
+
 func (m *Result) Size() (n int) {
 	var l int
 	_ = l

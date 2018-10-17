@@ -7,11 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"strconv"
-	"strings"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -78,19 +75,10 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	var err error
-	if in.ImageType == edgeproto.ImageType_ImageTypeUnknown {
-		return &edgeproto.Result{}, errors.New("Please specify Image Type")
-	}
-	_, ok := edgeproto.ImageType_name[int32(in.ImageType)]
-	if !ok {
-		return &edgeproto.Result{}, errors.New("invalid Image Type")
-	}
+
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
-	}
-	if in.AccessPorts == "" {
-		return &edgeproto.Result{}, errors.New("Please specify access ports")
 	}
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
@@ -102,8 +90,8 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			in.ImagePath = "qcow path not determined yet"
 		}
 	}
-	_, err = parseAppPorts(in.AccessPorts)
-	if err != nil {
+
+	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
 
@@ -151,9 +139,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if err := in.Validate(edgeproto.AppAllFieldsMap); err != nil {
-			return err
-		}
 		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
 			return errors.New("Specified developer not found")
 		}
@@ -262,47 +247,6 @@ func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
 		}
 		appInstApi.cache.Mux.Unlock()
 	}
-}
-
-func GetLProto(s string) (dme.LProto, error) {
-	s = strings.ToLower(s)
-	switch s {
-	case "tcp":
-		return dme.LProto_LProtoTCP, nil
-	case "udp":
-		return dme.LProto_LProtoUDP, nil
-	case "http":
-		return dme.LProto_LProtoHTTP, nil
-	}
-	return 0, fmt.Errorf("%s is not a supported Protocol", s)
-}
-
-func parseAppPorts(ports string) ([]dme.AppPort, error) {
-	appports := make([]dme.AppPort, 0)
-	strs := strings.Split(ports, ",")
-	for _, str := range strs {
-		vals := strings.Split(str, ":")
-		if len(vals) != 2 {
-			return nil, fmt.Errorf("Invalid Access Ports format, expected proto:port but was %s", vals[0])
-		}
-		proto, err := GetLProto(vals[0])
-		if err != nil {
-			return nil, err
-		}
-		port, err := strconv.ParseInt(vals[1], 10, 32)
-		if err != nil {
-			return nil, fmt.Errorf("Failed to convert port %s to integer: %s", vals[1], err)
-		}
-		if port < 1 || port > 65535 {
-			return nil, fmt.Errorf("Port %s out of range", vals[1])
-		}
-		p := dme.AppPort{
-			Proto:        proto,
-			InternalPort: int32(port),
-		}
-		appports = append(appports, p)
-	}
-	return appports, nil
 }
 
 // GetClusterFlavorForFlavor finds the smallest cluster flavor whose
