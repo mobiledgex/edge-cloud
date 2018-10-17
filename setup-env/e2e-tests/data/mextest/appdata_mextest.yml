@@ -1,0 +1,166 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterflavors:
+- key:
+    name: x1.medium
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: testappcluster
+  defaultflavor:
+    name: x1.medium
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
+operators:
+- key:
+    name: jlm
+- key: 
+    name: azure
+- key:
+    name: gcp
+
+developers:
+- key:
+    name: MobiledgeX SDK Demo
+  username: bruce
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+cloudlets:
+- key:
+    operatorkey:
+      name: gcp
+    name: centraluscloudlet
+  accessuri: 
+  location:
+    lat: 44.977300
+    long: -93.265469
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+- key:
+    operatorkey:
+      name: jlm
+    name: buckhorntestcloudlet
+  accessuri: 
+  location:
+    lat: 50.737
+    long: 7.098
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+apps:
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: MobiledgeX SDK Demo
+    version: "1.0"
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp 
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: testappcluster
+  config: "simapp -port 7777"
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+  accessports: "http:7777"
+  ipaccess: IpAccessDedicated
+
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: MobiledgeX SDK Demo
+    version: "1.1"
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: testappcluster
+  config: "simapp -port 7777"
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+  accessports: "tcp:7777"
+  ipaccess: IpAccessShared
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.1"
+    cloudletkey:
+      operatorkey:
+        name: jlm
+      name: buckhorntestcloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: jlm
+      name: buckhorntestcloudlet
+  liveness: LivenessStatic
+  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
