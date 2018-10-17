@@ -251,7 +251,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", key.carrierName, "app", key.appKey.Name, "developer", key.appKey.DeveloperKey.Name, "version", key.appKey.Version)
 
-	// first find carrier cloudlet with 10k
+	// first find carrier cloudlet
 	bestDistance, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
 
 	if updated {

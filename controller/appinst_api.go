@@ -151,7 +151,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	var nonMEXCloudlet bool
 
 	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
+		log.DebugLog(log.DebugLevelApi, "special nonmex public cloud case", "appinst", in)
 		nonMEXCloudlet = true
 	}
 
@@ -412,13 +412,13 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
 
-	var publicCloudlet bool
+	var nonMexCloudlet bool
 
 	log.DebugLog(log.DebugLevelApi, "createAppInstInternal", "appinst", in)
 
 	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
-		publicCloudlet = true
+		nonMexCloudlet = true
 	}
 
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
@@ -438,7 +438,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		var cloudlet edgeproto.Cloudlet
-		if !publicCloudlet {
+		if !nonMexCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 				return errors.New("Specified cloudlet not found")
 			}
@@ -461,7 +461,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		// delete app inst
-		if ignoreCRM(cctx) || publicCloudlet {
+		if ignoreCRM(cctx) || nonMexCloudlet {
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -475,7 +475,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || publicCloudlet {
+	if ignoreCRM(cctx) || nonMexCloudlet {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteAppInstTransitions, edgeproto.TrackedState_DeleteError, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
