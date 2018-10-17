@@ -1,0 +1,86 @@
+cluster:
+    mexmanifest: "{{setupdir}}//cluster-gcloud-gke.yaml"
+
+#we don't actually know the ip until after it is created, so this is updated
+#after and deploy is run a second time.  A better solution TBD
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: mextest.dme.mobiledgex.net
+    type: A
+    content: 35.233.179.175
+  - name: mextest.tok.mobiledgex.net
+    type: A
+    content: 40.113.219.126
+  - name: mextest.locsim.mobiledgex.net
+    type: A
+    content: 40.113.219.126
+  - name: mextest.ctrl.mobiledgex.net
+    type: A
+    content: 35.233.134.203
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.centraluscloudlet.gcp.mobiledgex.net
+    type: A
+    content: 35.230.36.164
+
+
+k8s-deployment:
+   - file: rbac.yml
+     description: setup permissions for service account
+
+   - file: mex-secret.yml
+     description: secret used to access private repo
+
+   - file: etcd-operator.yml
+     description: create an operator deployment to manage etcd
+     waitforpods:
+      - podname: etcd-operator
+        podcount: 1
+        maxwait: 180
+ 
+   - file: mex-etcd-cluster.yml
+     description: creates the MEX etcd cluster
+     waitforpods:
+      - podname: mex-etcd-cluster
+        podcount: 3 
+        maxwait: 180
+
+   - file: mex-controller-deploy.yml
+     description: deploys the controllers
+     waitforpods:
+      - podname: controller
+        podcount: 3
+        maxwait: 180
+
+   - file: mex-controller-lb.yml
+     description: create a load balancer for controllers
+
+   - file: mex-dme-deploy.yml
+     description: deploys the dmes
+     waitforpods:
+      - podname: dme
+        podcount: 2
+        maxwait: 180
+
+   - file: mex-dme-lb.yml
+     description: create a load balancer for dmes
+
+controllers:
+- controllerlocal:
+    name: ctrl-pool
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+    apiaddr: "0.0.0.0:55001"
+  hostname: "mextest.ctrl.mobiledgex.net"
+
+
+dmes:
+- dmelocal:
+    name: dme-pool
+    carrier: tdg
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+    apiaddr: "0.0.0.0:50051"
+  hostname: "mextest.dme.mobiledgex.net"
+
