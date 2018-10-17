@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: controller
+  name: controller
+  namespace: default
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+   - port: 55001
+     name: api
+     protocol: TCP
+     targetPort: 55001
+   - port: 36001
+     name: http
+     protocol: TCP
+     targetPort: 36001
+   - port: 37001
+     name: notify
+     protocol: TCP
+     targetPort: 37001
+  selector:
+    app: controller
+  sessionAffinity: None
+  type: LoadBalancer

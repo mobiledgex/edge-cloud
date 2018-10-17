@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/mextest/appdata_mextest.yml"
+  actions: [ctrlapi-delete]
