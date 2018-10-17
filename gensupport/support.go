@@ -36,6 +36,9 @@ type PluginSupport struct {
 	// ProtoFilesGen are all of the proto files in the request to
 	// generate.
 	ProtoFilesGen map[string]struct{}
+	// MessageTypesGen are all the message types that are defined
+	// in this package.
+	MessageTypesGen map[string]struct{}
 	// Map of all packages used from calls to FQTypeName
 	// Can be used to generate imports.
 	UsedPkgs map[string]*descriptor.FileDescriptorProto
@@ -59,12 +62,18 @@ func (s *PluginSupport) Init(req *plugin.CodeGeneratorRequest) {
 
 	s.ProtoFiles = make([]*descriptor.FileDescriptorProto, 0)
 	s.ProtoFilesGen = make(map[string]struct{})
+	s.MessageTypesGen = make(map[string]struct{})
 	if req != nil {
-		for _, protofile := range req.ProtoFile {
-			s.ProtoFiles = append(s.ProtoFiles, protofile)
-		}
 		for _, filename := range req.FileToGenerate {
 			s.ProtoFilesGen[filename] = struct{}{}
+		}
+		for _, protofile := range req.ProtoFile {
+			s.ProtoFiles = append(s.ProtoFiles, protofile)
+			if _, ok := s.ProtoFilesGen[protofile.GetName()]; ok {
+				for _, desc := range protofile.GetMessageType() {
+					s.MessageTypesGen["."+*protofile.Package+"."+*desc.Name] = struct{}{}
+				}
+			}
 		}
 	}
 }

@@ -1211,6 +1211,69 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 	}
+
+	//Generate enum values validation
+	m.generateEnumValidation(message, desc)
+}
+
+// Generate a single check for an enum
+func (m *mex) generateEnumCheck(field *descriptor.FieldDescriptorProto, elem string) {
+	m.P("if _, ok := ", m.support.GoType(m.gen, field), "_name[int32(", elem,
+		")]; !ok {")
+	m.P("return errors.New(\"invalid ", generator.CamelCase(*field.Name),
+		"\")")
+	m.P("}")
+}
+
+func (m *mex) generateMessageEnumCheck(elem string) {
+	m.P("if err := ", elem, ".ValidateEnums(); err != nil {")
+	m.P("return err")
+	m.P("}")
+}
+
+// Generate enum validation method for each message
+// NOTE: we don't check for set fields. This is ok as
+// long as enums start at 0 and unset fields are zeroed out
+func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *generator.Descriptor) {
+	m.P("// Helper method to check that enums have valid values")
+	if gensupport.HasGrpcFields(message) {
+		m.P("// NOTE: ValidateEnums checks all Fields even if some are not set")
+	}
+	msgtyp := m.gen.TypeName(desc)
+	m.P("func (m *", msgtyp, ") ValidateEnums() error {")
+	for _, field := range message.Field {
+		switch *field.Type {
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
+			// could be an array of enums
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
+				m.generateEnumCheck(field, "e")
+				m.P("}")
+			} else {
+				m.generateEnumCheck(field, "m."+generator.CamelCase(*field.Name))
+			}
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			// Don't try to generate a call to a vlidation for external package
+			if _, ok := m.support.MessageTypesGen[field.GetTypeName()]; !ok {
+				continue
+			}
+			// Not supported OneOf types
+			if field.OneofIndex != nil {
+				continue
+			}
+			// could be an array of messages
+			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+				m.P("for _, e := range m.", generator.CamelCase(*field.Name), " {")
+				m.generateMessageEnumCheck("e")
+				m.P("}")
+			} else {
+				m.generateMessageEnumCheck("m." + generator.CamelCase(*field.Name))
+			}
+		}
+	}
+	m.P("return nil")
+	m.P("}")
+	m.P("")
 }
 
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {

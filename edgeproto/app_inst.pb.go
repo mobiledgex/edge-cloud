@@ -970,6 +970,17 @@ func AppInstKeyStringParse(str string, key *AppInstKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *AppInstKey) ValidateEnums() error {
+	if err := m.AppKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.CloudletKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *AppInst) Matches(o *AppInst, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1988,6 +1999,36 @@ func (m *AppInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *AppInst) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.ClusterInstKey.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := Liveness_name[int32(m.Liveness)]; !ok {
+		return errors.New("invalid Liveness")
+	}
+	if _, ok := ImageType_name[int32(m.ImageType)]; !ok {
+		return errors.New("invalid ImageType")
+	}
+	if err := m.Flavor.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := IpAccess_name[int32(m.IpAccess)]; !ok {
+		return errors.New("invalid IpAccess")
+	}
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	if _, ok := CRMOverride_name[int32(m.CrmOverride)]; !ok {
+		return errors.New("invalid CrmOverride")
+	}
+	return nil
+}
+
 func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2585,8 +2626,25 @@ func (m *AppInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *AppInstInfo) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := TrackedState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	return nil
+}
+
 func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) {
 	m.Something = src.Something
+}
+
+// Helper method to check that enums have valid values
+func (m *AppInstMetrics) ValidateEnums() error {
+	return nil
 }
 
 func (m *AppInstKey) Size() (n int) {
