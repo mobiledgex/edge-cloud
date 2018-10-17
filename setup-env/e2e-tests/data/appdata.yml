@@ -191,8 +191,8 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: nonmex
-      name: public
+        name: developer
+      name: default
     id: 123
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication:1.0

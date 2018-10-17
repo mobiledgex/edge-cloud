@@ -20,16 +20,16 @@ tests:
   apifile: "{{datadir}}/mer.yml"
   actions: [dmeapi-findcloudlet]
 
-- name: create nonmex appinst
-  apifile: "{{datadir}}/appdata_nonmex.yml"
+- name: create default_appinst appinst
+  apifile: "{{datadir}}/appdata_default_appinst.yml"
   actions: [ctrlapi-create,ctrlapi-show]
 
-- name: find cloudlet with nonmex appinst only
+- name: find cloudlet with default_appinst appinst only
   apifile: "{{datadir}}/mer.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
-    yaml2: "{{datadir}}/find-cloudlet-response-nonmex.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-default_appinst.yml"
     filetype: findcloudlet
 
 - name: create appinst1 

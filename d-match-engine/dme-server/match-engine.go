@@ -279,14 +279,14 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		}
 	}
 	if mreply.Status == dme.Match_Engine_Reply_FIND_NOTFOUND {
-		key.carrierName = cloudcommon.OperatorNonMEX
-		// nonmex cloudlet is at lat:0, long:0.  Look at any distance distance
+		key.carrierName = cloudcommon.OperatorDeveloper
+		// default cloudlet is at lat:0, long:0.  Look at any distance distance
 		_, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found nonmex cloudlet", "uri", mreply.Uri)
+			log.DebugLog(log.DebugLevelDmereq, "found default operator cloudlet", "uri", mreply.Uri)
 			bestDistance = -1 //not used except in log
 		} else {
-			log.DebugLog(log.DebugLevelDmedb, "no nonmex cloudlet for app", "appkey", key.appKey)
+			log.DebugLog(log.DebugLevelDmedb, "no default operator cloudlet for app", "appkey", key.appKey)
 		}
 	}
 
@@ -301,7 +301,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 func isPublicCarrier(carriername string) bool {
 	if carriername == cloudcommon.OperatorAzure ||
 		carriername == cloudcommon.OperatorGCP ||
-		carriername == cloudcommon.OperatorNonMEX {
+		carriername == cloudcommon.OperatorDeveloper {
 		return true
 	}
 	return false
@@ -332,7 +332,7 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 			if !exists {
 				cloc = new(dme.CloudletLocation)
 				var d float64
-				if mreq.CarrierName == cloudcommon.OperatorNonMEX {
+				if mreq.CarrierName == cloudcommon.OperatorDeveloper {
 					// there is no real distance as this is a fake cloudlet.
 					d = dmecommon.InfiniteDistance
 				} else {

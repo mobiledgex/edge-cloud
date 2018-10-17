@@ -4,5 +4,5 @@
 tests:
 
 - name: delete provisioning
-  apifile: "{{datadir}}/appdata_nonmex.yml"
+  apifile: "{{datadir}}/appdata_default_appinst.yml"
   actions: [ctrlapi-delete,ctrlapi-show]

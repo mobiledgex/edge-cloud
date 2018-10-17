@@ -94,7 +94,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 }
 
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
-	if *key == cloudcommon.NonMEXCloudletKey {
+	if *key == cloudcommon.DefaultCloudletKey {
 		return edgeproto.CloudletState_CloudletStateReady
 	}
 	s.cache.Mux.Lock()

@@ -147,15 +147,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// See if we need to create auto-cluster.
 	// This also sets up the correct ClusterInstKey in "in".
 
-	// indicates special default cloudlet not maintained by MEX
-	var nonMEXCloudlet bool
+	// indicates special default cloudlet maintained by the developer
+	var defaultCloudlet bool
 
-	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special nonmex public cloud case", "appinst", in)
-		nonMEXCloudlet = true
+	if in.Key.CloudletKey == cloudcommon.DefaultCloudletKey {
+		log.DebugLog(log.DebugLevelApi, "special default public cloud case", "appinst", in)
+		defaultCloudlet = true
 	}
 
-	if !nonMEXCloudlet {
+	if !defaultCloudlet {
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 			autocluster = false
 			if s.store.STMGet(stm, &in.Key, in) {
@@ -251,7 +251,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// cache location of cloudlet in app inst
 		var cloudlet edgeproto.Cloudlet
 
-		if !nonMEXCloudlet {
+		if !defaultCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 				return errors.New("Specified cloudlet not found")
 			}
@@ -278,7 +278,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
-		if !nonMEXCloudlet {
+		if !defaultCloudlet {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
 				return errors.New("Cluster instance does not exist for app")
@@ -352,7 +352,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
 
-		if ignoreCRM(cctx) || nonMEXCloudlet {
+		if ignoreCRM(cctx) || defaultCloudlet {
 			in.State = edgeproto.TrackedState_Ready
 		} else {
 			in.State = edgeproto.TrackedState_CreateRequested
@@ -363,7 +363,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || nonMEXCloudlet {
+	if ignoreCRM(cctx) || defaultCloudlet {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateAppInstTransitions, edgeproto.TrackedState_CreateError, CreateAppInstTimeout, "Created successfully", cb.Send)
@@ -412,13 +412,13 @@ func (s *AppInstApi) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
 
-	var nonMexCloudlet bool
+	var defaultCloudlet bool
 
 	log.DebugLog(log.DebugLevelApi, "createAppInstInternal", "appinst", in)
 
-	if in.Key.CloudletKey == cloudcommon.NonMEXCloudletKey {
+	if in.Key.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
-		nonMexCloudlet = true
+		defaultCloudlet = true
 	}
 
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
@@ -438,7 +438,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		var cloudlet edgeproto.Cloudlet
-		if !nonMexCloudlet {
+		if !defaultCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
 				return errors.New("Specified cloudlet not found")
 			}
@@ -461,7 +461,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		// delete app inst
-		if ignoreCRM(cctx) || nonMexCloudlet {
+		if ignoreCRM(cctx) || defaultCloudlet {
 			// CRM state should be the same as before the
 			// operation failed, so just need to clean up
 			// controller state.
@@ -475,7 +475,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if err != nil {
 		return err
 	}
-	if ignoreCRM(cctx) || nonMexCloudlet {
+	if ignoreCRM(cctx) || defaultCloudlet {
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NotPresent, DeleteAppInstTransitions, edgeproto.TrackedState_DeleteError, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)

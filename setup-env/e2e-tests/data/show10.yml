@@ -906,8 +906,8 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: nonmex
-      name: public
+        name: developer
+      name: default
     id: 123
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -923,8 +923,8 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: nonmex
-      name: public
+        name: developer
+      name: default
     id: 123
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0

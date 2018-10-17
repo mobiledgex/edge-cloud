@@ -1,4 +1,4 @@
-uri: public.nonmex.mobiledgex.net
+uri: default.developer.mobiledgex.net
 cloudletlocation: {}
 ports:
 - proto: LProtoTCP
