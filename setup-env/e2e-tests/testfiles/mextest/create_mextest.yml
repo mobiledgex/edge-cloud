@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: create provisioning
+  apifile: "{{datadir}}/mextest/appdata_mextest.yml"
+  actions: [ctrlapi-create]
