@@ -393,6 +393,11 @@ func OperatorKeyStringParse(str string, key *OperatorKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *OperatorKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *Operator) Matches(o *Operator, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -838,6 +843,15 @@ func (c *OperatorCache) SyncListEnd() {
 
 func (m *Operator) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Operator) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *OperatorKey) Size() (n int) {

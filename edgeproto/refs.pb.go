@@ -891,6 +891,19 @@ func (m *CloudletRefs) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+func (m *CloudletRefs) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, e := range m.Clusters {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *ClusterRefs) Matches(o *ClusterRefs, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1335,6 +1348,19 @@ func (c *ClusterRefsCache) SyncListEnd() {
 
 func (m *ClusterRefs) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+func (m *ClusterRefs) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, e := range m.Apps {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *CloudletRefs) Size() (n int) {

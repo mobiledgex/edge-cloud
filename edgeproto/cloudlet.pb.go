@@ -978,6 +978,14 @@ func CloudletKeyStringParse(str string, key *CloudletKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *CloudletKey) ValidateEnums() error {
+	if err := m.OperatorKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Cloudlet) Matches(o *Cloudlet, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -1594,6 +1602,18 @@ func (m *Cloudlet) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Cloudlet) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := IpSupport_name[int32(m.IpSupport)]; !ok {
+		return errors.New("invalid IpSupport")
+	}
+	return nil
+}
+
 func (m *CloudletInfo) Matches(o *CloudletInfo, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -2192,8 +2212,25 @@ func (m *CloudletInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *CloudletInfo) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := CloudletState_name[int32(m.State)]; !ok {
+		return errors.New("invalid State")
+	}
+	return nil
+}
+
 func (m *CloudletMetrics) CopyInFields(src *CloudletMetrics) {
 	m.Foo = src.Foo
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletMetrics) ValidateEnums() error {
+	return nil
 }
 
 var CloudletStateStrings = []string{

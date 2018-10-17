@@ -292,7 +292,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 
-		ports, _ := parseAppPorts(app.AccessPorts)
+		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 
 		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
