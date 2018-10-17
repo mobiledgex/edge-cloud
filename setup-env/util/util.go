@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
@@ -547,7 +548,22 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		a2.Sort()
 		y1 = a1
 		y2 = a2
+	} else if fileType == "findcloudlet" {
+		var f1 dmeproto.Match_Engine_Reply
+		var f2 dmeproto.Match_Engine_Reply
 
+		err1 = ReadYamlFile(firstYamlFile, &f1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &f2, "", false)
+
+		//publicport is variable so we nil it out for comparison purposes.
+		for _, p := range f1.Ports {
+			p.PublicPort = 0
+		}
+		for _, p := range f2.Ports {
+			p.PublicPort = 0
+		}
+		y1 = f1
+		y2 = f1
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
 		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
