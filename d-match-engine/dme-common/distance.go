@@ -20,6 +20,10 @@ var (
 	LocationRoamingCountryMismatch uint32 = 7
 )
 
+// InfiniteDistance is a value higher than the circumference of the globe,
+// any cloudlet found would have to be closer than this.
+var InfiniteDistance float64 = 100000
+
 type LocationResult struct {
 	DistanceRange        float64
 	MatchEngineLocStatus dme.Match_Engine_Loc_Verify_GPS_Location_Status

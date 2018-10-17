@@ -1,0 +1,14 @@
+uri: default.developer.mobiledgex.net
+cloudletlocation: {}
+ports:
+- proto: LProtoTCP
+  internalport: 80
+  publicport: 10017
+- proto: LProtoHTTP
+  internalport: 443
+  publicport: 443
+  publicpath: acmeappco/someapplication10/http443
+- proto: LProtoUDP
+  internalport: 10002
+  publicport: 10019
+status: FIND_FOUND
