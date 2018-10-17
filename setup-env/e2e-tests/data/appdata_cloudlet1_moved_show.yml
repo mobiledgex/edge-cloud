@@ -182,4 +182,19 @@ appinstances:
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
-
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
