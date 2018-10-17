@@ -288,6 +288,11 @@ func ControllerKeyStringParse(str string, key *ControllerKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *ControllerKey) ValidateEnums() error {
+	return nil
+}
+
 func (m *Controller) Matches(o *Controller, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -733,6 +738,15 @@ func (c *ControllerCache) SyncListEnd() {
 
 func (m *Controller) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Controller) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (m *ControllerKey) Size() (n int) {

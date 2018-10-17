@@ -139,6 +139,11 @@ func (m *Loc) CopyInFields(src *Loc) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *Loc) ValidateEnums() error {
+	return nil
+}
+
 func (m *Loc) Size() (n int) {
 	var l int
 	_ = l

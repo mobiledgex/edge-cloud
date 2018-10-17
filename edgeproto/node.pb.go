@@ -418,6 +418,17 @@ func NodeKeyStringParse(str string, key *NodeKey) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *NodeKey) ValidateEnums() error {
+	if _, ok := NodeType_name[int32(m.NodeType)]; !ok {
+		return errors.New("invalid NodeType")
+	}
+	if err := m.CloudletKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Node) Matches(o *Node, fopts ...MatchOpt) bool {
 	opts := MatchOptions{}
 	applyMatchOptions(&opts, fopts...)
@@ -938,6 +949,15 @@ func (c *NodeCache) SyncListEnd() {
 
 func (m *Node) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *Node) ValidateEnums() error {
+	if err := m.Key.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
 }
 
 var NodeTypeStrings = []string{

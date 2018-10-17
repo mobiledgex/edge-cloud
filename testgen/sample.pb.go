@@ -821,6 +821,11 @@ func (m *NestedMessage) CopyInFields(src *NestedMessage) {
 	m.Name = src.Name
 }
 
+// Helper method to check that enums have valid values
+func (m *NestedMessage) ValidateEnums() error {
+	return nil
+}
+
 func (m *IncludeMessage) CopyInFields(src *IncludeMessage) {
 	m.Name = src.Name
 	m.Id = src.Id
@@ -830,8 +835,21 @@ func (m *IncludeMessage) CopyInFields(src *IncludeMessage) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *IncludeMessage) ValidateEnums() error {
+	if err := m.NestedMsg.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *IncludeFields) CopyInFields(src *IncludeFields) {
 	m.Name = src.Name
+}
+
+// Helper method to check that enums have valid values
+func (m *IncludeFields) ValidateEnums() error {
+	return nil
 }
 
 func (m *TestGen) Matches(o *TestGen, fopts ...MatchOpt) bool {
@@ -2177,9 +2195,58 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 	}
 }
 
+// Helper method to check that enums have valid values
+// NOTE: ValidateEnums checks all Fields even if some are not set
+func (m *TestGen) ValidateEnums() error {
+	if _, ok := OuterEnum_name[int32(m.OuterEn)]; !ok {
+		return errors.New("invalid OuterEn")
+	}
+	if _, ok := TestGen_InnerEnum_name[int32(m.InnerEn)]; !ok {
+		return errors.New("invalid InnerEn")
+	}
+	if err := m.IncludeMsg.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.IncludeMsgNonnull.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.IncludeFields.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.IncludeFieldsNonnull.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, e := range m.RepeatedMsg {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.RepeatedMsgNonnull {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.RepeatedFields {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	for _, e := range m.RepeatedFieldsNonnull {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *TestGen_InnerMessage) CopyInFields(src *TestGen_InnerMessage) {
 	m.Url = src.Url
 	m.Id = src.Id
+}
+
+// Helper method to check that enums have valid values
+func (m *TestGen_InnerMessage) ValidateEnums() error {
+	return nil
 }
 
 var OuterEnumStrings = []string{

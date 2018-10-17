@@ -1323,6 +1323,17 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 	m.VerifyLocToken = src.VerifyLocToken
 }
 
+// Helper method to check that enums have valid values
+func (m *Match_Engine_Request) ValidateEnums() error {
+	if _, ok := IDTypes_name[int32(m.IdType)]; !ok {
+		return errors.New("invalid IdType")
+	}
+	if err := m.GpsLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	m.Ver = src.Ver
 	m.Uri = src.Uri
@@ -1362,11 +1373,38 @@ func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *Match_Engine_Reply) ValidateEnums() error {
+	if err := m.CloudletLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := Match_Engine_Reply_Find_Status_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	for _, e := range m.Ports {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *Match_Engine_Loc_Verify) CopyInFields(src *Match_Engine_Loc_Verify) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
 	m.GpsLocationStatus = src.GpsLocationStatus
 	m.GPS_Location_Accuracy_KM = src.GPS_Location_Accuracy_KM
+}
+
+// Helper method to check that enums have valid values
+func (m *Match_Engine_Loc_Verify) ValidateEnums() error {
+	if _, ok := Match_Engine_Loc_Verify_Tower_Status_name[int32(m.TowerStatus)]; !ok {
+		return errors.New("invalid TowerStatus")
+	}
+	if _, ok := Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(m.GpsLocationStatus)]; !ok {
+		return errors.New("invalid GpsLocationStatus")
+	}
+	return nil
 }
 
 func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
@@ -1392,6 +1430,17 @@ func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
 	m.SessionCookie = src.SessionCookie
 }
 
+// Helper method to check that enums have valid values
+func (m *Match_Engine_Loc) ValidateEnums() error {
+	if _, ok := Match_Engine_Loc_Loc_Status_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	if err := m.NetworkLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
 	m.Ver = src.Ver
 	m.Status = src.Status
@@ -1401,10 +1450,23 @@ func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
 	m.TokenServerURI = src.TokenServerURI
 }
 
+// Helper method to check that enums have valid values
+func (m *Match_Engine_Status) ValidateEnums() error {
+	if _, ok := Match_Engine_Status_ME_Status_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
 func (m *Appinstance) CopyInFields(src *Appinstance) {
 	m.Appname = src.Appname
 	m.Appversion = src.Appversion
 	m.Uri = src.Uri
+}
+
+// Helper method to check that enums have valid values
+func (m *Appinstance) ValidateEnums() error {
+	return nil
 }
 
 func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
@@ -1437,6 +1499,19 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 			m.Appinstances[i0].Uri = src.Appinstances[i0].Uri
 		}
 	}
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletLocation) ValidateEnums() error {
+	if err := m.GpsLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	for _, e := range m.Appinstances {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List) {
@@ -1481,6 +1556,19 @@ func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List)
 	}
 }
 
+// Helper method to check that enums have valid values
+func (m *Match_Engine_AppInst_List) ValidateEnums() error {
+	if _, ok := Match_Engine_AppInst_List_AI_Status_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	for _, e := range m.Cloudlets {
+		if err := e.ValidateEnums(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
 	m.Ver = src.Ver
 	m.IdType = src.IdType
@@ -1508,6 +1596,20 @@ func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
 	m.SessionCookie = src.SessionCookie
 	m.CommType = src.CommType
 	m.UserData = src.UserData
+}
+
+// Helper method to check that enums have valid values
+func (m *DynamicLocGroupAdd) ValidateEnums() error {
+	if _, ok := IDTypes_name[int32(m.IdType)]; !ok {
+		return errors.New("invalid IdType")
+	}
+	if err := m.GpsLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	if _, ok := DynamicLocGroupAdd_DlgCommType_name[int32(m.CommType)]; !ok {
+		return errors.New("invalid CommType")
+	}
+	return nil
 }
 
 var IDTypesStrings = []string{
