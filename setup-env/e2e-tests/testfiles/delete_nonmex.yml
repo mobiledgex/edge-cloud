@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata_nonmex.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]

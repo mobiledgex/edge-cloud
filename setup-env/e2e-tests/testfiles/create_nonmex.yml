@@ -1,0 +1,9 @@
+##
+##
+description: Adds provisioning 
+
+tests:
+
+- name: create provisioning
+  apifile: "{{datadir}}/appdata_nonmex.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
