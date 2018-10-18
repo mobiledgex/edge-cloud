@@ -1,0 +1,144 @@
+// User proto
+
+syntax = "proto3";
+package edgeproto;
+
+import "result.proto";
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+message UserKey {
+  // User id is the unique identifier
+  int64 user_id = 1 [(protogen.sql_type) = "bigserial"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+// A User defines an account for accessing the MobiledgeX platform. Each user has their own roles and is tied to either an Operator, Developer, or Mobiledgex Admin.
+message User {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique Key
+  UserKey key = 2 [(gogoproto.nullable) = false];
+  // Full User name
+  string name = 3;
+  // Nickname
+  string nickname = 4;
+  // Email address
+  string email = 5;
+  // Has email been verified?
+  bool email_verified = 6;
+  // Password used during login
+  string password = 7 [(protogen.sql_skip) = true];
+  // Password hash stored in database
+  string passhash = 8;
+  // Family name
+  string family_name = 9;
+  // Given name
+  string given_name = 10;
+  // Picture URI (i.e. Gravatar)
+  string picture = 11;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_sql) = true;
+}
+
+service UserApi {
+  // Log in a user
+  rpc LoginUser(User) returns (Result) {
+    option (google.api.http) = {
+      post: "/login/user"
+      body: "*"
+    };
+  }
+  // Create a User
+  rpc CreateUser(User) returns (Result) {
+    option (google.api.http) = {
+      post: "/create/user"
+      body: "*"
+    };
+  }
+  // Update a User
+  rpc UpdateUser(User) returns (Result) {
+    option (google.api.http) = {
+      post: "/update/user"
+      body: "*"
+    };
+  }
+  // Delete a User
+  rpc DeleteUser(User) returns (Result) {
+    option (google.api.http) = {
+      post: "/delete/user"
+      body: "*"
+    };
+  }
+  // Show Users
+  rpc ShowUser(User) returns (stream User) {
+    option (google.api.http) = {
+      post: "/show/user"
+      body: "*"
+    };
+  }
+}
+
+// Organization the Role belongs to.
+enum OrgType {
+  // Unknown type
+  OrgTypeUnknown = 0;
+  // MobiledgeX Admin
+  OrgTypeAdmin = 1;
+  // Developer
+  OrgTypeDeveloper = 2;
+  // Operator
+  OrgTypeOperator = 3;
+}
+
+enum RoleType {
+  // Unknown type
+  RoleTypeUnknown = 0;
+  // Admin
+  RoleTypeAdmin = 1;
+  // Read-only
+  RoleTypeReadOnly = 2;
+}
+
+message RoleKey {
+  // Unique id
+  int64 id = 1 [(protogen.sql_type) = "bigserial"];
+  option (protogen.generate_matches) = true;
+  option (protogen.obj_key) = true;
+  option (gogoproto.gostring) = true;
+}
+
+message Role {
+  // unique key
+  RoleKey key = 1 [(gogoproto.nullable) = false];
+  // User for this role
+  int64 user_id = 2;
+  // Organization Type
+  OrgType org_type = 3;
+  // Organization name (Developer Name or Operator Name)
+  string org_name = 4;
+  // Role type
+  RoleType role_type = 5;
+  option (protogen.generate_matches) = true;
+  option (protogen.generate_sql) = true;
+}
+
+service RoleApi {
+  // Add a Role to a User
+  rpc AddRole(Role) returns (Result) {
+    option (google.api.http) = {
+      post: "/add/role"
+      body: "*"
+    };
+  }
+  // Remove a Role from a User
+  rpc RemoveRole(Role) returns (Result) {
+    option (google.api.http) = {
+      post: "/remove/role"
+      body: "*"
+    };
+  }
+}

@@ -18,9 +18,9 @@ import grpc "google.golang.org/grpc"
 
 import "encoding/json"
 import "github.com/mobiledgex/edge-cloud/objstore"
-import "github.com/coreos/etcd/clientv3/concurrency"
-import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
+import "strconv"
+import "database/sql"
 
 import io "io"
 
@@ -440,409 +440,141 @@ func (m *Operator) CopyInFields(src *Operator) {
 	}
 }
 
-func (s *Operator) HasFields() bool {
-	return true
+func (m *Operator) GetKey() objstore.ObjKey {
+	return &m.Key
 }
 
-type OperatorStore struct {
-	kvstore objstore.KVStore
+type OperatorSql struct {
+	DB    *sql.DB
+	Table string
 }
 
-func NewOperatorStore(kvstore objstore.KVStore) OperatorStore {
-	return OperatorStore{kvstore: kvstore}
+func (s *OperatorSql) Init(db *sql.DB) {
+	s.DB = db
+	s.Table = "Operators"
 }
 
-func (s *OperatorStore) Create(m *Operator, wait func(int64)) (*Result, error) {
+func CreateOperatorSqlTable(db *sql.DB) (sql.Result, error) {
+	return db.Exec("CREATE TABLE IF NOT EXISTS Operators(" +
+		"Name text  primary key)")
+}
+
+func (s *OperatorSql) Create(m *Operator) (sql.Result, error) {
 	err := m.Validate(OperatorAllFieldsMap)
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("Operator", m.GetKey())
-	val, err := json.Marshal(m)
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Create(key, string(val))
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
+	stmt := "INSERT INTO Operators(Name) VALUES($1)"
+	log.DebugLog(log.DebugLevelApi, "create Operator", "stmt", stmt, "vals", []interface{}{m.Key.Name})
+	return s.DB.Exec(stmt, m.Key.Name)
 }
 
-func (s *OperatorStore) Update(m *Operator, wait func(int64)) (*Result, error) {
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("Operator", m.GetKey())
-	var vers int64 = 0
-	curBytes, vers, _, err := s.kvstore.Get(key)
-	if err != nil {
-		return nil, err
-	}
-	var cur Operator
-	err = json.Unmarshal(curBytes, &cur)
-	if err != nil {
-		return nil, err
-	}
-	cur.CopyInFields(m)
-	// never save fields
-	cur.Fields = nil
-	val, err := json.Marshal(cur)
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Update(key, string(val), vers)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *OperatorStore) Put(m *Operator, wait func(int64), ops ...objstore.KVOp) (*Result, error) {
-	fmap := MakeFieldMap(m.Fields)
-	err := m.Validate(fmap)
-	if err != nil {
-		return nil, err
-	}
-	key := objstore.DbKeyString("Operator", m.GetKey())
-	var val []byte
-	curBytes, _, _, err := s.kvstore.Get(key)
-	if err == nil {
-		var cur Operator
-		err = json.Unmarshal(curBytes, &cur)
-		if err != nil {
-			return nil, err
-		}
-		cur.CopyInFields(m)
-		// never save fields
-		cur.Fields = nil
-		val, err = json.Marshal(cur)
-	} else {
-		m.Fields = nil
-		val, err = json.Marshal(m)
-	}
-	if err != nil {
-		return nil, err
-	}
-	rev, err := s.kvstore.Put(key, string(val), ops...)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
-}
-
-func (s *OperatorStore) Delete(m *Operator, wait func(int64)) (*Result, error) {
+func (s *OperatorSql) Delete(m *Operator) (sql.Result, error) {
 	err := m.GetKey().Validate()
 	if err != nil {
 		return nil, err
 	}
-	key := objstore.DbKeyString("Operator", m.GetKey())
-	rev, err := s.kvstore.Delete(key)
-	if err != nil {
-		return nil, err
-	}
-	if wait != nil {
-		wait(rev)
-	}
-	return &Result{}, err
+	stmt := "DELETE FROM Operators WHERE Name = $1"
+	log.DebugLog(log.DebugLevelApi, "delete Operator", "stmt", stmt, "key", m.Key.Name)
+	return s.DB.Exec(stmt, m.Key.Name)
 }
 
-func (s *OperatorStore) LoadOne(key string) (*Operator, int64, error) {
-	val, rev, _, err := s.kvstore.Get(key)
-	if err != nil {
-		return nil, 0, err
-	}
-	var obj Operator
-	err = json.Unmarshal(val, &obj)
-	if err != nil {
-		log.DebugLog(log.DebugLevelApi, "Failed to parse Operator data", "val", string(val))
-		return nil, 0, err
-	}
-	return &obj, rev, nil
+func (s *OperatorSql) HasKey(key *OperatorKey) (bool, error) {
+	buf := Operator{}
+	return s.Get(key, &buf)
 }
 
-func (s *OperatorStore) STMGet(stm concurrency.STM, key *OperatorKey, buf *Operator) bool {
-	keystr := objstore.DbKeyString("Operator", key)
-	valstr := stm.Get(keystr)
-	if valstr == "" {
-		return false
+func (s *OperatorSql) Get(key *OperatorKey, buf *Operator) (bool, error) {
+	stmt := "SELECT Name FROM Operators WHERE Name = $1"
+	row := s.DB.QueryRow(stmt, key.Name)
+	err := row.Scan(&buf.Key.Name)
+	if err == nil {
+		return true, nil
+	} else if err == sql.ErrNoRows {
+		return false, nil
 	}
-	if buf != nil {
-		err := json.Unmarshal([]byte(valstr), buf)
+	return false, err
+}
+
+func (s *OperatorSql) Show(filter *Operator, cb func(ret *Operator) error) error {
+	stmt := "SELECT Name FROM Operators"
+	rows, err := s.DB.Query(stmt)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		buf := Operator{}
+		err = rows.Scan(&buf.Key.Name)
 		if err != nil {
-			return false
+			return fmt.Errorf("sql scan failed, %s", err.Error())
 		}
-	}
-	return true
-}
-
-func (s *OperatorStore) STMPut(stm concurrency.STM, obj *Operator) {
-	keystr := objstore.DbKeyString("Operator", obj.GetKey())
-	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
-}
-
-func (s *OperatorStore) STMDel(stm concurrency.STM, key *OperatorKey) {
-	keystr := objstore.DbKeyString("Operator", key)
-	stm.Del(keystr)
-}
-
-type OperatorKeyWatcher struct {
-	cb func()
-}
-
-// OperatorCache caches Operator objects in memory in a hash table
-// and keeps them in sync with the database.
-type OperatorCache struct {
-	Objs        map[OperatorKey]*Operator
-	Mux         util.Mutex
-	List        map[OperatorKey]struct{}
-	NotifyCb    func(obj *OperatorKey, old *Operator)
-	UpdatedCb   func(old *Operator, new *Operator)
-	KeyWatchers map[OperatorKey][]*OperatorKeyWatcher
-}
-
-func NewOperatorCache() *OperatorCache {
-	cache := OperatorCache{}
-	InitOperatorCache(&cache)
-	return &cache
-}
-
-func InitOperatorCache(cache *OperatorCache) {
-	cache.Objs = make(map[OperatorKey]*Operator)
-	cache.KeyWatchers = make(map[OperatorKey][]*OperatorKeyWatcher)
-}
-
-func (c *OperatorCache) GetTypeString() string {
-	return "Operator"
-}
-
-func (c *OperatorCache) Get(key *OperatorKey, valbuf *Operator) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	inst, found := c.Objs[*key]
-	if found {
-		*valbuf = *inst
-	}
-	return found
-}
-
-func (c *OperatorCache) HasKey(key *OperatorKey) bool {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	_, found := c.Objs[*key]
-	return found
-}
-
-func (c *OperatorCache) GetAllKeys(keys map[OperatorKey]struct{}) {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for key, _ := range c.Objs {
-		keys[key] = struct{}{}
-	}
-}
-
-func (c *OperatorCache) Update(in *Operator, rev int64) {
-	c.UpdateModFunc(&in.Key, rev, func(old *Operator) (*Operator, bool) {
-		return in, true
-	})
-}
-
-func (c *OperatorCache) UpdateModFunc(key *OperatorKey, rev int64, modFunc func(old *Operator) (new *Operator, changed bool)) {
-	c.Mux.Lock()
-	old := c.Objs[*key]
-	new, changed := modFunc(old)
-	if !changed {
-		c.Mux.Unlock()
-		return
-	}
-	if c.UpdatedCb != nil || c.NotifyCb != nil {
-		if c.UpdatedCb != nil {
-			newCopy := &Operator{}
-			*newCopy = *new
-			defer c.UpdatedCb(old, newCopy)
-		}
-		if c.NotifyCb != nil {
-			defer c.NotifyCb(&new.Key, old)
-		}
-	}
-	c.Objs[new.Key] = new
-	log.DebugLog(log.DebugLevelApi, "SyncUpdate Operator", "obj", new, "rev", rev)
-	c.Mux.Unlock()
-	c.TriggerKeyWatchers(&new.Key)
-}
-
-func (c *OperatorCache) Delete(in *Operator, rev int64) {
-	c.Mux.Lock()
-	old := c.Objs[in.Key]
-	delete(c.Objs, in.Key)
-	log.DebugLog(log.DebugLevelApi, "SyncDelete Operator", "key", in.Key, "rev", rev)
-	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		c.NotifyCb(&in.Key, old)
-	}
-	c.TriggerKeyWatchers(&in.Key)
-}
-
-func (c *OperatorCache) Prune(validKeys map[OperatorKey]struct{}) {
-	notify := make(map[OperatorKey]*Operator)
-	c.Mux.Lock()
-	for key, _ := range c.Objs {
-		if _, ok := validKeys[key]; !ok {
-			if c.NotifyCb != nil {
-				notify[key] = c.Objs[key]
-			}
-			delete(c.Objs, key)
-		}
-	}
-	c.Mux.Unlock()
-	for key, old := range notify {
-		if c.NotifyCb != nil {
-			c.NotifyCb(&key, old)
-		}
-		c.TriggerKeyWatchers(&key)
-	}
-}
-
-func (c *OperatorCache) GetCount() int {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	return len(c.Objs)
-}
-
-func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) error {
-	log.DebugLog(log.DebugLevelApi, "Show Operator", "count", len(c.Objs))
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	for _, obj := range c.Objs {
-		if !obj.Matches(filter, MatchFilter()) {
-			continue
-		}
-		log.DebugLog(log.DebugLevelApi, "Show Operator", "obj", obj)
-		err := cb(obj)
+		err = cb(&buf)
 		if err != nil {
 			return err
 		}
 	}
+	// return any error encountered during iteration
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
 	return nil
 }
-
-func OperatorGenericNotifyCb(fn func(key *OperatorKey, old *Operator)) func(objstore.ObjKey, objstore.Obj) {
-	return func(objkey objstore.ObjKey, obj objstore.Obj) {
-		fn(objkey.(*OperatorKey), obj.(*Operator))
-	}
-}
-
-func (c *OperatorCache) SetNotifyCb(fn func(obj *OperatorKey, old *Operator)) {
-	c.NotifyCb = fn
-}
-
-func (c *OperatorCache) SetUpdatedCb(fn func(old *Operator, new *Operator)) {
-	c.UpdatedCb = fn
-}
-
-func (c *OperatorCache) WatchKey(key *OperatorKey, cb func()) context.CancelFunc {
-	c.Mux.Lock()
-	defer c.Mux.Unlock()
-	list, ok := c.KeyWatchers[*key]
-	if !ok {
-		list = make([]*OperatorKeyWatcher, 0)
-	}
-	watcher := OperatorKeyWatcher{cb: cb}
-	c.KeyWatchers[*key] = append(list, &watcher)
-	log.DebugLog(log.DebugLevelApi, "Watching Operator", "key", key)
-	return func() {
-		c.Mux.Lock()
-		defer c.Mux.Unlock()
-		list, ok := c.KeyWatchers[*key]
-		if !ok {
-			return
-		}
-		for ii, _ := range list {
-			if list[ii] != &watcher {
-				continue
-			}
-			if len(list) == 1 {
-				delete(c.KeyWatchers, *key)
-				return
-			}
-			list[ii] = list[len(list)-1]
-			list[len(list)-1] = nil
-			c.KeyWatchers[*key] = list[:len(list)-1]
-			return
-		}
-	}
-}
-
-func (c *OperatorCache) TriggerKeyWatchers(key *OperatorKey) {
-	watchers := make([]*OperatorKeyWatcher, 0)
-	c.Mux.Lock()
-	if list, ok := c.KeyWatchers[*key]; ok {
-		watchers = append(watchers, list...)
-	}
-	c.Mux.Unlock()
-	for ii, _ := range watchers {
-		watchers[ii].cb()
-	}
-}
-func (c *OperatorCache) SyncUpdate(key, val []byte, rev int64) {
-	obj := Operator{}
-	err := json.Unmarshal(val, &obj)
+func (s *OperatorSql) Update(m *Operator) (sql.Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
 	if err != nil {
-		log.WarnLog("Failed to parse Operator data", "val", string(val))
-		return
+		return nil, err
 	}
-	c.Update(&obj, rev)
-	c.Mux.Lock()
-	if c.List != nil {
-		c.List[obj.Key] = struct{}{}
+	vars := make([]interface{}, 0)
+	sets := make([]string, 0)
+
+	vars = append(vars, m.Key.Name) // $1
+	if _, found := fmap["2.1"]; found {
+		vars = append(vars, m.Key.Name)
+		sets = append(sets, "Name = $"+strconv.Itoa(len(vars)))
 	}
-	c.Mux.Unlock()
+	if len(sets) == 0 {
+		// nothing specified to update
+		return nil, fmt.Errorf("No fields specified to update")
+	}
+
+	stmt := fmt.Sprintf("UPDATE Operators SET %s WHERE Name = $1", strings.Join(sets, ", "))
+	log.DebugLog(log.DebugLevelApi, "update Operator", "stmt", stmt, "vars", vars)
+	res, err := s.DB.Exec(stmt, vars...)
+	if err != nil {
+		return res, err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return res, err
+	}
+	if count != 1 {
+		return res, fmt.Errorf("Updated %d rows instead of 1", count)
+	}
+	return res, nil
 }
 
-func (c *OperatorCache) SyncDelete(key []byte, rev int64) {
-	obj := Operator{}
-	keystr := objstore.DbKeyPrefixRemove(string(key))
-	OperatorKeyStringParse(keystr, &obj.Key)
-	c.Delete(&obj, rev)
-}
-
-func (c *OperatorCache) SyncListStart() {
-	c.List = make(map[OperatorKey]struct{})
-}
-
-func (c *OperatorCache) SyncListEnd() {
-	deleted := make(map[OperatorKey]*Operator)
-	c.Mux.Lock()
-	for key, val := range c.Objs {
-		if _, found := c.List[key]; !found {
-			deleted[key] = val
-			delete(c.Objs, key)
-		}
+func (s *OperatorSql) GetMatch(filter *Operator, buf *Operator) (bool, error) {
+	fmap := MakeFieldMap(filter.Fields)
+	vars := make([]interface{}, 0)
+	reqs := make([]string, 0)
+	if _, found := fmap["2.1"]; found {
+		vars = append(vars, filter.Key.Name)
+		reqs = append(reqs, "Name = $"+strconv.Itoa(len(vars)))
 	}
-	c.List = nil
-	c.Mux.Unlock()
-	if c.NotifyCb != nil {
-		for key, val := range deleted {
-			c.NotifyCb(&key, val)
-			c.TriggerKeyWatchers(&key)
-		}
-	}
-}
 
-func (m *Operator) GetKey() objstore.ObjKey {
-	return &m.Key
+	stmt := fmt.Sprintf("SELECT Name FROM Operators WHERE %s", strings.Join(reqs, " AND "))
+	log.DebugLog(log.DebugLevelApi, "get match Operator", "stmt", stmt, "vars", vars)
+	row := s.DB.QueryRow(stmt, vars...)
+	err := row.Scan(&buf.Key.Name)
+	if err == nil {
+		return true, nil
+	} else if err == sql.ErrNoRows {
+		return false, nil
+	}
+	return false, err
 }
 
 // Helper method to check that enums have valid values
@@ -1187,7 +919,7 @@ var (
 func init() { proto.RegisterFile("operator.proto", fileDescriptorOperator) }
 
 var fileDescriptorOperator = []byte{
-	// 383 bytes of a gzipped FileDescriptorProto
+	// 376 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0xcb, 0x2f, 0x48, 0x2d,
 	0x4a, 0x2c, 0xc9, 0x2f, 0xd2, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x4c, 0x4d, 0x49, 0x4f,
 	0x05, 0x33, 0xa5, 0x64, 0xd2, 0xf3, 0xf3, 0xd3, 0x73, 0x52, 0xf5, 0x13, 0x0b, 0x32, 0xf5, 0x13,
@@ -1198,18 +930,18 @@ var fileDescriptorOperator = []byte{
 	0x9e, 0x9f, 0x9e, 0x0f, 0x51, 0x9d, 0x54, 0x9a, 0x06, 0xe6, 0x81, 0x39, 0x60, 0x16, 0x44, 0xb9,
 	0x92, 0x3e, 0x17, 0xb7, 0x3f, 0xd4, 0xc5, 0xde, 0xa9, 0x95, 0x42, 0x42, 0x5c, 0x2c, 0x79, 0x89,
 	0xb9, 0xa9, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0x9c, 0x41, 0x60, 0xb6, 0x15, 0xcf, 0x8b, 0xcf, 0x12,
-	0x8c, 0x3f, 0x3e, 0x4b, 0x30, 0x6e, 0x58, 0x20, 0xcf, 0xa8, 0x94, 0xc2, 0xc5, 0x01, 0xd3, 0x20,
+	0x8c, 0x3f, 0x3e, 0x4b, 0x30, 0x6e, 0x58, 0x20, 0xcf, 0xa8, 0x94, 0xc0, 0xc5, 0x01, 0xd3, 0x20,
 	0x24, 0xc6, 0xc5, 0x96, 0x96, 0x99, 0x9a, 0x93, 0x52, 0x2c, 0xc1, 0xa8, 0xc0, 0xac, 0xc1, 0x19,
 	0x04, 0xe5, 0x09, 0xe9, 0x71, 0x31, 0x67, 0xa7, 0x56, 0x4a, 0x30, 0x29, 0x30, 0x6a, 0x70, 0x1b,
 	0x89, 0xe9, 0xc1, 0x83, 0x40, 0x0f, 0xc9, 0x2a, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19, 0x82, 0x40,
-	0x0a, 0xad, 0x04, 0x40, 0x36, 0x7c, 0xf8, 0x2c, 0xc1, 0xd8, 0xf0, 0x45, 0x82, 0x71, 0xc6, 0x17,
-	0x09, 0x46, 0xa3, 0x97, 0x4c, 0x08, 0x77, 0x39, 0x16, 0x64, 0x0a, 0x85, 0x72, 0xf1, 0x39, 0x17,
-	0xa5, 0x26, 0x96, 0xa4, 0xc2, 0xed, 0x16, 0xc6, 0x62, 0xac, 0x94, 0x20, 0x92, 0x60, 0x10, 0x38,
-	0x54, 0x94, 0xa4, 0x9b, 0x2e, 0x3f, 0x99, 0xcc, 0x24, 0xaa, 0x24, 0xa0, 0x9f, 0x0c, 0x36, 0x40,
-	0x1f, 0x16, 0x41, 0x56, 0x8c, 0x5a, 0x20, 0x63, 0x5d, 0x52, 0x73, 0x52, 0x29, 0x32, 0x36, 0x05,
-	0x6c, 0x00, 0xba, 0xb1, 0xa1, 0x05, 0x29, 0x94, 0xb9, 0xb6, 0x14, 0x6c, 0x00, 0x9a, 0xb1, 0x3c,
-	0xc1, 0x19, 0xf9, 0xe5, 0xf8, 0x0d, 0xc5, 0x26, 0xa8, 0x24, 0x09, 0x36, 0x56, 0x58, 0x89, 0x4f,
-	0xbf, 0x38, 0x23, 0xbf, 0x1c, 0xd9, 0x50, 0x03, 0x46, 0x27, 0x81, 0x13, 0x0f, 0xe5, 0x18, 0x4e,
-	0x3c, 0x92, 0x63, 0xbc, 0xf0, 0x48, 0x8e, 0xf1, 0xc1, 0x23, 0x39, 0xc6, 0x24, 0x36, 0xb0, 0x76,
-	0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x67, 0x1e, 0x6e, 0x24, 0xcd, 0x02, 0x00, 0x00,
+	0x0a, 0x21, 0x36, 0xcc, 0xf8, 0x22, 0xc1, 0x78, 0xe0, 0x8b, 0x04, 0xa3, 0xd1, 0x4b, 0x26, 0x84,
+	0x9b, 0x1c, 0x0b, 0x32, 0x85, 0x42, 0xb9, 0xf8, 0x9c, 0x8b, 0x52, 0x13, 0x4b, 0x52, 0xe1, 0xf6,
+	0x0a, 0x63, 0x31, 0x52, 0x4a, 0x10, 0x49, 0x30, 0x08, 0x1c, 0x22, 0x4a, 0xd2, 0x4d, 0x97, 0x9f,
+	0x4c, 0x66, 0x12, 0x55, 0x12, 0xd0, 0x4f, 0x06, 0x1b, 0xa0, 0x0f, 0x8b, 0x1c, 0x2b, 0x46, 0x2d,
+	0x90, 0xb1, 0x2e, 0xa9, 0x39, 0xa9, 0x14, 0x19, 0x9b, 0x02, 0x36, 0x00, 0xdd, 0xd8, 0xd0, 0x82,
+	0x14, 0xca, 0x5c, 0x5b, 0x0a, 0x36, 0x00, 0xcd, 0x58, 0x9e, 0xe0, 0x8c, 0xfc, 0x72, 0xfc, 0x86,
+	0x62, 0x13, 0x54, 0x92, 0x04, 0x1b, 0x2b, 0xac, 0xc4, 0xa7, 0x5f, 0x9c, 0x91, 0x5f, 0x8e, 0x6c,
+	0xa8, 0x01, 0xa3, 0x93, 0xc0, 0x89, 0x87, 0x72, 0x0c, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24,
+	0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0x63, 0x12, 0x1b, 0x58, 0xbb, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff,
+	0x4f, 0x5c, 0x98, 0x43, 0xc9, 0x02, 0x00, 0x00,
 }

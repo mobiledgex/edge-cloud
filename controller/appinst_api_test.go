@@ -11,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAppInstApi(t *testing.T) {
@@ -18,11 +19,15 @@ func TestAppInstApi(t *testing.T) {
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
+	sql, err := EnsureCleanSql()
+	require.Nil(t, err, "sql")
+	defer sql.Close()
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
@@ -81,7 +86,7 @@ func TestAppInstApi(t *testing.T) {
 	// Set responder to fail delete.
 	responder.SetSimulateDeleteFailure(true)
 	obj := testutil.AppInstData[0]
-	err := appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
+	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	assert.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateDeleteFailure(false)
 	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
@@ -194,11 +199,15 @@ func TestAutoClusterInst(t *testing.T) {
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
+	sql, err := EnsureCleanSql()
+	require.Nil(t, err, "sql")
+	defer sql.Close()
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 	NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
@@ -215,7 +224,7 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created
-	err := appInstApi.CreateAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
+	err = appInstApi.CreateAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
 	found := clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)

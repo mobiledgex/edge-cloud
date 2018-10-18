@@ -97,6 +97,11 @@ func ignoreExpectedErrors(api string, err error) error {
 			log.Printf("ignoring error on create : %v\n", err)
 			return nil
 		}
+		if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			// sql key already exists error
+			log.Printf("ignoring error on create : %v\n", err)
+			return nil
+		}
 	}
 	return err
 }

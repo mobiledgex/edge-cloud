@@ -3,6 +3,7 @@ package mexgen
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -23,19 +24,24 @@ func init() {
 }
 
 type mex struct {
-	gen           *generator.Generator
-	msgs          map[string]*descriptor.DescriptorProto
-	cudTemplate   *template.Template
-	enumTemplate  *template.Template
-	cacheTemplate *template.Template
-	importUtil    bool
-	importStrings bool
-	importErrors  bool
-	importStrconv bool
-	importSort    bool
-	importTime    bool
-	firstFile     string
-	support       gensupport.PluginSupport
+	gen            *generator.Generator
+	msgs           map[string]*descriptor.DescriptorProto
+	cudTemplate    *template.Template
+	enumTemplate   *template.Template
+	cacheTemplate  *template.Template
+	sqlTemplate    *template.Template
+	importUtil     bool
+	importStrings  bool
+	importErrors   bool
+	importStrconv  bool
+	importSort     bool
+	importTime     bool
+	importSql      bool
+	importJson     bool
+	importLog      bool
+	importObjstore bool
+	firstFile      string
+	support        gensupport.PluginSupport
 }
 
 func (m *mex) Name() string {
@@ -48,6 +54,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
+	m.sqlTemplate = template.Must(template.New("sql").Parse(sqlTemplateIn))
 	m.support.Init(gen.Request)
 	// Generator passes us all files (some of which are builtin
 	// like google/api/http). To determine the first file to generate
@@ -75,6 +82,10 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importStrconv = false
 	m.importSort = false
 	m.importTime = false
+	m.importSql = false
+	m.importJson = false
+	m.importLog = false
+	m.importObjstore = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -100,13 +111,19 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 		}
 		m.msgs[*msg.Name] = msg
 	}
-	if hasGenerateCud {
+	if m.importJson {
 		m.gen.PrintImport("", "encoding/json")
+	}
+	if m.importObjstore {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/objstore")
+	}
+	if hasGenerateCud {
 		m.gen.PrintImport("", "github.com/coreos/etcd/clientv3/concurrency")
 	}
 	if m.importUtil {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
+	}
+	if m.importLog {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
 	if m.importStrings {
@@ -123,6 +140,9 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importTime {
 		m.gen.PrintImport("", "time")
+	}
+	if m.importSql {
+		m.gen.PrintImport("", "database/sql")
 	}
 	m.support.PrintUsedImports(m.gen)
 }
@@ -1104,6 +1124,179 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 
 `
 
+type sqlTemplateArgs struct {
+	Name             string
+	KeyType          string
+	Table            string
+	HasGrpcFields    bool
+	PrimaryKey       *SqlField
+	Fields           []SqlField
+	CreateTableLines []string
+	AllFields        string
+	CreateFields     string
+	CreateVars       string
+	CreateRefs       string
+	GetFields        string
+}
+
+type SqlField struct {
+	Name       string
+	Refname    string
+	Fieldnum   string
+	Typ        string
+	Primarykey bool
+	SerialTyp  bool
+	Option     string
+}
+
+var sqlTemplateIn = `
+type {{.Name}}Sql struct {
+	DB *sql.DB
+	Table string
+}
+
+func (s *{{.Name}}Sql) Init(db *sql.DB) {
+	s.DB = db
+	s.Table = "{{.Table}}"
+}
+
+func Create{{.Name}}SqlTable(db *sql.DB) (sql.Result, error) {
+	return db.Exec("CREATE TABLE IF NOT EXISTS {{.Table}}(" +
+	{{- range .CreateTableLines}}
+		{{.}}
+	{{- end}}
+}
+
+func (s *{{.Name}}Sql) Create(m *{{.Name}}) (sql.Result, error) {
+{{- if (.HasGrpcFields)}}
+	err := m.Validate({{.Name}}AllFieldsMap)
+{{- else}}
+	err := m.Validate()
+{{- end}}
+	if err != nil { return nil, err}
+	stmt := "INSERT INTO {{.Table}}({{.CreateFields}}) VALUES({{.CreateVars}})"
+	log.DebugLog(log.DebugLevelApi, "create {{.Name}}", "stmt", stmt, "vals", []interface{}{ {{.CreateRefs}} })
+	return s.DB.Exec(stmt, {{.CreateRefs}})
+}
+
+func (s *{{.Name}}Sql) Delete(m *{{.Name}}) (sql.Result, error) {
+	err := m.GetKey().Validate()
+	if err != nil { return nil, err }
+	stmt := "DELETE FROM {{.Table}} WHERE {{.PrimaryKey.Name}} = $1"
+	log.DebugLog(log.DebugLevelApi, "delete {{.Name}}", "stmt", stmt, "key", m.{{.PrimaryKey.Refname}})
+	return s.DB.Exec(stmt, m.{{.PrimaryKey.Refname}})
+}
+
+func (s *{{.Name}}Sql) HasKey(key *{{.KeyType}}) (bool, error) {
+	buf := {{.Name}}{}
+	return s.Get(key, &buf)
+}
+
+func (s *{{.Name}}Sql) Get(key *{{.KeyType}}, buf *{{.Name}}) (bool, error) {
+	stmt := "SELECT {{.AllFields}} FROM {{.Table}} WHERE {{.PrimaryKey.Name}} = $1"
+	row := s.DB.QueryRow(stmt, key.{{.PrimaryKey.Name}})
+	err := row.Scan({{.GetFields}})
+	if err == nil {
+		return true, nil
+	} else if err == sql.ErrNoRows {
+		return false, nil
+	}
+	return false, err
+}
+
+func (s *{{.Name}}Sql) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
+	stmt := "SELECT {{.AllFields}} FROM {{.Table}}"
+	rows, err := s.DB.Query(stmt)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		buf := {{.Name}}{}
+		err = rows.Scan({{.GetFields}})
+		if err != nil {
+			return fmt.Errorf("sql scan failed, %s", err.Error())
+		}
+		err = cb(&buf)
+		if err != nil {
+			return err
+		}
+	}
+	// return any error encountered during iteration
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+{{- if .HasGrpcFields}}
+func (s *{{.Name}}Sql) Update(m *{{.Name}}) (sql.Result, error) {
+	fmap := MakeFieldMap(m.Fields)
+	err := m.Validate(fmap)
+	if err != nil {
+		return nil, err
+	}
+	vars := make([]interface{}, 0)
+	sets := make([]string, 0)
+
+	vars = append(vars, m.{{.PrimaryKey.Refname}}) // $1
+	{{- range .Fields}}
+	{{- if not .SerialTyp}}
+	if _, found := fmap["{{.Fieldnum}}"]; found {
+		vars = append(vars, m.{{.Refname}})
+		sets = append(sets, "{{.Name}} = $" + strconv.Itoa(len(vars)))
+	}
+	{{- end}}
+	{{- end}}
+	if len(sets) == 0 {
+		// nothing specified to update
+		return nil, fmt.Errorf("No fields specified to update")
+	}
+
+	stmt := fmt.Sprintf("UPDATE {{.Table}} SET %s WHERE {{.PrimaryKey.Name}} = $1", strings.Join(sets, ", "))
+	log.DebugLog(log.DebugLevelApi, "update {{.Name}}", "stmt", stmt, "vars", vars)
+	res, err := s.DB.Exec(stmt, vars...)
+	if err != nil {
+		return res, err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return res, err
+	}
+	if count != 1 {
+		return res, fmt.Errorf("Updated %d rows instead of 1", count)
+	}
+	return res, nil
+}
+
+func (s *{{.Name}}Sql) GetMatch(filter *{{.Name}}, buf *{{.Name}}) (bool, error) {
+	fmap := MakeFieldMap(filter.Fields)
+	vars := make([]interface{}, 0)
+	reqs := make([]string, 0)
+
+	{{- range .Fields}}
+	if _, found := fmap["{{.Fieldnum}}"]; found {
+		vars = append(vars, filter.{{.Refname}})
+		reqs = append(reqs, "{{.Name}} = $"+strconv.Itoa(len(vars)))
+	}
+	{{- end}}
+
+	stmt := fmt.Sprintf("SELECT {{.AllFields}} FROM {{.Table}} WHERE %s", strings.Join(reqs, " AND "))
+	log.DebugLog(log.DebugLevelApi, "get match {{.Name}}", "stmt", stmt, "vars", vars)
+	row := s.DB.QueryRow(stmt, vars...)
+	err := row.Scan({{.GetFields}})
+	if err == nil {
+		return true, nil
+	} else if err == sql.ErrNoRows {
+		return false, nil
+	}
+	return false, err
+}
+{{- end}}
+
+`
+
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
@@ -1165,6 +1358,9 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			HasFields: gensupport.HasGrpcFields(message),
 		}
 		m.cudTemplate.Execute(m.gen.Buffer, args)
+		m.importJson = true
+		m.importLog = true
+		m.importObjstore = true
 	}
 	if GetGenerateCache(message) {
 		keyField := gensupport.GetMessageKey(message)
@@ -1180,9 +1376,14 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
+		m.importLog = true
+		m.importObjstore = true
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
+		}
+		if args.CudCache {
+			m.importJson = true
 		}
 	}
 	if GetObjKey(message) {
@@ -1202,14 +1403,78 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("}")
 		m.P("")
-		m.importUtil = true
+		m.importLog = true
+		m.importJson = true
 	}
 	if field := gensupport.GetMessageKey(message); field != nil {
-		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
 		m.P("func (m *", message.Name, ") GetKey() objstore.ObjKey {")
 		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
+		m.importObjstore = true
+	}
+	if GetGenerateSql(message) {
+		keyField := gensupport.GetMessageKey(message)
+		if keyField == nil {
+			m.gen.Fail("sql message ", *message.Name, " has no Key field")
+			return
+		}
+		keyDesc := gensupport.GetDesc(m.gen, keyField.GetTypeName())
+		if len(keyDesc.DescriptorProto.Field) != 1 {
+			m.gen.Fail("sql message ", *message.Name, "'s Key ", *keyDesc.Name, " must only have 1 field to be used as the primary key")
+			return
+		}
+
+		spec := make([]SqlField, 0)
+		m.getSqlFields(make([]string, 0), make([]string, 0), desc, make([]*generator.Descriptor, 0), keyDesc, &spec)
+
+		args := sqlTemplateArgs{
+			Name:          *message.Name,
+			KeyType:       m.support.GoType(m.gen, keyField),
+			Table:         *message.Name + "s",
+			HasGrpcFields: gensupport.HasGrpcFields(message),
+			Fields:        spec,
+		}
+		args.CreateTableLines = make([]string, 0)
+
+		allFields := make([]string, 0)
+		createFields := make([]string, 0)
+		createVars := make([]string, 0)
+		createRefs := make([]string, 0)
+		getFields := make([]string, 0)
+		for ii, _ := range spec {
+			tail := ", \" +"
+			if len(spec) == ii+1 {
+				// last one
+				tail = ")\")"
+			}
+			if spec[ii].Primarykey {
+				spec[ii].Option += " primary key"
+				args.PrimaryKey = &spec[ii]
+			}
+			line := fmt.Sprintf("\"%s %s %s%s", spec[ii].Name,
+				spec[ii].Typ, spec[ii].Option, tail)
+			args.CreateTableLines = append(args.CreateTableLines, line)
+
+			allFields = append(allFields, spec[ii].Name)
+			getFields = append(getFields, "&buf."+spec[ii].Refname)
+			if !strings.Contains(strings.ToLower(spec[ii].Typ), "serial") {
+				createFields = append(createFields, spec[ii].Name)
+				createVars = append(createVars, "$"+strconv.Itoa(len(allFields)))
+				createRefs = append(createRefs, "m."+spec[ii].Refname)
+			}
+		}
+		args.AllFields = strings.Join(allFields, ", ")
+		args.CreateFields = strings.Join(createFields, ", ")
+		args.CreateVars = strings.Join(createVars, ", ")
+		args.CreateRefs = strings.Join(createRefs, ", ")
+		args.GetFields = strings.Join(getFields, ", ")
+
+		m.sqlTemplate.Execute(m.gen.Buffer, args)
+		m.importSql = true
+		if args.HasGrpcFields {
+			m.importStrconv = true
+		}
 	}
 
 	//Generate enum values validation
@@ -1276,6 +1541,47 @@ func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *
 	m.P("")
 }
 
+func (m *mex) getSqlFields(parents, nums []string, desc *generator.Descriptor, visited []*generator.Descriptor, keyDesc *generator.Descriptor, spec *[]SqlField) {
+	if gensupport.WasVisited(desc, visited) {
+		return
+	}
+	for ii, field := range desc.DescriptorProto.Field {
+		if ii == 0 && *field.Name == "fields" {
+			continue
+		}
+		if GetSqlSkip(field) {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		num := fmt.Sprintf("%d", *field.Number)
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.getSqlFields(append(parents, name), append(nums, num), subDesc, append(visited, desc), keyDesc, spec)
+			continue
+		}
+		sqlField := SqlField{
+			Name:     strings.Join(append(parents, name), ""),
+			Refname:  strings.Join(append(parents, name), "."),
+			Fieldnum: strings.Join(append(nums, num), "."),
+			Typ:      m.support.SqlType(m.gen, field),
+			Option:   GetSqlOption(field),
+		}
+		if desc == keyDesc {
+			// don't bother pre-pending Key struct name
+			sqlField.Name = name
+			sqlField.Primarykey = true
+		}
+		if str := GetSqlType(field); str != "" {
+			// override type specified
+			sqlField.Typ = str
+		}
+		if strings.Contains(strings.ToLower(sqlField.Typ), "serial") {
+			sqlField.SerialTyp = true
+		}
+		*spec = append(*spec, sqlField)
+	}
+}
+
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {
 	if len(service.Method) != 0 {
 		for _, method := range service.Method {
@@ -1296,6 +1602,10 @@ func GetGenerateCud(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
 }
 
+func GetGenerateSql(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateSql, false)
+}
+
 func GetGenerateCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCache, false)
 }
@@ -1314,4 +1624,16 @@ func GetObjKey(message *descriptor.DescriptorProto) bool {
 
 func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 	return proto.GetBoolExtension(field.Options, protogen.E_Backend, false)
+}
+
+func GetSqlSkip(field *descriptor.FieldDescriptorProto) bool {
+	return proto.GetBoolExtension(field.Options, protogen.E_SqlSkip, false)
+}
+
+func GetSqlType(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protogen.E_SqlType, "")
+}
+
+func GetSqlOption(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protogen.E_SqlOption, "")
 }

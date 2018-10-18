@@ -241,9 +241,6 @@ func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgepro
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
-	// test update of missing object
-	_, err = api.UpdateCluster(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateCluster(ctx, &testData[0])
 	assert.Nil(t, err, "Create Cluster %s", testData[0].Key.GetKeyString())

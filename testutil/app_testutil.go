@@ -22,6 +22,7 @@ It is generated from these files:
 	operator.proto
 	refs.proto
 	result.proto
+	user.proto
 
 It has these top-level messages:
 	AppKey
@@ -62,6 +63,10 @@ It has these top-level messages:
 	CloudletRefs
 	ClusterRefs
 	Result
+	UserKey
+	User
+	RoleKey
+	Role
 */
 package testutil
 
@@ -303,9 +308,6 @@ func basicAppCudTest(t *testing.T, api *AppCommonApi, testData []edgeproto.App) 
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
-	// test update of missing object
-	_, err = api.UpdateApp(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateApp(ctx, &testData[0])
 	assert.Nil(t, err, "Create App %s", testData[0].Key.GetKeyString())

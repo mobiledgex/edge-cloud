@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -41,6 +42,15 @@ func TestInfluxQ(t *testing.T) {
 
 	// clear test metrics
 	_, err = q.QueryDB(`DROP SERIES FROM "test-metric"`)
+	if err != nil && strings.Contains(err.Error(), ".wal: file already closed") {
+		// seems like a bug with influxdb, restart it
+		fmt.Println("Restarting influx due to wal file already closed error")
+		exec.Command("sh", "-c", "pkill -x influxd").Output()
+		db := NewInfluxDBServer()
+		err = db.Start(addr)
+		require.Nil(t, err, "start InfluxDB server")
+		defer db.Stop()
+	}
 	require.Nil(t, err, "clear test metrics")
 
 	count := 0

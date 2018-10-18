@@ -305,9 +305,14 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData) - 1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
+{{- if .UpdateField}}
 	// test update of missing object
+	testData[0].Fields = make([]string, 0)
+	testData[0].Fields = append(testData[0].Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &testData[0])
 	assert.NotNil(t, err, "Update missing object")
+	testData[0].Fields = nil
+{{- end}}
 	// create it back
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
 	assert.Nil(t, err, "Create {{.Name}} %s", testData[0].Key.GetKeyString())
@@ -322,8 +327,9 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	updater := {{.Pkg}}.{{.Name}}{}
 	updater.Key = testData[0].Key
 	updater.{{.UpdateField}} = {{.UpdateValue}}
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
+	updateFields := make([]string, 0)
+	updateFields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
+	updater.Fields = updateFields
 	_, err = api.Update{{.Name}}(ctx, &updater)
 	assert.Nil(t, err, "Update {{.Name}} %s", testData[0].Key.GetKeyString())
 
@@ -336,8 +342,15 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 
 	// revert change
 	updater.{{.UpdateField}} = testData[0].{{.UpdateField}}
+	updater.Fields = updateFields
 	_, err = api.Update{{.Name}}(ctx, &updater)
 	assert.Nil(t, err, "Update back {{.Name}}")
+
+	show.Init()
+	updater = testData[0]
+	err = api.Show{{.Name}}(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show {{.Name}}")
+	show.AssertFound(t, &updater)
 {{- end}}
 }
 

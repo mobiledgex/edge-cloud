@@ -285,6 +285,49 @@ func (s *ClusterRefs) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
+func (key *UserKey) Validate() error {
+	return nil
+}
+
+func (s *User) Validate(fields map[string]struct{}) error {
+	if err := s.GetKey().Validate(); err != nil {
+		return err
+	}
+	if _, found := fields[UserFieldName]; found && s.Name == "" {
+		return errors.New("Please specify Name")
+	}
+	if _, found := fields[UserFieldEmail]; found && s.Email == "" {
+		return errors.New("Please specify Email")
+	}
+	if _, found := fields[UserFieldPasshash]; found && s.Passhash == "" {
+		return errors.New("Password hash not provided")
+	}
+	return nil
+}
+
+func (key *RoleKey) Validate() error {
+	return nil
+}
+
+func (s *Role) Validate() error {
+	if err := s.GetKey().Validate(); err != nil {
+		return err
+	}
+	if s.UserId == 0 {
+		return errors.New("Please specify UserId")
+	}
+	if s.OrgType == 0 {
+		return errors.New("Please specify OrgType")
+	}
+	if s.OrgName == "" {
+		return errors.New("Please specify OrgName")
+	}
+	if s.RoleType == 0 {
+		return errors.New("Please specify RoleType")
+	}
+	return nil
+}
+
 func MakeFieldMap(fields []string) map[string]struct{} {
 	fmap := make(map[string]struct{})
 	if fields == nil {

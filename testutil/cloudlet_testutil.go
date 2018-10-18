@@ -284,8 +284,11 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
+	testData[0].Fields = make([]string, 0)
+	testData[0].Fields = append(testData[0].Fields, edgeproto.CloudletFieldAccessUri)
 	_, err = api.UpdateCloudlet(ctx, &testData[0])
 	assert.NotNil(t, err, "Update missing object")
+	testData[0].Fields = nil
 	// create it back
 	_, err = api.CreateCloudlet(ctx, &testData[0])
 	assert.Nil(t, err, "Create Cloudlet %s", testData[0].Key.GetKeyString())
@@ -299,8 +302,9 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 	updater := edgeproto.Cloudlet{}
 	updater.Key = testData[0].Key
 	updater.AccessUri = "update just this"
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.CloudletFieldAccessUri)
+	updateFields := make([]string, 0)
+	updateFields = append(updater.Fields, edgeproto.CloudletFieldAccessUri)
+	updater.Fields = updateFields
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update Cloudlet %s", testData[0].Key.GetKeyString())
 
@@ -313,8 +317,15 @@ func basicCloudletCudTest(t *testing.T, api *CloudletCommonApi, testData []edgep
 
 	// revert change
 	updater.AccessUri = testData[0].AccessUri
+	updater.Fields = updateFields
 	_, err = api.UpdateCloudlet(ctx, &updater)
 	assert.Nil(t, err, "Update back Cloudlet")
+
+	show.Init()
+	updater = testData[0]
+	err = api.ShowCloudlet(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show Cloudlet")
+	show.AssertFound(t, &updater)
 }
 
 func InternalCloudletCreate(t *testing.T, api edgeproto.CloudletApiServer, testData []edgeproto.Cloudlet) {

@@ -22,6 +22,7 @@ It is generated from these files:
 	operator.proto
 	refs.proto
 	result.proto
+	user.proto
 
 It has these top-level messages:
 	AppKey
@@ -62,6 +63,10 @@ It has these top-level messages:
 	CloudletRefs
 	ClusterRefs
 	Result
+	UserKey
+	User
+	RoleKey
+	Role
 */
 package gencmd
 

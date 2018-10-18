@@ -9,17 +9,22 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAppApi(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
 
+	sql, err := EnsureCleanSql()
+	require.Nil(t, err, "sql")
+	defer sql.Close()
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 
@@ -49,11 +54,15 @@ func TestAutoCluster(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelApi)
 	objstore.InitRegion(1)
 
+	sql, err := EnsureCleanSql()
+	require.Nil(t, err, "sql")
+	defer sql.Close()
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 
@@ -67,7 +76,7 @@ func TestAutoCluster(t *testing.T) {
 	// need to clear cluster name so it will auto-create
 	app := testutil.AppData[0]
 	app.Cluster.Name = ""
-	_, err := appApi.CreateApp(ctx, &app)
+	_, err = appApi.CreateApp(ctx, &app)
 	assert.Nil(t, err, "create app")
 	cluster := edgeproto.Cluster{}
 	found := clusterApi.Get(&app.Cluster, &cluster)

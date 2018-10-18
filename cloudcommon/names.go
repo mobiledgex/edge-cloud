@@ -30,6 +30,9 @@ var operatorDeveloper = edgeproto.OperatorKey{Name: OperatorDeveloper}
 // is for an appinst deployment maintained by the developer, not Mobiledgex
 var DefaultCloudletKey = edgeproto.CloudletKey{OperatorKey: operatorDeveloper, Name: "default"}
 
+var PostgresUserName = "controller"
+var PostgresUserDb = "userdb"
+
 // GetRootLBFQDN gets the global Load Balancer's Fully Qualified Domain Name
 // for apps using "shared" IP access.
 func GetRootLBFQDN(key *edgeproto.CloudletKey) string {

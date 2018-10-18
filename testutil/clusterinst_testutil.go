@@ -282,9 +282,6 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
-	// test update of missing object
-	_, err = api.UpdateClusterInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateClusterInst(ctx, &testData[0])
 	assert.Nil(t, err, "Create ClusterInst %s", testData[0].Key.GetKeyString())

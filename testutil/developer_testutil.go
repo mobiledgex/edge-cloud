@@ -241,8 +241,11 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
+	testData[0].Fields = make([]string, 0)
+	testData[0].Fields = append(testData[0].Fields, edgeproto.DeveloperFieldEmail)
 	_, err = api.UpdateDeveloper(ctx, &testData[0])
 	assert.NotNil(t, err, "Update missing object")
+	testData[0].Fields = nil
 	// create it back
 	_, err = api.CreateDeveloper(ctx, &testData[0])
 	assert.Nil(t, err, "Create Developer %s", testData[0].Key.GetKeyString())
@@ -256,8 +259,9 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	updater := edgeproto.Developer{}
 	updater.Key = testData[0].Key
 	updater.Email = "update just this"
-	updater.Fields = make([]string, 0)
-	updater.Fields = append(updater.Fields, edgeproto.DeveloperFieldEmail)
+	updateFields := make([]string, 0)
+	updateFields = append(updater.Fields, edgeproto.DeveloperFieldEmail)
+	updater.Fields = updateFields
 	_, err = api.UpdateDeveloper(ctx, &updater)
 	assert.Nil(t, err, "Update Developer %s", testData[0].Key.GetKeyString())
 
@@ -270,8 +274,15 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 
 	// revert change
 	updater.Email = testData[0].Email
+	updater.Fields = updateFields
 	_, err = api.UpdateDeveloper(ctx, &updater)
 	assert.Nil(t, err, "Update back Developer")
+
+	show.Init()
+	updater = testData[0]
+	err = api.ShowDeveloper(ctx, &filterNone, &show)
+	assert.Nil(t, err, "show Developer")
+	show.AssertFound(t, &updater)
 }
 
 func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {

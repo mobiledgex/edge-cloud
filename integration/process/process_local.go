@@ -9,10 +9,13 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"os/user"
+	"strings"
 	"sync"
 	"time"
 
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
@@ -59,6 +62,7 @@ type ControllerLocal struct {
 	ApiAddr       string
 	HttpAddr      string
 	NotifyAddr    string
+	PostgresAddr  string
 	TLS           TLSCerts
 	ShortTimeouts bool
 	cmd           *exec.Cmd
@@ -77,6 +81,10 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.PostgresAddr != "" {
+		args = append(args, "--postgresAddr")
+		args = append(args, p.PostgresAddr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -265,6 +273,95 @@ func (p *InfluxLocal) Stop() {
 
 func (p *InfluxLocal) ResetData() error {
 	return os.RemoveAll(p.DataDir)
+}
+
+// Postgres Sql
+
+type SqlLocal struct {
+	Name     string
+	DataDir  string
+	HttpAddr string
+	TLS      TLSCerts
+	cmd      *exec.Cmd
+}
+
+func (p *SqlLocal) Start(logfile string) error {
+	args := []string{"-D", p.DataDir, "start"}
+	options := []string{}
+	addr := []string{}
+	if p.HttpAddr != "" {
+		addr = strings.Split(p.HttpAddr, ":")
+		if len(addr) == 2 {
+			options = append(options, "-p")
+			options = append(options, addr[1])
+		}
+	}
+	if p.TLS.ServerCert != "" {
+		// files server.crt and server.key must exist
+		// in server's data directory (note: this is untested).
+		options = append(options, "-l")
+	}
+	if len(options) > 0 {
+		args = append(args, "-o")
+		args = append(args, strings.Join(options, " "))
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, "pg_ctl", args, logfile)
+	if err != nil {
+		return err
+	}
+
+	// wait until pg_ctl script exits (means postgres service is ready)
+	state, err := p.cmd.Process.Wait()
+	if err != nil {
+		return fmt.Errorf("failed wait for pg_ctl, %s", err.Error())
+	}
+	if !state.Exited() {
+		return fmt.Errorf("pg_ctl not exited")
+	}
+	if !state.Success() {
+		return fmt.Errorf("pg_ctl failed, see script output")
+	}
+	me, err := user.Current()
+	if err != nil {
+		return fmt.Errorf("sql: get current user failed, %s", err.Error())
+	}
+	// create controller user
+	args = []string{}
+	if len(addr) == 2 {
+		args = []string{"-h", addr[0], "-p", addr[1]}
+	}
+	args = append(args, cloudcommon.PostgresUserName)
+	out, err := exec.Command("createuser", args...).CombinedOutput()
+	fmt.Println(string(out))
+	if err != nil {
+		return fmt.Errorf("sql: failed to create controller user, %s", err.Error())
+	}
+	// create user database
+	args = []string{}
+	if len(addr) == 2 {
+		args = []string{"-h", addr[0], "-p", addr[1]}
+	}
+	args = append(args, []string{cloudcommon.PostgresUserDb, "-U", me.Username}...)
+	out, err = exec.Command("createdb", args...).CombinedOutput()
+	fmt.Println(string(out))
+	if err != nil {
+		return fmt.Errorf("sql: failed to create controller database, %s", err.Error())
+	}
+	return nil
+}
+
+func (p *SqlLocal) Stop() {
+	exec.Command("pg_ctl", "-D", p.DataDir, "stop").CombinedOutput()
+}
+
+func (p *SqlLocal) InitDataDir() error {
+	err := os.RemoveAll(p.DataDir)
+	if err != nil {
+		return err
+	}
+	_, err = exec.Command("initdb", p.DataDir).CombinedOutput()
+	return err
 }
 
 // Support funcs

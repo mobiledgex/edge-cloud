@@ -42,9 +42,10 @@ func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
 
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
+	err := EnsureCleanSql2()
+	require.Nil(t, err, "sql")
 
 	os.Args = append(os.Args, "-localEtcd")
-
 	conn, mainDone, err := startMain(t)
 	if err != nil {
 		close(sigChan)
@@ -144,7 +145,8 @@ func TestController(t *testing.T) {
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.CloudletData {
-		_, err = cloudletClient.DeleteCloudlet(ctx, &obj)
+		stream, err := cloudletClient.DeleteCloudlet(ctx, &obj)
+		err = testutil.CloudletReadResultStream(stream, err)
 		assert.Nil(t, err)
 	}
 	for _, obj := range testutil.DevData {
@@ -187,8 +189,10 @@ func TestDataGen(t *testing.T) {
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
 
-	os.Args = append(os.Args, "-localEtcd")
+	err := EnsureCleanSql2()
+	require.Nil(t, err, "postgres start")
 
+	os.Args = append(os.Args, "-localEtcd")
 	conn, mainDone, err := startMain(t)
 	if err != nil {
 		close(sigChan)

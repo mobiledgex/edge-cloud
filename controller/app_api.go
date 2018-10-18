@@ -90,8 +90,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 			in.ImagePath = "qcow path not determined yet"
 		}
 	}
-
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
+		return &edgeproto.Result{}, err
+	}
+	err = developerApi.RequireDeveloper(&in.Key.DeveloperKey)
+	if err != nil {
 		return &edgeproto.Result{}, err
 	}
 
@@ -139,9 +142,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	}
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !developerApi.store.STMGet(stm, &in.Key.DeveloperKey, nil) {
-			return errors.New("Specified developer not found")
-		}
 		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
 			return errors.New("Specified default flavor not found")
 		}

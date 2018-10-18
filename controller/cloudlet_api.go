@@ -48,8 +48,9 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 }
 
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
-	if !operatorApi.HasOperator(&in.Key.OperatorKey) {
-		return errors.New("Specified cloudlet operator not found")
+	err := operatorApi.RequireOperator(&in.Key.OperatorKey)
+	if err != nil {
+		return err
 	}
 	if in.IpSupport == edgeproto.IpSupport_IpSupportUnknown {
 		in.IpSupport = edgeproto.IpSupport_IpSupportDynamic
@@ -66,7 +67,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("Must specify at least one dynamic public IP available")
 		}
 	}
-	_, err := s.store.Create(in, s.sync.syncWait)
+	_, err = s.store.Create(in, s.sync.syncWait)
 	return err
 }
 

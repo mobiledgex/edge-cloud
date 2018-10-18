@@ -121,6 +121,10 @@ type InfluxProcess struct {
 	process.InfluxLocal
 	Hostname string
 }
+type SqlProcess struct {
+	process.SqlLocal
+	Hostname string
+}
 
 type TLSCertInfo struct {
 	CommonName string
@@ -153,6 +157,7 @@ type DeploymentData struct {
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
+	Sqls          []SqlProcess        `yaml:"sqls"`
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.

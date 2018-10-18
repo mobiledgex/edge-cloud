@@ -283,6 +283,15 @@
   version = "1.1.3"
 
 [[projects]]
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid"
+  ]
+  revision = "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
@@ -695,6 +704,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e5f75ca6bd9145fc94ec5b3d6091705a627992429a74c5e85d96c9c88432b1f9"
+  inputs-digest = "d81320bdb523662e2879aaad74a1a611bee63185b76e06f3d8fe5975106f18bd"
   solver-name = "gps-cdcl"
   solver-version = 1

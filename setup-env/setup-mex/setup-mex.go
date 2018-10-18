@@ -326,6 +326,13 @@ func StopProcesses(processName string) bool {
 	//if a process name is specified, we stop just that one.  The name here identifies the
 	//specific instance of the application, e.g. 'ctrl1'
 	if processName != "" {
+		for _, sql := range util.Deployment.Sqls {
+			if processName == sql.Name {
+				log.Println("stopping process " + sql.Name)
+				sql.Stop()
+				return true
+			}
+		}
 		hostName, processExeName, processArgs := findProcess(processName)
 		log.Printf("Found host %v processexe %v processargs %v\n", hostName, processExeName, processArgs)
 		if hostName == "" {
@@ -342,6 +349,10 @@ func StopProcesses(processName string) bool {
 	for _, p := range util.Deployment.Etcds {
 		log.Printf("cleaning etcd %+v", p)
 		p.ResetData()
+	}
+	for _, sql := range util.Deployment.Sqls {
+		log.Println("stopping process " + sql.Name)
+		sql.Stop()
 	}
 
 	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim", "influx"}
@@ -908,6 +919,24 @@ func StartProcesses(processName string, outputDir string) bool {
 			err := influx.Start(logfile)
 			if err != nil {
 				log.Printf("Error on Influx startup: %v", err)
+				return false
+			}
+		}
+	}
+	for _, sql := range util.Deployment.Sqls {
+		if processName != "" && processName != sql.Name {
+			continue
+		}
+		if isLocalIP(sql.Hostname) {
+			log.Printf("Starting PostgreSQL %+v\n", sql)
+			if processName == "" {
+				//only reset the data if this is a full start of all processes
+				sql.InitDataDir()
+			}
+			logfile := getLogFile(sql.Name, outputDir)
+			err := sql.Start(logfile)
+			if err != nil {
+				log.Printf("Error on postgres startup: %v", err)
 				return false
 			}
 		}

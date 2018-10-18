@@ -10,6 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestClusterInstApi(t *testing.T) {
@@ -17,11 +18,15 @@ func TestClusterInstApi(t *testing.T) {
 	objstore.InitRegion(1)
 	reduceInfoTimeouts()
 
+	sql, err := EnsureCleanSql()
+	require.Nil(t, err, "sql")
+	defer sql.Close()
+
 	dummy := dummyEtcd{}
 	dummy.Start()
 
 	sync := InitSync(&dummy)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 	responder := NewDummyInfoResponder(&appInstApi.cache, &clusterInstApi.cache,
@@ -63,7 +68,7 @@ func TestClusterInstApi(t *testing.T) {
 	// Set responder to fail delete.
 	responder.SetSimulateDeleteFailure(true)
 	obj := testutil.ClusterInstData[0]
-	err := clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	err = clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 	assert.NotNil(t, err, "Delete ClusterInst responder failure")
 	responder.SetSimulateDeleteFailure(false)
 	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)

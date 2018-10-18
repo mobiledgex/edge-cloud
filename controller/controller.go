@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	ctls "crypto/tls"
+	"database/sql"
 	"errors"
 	"flag"
 	"fmt"
@@ -39,6 +40,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
+var postgresAddr = flag.String("postgresAddr", "127.0.0.1:5432", "PostgreSQL server address")
 var ControllerId = ""
 
 func GetRootDir() string {
@@ -86,8 +88,15 @@ func main() {
 			"error", err)
 	}
 
+	sql, err := InitSql(*postgresAddr)
+	if err != nil {
+		log.FatalLog("Failed to init sql db client",
+			"address", *postgresAddr, "error", err)
+	}
+	defer sql.Close()
+
 	sync := InitSync(objStore)
-	InitApis(sync)
+	InitApis(sync, sql)
 	sync.Start()
 	defer sync.Done()
 
@@ -191,10 +200,10 @@ func main() {
 	fmt.Println(sig)
 }
 
-func InitApis(sync *Sync) {
-	InitDeveloperApi(sync)
+func InitApis(sync *Sync, sql *sql.DB) {
+	InitDeveloperApi(sql)
 	InitAppApi(sync)
-	InitOperatorApi(sync)
+	InitOperatorApi(sql)
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
@@ -212,4 +221,5 @@ func InitApis(sync *Sync) {
 		hostname = "nohostname"
 	}
 	ControllerId = hostname + "@" + *externalApiAddr
+	GoInitSqlTables(sql)
 }

@@ -284,9 +284,6 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
-	// test update of missing object
-	_, err = api.UpdateAppInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateAppInst(ctx, &testData[0])
 	assert.Nil(t, err, "Create AppInst %s", testData[0].Key.GetKeyString())

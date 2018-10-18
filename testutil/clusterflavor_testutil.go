@@ -241,9 +241,6 @@ func basicClusterFlavorCudTest(t *testing.T, api *ClusterFlavorCommonApi, testDa
 	assert.Nil(t, err, "show data")
 	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
-	// test update of missing object
-	_, err = api.UpdateClusterFlavor(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateClusterFlavor(ctx, &testData[0])
 	assert.Nil(t, err, "Create ClusterFlavor %s", testData[0].Key.GetKeyString())

@@ -236,6 +236,54 @@ func (s *PluginSupport) GoType(g *generator.Generator, field *descriptor.FieldDe
 	return typ
 }
 
+func (s *PluginSupport) SqlType(g *generator.Generator, field *descriptor.FieldDescriptorProto) string {
+	typ := ""
+	switch *field.Type {
+	case descriptor.FieldDescriptorProto_TYPE_DOUBLE:
+		typ = "double"
+	case descriptor.FieldDescriptorProto_TYPE_FLOAT:
+		typ = "real"
+	case descriptor.FieldDescriptorProto_TYPE_INT64:
+		typ = "bigint"
+	case descriptor.FieldDescriptorProto_TYPE_UINT64:
+		typ = "bigint"
+	case descriptor.FieldDescriptorProto_TYPE_INT32:
+		typ = "int"
+	case descriptor.FieldDescriptorProto_TYPE_UINT32:
+		typ = "int"
+	case descriptor.FieldDescriptorProto_TYPE_FIXED64:
+		typ = "bigint"
+	case descriptor.FieldDescriptorProto_TYPE_FIXED32:
+		typ = "int"
+	case descriptor.FieldDescriptorProto_TYPE_BOOL:
+		typ = "boolean"
+	case descriptor.FieldDescriptorProto_TYPE_STRING:
+		typ = "text"
+	case descriptor.FieldDescriptorProto_TYPE_GROUP:
+		g.Fail("group type not allowed")
+	case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+		g.Fail("message type not allowed")
+	case descriptor.FieldDescriptorProto_TYPE_BYTES:
+		g.Fail("bytes type not allowed")
+	case descriptor.FieldDescriptorProto_TYPE_ENUM:
+		typ = "text"
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED32:
+		typ = "int"
+	case descriptor.FieldDescriptorProto_TYPE_SFIXED64:
+		typ = "bigint"
+	case descriptor.FieldDescriptorProto_TYPE_SINT32:
+		typ = "int"
+	case descriptor.FieldDescriptorProto_TYPE_SINT64:
+		typ = "bigint"
+	default:
+		g.Fail("unknown type for", field.GetName())
+	}
+	if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
+		return typ + "[]"
+	}
+	return typ
+}
+
 // ConvTypeNames takes a protoc format type name (as used in Fields and
 // Methods) and returns the package plus a Go-ified type name.
 // The protoc format is .package.Name or .package.Parent.Name for nested

@@ -4,6 +4,9 @@ description: adds provisioning, stops and starts ctrl and compares to expected v
 
 tests:
 
+- name: stop ctrl2
+  actions: [stop=ctrl2]
+
 - name: Add and show provisioning
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-create,ctrlapi-show]
@@ -14,26 +17,23 @@ tests:
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
 
-- name: show provisioning from second controller
+- name: show provisioning from first controller
   apifile: "{{datadir}}/appdata.yml"
-  actions: [ctrlapi-show=ctrl2]
+  actions: [ctrlapi-show=ctrl1]
 
-- name: compare results of ctrl2 show provisioning
+- name: compare results of ctrl1 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
     filetype: appdata
 
-- name: stop ctrl1
-  actions: [stop=ctrl1]
+- name: start ctrl2
+  actions: [start=ctrl2]
 
-- name: start ctrl1 
-  actions: [start=ctrl1]
+- name: show provisioning from ctrl2
+  actions: [ctrlapi-show=ctrl2]
 
-- name: show provisioning from ctrl1
-  actions: [ctrlapi-show=ctrl1]
-
-- name: compare results of ctrl1 show provisioning
+- name: compare results of ctrl2 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
     yaml2: "{{datadir}}/appdata.yml"
