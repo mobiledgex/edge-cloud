@@ -45,14 +45,16 @@ func testControllerSync(t *testing.T, setup *process.ProcessSetup) {
 	}
 
 	// restart a controller and make sure it resyncs
+	restartInterval := 1 * time.Second
 	ctrlApis[0].Close()
 	setup.Controllers[0].Stop()
 	setup.Controllers[0].Start("", process.WithDebug("etcd,api,notify"))
+	// we need to wait for the ctrlr connection to be ready
 	ctrlApis[0], err = setup.Controllers[0].ConnectAPI(connectTimeout)
 	assert.Nil(t, err, "reconnect to controller 0")
 	devApis[0] = edgeproto.NewDeveloperApiClient(ctrlApis[0])
 	for _, dev := range testutil.DevData {
-		testutil.WaitAssertFoundDeveloper(t, devApis[0], &dev, retries, interval)
+		testutil.WaitAssertFoundDeveloper(t, devApis[0], &dev, retries, restartInterval)
 	}
 
 	// update a developer and make sure it syncs
