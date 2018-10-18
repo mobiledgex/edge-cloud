@@ -192,17 +192,19 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	if err = s.GetKey().Validate(); err != nil {
 		return err
 	}
-	if s.ImageType == ImageType_ImageTypeUnknown {
+	if _, found := fields[AppFieldImageType]; found && s.ImageType == ImageType_ImageTypeUnknown {
 		return errors.New("Please specify Image Type")
 	}
 	if err = s.ValidateEnums(); err != nil {
 		return err
 	}
-	if s.AccessPorts == "" {
-		return errors.New("Please specify access ports")
-	}
-	if _, err = ParseAppPorts(s.AccessPorts); err != nil {
-		return err
+	if _, found := fields[AppFieldAccessPorts]; found {
+		if s.AccessPorts == "" {
+			return errors.New("Please specify access ports")
+		}
+		if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
+			return err
+		}
 	}
 	return nil
 }

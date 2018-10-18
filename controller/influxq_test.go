@@ -39,6 +39,10 @@ func TestInfluxQ(t *testing.T) {
 	connected := q.WaitConnected()
 	assert.True(t, connected, "connected")
 
+	// clear test metrics
+	_, err = q.QueryDB(`DROP SERIES FROM "test-metric"`)
+	require.Nil(t, err, "clear test metrics")
+
 	count := 0
 	iilimit := 10
 
