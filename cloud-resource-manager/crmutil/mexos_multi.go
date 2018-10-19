@@ -661,6 +661,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	return mf, nil
 }
 
+//XXX InternalPort used for both port and targetport
 var kubeManifestSimpleShared = `apiVersion: v1
 kind: Service
 metadata:
@@ -706,7 +707,7 @@ spec:
 {{- end}}
         command:
 {{- range .Spec.Command}}
-        - "{{.}}"
+        - {{.}}
 {{- end}}
 `
 

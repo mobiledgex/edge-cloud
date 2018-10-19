@@ -40,6 +40,8 @@ func (srv *Server) Status(ctx context.Context, req *api.StatusRequest) (res *api
 
 func (srv *Server) Info(ctx context.Context, req *api.InfoRequest) (res *api.InfoResponse, err error) {
 	res = &api.InfoResponse{
+		Totaludp:     TotalUDP,
+		Totaltcp:     TotalTCP,
 		Message:      req.Message,
 		Outbound:     GetOutboundIP(),
 		Realoutbound: GetRealOutboundIP(),
