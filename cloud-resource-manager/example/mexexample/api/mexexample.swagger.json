@@ -180,6 +180,14 @@
         "realoutbound": {
           "type": "string"
         },
+        "totaltcp": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "totaludp": {
+          "type": "string",
+          "format": "uint64"
+        },
         "interfaces": {
           "type": "array",
           "items": {

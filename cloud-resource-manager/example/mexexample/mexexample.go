@@ -22,6 +22,8 @@ func main() {
 	grpcAddress := flag.String("grpc", ":27272", "GRPC address")
 	restAddress := flag.String("rest", ":27273", "REST API address")
 	httpAddress := flag.String("http", ":27274", "HTTP address")
+	tcpAddress := flag.String("tcp", ":27275", "TCP address")
+	udpAddress := flag.String("udp", ":27276", "UDP address")
 	flag.Parse()
 	if *debug {
 		log.SetLevel(log.DebugLevel)
@@ -47,6 +49,18 @@ func main() {
 			log.Fatalf("cannot run GRPC server, %v", err)
 		}
 	}()
+	log.Debugf("starting TCP Server at %s", *tcpAddress)
+	go func() {
+		if err := server.ListenAndServeTCP(*tcpAddress); err != nil {
+			log.Fatalf("cannot run TCP server, %v", err)
+		}
+	}()
+	log.Debugf("starting UDP Server at %s", *udpAddress)
+	go func() {
+		if err := server.ListenAndServeUDP(*udpAddress); err != nil {
+			log.Fatalf("cannot run UDP server, %v", err)
+		}
+	}()
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	<-sigChan
@@ -66,6 +80,8 @@ func frontpage(w http.ResponseWriter, r *http.Request) {
 	}
 	conn.Close() // nolint
 	fmt.Fprintf(w, "real outbound ip %s", server.GetRealOutboundIP())
+	fmt.Fprintf(w, "totaltcp %v", server.TotalTCP)
+	fmt.Fprintf(w, "totaludp %v", server.TotalUDP)
 	interfaces, err := net.Interfaces()
 	if err == nil {
 		for _, intf := range interfaces {

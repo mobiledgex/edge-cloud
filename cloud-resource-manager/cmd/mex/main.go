@@ -27,13 +27,13 @@ var clusterOps = map[string]func(*crmutil.Manifest) error{
 }
 
 var platformOps = map[string]func(*crmutil.Manifest) error{
-	"init":  crmutil.MEXPlatformInitManifest,
-	"clean": crmutil.MEXPlatformCleanManifest,
+	"create": crmutil.MEXPlatformInitManifest,
+	"remove": crmutil.MEXPlatformCleanManifest,
 }
 
 var applicationOps = map[string]func(*crmutil.Manifest) error{
-	"run":  crmutil.MEXAppCreateAppManifest,
-	"kill": crmutil.MEXAppDeleteAppManifest,
+	"create": crmutil.MEXAppCreateAppManifest,
+	"remove": crmutil.MEXAppDeleteAppManifest,
 }
 
 var categories = map[string]map[string]func(*crmutil.Manifest) error{

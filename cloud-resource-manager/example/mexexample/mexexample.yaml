@@ -19,6 +19,10 @@ spec:
     targetPort: 27274
     protocol: TCP
     name: http
+  - port: 27275
+    targetPort: 27275
+    protocol: TCP
+    name: tcp
   selector:
     run: mexexample
 ---
@@ -45,5 +49,10 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 27272
+          protocol: TCP
         - containerPort: 27273
+          protocol: TCP
         - containerPort: 27274
+          protocol: TCP
+        - containerPort: 27275
+          protocol: TCP
