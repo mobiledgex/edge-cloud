@@ -7,6 +7,7 @@ import (
 	"github.com/cespare/xxhash"
 	"github.com/gogo/protobuf/types"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	grpcstats "github.com/mobiledgex/edge-cloud/metrics/grpc"
@@ -178,12 +179,20 @@ func (s *DmeStats) UnaryStatsInterceptor(ctx context.Context, req interface{}, i
 	_, call.key.method = cloudcommon.ParseGrpcMethod(info.FullMethod)
 
 	switch typ := req.(type) {
-	case *dme.Match_Engine_Request:
+	case *dme.RegisterClientRequest:
 		call.key.AppKey.DeveloperKey.Name = typ.DevName
 		call.key.AppKey.Name = typ.AppName
 		call.key.AppKey.Version = typ.AppVers
-	case *dme.DynamicLocGroupAdd:
-		// TODO
+	default:
+		// All other API calls besides RegisterClient
+		// have the app info in the session cookie key.
+		ckey, ok := dmecommon.CookieFromContext(ctx)
+		if !ok {
+			return resp, err
+		}
+		call.key.AppKey.DeveloperKey.Name = ckey.DevName
+		call.key.AppKey.Name = ckey.AppName
+		call.key.AppKey.Version = ckey.AppVers
 	}
 	if err != nil {
 		call.fail = true

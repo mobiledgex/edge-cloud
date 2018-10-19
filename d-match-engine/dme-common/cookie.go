@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 )
 
@@ -81,16 +84,30 @@ l+CiuBqG+a/qu6qJVvPH1zt5lN+z+VorKI0qM0bLkr9+2Qq01FPfaSUm9LfL3ggh
 rsYPlqEPvtSrS1HPve+6akMCAwEAAQ==
 -----END PUBLIC KEY-----`
 
+type CookieKey struct {
+	PeerIP  string `json:"peerip,omitempty"`
+	DevName string `json:"devname,omitempty"`
+	AppName string `json:"appname,omitempty"`
+	AppVers string `json:"appvers,omitempty"`
+}
+
+type dmeClaims struct {
+	jwt.StandardClaims
+	Key *CookieKey `json:"key,omitempty"`
+}
+
+type ctxCookieKey struct{}
+
 // returns Peer IP or Error
-func VerifyCookie(cookie string) (string, error) {
+func VerifyCookie(cookie string) (*CookieKey, error) {
 
 	if cookie == "" {
-		return "", fmt.Errorf("missing cookie")
+		return nil, fmt.Errorf("missing cookie")
 	}
-	claims := jwt.StandardClaims{}
+	claims := dmeClaims{}
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(dmePublicKey))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	_, err = jwt.ParseWithClaims(cookie, &claims, func(token *jwt.Token) (verifykey interface{}, err error) {
 		return pubKey, nil
@@ -98,41 +115,97 @@ func VerifyCookie(cookie string) (string, error) {
 
 	if err != nil {
 		log.WarnLog("error in verifycookie", "cookie", cookie, "err", err)
-		return "", err
+		return nil, err
 	}
 
 	if claims.ExpiresAt < time.Now().Unix() {
 		log.InfoLog("cookie is expired", "cookie", cookie, "expiresAt", claims.ExpiresAt)
-		return "", errors.New("Expired cookie")
+		return nil, errors.New("Expired cookie")
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "verified cookie", "cookie", cookie, "expires", claims.ExpiresAt)
-	return claims.Id, nil
+	return claims.Key, nil
 }
 
-func GenerateCookie(appName string, ctx context.Context) (string, error) {
+func GenerateCookie(key *CookieKey, ctx context.Context) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return "", errors.New("unable to get peer IP info")
 	}
 
+	// TODO:
+	// This needs to validate that the Dev/App data sent by client
+	// is in our database, and is not spoofed by the client.
+
 	ss := strings.Split(p.Addr.String(), ":")
 	if len(ss) != 2 {
 		return "", errors.New("unable to parse peer address " + p.Addr.String())
 	}
-	peerIp := ss[0]
+	key.PeerIP = ss[0]
+	claims := dmeClaims{
+		StandardClaims: jwt.StandardClaims{
+			IssuedAt: time.Now().Unix(),
+			// 1 day expiration for now
+			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+		},
+		Key: key,
+	}
 
-	tok := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.StandardClaims{
-		Subject:   appName,
-		Id:        peerIp,
-		IssuedAt:  time.Now().Unix(),
-		ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(), // 1 day expiration for now
-	})
+	tok := jwt.NewWithClaims(jwt.SigningMethodRS256, &claims)
 	signKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(dmePrivateKey))
 	if err != nil {
 		return "", err
 	}
 	cookie, err := tok.SignedString(signKey)
-	log.DebugLog(log.DebugLevelDmereq, "generated cookie", "app", appName, "cookie", cookie, "err", err)
+	log.DebugLog(log.DebugLevelDmereq, "generated cookie", "key", key, "cookie", cookie, "err", err)
 	return cookie, err
+}
+
+func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	allow := false
+	var cookie string
+
+	switch typ := req.(type) {
+	case *dme.RegisterClientRequest:
+		// allow any
+		allow = true
+	case *dme.FindCloudletRequest:
+		cookie = typ.SessionCookie
+	case *dme.VerifyLocationRequest:
+		cookie = typ.SessionCookie
+	case *dme.GetLocationRequest:
+		cookie = typ.SessionCookie
+	case *dme.DynamicLocGroupRequest:
+		cookie = typ.SessionCookie
+	case *dme.AppInstListRequest:
+		cookie = typ.SessionCookie
+	}
+	if !allow {
+		// Verify session cookie, add decoded CookieKey to context
+		ckey, err := VerifyCookie(cookie)
+		if err != nil {
+			return nil, err
+		}
+		ctx = NewCookieContext(ctx, ckey)
+	}
+	// call the handler
+	return handler(ctx, req)
+}
+
+func NewCookieContext(ctx context.Context, ckey *CookieKey) context.Context {
+	return context.WithValue(ctx, ctxCookieKey{}, ckey)
+}
+
+func CookieFromContext(ctx context.Context) (ckey *CookieKey, ok bool) {
+	ckey, ok = ctx.Value(ctxCookieKey{}).(*CookieKey)
+	return
+}
+
+// PeerContext is a helper function to a context with peer info
+func PeerContext(ctx context.Context, ip string, port int) context.Context {
+	addr := net.TCPAddr{}
+	addr.IP = net.ParseIP(ip)
+	addr.Port = port
+	pr := peer.Peer{Addr: &addr}
+	return peer.NewContext(ctx, &pr)
 }

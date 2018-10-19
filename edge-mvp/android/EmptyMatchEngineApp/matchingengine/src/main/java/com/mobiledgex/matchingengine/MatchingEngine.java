@@ -32,7 +32,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
-import distributed_match_engine.AppClient.Match_Engine_Request;
+import distributed_match_engine.AppClient.RegisterClientRequest;
+import distributed_match_engine.AppClient.RegisterClientReply;
+import distributed_match_engine.AppClient.VerifyLocationRequest;
+import distributed_match_engine.AppClient.VerifyLocationReply;
+import distributed_match_engine.AppClient.FindCloudletRequest;
+import distributed_match_engine.AppClient.FindCloudletReply;
+import distributed_match_engine.AppClient.GetLocationRequest;
+import distributed_match_engine.AppClient.GetLocationReply;
+import distributed_match_engine.AppClient.AppInstListRequest;
+import distributed_match_engine.AppClient.AppInstListReply;
+
+import distributed_match_engine.AppClient.DynamicLocGroupRequest;
+import distributed_match_engine.AppClient.DynamicLocGroupReply;
+
+import distributed_match_engine.LocOuterClass;
 import distributed_match_engine.LocOuterClass.Loc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -57,15 +71,18 @@ public class MatchingEngine {
     final ExecutorService threadpool;
 
     // State info for engine
-    private AppClient.Match_Engine_Status mStatus;
     private UUID mUUID;
     private String mSessionCookie;
     private String mTokenServerURI;
     private String mTokenServerToken;
-    private AppClient.Match_Engine_Reply mMatchEngineFindCloudletReply; // FindCloudlet.
-    private AppClient.Match_Engine_Status mMatchEngineStatus;
-    private AppClient.Match_Engine_Loc mMatchEngineLocation;
-    private AppClient.Match_Engine_Loc_Verify mMatchEngineLocationVerify;
+
+    private RegisterClientReply mRegisterClientReply;
+    private FindCloudletReply mFindCloudletReply;
+    private VerifyLocationReply mVerifyLocationReply;
+    private GetLocationReply mGetLocationReply;
+    private DynamicLocGroupReply mDynamicLocGroupReply;
+
+    private LocOuterClass.Loc mMatchEngineLocation;
 
     private boolean isSSLEnabled = true;
     private SSLSocketFactory mMutualAuthSocketFactory;
@@ -144,22 +161,26 @@ public class MatchingEngine {
         return this.mSessionCookie;
     }
 
-    void setMatchEngineStatus(AppClient.Match_Engine_Status status) {
-        mMatchEngineStatus = status;
+    void setMatchEngineStatus(AppClient.RegisterClientReply status) {
+        mRegisterClientReply = status;
     }
 
-    void setMatchEngineLocation(AppClient.Match_Engine_Loc location) {
-        mMatchEngineLocation = location;
+    void setGetLocationReply(GetLocationReply locationReply) {
+        mGetLocationReply = locationReply;
+        mMatchEngineLocation = locationReply.getNetworkLocation();
     }
 
-    void setMatchEngineLocationVerify(AppClient.Match_Engine_Loc_Verify locationVerify) {
-        mMatchEngineLocationVerify = locationVerify;
+    void setVerifyLocationReply(AppClient.VerifyLocationReply locationVerify) {
+        mVerifyLocationReply = locationVerify;
     }
 
-    void setFindCloudletResponse(AppClient.Match_Engine_Reply reply) {
-        mMatchEngineFindCloudletReply = reply;
+    void setFindCloudletResponse(AppClient.FindCloudletReply reply) {
+        mFindCloudletReply = reply;
     }
 
+    void setDynamicLocGroupReply(DynamicLocGroupReply reply) {
+        mDynamicLocGroupReply = reply;
+    }
     /**
      * Utility method retrieves current network CarrierName from system service.
      * @param context
@@ -194,83 +215,15 @@ public class MatchingEngine {
         mNetworkManager = networkManager;
     }
 
-
-    /**
-     * Creates a MatchingEngineRequest going to the Distributed Matching Engine (DME). The library
-     * itself will not directly ask for permissions, the application should before use.
-     * @param context
-     * @param loc
-     * @return
-     * @throws SecurityException
-     */
-    public MatchingEngineRequest createRequest(Context context, android.location.Location loc) throws SecurityException {
-        String carrierName = retrieveNetworkCarrierName(context);
-        String dmeHost = generateDmeHostAddress(retrieveNetworkCarrierName(context));
-        MatchingEngineRequest request = createRequest(context, dmeHost, getPort(), "", "", loc);
-        return request;
-    }
-
-    /**
-     * Creates a MatchingEngineRequest going to the Distributed Matching Engine (DME). The library
-     * itself will not directly ask for permissions, the application should before use.
-     * @param context
-     * @param host
-     * @param port
-     * @param loc
-     * @return
-     * @throws SecurityException
-     */
-    public MatchingEngineRequest createRequest(Context context, String host, int port, String carrierName,
-                                               String developerName, android.location.Location loc) throws SecurityException {
-        Match_Engine_Request grpcRequest = createGRPCRequest(context, carrierName, developerName, loc);
-        MatchingEngineRequest matchingEngineRequest = new MatchingEngineRequest(grpcRequest, host, port);
-        return matchingEngineRequest;
-    }
-
-    Match_Engine_Request createGRPCRequest(Context context, String carrierName, String devName, Location loc) throws SecurityException {
-        if (context == null) {
-            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
-        }
-
+    public RegisterClientRequest createRegisterClientRequest(Context context, String developerName,
+                                                             String applicationName, String appVersion) {
         if (!mMexLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
         }
-
-        if (loc == null) {
-            throw new IllegalArgumentException("Location parameter is required.");
+        if (context == null) {
+            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
-
-        if (mUUID == null) {
-            throw new IllegalArgumentException("UUID is not set, and is required.");
-        }
-
-        // Operator
-        TelephonyManager telManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
-        // READ_PHONE_STATE. FIXME: May
-        AppClient.IDTypes id_types = AppClient.IDTypes.IPADDR;
-        String id = telManager.getLine1Number(); // NOT IMEI, if this throws a SecurityException, application must handle it.
-        String mnc = telManager.getNetworkOperator();
-        String mcc = telManager.getNetworkCountryIso();
-
-        if (id == null) { // Fallback to IP:
-	        // TODO: Dual SIM?
-        }
-
-        String retrievedNetworkOperatorName = retrieveNetworkCarrierName(context);
-        if(carrierName == null || carrierName.equals("")) {
-            carrierName = retrievedNetworkOperatorName.equals("") ? mnc : retrievedNetworkOperatorName; // Carrier Name or Mnc?
-        }
-
-        // Tower
-        List<NeighboringCellInfo> neighbors = telManager.getNeighboringCellInfo();
-        int lac = 0;
-        int cid = 0;
-        if (neighbors.size() > 0) {
-            lac = neighbors.get(0).getLac();
-            cid = neighbors.get(0).getCid();
-        }
-
         // App
         ApplicationInfo appInfo = context.getApplicationInfo();
         String packageLabel = "";
@@ -282,70 +235,32 @@ public class MatchingEngine {
         }
         PackageInfo pInfo;
         String versionName = "";
-        String versionCode = "";
-        String appName = packageLabel;
+        String appName;
+        if (applicationName == null || applicationName.equals("")) {
+            appName = packageLabel;
+        } else {
+            appName = applicationName;
+        }
+
         try {
             pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            versionName = pInfo.versionName;
-            versionCode = (new Integer(pInfo.versionCode)).toString();
+            versionName = (appVersion == null) ? pInfo.versionName : appVersion;
         } catch (PackageManager.NameNotFoundException nfe) {
             nfe.printStackTrace();
             // Hard stop, or continue?
         }
-        if(devName == null || devName.equals("")) {
-            devName = packageLabel; // From signing certificate?
+        if(developerName == null || developerName.equals("")) {
+            developerName = packageLabel; // From signing certificate?
         }
-
-        // Passed in Location (which is a callback interface)
-        Loc aLoc = androidLocToMexLoc(loc);
-
-        Match_Engine_Request request = AppClient.Match_Engine_Request.newBuilder()
-                .setVer(5)
-                .setIdType(id_types)
-                .setUuid(mUUID.toString())
-                .setId((id == null) ? "" : id)
-                .setCarrierID(3l) // uint64 --> String? mnc, mcc?
-                .setCarrierName(carrierName)
-                .setTower(cid) // cid and lac (int)
-                .setGpsLocation(aLoc)
-                .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
-                .setProtocol(ByteString.copyFromUtf8("http")) // This one is appId context sensitive.
-                .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
-                .setDevName(devName)
+        return AppClient.RegisterClientRequest.newBuilder()
+                .setDevName(developerName)
                 .setAppName(appName)
                 .setAppVers(versionName)
-                .setSessionCookie(mSessionCookie == null ? "" : mSessionCookie) // "" if null/unknown.
-                .setVerifyLocToken(mTokenServerToken == null ? "" : mTokenServerToken)
                 .build();
-
-        return request;
     }
 
-    public DynamicLocationGroupAdd createDynamicLocationGroupAdd(Context context,
-                                                           long groupLocationId,
-                                                           @NonNull
-                                                           AppClient.DynamicLocGroupAdd.DlgCommType type,
-                                                           @NonNull
-                                                           android.location.Location loc,
-                                                           String userData)
-            throws SecurityException {
-
-        return createDynamicLocationGroupAdd(context, groupLocationId, this.host, this.port,
-                                             type, loc, userData);
-    }
-
-    public DynamicLocationGroupAdd createDynamicLocationGroupAdd(Context context,
-                                                                 long groupLocationId,
-                                                                 @NonNull
-                                                                 String host,
-                                                                 int port,
-                                                                 @NonNull
-                                                                 AppClient.DynamicLocGroupAdd.DlgCommType type,
-                                                                 @NonNull
-                                                                 android.location.Location loc,
-                                                                 String userData)
-            throws SecurityException {
-
+    public VerifyLocationRequest createVerifyLocationRequest(Context context, String carrierName,
+                                                             android.location.Location location) {
         if (context == null) {
             throw new IllegalArgumentException("MatchingEngine requires a working application context.");
         }
@@ -355,51 +270,110 @@ public class MatchingEngine {
             return null;
         }
 
-        if (host == null || host.isEmpty()) {
-            throw new IllegalArgumentException("MatchingEngine requires a host target value.");
+        if (location == null) {
+            throw new IllegalArgumentException("Location parameter is required.");
         }
 
-        if (port < 0) {
-            throw new IllegalArgumentException("MatchingEngine requires a positive port value.");
+        String retrievedNetworkOperatorName = retrieveNetworkCarrierName(context);
+        if(carrierName == null || carrierName.equals("")) {
+            carrierName = retrievedNetworkOperatorName;
         }
+        Loc aLoc = androidLocToMexLoc(location);
 
-
-        if (loc == null) {
-            throw new IllegalStateException("Location parameter is required.");
-        }
-
-        if (mUUID == null) {
-            throw new IllegalArgumentException("UUID is not set, and is required.");
-        }
-
-        String networkOperatorName = retrieveNetworkCarrierName(context);
-
-        TelephonyManager tm = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        List<NeighboringCellInfo> neighbors = tm.getNeighboringCellInfo();
-        int lac = 0;
-        int cid = 0;
-        if (neighbors.size() > 0) {
-            lac = neighbors.get(0).getLac();
-            cid = neighbors.get(0).getCid();
-        }
-
-        Loc aLoc = androidLocToMexLoc(loc);
-
-        AppClient.DynamicLocGroupAdd groupAddRequest = AppClient.DynamicLocGroupAdd.newBuilder()
-                .setVer(0)
-                .setIdType(AppClient.IDTypes.IPADDR)
-                .setCarrierID(0)
-                .setCarrierName(networkOperatorName == null ? "" : networkOperatorName)
-                .setTower(cid)
-                .setGpsLocation(aLoc)
-                .setLgId(groupLocationId)
+        return AppClient.VerifyLocationRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
-                .setCommType(type)
-                .setUserData(userData)
+                .setCarrierName(carrierName)
+                .setGpsLocation(aLoc) // Latest token is unknown until retrieved.
                 .build();
+    }
 
-        return new DynamicLocationGroupAdd(groupAddRequest, host, port);
+    public FindCloudletRequest createFindCloudletRequest(Context context, String carrierName,
+                                                         android.location.Location location) {
+        if (!mMexLocationAllowed) {
+            Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
+            return null;
+        }
+        if (context == null) {
+            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
+        }
 
+        Loc aLoc = androidLocToMexLoc(location);
+
+        return FindCloudletRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
+                .setCarrierName(
+                        (carrierName == null || carrierName.equals(""))
+                            ? retrieveNetworkCarrierName(context) : carrierName
+                )
+                .setGpsLocation(aLoc)
+                .build();
+    }
+
+    public GetLocationRequest createGetLocationRequest(Context context, String carrierName) {
+        if (!mMexLocationAllowed) {
+            Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
+            return null;
+        }
+        if (context == null) {
+            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
+        }
+
+        return GetLocationRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
+                .setCarrierName(
+                        (carrierName == null || carrierName.equals(""))
+                            ? retrieveNetworkCarrierName(context) : carrierName
+
+                )
+                .build();
+    }
+
+    public AppInstListRequest createAppInstListRequest(Context context, String carrierName,
+                                                       android.location.Location location) {
+        if (!mMexLocationAllowed) {
+            Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
+            return null;
+        }
+        if (context == null) {
+            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
+        }
+
+
+        if (location == null) {
+            throw new IllegalArgumentException("Location parameter is required.");
+        }
+
+        String retrievedNetworkOperatorName = retrieveNetworkCarrierName(context);
+        if(carrierName == null || carrierName.equals("")) {
+            carrierName = retrievedNetworkOperatorName;
+        }
+        Loc aLoc = androidLocToMexLoc(location);
+
+        return AppClient.AppInstListRequest.newBuilder()
+                .setCarrierName(carrierName)
+                .setGpsLocation(aLoc) // Latest token is unknown until retrieved.
+                .build();
+    }
+
+    public DynamicLocGroupRequest createDynamicLocGroupRequest(Context context,
+                                                               DynamicLocGroupRequest.DlgCommType commType,
+                                                               String userData) {
+        if (!mMexLocationAllowed) {
+            Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
+            return null;
+        }
+        if (context == null) {
+            throw new IllegalArgumentException("MatchingEngine requires a working application context.");
+        }
+
+        if (commType == null || commType == DynamicLocGroupRequest.DlgCommType.DlgUndefined) {
+            commType = DynamicLocGroupRequest.DlgCommType.DlgSecure;
+        }
+
+        return DynamicLocGroupRequest.newBuilder()
+                .setCommType(commType)
+                .setUserData(userData == null ? "" : userData)
+                .build();
     }
 
     private Loc androidLocToMexLoc(android.location.Location loc) {
@@ -421,47 +395,120 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws ExecutionException
      */
-    public AppClient.Match_Engine_Status registerClient(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public RegisterClientReply registerClient(Context context,
+                                              RegisterClientRequest request,
+                                              long timeoutInMilliseconds)
             throws StatusRuntimeException, InterruptedException, ExecutionException {
-        RegisterClient registerClient = new RegisterClient(this);
-        registerClient.setRequest(request, timeoutInMilliseconds);
+        String carrierName = retrieveNetworkCarrierName(context);
+        return registerClient(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * Registers Client using blocking API call. Allows specifying a DME host and port.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws StatusRuntimeException
+     */
+    public RegisterClientReply registerClient(RegisterClientRequest request,
+                                              String host, int port,
+                                              long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
+        RegisterClient registerClient = new RegisterClient(this); // Instanced, so just add host, port as field.
+        registerClient.setRequest(request, host, port, timeoutInMilliseconds);
         return registerClient.call();
     }
 
+    public Future<RegisterClientReply> registerClientFuture(Context context,
+                                                            RegisterClientRequest request,
+                                                            long timeoutInMilliseconds) {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return registerClientFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
     /**
      * Registers device on the MatchingEngine server. Returns a Future.
      * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
      * @param timeoutInMilliseconds
      * @return
      */
-    public Future<AppClient.Match_Engine_Status> registerClientFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<RegisterClientReply> registerClientFuture(RegisterClientRequest request,
+                                                            String host, int port,
+                                                            long timeoutInMilliseconds) {
         RegisterClient registerClient = new RegisterClient(this);
-        registerClient.setRequest(request, timeoutInMilliseconds);
+        registerClient.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(registerClient);
     }
 
     /**
      * findCloudlet finds the closest cloudlet instance as per request.
+     * @param context
      * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public FindCloudletReply findCloudlet(Context context,
+                                          FindCloudletRequest request,
+                                          long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return findCloudlet(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+
+    }
+    /**
+     * findCloudlet finds the closest cloudlet instance as per request.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
      * @return cloudlet URI.
      * @throws StatusRuntimeException
      */
-    public FindCloudletResponse findCloudlet(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public FindCloudletReply findCloudlet(FindCloudletRequest request,
+                                          String host, int port,
+                                          long timeoutInMilliseconds)
             throws StatusRuntimeException, InterruptedException, ExecutionException {
         FindCloudlet findCloudlet = new FindCloudlet(this);
-        findCloudlet.setRequest(request, timeoutInMilliseconds);
+        findCloudlet.setRequest(request, host, port, timeoutInMilliseconds);
         return findCloudlet.call();
     }
 
+
     /**
      * findCloudlet finds the closest cloudlet instance as per request. Returns a Future.
+     * @param context
      * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<FindCloudletReply> findCloudletFuture(Context context,
+                                          FindCloudletRequest request,
+                                          long timeoutInMilliseconds) {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return findCloudletFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+
+    /**
+     * findCloudletFuture finds the closest cloudlet instance as per request. Returns a Future.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
      * @return cloudlet URI Future.
      */
-    public Future<FindCloudletResponse> findCloudletFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<FindCloudletReply> findCloudletFuture(FindCloudletRequest request,
+                                                        String host, int port,
+                                                        long timeoutInMilliseconds) {
         FindCloudlet findCloudlet = new FindCloudlet(this);
-        findCloudlet.setRequest(request, timeoutInMilliseconds);
+        findCloudlet.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(findCloudlet);
     }
 
@@ -469,74 +516,210 @@ public class MatchingEngine {
     /**
      * verifyLocationFuture validates the client submitted information against known network
      * parameters on the subscriber network side.
+     * @param context
      * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws ExecutionException
+     */
+    public VerifyLocationReply verifyLocation(Context context, VerifyLocationRequest request,
+                                             long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, IOException, ExecutionException {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return verifyLocation(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * verifyLocationFuture validates the client submitted information against known network
+     * parameters on the subscriber network side.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
      * @return boolean validated or not.
      * @throws StatusRuntimeException
      * @throws InterruptedException
      * @throws IOException
      */
-    public AppClient.Match_Engine_Loc_Verify verifyLocation(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public VerifyLocationReply verifyLocation(VerifyLocationRequest request,
+                                              String host, int port,
+                                              long timeoutInMilliseconds)
             throws StatusRuntimeException, InterruptedException, IOException, ExecutionException {
         VerifyLocation verifyLocation = new VerifyLocation(this);
-        verifyLocation.setRequest(request, timeoutInMilliseconds);
+        verifyLocation.setRequest(request, host, port, timeoutInMilliseconds);
         return verifyLocation.call();
     }
 
     /**
      * verifyLocationFuture validates the client submitted information against known network
      * parameters on the subscriber network side. Returns a future.
+     * @param context
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<VerifyLocationReply> verifyLocationFuture(Context context,
+                                                            VerifyLocationRequest request,
+                                                            long timeoutInMilliseconds) {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return verifyLocationFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * verifyLocationFuture validates the client submitted information against known network
+     * parameters on the subscriber network side. Returns a future.
      * @param request
      * @return Future<Boolean> validated or not.
      */
-    public Future<AppClient.Match_Engine_Loc_Verify> verifyLocationFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<VerifyLocationReply> verifyLocationFuture(VerifyLocationRequest request,
+                                                            String host, int port,
+                                                            long timeoutInMilliseconds) {
         VerifyLocation verifyLocation = new VerifyLocation(this);
-        verifyLocation.setRequest(request, timeoutInMilliseconds);
+        verifyLocation.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(verifyLocation);
     }
 
     /**
      * getLocation returns the network verified location of this device.
+     * @param context
      * @param request
      * @param timeoutInMilliseconds
      * @return
      * @throws StatusRuntimeException
+     * @throws InterruptedException
+     * @throws ExecutionException
      */
-    public AppClient.Match_Engine_Loc getLocation(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public GetLocationReply getLocation(Context context,
+                                        GetLocationRequest request,
+                                        long timeoutInMilliseconds)
+            throws StatusRuntimeException, InterruptedException, ExecutionException {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return getLocation(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * getLocation returns the network verified location of this device.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws StatusRuntimeException
+     */
+    public GetLocationReply getLocation(GetLocationRequest request,
+                                        String host, int port,
+                                        long timeoutInMilliseconds)
             throws StatusRuntimeException, InterruptedException, ExecutionException {
         GetLocation getLocation = new GetLocation(this);
-        getLocation.setRequest(request, timeoutInMilliseconds);
+        getLocation.setRequest(request, host, port, timeoutInMilliseconds);
         return getLocation.call();
     }
 
     /**
      * getLocation returns the network verified location of this device. Returns a Future.
+     * @param context
      * @param request
      * @param timeoutInMilliseconds
      * @return
      */
-    public Future<AppClient.Match_Engine_Loc> getLocationFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public Future<GetLocationReply> getLocationFuture(Context context,
+                                                      GetLocationRequest request,
+                                                      long timeoutInMilliseconds) {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return getLocationFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * getLocation returns the network verified location of this device. Returns a Future.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<GetLocationReply> getLocationFuture(GetLocationRequest request,
+                                                      String host, int port,
+                                                      long timeoutInMilliseconds) {
         GetLocation getLocation = new GetLocation(this);
-        getLocation.setRequest(request, timeoutInMilliseconds);
+        getLocation.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(getLocation);
     }
 
+
     /**
      * addUserToGroup is a blocking call.
+     * @param context
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public DynamicLocGroupReply addUserToGroup(Context context, DynamicLocGroupRequest request,
+                                               long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return addUserToGroup(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * addUserToGroup is a blocking call.
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public DynamicLocGroupReply addUserToGroup(DynamicLocGroupRequest request,
+                                               String host, int port,
+                                               long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        AddUserToGroup addUserToGroup = new AddUserToGroup(this);
+        addUserToGroup.setRequest(request, host, port, timeoutInMilliseconds);
+        return addUserToGroup.call();
+    }
+
+    /**
+     * addUserToGroupFuture
+     * @param context
      * @param request
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_Status addUserToGroup(DynamicLocationGroupAdd request, long timeoutInMilliseconds)
-            throws InterruptedException, ExecutionException {
+    public Future<DynamicLocGroupReply> addUserToGroupFuture(Context context,
+                                                             DynamicLocGroupRequest request,
+                                                             long timeoutInMilliseconds) {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return addUserToGroupFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * addUserToGroupFuture
+     * @param request
+     * @param host Distributed Matching Engine hostname
+     * @param port Distributed Matching Engine port
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<DynamicLocGroupReply> addUserToGroupFuture(DynamicLocGroupRequest request,
+                                                             String host, int port,
+                                                             long timeoutInMilliseconds) {
         AddUserToGroup addUserToGroup = new AddUserToGroup(this);
-        addUserToGroup.setRequest(request, timeoutInMilliseconds);
-        return addUserToGroup.call();
+        addUserToGroup.setRequest(request, host, port, timeoutInMilliseconds);
+        return submit(addUserToGroup);
     }
 
-    public Future<AppClient.Match_Engine_Status> addUserToGroupFuture(DynamicLocationGroupAdd request, long timeoutInMilliseconds) {
-        AddUserToGroup addUserToGroup = new AddUserToGroup(this);
-        addUserToGroup.setRequest(request, timeoutInMilliseconds);
-        return submit(addUserToGroup);
+    /**
+     * Retrieve nearby AppInsts for registered application. This is a blocking call.
+     * @param context
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public AppInstListReply getAppInstList(Context context, AppInstListRequest request,
+                                           long timeoutInMilliseconds)
+            throws InterruptedException, ExecutionException {
+        String carrierName = retrieveNetworkCarrierName(context);
+        return getAppInstList(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
     }
 
     /**
@@ -545,16 +728,43 @@ public class MatchingEngine {
      * @param timeoutInMilliseconds
      * @return
      */
-    public AppClient.Match_Engine_AppInst_List getAppInstList(MatchingEngineRequest request, long timeoutInMilliseconds)
+    public AppInstListReply getAppInstList(AppInstListRequest request,
+                                           String host, int port,
+                                           long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
         GetAppInstList getAppInstList = new GetAppInstList(this);
-        getAppInstList.setRequest(request, timeoutInMilliseconds);
+        getAppInstList.setRequest(request, host, port, timeoutInMilliseconds);
         return getAppInstList.call();
     }
 
-    public Future<AppClient.Match_Engine_AppInst_List> getAppInstListFuture(MatchingEngineRequest request, long timeoutInMilliseconds) {
+
+    /**
+     * Retrieve nearby AppInsts for registered application. Returns a Future.
+     * @param context
+     * @param request
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<AppInstListReply> getAppInstListFuture(Context context,
+                                                         AppInstListRequest request,
+                                                         long timeoutInMilliseconds) {
+
+        String carrierName = retrieveNetworkCarrierName(context);
+        return getAppInstListFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
+    }
+    /**
+     * Retrieve nearby AppInsts for registered application. Returns a Future.
+     * @param request
+     * @param host
+     * @param port
+     * @param timeoutInMilliseconds
+     * @return
+     */
+    public Future<AppInstListReply> getAppInstListFuture(AppInstListRequest request,
+                                                         String host, int port,
+                                                         long timeoutInMilliseconds) {
         GetAppInstList getAppInstList = new GetAppInstList(this);
-        getAppInstList.setRequest(request, timeoutInMilliseconds);
+        getAppInstList.setRequest(request, host, port, timeoutInMilliseconds);
         return submit(getAppInstList);
     }
 

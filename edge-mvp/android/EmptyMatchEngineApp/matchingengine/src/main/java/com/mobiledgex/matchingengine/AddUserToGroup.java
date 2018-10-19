@@ -9,7 +9,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import distributed_match_engine.AppClient;
+import distributed_match_engine.AppClient.DynamicLocGroupRequest;
+import distributed_match_engine.AppClient.DynamicLocGroupReply;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
@@ -18,14 +19,18 @@ public class AddUserToGroup implements Callable {
     public static final String TAG = "AddUserToGroup";
 
     private MatchingEngine mMatchingEngine;
-    private DynamicLocationGroupAdd mRequest; // Singleton.
+
+    private DynamicLocGroupRequest mRequest;
+    private String mHost;
+    private int mPort;
     private long mTimeoutInMilliseconds = -1;
 
     public AddUserToGroup(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(DynamicLocationGroupAdd request, long timeoutInMilliseconds) {
+    public boolean setRequest(DynamicLocGroupRequest request,
+                              String host, int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -33,7 +38,12 @@ public class AddUserToGroup implements Callable {
             mRequest = null;
             return false;
         }
+        if (host == null || host.equals("")) {
+            return false;
+        }
         mRequest = request;
+        mHost = host;
+        mPort = port;
 
         if (timeoutInMilliseconds <= 0) {
             throw new IllegalArgumentException(TAG + "timeout must be positive.");
@@ -43,24 +53,24 @@ public class AddUserToGroup implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Status call()
+    public DynamicLocGroupReply call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.dynamicLocGroupAdd == null) {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: AddUserToGroup does not have a request object to use MatchEngine!");
         }
 
-        AppClient.Match_Engine_Status reply;
+        DynamicLocGroupReply reply;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mMatchingEngine.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .addUserToGroup(mRequest.dynamicLocGroupAdd);
+                    .addUserToGroup(mRequest);
 
             // Nothing a sdk user can do below but read the exception cause:
         } catch (MexKeyStoreException mkse) {
@@ -83,7 +93,7 @@ public class AddUserToGroup implements Callable {
             }
         }
 
-        mMatchingEngine.setMatchEngineStatus(reply);
+        mMatchingEngine.setDynamicLocGroupReply(reply);
         return reply;
     }
 }

@@ -9,7 +9,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import distributed_match_engine.AppClient;
+import distributed_match_engine.AppClient.AppInstListRequest;
+import distributed_match_engine.AppClient.AppInstListReply;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
@@ -18,14 +19,18 @@ public class GetAppInstList implements Callable {
     public static final String TAG = "GetLocation";
 
     private MatchingEngine mMatchingEngine;
-    private MatchingEngineRequest mRequest;
+    private AppInstListRequest mRequest;
+    private String mHost;
+    private int mPort;
     private long mTimeoutInMilliseconds = -1;
 
     GetAppInstList(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public boolean setRequest(AppInstListRequest request,
+                              String host,
+                              int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -33,6 +38,12 @@ public class GetAppInstList implements Callable {
             mRequest = null;
             return false;
         }
+
+        if (host == null || host.equals("")) {
+            return false;
+        }
+        mHost = host;
+        mPort = port;
         mRequest = request;
 
         if (timeoutInMilliseconds <= 0) {
@@ -43,24 +54,24 @@ public class GetAppInstList implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_AppInst_List call()
+    public AppInstListReply call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.matchEngineRequest == null) {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: GetCloudletList does not have a request object!");
         }
 
-        AppClient.Match_Engine_AppInst_List reply;
+        AppInstListReply reply;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .getAppInstList(mRequest.matchEngineRequest);
+                    .getAppInstList(mRequest);
 
 
 
@@ -89,7 +100,7 @@ public class GetAppInstList implements Callable {
         int ver;
         if (reply != null) {
             ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Cloudlet_List: " + ver);
+            Log.d(TAG, "Version of AppInstListReply: " + ver);
         }
 
         return reply;

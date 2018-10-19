@@ -1,9 +1,10 @@
-match-engine-request:
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication
+  appvers: "1.0"
+verifylocationrequest:
   carriername: tmus
   gpslocation: 
     lat: 32.8510877
     long: -96.8014146
-  devname: AcmeAppCo
-  appname: someapplication
-  appvers: "1.0"
 
