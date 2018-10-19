@@ -52,3 +52,77 @@ func ListenAndServeREST(restAddress, grpcAddress string) error {
 
 	return http.ListenAndServe(restAddress, mux)
 }
+
+func ListenAndServeTCP(tcpAddress string) error {
+	la, err := net.Listen("tcp", tcpAddress)
+	if err != nil {
+		return err
+	}
+	defer la.Close()
+	for {
+		cl, err := la.Accept()
+		if err != nil {
+			return err
+		}
+		go handleTCP(cl)
+	}
+}
+
+var TotalTCP = uint64(0)
+
+func handleTCP(cl net.Conn) {
+	defer cl.Close()
+	myip := GetRealOutboundIP()
+	buffer := make([]byte, 1024)
+	for {
+		nr, err := cl.Read(buffer)
+		if err != nil {
+			fmt.Println("error reading from tcp socket", err)
+			return
+		}
+		TotalTCP += uint64(nr)
+		dat := fmt.Sprintf("%s:%v:", myip, TotalTCP)
+		_, err = cl.Write([]byte(dat))
+		if err != nil {
+			fmt.Println("error writing to tcp socket", err)
+			return
+		}
+		_, err = cl.Write(buffer)
+		if err != nil {
+			fmt.Println("error writing to tcp socket", err)
+			return
+		}
+	}
+}
+
+var TotalUDP = uint64(0)
+
+func ListenAndServeUDP(udpAddress string) error {
+	uc, err := net.ListenPacket("udp", udpAddress)
+	if err != nil {
+		return err
+	}
+	defer uc.Close()
+	fmt.Println("reading udp", udpAddress)
+	myip := GetRealOutboundIP()
+	buffer := make([]byte, 1024)
+	for {
+		nr, addr, err := uc.ReadFrom(buffer)
+		if err != nil {
+			fmt.Println("udp read error", err)
+			return err
+		}
+		TotalUDP += uint64(nr)
+		dat := fmt.Sprintf("%s:%v:", myip, TotalUDP)
+		_, err = uc.WriteTo([]byte(dat), addr)
+		if err != nil {
+			fmt.Println("udp write error", err)
+			return err
+		}
+		_, err = uc.WriteTo(buffer, addr)
+		if err != nil {
+			fmt.Println("udp write error", err)
+			return err
+		}
+	}
+}
