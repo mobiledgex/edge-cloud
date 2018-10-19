@@ -112,10 +112,13 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	_, err = jwt.ParseWithClaims(cookie, &claims, func(token *jwt.Token) (verifykey interface{}, err error) {
 		return pubKey, nil
 	})
-
 	if err != nil {
 		log.WarnLog("error in verifycookie", "cookie", cookie, "err", err)
 		return nil, err
+	}
+	if claims.Key == nil {
+		log.InfoLog("no key parsed", "cookie", cookie, "err", err)
+		return nil, errors.New("No Key data in cookie")
 	}
 
 	if claims.ExpiresAt < time.Now().Unix() {
