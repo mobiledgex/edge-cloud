@@ -67,7 +67,9 @@ message InfoResponse {
     string outbound = 3;
     string hostname = 4;
     string realoutbound = 5;
-    repeated Interface interfaces = 6;
+    uint64 totaltcp = 6;
+    uint64 totaludp = 7; 
+    repeated Interface interfaces = 8;
 }
 
 message Interface {

@@ -6,7 +6,7 @@ API_FILES = api/mexexample.pb.go api/mexexample.pb.gw.go api/mexexample.swagger.
 
 .PHONY: build api dep test race msan
 
-default: build docker-build docker-push
+default: build 
 
 docker-build:
 	./docker-build.sh

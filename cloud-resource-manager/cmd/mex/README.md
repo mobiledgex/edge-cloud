@@ -70,9 +70,9 @@ Usage of /tmp/go-build838444644/b001/exe/main:
         platform data
   -quiet
         less verbose
-INFO[0000] e.g. mex [-debug] [-platform pl.yaml] platform {init|clean} -manifest my.yaml
+INFO[0000] e.g. mex [-debug] [-platform pl.yaml] platform {create|remove} -manifest my.yaml
 INFO[0000] e.g. mex [-debug] [-platform pl.yaml] cluster {create|remove} -manifest my.yaml
-INFO[0000] e.g. mex [-debug] [-platform pl.yaml] application {kill|run} -manifest my.yaml
+INFO[0000] e.g. mex [-debug] [-platform pl.yaml] application {creaet|remove} -manifest my.yaml
 FATA[0000] insufficient args
 exit status 1
 ```
@@ -88,7 +88,7 @@ For Openstack, as in Bonn installation, we have to carve out and establish prope
 Normally you will not create platform often. 
 
 ```
-$ mex -platform platform-mex-k8s.yaml platform init  -manifest platform-mex-k8s.yaml
+$ mex -platform platform-mex-k8s.yaml platform create  -manifest platform-mex-k8s.yaml
 
 ```
 
@@ -193,7 +193,7 @@ mexexample-deployment-56dd4f7d44-9sl5k   1/1       Running   0          20m
 A VM based app can be launched as well
 
 ```
-$ go run main.go -debug -platform platform-mex-k8s.yaml application run -manifest application-mex-qcow2.yaml
+$ go run main.go -debug -platform platform-mex-k8s.yaml application create -manifest application-mex-qcow2.yaml
 ```
 
 The details of this workflow still need to be worked out when apps are made available to us.  As is, not enough information available to see what customization has to be done for a given KVM.
@@ -212,7 +212,7 @@ When running the MEX API in a CRM talking to controller, the context of the plat
 ```
 $ source ~/mex.env
 $ mex -d mexos -platform platform-mex-k8s.yaml cluster remove -manifest cluster-mex-k8s.yaml
-$ mex -d mexos -platform platform-mex-k8s.yaml platform clean -manifest platform-mex-k8s.yaml
+$ mex -d mexos -platform platform-mex-k8s.yaml platform remove -manifest platform-mex-k8s.yaml
 $ openstack server list
 ```
 
@@ -222,7 +222,7 @@ The machine running the followings need to have `az` installed. You also need to
 
 ```
 $ mex -d mexos cluster create -manifest cluster-azure-aks.yaml
-$ mex -d mexos application run -manifest application-aks.yaml
+$ mex -d mexos application create -manifest application-aks.yaml
 ```
 
 
@@ -241,5 +241,5 @@ You may need to do `gcloud init` if this is first time you use `gcloud` which se
 
 ```
 $ mex -d mexos cluster create -manifest cluster-gcloud-aks.yaml
-$ mex -d mexos application run -manifest application-gke.yaml
+$ mex -d mexos application create -manifest application-gke.yaml
 ```

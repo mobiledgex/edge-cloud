@@ -17,7 +17,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
@@ -54,6 +53,8 @@ var ValidClusterFlavors = []string{
 	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
 }
 
+var defaultPrivateNetRange = "10.101.X.0/24"
+
 //AvailableClusterFlavors lists currently available flavors
 var AvailableClusterFlavors = []*ClusterFlavor{
 	&ClusterFlavor{
@@ -63,7 +64,7 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 		NumNodes:       2,
 		NumMasterNodes: 1,
 		Topology:       "type-1",
-		NetworkSpec:    "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
+		NetworkSpec:    "priv-subnet,mex-k8s-net-1," + defaultPrivateNetRange,
 		StorageSpec:    "default",
 		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-medium", Type: "k8s-node"},
 		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-medium", Type: "k8s-master"},
@@ -648,6 +649,40 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 			return err
 		}
 		log.DebugLog(log.DebugLevelMexos, "created kvm instance", "name", rootLB.Name)
+
+		rootLBIPaddr, ierr := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, rootLB.Name)
+		if ierr != nil {
+			log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", ierr)
+			return fmt.Errorf("created rootlb but cannot get rootlb IP")
+		}
+		ports := []int{
+			18889, //mexosagent HTTP server
+			18888, //mexosagent GRPC server
+			443,   //mexosagent reverse proxy HTTPS
+			8001,  //kubectl proxy
+			6443,  //kubernetes control
+			8000,  //mex k8s join token server
+		}
+		ruleName := oscli.GetDefaultSecurityRule()
+		privateNetCIDR := strings.Replace(defaultPrivateNetRange, "X", "0", 1)
+		allowedClientCIDR := GetAllowedClientCIDR()
+		for _, p := range ports {
+			err := oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", "tcp", ruleName, p)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "error", err, "rootlbIP", rootLBIPaddr, "rulename", ruleName, "port", p)
+			}
+			err = oscli.AddSecurityRuleCIDR(privateNetCIDR, "tcp", ruleName, p)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "error", err, "privatenet", privateNetCIDR, "rulename", ruleName, "port", p)
+			}
+			err = oscli.AddSecurityRuleCIDR(allowedClientCIDR, "tcp", ruleName, p)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, error while adding external  ingress security rule", "error", err, "rulename", ruleName, "port", p)
+			}
+		}
+		//TODO: removal of security rules. Needs to be done for general resource per VM object.
+		//    Add annotation to the running VM. When VM is removed, go through annotations
+		//   and undo the resource allocations, like security rules, etc.
 	} else {
 		log.DebugLog(log.DebugLevelMexos, "re-using existing kvm instance", "name", rootLB.Name)
 	}
@@ -655,10 +690,16 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	return nil
 }
 
+func GetAllowedClientCIDR() string {
+	//XXX TODO get real list of allowed clients from remote database or template configuration
+	return "0.0.0.0/0"
+}
+
 //XXX allow creating more than one LB
 
 //GetServerIPAddr gets the server IP
 func GetServerIPAddr(networkName, serverName string) (string, error) {
+	//TODO: mexosagent cache
 	log.DebugLog(log.DebugLevelMexos, "get server ip addr", "networkname", networkName, "servername", serverName)
 	//sd, err := oscli.GetServerDetails(rootLB)
 	sd, err := oscli.GetServerDetails(serverName)
@@ -800,12 +841,13 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	sd, err := oscli.GetServerDetails(fqdn)
 	if err == nil {
 		if sd.Name == fqdn {
-			log.DebugLog(log.DebugLevelMexos, "mex agent exists", "fqdn", fqdn)
+			log.DebugLog(log.DebugLevelMexos, "server with same name as rootLB exists", "fqdn", fqdn)
 			rootLB, err := getRootLB(fqdn)
 			if err != nil {
 				return fmt.Errorf("cannot find rootlb %s", fqdn)
 			}
-			return RunMEXOSAgentContainer(mf, rootLB)
+			//return RunMEXOSAgentContainer(mf, rootLB)
+			return RunMEXOSAgentService(mf, rootLB)
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "proceed to create mex agent", "fqdn", fqdn)
@@ -845,10 +887,53 @@ func RunMEXAgentManifest(mf *Manifest) error {
 		return fmt.Errorf("can't acquire certificate for %s, %v", rootLB.Name, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "acquired certificates from letsencrypt", "name", rootLB.Name)
-	return RunMEXOSAgentContainer(mf, rootLB)
+	//return RunMEXOSAgentContainer(mf, rootLB)
+	return RunMEXOSAgentService(mf, rootLB)
+}
+
+func RunMEXOSAgentService(mf *Manifest, rootLB *MEXRootLB) error {
+	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
+	if err != nil {
+		return err
+	}
+	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@registry.mobiledgex.net:files-repo/mobiledgex/mexosagent /usr/local/bin/", mexEnv["MEX_SSH_KEY"])
+	out, err := client.Output(cmd)
+	if err != nil {
+		log.InfoLog("error: cannot download mexosagent from registry", "error", err, "out", out)
+		return err
+	}
+	out, err = client.Output("chmod a+rx /usr/local/bin/mexosagent")
+	if err != nil {
+		log.InfoLog("error: cannot chmod mexosagent", "error", err)
+		return err
+	}
+	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@registry.mobiledgex.net:files-repo/mobiledgex/mexosagent.service /lib/systemd/system/", mexEnv["MEX_SSH_KEY"])
+	out, err = client.Output(cmd)
+	if err != nil {
+		log.InfoLog("error: cannot download mexosagent from registry", "error", err, "out", out)
+		return err
+	}
+	//out, err = client.Output("mexosagent -cert /root -debug")
+	//if err != nil {
+	//	log.DebugLog(log.DebugLevelMexos, "cannot run mexosagent", "error", err)
+	//	return err
+	//}
+	out, err = client.Output("systemctl enable mexosagent.service")
+	if err != nil {
+		log.InfoLog("warning: cannot enable mexosagent.service", "out", out, "err", err)
+	}
+	out, err = client.Output("systemctl start mexosagent.service")
+	if err != nil {
+		log.InfoLog("warning: cannot start mexosagent.service", "out", out, "err", err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "started mexosagent service")
+	return nil
 }
 
 func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
+	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
+		return fmt.Errorf("empty docker registry pass env var")
+	}
 	client, err := GetSSHClient(rootLB.Name, rootLB.PlatConf.Spec.ExternalNetwork, "root")
 	if err != nil {
 		return err
@@ -861,9 +946,6 @@ func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
 		//XXX check better
 		log.DebugLog(log.DebugLevelMexos, "agent docker instance already running")
 		return nil
-	}
-	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
-		return fmt.Errorf("empty docker registry pass env var")
 	}
 	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv["MEX_DOCKER_REG_PASS"])
 	out, err = client.Output(cmd)
@@ -893,7 +975,7 @@ func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
 	if err != nil {
 		return fmt.Errorf("error running dockerized agent on RootLB %s, %s, %s, %v", rootLB.Name, cmd, out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "now running dockerized agent")
+	log.DebugLog(log.DebugLevelMexos, "now running dockerized mexosagent")
 	return nil
 }
 
@@ -1173,6 +1255,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes -o json", mexEnv["MEX_SSH_KEY"], ipaddr)
 	out, err := client.Output(cmd)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "error checking for kubernetes nodes", "out", out, "err", err)
 		return false, nil //This is intentional
 	}
 	gitems := &genericItems{}
@@ -1380,9 +1463,6 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name for kubernetes deployment")
 	}
-	//if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
-	//	return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
-	//}
 	if mf.Spec.Key == "" {
 		return fmt.Errorf("empty kubernetes cluster name")
 	}
@@ -1396,14 +1476,15 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if err != nil {
 		return err
 	}
-
-	log.DebugLog(log.DebugLevelMexos, "will launch app into existing cluster", "kubeconfig", kp.kubeconfig, "ipaddr", kp.ipaddr)
+	log.DebugLog(log.DebugLevelMexos, "will launch app into cluster", "kubeconfig", kp.kubeconfig, "ipaddr", kp.ipaddr)
 	var cmd string
 	if mexEnv["MEX_DOCKER_REG_PASS"] == "" {
 		return fmt.Errorf("empty docker registry password environment variable")
 	}
+	//TODO: mexosagent should cache
+	var out string
 	cmd = fmt.Sprintf("echo %s > .docker-pass", mexEnv["MEX_DOCKER_REG_PASS"])
-	out, err := kp.client.Output(cmd)
+	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't store docker password, %s, %v", out, err)
 	}
@@ -1443,23 +1524,54 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest")
 	log.DebugLog(log.DebugLevelMexos, "add spec ports", "ports", mf.Spec.Ports)
+	rootLBIPaddr, ierr := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, rootLB.Name)
+	if ierr != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", ierr)
+		return fmt.Errorf("cannot deploy kubernetes app, cannot get rootlb IP")
+	}
+	sr := oscli.GetDefaultSecurityRule()
+	allowedClientCIDR := GetAllowedClientCIDR()
 	for _, port := range mf.Spec.Ports {
-		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
-			// only handling L7 right now
-			log.DebugLog(log.DebugLevelMexos, "skip unsupported proto", "port", port)
+		serr := oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
 			continue
 		}
-		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
-		errs := AddPathReverseProxy(rootLB.Name, port.PublicPath, origin)
-		if errs != nil {
-			errmsg := fmt.Sprintf("%v", errs)
-			if strings.Contains(errmsg, "exists") {
-				log.DebugLog(log.DebugLevelMexos, "rproxy path already exists", "path", port.PublicPath, "origin", origin)
-			} else {
-				return fmt.Errorf("Errors adding reverse proxy path, %v", errs)
-			}
+		serr = oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
+			continue
+		}
+		serr = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
+			continue
+		}
+		serr = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
+			continue
+		}
+		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "internal port", port.InternalPort)
+			continue
+		}
+		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
+		if serr != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port.InternalPort)
+			continue
 		}
 	}
+	if len(mf.Spec.Ports) > 0 {
+		err = AddNginxProxy(rootLB.Name, mf.Metadata.Name, kp.ipaddr, mf.Spec.Ports)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "cannot add nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
+			return err
+		}
+	}
+
+	log.DebugLog(log.DebugLevelMexos, "added nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
 	cmd = fmt.Sprintf(`%s kubectl patch svc %s-service -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, mf.Metadata.Name, kp.ipaddr)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
@@ -1611,6 +1723,62 @@ func GetKubernetesConfigmapYAML(rootLBName string, clustername, configname strin
 	return out, nil
 }
 
+func AddNginxProxy(rootLBName, name, ipaddr string, ports []PortDetail) error {
+	log.DebugLog(log.DebugLevelMexos, "add nginx proxy", "name", name, "ports", ports)
+
+	request := gorequest.New()
+	npURI := fmt.Sprintf("http://%s:%s/v1/nginx", rootLBName, mexEnv["MEX_AGENT_PORT"])
+	pl, err := FormNginxProxyRequest(ports, ipaddr, name)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot form nginx proxy request")
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "nginx proxy add request post", "request", *pl)
+	resp, body, errs := request.Post(npURI).Set("Content-Type", "application/json").Send(pl).End()
+	if errs != nil {
+		return fmt.Errorf("error, can't request nginx proxy add, %v", errs)
+	}
+	if strings.Contains(body, "OK") {
+		log.DebugLog(log.DebugLevelMexos, "added nginx proxy OK")
+		return nil
+	}
+	log.DebugLog(log.DebugLevelMexos, "warning, error while adding nginx proxy", "resp", resp, "body", body)
+	return fmt.Errorf("cannot add nginx proxy, resp %v", resp)
+}
+
+func FormNginxProxyRequest(ports []PortDetail, ipaddr string, name string) (*string, error) {
+	portstrs := []string{}
+	for _, p := range ports {
+		switch p.MexProto {
+		case "LProtoHTTP":
+			portstrs = append(portstrs,
+				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "internal": "%d", "origin":"%s:%d", "path":"/%s"}`,
+					p.MexProto, p.PublicPort, p.InternalPort, ipaddr, p.PublicPort, p.PublicPath))
+		case "LProtoTCP":
+			portstrs = append(portstrs,
+				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
+					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+		case "LProtoUDP":
+			portstrs = append(portstrs,
+				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
+					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+		default:
+			log.DebugLog(log.DebugLevelMexos, "invalid mexproto", "port", p)
+		}
+	}
+	portspec := ""
+	for i, ps := range portstrs {
+		if i == 0 {
+			portspec += ps
+		} else {
+			portspec += "," + ps
+		}
+
+	}
+	pl := fmt.Sprintf(`{ "message":"add", "name": "%s" , "ports": %s }`, name, "["+portspec+"]")
+	return &pl, nil
+}
+
 //AddPathReverseProxy adds a new route to origin on the reverse proxy
 func AddPathReverseProxy(rootLBName, path, origin string) []error {
 	log.DebugLog(log.DebugLevelMexos, "add path to reverse proxy", "rootlbname", rootLBName, "path", path, "origin", origin)
@@ -1729,30 +1897,24 @@ func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "delete spec ports", "ports", mf.Spec.Ports)
-	for _, port := range mf.Spec.Ports {
-		if port.MexProto != dme.LProto_name[int32(dme.LProto_LProtoHTTP)] {
-			// only handling L7 now
-			log.DebugLog(log.DebugLevelMexos, "skip unsupported proto", "port", port)
-			continue
-		}
-		origin := fmt.Sprintf("http://%s:%d", kp.ipaddr, port.InternalPort)
-		errs := DeletePathReverseProxy(rootLB.Name, port.PublicPath, origin)
-		if errs != nil {
-			return fmt.Errorf("Errors deleting reverse proxy path, %v", errs)
-		}
+	err = DeleteNginxProxy(rootLB.Name, mf.Metadata.Name)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
 	}
 	cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, mf.Metadata.Name+"-service")
 	out, err := kp.client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error deleting kubernetes service, %s, %s, %v", cmd, out, err)
+		log.DebugLog(log.DebugLevelMexos, "error deleting kubernetes service", "name", mf.Metadata.Name, "cmd", cmd, "out", out, "err", err)
+	} else {
+		log.DebugLog(log.DebugLevelMexos, "deleted service", "name", mf.Metadata.Name)
 	}
-	log.DebugLog(log.DebugLevelMexos, "deleted service", "name", mf.Metadata.Name)
 	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", mf.Metadata.Name)
+	//TODO: remove security rules
 	return nil
 }
 
@@ -1761,6 +1923,24 @@ func DeletePathReverseProxy(rootLBName, path, origin string) []error {
 	log.DebugLog(log.DebugLevelMexos, "delete path reverse proxy", "path", path, "origin", origin)
 	//TODO
 	return nil
+}
+
+func DeleteNginxProxy(rootLBName, name string) error {
+	log.DebugLog(log.DebugLevelMexos, "add nginx proxy", "name", name)
+	request := gorequest.New()
+	npURI := fmt.Sprintf("http://%s:%s/v1/nginx", rootLBName, mexEnv["MEX_AGENT_PORT"])
+	pl := fmt.Sprintf(`{"message":"delete","name":"%s"}`, name)
+	log.DebugLog(log.DebugLevelMexos, "nginx proxy add request post", "request", pl)
+	resp, body, errs := request.Post(npURI).Set("Content-Type", "application/json").Send(pl).End()
+	if errs != nil {
+		return fmt.Errorf("error, can't request nginx proxy delete, %v", errs)
+	}
+	if strings.Contains(body, "OK") {
+		log.DebugLog(log.DebugLevelMexos, "deleted nginx proxy OK")
+		return nil
+	}
+	log.DebugLog(log.DebugLevelMexos, "error while deleting nginx proxy", "resp", resp, "body", body)
+	return fmt.Errorf("cannot delete nginx proxy, resp %v", resp)
 }
 
 //CreateQCOW2AppManifest creates qcow2 app
