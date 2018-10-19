@@ -37,4 +37,10 @@ spec:
     internalport: 27274
     publicport: 27274
     publicpath: testapphttp
+  - name: lprototcp1
+    mexproto: LProtoTCP
+    proto: TCP
+    internalport: 27275
+    publicport: 27275
+    publicpath: testapptcp
   command:

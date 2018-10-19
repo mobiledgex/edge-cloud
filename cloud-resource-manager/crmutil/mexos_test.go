@@ -310,3 +310,17 @@ func TestGenDeployment(t *testing.T) {
 		return
 	}
 }
+
+func TestFormNginxProxyRequest(t *testing.T) {
+	ports := []PortDetail{
+		{MexProto: "LProtoHTTP", PublicPort: 8888, InternalPort: 8888, PublicPath: "test1"},
+		{MexProto: "LProtoTCP", PublicPort: 8889, InternalPort: 8889, PublicPath: "test2"},
+		{MexProto: "LProtoUDP", PublicPort: 8887, InternalPort: 8887, PublicPath: "test3"},
+	}
+
+	pl, err := FormNginxProxyRequest(ports, "10.0.0.1", "test123")
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(*pl)
+}
