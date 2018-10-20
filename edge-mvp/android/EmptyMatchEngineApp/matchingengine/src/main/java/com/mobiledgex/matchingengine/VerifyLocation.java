@@ -16,22 +16,27 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
+import distributed_match_engine.AppClient.VerifyLocationRequest;
+import distributed_match_engine.AppClient.VerifyLocationReply;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
 public class VerifyLocation implements Callable {
-    public static final String TAG = "VerifyLocationTask";
+    public static final String TAG = "VerifyLocation";
 
     private MatchingEngine mMatchingEngine;
-    private MatchingEngineRequest mRequest; // Singleton.
+    private VerifyLocationRequest mRequest; // Singleton.
+    private String mHost;
+    private int mPort;
     private long mTimeoutInMilliseconds = -1;
 
     VerifyLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public boolean setRequest(VerifyLocationRequest request,
+                              String host, int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -39,7 +44,13 @@ public class VerifyLocation implements Callable {
             mRequest = null;
             return false;
         }
+
+        if (host == null || host.equals("")) {
+            return false;
+        }
         mRequest = request;
+        mHost = host;
+        mPort = port;
 
         if (timeoutInMilliseconds <= 0) {
             throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
@@ -78,37 +89,25 @@ public class VerifyLocation implements Callable {
         return token;
     }
 
-    private AppClient.Match_Engine_Request addTokenToRequest(String token) {
-        AppClient.Match_Engine_Request grpcRequest = mRequest.matchEngineRequest;
-        AppClient.Match_Engine_Request tokenizedRequest = AppClient.Match_Engine_Request.newBuilder()
-                .setVer(grpcRequest.getVer())
-                .setIdType(grpcRequest.getIdType())
-                .setUuid(grpcRequest.getUuid())
-                .setId(grpcRequest.getId())
-                .setCarrierID(grpcRequest.getCarrierID())
-                .setCarrierName(grpcRequest.getCarrierName())
-                .setTower(grpcRequest.getTower())
-                .setGpsLocation(grpcRequest.getGpsLocation())
-                .setAppId(grpcRequest.getAppId())
-                .setProtocol(grpcRequest.getProtocol())
-                .setServerPort(grpcRequest.getServerPort())
-                .setDevName(grpcRequest.getDevName())
-                .setAppName(grpcRequest.getAppName())
-                .setAppVers(grpcRequest.getAppVers())
-                .setSessionCookie(grpcRequest.getSessionCookie())
+    private VerifyLocationRequest addTokenToRequest(String token) {
+        VerifyLocationRequest tokenizedRequest = AppClient.VerifyLocationRequest.newBuilder()
+                .setVer(mRequest.getVer())
+                .setSessionCookie(mRequest.getSessionCookie())
+                .setCarrierName(mRequest.getCarrierName())
+                .setGpsLocation(mRequest.getGpsLocation())
                 .setVerifyLocToken(token)
                 .build();
         return tokenizedRequest;
     }
 
     @Override
-    public AppClient.Match_Engine_Loc_Verify call()
+    public VerifyLocationReply call()
             throws MissingRequestException, StatusRuntimeException,
                    IOException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.matchEngineRequest == null) {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: VerifyLocation does not have a request object to make location verification call!");
         }
-        AppClient.Match_Engine_Request grpcRequest = mRequest.matchEngineRequest;
+        VerifyLocationRequest grpcRequest;
 
         // Make One time use of HTTP Request to Token Server:
         NetworkManager nm = mMatchingEngine.getNetworkManager();
@@ -117,10 +116,10 @@ public class VerifyLocation implements Callable {
         String token = getToken(); // This token is short lived.
         grpcRequest = addTokenToRequest(token);
 
-        AppClient.Match_Engine_Loc_Verify reply;
+        VerifyLocationReply reply;
         ManagedChannel channel = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
@@ -150,11 +149,11 @@ public class VerifyLocation implements Callable {
         int ver = -1;
         if (reply != null) {
             ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Loc_Verify: " + ver);
+            Log.d(TAG, "Version of VerifyLocationReply: " + ver);
         }
 
         mMatchingEngine.setTokenServerToken(token);
-        mMatchingEngine.setMatchEngineLocationVerify(reply);
+        mMatchingEngine.setVerifyLocationReply(reply);
         return reply;
     }
 }

@@ -135,6 +135,7 @@ func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, e
 type DmeLocal struct {
 	Name        string
 	ApiAddr     string
+	HttpAddr    string
 	NotifyAddrs string
 	LocVerUrl   string
 	TokSrvUrl   string
@@ -149,6 +150,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
 		args = append(args, p.ApiAddr)
+	}
+	if p.HttpAddr != "" {
+		args = append(args, "--httpAddr")
+		args = append(args, p.HttpAddr)
 	}
 	if p.LocVerUrl != "" {
 		args = append(args, "--locverurl")

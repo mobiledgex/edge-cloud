@@ -11,15 +11,20 @@
 		loc.proto
 
 	It has these top-level messages:
-		Match_Engine_Request
-		Match_Engine_Reply
-		Match_Engine_Loc_Verify
-		Match_Engine_Loc
-		Match_Engine_Status
+		RegisterClientRequest
+		RegisterClientReply
+		FindCloudletRequest
+		FindCloudletReply
+		VerifyLocationRequest
+		VerifyLocationReply
+		GetLocationRequest
+		GetLocationReply
+		AppInstListRequest
 		Appinstance
 		CloudletLocation
-		Match_Engine_AppInst_List
-		DynamicLocGroupAdd
+		AppInstListReply
+		DynamicLocGroupRequest
+		DynamicLocGroupReply
 		AppPort
 		DlgMessage
 		DlgReply
@@ -30,6 +35,7 @@ package distributed_match_engine
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import _ "github.com/gogo/googleapis/google/api"
 
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
@@ -80,73 +86,97 @@ func (x IDTypes) String() string {
 }
 func (IDTypes) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{0} }
 
-type Match_Engine_Reply_Find_Status int32
+type ReplyStatus int32
 
 const (
-	Match_Engine_Reply_FIND_UNKNOWN  Match_Engine_Reply_Find_Status = 0
-	Match_Engine_Reply_FIND_FOUND    Match_Engine_Reply_Find_Status = 1
-	Match_Engine_Reply_FIND_NOTFOUND Match_Engine_Reply_Find_Status = 2
+	ReplyStatus_RS_UNDEFINED ReplyStatus = 0
+	ReplyStatus_RS_SUCCESS   ReplyStatus = 1
+	ReplyStatus_RS_FAIL      ReplyStatus = 2
 )
 
-var Match_Engine_Reply_Find_Status_name = map[int32]string{
+var ReplyStatus_name = map[int32]string{
+	0: "RS_UNDEFINED",
+	1: "RS_SUCCESS",
+	2: "RS_FAIL",
+}
+var ReplyStatus_value = map[string]int32{
+	"RS_UNDEFINED": 0,
+	"RS_SUCCESS":   1,
+	"RS_FAIL":      2,
+}
+
+func (x ReplyStatus) String() string {
+	return proto.EnumName(ReplyStatus_name, int32(x))
+}
+func (ReplyStatus) EnumDescriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{1} }
+
+type FindCloudletReply_FindStatus int32
+
+const (
+	FindCloudletReply_FIND_UNKNOWN  FindCloudletReply_FindStatus = 0
+	FindCloudletReply_FIND_FOUND    FindCloudletReply_FindStatus = 1
+	FindCloudletReply_FIND_NOTFOUND FindCloudletReply_FindStatus = 2
+)
+
+var FindCloudletReply_FindStatus_name = map[int32]string{
 	0: "FIND_UNKNOWN",
 	1: "FIND_FOUND",
 	2: "FIND_NOTFOUND",
 }
-var Match_Engine_Reply_Find_Status_value = map[string]int32{
+var FindCloudletReply_FindStatus_value = map[string]int32{
 	"FIND_UNKNOWN":  0,
 	"FIND_FOUND":    1,
 	"FIND_NOTFOUND": 2,
 }
 
-func (x Match_Engine_Reply_Find_Status) String() string {
-	return proto.EnumName(Match_Engine_Reply_Find_Status_name, int32(x))
+func (x FindCloudletReply_FindStatus) String() string {
+	return proto.EnumName(FindCloudletReply_FindStatus_name, int32(x))
 }
-func (Match_Engine_Reply_Find_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{1, 0}
+func (FindCloudletReply_FindStatus) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{3, 0}
 }
 
 // Status of the reply
-type Match_Engine_Loc_Verify_Tower_Status int32
+type VerifyLocationReply_Tower_Status int32
 
 const (
-	Match_Engine_Loc_Verify_TOWER_UNKNOWN                    Match_Engine_Loc_Verify_Tower_Status = 0
-	Match_Engine_Loc_Verify_CONNECTED_TO_SPECIFIED_TOWER     Match_Engine_Loc_Verify_Tower_Status = 1
-	Match_Engine_Loc_Verify_NOT_CONNECTED_TO_SPECIFIED_TOWER Match_Engine_Loc_Verify_Tower_Status = 2
+	VerifyLocationReply_TOWER_UNKNOWN                    VerifyLocationReply_Tower_Status = 0
+	VerifyLocationReply_CONNECTED_TO_SPECIFIED_TOWER     VerifyLocationReply_Tower_Status = 1
+	VerifyLocationReply_NOT_CONNECTED_TO_SPECIFIED_TOWER VerifyLocationReply_Tower_Status = 2
 )
 
-var Match_Engine_Loc_Verify_Tower_Status_name = map[int32]string{
+var VerifyLocationReply_Tower_Status_name = map[int32]string{
 	0: "TOWER_UNKNOWN",
 	1: "CONNECTED_TO_SPECIFIED_TOWER",
 	2: "NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
-var Match_Engine_Loc_Verify_Tower_Status_value = map[string]int32{
+var VerifyLocationReply_Tower_Status_value = map[string]int32{
 	"TOWER_UNKNOWN":                    0,
 	"CONNECTED_TO_SPECIFIED_TOWER":     1,
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER": 2,
 }
 
-func (x Match_Engine_Loc_Verify_Tower_Status) String() string {
-	return proto.EnumName(Match_Engine_Loc_Verify_Tower_Status_name, int32(x))
+func (x VerifyLocationReply_Tower_Status) String() string {
+	return proto.EnumName(VerifyLocationReply_Tower_Status_name, int32(x))
 }
-func (Match_Engine_Loc_Verify_Tower_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{2, 0}
+func (VerifyLocationReply_Tower_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{5, 0}
 }
 
-type Match_Engine_Loc_Verify_GPS_Location_Status int32
+type VerifyLocationReply_GPS_Location_Status int32
 
 const (
-	Match_Engine_Loc_Verify_LOC_UNKNOWN                  Match_Engine_Loc_Verify_GPS_Location_Status = 0
-	Match_Engine_Loc_Verify_LOC_VERIFIED                 Match_Engine_Loc_Verify_GPS_Location_Status = 1
-	Match_Engine_Loc_Verify_LOC_MISMATCH_SAME_COUNTRY    Match_Engine_Loc_Verify_GPS_Location_Status = 2
-	Match_Engine_Loc_Verify_LOC_MISMATCH_OTHER_COUNTRY   Match_Engine_Loc_Verify_GPS_Location_Status = 3
-	Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MATCH    Match_Engine_Loc_Verify_GPS_Location_Status = 4
-	Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MISMATCH Match_Engine_Loc_Verify_GPS_Location_Status = 5
-	Match_Engine_Loc_Verify_LOC_ERROR_UNAUTHORIZED       Match_Engine_Loc_Verify_GPS_Location_Status = 6
-	Match_Engine_Loc_Verify_LOC_ERROR_OTHER              Match_Engine_Loc_Verify_GPS_Location_Status = 7
+	VerifyLocationReply_LOC_UNKNOWN                  VerifyLocationReply_GPS_Location_Status = 0
+	VerifyLocationReply_LOC_VERIFIED                 VerifyLocationReply_GPS_Location_Status = 1
+	VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY    VerifyLocationReply_GPS_Location_Status = 2
+	VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY   VerifyLocationReply_GPS_Location_Status = 3
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH    VerifyLocationReply_GPS_Location_Status = 4
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH VerifyLocationReply_GPS_Location_Status = 5
+	VerifyLocationReply_LOC_ERROR_UNAUTHORIZED       VerifyLocationReply_GPS_Location_Status = 6
+	VerifyLocationReply_LOC_ERROR_OTHER              VerifyLocationReply_GPS_Location_Status = 7
 )
 
-var Match_Engine_Loc_Verify_GPS_Location_Status_name = map[int32]string{
+var VerifyLocationReply_GPS_Location_Status_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_VERIFIED",
 	2: "LOC_MISMATCH_SAME_COUNTRY",
@@ -156,7 +186,7 @@ var Match_Engine_Loc_Verify_GPS_Location_Status_name = map[int32]string{
 	6: "LOC_ERROR_UNAUTHORIZED",
 	7: "LOC_ERROR_OTHER",
 }
-var Match_Engine_Loc_Verify_GPS_Location_Status_value = map[string]int32{
+var VerifyLocationReply_GPS_Location_Status_value = map[string]int32{
 	"LOC_UNKNOWN":                  0,
 	"LOC_VERIFIED":                 1,
 	"LOC_MISMATCH_SAME_COUNTRY":    2,
@@ -167,320 +197,339 @@ var Match_Engine_Loc_Verify_GPS_Location_Status_value = map[string]int32{
 	"LOC_ERROR_OTHER":              7,
 }
 
-func (x Match_Engine_Loc_Verify_GPS_Location_Status) String() string {
-	return proto.EnumName(Match_Engine_Loc_Verify_GPS_Location_Status_name, int32(x))
+func (x VerifyLocationReply_GPS_Location_Status) String() string {
+	return proto.EnumName(VerifyLocationReply_GPS_Location_Status_name, int32(x))
 }
-func (Match_Engine_Loc_Verify_GPS_Location_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{2, 1}
+func (VerifyLocationReply_GPS_Location_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{5, 1}
 }
 
 // Status of the reply
-type Match_Engine_Loc_Loc_Status int32
+type GetLocationReply_Loc_Status int32
 
 const (
-	Match_Engine_Loc_LOC_UNKNOWN Match_Engine_Loc_Loc_Status = 0
-	Match_Engine_Loc_LOC_FOUND   Match_Engine_Loc_Loc_Status = 1
+	GetLocationReply_LOC_UNKNOWN GetLocationReply_Loc_Status = 0
+	GetLocationReply_LOC_FOUND   GetLocationReply_Loc_Status = 1
 	// The user does not allow his location to be tracked
-	Match_Engine_Loc_LOC_DENIED Match_Engine_Loc_Loc_Status = 2
+	GetLocationReply_LOC_DENIED GetLocationReply_Loc_Status = 2
 )
 
-var Match_Engine_Loc_Loc_Status_name = map[int32]string{
+var GetLocationReply_Loc_Status_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_FOUND",
 	2: "LOC_DENIED",
 }
-var Match_Engine_Loc_Loc_Status_value = map[string]int32{
+var GetLocationReply_Loc_Status_value = map[string]int32{
 	"LOC_UNKNOWN": 0,
 	"LOC_FOUND":   1,
 	"LOC_DENIED":  2,
 }
 
-func (x Match_Engine_Loc_Loc_Status) String() string {
-	return proto.EnumName(Match_Engine_Loc_Loc_Status_name, int32(x))
+func (x GetLocationReply_Loc_Status) String() string {
+	return proto.EnumName(GetLocationReply_Loc_Status_name, int32(x))
 }
-func (Match_Engine_Loc_Loc_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{3, 0}
-}
-
-// Status of the reply
-type Match_Engine_Status_ME_Status int32
-
-const (
-	Match_Engine_Status_ME_UNDEFINED Match_Engine_Status_ME_Status = 0
-	Match_Engine_Status_ME_SUCCESS   Match_Engine_Status_ME_Status = 1
-	Match_Engine_Status_ME_FAIL      Match_Engine_Status_ME_Status = 2
-)
-
-var Match_Engine_Status_ME_Status_name = map[int32]string{
-	0: "ME_UNDEFINED",
-	1: "ME_SUCCESS",
-	2: "ME_FAIL",
-}
-var Match_Engine_Status_ME_Status_value = map[string]int32{
-	"ME_UNDEFINED": 0,
-	"ME_SUCCESS":   1,
-	"ME_FAIL":      2,
-}
-
-func (x Match_Engine_Status_ME_Status) String() string {
-	return proto.EnumName(Match_Engine_Status_ME_Status_name, int32(x))
-}
-func (Match_Engine_Status_ME_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{4, 0}
+func (GetLocationReply_Loc_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{7, 0}
 }
 
 // Status of the reply
-type Match_Engine_AppInst_List_AI_Status int32
+type AppInstListReply_AI_Status int32
 
 const (
-	Match_Engine_AppInst_List_AI_UNDEFINED Match_Engine_AppInst_List_AI_Status = 0
-	Match_Engine_AppInst_List_AI_SUCCESS   Match_Engine_AppInst_List_AI_Status = 1
-	Match_Engine_AppInst_List_AI_FAIL      Match_Engine_AppInst_List_AI_Status = 2
+	AppInstListReply_AI_UNDEFINED AppInstListReply_AI_Status = 0
+	AppInstListReply_AI_SUCCESS   AppInstListReply_AI_Status = 1
+	AppInstListReply_AI_FAIL      AppInstListReply_AI_Status = 2
 )
 
-var Match_Engine_AppInst_List_AI_Status_name = map[int32]string{
+var AppInstListReply_AI_Status_name = map[int32]string{
 	0: "AI_UNDEFINED",
 	1: "AI_SUCCESS",
 	2: "AI_FAIL",
 }
-var Match_Engine_AppInst_List_AI_Status_value = map[string]int32{
+var AppInstListReply_AI_Status_value = map[string]int32{
 	"AI_UNDEFINED": 0,
 	"AI_SUCCESS":   1,
 	"AI_FAIL":      2,
 }
 
-func (x Match_Engine_AppInst_List_AI_Status) String() string {
-	return proto.EnumName(Match_Engine_AppInst_List_AI_Status_name, int32(x))
+func (x AppInstListReply_AI_Status) String() string {
+	return proto.EnumName(AppInstListReply_AI_Status_name, int32(x))
 }
-func (Match_Engine_AppInst_List_AI_Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{7, 0}
+func (AppInstListReply_AI_Status) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{11, 0}
 }
 
 // Use Secure communication or Open with the group
-type DynamicLocGroupAdd_DlgCommType int32
+type DynamicLocGroupRequest_DlgCommType int32
 
 const (
-	DynamicLocGroupAdd_DlgUndefined DynamicLocGroupAdd_DlgCommType = 0
-	DynamicLocGroupAdd_DlgSecure    DynamicLocGroupAdd_DlgCommType = 1
-	DynamicLocGroupAdd_DlgOpen      DynamicLocGroupAdd_DlgCommType = 2
+	DynamicLocGroupRequest_DlgUndefined DynamicLocGroupRequest_DlgCommType = 0
+	DynamicLocGroupRequest_DlgSecure    DynamicLocGroupRequest_DlgCommType = 1
+	DynamicLocGroupRequest_DlgOpen      DynamicLocGroupRequest_DlgCommType = 2
 )
 
-var DynamicLocGroupAdd_DlgCommType_name = map[int32]string{
+var DynamicLocGroupRequest_DlgCommType_name = map[int32]string{
 	0: "DlgUndefined",
 	1: "DlgSecure",
 	2: "DlgOpen",
 }
-var DynamicLocGroupAdd_DlgCommType_value = map[string]int32{
+var DynamicLocGroupRequest_DlgCommType_value = map[string]int32{
 	"DlgUndefined": 0,
 	"DlgSecure":    1,
 	"DlgOpen":      2,
 }
 
-func (x DynamicLocGroupAdd_DlgCommType) String() string {
-	return proto.EnumName(DynamicLocGroupAdd_DlgCommType_name, int32(x))
+func (x DynamicLocGroupRequest_DlgCommType) String() string {
+	return proto.EnumName(DynamicLocGroupRequest_DlgCommType_name, int32(x))
 }
-func (DynamicLocGroupAdd_DlgCommType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{8, 0}
+func (DynamicLocGroupRequest_DlgCommType) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptorAppClient, []int{12, 0}
 }
 
-type Match_Engine_Request struct {
+type RegisterClientRequest struct {
+	// API version
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	// User ID type - IMEI, MSISDN etc
-	IdType IDTypes `protobuf:"varint,2,opt,name=IdType,proto3,enum=distributed_match_engine.IDTypes" json:"IdType,omitempty"`
-	// Actual ID
-	Id string `protobuf:"bytes,3,opt,name=Id,proto3" json:"Id,omitempty"`
-	// App/OS generated ID
-	Uuid string `protobuf:"bytes,4,opt,name=Uuid,proto3" json:"Uuid,omitempty"`
-	// The carrier ID that user is connected to ("Mobile Country Code")
-	CarrierID uint64 `protobuf:"varint,5,opt,name=CarrierID,proto3" json:"CarrierID,omitempty"`
-	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,6,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
-	// The tower that user is currently connected to
-	Tower uint64 `protobuf:"varint,7,opt,name=Tower,proto3" json:"Tower,omitempty"`
-	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,8,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
-	// Edge-cloud assigned application ID
-	AppId uint64 `protobuf:"varint,9,opt,name=AppId,proto3" json:"AppId,omitempty"`
-	// Protocol application uses
-	Protocol []byte `protobuf:"bytes,10,opt,name=Protocol,proto3" json:"Protocol,omitempty"`
-	// The protocol port on the server side
-	ServerPort []byte `protobuf:"bytes,11,opt,name=ServerPort,proto3" json:"ServerPort,omitempty"`
 	// App Developer Name
-	DevName string `protobuf:"bytes,12,opt,name=DevName,proto3" json:"DevName,omitempty"`
+	DevName string `protobuf:"bytes,2,opt,name=DevName,proto3" json:"DevName,omitempty"`
 	// App Name
-	AppName string `protobuf:"bytes,13,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,3,opt,name=AppName,proto3" json:"AppName,omitempty"`
 	// App Version
-	AppVers string `protobuf:"bytes,14,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
-	// DME Session Cookie; Not used for Register
-	SessionCookie string `protobuf:"bytes,15,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
-	// token used for location verification
-	VerifyLocToken string `protobuf:"bytes,16,opt,name=VerifyLocToken,proto3" json:"VerifyLocToken,omitempty"`
+	AppVers string `protobuf:"bytes,4,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
 }
 
-func (m *Match_Engine_Request) Reset()                    { *m = Match_Engine_Request{} }
-func (m *Match_Engine_Request) String() string            { return proto.CompactTextString(m) }
-func (*Match_Engine_Request) ProtoMessage()               {}
-func (*Match_Engine_Request) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{0} }
+func (m *RegisterClientRequest) Reset()                    { *m = RegisterClientRequest{} }
+func (m *RegisterClientRequest) String() string            { return proto.CompactTextString(m) }
+func (*RegisterClientRequest) ProtoMessage()               {}
+func (*RegisterClientRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{0} }
 
-type Match_Engine_Reply struct {
+type RegisterClientReply struct {
+	// API version
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	// domain name
-	Uri string `protobuf:"bytes,2,opt,name=uri,proto3" json:"uri,omitempty"`
-	// ip of the app service
-	ServiceIp []byte `protobuf:"bytes,3,opt,name=service_ip,json=serviceIp,proto3" json:"service_ip,omitempty"`
-	// port of the app service?
-	ServicePort uint32 `protobuf:"varint,4,opt,name=service_port,json=servicePort,proto3" json:"service_port,omitempty"`
-	// location of the cloudlet?
-	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
-	// list of ports and L7 paths
-	Ports []*AppPort `protobuf:"bytes,8,rep,name=ports" json:"ports,omitempty"`
-	// Status return
-	Status        Match_Engine_Reply_Find_Status `protobuf:"varint,6,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_Reply_Find_Status" json:"Status,omitempty"`
-	SessionCookie string                         `protobuf:"bytes,7,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// Status of the reply
+	Status ReplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.ReplyStatus" json:"status,omitempty"`
+	// Session Cookie to be used in later API calls
+	SessionCookie string `protobuf:"bytes,3,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// URI for Token Server
+	TokenServerURI string `protobuf:"bytes,4,opt,name=TokenServerURI,proto3" json:"TokenServerURI,omitempty"`
 }
 
-func (m *Match_Engine_Reply) Reset()                    { *m = Match_Engine_Reply{} }
-func (m *Match_Engine_Reply) String() string            { return proto.CompactTextString(m) }
-func (*Match_Engine_Reply) ProtoMessage()               {}
-func (*Match_Engine_Reply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{1} }
+func (m *RegisterClientReply) Reset()                    { *m = RegisterClientReply{} }
+func (m *RegisterClientReply) String() string            { return proto.CompactTextString(m) }
+func (*RegisterClientReply) ProtoMessage()               {}
+func (*RegisterClientReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{1} }
 
-type Match_Engine_Loc_Verify struct {
-	Ver               uint32                                      `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	TowerStatus       Match_Engine_Loc_Verify_Tower_Status        `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status" json:"tower_status,omitempty"`
-	GpsLocationStatus Match_Engine_Loc_Verify_GPS_Location_Status `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status" json:"gps_location_status,omitempty"`
+type FindCloudletRequest struct {
+	// API version
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// The GPS location of the user
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+}
+
+func (m *FindCloudletRequest) Reset()                    { *m = FindCloudletRequest{} }
+func (m *FindCloudletRequest) String() string            { return proto.CompactTextString(m) }
+func (*FindCloudletRequest) ProtoMessage()               {}
+func (*FindCloudletRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{2} }
+
+type FindCloudletReply struct {
+	// API version
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Status return
+	Status FindCloudletReply_FindStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.FindCloudletReply_FindStatus" json:"status,omitempty"`
+	// Full Qualified Domain Name of Closest App instance
+	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
+	// List of ports and L7 paths to connect to App instance
+	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
+	// Location of the cloudlet
+	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
+}
+
+func (m *FindCloudletReply) Reset()                    { *m = FindCloudletReply{} }
+func (m *FindCloudletReply) String() string            { return proto.CompactTextString(m) }
+func (*FindCloudletReply) ProtoMessage()               {}
+func (*FindCloudletReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{3} }
+
+type VerifyLocationRequest struct {
+	// API version
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// The GPS location to verify
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	// token used for location verification, app must retrieve from TokenServerURI
+	VerifyLocToken string `protobuf:"bytes,5,opt,name=VerifyLocToken,proto3" json:"VerifyLocToken,omitempty"`
+}
+
+func (m *VerifyLocationRequest) Reset()                    { *m = VerifyLocationRequest{} }
+func (m *VerifyLocationRequest) String() string            { return proto.CompactTextString(m) }
+func (*VerifyLocationRequest) ProtoMessage()               {}
+func (*VerifyLocationRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{4} }
+
+type VerifyLocationReply struct {
+	// API version
+	Ver               uint32                                  `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	TowerStatus       VerifyLocationReply_Tower_Status        `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_Tower_Status" json:"tower_status,omitempty"`
+	GpsLocationStatus VerifyLocationReply_GPS_Location_Status `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPS_Location_Status" json:"gps_location_status,omitempty"`
 	// location accuracy, the location is verified to
 	// be within this number of kilometers.  Negative value
 	// means no verification was done
 	GPS_Location_Accuracy_KM float64 `protobuf:"fixed64,4,opt,name=GPS_Location_Accuracy_KM,json=GPSLocationAccuracyKM,proto3" json:"GPS_Location_Accuracy_KM,omitempty"`
 }
 
-func (m *Match_Engine_Loc_Verify) Reset()                    { *m = Match_Engine_Loc_Verify{} }
-func (m *Match_Engine_Loc_Verify) String() string            { return proto.CompactTextString(m) }
-func (*Match_Engine_Loc_Verify) ProtoMessage()               {}
-func (*Match_Engine_Loc_Verify) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{2} }
+func (m *VerifyLocationReply) Reset()                    { *m = VerifyLocationReply{} }
+func (m *VerifyLocationReply) String() string            { return proto.CompactTextString(m) }
+func (*VerifyLocationReply) ProtoMessage()               {}
+func (*VerifyLocationReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{5} }
 
-type Match_Engine_Loc struct {
+type GetLocationRequest struct {
+	// API version
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+}
+
+func (m *GetLocationRequest) Reset()                    { *m = GetLocationRequest{} }
+func (m *GetLocationRequest) String() string            { return proto.CompactTextString(m) }
+func (*GetLocationRequest) ProtoMessage()               {}
+func (*GetLocationRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{6} }
+
+type GetLocationReply struct {
 	Ver    uint32                      `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	Status Match_Engine_Loc_Loc_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_Loc_Loc_Status" json:"Status,omitempty"`
+	Status GetLocationReply_Loc_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.GetLocationReply_Loc_Status" json:"Status,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The tower that user is currently connected to
 	Tower uint64 `protobuf:"varint,4,opt,name=Tower,proto3" json:"Tower,omitempty"`
 	// The GPS location of the user
 	NetworkLocation *Loc `protobuf:"bytes,5,opt,name=NetworkLocation" json:"NetworkLocation,omitempty"`
-	// DME Session Cookie
-	SessionCookie string `protobuf:"bytes,6,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
 }
 
-func (m *Match_Engine_Loc) Reset()                    { *m = Match_Engine_Loc{} }
-func (m *Match_Engine_Loc) String() string            { return proto.CompactTextString(m) }
-func (*Match_Engine_Loc) ProtoMessage()               {}
-func (*Match_Engine_Loc) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{3} }
+func (m *GetLocationReply) Reset()                    { *m = GetLocationReply{} }
+func (m *GetLocationReply) String() string            { return proto.CompactTextString(m) }
+func (*GetLocationReply) ProtoMessage()               {}
+func (*GetLocationReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{7} }
 
-type Match_Engine_Status struct {
-	Ver    uint32                        `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	Status Match_Engine_Status_ME_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_Status_ME_Status" json:"Status,omitempty"`
-	// Error Code based on Failure
-	ErrorCode uint32 `protobuf:"varint,3,opt,name=ErrorCode,proto3" json:"ErrorCode,omitempty"`
-	// DME Session Cookie
-	SessionCookie string `protobuf:"bytes,4,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
-	// Group Cookie for Secure Group Communication
-	GroupCookie string `protobuf:"bytes,5,opt,name=GroupCookie,proto3" json:"GroupCookie,omitempty"`
-	// URI for Token Server
-	TokenServerURI string `protobuf:"bytes,6,opt,name=TokenServerURI,proto3" json:"TokenServerURI,omitempty"`
+type AppInstListRequest struct {
+	// API version
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// The GPS location of the user
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
 }
 
-func (m *Match_Engine_Status) Reset()                    { *m = Match_Engine_Status{} }
-func (m *Match_Engine_Status) String() string            { return proto.CompactTextString(m) }
-func (*Match_Engine_Status) ProtoMessage()               {}
-func (*Match_Engine_Status) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{4} }
+func (m *AppInstListRequest) Reset()                    { *m = AppInstListRequest{} }
+func (m *AppInstListRequest) String() string            { return proto.CompactTextString(m) }
+func (*AppInstListRequest) ProtoMessage()               {}
+func (*AppInstListRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{8} }
 
 type Appinstance struct {
-	Appname    string `protobuf:"bytes,1,opt,name=Appname,proto3" json:"Appname,omitempty"`
+	// App Instance Name
+	Appname string `protobuf:"bytes,1,opt,name=Appname,proto3" json:"Appname,omitempty"`
+	// App Instance Version
 	Appversion string `protobuf:"bytes,2,opt,name=Appversion,proto3" json:"Appversion,omitempty"`
-	Uri        string `protobuf:"bytes,3,opt,name=Uri,proto3" json:"Uri,omitempty"`
+	// App Instance FQDN
+	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
 }
 
 func (m *Appinstance) Reset()                    { *m = Appinstance{} }
 func (m *Appinstance) String() string            { return proto.CompactTextString(m) }
 func (*Appinstance) ProtoMessage()               {}
-func (*Appinstance) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{5} }
+func (*Appinstance) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{9} }
 
 type CloudletLocation struct {
-	CarrierName  string `protobuf:"bytes,1,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// The carrier name that user is connected to ("Cellular Carrier Name")
+	CarrierName string `protobuf:"bytes,1,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	// Cloudlet Name
 	CloudletName string `protobuf:"bytes,2,opt,name=CloudletName,proto3" json:"CloudletName,omitempty"`
-	GpsLocation  *Loc   `protobuf:"bytes,3,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
-	// distance of cloudlet vs loc in request
-	Distance     float64        `protobuf:"fixed64,4,opt,name=Distance,proto3" json:"Distance,omitempty"`
+	// The GPS Location of the user
+	GpsLocation *Loc `protobuf:"bytes,3,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	// Distance of cloudlet vs loc in request
+	Distance float64 `protobuf:"fixed64,4,opt,name=Distance,proto3" json:"Distance,omitempty"`
+	// App instances
 	Appinstances []*Appinstance `protobuf:"bytes,5,rep,name=Appinstances" json:"Appinstances,omitempty"`
 }
 
 func (m *CloudletLocation) Reset()                    { *m = CloudletLocation{} }
 func (m *CloudletLocation) String() string            { return proto.CompactTextString(m) }
 func (*CloudletLocation) ProtoMessage()               {}
-func (*CloudletLocation) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{6} }
+func (*CloudletLocation) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{10} }
 
-type Match_Engine_AppInst_List struct {
-	Ver       uint32                              `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	Status    Match_Engine_AppInst_List_AI_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.Match_Engine_AppInst_List_AI_Status" json:"Status,omitempty"`
-	Cloudlets []*CloudletLocation                 `protobuf:"bytes,3,rep,name=Cloudlets" json:"Cloudlets,omitempty"`
+type AppInstListReply struct {
+	// API version
+	Ver       uint32                     `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	Status    AppInstListReply_AI_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.AppInstListReply_AI_Status" json:"Status,omitempty"`
+	Cloudlets []*CloudletLocation        `protobuf:"bytes,3,rep,name=Cloudlets" json:"Cloudlets,omitempty"`
 }
 
-func (m *Match_Engine_AppInst_List) Reset()         { *m = Match_Engine_AppInst_List{} }
-func (m *Match_Engine_AppInst_List) String() string { return proto.CompactTextString(m) }
-func (*Match_Engine_AppInst_List) ProtoMessage()    {}
-func (*Match_Engine_AppInst_List) Descriptor() ([]byte, []int) {
-	return fileDescriptorAppClient, []int{7}
-}
+func (m *AppInstListReply) Reset()                    { *m = AppInstListReply{} }
+func (m *AppInstListReply) String() string            { return proto.CompactTextString(m) }
+func (*AppInstListReply) ProtoMessage()               {}
+func (*AppInstListReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{11} }
 
-type DynamicLocGroupAdd struct {
+type DynamicLocGroupRequest struct {
 	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	// User ID type - IMEI, MSISDN etc
-	IdType IDTypes `protobuf:"varint,2,opt,name=IdType,proto3,enum=distributed_match_engine.IDTypes" json:"IdType,omitempty"`
-	// Actual ID
-	Id string `protobuf:"bytes,3,opt,name=Id,proto3" json:"Id,omitempty"`
-	// App/OS generated ID
-	Uuid string `protobuf:"bytes,4,opt,name=Uuid,proto3" json:"Uuid,omitempty"`
-	// The carrier ID that user is connected to ("Mobile Country Code")
-	CarrierID uint64 `protobuf:"varint,5,opt,name=CarrierID,proto3" json:"CarrierID,omitempty"`
-	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,6,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
-	// The tower that user is currently connected to
-	Tower uint64 `protobuf:"varint,7,opt,name=Tower,proto3" json:"Tower,omitempty"`
-	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,8,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	// Session Cookie from RegisterClientRequest
+	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
 	// Dynamic Location Group Id
-	LgId uint64 `protobuf:"varint,9,opt,name=LgId,proto3" json:"LgId,omitempty"`
-	// DME Session Cookie
-	SessionCookie string                         `protobuf:"bytes,10,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
-	CommType      DynamicLocGroupAdd_DlgCommType `protobuf:"varint,11,opt,name=CommType,proto3,enum=distributed_match_engine.DynamicLocGroupAdd_DlgCommType" json:"CommType,omitempty"`
+	LgId     uint64                             `protobuf:"varint,3,opt,name=LgId,proto3" json:"LgId,omitempty"`
+	CommType DynamicLocGroupRequest_DlgCommType `protobuf:"varint,11,opt,name=CommType,proto3,enum=distributed_match_engine.DynamicLocGroupRequest_DlgCommType" json:"CommType,omitempty"`
 	// Unused
 	UserData string `protobuf:"bytes,12,opt,name=UserData,proto3" json:"UserData,omitempty"`
 }
 
-func (m *DynamicLocGroupAdd) Reset()                    { *m = DynamicLocGroupAdd{} }
-func (m *DynamicLocGroupAdd) String() string            { return proto.CompactTextString(m) }
-func (*DynamicLocGroupAdd) ProtoMessage()               {}
-func (*DynamicLocGroupAdd) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{8} }
+func (m *DynamicLocGroupRequest) Reset()                    { *m = DynamicLocGroupRequest{} }
+func (m *DynamicLocGroupRequest) String() string            { return proto.CompactTextString(m) }
+func (*DynamicLocGroupRequest) ProtoMessage()               {}
+func (*DynamicLocGroupRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{12} }
+
+type DynamicLocGroupReply struct {
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	// Status of the reply
+	Status ReplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.ReplyStatus" json:"status,omitempty"`
+	// Error Code based on Failure
+	ErrorCode uint32 `protobuf:"varint,3,opt,name=ErrorCode,proto3" json:"ErrorCode,omitempty"`
+	// Group Cookie for Secure Group Communication
+	GroupCookie string `protobuf:"bytes,5,opt,name=GroupCookie,proto3" json:"GroupCookie,omitempty"`
+}
+
+func (m *DynamicLocGroupReply) Reset()                    { *m = DynamicLocGroupReply{} }
+func (m *DynamicLocGroupReply) String() string            { return proto.CompactTextString(m) }
+func (*DynamicLocGroupReply) ProtoMessage()               {}
+func (*DynamicLocGroupReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{13} }
 
 func init() {
-	proto.RegisterType((*Match_Engine_Request)(nil), "distributed_match_engine.Match_Engine_Request")
-	proto.RegisterType((*Match_Engine_Reply)(nil), "distributed_match_engine.Match_Engine_Reply")
-	proto.RegisterType((*Match_Engine_Loc_Verify)(nil), "distributed_match_engine.Match_Engine_Loc_Verify")
-	proto.RegisterType((*Match_Engine_Loc)(nil), "distributed_match_engine.Match_Engine_Loc")
-	proto.RegisterType((*Match_Engine_Status)(nil), "distributed_match_engine.Match_Engine_Status")
+	proto.RegisterType((*RegisterClientRequest)(nil), "distributed_match_engine.RegisterClientRequest")
+	proto.RegisterType((*RegisterClientReply)(nil), "distributed_match_engine.RegisterClientReply")
+	proto.RegisterType((*FindCloudletRequest)(nil), "distributed_match_engine.FindCloudletRequest")
+	proto.RegisterType((*FindCloudletReply)(nil), "distributed_match_engine.FindCloudletReply")
+	proto.RegisterType((*VerifyLocationRequest)(nil), "distributed_match_engine.VerifyLocationRequest")
+	proto.RegisterType((*VerifyLocationReply)(nil), "distributed_match_engine.VerifyLocationReply")
+	proto.RegisterType((*GetLocationRequest)(nil), "distributed_match_engine.GetLocationRequest")
+	proto.RegisterType((*GetLocationReply)(nil), "distributed_match_engine.GetLocationReply")
+	proto.RegisterType((*AppInstListRequest)(nil), "distributed_match_engine.AppInstListRequest")
 	proto.RegisterType((*Appinstance)(nil), "distributed_match_engine.Appinstance")
 	proto.RegisterType((*CloudletLocation)(nil), "distributed_match_engine.CloudletLocation")
-	proto.RegisterType((*Match_Engine_AppInst_List)(nil), "distributed_match_engine.Match_Engine_AppInst_List")
-	proto.RegisterType((*DynamicLocGroupAdd)(nil), "distributed_match_engine.DynamicLocGroupAdd")
+	proto.RegisterType((*AppInstListReply)(nil), "distributed_match_engine.AppInstListReply")
+	proto.RegisterType((*DynamicLocGroupRequest)(nil), "distributed_match_engine.DynamicLocGroupRequest")
+	proto.RegisterType((*DynamicLocGroupReply)(nil), "distributed_match_engine.DynamicLocGroupReply")
 	proto.RegisterEnum("distributed_match_engine.IDTypes", IDTypes_name, IDTypes_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_Reply_Find_Status", Match_Engine_Reply_Find_Status_name, Match_Engine_Reply_Find_Status_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Verify_Tower_Status", Match_Engine_Loc_Verify_Tower_Status_name, Match_Engine_Loc_Verify_Tower_Status_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Verify_GPS_Location_Status", Match_Engine_Loc_Verify_GPS_Location_Status_name, Match_Engine_Loc_Verify_GPS_Location_Status_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_Loc_Loc_Status", Match_Engine_Loc_Loc_Status_name, Match_Engine_Loc_Loc_Status_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_Status_ME_Status", Match_Engine_Status_ME_Status_name, Match_Engine_Status_ME_Status_value)
-	proto.RegisterEnum("distributed_match_engine.Match_Engine_AppInst_List_AI_Status", Match_Engine_AppInst_List_AI_Status_name, Match_Engine_AppInst_List_AI_Status_value)
-	proto.RegisterEnum("distributed_match_engine.DynamicLocGroupAdd_DlgCommType", DynamicLocGroupAdd_DlgCommType_name, DynamicLocGroupAdd_DlgCommType_value)
+	proto.RegisterEnum("distributed_match_engine.ReplyStatus", ReplyStatus_name, ReplyStatus_value)
+	proto.RegisterEnum("distributed_match_engine.FindCloudletReply_FindStatus", FindCloudletReply_FindStatus_name, FindCloudletReply_FindStatus_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_Tower_Status", VerifyLocationReply_Tower_Status_name, VerifyLocationReply_Tower_Status_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPS_Location_Status", VerifyLocationReply_GPS_Location_Status_name, VerifyLocationReply_GPS_Location_Status_value)
+	proto.RegisterEnum("distributed_match_engine.GetLocationReply_Loc_Status", GetLocationReply_Loc_Status_name, GetLocationReply_Loc_Status_value)
+	proto.RegisterEnum("distributed_match_engine.AppInstListReply_AI_Status", AppInstListReply_AI_Status_name, AppInstListReply_AI_Status_value)
+	proto.RegisterEnum("distributed_match_engine.DynamicLocGroupRequest_DlgCommType", DynamicLocGroupRequest_DlgCommType_name, DynamicLocGroupRequest_DlgCommType_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -494,12 +543,12 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Match_Engine_Api service
 
 type Match_Engine_ApiClient interface {
-	FindCloudlet(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Reply, error)
-	VerifyLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc_Verify, error)
-	GetLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc, error)
-	RegisterClient(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Status, error)
-	AddUserToGroup(ctx context.Context, in *DynamicLocGroupAdd, opts ...grpc.CallOption) (*Match_Engine_Status, error)
-	GetAppInstList(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_AppInst_List, error)
+	RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error)
+	FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error)
+	VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error)
+	GetLocation(ctx context.Context, in *GetLocationRequest, opts ...grpc.CallOption) (*GetLocationReply, error)
+	AddUserToGroup(ctx context.Context, in *DynamicLocGroupRequest, opts ...grpc.CallOption) (*DynamicLocGroupReply, error)
+	GetAppInstList(ctx context.Context, in *AppInstListRequest, opts ...grpc.CallOption) (*AppInstListReply, error)
 }
 
 type match_Engine_ApiClient struct {
@@ -510,35 +559,8 @@ func NewMatch_Engine_ApiClient(cc *grpc.ClientConn) Match_Engine_ApiClient {
 	return &match_Engine_ApiClient{cc}
 }
 
-func (c *match_Engine_ApiClient) FindCloudlet(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Reply, error) {
-	out := new(Match_Engine_Reply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/FindCloudlet", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *match_Engine_ApiClient) VerifyLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc_Verify, error) {
-	out := new(Match_Engine_Loc_Verify)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/VerifyLocation", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *match_Engine_ApiClient) GetLocation(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Loc, error) {
-	out := new(Match_Engine_Loc)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetLocation", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *match_Engine_ApiClient) RegisterClient(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_Status, error) {
-	out := new(Match_Engine_Status)
+func (c *match_Engine_ApiClient) RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error) {
+	out := new(RegisterClientReply)
 	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/RegisterClient", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -546,8 +568,35 @@ func (c *match_Engine_ApiClient) RegisterClient(ctx context.Context, in *Match_E
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) AddUserToGroup(ctx context.Context, in *DynamicLocGroupAdd, opts ...grpc.CallOption) (*Match_Engine_Status, error) {
-	out := new(Match_Engine_Status)
+func (c *match_Engine_ApiClient) FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error) {
+	out := new(FindCloudletReply)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/FindCloudlet", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *match_Engine_ApiClient) VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error) {
+	out := new(VerifyLocationReply)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/VerifyLocation", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *match_Engine_ApiClient) GetLocation(ctx context.Context, in *GetLocationRequest, opts ...grpc.CallOption) (*GetLocationReply, error) {
+	out := new(GetLocationReply)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetLocation", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *match_Engine_ApiClient) AddUserToGroup(ctx context.Context, in *DynamicLocGroupRequest, opts ...grpc.CallOption) (*DynamicLocGroupReply, error) {
+	out := new(DynamicLocGroupReply)
 	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/AddUserToGroup", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -555,8 +604,8 @@ func (c *match_Engine_ApiClient) AddUserToGroup(ctx context.Context, in *Dynamic
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) GetAppInstList(ctx context.Context, in *Match_Engine_Request, opts ...grpc.CallOption) (*Match_Engine_AppInst_List, error) {
-	out := new(Match_Engine_AppInst_List)
+func (c *match_Engine_ApiClient) GetAppInstList(ctx context.Context, in *AppInstListRequest, opts ...grpc.CallOption) (*AppInstListReply, error) {
+	out := new(AppInstListReply)
 	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetAppInstList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -567,74 +616,20 @@ func (c *match_Engine_ApiClient) GetAppInstList(ctx context.Context, in *Match_E
 // Server API for Match_Engine_Api service
 
 type Match_Engine_ApiServer interface {
-	FindCloudlet(context.Context, *Match_Engine_Request) (*Match_Engine_Reply, error)
-	VerifyLocation(context.Context, *Match_Engine_Request) (*Match_Engine_Loc_Verify, error)
-	GetLocation(context.Context, *Match_Engine_Request) (*Match_Engine_Loc, error)
-	RegisterClient(context.Context, *Match_Engine_Request) (*Match_Engine_Status, error)
-	AddUserToGroup(context.Context, *DynamicLocGroupAdd) (*Match_Engine_Status, error)
-	GetAppInstList(context.Context, *Match_Engine_Request) (*Match_Engine_AppInst_List, error)
+	RegisterClient(context.Context, *RegisterClientRequest) (*RegisterClientReply, error)
+	FindCloudlet(context.Context, *FindCloudletRequest) (*FindCloudletReply, error)
+	VerifyLocation(context.Context, *VerifyLocationRequest) (*VerifyLocationReply, error)
+	GetLocation(context.Context, *GetLocationRequest) (*GetLocationReply, error)
+	AddUserToGroup(context.Context, *DynamicLocGroupRequest) (*DynamicLocGroupReply, error)
+	GetAppInstList(context.Context, *AppInstListRequest) (*AppInstListReply, error)
 }
 
 func RegisterMatch_Engine_ApiServer(s *grpc.Server, srv Match_Engine_ApiServer) {
 	s.RegisterService(&_Match_Engine_Api_serviceDesc, srv)
 }
 
-func _Match_Engine_Api_FindCloudlet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Match_Engine_Request)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/FindCloudlet",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, req.(*Match_Engine_Request))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Match_Engine_Api_VerifyLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Match_Engine_Request)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/VerifyLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, req.(*Match_Engine_Request))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Match_Engine_Api_GetLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Match_Engine_Request)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).GetLocation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetLocation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).GetLocation(ctx, req.(*Match_Engine_Request))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Match_Engine_Api_RegisterClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Match_Engine_Request)
+	in := new(RegisterClientRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -646,13 +641,67 @@ func _Match_Engine_Api_RegisterClient_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/distributed_match_engine.Match_Engine_Api/RegisterClient",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, req.(*Match_Engine_Request))
+		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, req.(*RegisterClientRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Match_Engine_Api_FindCloudlet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FindCloudletRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.Match_Engine_Api/FindCloudlet",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, req.(*FindCloudletRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Match_Engine_Api_VerifyLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VerifyLocationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.Match_Engine_Api/VerifyLocation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, req.(*VerifyLocationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Match_Engine_Api_GetLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetLocationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(Match_Engine_ApiServer).GetLocation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetLocation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(Match_Engine_ApiServer).GetLocation(ctx, req.(*GetLocationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Match_Engine_Api_AddUserToGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DynamicLocGroupAdd)
+	in := new(DynamicLocGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -664,13 +713,13 @@ func _Match_Engine_Api_AddUserToGroup_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/distributed_match_engine.Match_Engine_Api/AddUserToGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).AddUserToGroup(ctx, req.(*DynamicLocGroupAdd))
+		return srv.(Match_Engine_ApiServer).AddUserToGroup(ctx, req.(*DynamicLocGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Match_Engine_Api_GetAppInstList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Match_Engine_Request)
+	in := new(AppInstListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -682,7 +731,7 @@ func _Match_Engine_Api_GetAppInstList_Handler(srv interface{}, ctx context.Conte
 		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetAppInstList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).GetAppInstList(ctx, req.(*Match_Engine_Request))
+		return srv.(Match_Engine_ApiServer).GetAppInstList(ctx, req.(*AppInstListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -691,6 +740,10 @@ var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "distributed_match_engine.Match_Engine_Api",
 	HandlerType: (*Match_Engine_ApiServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "RegisterClient",
+			Handler:    _Match_Engine_Api_RegisterClient_Handler,
+		},
 		{
 			MethodName: "FindCloudlet",
 			Handler:    _Match_Engine_Api_FindCloudlet_Handler,
@@ -702,10 +755,6 @@ var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetLocation",
 			Handler:    _Match_Engine_Api_GetLocation_Handler,
-		},
-		{
-			MethodName: "RegisterClient",
-			Handler:    _Match_Engine_Api_RegisterClient_Handler,
 		},
 		{
 			MethodName: "AddUserToGroup",
@@ -720,7 +769,7 @@ var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
 	Metadata: "app-client.proto",
 }
 
-func (m *Match_Engine_Request) Marshal() (dAtA []byte, err error) {
+func (m *RegisterClientRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -730,7 +779,7 @@ func (m *Match_Engine_Request) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_Request) MarshalTo(dAtA []byte) (int, error) {
+func (m *RegisterClientRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -740,41 +789,101 @@ func (m *Match_Engine_Request) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
 	}
-	if m.IdType != 0 {
-		dAtA[i] = 0x10
+	if len(m.DevName) > 0 {
+		dAtA[i] = 0x12
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.IdType))
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.DevName)))
+		i += copy(dAtA[i:], m.DevName)
 	}
-	if len(m.Id) > 0 {
+	if len(m.AppName) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppName)))
+		i += copy(dAtA[i:], m.AppName)
 	}
-	if len(m.Uuid) > 0 {
+	if len(m.AppVers) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Uuid)))
-		i += copy(dAtA[i:], m.Uuid)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppVers)))
+		i += copy(dAtA[i:], m.AppVers)
 	}
-	if m.CarrierID != 0 {
-		dAtA[i] = 0x28
+	return i, nil
+}
+
+func (m *RegisterClientReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *RegisterClientReply) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.CarrierID))
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
+	}
+	if len(m.SessionCookie) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i += copy(dAtA[i:], m.SessionCookie)
+	}
+	if len(m.TokenServerURI) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.TokenServerURI)))
+		i += copy(dAtA[i:], m.TokenServerURI)
+	}
+	return i, nil
+}
+
+func (m *FindCloudletRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FindCloudletRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if len(m.SessionCookie) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i += copy(dAtA[i:], m.SessionCookie)
 	}
 	if len(m.CarrierName) > 0 {
-		dAtA[i] = 0x32
+		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
 		i += copy(dAtA[i:], m.CarrierName)
 	}
-	if m.Tower != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.Tower))
-	}
 	if m.GpsLocation != nil {
-		dAtA[i] = 0x42
+		dAtA[i] = 0x22
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
 		n1, err := m.GpsLocation.MarshalTo(dAtA[i:])
@@ -783,59 +892,10 @@ func (m *Match_Engine_Request) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n1
 	}
-	if m.AppId != 0 {
-		dAtA[i] = 0x48
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.AppId))
-	}
-	if len(m.Protocol) > 0 {
-		dAtA[i] = 0x52
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Protocol)))
-		i += copy(dAtA[i:], m.Protocol)
-	}
-	if len(m.ServerPort) > 0 {
-		dAtA[i] = 0x5a
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.ServerPort)))
-		i += copy(dAtA[i:], m.ServerPort)
-	}
-	if len(m.DevName) > 0 {
-		dAtA[i] = 0x62
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.DevName)))
-		i += copy(dAtA[i:], m.DevName)
-	}
-	if len(m.AppName) > 0 {
-		dAtA[i] = 0x6a
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppName)))
-		i += copy(dAtA[i:], m.AppName)
-	}
-	if len(m.AppVers) > 0 {
-		dAtA[i] = 0x72
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppVers)))
-		i += copy(dAtA[i:], m.AppVers)
-	}
-	if len(m.SessionCookie) > 0 {
-		dAtA[i] = 0x7a
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
-		i += copy(dAtA[i:], m.SessionCookie)
-	}
-	if len(m.VerifyLocToken) > 0 {
-		dAtA[i] = 0x82
-		i++
-		dAtA[i] = 0x1
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.VerifyLocToken)))
-		i += copy(dAtA[i:], m.VerifyLocToken)
-	}
 	return i, nil
 }
 
-func (m *Match_Engine_Reply) Marshal() (dAtA []byte, err error) {
+func (m *FindCloudletReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -845,7 +905,7 @@ func (m *Match_Engine_Reply) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_Reply) MarshalTo(dAtA []byte) (int, error) {
+func (m *FindCloudletReply) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -855,22 +915,28 @@ func (m *Match_Engine_Reply) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
 	}
-	if len(m.Uri) > 0 {
-		dAtA[i] = 0x12
+	if m.Status != 0 {
+		dAtA[i] = 0x10
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Uri)))
-		i += copy(dAtA[i:], m.Uri)
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
 	}
-	if len(m.ServiceIp) > 0 {
+	if len(m.FQDN) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.ServiceIp)))
-		i += copy(dAtA[i:], m.ServiceIp)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.FQDN)))
+		i += copy(dAtA[i:], m.FQDN)
 	}
-	if m.ServicePort != 0 {
-		dAtA[i] = 0x20
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.ServicePort))
+	if len(m.Ports) > 0 {
+		for _, msg := range m.Ports {
+			dAtA[i] = 0x22
+			i++
+			i = encodeVarintAppClient(dAtA, i, uint64(msg.Size()))
+			n, err := msg.MarshalTo(dAtA[i:])
+			if err != nil {
+				return 0, err
+			}
+			i += n
+		}
 	}
 	if m.CloudletLocation != nil {
 		dAtA[i] = 0x2a
@@ -882,33 +948,10 @@ func (m *Match_Engine_Reply) MarshalTo(dAtA []byte) (int, error) {
 		}
 		i += n2
 	}
-	if m.Status != 0 {
-		dAtA[i] = 0x30
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
-	}
-	if len(m.SessionCookie) > 0 {
-		dAtA[i] = 0x3a
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
-		i += copy(dAtA[i:], m.SessionCookie)
-	}
-	if len(m.Ports) > 0 {
-		for _, msg := range m.Ports {
-			dAtA[i] = 0x42
-			i++
-			i = encodeVarintAppClient(dAtA, i, uint64(msg.Size()))
-			n, err := msg.MarshalTo(dAtA[i:])
-			if err != nil {
-				return 0, err
-			}
-			i += n
-		}
-	}
 	return i, nil
 }
 
-func (m *Match_Engine_Loc_Verify) Marshal() (dAtA []byte, err error) {
+func (m *VerifyLocationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -918,7 +961,58 @@ func (m *Match_Engine_Loc_Verify) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_Loc_Verify) MarshalTo(dAtA []byte) (int, error) {
+func (m *VerifyLocationRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if len(m.SessionCookie) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i += copy(dAtA[i:], m.SessionCookie)
+	}
+	if len(m.CarrierName) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
+		i += copy(dAtA[i:], m.CarrierName)
+	}
+	if m.GpsLocation != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
+		n3, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if len(m.VerifyLocToken) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.VerifyLocToken)))
+		i += copy(dAtA[i:], m.VerifyLocToken)
+	}
+	return i, nil
+}
+
+func (m *VerifyLocationReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *VerifyLocationReply) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -947,7 +1041,7 @@ func (m *Match_Engine_Loc_Verify) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Match_Engine_Loc) Marshal() (dAtA []byte, err error) {
+func (m *GetLocationRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -957,7 +1051,42 @@ func (m *Match_Engine_Loc) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_Loc) MarshalTo(dAtA []byte) (int, error) {
+func (m *GetLocationRequest) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if len(m.SessionCookie) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
+		i += copy(dAtA[i:], m.SessionCookie)
+	}
+	if len(m.CarrierName) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
+		i += copy(dAtA[i:], m.CarrierName)
+	}
+	return i, nil
+}
+
+func (m *GetLocationReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetLocationReply) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -987,22 +1116,16 @@ func (m *Match_Engine_Loc) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x2a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.NetworkLocation.Size()))
-		n3, err := m.NetworkLocation.MarshalTo(dAtA[i:])
+		n4, err := m.NetworkLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n3
-	}
-	if len(m.SessionCookie) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
-		i += copy(dAtA[i:], m.SessionCookie)
+		i += n4
 	}
 	return i, nil
 }
 
-func (m *Match_Engine_Status) Marshal() (dAtA []byte, err error) {
+func (m *AppInstListRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1012,7 +1135,7 @@ func (m *Match_Engine_Status) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_Status) MarshalTo(dAtA []byte) (int, error) {
+func (m *AppInstListRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1022,33 +1145,27 @@ func (m *Match_Engine_Status) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
 	}
-	if m.Status != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
-	}
-	if m.ErrorCode != 0 {
-		dAtA[i] = 0x18
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.ErrorCode))
-	}
 	if len(m.SessionCookie) > 0 {
-		dAtA[i] = 0x22
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
 		i += copy(dAtA[i:], m.SessionCookie)
 	}
-	if len(m.GroupCookie) > 0 {
-		dAtA[i] = 0x2a
+	if len(m.CarrierName) > 0 {
+		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.GroupCookie)))
-		i += copy(dAtA[i:], m.GroupCookie)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
+		i += copy(dAtA[i:], m.CarrierName)
 	}
-	if len(m.TokenServerURI) > 0 {
-		dAtA[i] = 0x32
+	if m.GpsLocation != nil {
+		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.TokenServerURI)))
-		i += copy(dAtA[i:], m.TokenServerURI)
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
+		n5, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n5
 	}
 	return i, nil
 }
@@ -1080,11 +1197,11 @@ func (m *Appinstance) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Appversion)))
 		i += copy(dAtA[i:], m.Appversion)
 	}
-	if len(m.Uri) > 0 {
+	if len(m.FQDN) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Uri)))
-		i += copy(dAtA[i:], m.Uri)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.FQDN)))
+		i += copy(dAtA[i:], m.FQDN)
 	}
 	return i, nil
 }
@@ -1120,11 +1237,11 @@ func (m *CloudletLocation) MarshalTo(dAtA []byte) (int, error) {
 		dAtA[i] = 0x1a
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n4, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		n6, err := m.GpsLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
-		i += n4
+		i += n6
 	}
 	if m.Distance != 0 {
 		dAtA[i] = 0x21
@@ -1147,7 +1264,7 @@ func (m *CloudletLocation) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *Match_Engine_AppInst_List) Marshal() (dAtA []byte, err error) {
+func (m *AppInstListReply) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1157,7 +1274,7 @@ func (m *Match_Engine_AppInst_List) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Match_Engine_AppInst_List) MarshalTo(dAtA []byte) (int, error) {
+func (m *AppInstListReply) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1187,7 +1304,7 @@ func (m *Match_Engine_AppInst_List) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
-func (m *DynamicLocGroupAdd) Marshal() (dAtA []byte, err error) {
+func (m *DynamicLocGroupRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalTo(dAtA)
@@ -1197,7 +1314,7 @@ func (m *DynamicLocGroupAdd) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *DynamicLocGroupAdd) MarshalTo(dAtA []byte) (int, error) {
+func (m *DynamicLocGroupRequest) MarshalTo(dAtA []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
@@ -1207,59 +1324,16 @@ func (m *DynamicLocGroupAdd) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
 	}
-	if m.IdType != 0 {
-		dAtA[i] = 0x10
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.IdType))
-	}
-	if len(m.Id) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Id)))
-		i += copy(dAtA[i:], m.Id)
-	}
-	if len(m.Uuid) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Uuid)))
-		i += copy(dAtA[i:], m.Uuid)
-	}
-	if m.CarrierID != 0 {
-		dAtA[i] = 0x28
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.CarrierID))
-	}
-	if len(m.CarrierName) > 0 {
-		dAtA[i] = 0x32
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
-		i += copy(dAtA[i:], m.CarrierName)
-	}
-	if m.Tower != 0 {
-		dAtA[i] = 0x38
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.Tower))
-	}
-	if m.GpsLocation != nil {
-		dAtA[i] = 0x42
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n5, err := m.GpsLocation.MarshalTo(dAtA[i:])
-		if err != nil {
-			return 0, err
-		}
-		i += n5
-	}
-	if m.LgId != 0 {
-		dAtA[i] = 0x48
-		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.LgId))
-	}
 	if len(m.SessionCookie) > 0 {
-		dAtA[i] = 0x52
+		dAtA[i] = 0x12
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
 		i += copy(dAtA[i:], m.SessionCookie)
+	}
+	if m.LgId != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.LgId))
 	}
 	if m.CommType != 0 {
 		dAtA[i] = 0x58
@@ -1275,6 +1349,45 @@ func (m *DynamicLocGroupAdd) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *DynamicLocGroupReply) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DynamicLocGroupReply) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		dAtA[i] = 0x8
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		dAtA[i] = 0x10
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
+	}
+	if m.ErrorCode != 0 {
+		dAtA[i] = 0x18
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(m.ErrorCode))
+	}
+	if len(m.GroupCookie) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.GroupCookie)))
+		i += copy(dAtA[i:], m.GroupCookie)
+	}
+	return i, nil
+}
+
 func encodeVarintAppClient(dAtA []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		dAtA[offset] = uint8(v&0x7f | 0x80)
@@ -1284,14 +1397,37 @@ func encodeVarintAppClient(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
+func (m *RegisterClientRequest) CopyInFields(src *RegisterClientRequest) {
 	m.Ver = src.Ver
-	m.IdType = src.IdType
-	m.Id = src.Id
-	m.Uuid = src.Uuid
-	m.CarrierID = src.CarrierID
+	m.DevName = src.DevName
+	m.AppName = src.AppName
+	m.AppVers = src.AppVers
+}
+
+// Helper method to check that enums have valid values
+func (m *RegisterClientRequest) ValidateEnums() error {
+	return nil
+}
+
+func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.SessionCookie = src.SessionCookie
+	m.TokenServerURI = src.TokenServerURI
+}
+
+// Helper method to check that enums have valid values
+func (m *RegisterClientReply) ValidateEnums() error {
+	if _, ok := ReplyStatus_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
+	}
+	return nil
+}
+
+func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
 	m.CarrierName = src.CarrierName
-	m.Tower = src.Tower
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
 		m.GpsLocation.Lat = src.GpsLocation.Lat
@@ -1307,41 +1443,32 @@ func (m *Match_Engine_Request) CopyInFields(src *Match_Engine_Request) {
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
 	}
-	m.AppId = src.AppId
-	if m.Protocol == nil || len(m.Protocol) != len(src.Protocol) {
-		m.Protocol = make([]byte, len(src.Protocol))
-	}
-	copy(m.Protocol, src.Protocol)
-	if m.ServerPort == nil || len(m.ServerPort) != len(src.ServerPort) {
-		m.ServerPort = make([]byte, len(src.ServerPort))
-	}
-	copy(m.ServerPort, src.ServerPort)
-	m.DevName = src.DevName
-	m.AppName = src.AppName
-	m.AppVers = src.AppVers
-	m.SessionCookie = src.SessionCookie
-	m.VerifyLocToken = src.VerifyLocToken
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_Request) ValidateEnums() error {
-	if _, ok := IDTypes_name[int32(m.IdType)]; !ok {
-		return errors.New("invalid IdType")
-	}
+func (m *FindCloudletRequest) ValidateEnums() error {
 	if err := m.GpsLocation.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
+func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 	m.Ver = src.Ver
-	m.Uri = src.Uri
-	if m.ServiceIp == nil || len(m.ServiceIp) != len(src.ServiceIp) {
-		m.ServiceIp = make([]byte, len(src.ServiceIp))
+	m.Status = src.Status
+	m.FQDN = src.FQDN
+	if src.Ports != nil {
+		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
+			m.Ports = make([]*AppPort, len(src.Ports))
+		}
+		for i0 := 0; i0 < len(src.Ports); i0++ {
+			m.Ports[i0] = &AppPort{}
+			m.Ports[i0].Proto = src.Ports[i0].Proto
+			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
+			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
+			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+		}
 	}
-	copy(m.ServiceIp, src.ServiceIp)
-	m.ServicePort = src.ServicePort
 	if src.CloudletLocation != nil {
 		m.CloudletLocation = &Loc{}
 		m.CloudletLocation.Lat = src.CloudletLocation.Lat
@@ -1357,28 +1484,11 @@ func (m *Match_Engine_Reply) CopyInFields(src *Match_Engine_Reply) {
 			m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
 		}
 	}
-	m.Status = src.Status
-	m.SessionCookie = src.SessionCookie
-	if src.Ports != nil {
-		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
-			m.Ports = make([]*AppPort, len(src.Ports))
-		}
-		for i0 := 0; i0 < len(src.Ports); i0++ {
-			m.Ports[i0] = &AppPort{}
-			m.Ports[i0].Proto = src.Ports[i0].Proto
-			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
-			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
-		}
-	}
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_Reply) ValidateEnums() error {
-	if err := m.CloudletLocation.ValidateEnums(); err != nil {
-		return err
-	}
-	if _, ok := Match_Engine_Reply_Find_Status_name[int32(m.Status)]; !ok {
+func (m *FindCloudletReply) ValidateEnums() error {
+	if _, ok := FindCloudletReply_FindStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	for _, e := range m.Ports {
@@ -1386,10 +1496,43 @@ func (m *Match_Engine_Reply) ValidateEnums() error {
 			return err
 		}
 	}
+	if err := m.CloudletLocation.ValidateEnums(); err != nil {
+		return err
+	}
 	return nil
 }
 
-func (m *Match_Engine_Loc_Verify) CopyInFields(src *Match_Engine_Loc_Verify) {
+func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+	if src.GpsLocation != nil {
+		m.GpsLocation = &Loc{}
+		m.GpsLocation.Lat = src.GpsLocation.Lat
+		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+		m.GpsLocation.Altitude = src.GpsLocation.Altitude
+		m.GpsLocation.Course = src.GpsLocation.Course
+		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if src.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+		}
+	}
+	m.VerifyLocToken = src.VerifyLocToken
+}
+
+// Helper method to check that enums have valid values
+func (m *VerifyLocationRequest) ValidateEnums() error {
+	if err := m.GpsLocation.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
 	m.GpsLocationStatus = src.GpsLocationStatus
@@ -1397,17 +1540,28 @@ func (m *Match_Engine_Loc_Verify) CopyInFields(src *Match_Engine_Loc_Verify) {
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_Loc_Verify) ValidateEnums() error {
-	if _, ok := Match_Engine_Loc_Verify_Tower_Status_name[int32(m.TowerStatus)]; !ok {
+func (m *VerifyLocationReply) ValidateEnums() error {
+	if _, ok := VerifyLocationReply_Tower_Status_name[int32(m.TowerStatus)]; !ok {
 		return errors.New("invalid TowerStatus")
 	}
-	if _, ok := Match_Engine_Loc_Verify_GPS_Location_Status_name[int32(m.GpsLocationStatus)]; !ok {
+	if _, ok := VerifyLocationReply_GPS_Location_Status_name[int32(m.GpsLocationStatus)]; !ok {
 		return errors.New("invalid GpsLocationStatus")
 	}
 	return nil
 }
 
-func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
+func (m *GetLocationRequest) CopyInFields(src *GetLocationRequest) {
+	m.Ver = src.Ver
+	m.SessionCookie = src.SessionCookie
+	m.CarrierName = src.CarrierName
+}
+
+// Helper method to check that enums have valid values
+func (m *GetLocationRequest) ValidateEnums() error {
+	return nil
+}
+
+func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 	m.Ver = src.Ver
 	m.Status = src.Status
 	m.CarrierName = src.CarrierName
@@ -1427,12 +1581,11 @@ func (m *Match_Engine_Loc) CopyInFields(src *Match_Engine_Loc) {
 			m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
 		}
 	}
-	m.SessionCookie = src.SessionCookie
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_Loc) ValidateEnums() error {
-	if _, ok := Match_Engine_Loc_Loc_Status_name[int32(m.Status)]; !ok {
+func (m *GetLocationReply) ValidateEnums() error {
+	if _, ok := GetLocationReply_Loc_Status_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	if err := m.NetworkLocation.ValidateEnums(); err != nil {
@@ -1441,19 +1594,31 @@ func (m *Match_Engine_Loc) ValidateEnums() error {
 	return nil
 }
 
-func (m *Match_Engine_Status) CopyInFields(src *Match_Engine_Status) {
+func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
 	m.Ver = src.Ver
-	m.Status = src.Status
-	m.ErrorCode = src.ErrorCode
 	m.SessionCookie = src.SessionCookie
-	m.GroupCookie = src.GroupCookie
-	m.TokenServerURI = src.TokenServerURI
+	m.CarrierName = src.CarrierName
+	if src.GpsLocation != nil {
+		m.GpsLocation = &Loc{}
+		m.GpsLocation.Lat = src.GpsLocation.Lat
+		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
+		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
+		m.GpsLocation.Altitude = src.GpsLocation.Altitude
+		m.GpsLocation.Course = src.GpsLocation.Course
+		m.GpsLocation.Speed = src.GpsLocation.Speed
+		if src.GpsLocation.Timestamp != nil {
+			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
+			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+		}
+	}
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_Status) ValidateEnums() error {
-	if _, ok := Match_Engine_Status_ME_Status_name[int32(m.Status)]; !ok {
-		return errors.New("invalid Status")
+func (m *AppInstListRequest) ValidateEnums() error {
+	if err := m.GpsLocation.ValidateEnums(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -1461,7 +1626,7 @@ func (m *Match_Engine_Status) ValidateEnums() error {
 func (m *Appinstance) CopyInFields(src *Appinstance) {
 	m.Appname = src.Appname
 	m.Appversion = src.Appversion
-	m.Uri = src.Uri
+	m.FQDN = src.FQDN
 }
 
 // Helper method to check that enums have valid values
@@ -1496,7 +1661,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 			m.Appinstances[i0] = &Appinstance{}
 			m.Appinstances[i0].Appname = src.Appinstances[i0].Appname
 			m.Appinstances[i0].Appversion = src.Appinstances[i0].Appversion
-			m.Appinstances[i0].Uri = src.Appinstances[i0].Uri
+			m.Appinstances[i0].FQDN = src.Appinstances[i0].FQDN
 		}
 	}
 }
@@ -1514,7 +1679,7 @@ func (m *CloudletLocation) ValidateEnums() error {
 	return nil
 }
 
-func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List) {
+func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 	m.Ver = src.Ver
 	m.Status = src.Status
 	if src.Cloudlets != nil {
@@ -1549,7 +1714,7 @@ func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List)
 					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
 					m.Cloudlets[i0].Appinstances[i1].Appname = src.Cloudlets[i0].Appinstances[i1].Appname
 					m.Cloudlets[i0].Appinstances[i1].Appversion = src.Cloudlets[i0].Appinstances[i1].Appversion
-					m.Cloudlets[i0].Appinstances[i1].Uri = src.Cloudlets[i0].Appinstances[i1].Uri
+					m.Cloudlets[i0].Appinstances[i1].FQDN = src.Cloudlets[i0].Appinstances[i1].FQDN
 				}
 			}
 		}
@@ -1557,8 +1722,8 @@ func (m *Match_Engine_AppInst_List) CopyInFields(src *Match_Engine_AppInst_List)
 }
 
 // Helper method to check that enums have valid values
-func (m *Match_Engine_AppInst_List) ValidateEnums() error {
-	if _, ok := Match_Engine_AppInst_List_AI_Status_name[int32(m.Status)]; !ok {
+func (m *AppInstListReply) ValidateEnums() error {
+	if _, ok := AppInstListReply_AI_Status_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	for _, e := range m.Cloudlets {
@@ -1569,45 +1734,33 @@ func (m *Match_Engine_AppInst_List) ValidateEnums() error {
 	return nil
 }
 
-func (m *DynamicLocGroupAdd) CopyInFields(src *DynamicLocGroupAdd) {
+func (m *DynamicLocGroupRequest) CopyInFields(src *DynamicLocGroupRequest) {
 	m.Ver = src.Ver
-	m.IdType = src.IdType
-	m.Id = src.Id
-	m.Uuid = src.Uuid
-	m.CarrierID = src.CarrierID
-	m.CarrierName = src.CarrierName
-	m.Tower = src.Tower
-	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
-		m.GpsLocation.Lat = src.GpsLocation.Lat
-		m.GpsLocation.Long = src.GpsLocation.Long
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
-		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
-		}
-	}
-	m.LgId = src.LgId
 	m.SessionCookie = src.SessionCookie
+	m.LgId = src.LgId
 	m.CommType = src.CommType
 	m.UserData = src.UserData
 }
 
 // Helper method to check that enums have valid values
-func (m *DynamicLocGroupAdd) ValidateEnums() error {
-	if _, ok := IDTypes_name[int32(m.IdType)]; !ok {
-		return errors.New("invalid IdType")
-	}
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
-		return err
-	}
-	if _, ok := DynamicLocGroupAdd_DlgCommType_name[int32(m.CommType)]; !ok {
+func (m *DynamicLocGroupRequest) ValidateEnums() error {
+	if _, ok := DynamicLocGroupRequest_DlgCommType_name[int32(m.CommType)]; !ok {
 		return errors.New("invalid CommType")
+	}
+	return nil
+}
+
+func (m *DynamicLocGroupReply) CopyInFields(src *DynamicLocGroupReply) {
+	m.Ver = src.Ver
+	m.Status = src.Status
+	m.ErrorCode = src.ErrorCode
+	m.GroupCookie = src.GroupCookie
+}
+
+// Helper method to check that enums have valid values
+func (m *DynamicLocGroupReply) ValidateEnums() error {
+	if _, ok := ReplyStatus_name[int32(m.Status)]; !ok {
+		return errors.New("invalid Status")
 	}
 	return nil
 }
@@ -1652,41 +1805,79 @@ func (e IDTypes) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var Find_StatusStrings = []string{
+var ReplyStatusStrings = []string{
+	"RS_UNDEFINED",
+	"RS_SUCCESS",
+	"RS_FAIL",
+}
+
+const (
+	ReplyStatusRS_UNDEFINED uint64 = 1 << 0
+	ReplyStatusRS_SUCCESS   uint64 = 1 << 1
+	ReplyStatusRS_FAIL      uint64 = 1 << 2
+)
+
+func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var str string
+	err := unmarshal(&str)
+	if err != nil {
+		return err
+	}
+	val, ok := ReplyStatus_value[str]
+	if !ok {
+		// may be enum value instead of string
+		ival, err := strconv.Atoi(str)
+		val = int32(ival)
+		if err == nil {
+			_, ok = ReplyStatus_name[val]
+		}
+	}
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ReplyStatus(val)
+	return nil
+}
+
+func (e ReplyStatus) MarshalYAML() (interface{}, error) {
+	return e.String(), nil
+}
+
+var FindStatusStrings = []string{
 	"FIND_UNKNOWN",
 	"FIND_FOUND",
 	"FIND_NOTFOUND",
 }
 
 const (
-	Find_StatusFIND_UNKNOWN  uint64 = 1 << 0
-	Find_StatusFIND_FOUND    uint64 = 1 << 1
-	Find_StatusFIND_NOTFOUND uint64 = 1 << 2
+	FindStatusFIND_UNKNOWN  uint64 = 1 << 0
+	FindStatusFIND_FOUND    uint64 = 1 << 1
+	FindStatusFIND_NOTFOUND uint64 = 1 << 2
 )
 
-func (e *Match_Engine_Reply_Find_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := Match_Engine_Reply_Find_Status_value[str]
+	val, ok := FindCloudletReply_FindStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = Match_Engine_Reply_Find_Status_name[val]
+			_, ok = FindCloudletReply_FindStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = Match_Engine_Reply_Find_Status(val)
+	*e = FindCloudletReply_FindStatus(val)
 	return nil
 }
 
-func (e Match_Engine_Reply_Find_Status) MarshalYAML() (interface{}, error) {
+func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1702,29 +1893,29 @@ const (
 	Tower_StatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
 )
 
-func (e *Match_Engine_Loc_Verify_Tower_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *VerifyLocationReply_Tower_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := Match_Engine_Loc_Verify_Tower_Status_value[str]
+	val, ok := VerifyLocationReply_Tower_Status_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = Match_Engine_Loc_Verify_Tower_Status_name[val]
+			_, ok = VerifyLocationReply_Tower_Status_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = Match_Engine_Loc_Verify_Tower_Status(val)
+	*e = VerifyLocationReply_Tower_Status(val)
 	return nil
 }
 
-func (e Match_Engine_Loc_Verify_Tower_Status) MarshalYAML() (interface{}, error) {
+func (e VerifyLocationReply_Tower_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1750,29 +1941,29 @@ const (
 	GPS_Location_StatusLOC_ERROR_OTHER              uint64 = 1 << 7
 )
 
-func (e *Match_Engine_Loc_Verify_GPS_Location_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *VerifyLocationReply_GPS_Location_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := Match_Engine_Loc_Verify_GPS_Location_Status_value[str]
+	val, ok := VerifyLocationReply_GPS_Location_Status_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = Match_Engine_Loc_Verify_GPS_Location_Status_name[val]
+			_, ok = VerifyLocationReply_GPS_Location_Status_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = Match_Engine_Loc_Verify_GPS_Location_Status(val)
+	*e = VerifyLocationReply_GPS_Location_Status(val)
 	return nil
 }
 
-func (e Match_Engine_Loc_Verify_GPS_Location_Status) MarshalYAML() (interface{}, error) {
+func (e VerifyLocationReply_GPS_Location_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1788,67 +1979,29 @@ const (
 	Loc_StatusLOC_DENIED  uint64 = 1 << 2
 )
 
-func (e *Match_Engine_Loc_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *GetLocationReply_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := Match_Engine_Loc_Loc_Status_value[str]
+	val, ok := GetLocationReply_Loc_Status_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = Match_Engine_Loc_Loc_Status_name[val]
+			_, ok = GetLocationReply_Loc_Status_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = Match_Engine_Loc_Loc_Status(val)
+	*e = GetLocationReply_Loc_Status(val)
 	return nil
 }
 
-func (e Match_Engine_Loc_Loc_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
-}
-
-var ME_StatusStrings = []string{
-	"ME_UNDEFINED",
-	"ME_SUCCESS",
-	"ME_FAIL",
-}
-
-const (
-	ME_StatusME_UNDEFINED uint64 = 1 << 0
-	ME_StatusME_SUCCESS   uint64 = 1 << 1
-	ME_StatusME_FAIL      uint64 = 1 << 2
-)
-
-func (e *Match_Engine_Status_ME_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var str string
-	err := unmarshal(&str)
-	if err != nil {
-		return err
-	}
-	val, ok := Match_Engine_Status_ME_Status_value[str]
-	if !ok {
-		// may be enum value instead of string
-		ival, err := strconv.Atoi(str)
-		val = int32(ival)
-		if err == nil {
-			_, ok = Match_Engine_Status_ME_Status_name[val]
-		}
-	}
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
-	}
-	*e = Match_Engine_Status_ME_Status(val)
-	return nil
-}
-
-func (e Match_Engine_Status_ME_Status) MarshalYAML() (interface{}, error) {
+func (e GetLocationReply_Loc_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1864,29 +2017,29 @@ const (
 	AI_StatusAI_FAIL      uint64 = 1 << 2
 )
 
-func (e *Match_Engine_AppInst_List_AI_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *AppInstListReply_AI_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := Match_Engine_AppInst_List_AI_Status_value[str]
+	val, ok := AppInstListReply_AI_Status_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = Match_Engine_AppInst_List_AI_Status_name[val]
+			_, ok = AppInstListReply_AI_Status_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = Match_Engine_AppInst_List_AI_Status(val)
+	*e = AppInstListReply_AI_Status(val)
 	return nil
 }
 
-func (e Match_Engine_AppInst_List_AI_Status) MarshalYAML() (interface{}, error) {
+func (e AppInstListReply_AI_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1902,29 +2055,29 @@ const (
 	DlgCommTypeDlgOpen      uint64 = 1 << 2
 )
 
-func (e *DynamicLocGroupAdd_DlgCommType) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := DynamicLocGroupAdd_DlgCommType_value[str]
+	val, ok := DynamicLocGroupRequest_DlgCommType_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = DynamicLocGroupAdd_DlgCommType_name[val]
+			_, ok = DynamicLocGroupRequest_DlgCommType_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = DynamicLocGroupAdd_DlgCommType(val)
+	*e = DynamicLocGroupRequest_DlgCommType(val)
 	return nil
 }
 
-func (e DynamicLocGroupAdd_DlgCommType) MarshalYAML() (interface{}, error) {
+func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -1964,47 +2117,11 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 	}
 }
 
-func (m *Match_Engine_Request) Size() (n int) {
+func (m *RegisterClientRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
 		n += 1 + sovAppClient(uint64(m.Ver))
-	}
-	if m.IdType != 0 {
-		n += 1 + sovAppClient(uint64(m.IdType))
-	}
-	l = len(m.Id)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	l = len(m.Uuid)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.CarrierID != 0 {
-		n += 1 + sovAppClient(uint64(m.CarrierID))
-	}
-	l = len(m.CarrierName)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.Tower != 0 {
-		n += 1 + sovAppClient(uint64(m.Tower))
-	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.AppId != 0 {
-		n += 1 + sovAppClient(uint64(m.AppId))
-	}
-	l = len(m.Protocol)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	l = len(m.ServerPort)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
 	}
 	l = len(m.DevName)
 	if l > 0 {
@@ -2018,42 +2135,60 @@ func (m *Match_Engine_Request) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.SessionCookie)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	l = len(m.VerifyLocToken)
-	if l > 0 {
-		n += 2 + l + sovAppClient(uint64(l))
-	}
 	return n
 }
 
-func (m *Match_Engine_Reply) Size() (n int) {
+func (m *RegisterClientReply) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
 		n += 1 + sovAppClient(uint64(m.Ver))
 	}
-	l = len(m.Uri)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	l = len(m.ServiceIp)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.ServicePort != 0 {
-		n += 1 + sovAppClient(uint64(m.ServicePort))
-	}
-	if m.CloudletLocation != nil {
-		l = m.CloudletLocation.Size()
-		n += 1 + l + sovAppClient(uint64(l))
-	}
 	if m.Status != 0 {
 		n += 1 + sovAppClient(uint64(m.Status))
 	}
 	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.TokenServerURI)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *FindCloudletRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.CarrierName)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.GpsLocation != nil {
+		l = m.GpsLocation.Size()
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *FindCloudletReply) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		n += 1 + sovAppClient(uint64(m.Status))
+	}
+	l = len(m.FQDN)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -2063,10 +2198,39 @@ func (m *Match_Engine_Reply) Size() (n int) {
 			n += 1 + l + sovAppClient(uint64(l))
 		}
 	}
+	if m.CloudletLocation != nil {
+		l = m.CloudletLocation.Size()
+		n += 1 + l + sovAppClient(uint64(l))
+	}
 	return n
 }
 
-func (m *Match_Engine_Loc_Verify) Size() (n int) {
+func (m *VerifyLocationRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.CarrierName)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	if m.GpsLocation != nil {
+		l = m.GpsLocation.Size()
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.VerifyLocToken)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *VerifyLocationReply) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
@@ -2084,7 +2248,24 @@ func (m *Match_Engine_Loc_Verify) Size() (n int) {
 	return n
 }
 
-func (m *Match_Engine_Loc) Size() (n int) {
+func (m *GetLocationRequest) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	l = len(m.SessionCookie)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	l = len(m.CarrierName)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *GetLocationReply) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
@@ -2104,35 +2285,25 @@ func (m *Match_Engine_Loc) Size() (n int) {
 		l = m.NetworkLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.SessionCookie)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
 	return n
 }
 
-func (m *Match_Engine_Status) Size() (n int) {
+func (m *AppInstListRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
 		n += 1 + sovAppClient(uint64(m.Ver))
 	}
-	if m.Status != 0 {
-		n += 1 + sovAppClient(uint64(m.Status))
-	}
-	if m.ErrorCode != 0 {
-		n += 1 + sovAppClient(uint64(m.ErrorCode))
-	}
 	l = len(m.SessionCookie)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.GroupCookie)
+	l = len(m.CarrierName)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.TokenServerURI)
-	if l > 0 {
+	if m.GpsLocation != nil {
+		l = m.GpsLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	return n
@@ -2149,7 +2320,7 @@ func (m *Appinstance) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.Uri)
+	l = len(m.FQDN)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -2183,7 +2354,7 @@ func (m *CloudletLocation) Size() (n int) {
 	return n
 }
 
-func (m *Match_Engine_AppInst_List) Size() (n int) {
+func (m *AppInstListReply) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
@@ -2201,48 +2372,42 @@ func (m *Match_Engine_AppInst_List) Size() (n int) {
 	return n
 }
 
-func (m *DynamicLocGroupAdd) Size() (n int) {
+func (m *DynamicLocGroupRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.Ver != 0 {
 		n += 1 + sovAppClient(uint64(m.Ver))
 	}
-	if m.IdType != 0 {
-		n += 1 + sovAppClient(uint64(m.IdType))
-	}
-	l = len(m.Id)
+	l = len(m.SessionCookie)
 	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	l = len(m.Uuid)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.CarrierID != 0 {
-		n += 1 + sovAppClient(uint64(m.CarrierID))
-	}
-	l = len(m.CarrierName)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
-	if m.Tower != 0 {
-		n += 1 + sovAppClient(uint64(m.Tower))
-	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	if m.LgId != 0 {
 		n += 1 + sovAppClient(uint64(m.LgId))
 	}
-	l = len(m.SessionCookie)
-	if l > 0 {
-		n += 1 + l + sovAppClient(uint64(l))
-	}
 	if m.CommType != 0 {
 		n += 1 + sovAppClient(uint64(m.CommType))
 	}
 	l = len(m.UserData)
+	if l > 0 {
+		n += 1 + l + sovAppClient(uint64(l))
+	}
+	return n
+}
+
+func (m *DynamicLocGroupReply) Size() (n int) {
+	var l int
+	_ = l
+	if m.Ver != 0 {
+		n += 1 + sovAppClient(uint64(m.Ver))
+	}
+	if m.Status != 0 {
+		n += 1 + sovAppClient(uint64(m.Status))
+	}
+	if m.ErrorCode != 0 {
+		n += 1 + sovAppClient(uint64(m.ErrorCode))
+	}
+	l = len(m.GroupCookie)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -2262,7 +2427,7 @@ func sovAppClient(x uint64) (n int) {
 func sozAppClient(x uint64) (n int) {
 	return sovAppClient(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
+func (m *RegisterClientRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2285,10 +2450,166 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_Request: wiretype end group for non-group")
+			return fmt.Errorf("proto: RegisterClientRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_Request: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: RegisterClientRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DevName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DevName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AppVers", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AppVers = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *RegisterClientReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: RegisterClientReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: RegisterClientReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2312,9 +2633,9 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IdType", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
-			m.IdType = 0
+			m.Status = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2324,14 +2645,14 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.IdType |= (IDTypes(b) & 0x7F) << shift
+				m.Status |= (ReplyStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2356,11 +2677,11 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Id = string(dAtA[iNdEx:postIndex])
+			m.SessionCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uuid", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenServerURI", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2385,13 +2706,63 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Uuid = string(dAtA[iNdEx:postIndex])
+			m.TokenServerURI = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CarrierID", wireType)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
 			}
-			m.CarrierID = 0
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FindCloudletRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FindCloudletRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FindCloudletRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2401,12 +2772,41 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CarrierID |= (uint64(b) & 0x7F) << shift
+				m.Ver |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 6:
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionCookie = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
 			}
@@ -2435,26 +2835,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			}
 			m.CarrierName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tower", wireType)
-			}
-			m.Tower = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Tower |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
 			}
@@ -2487,11 +2868,61 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 9:
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FindCloudletReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FindCloudletReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FindCloudletReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
 			}
-			m.AppId = 0
+			m.Ver = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2501,16 +2932,16 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.AppId |= (uint64(b) & 0x7F) << shift
+				m.Ver |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-		case 10:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Protocol", wireType)
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
 			}
-			var byteLen int
+			m.Status = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2520,57 +2951,14 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				m.Status |= (FindCloudletReply_FindStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Protocol = append(m.Protocol[:0], dAtA[iNdEx:postIndex]...)
-			if m.Protocol == nil {
-				m.Protocol = []byte{}
-			}
-			iNdEx = postIndex
-		case 11:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ServerPort", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ServerPort = append(m.ServerPort[:0], dAtA[iNdEx:postIndex]...)
-			if m.ServerPort == nil {
-				m.ServerPort = []byte{}
-			}
-			iNdEx = postIndex
-		case 12:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DevName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FQDN", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2595,13 +2983,13 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.DevName = string(dAtA[iNdEx:postIndex])
+			m.FQDN = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 13:
+		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppName", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2611,26 +2999,28 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthAppClient
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AppName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 14:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AppVers", wireType)
+			m.Ports = append(m.Ports, &AppPort{})
+			if err := m.Ports[len(m.Ports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
 			}
-			var stringLen uint64
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletLocation", wireType)
+			}
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -2640,22 +3030,95 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthAppClient
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.AppVers = string(dAtA[iNdEx:postIndex])
+			if m.CloudletLocation == nil {
+				m.CloudletLocation = &Loc{}
+			}
+			if err := m.CloudletLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
-		case 15:
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *VerifyLocationRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: VerifyLocationRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: VerifyLocationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
 			}
@@ -2684,7 +3147,69 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 			}
 			m.SessionCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 16:
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CarrierName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.GpsLocation == nil {
+				m.GpsLocation = &Loc{}
+			}
+			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field VerifyLocToken", wireType)
 			}
@@ -2734,7 +3259,7 @@ func (m *Match_Engine_Request) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Match_Engine_Reply) Unmarshal(dAtA []byte) error {
+func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2757,270 +3282,10 @@ func (m *Match_Engine_Reply) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_Reply: wiretype end group for non-group")
+			return fmt.Errorf("proto: VerifyLocationReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_Reply: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
-			}
-			m.Ver = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Ver |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Uri = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ServiceIp", wireType)
-			}
-			var byteLen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if byteLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + byteLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ServiceIp = append(m.ServiceIp[:0], dAtA[iNdEx:postIndex]...)
-			if m.ServiceIp == nil {
-				m.ServiceIp = []byte{}
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ServicePort", wireType)
-			}
-			m.ServicePort = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ServicePort |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CloudletLocation", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.CloudletLocation == nil {
-				m.CloudletLocation = &Loc{}
-			}
-			if err := m.CloudletLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (Match_Engine_Reply_Find_Status(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SessionCookie = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ports", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Ports = append(m.Ports, &AppPort{})
-			if err := m.Ports[len(m.Ports)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipAppClient(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *Match_Engine_Loc_Verify) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowAppClient
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_Loc_Verify: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_Loc_Verify: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: VerifyLocationReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3056,7 +3321,7 @@ func (m *Match_Engine_Loc_Verify) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TowerStatus |= (Match_Engine_Loc_Verify_Tower_Status(b) & 0x7F) << shift
+				m.TowerStatus |= (VerifyLocationReply_Tower_Status(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3075,7 +3340,7 @@ func (m *Match_Engine_Loc_Verify) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GpsLocationStatus |= (Match_Engine_Loc_Verify_GPS_Location_Status(b) & 0x7F) << shift
+				m.GpsLocationStatus |= (VerifyLocationReply_GPS_Location_Status(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3112,7 +3377,7 @@ func (m *Match_Engine_Loc_Verify) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
+func (m *GetLocationRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3135,10 +3400,137 @@ func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_Loc: wiretype end group for non-group")
+			return fmt.Errorf("proto: GetLocationRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_Loc: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: GetLocationRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SessionCookie = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CarrierName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetLocationReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetLocationReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetLocationReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3174,7 +3566,7 @@ func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (Match_Engine_Loc_Loc_Status(b) & 0x7F) << shift
+				m.Status |= (GetLocationReply_Loc_Status(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3260,35 +3652,6 @@ func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.SessionCookie = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppClient(dAtA[iNdEx:])
@@ -3310,7 +3673,7 @@ func (m *Match_Engine_Loc) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
+func (m *AppInstListRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3333,10 +3696,10 @@ func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_Status: wiretype end group for non-group")
+			return fmt.Errorf("proto: AppInstListRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_Status: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AppInstListRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3359,44 +3722,6 @@ func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
-			}
-			m.Status = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Status |= (Match_Engine_Status_ME_Status(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ErrorCode", wireType)
-			}
-			m.ErrorCode = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.ErrorCode |= (uint32(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
 			}
@@ -3425,9 +3750,9 @@ func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
 			}
 			m.SessionCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GroupCookie", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3452,13 +3777,13 @@ func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.GroupCookie = string(dAtA[iNdEx:postIndex])
+			m.CarrierName = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenServerURI", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -3468,20 +3793,24 @@ func (m *Match_Engine_Status) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthAppClient
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenServerURI = string(dAtA[iNdEx:postIndex])
+			if m.GpsLocation == nil {
+				m.GpsLocation = &Loc{}
+			}
+			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3593,7 +3922,7 @@ func (m *Appinstance) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uri", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field FQDN", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3618,7 +3947,7 @@ func (m *Appinstance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Uri = string(dAtA[iNdEx:postIndex])
+			m.FQDN = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3824,7 +4153,7 @@ func (m *CloudletLocation) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *Match_Engine_AppInst_List) Unmarshal(dAtA []byte) error {
+func (m *AppInstListReply) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3847,10 +4176,10 @@ func (m *Match_Engine_AppInst_List) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Match_Engine_AppInst_List: wiretype end group for non-group")
+			return fmt.Errorf("proto: AppInstListReply: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Match_Engine_AppInst_List: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AppInstListReply: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3886,7 +4215,7 @@ func (m *Match_Engine_AppInst_List) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (Match_Engine_AppInst_List_AI_Status(b) & 0x7F) << shift
+				m.Status |= (AppInstListReply_AI_Status(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3943,7 +4272,7 @@ func (m *Match_Engine_AppInst_List) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
+func (m *DynamicLocGroupRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -3966,10 +4295,10 @@ func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: DynamicLocGroupAdd: wiretype end group for non-group")
+			return fmt.Errorf("proto: DynamicLocGroupRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: DynamicLocGroupAdd: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: DynamicLocGroupRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -3992,202 +4321,6 @@ func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
 				}
 			}
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field IdType", wireType)
-			}
-			m.IdType = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.IdType |= (IDTypes(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Id = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Uuid", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Uuid = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CarrierID", wireType)
-			}
-			m.CarrierID = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.CarrierID |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CarrierName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CarrierName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Tower", wireType)
-			}
-			m.Tower = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.Tower |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthAppClient
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.GpsLocation == nil {
-				m.GpsLocation = &Loc{}
-			}
-			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LgId", wireType)
-			}
-			m.LgId = 0
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowAppClient
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				m.LgId |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-		case 10:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SessionCookie", wireType)
 			}
@@ -4216,6 +4349,25 @@ func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
 			}
 			m.SessionCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LgId", wireType)
+			}
+			m.LgId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LgId |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		case 11:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CommType", wireType)
@@ -4230,7 +4382,7 @@ func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.CommType |= (DynamicLocGroupAdd_DlgCommType(b) & 0x7F) << shift
+				m.CommType |= (DynamicLocGroupRequest_DlgCommType(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4263,6 +4415,142 @@ func (m *DynamicLocGroupAdd) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.UserData = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipAppClient(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DynamicLocGroupReply) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowAppClient
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DynamicLocGroupReply: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DynamicLocGroupReply: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Ver", wireType)
+			}
+			m.Ver = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Ver |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= (ReplyStatus(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ErrorCode", wireType)
+			}
+			m.ErrorCode = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ErrorCode |= (uint32(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GroupCookie", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowAppClient
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthAppClient
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.GroupCookie = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -4393,97 +4681,97 @@ var (
 func init() { proto.RegisterFile("app-client.proto", fileDescriptorAppClient) }
 
 var fileDescriptorAppClient = []byte{
-	// 1460 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xec, 0x58, 0xcb, 0x6f, 0xdb, 0x46,
-	0x13, 0x37, 0xf5, 0xb0, 0xad, 0xa1, 0x2c, 0x33, 0xeb, 0x7c, 0xdf, 0xc7, 0x18, 0x89, 0xa1, 0x10,
-	0xf9, 0x0a, 0x23, 0x48, 0x04, 0xd4, 0x41, 0x91, 0xbe, 0xd2, 0x82, 0x11, 0x69, 0x99, 0x8d, 0x44,
-	0x1a, 0x2b, 0x2a, 0x41, 0x7a, 0x21, 0x14, 0x72, 0xa3, 0x12, 0x96, 0x49, 0x86, 0xa4, 0x1c, 0xf8,
-	0xd6, 0x4b, 0x2f, 0x45, 0xaf, 0xfd, 0x6b, 0x7a, 0x6b, 0x2f, 0x39, 0xf6, 0xd8, 0x63, 0x9b, 0x5b,
-	0xff, 0x8b, 0x62, 0x97, 0x0f, 0x53, 0x94, 0xec, 0x5a, 0x3d, 0xf7, 0xb6, 0xf3, 0xd6, 0xcc, 0xfc,
-	0x76, 0x66, 0x29, 0x10, 0xc6, 0x41, 0xf0, 0xd0, 0x9e, 0xba, 0xc4, 0x8b, 0x3b, 0x41, 0xe8, 0xc7,
-	0x3e, 0x12, 0x1d, 0x37, 0x8a, 0x43, 0xf7, 0xd5, 0x2c, 0x26, 0x8e, 0x75, 0x3a, 0x8e, 0xed, 0x6f,
-	0x2c, 0xe2, 0x4d, 0x5c, 0x8f, 0xec, 0x36, 0xa6, 0xbe, 0x9d, 0x28, 0xed, 0x6e, 0x8f, 0x83, 0xc0,
-	0xf6, 0x4f, 0x4f, 0x7d, 0x2f, 0x61, 0x48, 0x3f, 0xd4, 0xe0, 0xe6, 0x80, 0x29, 0xab, 0x4c, 0xd9,
-	0xc2, 0xe4, 0xcd, 0x8c, 0x44, 0x31, 0x12, 0xa0, 0x7a, 0x46, 0x42, 0x91, 0x6b, 0x73, 0xfb, 0x5b,
-	0x98, 0x1e, 0xd1, 0x27, 0xb0, 0xae, 0x39, 0xe6, 0x79, 0x40, 0xc4, 0x4a, 0x9b, 0xdb, 0x6f, 0x1d,
-	0xdc, 0xed, 0x5c, 0x16, 0xb1, 0xa3, 0x29, 0x54, 0x2f, 0xc2, 0xa9, 0x01, 0x6a, 0x41, 0x45, 0x73,
-	0xc4, 0x6a, 0x9b, 0xdb, 0x6f, 0xe0, 0x8a, 0xe6, 0x20, 0x04, 0xb5, 0xd1, 0xcc, 0x75, 0xc4, 0x1a,
-	0xe3, 0xb0, 0x33, 0xba, 0x0d, 0x8d, 0xee, 0x38, 0x0c, 0x5d, 0x12, 0x6a, 0x8a, 0x58, 0x6f, 0x73,
-	0xfb, 0x35, 0x7c, 0xc1, 0x40, 0x6d, 0xe0, 0x53, 0x42, 0x1f, 0x9f, 0x12, 0x71, 0x9d, 0x19, 0x16,
-	0x59, 0xe8, 0x26, 0xd4, 0x4d, 0xff, 0x2d, 0x09, 0xc5, 0x0d, 0x66, 0x9b, 0x10, 0xe8, 0x4b, 0xe0,
-	0x7b, 0x41, 0xd4, 0xf7, 0xed, 0x71, 0xec, 0xfa, 0x9e, 0xb8, 0xd9, 0xe6, 0xf6, 0xf9, 0x83, 0x3b,
-	0x97, 0xff, 0xf2, 0xbe, 0x6f, 0xe3, 0xa2, 0x05, 0x75, 0x2b, 0x07, 0x81, 0xe6, 0x88, 0x8d, 0xc4,
-	0x2d, 0x23, 0xd0, 0x2e, 0x6c, 0x1e, 0xd3, 0xfa, 0xd9, 0xfe, 0x54, 0x84, 0x36, 0xb7, 0xdf, 0xc4,
-	0x39, 0x8d, 0xf6, 0x00, 0x86, 0x24, 0x3c, 0x23, 0xe1, 0xb1, 0x1f, 0xc6, 0x22, 0xcf, 0xa4, 0x05,
-	0x0e, 0x12, 0x61, 0x43, 0x21, 0x67, 0x2c, 0x8d, 0x26, 0x4b, 0x23, 0x23, 0xa9, 0x44, 0x0e, 0x02,
-	0x26, 0xd9, 0x4a, 0x24, 0x29, 0x99, 0x4a, 0x9e, 0x93, 0x30, 0x12, 0x5b, 0xb9, 0x84, 0x92, 0xe8,
-	0x1e, 0x6c, 0x0d, 0x49, 0x14, 0xb9, 0xbe, 0xd7, 0xf5, 0xfd, 0x13, 0x97, 0x88, 0xdb, 0x4c, 0x3e,
-	0xcf, 0x44, 0x1f, 0x40, 0xeb, 0x39, 0x09, 0xdd, 0xd7, 0xe7, 0x7d, 0xdf, 0x36, 0xfd, 0x13, 0xe2,
-	0x89, 0x02, 0x53, 0x2b, 0x71, 0xa5, 0x9f, 0xaa, 0x80, 0x4a, 0x70, 0x08, 0xa6, 0xe7, 0x4b, 0xc0,
-	0x20, 0x40, 0x75, 0x16, 0xba, 0x0c, 0x09, 0x0d, 0x4c, 0x8f, 0xe8, 0x0e, 0x40, 0x44, 0xc2, 0x33,
-	0xd7, 0x26, 0x96, 0x1b, 0xb0, 0x5e, 0x37, 0x71, 0x23, 0xe5, 0x68, 0x01, 0xba, 0x0b, 0xcd, 0x4c,
-	0x1c, 0xd0, 0xba, 0xd4, 0x98, 0x2f, 0x3e, 0xe5, 0xb1, 0xc2, 0x7c, 0x05, 0x37, 0xec, 0xa9, 0x3f,
-	0x73, 0xa6, 0x24, 0xb6, 0xa6, 0x59, 0xc7, 0xea, 0xd7, 0xe9, 0x98, 0x90, 0xd9, 0xe5, 0x6d, 0x3b,
-	0x86, 0xf5, 0x61, 0x3c, 0x8e, 0x67, 0x11, 0x83, 0x4a, 0xeb, 0xe0, 0xe3, 0xcb, 0x1d, 0x2c, 0xe6,
-	0xdb, 0x39, 0x74, 0x3d, 0xc7, 0x4a, 0xec, 0x71, 0xea, 0x67, 0xb1, 0xd0, 0x1b, 0xcb, 0x0a, 0xfd,
-	0x18, 0xea, 0x34, 0xbd, 0x48, 0xdc, 0x6c, 0x57, 0xf7, 0xf9, 0xab, 0xee, 0x88, 0x1c, 0x04, 0x34,
-	0x6b, 0x9c, 0xe8, 0x4b, 0x4f, 0x81, 0x2f, 0x44, 0x45, 0x02, 0x34, 0x0f, 0x35, 0x5d, 0xb1, 0x46,
-	0xfa, 0x33, 0xdd, 0x78, 0xa1, 0x0b, 0x6b, 0xa8, 0x05, 0xc0, 0x38, 0x87, 0xc6, 0x48, 0x57, 0x04,
-	0x0e, 0xdd, 0x80, 0x2d, 0x46, 0xeb, 0x86, 0x99, 0xb0, 0x2a, 0xd2, 0x8f, 0x75, 0xf8, 0xdf, 0x5c,
-	0x36, 0x7d, 0xdf, 0xb6, 0x92, 0x0e, 0x2f, 0x69, 0xe1, 0x18, 0x9a, 0x31, 0xbd, 0x23, 0x56, 0x94,
-	0x14, 0x2a, 0xb9, 0xd5, 0x5f, 0x5c, 0xb3, 0x50, 0x17, 0xae, 0x3b, 0xec, 0xa6, 0x65, 0xe5, 0xe2,
-	0x99, 0xcf, 0x34, 0x8b, 0x19, 0xec, 0x4c, 0x82, 0x28, 0x6f, 0x66, 0x16, 0xa9, 0xca, 0x22, 0xa9,
-	0xab, 0x47, 0xea, 0x1d, 0x0f, 0xad, 0xac, 0xc5, 0x59, 0xc0, 0x1b, 0x93, 0x8b, 0xdb, 0x9a, 0x86,
-	0x7d, 0x0c, 0xe2, 0x9c, 0xa6, 0x6c, 0xdb, 0xb3, 0x70, 0x6c, 0x9f, 0x5b, 0xcf, 0x06, 0x0c, 0x77,
-	0x1c, 0xfe, 0x4f, 0xef, 0x78, 0x98, 0x89, 0x33, 0xe9, 0xb3, 0x81, 0xe4, 0x42, 0xb3, 0x98, 0x0c,
-	0xad, 0xb1, 0x69, 0xbc, 0x50, 0x71, 0xa1, 0x0d, 0x6d, 0xb8, 0xdd, 0x35, 0x74, 0x5d, 0xed, 0x9a,
-	0xaa, 0x62, 0x99, 0x86, 0x35, 0x3c, 0x56, 0xbb, 0xda, 0xa1, 0xc6, 0x88, 0x17, 0x2a, 0x16, 0x38,
-	0x74, 0x0f, 0xda, 0xba, 0x61, 0x5a, 0x57, 0x6a, 0x55, 0xa4, 0x3f, 0x39, 0xd8, 0x59, 0x92, 0x0e,
-	0xda, 0x06, 0xbe, 0x6f, 0x74, 0x0b, 0x01, 0x05, 0x68, 0x52, 0xc6, 0x73, 0x15, 0x33, 0x07, 0x02,
-	0x87, 0xee, 0xc0, 0x2d, 0xca, 0x19, 0x68, 0xc3, 0x81, 0x6c, 0x76, 0x8f, 0xac, 0xa1, 0x3c, 0x50,
-	0xad, 0xae, 0x31, 0xd2, 0x4d, 0xfc, 0x52, 0xa8, 0xa0, 0x3d, 0xd8, 0x9d, 0x13, 0x1b, 0xe6, 0x91,
-	0x8a, 0x73, 0x79, 0x35, 0x33, 0xc7, 0x86, 0x3c, 0xd0, 0xf4, 0x5e, 0x26, 0xb0, 0x98, 0xb2, 0x50,
-	0xa3, 0x09, 0x2e, 0x15, 0xa7, 0xee, 0x84, 0x3a, 0xda, 0x85, 0xff, 0x52, 0x0d, 0x15, 0x63, 0x83,
-	0x56, 0x46, 0x1e, 0x99, 0x47, 0x06, 0xd6, 0xbe, 0x56, 0x15, 0x61, 0x1d, 0xed, 0xc0, 0xf6, 0x85,
-	0x8c, 0x45, 0x16, 0x36, 0xa4, 0xdf, 0x2a, 0x20, 0x94, 0x5b, 0xba, 0x04, 0x90, 0x83, 0xfc, 0xce,
-	0x26, 0x50, 0xfc, 0xe8, 0xfa, 0x00, 0xa1, 0x53, 0xa0, 0x7c, 0x61, 0x4b, 0x2b, 0xa3, 0x7a, 0xc5,
-	0xca, 0xa8, 0x15, 0x57, 0x46, 0x0f, 0xb6, 0x75, 0x12, 0xbf, 0xf5, 0xc3, 0x93, 0xfe, 0x4a, 0x43,
-	0xa8, 0x6c, 0xb5, 0x38, 0x31, 0xd6, 0x97, 0x4c, 0x0c, 0xe9, 0x73, 0x80, 0x8b, 0x1f, 0xbf, 0xd8,
-	0xfe, 0x2d, 0x68, 0x50, 0x46, 0x76, 0xeb, 0x5b, 0x00, 0x94, 0x54, 0x54, 0x9d, 0x62, 0xa1, 0x22,
-	0xfd, 0x5c, 0x81, 0x9d, 0xb9, 0x62, 0xe4, 0xf3, 0xa3, 0x5c, 0x5d, 0xa3, 0x54, 0xdd, 0xc7, 0xd7,
-	0xac, 0x6e, 0x62, 0xd4, 0x19, 0xa8, 0xe5, 0xfa, 0xde, 0x86, 0x86, 0x1a, 0x86, 0x7e, 0xd8, 0xf5,
-	0x9d, 0xa4, 0xba, 0x5b, 0xf8, 0x82, 0xb1, 0x98, 0x7c, 0x6d, 0xd9, 0xb8, 0x6c, 0x03, 0xdf, 0x0b,
-	0xfd, 0x59, 0x90, 0xea, 0xd4, 0x93, 0x1e, 0x15, 0x58, 0x74, 0x73, 0xb1, 0xd5, 0x94, 0x2c, 0xd0,
-	0x11, 0xd6, 0xd2, 0x2a, 0x96, 0xb8, 0xd2, 0xa7, 0xd0, 0xc8, 0x7f, 0x22, 0xbd, 0x33, 0x03, 0xd5,
-	0x1a, 0xe9, 0x8a, 0x7a, 0xa8, 0xe9, 0xaa, 0x92, 0x4c, 0x4f, 0x2a, 0x1e, 0x75, 0xbb, 0xea, 0x70,
-	0x28, 0x70, 0x88, 0x87, 0x8d, 0x81, 0x6a, 0x1d, 0xca, 0x5a, 0x5f, 0xa8, 0x48, 0x2f, 0x81, 0x97,
-	0x83, 0xc0, 0xf5, 0xa2, 0x78, 0xec, 0xd9, 0xd9, 0xb2, 0xf5, 0x28, 0x68, 0xb8, 0x7c, 0xd9, 0x52,
-	0x92, 0xae, 0x76, 0x39, 0x08, 0xce, 0x48, 0x48, 0x53, 0x48, 0x97, 0x5f, 0x81, 0x43, 0xab, 0x3e,
-	0x0a, 0xdd, 0x14, 0x6a, 0xf4, 0x28, 0x7d, 0x5b, 0x01, 0xa1, 0x5b, 0x5e, 0x4e, 0x25, 0x64, 0x72,
-	0x8b, 0xc8, 0x94, 0xa0, 0x99, 0x59, 0x31, 0x95, 0x24, 0xd4, 0x1c, 0xaf, 0xfc, 0xb4, 0xa9, 0xae,
-	0xfc, 0xb4, 0xd9, 0x85, 0x4d, 0xc5, 0x4d, 0x72, 0x4e, 0xc7, 0x62, 0x4e, 0x23, 0x0d, 0x9a, 0x85,
-	0x92, 0x44, 0x62, 0x9d, 0xad, 0xb3, 0xff, 0x5f, 0xb9, 0xce, 0x32, 0x6d, 0x3c, 0x67, 0x2a, 0x7d,
-	0x5f, 0x81, 0x5b, 0x73, 0x88, 0xa2, 0x4f, 0x28, 0x2f, 0x8a, 0xad, 0xbe, 0xbb, 0xf4, 0x9d, 0x39,
-	0x2a, 0x01, 0xf5, 0xc9, 0x35, 0x81, 0x5a, 0x74, 0xdb, 0x91, 0xb5, 0x32, 0x5c, 0x8f, 0xa0, 0x91,
-	0x95, 0x8f, 0x6e, 0x20, 0x9a, 0xce, 0xfd, 0xcb, 0x3d, 0x97, 0x7b, 0x86, 0x2f, 0x8c, 0x29, 0xd4,
-	0x72, 0xf7, 0x14, 0x6a, 0xb2, 0x56, 0x86, 0x1a, 0x15, 0x17, 0xa1, 0x26, 0x6b, 0x19, 0xd4, 0xbe,
-	0xab, 0x01, 0x52, 0xce, 0xbd, 0xf1, 0xa9, 0x6b, 0xf7, 0x7d, 0x9b, 0x01, 0x5d, 0x76, 0x9c, 0x7f,
-	0x5f, 0xdb, 0x29, 0x24, 0x11, 0xd4, 0xfa, 0x93, 0xfc, 0xb1, 0xcd, 0xce, 0x8b, 0x93, 0x04, 0x96,
-	0x4d, 0x12, 0x13, 0x36, 0xbb, 0xfe, 0xe9, 0x29, 0xab, 0x18, 0xff, 0x77, 0x4f, 0xbe, 0xc5, 0x0e,
-	0x74, 0x94, 0xe9, 0x24, 0xb3, 0xc7, 0xb9, 0x27, 0x7a, 0x45, 0x46, 0x11, 0x09, 0x95, 0x71, 0x3c,
-	0x4e, 0x1f, 0xeb, 0x39, 0x2d, 0x7d, 0x06, 0x7c, 0xc1, 0x88, 0x02, 0x41, 0x99, 0x4e, 0x46, 0x9e,
-	0x43, 0x5e, 0xbb, 0x1e, 0x71, 0x92, 0xd1, 0xad, 0x4c, 0x27, 0x43, 0x62, 0xcf, 0x42, 0x92, 0xe0,
-	0x40, 0x99, 0x4e, 0x8c, 0x80, 0x78, 0x42, 0xe5, 0xfe, 0x13, 0xd8, 0x48, 0xdb, 0x46, 0x0d, 0x35,
-	0x65, 0x0e, 0x41, 0x9b, 0x50, 0xd3, 0x06, 0xaa, 0x26, 0x70, 0x08, 0x60, 0x7d, 0x30, 0xd4, 0x86,
-	0x8a, 0x2e, 0x54, 0xe8, 0x59, 0x3b, 0x96, 0x15, 0x05, 0x0b, 0xd5, 0x83, 0x5f, 0xea, 0xa5, 0x8d,
-	0x2a, 0x07, 0x2e, 0xf2, 0xa0, 0x49, 0x9f, 0x90, 0x19, 0x50, 0x51, 0xe7, 0xda, 0x6f, 0x5e, 0xf6,
-	0xc9, 0xb7, 0xfb, 0x60, 0x95, 0x37, 0xb2, 0xb4, 0x86, 0x66, 0x85, 0x8f, 0x8a, 0xa4, 0x7d, 0xab,
-	0x46, 0xfc, 0x70, 0xe5, 0x27, 0xa0, 0xb4, 0x86, 0x4e, 0x80, 0xef, 0x15, 0x86, 0xe9, 0xaa, 0x31,
-	0xef, 0x5f, 0x3f, 0xa6, 0xb4, 0x86, 0xde, 0x40, 0x0b, 0x93, 0x89, 0x1b, 0xc5, 0x24, 0xec, 0xb2,
-	0xaf, 0xed, 0x95, 0xe3, 0x3d, 0x5c, 0x69, 0xcf, 0x4a, 0x6b, 0xc8, 0x87, 0x96, 0xec, 0x38, 0x14,
-	0x66, 0xa6, 0xcf, 0xe0, 0x89, 0x1e, 0xac, 0x82, 0xe4, 0xd5, 0x03, 0xbe, 0x85, 0x56, 0x8f, 0xc4,
-	0xe9, 0xf8, 0x64, 0x43, 0x79, 0xd5, 0x1c, 0x1f, 0xfd, 0x83, 0x11, 0x2d, 0xad, 0x3d, 0x15, 0xde,
-	0xfd, 0xb1, 0xb7, 0xf6, 0xee, 0xfd, 0x1e, 0xf7, 0xeb, 0xfb, 0x3d, 0xee, 0xf7, 0xf7, 0x7b, 0xdc,
-	0xab, 0x75, 0xf6, 0xaf, 0xc4, 0xa3, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xa6, 0xd1, 0xa1, 0x37,
-	0xdf, 0x10, 0x00, 0x00,
+	// 1467 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x5f, 0x6f, 0xdc, 0xc4,
+	0x16, 0xaf, 0x37, 0xff, 0x9a, 0xb3, 0x9b, 0xc4, 0x99, 0x34, 0xbd, 0x7b, 0xf7, 0xb6, 0x51, 0xae,
+	0xd5, 0x5e, 0x55, 0xb9, 0x34, 0x81, 0xf0, 0xa7, 0x52, 0x69, 0x85, 0x8c, 0xed, 0x6c, 0x4c, 0x77,
+	0xbd, 0x61, 0xbc, 0xdb, 0xf2, 0x47, 0xc8, 0x72, 0xbd, 0x53, 0x63, 0x75, 0x63, 0xbb, 0xb6, 0x37,
+	0x55, 0xde, 0x10, 0x3c, 0xa0, 0x3e, 0x21, 0xc4, 0x03, 0x1f, 0x81, 0x47, 0x10, 0xe2, 0x43, 0xf4,
+	0x11, 0xc4, 0x1b, 0x4f, 0x50, 0x21, 0x24, 0xbe, 0x01, 0x8f, 0x68, 0xc6, 0xf6, 0xc6, 0xf6, 0x7a,
+	0x57, 0x89, 0x50, 0x25, 0x78, 0xdb, 0x39, 0x67, 0xe6, 0x9c, 0xdf, 0xf9, 0xcd, 0x6f, 0x66, 0x8e,
+	0x17, 0x78, 0xd3, 0xf7, 0xaf, 0x5b, 0x03, 0x87, 0xb8, 0xd1, 0xb6, 0x1f, 0x78, 0x91, 0x87, 0xea,
+	0x7d, 0x27, 0x8c, 0x02, 0xe7, 0xfe, 0x30, 0x22, 0x7d, 0xe3, 0xd0, 0x8c, 0xac, 0x0f, 0x0d, 0xe2,
+	0xda, 0x8e, 0x4b, 0x1a, 0x97, 0x6c, 0xcf, 0xb3, 0x07, 0x64, 0xc7, 0xf4, 0x9d, 0x1d, 0xd3, 0x75,
+	0xbd, 0xc8, 0x8c, 0x1c, 0xcf, 0x0d, 0xe3, 0x75, 0x8d, 0xc5, 0x81, 0x67, 0x25, 0x3f, 0x57, 0x4c,
+	0xdf, 0xb7, 0xbc, 0xc3, 0x43, 0xcf, 0x8d, 0x0d, 0xc2, 0x63, 0x58, 0xc7, 0xc4, 0x76, 0xc2, 0x88,
+	0x04, 0x12, 0xcb, 0x85, 0xc9, 0xa3, 0x21, 0x09, 0x23, 0xc4, 0xc3, 0xcc, 0x11, 0x09, 0xea, 0xdc,
+	0x26, 0x77, 0x6d, 0x09, 0xd3, 0x9f, 0xa8, 0x0e, 0x0b, 0x32, 0x39, 0xd2, 0xcc, 0x43, 0x52, 0xaf,
+	0x6c, 0x72, 0xd7, 0x16, 0x71, 0x3a, 0xa4, 0x1e, 0xd1, 0xf7, 0x99, 0x67, 0x26, 0xf6, 0x24, 0xc3,
+	0xc4, 0x73, 0x97, 0x04, 0x61, 0x7d, 0x76, 0xe4, 0xa1, 0x43, 0xe1, 0x3b, 0x0e, 0xd6, 0x8a, 0x99,
+	0xfd, 0xc1, 0x71, 0x49, 0xde, 0xdb, 0x30, 0x1f, 0x46, 0x66, 0x34, 0x0c, 0x59, 0xda, 0xe5, 0xdd,
+	0xab, 0xdb, 0x93, 0x78, 0xd8, 0x66, 0x21, 0x74, 0x36, 0x19, 0x27, 0x8b, 0xd0, 0x15, 0x58, 0xd2,
+	0x49, 0x18, 0x3a, 0x9e, 0x2b, 0x79, 0xde, 0x43, 0x27, 0x85, 0x98, 0x37, 0xa2, 0xff, 0xc1, 0x72,
+	0xd7, 0x7b, 0x48, 0x5c, 0x9d, 0x04, 0x47, 0x24, 0xe8, 0x61, 0x35, 0xc1, 0x5b, 0xb0, 0x0a, 0xdf,
+	0x70, 0xb0, 0xb6, 0xe7, 0xb8, 0x7d, 0x69, 0xe0, 0x0d, 0xfb, 0x03, 0x32, 0x85, 0xae, 0xb1, 0xbc,
+	0x95, 0xb2, 0xbc, 0x9b, 0x50, 0x95, 0xcc, 0x20, 0x70, 0x48, 0x90, 0xa1, 0x2f, 0x6b, 0x42, 0x6f,
+	0x40, 0xb5, 0xe9, 0x87, 0x2d, 0xcf, 0x62, 0x7b, 0xca, 0x60, 0x55, 0x77, 0x2f, 0x4f, 0xe6, 0xa0,
+	0xe5, 0x59, 0x38, 0xbb, 0x42, 0xf8, 0xa1, 0x02, 0xab, 0x79, 0xc8, 0xe5, 0x3c, 0x6b, 0x05, 0x9e,
+	0x5f, 0x9b, 0x9c, 0x63, 0x2c, 0x1c, 0xb3, 0x14, 0x88, 0x47, 0x30, 0xbb, 0xf7, 0xb6, 0xac, 0x25,
+	0x35, 0xb1, 0xdf, 0xe8, 0x06, 0xcc, 0xf9, 0x5e, 0x10, 0x51, 0x35, 0xcc, 0x5c, 0xab, 0xee, 0xfe,
+	0x77, 0x72, 0x0a, 0xd1, 0xf7, 0x0f, 0xbc, 0x20, 0xc2, 0xf1, 0x7c, 0xf4, 0x16, 0xac, 0x5a, 0x49,
+	0x42, 0x63, 0x90, 0x72, 0x31, 0x77, 0x1a, 0x2e, 0xf8, 0x74, 0xdd, 0x88, 0x10, 0x11, 0xe0, 0x04,
+	0x2e, 0xe2, 0xa1, 0xb6, 0xa7, 0x6a, 0xb2, 0xd1, 0xd3, 0xee, 0x68, 0x9d, 0x7b, 0x1a, 0x7f, 0x0e,
+	0x2d, 0x03, 0x30, 0xcb, 0x5e, 0xa7, 0xa7, 0xc9, 0x3c, 0x87, 0x56, 0x61, 0x89, 0x8d, 0xb5, 0x4e,
+	0x37, 0x36, 0x55, 0x84, 0x9f, 0x38, 0x58, 0xbf, 0x4b, 0x02, 0xe7, 0xc1, 0x71, 0x1a, 0xf5, 0xef,
+	0x2f, 0x04, 0xaa, 0xf1, 0x11, 0x66, 0x26, 0x6b, 0x46, 0xe0, 0x22, 0x2e, 0x58, 0x85, 0x27, 0x73,
+	0xb0, 0x56, 0x2c, 0xae, 0x5c, 0x32, 0x1f, 0x40, 0x2d, 0xf2, 0x1e, 0x93, 0xc0, 0xc8, 0x09, 0xe7,
+	0xe6, 0x64, 0x4c, 0x25, 0x61, 0xb7, 0xbb, 0x2c, 0x42, 0x22, 0x9e, 0x2a, 0x8b, 0x97, 0x6c, 0xcd,
+	0x23, 0x58, 0xb3, 0xfd, 0x70, 0xb4, 0xdf, 0x69, 0x96, 0x19, 0x96, 0x45, 0x3c, 0x5b, 0x96, 0xe6,
+	0x81, 0x6e, 0xa4, 0x96, 0x34, 0xd9, 0xaa, 0x7d, 0xc2, 0x4e, 0x92, 0xf2, 0x06, 0xd4, 0x73, 0x33,
+	0x45, 0xcb, 0x1a, 0x06, 0xa6, 0x75, 0x6c, 0xdc, 0x69, 0x33, 0xc6, 0x39, 0xbc, 0xde, 0x3c, 0xd0,
+	0x53, 0x77, 0xea, 0xbd, 0xd3, 0x16, 0x1c, 0xa8, 0x65, 0x0b, 0xa1, 0xa2, 0xe9, 0x76, 0xee, 0x29,
+	0x38, 0xa3, 0xab, 0x4d, 0xb8, 0x24, 0x75, 0x34, 0x4d, 0x91, 0xba, 0x8a, 0x6c, 0x74, 0x3b, 0x86,
+	0x7e, 0xa0, 0x48, 0xea, 0x9e, 0xca, 0x06, 0xf7, 0x14, 0xcc, 0x73, 0xe8, 0x0a, 0x6c, 0x6a, 0x9d,
+	0xae, 0x31, 0x75, 0x56, 0x45, 0xf8, 0x9d, 0x83, 0xb5, 0x92, 0x72, 0xd0, 0x0a, 0x54, 0x5b, 0x1d,
+	0x29, 0x93, 0x90, 0x87, 0x1a, 0x35, 0xdc, 0x55, 0x30, 0x0b, 0xc0, 0x73, 0xe8, 0x32, 0xfc, 0x9b,
+	0x5a, 0xda, 0xaa, 0xde, 0x16, 0xbb, 0xd2, 0xbe, 0xa1, 0x8b, 0x6d, 0xc5, 0x90, 0x3a, 0x3d, 0xad,
+	0x8b, 0xdf, 0xe5, 0x2b, 0x68, 0x03, 0x1a, 0x39, 0x77, 0xa7, 0xbb, 0xaf, 0xe0, 0x91, 0x7f, 0x26,
+	0x5d, 0x8e, 0x3b, 0x62, 0x5b, 0xd5, 0x9a, 0xa9, 0xc3, 0x60, 0x93, 0xf9, 0x59, 0x5a, 0x60, 0xa9,
+	0x3b, 0x09, 0xc7, 0xcf, 0xa1, 0x06, 0x5c, 0xa4, 0x33, 0x14, 0x8c, 0x3b, 0x94, 0x19, 0xb1, 0xd7,
+	0xdd, 0xef, 0x60, 0xf5, 0x3d, 0x45, 0xe6, 0xe7, 0xd1, 0x1a, 0xac, 0x9c, 0xf8, 0x58, 0x66, 0x7e,
+	0x41, 0x70, 0x01, 0x35, 0x4f, 0x8e, 0xee, 0x73, 0x3f, 0x64, 0xc2, 0xb7, 0x15, 0xe0, 0x73, 0x09,
+	0xcb, 0x85, 0xdf, 0x86, 0x79, 0x3d, 0x2b, 0xf9, 0x57, 0x27, 0x8b, 0xb1, 0x18, 0x8d, 0x9e, 0xcb,
+	0x54, 0x80, 0x49, 0x90, 0x53, 0x1c, 0xfe, 0x0b, 0x30, 0xc7, 0xe4, 0xc5, 0x44, 0x38, 0x8b, 0xe3,
+	0x01, 0x6a, 0xc2, 0x8a, 0x46, 0xa2, 0xc7, 0x5e, 0xf0, 0xb0, 0x75, 0xa6, 0x3b, 0xb1, 0xb8, 0x4a,
+	0xb8, 0x05, 0x70, 0x02, 0x6b, 0x5c, 0x48, 0x4b, 0xb0, 0x48, 0x0d, 0xe9, 0x85, 0xb8, 0x0c, 0x40,
+	0x87, 0xb2, 0xa2, 0x51, 0x55, 0x55, 0x84, 0xaf, 0x39, 0x40, 0xa2, 0xef, 0xab, 0x6e, 0x18, 0xb5,
+	0x9c, 0xf0, 0x9f, 0xf0, 0x26, 0xbe, 0x0f, 0x55, 0xd1, 0xf7, 0x1d, 0x37, 0x8c, 0x4c, 0xd7, 0x4a,
+	0xdb, 0x14, 0x97, 0x66, 0xe3, 0x46, 0x6d, 0x0a, 0x1d, 0xa2, 0x0d, 0x00, 0xd1, 0xf7, 0x8f, 0x48,
+	0x40, 0xf1, 0x25, 0x70, 0x33, 0x96, 0xb2, 0x47, 0x4e, 0xf8, 0xa8, 0x02, 0xbc, 0x54, 0x78, 0x74,
+	0x8a, 0x45, 0x71, 0xe3, 0x45, 0x09, 0x50, 0x4b, 0x57, 0x65, 0x9a, 0xac, 0x9c, 0xad, 0x58, 0xf8,
+	0xcc, 0x99, 0xdf, 0x80, 0x06, 0x9c, 0x97, 0x9d, 0xb8, 0xea, 0xe4, 0x3e, 0x1b, 0x8d, 0x91, 0x0a,
+	0xb5, 0x0c, 0x29, 0x61, 0x7d, 0x8e, 0xbd, 0xd1, 0x57, 0xa7, 0xbe, 0xd1, 0xe9, 0x6c, 0x9c, 0x5b,
+	0x2a, 0xfc, 0xc1, 0x01, 0x9f, 0x53, 0x44, 0xf9, 0x31, 0x6a, 0x15, 0x8e, 0xd1, 0x2b, 0x53, 0x73,
+	0xe5, 0xa2, 0x6d, 0x8b, 0x6a, 0xf1, 0x14, 0xed, 0xc3, 0x62, 0x4a, 0x16, 0x7d, 0x24, 0x28, 0xf8,
+	0xad, 0xc9, 0x01, 0x8b, 0x3b, 0x84, 0x4f, 0x16, 0x0b, 0x37, 0x61, 0x71, 0x14, 0x9e, 0xde, 0xa2,
+	0xa2, 0x6a, 0xf4, 0x34, 0x59, 0xd9, 0x53, 0x35, 0x45, 0x8e, 0x1b, 0x04, 0xea, 0xee, 0x49, 0x92,
+	0xa2, 0xeb, 0x3c, 0x87, 0xaa, 0xb0, 0x20, 0xaa, 0xc6, 0x9e, 0xa8, 0xb6, 0xf8, 0x8a, 0xf0, 0x65,
+	0x05, 0x2e, 0xca, 0xc7, 0xae, 0x79, 0xe8, 0x58, 0x2d, 0xcf, 0x6a, 0x06, 0xde, 0xd0, 0xff, 0xab,
+	0x07, 0x02, 0xc1, 0x6c, 0xcb, 0x56, 0xfb, 0x6c, 0xbb, 0x67, 0x31, 0xfb, 0x8d, 0xde, 0x81, 0xf3,
+	0x92, 0x77, 0x78, 0xd8, 0x3d, 0xf6, 0x49, 0xbd, 0xca, 0xc8, 0xbb, 0x35, 0xb9, 0xd6, 0x72, 0x3c,
+	0xdb, 0xf2, 0xc0, 0x4e, 0x63, 0xe0, 0x51, 0x34, 0x2a, 0x91, 0x5e, 0x48, 0x02, 0xd9, 0x8c, 0xcc,
+	0x7a, 0x8d, 0xc1, 0x19, 0x8d, 0x85, 0xd7, 0xa1, 0x9a, 0x59, 0x44, 0xa9, 0x91, 0x07, 0x76, 0xcf,
+	0xed, 0x93, 0x07, 0x8e, 0x4b, 0xfa, 0xf1, 0x4d, 0x21, 0x0f, 0x6c, 0x9d, 0x58, 0xc3, 0x80, 0xc4,
+	0xcc, 0xc8, 0x03, 0xbb, 0xe3, 0x13, 0x97, 0xaf, 0x08, 0x5f, 0x71, 0x70, 0x61, 0x0c, 0xc9, 0x73,
+	0xe9, 0xf9, 0x2f, 0xc1, 0xa2, 0x12, 0x04, 0x5e, 0x20, 0x79, 0xfd, 0xf8, 0xfe, 0x58, 0xc2, 0x27,
+	0x06, 0x7a, 0x14, 0x59, 0xf2, 0x84, 0xf2, 0xb8, 0x09, 0xca, 0x9a, 0xb6, 0x6e, 0xc3, 0x82, 0x2a,
+	0xd3, 0x0a, 0xd9, 0xee, 0xab, 0x72, 0x6e, 0xf7, 0xcf, 0xc3, 0xac, 0xda, 0x56, 0x54, 0x9e, 0x43,
+	0x00, 0xf3, 0x6d, 0x5d, 0xd5, 0x65, 0x8d, 0xaf, 0xd0, 0xdf, 0xea, 0x81, 0x28, 0xcb, 0x98, 0x9f,
+	0xd9, 0xba, 0x05, 0xd5, 0x0c, 0x2a, 0x1a, 0x02, 0xeb, 0x45, 0x01, 0x61, 0x3d, 0x2f, 0x20, 0xac,
+	0x27, 0x02, 0xda, 0xfd, 0x6d, 0x1e, 0xf8, 0x36, 0xab, 0x50, 0x61, 0x15, 0x1a, 0xa2, 0xef, 0xa0,
+	0xcf, 0x38, 0x58, 0xce, 0x7f, 0x2e, 0xa1, 0x9d, 0x69, 0x9c, 0x94, 0x7c, 0xd2, 0x35, 0xae, 0x9f,
+	0x7e, 0x81, 0x3f, 0x38, 0x16, 0x2e, 0x7f, 0xfc, 0xe3, 0xaf, 0x5f, 0x54, 0xfe, 0x25, 0xa0, 0x9d,
+	0xa3, 0x97, 0x76, 0x82, 0x64, 0x42, 0xfc, 0x41, 0x7a, 0x93, 0xdb, 0x42, 0x9f, 0x72, 0x50, 0xcb,
+	0x7e, 0x07, 0xa0, 0xeb, 0xa7, 0xfd, 0x5e, 0x88, 0xd1, 0xfc, 0xff, 0x0c, 0x9f, 0x17, 0xc2, 0x7f,
+	0x18, 0x96, 0x75, 0x81, 0xa7, 0x58, 0x1e, 0x38, 0x6e, 0x3f, 0x6d, 0xea, 0x29, 0x12, 0xca, 0x4d,
+	0xbe, 0xe5, 0x9b, 0xc6, 0x4d, 0x69, 0xdb, 0x3e, 0x8d, 0x9b, 0x92, 0x6e, 0x32, 0xcf, 0xcd, 0x11,
+	0x9b, 0x90, 0x76, 0xa9, 0x14, 0xd1, 0x27, 0x1c, 0x54, 0x33, 0xef, 0x3e, 0x7a, 0xe1, 0x94, 0xed,
+	0x41, 0x8c, 0x65, 0xeb, 0xf4, 0xcd, 0x84, 0xd0, 0x60, 0x40, 0x2e, 0x08, 0x2b, 0x14, 0x88, 0x4d,
+	0xa2, 0x2c, 0x8a, 0xcf, 0x39, 0x58, 0x16, 0xfb, 0x7d, 0x7a, 0x78, 0xbb, 0x1e, 0x93, 0x37, 0x7a,
+	0xf1, 0xac, 0x77, 0x44, 0x63, 0xfb, 0x0c, 0x2b, 0xc6, 0x98, 0x31, 0xfb, 0xfd, 0x61, 0x48, 0x82,
+	0xc8, 0xb3, 0xe9, 0x04, 0x8a, 0xe9, 0x09, 0x07, 0xcb, 0x4d, 0x12, 0x65, 0x6e, 0xf3, 0x69, 0xe4,
+	0x8c, 0x37, 0x15, 0xd3, 0xc8, 0x29, 0x3e, 0x11, 0x79, 0x2c, 0x36, 0x89, 0xcc, 0xf8, 0x89, 0x1a,
+	0x38, 0x21, 0xd5, 0xcd, 0x9b, 0xfc, 0xd3, 0x5f, 0x36, 0xce, 0x3d, 0x7d, 0xb6, 0xc1, 0x7d, 0xff,
+	0x6c, 0x83, 0xfb, 0xf9, 0xd9, 0x06, 0x77, 0x7f, 0x9e, 0xfd, 0x29, 0xf2, 0xf2, 0x9f, 0x01, 0x00,
+	0x00, 0xff, 0xff, 0xb4, 0x53, 0x91, 0x00, 0x7c, 0x11, 0x00, 0x00,
 }

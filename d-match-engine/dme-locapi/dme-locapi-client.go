@@ -47,7 +47,7 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 	b, err := json.Marshal(lrm)
 	if err != nil {
 		log.WarnLog("error in json mashal of request", "err", err)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 
 	body := bytes.NewBufferString(string(b))
@@ -55,7 +55,7 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 
 	if err != nil {
 		log.WarnLog("error in http.NewRequest", "err", err)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	req.Header.Add("Content-Type", "application/json")
 	username := os.Getenv("LOCAPI_USER")
@@ -74,7 +74,7 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 
 	if err != nil {
 		log.WarnLog("Error in POST to TDG Loc service error", "error", err)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	defer resp.Body.Close()
 
@@ -88,18 +88,18 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 	case http.StatusForbidden:
 		fallthrough
 	case http.StatusUnauthorized:
-		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_UNAUTHORIZED", "received code", resp.StatusCode)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_UNAUTHORIZED}
+		log.WarnLog("returning VerifyLocationReply_LOC_ERROR_UNAUTHORIZED", "received code", resp.StatusCode)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_UNAUTHORIZED}
 	default:
-		log.WarnLog("returning Match_Engine_Loc_Verify_LOC_ERROR_OTHER", "received code", resp.StatusCode)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		log.WarnLog("returning VerifyLocationReply_LOC_ERROR_OTHER", "received code", resp.StatusCode)
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 
 	respBytes, resperr := ioutil.ReadAll(resp.Body)
 
 	if resperr != nil {
 		log.WarnLog("Error read response body", "resperr", resperr)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	var lrmResp LocationResponseMessage
 
@@ -107,18 +107,18 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 	err = json.Unmarshal(respBytes, &lrmResp)
 	if err != nil {
 		log.WarnLog("Error unmarshall response", "respBytes", respBytes, "err", err)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 
 	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "match degree:", lrmResp.MatchingDegree)
 	if lrmResp.Error != "" {
 		log.WarnLog("Error received in token response", "err", lrmResp.Error)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	l, err := strconv.ParseInt(lrmResp.MatchingDegree, 10, 32)
 	if err != nil {
 		log.WarnLog("Error in LocationResult", "LocationResult", lrmResp.MatchingDegree, "err", err)
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.Match_Engine_Loc_Verify_LOC_ERROR_OTHER}
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	rc := dmecommon.GetDistanceAndStatusForLocationResult(uint32(l))
 	fmt.Printf("6666 %v %v", l, rc)

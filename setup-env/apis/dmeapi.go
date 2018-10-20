@@ -18,8 +18,18 @@ import (
 )
 
 type dmeApiRequest struct {
-	MatchEngineRequest dmeproto.Match_Engine_Request `yaml:"match-engine-request"`
-	TokenServerPath    string                        `yaml:"token-server-path"`
+	Rcreq           dmeproto.RegisterClientRequest  `yaml:"registerclientrequest"`
+	Fcreq           dmeproto.FindCloudletRequest    `yaml:"findcloudletrequest"`
+	Vlreq           dmeproto.VerifyLocationRequest  `yaml:"verifylocationrequest"`
+	Glreq           dmeproto.GetLocationRequest     `yaml:"getlocationrequest"`
+	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
+	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
+	TokenServerPath string                          `yaml:"token-server-path"`
+}
+
+type registration struct {
+	Req   dmeproto.RegisterClientRequest `yaml:"registerclientrequest"`
+	Reply dmeproto.RegisterClientReply   `yaml:"registerclientreply"`
 }
 
 var apiRequest dmeApiRequest
@@ -34,7 +44,7 @@ func readMERFile(merfile string) {
 	}
 }
 
-func readMatchEngineStatus(filename string, mes *dmeproto.Match_Engine_Status) {
+func readMatchEngineStatus(filename string, mes *registration) {
 	util.ReadYamlFile(filename, &mes, "", false)
 }
 
@@ -43,7 +53,7 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		log.Println("Error: Cannot run DME APIs without API file")
 		return false
 	}
-	log.Printf("RunDmeAPI for api %s\n", api)
+	log.Printf("RunDmeAPI for api %s, %s\n", api, apiFile)
 	apiConnectTimeout := 5 * time.Second
 
 	readMERFile(apiFile)
@@ -64,26 +74,44 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 	var dmereply interface{}
 	var dmeerror error
 
-	var registerStatus dmeproto.Match_Engine_Status
+	sessionCookie := ""
+	var registerStatus registration
 	if api != "register" {
-		//read the results from the last register so we can get the cookie
+		//read the results from the last register so we can get the cookie.
+		//if the current app is different, re-register
 		readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
-		apiRequest.MatchEngineRequest.SessionCookie = registerStatus.SessionCookie
-		log.Printf("Got session cookie from previous register: %s\n", apiRequest.MatchEngineRequest.SessionCookie)
+		if registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
+			registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
+			registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers {
+			log.Printf("Re-registering for api %s\n", api)
+			ok := RunDmeAPI("register", procname, apiFile, outputDir)
+			if !ok {
+				return false
+			}
+			readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
+		}
+		sessionCookie = registerStatus.Reply.SessionCookie
+		log.Printf("Using session cookie: %s\n", sessionCookie)
 	}
 
 	switch api {
 	case "findcloudlet":
-		fc, err := client.FindCloudlet(ctx, &apiRequest.MatchEngineRequest)
+		apiRequest.Fcreq.SessionCookie = sessionCookie
+		fc, err := client.FindCloudlet(ctx, &apiRequest.Fcreq)
 		sort.Slice(fc.Ports, func(i, j int) bool {
 			return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
 		})
 		dmereply = fc
 		dmeerror = err
 	case "register":
-		dmereply, dmeerror = client.RegisterClient(ctx, &apiRequest.MatchEngineRequest)
+		reply := new(dmeproto.RegisterClientReply)
+		reply, dmeerror = client.RegisterClient(ctx, &apiRequest.Rcreq)
+		dmereply = &registration{
+			Req:   apiRequest.Rcreq,
+			Reply: *reply,
+		}
 	case "verifylocation":
-		tokSrvUrl := registerStatus.TokenServerURI
+		tokSrvUrl := registerStatus.Reply.TokenServerURI
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
 
 		if tokSrvUrl == "" {
@@ -106,13 +134,15 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		if token == "" {
 			return false
 		}
-		apiRequest.MatchEngineRequest.VerifyLocToken = token
-		dmereply, dmeerror = client.VerifyLocation(ctx, &apiRequest.MatchEngineRequest)
+		apiRequest.Vlreq.SessionCookie = sessionCookie
+		apiRequest.Vlreq.VerifyLocToken = token
+		dmereply, dmeerror = client.VerifyLocation(ctx, &apiRequest.Vlreq)
 	case "getappinstlist":
 		// unlike the other responses, this is a slice of multiple entries which needs
 		// to be sorted to allow a consistent yaml compare
-		log.Printf("DME REQUEST: %+v\n", apiRequest.MatchEngineRequest)
-		mel, err := client.GetAppInstList(ctx, &apiRequest.MatchEngineRequest)
+		apiRequest.Aireq.SessionCookie = sessionCookie
+		log.Printf("DME REQUEST: %+v\n", apiRequest.Aireq)
+		mel, err := client.GetAppInstList(ctx, &apiRequest.Aireq)
 		if err == nil {
 			sort.Slice((*mel).Cloudlets, func(i, j int) bool {
 				return (*mel).Cloudlets[i].CloudletName < (*mel).Cloudlets[j].CloudletName

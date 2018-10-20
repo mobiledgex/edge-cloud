@@ -1,5 +1,4 @@
-match-engine-request:
-  carriername: tmus
+registerclientrequest:
   devname: AcmeAppCo
   appname: someapplication
   appvers: "1.0"
