@@ -186,7 +186,7 @@ func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
 
 // given the carrier app key, update the reply if we find a cloudlet closer
 // than the max distance.  Return the distance and whether or not response was updated
-func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mreply *dme.Match_Engine_Reply) (float64, bool) {
+func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mreply *dme.FindCloudletReply) (float64, bool) {
 	tbl := carrierAppTbl
 	var c, found *carrierAppInst
 	var d float64
@@ -215,9 +215,8 @@ func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mre
 			updated = true
 			maxDistance = d
 			found = c
-			mreply.Uri = c.uri
-			mreply.ServiceIp = c.ip
-			mreply.Status = dme.Match_Engine_Reply_FIND_FOUND
+			mreply.FQDN = c.uri
+			mreply.Status = dme.FindCloudletReply_FIND_FOUND
 			*mreply.CloudletLocation = c.location
 			mreply.Ports = copyPorts(c)
 		}
@@ -238,15 +237,15 @@ func findClosestForKey(key carrierAppKey, loc *dme.Loc, maxDistance float64, mre
 	return maxDistance, updated
 }
 
-func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply) {
+func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) {
 	var key carrierAppKey
 	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
 
 	key.carrierName = mreq.CarrierName
-	key.appKey.DeveloperKey.Name = mreq.DevName
-	key.appKey.Name = mreq.AppName
-	key.appKey.Version = mreq.AppVers
-	mreply.Status = dme.Match_Engine_Reply_FIND_NOTFOUND
+	key.appKey.DeveloperKey.Name = ckey.DevName
+	key.appKey.Name = ckey.AppName
+	key.appKey.Version = ckey.AppVers
+	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
 
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", key.carrierName, "app", key.appKey.Name, "developer", key.appKey.DeveloperKey.Name, "version", key.appKey.Version)
@@ -255,7 +254,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 	bestDistance, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
 
 	if updated {
-		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "uri", mreply.Uri, "distance", bestDistance)
+		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "FQDN", mreply.FQDN, "distance", bestDistance)
 	}
 
 	if updated && bestDistance > publicCloudPadding {
@@ -265,7 +264,7 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		key.carrierName = cloudcommon.OperatorAzure
 		azDistance, updated := findClosestForKey(key, mreq.GpsLocation, paddedCarrierDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "uri", mreply.Uri, "distance", azDistance)
+			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "FQDN", mreply.FQDN, "distance", azDistance)
 			bestDistance = azDistance
 		}
 
@@ -274,24 +273,24 @@ func findCloudlet(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Reply
 		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
 		gcpDistance, updated := findClosestForKey(key, mreq.GpsLocation, maxGCPDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "uri", mreply.Uri, "distance", gcpDistance)
+			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "FQDN", mreply.FQDN, "distance", gcpDistance)
 			bestDistance = gcpDistance
 		}
 	}
-	if mreply.Status == dme.Match_Engine_Reply_FIND_NOTFOUND {
+	if mreply.Status == dme.FindCloudletReply_FIND_NOTFOUND {
 		key.carrierName = cloudcommon.OperatorDeveloper
 		// default cloudlet is at lat:0, long:0.  Look at any distance distance
 		_, updated := findClosestForKey(key, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
 		if updated {
-			log.DebugLog(log.DebugLevelDmereq, "found default operator cloudlet", "uri", mreply.Uri)
+			log.DebugLog(log.DebugLevelDmereq, "found default operator cloudlet", "FQDN", mreply.FQDN)
 			bestDistance = -1 //not used except in log
 		} else {
 			log.DebugLog(log.DebugLevelDmedb, "no default operator cloudlet for app", "appkey", key.appKey)
 		}
 	}
 
-	if mreply.Status == dme.Match_Engine_Reply_FIND_FOUND {
-		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "uri", mreply.Uri, "distance", bestDistance)
+	if mreply.Status == dme.FindCloudletReply_FIND_FOUND {
+		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_FOUND, overall best cloudlet", "FQDN", mreply.FQDN, "distance", bestDistance)
 	} else {
 		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
 
@@ -307,7 +306,7 @@ func isPublicCarrier(carriername string) bool {
 	return false
 }
 
-func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppInst_List) {
+func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
 	var tbl *carrierApps
 	tbl = carrierAppTbl
 	foundCloudlets := make(map[edgeproto.CloudletKey]*dme.CloudletLocation)
@@ -323,8 +322,8 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 			continue
 		}
 		//if the app name or version was provided, only look for cloudlets for that app
-		if (mreq.AppName != "" && mreq.AppName != a.key.appKey.Name) ||
-			(mreq.AppVers != "" && mreq.AppVers != a.key.appKey.Version) {
+		if (ckey.AppName != "" && ckey.AppName != a.key.appKey.Name) ||
+			(ckey.AppVers != "" && ckey.AppVers != a.key.appKey.Version) {
 			continue
 		}
 		for _, i := range a.insts {
@@ -346,7 +345,7 @@ func getAppInstList(mreq *dme.Match_Engine_Request, clist *dme.Match_Engine_AppI
 			ai := dme.Appinstance{}
 			ai.Appname = a.key.appKey.Name
 			ai.Appversion = a.key.appKey.Version
-			ai.Uri = i.uri
+			ai.FQDN = i.uri
 			cloc.Appinstances = append(cloc.Appinstances, &ai)
 			foundCloudlets[i.cloudletKey] = cloc
 		}

@@ -1,9 +1,10 @@
-match-engine-request:
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication
+  appvers: "1.0"
+findcloudletrequest:
   carriername: tmus
   gpslocation: 
     lat: 36.00
     long: -96.00
-  devname: AcmeAppCo
-  appname: someapplication
-  appvers: "1.0"
 

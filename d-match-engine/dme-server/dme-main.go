@@ -1,11 +1,18 @@
 package main
 
 import (
+	ctls "crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"net"
+	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -22,6 +29,7 @@ import (
 var rootDir = flag.String("r", "", "root directory for testing")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var apiAddr = flag.String("apiAddr", "localhost:50051", "API listener address")
+var httpAddr = flag.String("httpAddr", "127.0.0.1:38001", "HTTP listener address")
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var locVerUrl = flag.String("locverurl", "", "location verification REST API URL to connect to")
@@ -44,98 +52,112 @@ type server struct{}
 var myCloudletKey edgeproto.CloudletKey
 var myNode edgeproto.Node
 
-func (s *server) FindCloudlet(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_Reply,
-	error) {
+var sigChan chan os.Signal
 
-	_, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, err
+func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest) (*dme.FindCloudletReply, error) {
+	reply := new(dme.FindCloudletReply)
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return reply, errors.New("No valid session cookie")
 	}
-
-	mreq := new(dme.Match_Engine_Reply)
-	findCloudlet(req, mreq)
-	return mreq, nil
+	findCloudlet(ckey, req, reply)
+	return reply, nil
 }
 
-func (s *server) GetAppInstList(ctx context.Context, req *dme.Match_Engine_Request) (*dme.Match_Engine_AppInst_List, error) {
-	_, err := dmecommon.VerifyCookie(req.SessionCookie)
+func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest) (*dme.AppInstListReply, error) {
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return nil, errors.New("No valid session cookie")
+	}
+	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
 		return nil, err
 	}
 
-	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "app", req.AppName)
+	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
 
 	if req.GpsLocation == nil {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
 		return nil, fmt.Errorf("missing GPS location")
 	}
-	alist := new(dme.Match_Engine_AppInst_List)
-	getAppInstList(req, alist)
+	alist := new(dme.AppInstListReply)
+	getAppInstList(ckey, req, alist)
 	return alist, nil
 }
 
 func (s *server) VerifyLocation(ctx context.Context,
-	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc_Verify, error) {
+	req *dme.VerifyLocationRequest) (*dme.VerifyLocationReply, error) {
 
-	var mreq *dme.Match_Engine_Loc_Verify
-	mreq = new(dme.Match_Engine_Loc_Verify)
+	reply := new(dme.VerifyLocationReply)
 
-	peerIp, err := dmecommon.VerifyCookie(req.SessionCookie)
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return reply, errors.New("No valid session cookie")
+	}
+	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl)
 	if err != nil {
 		return nil, err
 	}
-
-	err = VerifyClientLoc(req, mreq, *carrier, peerIp, *locVerUrl)
-	if err != nil {
-		return nil, err
-	}
-	return mreq, nil
+	return reply, nil
 }
 
 func (s *server) GetLocation(ctx context.Context,
-	req *dme.Match_Engine_Request) (*dme.Match_Engine_Loc, error) {
+	req *dme.GetLocationRequest) (*dme.GetLocationReply, error) {
 
-	var mloc *dme.Match_Engine_Loc
-	mloc = new(dme.Match_Engine_Loc)
+	reply := new(dme.GetLocationReply)
 
-	_, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, err
-	}
-
-	GetClientLoc(req, mloc)
-	if mloc.Status == dme.Match_Engine_Loc_LOC_FOUND {
+	GetClientLoc(req, reply)
+	if reply.Status == dme.GetLocationReply_LOC_FOUND {
 		fmt.Printf("GetLocation: Found Location\n")
 	} else {
 		fmt.Printf("GetLocation: Location NOT Found\n")
 	}
 
-	return mloc, nil
+	return reply, nil
 }
 
 func (s *server) RegisterClient(ctx context.Context,
-	req *dme.Match_Engine_Request) (*dme.Match_Engine_Status, error) {
+	req *dme.RegisterClientRequest) (*dme.RegisterClientReply, error) {
 
-	var mstatus *dme.Match_Engine_Status
-	mstatus = new(dme.Match_Engine_Status)
+	// TODO: Authenticate client via req.AuthToken.
+	// We need to determine if the
+	// DevName/AppName/AppVers sent are valid and not spoofed.
+	// We do this by looking at the AuthToken sent by the client.
+	// There are several possible ways to validate.
+	// 1. During CreateDev, the developer uploads a public key.
+	// Before calling RegisterClient, app client will request
+	// auth token from developer. Developer will encrpyt token with
+	// their private key, send it to app, then app will send it as
+	// req.AuthToken. We will decrpyt using uploaded public key and
+	// check info in token. Info should include AppName, expiration, etc.
+	// 2. During CreateDev, we generate a pub/priv key pair and
+	// give the public key to the developer. Same as (1) except
+	// keys are reversed.
+	// 3. During CreateDev, developer gives URI and method to
+	// access their backend to validate tokens. On register client,
+	// we connect to their backend to validate the token.
 
-	cookie, err := dmecommon.GenerateCookie(req.AppName, ctx)
+	key := dmecommon.CookieKey{
+		DevName: req.DevName,
+		AppName: req.AppName,
+		AppVers: req.AppVers,
+	}
+	mstatus := new(dme.RegisterClientReply)
+	cookie, err := dmecommon.GenerateCookie(&key, ctx)
 	if err != nil {
-		mstatus.Status = dme.Match_Engine_Status_ME_FAIL
 		return mstatus, err
 	}
 	mstatus.SessionCookie = cookie
 	mstatus.TokenServerURI = *tokSrvUrl
-	mstatus.Status = dme.Match_Engine_Status_ME_SUCCESS
+	mstatus.Status = dme.ReplyStatus_RS_SUCCESS
 	return mstatus, nil
 }
 
 func (s *server) AddUserToGroup(ctx context.Context,
-	req *dme.DynamicLocGroupAdd) (*dme.Match_Engine_Status, error) {
+	req *dme.DynamicLocGroupRequest) (*dme.DynamicLocGroupReply, error) {
 
-	var mreq *dme.Match_Engine_Status
-	mreq = new(dme.Match_Engine_Status)
-	mreq.Status = dme.Match_Engine_Status_ME_SUCCESS
+	mreq := new(dme.DynamicLocGroupReply)
+	mreq.Status = dme.ReplyStatus_RS_SUCCESS
 
 	return mreq, nil
 }
@@ -164,7 +186,7 @@ func main() {
 		stats := NewDmeStats(time.Second, 10, notifyClient.SendMetric)
 		stats.Start()
 		defer stats.Stop()
-		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(stats.UnaryStatsInterceptor))
+		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)))
 	}
 	nodeCache.Update(&myNode, 0)
 
@@ -189,7 +211,55 @@ func main() {
 
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
-	if err := s.Serve(lis); err != nil {
-		log.FatalLog("Failed to server", "err", err)
+	go func() {
+		if err := s.Serve(lis); err != nil {
+			log.FatalLog("Failed to server", "err", err)
+		}
+	}()
+	defer s.Stop()
+
+	// REST service
+	mux := http.NewServeMux()
+	gwcfg := &cloudcommon.GrpcGWConfig{
+		ApiAddr:     *apiAddr,
+		TlsCertFile: *tlsCertFile,
+		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
+			dme.RegisterMatch_Engine_ApiHandler,
+		},
 	}
+	gw, err := cloudcommon.GrpcGateway(gwcfg)
+	if err != nil {
+		log.FatalLog("Failed to start grpc Gateway", "err", err)
+	}
+	mux.Handle("/", gw)
+	tlscfg := &ctls.Config{
+		MinVersion:               ctls.VersionTLS12,
+		CurvePreferences:         []ctls.CurveID{ctls.CurveP521, ctls.CurveP384, ctls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			ctls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			ctls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			ctls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		},
+	}
+
+	httpServer := &http.Server{
+		Addr:      *httpAddr,
+		Handler:   mux,
+		TLSConfig: tlscfg,
+	}
+
+	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
+	defer httpServer.Shutdown(context.Background())
+
+	sigChan = make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+
+	log.InfoLog("Ready")
+
+	// wait until process in killed/interrupted
+	sig := <-sigChan
+	fmt.Println(sig)
 }

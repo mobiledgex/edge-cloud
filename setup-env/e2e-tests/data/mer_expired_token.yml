@@ -1,11 +1,12 @@
-match-engine-request:
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication
+  appvers: "1.0"
+verifylocationrequest:
   carriername: tmus
   gpslocation: 
     lat: 32.013988
     long: -96.598243
-  devname: AcmeAppCo
-  appname: someapplication
-  appvers: "1.0"
 
 #override the token server path to simulate the use of an expired token
 token-server-path: /itsexpired

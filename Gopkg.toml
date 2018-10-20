@@ -106,3 +106,7 @@ required = [
 [[constraint]]
   name = "github.com/influxdata/influxdb"
   version = "1.6.2"
+
+[[constraint]]
+  name = "github.com/grpc-ecosystem/go-grpc-middleware"
+  version = "1.0.0"

@@ -3,8 +3,9 @@ package dmetest
 import dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
 type FindCloudletRR struct {
-	Req   dme.Match_Engine_Request
-	Reply dme.Match_Engine_Reply
+	Reg   dme.RegisterClientRequest
+	Req   dme.FindCloudletRequest
+	Reply dme.FindCloudletReply
 }
 
 // FindCloudlet API test data.
@@ -12,108 +13,111 @@ type FindCloudletRR struct {
 // in this package.
 var FindCloudletData = []FindCloudletRR{
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   1,
+		Reg: dme.RegisterClientRequest{
+			DevName: "1000realities",
+			AppName: "1000realities",
+			AppVers: "1.1",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
 			GpsLocation: &dme.Loc{Lat: 50.65, Long: 6.341},
-			DevName:     "1000realities",
-			AppName:     "1000realities",
-			AppVers:     "1.1",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[2].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[2].Uri,
 			CloudletLocation: &Cloudlets[2].Location,
 			Status:           1,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   1,
+		Reg: dme.RegisterClientRequest{
+			DevName: "1000realities",
+			AppName: "1000realities",
+			AppVers: "1.1",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
 			GpsLocation: &dme.Loc{Lat: 51.65, Long: 9.341},
-			DevName:     "1000realities",
-			AppName:     "1000realities",
-			AppVers:     "1.1",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[1].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   5,
+		Reg: dme.RegisterClientRequest{
+			DevName: "1000realities",
+			AppName: "1000realities",
+			AppVers: "1.1",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "ATT",
 			GpsLocation: &dme.Loc{Lat: 52.65, Long: 10.341},
-			DevName:     "1000realities",
-			AppName:     "1000realities",
-			AppVers:     "1.1",
 		},
-		Reply: dme.Match_Engine_Reply{
+		Reply: dme.FindCloudletReply{
 			Status: 2,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   1,
+		Reg: dme.RegisterClientRequest{
+			DevName: "1000realities",
+			AppName: "1000realities",
+			AppVers: "1.1",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
 			GpsLocation: &dme.Loc{Lat: 50.75, Long: 7.9050},
-			AppId:       5000,
-			DevName:     "1000realities",
-			AppName:     "1000realities",
-			AppVers:     "1.1",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[2].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[2].Uri,
 			CloudletLocation: &Cloudlets[2].Location,
 			Status:           1,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   1,
+		Reg: dme.RegisterClientRequest{
+			DevName: "Niantic Labs",
+			AppName: "Pokemon-go",
+			AppVers: "2.1",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
 			GpsLocation: &dme.Loc{Lat: 52.75, Long: 12.9050},
-			AppId:       5005,
-			DevName:     "Niantic Labs",
-			AppName:     "Pokemon-go",
-			AppVers:     "2.1",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[1].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   1,
+		Reg: dme.RegisterClientRequest{
+			DevName: "Niantic Labs",
+			AppName: "HarryPotter-go",
+			AppVers: "1.0",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
 			GpsLocation: &dme.Loc{Lat: 50.75, Long: 11.9050},
-			AppId:       5006,
-			DevName:     "Niantic Labs",
-			AppName:     "HarryPotter-go",
-			AppVers:     "1.0",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[1].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[1].Uri,
 			CloudletLocation: &Cloudlets[1].Location,
 			Status:           1,
 		},
 	},
 	FindCloudletRR{
-		Req: dme.Match_Engine_Request{
-			CarrierID:   3,
+		Reg: dme.RegisterClientRequest{
+			DevName: "Ever.AI",
+			AppName: "Ever",
+			AppVers: "1.7",
+		},
+		Req: dme.FindCloudletRequest{
 			CarrierName: "TMUS",
 			GpsLocation: &dme.Loc{Lat: 47.75, Long: 122.9050},
-			AppId:       5010,
-			DevName:     "Ever.AI",
-			AppName:     "Ever",
-			AppVers:     "1.7",
 		},
-		Reply: dme.Match_Engine_Reply{
-			Uri:              Cloudlets[3].Uri,
+		Reply: dme.FindCloudletReply{
+			FQDN:             Cloudlets[3].Uri,
 			CloudletLocation: &Cloudlets[3].Location,
 			Status:           1,
 		},

@@ -20,14 +20,16 @@ public class RegisterClient implements Callable {
     public static final String TOKEN_SERVER_URI_KEY = "token_server_u_r_i";
 
     private MatchingEngine mMatchingEngine;
-    private MatchingEngineRequest mRequest;
+    private AppClient.RegisterClientRequest mRequest;
+    private String mHost = null;
+    private int mPort = 0;
     private long mTimeoutInMilliseconds = -1;
 
     RegisterClient(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public boolean setRequest(AppClient.RegisterClientRequest request, String host, int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -36,6 +38,11 @@ public class RegisterClient implements Callable {
             return false;
         }
 
+        if (host == null || host.equals("")) {
+            return false;
+        }
+        mHost = host;
+        mPort = port;
         mRequest = request;
 
         if (timeoutInMilliseconds <= 0) {
@@ -50,24 +57,23 @@ public class RegisterClient implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Status call() throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.matchEngineRequest == null) {
+    public AppClient.RegisterClientReply call() throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: RegisterClient() does not have a request object to make call!");
         }
 
-
-        AppClient.Match_Engine_Status reply = null;
+        AppClient.RegisterClientReply reply = null;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mMatchingEngine.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .registerClient(mRequest.matchEngineRequest);
+                    .registerClient(mRequest);
 
             // Nothing a sdk user can do below but read the exception cause:
         } catch (MexKeyStoreException mkse) {
@@ -90,6 +96,8 @@ public class RegisterClient implements Callable {
             }
         }
         mRequest = null;
+        mHost = null;
+        mPort = 0;
 
         int ver;
         if (reply != null) {
@@ -98,9 +106,10 @@ public class RegisterClient implements Callable {
         }
 
         mMatchingEngine.setSessionCookie(reply.getSessionCookie());
+        mMatchingEngine.setTokenServerURI(reply.getTokenServerURI());
+
         mMatchingEngine.setMatchEngineStatus(reply);
 
-        mMatchingEngine.setTokenServerURI(reply.getTokenServerURI());
 
         return reply;
     }

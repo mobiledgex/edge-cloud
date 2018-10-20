@@ -9,7 +9,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Loc_Verify, carrier string, peerIp string, locVerUrl string) error {
+func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string) error {
 	var key carrierAppKey
 	var found *carrierAppInst
 	var app *carrierApp
@@ -18,11 +18,11 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 
 	tbl = carrierAppTbl
 	key.carrierName = mreq.CarrierName
-	key.appKey.DeveloperKey.Name = mreq.DevName
-	key.appKey.Name = mreq.AppName
-	key.appKey.Version = mreq.AppVers
+	key.appKey.DeveloperKey.Name = ckey.DevName
+	key.appKey.Name = ckey.AppName
+	key.appKey.Version = ckey.AppVers
 
-	mreply.GpsLocationStatus = dme.Match_Engine_Loc_Verify_LOC_UNKNOWN
+	mreply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
 	mreply.GPS_Location_Accuracy_KM = -1
 
 	if mreq.GpsLocation == nil {
@@ -42,8 +42,9 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	app, ok := tbl.apps[key]
 	if !ok {
 		tbl.RUnlock()
-		log.InfoLog("Could not find key in app table", "key", key)
-		return fmt.Errorf("app not found")
+		log.DebugLog(log.DebugLevelDmereq, "Could not find key in app table", "key", key)
+		// return loc unknown
+		return nil
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and TDG
@@ -95,8 +96,8 @@ func VerifyClientLoc(mreq *dme.Match_Engine_Request, mreply *dme.Match_Engine_Lo
 	return nil
 }
 
-func GetClientLoc(mreq *dme.Match_Engine_Request, mloc *dme.Match_Engine_Loc) {
-	mloc.CarrierName = mreq.CarrierName
-	mloc.Status = dme.Match_Engine_Loc_LOC_FOUND
-	mloc.NetworkLocation = mreq.GpsLocation
+func GetClientLoc(mreq *dme.GetLocationRequest, reply *dme.GetLocationReply) {
+	reply.CarrierName = mreq.CarrierName
+	reply.Status = dme.GetLocationReply_LOC_FOUND
+	reply.NetworkLocation = &dme.Loc{}
 }

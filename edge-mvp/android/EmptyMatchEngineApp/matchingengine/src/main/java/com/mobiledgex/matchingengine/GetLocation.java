@@ -10,24 +10,28 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import distributed_match_engine.AppClient;
+import distributed_match_engine.AppClient.GetLocationRequest;
+import distributed_match_engine.AppClient.GetLocationReply;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 
 import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 public class GetLocation implements Callable {
     public static final String TAG = "GetLocation";
 
     private MatchingEngine mMatchingEngine;
-    private MatchingEngineRequest mRequest;
+    private GetLocationRequest mRequest;
+    private String mHost;
+    private int mPort;
     private long mTimeoutInMilliseconds = -1;
 
     GetLocation(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public boolean setRequest(GetLocationRequest request, String host, int port,
+                              long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -35,7 +39,14 @@ public class GetLocation implements Callable {
             mRequest = null;
             return false;
         }
+
+        if (host == null || host.equals("")) {
+            return false;
+        }
+
         mRequest = request;
+        mHost = host;
+        mPort = port;
 
         if (timeoutInMilliseconds <= 0) {
             throw new IllegalArgumentException("GetLocation() timeout must be positive.");
@@ -45,24 +56,24 @@ public class GetLocation implements Callable {
     }
 
     @Override
-    public AppClient.Match_Engine_Loc call()
+    public GetLocationReply call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.matchEngineRequest == null) {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: GetLocation does not have a request object to make location verification call!");
         }
 
-        AppClient.Match_Engine_Loc reply;
+        GetLocationReply reply = null;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
             nm = mMatchingEngine.getNetworkManager();
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .getLocation(mRequest.matchEngineRequest);
+                    .getLocation(mRequest);
 
             // Nothing a sdk user can do below but read the exception cause:
         } catch (MexKeyStoreException mkse) {
@@ -89,10 +100,10 @@ public class GetLocation implements Callable {
         int ver;
         if (reply != null) {
             ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Loc: " + ver);
+            Log.d(TAG, "Version of GetLocationReply: " + ver);
         }
 
-        mMatchingEngine.setMatchEngineLocation(reply);
+        mMatchingEngine.setGetLocationReply(reply);
         return reply;
     }
 }

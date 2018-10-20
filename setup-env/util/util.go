@@ -549,8 +549,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		y1 = a1
 		y2 = a2
 	} else if fileType == "findcloudlet" {
-		var f1 dmeproto.Match_Engine_Reply
-		var f2 dmeproto.Match_Engine_Reply
+		var f1 dmeproto.FindCloudletReply
+		var f2 dmeproto.FindCloudletReply
 
 		err1 = ReadYamlFile(firstYamlFile, &f1, "", false)
 		err2 = ReadYamlFile(secondYamlFile, &f2, "", false)

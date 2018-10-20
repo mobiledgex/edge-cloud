@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
 
 import distributed_match_engine.AppClient;
+import distributed_match_engine.AppClient.FindCloudletRequest;
 import distributed_match_engine.Match_Engine_ApiGrpc;
 
 import io.grpc.ManagedChannel;
@@ -19,14 +20,16 @@ public class FindCloudlet implements Callable {
     public static final String TAG = "FindCloudlet";
 
     private MatchingEngine mMatchingEngine;
-    private MatchingEngineRequest mRequest; // Singleton.
+    private FindCloudletRequest mRequest; // Singleton.
+    private String mHost;
+    private int mPort;
     private long mTimeoutInMilliseconds = -1;
 
     public FindCloudlet(MatchingEngine matchingEngine) {
         mMatchingEngine = matchingEngine;
     }
 
-    public boolean setRequest(MatchingEngineRequest request, long timeoutInMilliseconds) {
+    public boolean setRequest(FindCloudletRequest request, String host,  int port, long timeoutInMilliseconds) {
         if (request == null) {
             throw new IllegalArgumentException("Request object must not be null.");
         } else if (!mMatchingEngine.isMexLocationAllowed()) {
@@ -34,7 +37,13 @@ public class FindCloudlet implements Callable {
             mRequest = null;
             return false;
         }
+
+        if (host == null || host.equals("")) {
+            return false;
+        }
         mRequest = request;
+        mHost = host;
+        mPort = port;
 
         if (timeoutInMilliseconds <= 0) {
             throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
@@ -44,19 +53,17 @@ public class FindCloudlet implements Callable {
     }
 
     @Override
-    public FindCloudletResponse call()
+    public AppClient.FindCloudletReply call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
-        if (mRequest == null || mRequest.matchEngineRequest == null) {
+        if (mRequest == null) {
             throw new MissingRequestException("Usage error: FindCloudlet does not have a request object to use MatchEngine!");
         }
 
-        FindCloudletResponse cloudletResponse = null;
-
-        AppClient.Match_Engine_Reply reply;
+        AppClient.FindCloudletReply reply;
         ManagedChannel channel = null;
         NetworkManager nm = null;
         try {
-            channel = mMatchingEngine.channelPicker(mRequest.getHost(), mRequest.getPort());
+            channel = mMatchingEngine.channelPicker(mHost, mPort);
             Match_Engine_ApiGrpc.Match_Engine_ApiBlockingStub stub = Match_Engine_ApiGrpc.newBlockingStub(channel);
 
 
@@ -64,7 +71,7 @@ public class FindCloudlet implements Callable {
             nm.switchToCellularInternetNetworkBlocking();
 
             reply = stub.withDeadlineAfter(mTimeoutInMilliseconds, TimeUnit.MILLISECONDS)
-                    .findCloudlet(mRequest.matchEngineRequest);
+                    .findCloudlet(mRequest);
             // Nothing a sdk user can do below but read the exception cause:
         } catch (MexKeyStoreException mkse) {
             throw new ExecutionException("Exception calling FindCloudlet: ", mkse);
@@ -86,35 +93,8 @@ public class FindCloudlet implements Callable {
             }
         }
 
-        if (reply != null) {
-            int ver = reply.getVer();
-            Log.d(TAG, "Version of Match_Engine_Reply: " + ver);
-            byte []serviceIp = (reply.getServiceIp() == null) ? null : reply.getServiceIp().toByteArray();
-            if (reply.getCloudletLocation() != null) {
-                GPSLocation loc = new GPSLocation(reply.getCloudletLocation().getLong(),
-                        reply.getCloudletLocation().getLat(),
-                        reply.getCloudletLocation().getTimestamp().getSeconds(),
-                        reply.getCloudletLocation().getTimestamp().getNanos());
-                cloudletResponse = new FindCloudletResponse(reply.getVer(),
-                        reply.getUri(),
-                        serviceIp,
-                        reply.getServicePort(),
-                        loc,
-                        FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
-                        reply.getSessionCookie());
-            } else {
-                cloudletResponse = new FindCloudletResponse(reply.getVer(),
-                        reply.getUri(),
-                        serviceIp,
-                        reply.getServicePort(),
-                        null,
-                        FindCloudletResponse.Find_Status.forNumber(reply.getStatus().getNumber()),
-                        reply.getSessionCookie());
-            }
-
-        }
         // Let MatchingEngine know of the latest cookie.
         mMatchingEngine.setFindCloudletResponse(reply);
-        return cloudletResponse;
+        return reply;
     }
 }
