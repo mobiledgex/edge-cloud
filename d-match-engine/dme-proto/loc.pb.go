@@ -6,9 +6,11 @@ package distributed_match_engine
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "github.com/gogo/protobuf/types"
+import google_protobuf1 "github.com/gogo/protobuf/types"
 
 import binary "encoding/binary"
+
+import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -34,7 +36,7 @@ type Loc struct {
 	// speed (IOS) / velocity (Android) (meters/sec)
 	Speed float64 `protobuf:"fixed64,7,opt,name=speed,proto3" json:"speed,omitempty"`
 	// timestamp
-	Timestamp *google_protobuf.Timestamp `protobuf:"bytes,8,opt,name=timestamp" json:"timestamp,omitempty"`
+	Timestamp *google_protobuf1.Timestamp `protobuf:"bytes,8,opt,name=timestamp" json:"timestamp,omitempty"`
 }
 
 func (m *Loc) Reset()                    { *m = Loc{} }
@@ -321,7 +323,7 @@ func (m *Loc) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Timestamp == nil {
-				m.Timestamp = &google_protobuf.Timestamp{}
+				m.Timestamp = &google_protobuf1.Timestamp{}
 			}
 			if err := m.Timestamp.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
