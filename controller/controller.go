@@ -12,9 +12,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
+	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -140,7 +142,25 @@ func main() {
 
 	// REST gateway
 	mux := http.NewServeMux()
-	gw, err := grpcGateway(*apiAddr, *tlsCertFile)
+	gwcfg := &cloudcommon.GrpcGWConfig{
+		ApiAddr:     *apiAddr,
+		TlsCertFile: *tlsCertFile,
+		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
+			edgeproto.RegisterDeveloperApiHandler,
+			edgeproto.RegisterAppApiHandler,
+			edgeproto.RegisterAppInstApiHandler,
+			edgeproto.RegisterOperatorApiHandler,
+			edgeproto.RegisterCloudletApiHandler,
+			edgeproto.RegisterCloudletInfoApiHandler,
+			edgeproto.RegisterFlavorApiHandler,
+			edgeproto.RegisterClusterFlavorApiHandler,
+			edgeproto.RegisterClusterApiHandler,
+			edgeproto.RegisterClusterInstApiHandler,
+			edgeproto.RegisterControllerApiHandler,
+			edgeproto.RegisterNodeApiHandler,
+		},
+	}
+	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
 		log.FatalLog("Failed to create grpc gateway", "error", err)
 	}
@@ -163,19 +183,7 @@ func main() {
 		Handler:   mux,
 		TLSConfig: tlscfg,
 	}
-	go func() {
-		// Serve REST gateway
-		if *tlsCertFile != "" {
-			tlsKeyFile := strings.Replace(*tlsCertFile, ".crt", ".key", -1)
-			if err := httpServer.ListenAndServeTLS(*tlsCertFile, tlsKeyFile); err != http.ErrServerClosed {
-				log.FatalLog("Failed to serve HTTP TLS", "error", err)
-			}
-		} else {
-			if err := httpServer.ListenAndServe(); err != http.ErrServerClosed {
-				log.FatalLog("Failed to serve HTTP", "error", err)
-			}
-		}
-	}()
+	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	defer httpServer.Shutdown(context.Background())
 
 	sigChan = make(chan os.Signal, 1)

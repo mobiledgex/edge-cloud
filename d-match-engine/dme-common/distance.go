@@ -26,20 +26,20 @@ var InfiniteDistance float64 = 100000
 
 type LocationResult struct {
 	DistanceRange        float64
-	MatchEngineLocStatus dme.Match_Engine_Loc_Verify_GPS_Location_Status
+	MatchEngineLocStatus dme.VerifyLocationReply_GPS_Location_Status
 }
 
 // it has been agreed that mappings between location result integer and distances
 // in kilometers should be flexible.  These are the default mappings
 var DefaultGDDTLocationRangeMap = map[uint32]LocationResult{
-	LocationUnknown:                {-1, dme.Match_Engine_Loc_Verify_LOC_UNKNOWN},                  // unknown = negative distance (unverified)
-	LocationVerifiedNear:           {2, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                  // within 2km
-	LocationVerifiedMedium:         {10, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                 // within 10km
-	LocationVerifiedFar:            {100, dme.Match_Engine_Loc_Verify_LOC_VERIFIED},                // within 100km
-	LocationMismatchSameCounty:     {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH_SAME_COUNTRY},    // mismatch = negative distance (unverified)
-	LocationMismatchOtherCountry:   {-1, dme.Match_Engine_Loc_Verify_LOC_MISMATCH_OTHER_COUNTRY},   // mismatch, wrong country = negative distance (unverified)
-	LocationRoamingCountryMatch:    {-1, dme.Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MATCH},    // roamer in correct country = negative distance (unverified)
-	LocationRoamingCountryMismatch: {-1, dme.Match_Engine_Loc_Verify_LOC_ROAMING_COUNTRY_MISMATCH}, // roamer in wrong country = negative distance (unverified)
+	LocationUnknown:                {-1, dme.VerifyLocationReply_LOC_UNKNOWN},                  // unknown = negative distance (unverified)
+	LocationVerifiedNear:           {2, dme.VerifyLocationReply_LOC_VERIFIED},                  // within 2km
+	LocationVerifiedMedium:         {10, dme.VerifyLocationReply_LOC_VERIFIED},                 // within 10km
+	LocationVerifiedFar:            {100, dme.VerifyLocationReply_LOC_VERIFIED},                // within 100km
+	LocationMismatchSameCounty:     {-1, dme.VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY},    // mismatch = negative distance (unverified)
+	LocationMismatchOtherCountry:   {-1, dme.VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY},   // mismatch, wrong country = negative distance (unverified)
+	LocationRoamingCountryMatch:    {-1, dme.VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH},    // roamer in correct country = negative distance (unverified)
+	LocationRoamingCountryMismatch: {-1, dme.VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH}, // roamer in wrong country = negative distance (unverified)
 
 }
 

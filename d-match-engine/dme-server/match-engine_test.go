@@ -3,11 +3,13 @@ package main
 import (
 	"testing"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
 )
 
 func TestAddRemove(t *testing.T) {
@@ -33,14 +35,27 @@ func TestAddRemove(t *testing.T) {
 	removeApp(appInsts[0])
 	remaining := appInsts[1:]
 	checkAllData(t, remaining)
+	serv := server{}
 
 	// test findCloudlet
 	for ii, rr := range dmetest.FindCloudletData {
-		reply := dme.Match_Engine_Reply{}
-		findCloudlet(&rr.Req, &reply)
+		ctx := dmecommon.PeerContext(context.Background(), "127.0.0.1", 123)
+
+		regReply, err := serv.RegisterClient(ctx, &rr.Reg)
+		assert.Nil(t, err, "register client")
+
+		// Since we're directly calling functions, we end up
+		// bypassing the interceptor which sets up the cookie key.
+		// So set it on the context manually.
+		ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
+		assert.Nil(t, err, "verify cookie")
+		ctx = dmecommon.NewCookieContext(ctx, ckey)
+
+		reply, err := serv.FindCloudlet(ctx, &rr.Req)
+		assert.Nil(t, err, "find cloudlet")
 		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
-		if reply.Status == dme.Match_Engine_Reply_FIND_FOUND {
-			assert.Equal(t, rr.Reply.Uri, reply.Uri,
+		if reply.Status == dme.FindCloudletReply_FIND_FOUND {
+			assert.Equal(t, rr.Reply.FQDN, reply.FQDN,
 				"findCloudletData[%d]", ii)
 		}
 	}

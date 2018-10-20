@@ -1,4 +1,4 @@
-uri: default.developer.mobiledgex.net
+fqdn: default.developer.mobiledgex.net
 cloudletlocation: {}
 ports:
 - proto: LProtoTCP

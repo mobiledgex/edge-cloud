@@ -6,10 +6,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: default.developer.mobiledgex.net
+    fqdn: default.developer.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: default.developer.mobiledgex.net
+    fqdn: default.developer.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-1
   gpslocation:
@@ -18,10 +18,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-1.dmuus.mobiledgex.net
+    fqdn: tmocloud-1.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-1.dmuus.mobiledgex.net
+    fqdn: tmocloud-1.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-10
   gpslocation:
@@ -30,10 +30,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-10.dmuus.mobiledgex.net
+    fqdn: tmocloud-10.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-10.dmuus.mobiledgex.net
+    fqdn: tmocloud-10.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-2
   gpslocation:
@@ -42,10 +42,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-2.dmuus.mobiledgex.net
+    fqdn: tmocloud-2.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-2.dmuus.mobiledgex.net
+    fqdn: tmocloud-2.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-3
   gpslocation:
@@ -54,10 +54,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-3.dmuus.mobiledgex.net
+    fqdn: tmocloud-3.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-3.dmuus.mobiledgex.net
+    fqdn: tmocloud-3.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-4
   gpslocation:
@@ -66,10 +66,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-4.dmuus.mobiledgex.net
+    fqdn: tmocloud-4.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-4.dmuus.mobiledgex.net
+    fqdn: tmocloud-4.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-5
   gpslocation:
@@ -78,10 +78,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-5.dmuus.mobiledgex.net
+    fqdn: tmocloud-5.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-5.dmuus.mobiledgex.net
+    fqdn: tmocloud-5.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-6
   gpslocation:
@@ -90,10 +90,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-6.dmuus.mobiledgex.net
+    fqdn: tmocloud-6.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-6.dmuus.mobiledgex.net
+    fqdn: tmocloud-6.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-7
   gpslocation:
@@ -102,10 +102,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-7.dmuus.mobiledgex.net
+    fqdn: tmocloud-7.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-7.dmuus.mobiledgex.net
+    fqdn: tmocloud-7.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-8
   gpslocation:
@@ -114,10 +114,10 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-8.dmuus.mobiledgex.net
+    fqdn: tmocloud-8.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-8.dmuus.mobiledgex.net
+    fqdn: tmocloud-8.dmuus.mobiledgex.net
 - carriername: dmuus
   cloudletname: tmocloud-9
   gpslocation:
@@ -126,7 +126,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    uri: tmocloud-9.dmuus.mobiledgex.net
+    fqdn: tmocloud-9.dmuus.mobiledgex.net
   - appname: someapplication2
     appversion: "1.0"
-    uri: tmocloud-9.dmuus.mobiledgex.net
+    fqdn: tmocloud-9.dmuus.mobiledgex.net
