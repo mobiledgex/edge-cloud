@@ -1,0 +1,56 @@
+##
+## TODO change all the crtl apis to rest
+##
+description: Deploys and starts a system, adds and delete appinstances and verifies findlocation results each time using REST APIs
+
+tests:
+
+
+- name: Add and show provisioning without appinst
+  apifile: "{{datadir}}/appdata_no_appinst.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
+  compareyaml:
+    yaml1: "{{datadir}}/appdata_no_appinst.yml"
+    yaml2: "{{outputdir}}/show-commands.yml"
+    filetype: appdata
+
+- includefile: register.yml
+
+- name: find cloudlet, expect nothing
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmerest-findcloudlet]
+
+- name: create appinst1 
+  apifile: "{{datadir}}/appinst1.yml"
+  actions: [ctrlapi-create]
+
+- name: find cloudlet, expect to see cloudlet1
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmerest-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: create appinst2
+  apifile: "{{datadir}}/appinst2.yml"
+  actions: [ctrlapi-create]
+
+- name: find cloudlet, expect to see cloudlet2
+  apifile: "{{datadir}}/mer.yml"
+  actions: [dmerest-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
+- name: delete provisioning
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appdata.yml"
+
+- name: verify provisioning is empty
+  actions: [ctrlapi-show]
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata

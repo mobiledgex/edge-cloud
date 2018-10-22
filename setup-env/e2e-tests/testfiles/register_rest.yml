@@ -1,0 +1,15 @@
+##
+description: executes matching engine request for register via REST
+
+tests:
+
+- name: call register rest api
+  apifile: "{{datadir}}/mer_register.yml"
+  actions: [dmerest-register]
+# This doesn't work in multiple setups because of different ips
+# TODO, figure how to deal with that
+#  compareyaml:
+#    yaml1: "{{outputdir}}/register.yml"
+#    yaml2: "{{datadir}}/register_response.yml"
+#    filetype: verifylocation
+

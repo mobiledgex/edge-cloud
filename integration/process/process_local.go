@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"sync"
@@ -95,6 +96,20 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 
 func (p *ControllerLocal) Stop() {
 	StopLocal(p.cmd)
+}
+
+func getRestClientImpl(timeout time.Duration, addr string, tlsCertFile string) (*http.Client, error) {
+	tlsConfig, err := tls.GetTLSClientConfig(addr, tlsCertFile)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+		Timeout: timeout,
+	}
+	return client, nil
 }
 
 func connectAPIImpl(timeout time.Duration, apiaddr string, tlsCertFile string) (*grpc.ClientConn, error) {
@@ -192,6 +207,10 @@ func (p *DmeLocal) Stop() {
 
 func (p *DmeLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
+}
+
+func (p *DmeLocal) GetRestClient(timeout time.Duration) (*http.Client, error) {
+	return getRestClientImpl(timeout, p.HttpAddr, p.TLS.ClientCert)
 }
 
 // CrmLocal

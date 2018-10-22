@@ -66,6 +66,7 @@ var actionChoices = map[string]string{
 	"ctrlcli":       "procname",
 	"ctrlinfo":      "procname",
 	"dmeapi":        "procname",
+	"dmerest":       "procname",
 	"deploy":        "",
 	"cleanup":       "",
 	"fetchlogs":     "",
@@ -305,6 +306,16 @@ func main() {
 					log.Printf("Unable to run api for %s\n", action)
 					errorsFound++
 					errors = append(errors, "dme api failed")
+				}
+			}
+		case "dmerest":
+			if !setupmex.UpdateAPIAddrs() {
+				errorsFound++
+			} else {
+				if !apis.RunDmeRest(actionSubtype, actionParam, *apiFile, *outputDir) {
+					log.Printf("Unable to run api for %s\n", action)
+					errorsFound++
+					errors = append(errors, "dme rest failed")
 				}
 			}
 		case "cleanup":
