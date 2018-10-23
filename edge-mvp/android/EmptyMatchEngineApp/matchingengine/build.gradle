@@ -39,7 +39,8 @@ android {
     sourceSets {
         main {
             proto {
-                srcDir '../../../../d-match-engine/dme-proto'
+                srcDirs '../../../../d-match-engine/dme-proto'
+                srcDirs '../../../thrid_party/googleapis'
             }
             java {
             }

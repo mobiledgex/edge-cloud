@@ -271,7 +271,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
 
                     //MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, location); // Regular use case.
-                    String host = "newapi-bonn.dme.mobiledgex.net"; // Override host.
+                    String host = "tdg.dme.mobiledgex.net"; // Override host.
                     int port = mMatchingEngine.getPort(); // Keep same port.
                     String carrierName = "T-Mobile";
                     String devName = "EmptyMatchEngineApp";
