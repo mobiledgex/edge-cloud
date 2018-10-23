@@ -36,16 +36,16 @@ type registration struct {
 var apiRequest dmeApiRequest
 
 // REST client implementation of Match_Engine_ApiClient interface
-type match_Engine_RestClient struct {
+type dmeRestClient struct {
 	client *http.Client
 	addr   string
 }
 
-func NewMatch_Engine_RestClient(client *http.Client, httpAddr string) dmeproto.Match_Engine_ApiClient {
-	return &match_Engine_RestClient{client, httpAddr}
+func NewdmeRestClient(client *http.Client, httpAddr string) dmeproto.Match_Engine_ApiClient {
+	return &dmeRestClient{client, httpAddr}
 }
 
-func (c *match_Engine_RestClient) RegisterClient(ctx context.Context, in *dmeproto.RegisterClientRequest, opts ...grpc.CallOption) (*dmeproto.RegisterClientReply, error) {
+func (c *dmeRestClient) RegisterClient(ctx context.Context, in *dmeproto.RegisterClientRequest, opts ...grpc.CallOption) (*dmeproto.RegisterClientReply, error) {
 	out := new(dmeproto.RegisterClientReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/registerclient",
 		c.client, in, out)
@@ -55,7 +55,7 @@ func (c *match_Engine_RestClient) RegisterClient(ctx context.Context, in *dmepro
 	}
 	return out, nil
 }
-func (c *match_Engine_RestClient) FindCloudlet(ctx context.Context, in *dmeproto.FindCloudletRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
+func (c *dmeRestClient) FindCloudlet(ctx context.Context, in *dmeproto.FindCloudletRequest, opts ...grpc.CallOption) (*dmeproto.FindCloudletReply, error) {
 	out := new(dmeproto.FindCloudletReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/findcloudlet",
 		c.client, in, out)
@@ -66,7 +66,7 @@ func (c *match_Engine_RestClient) FindCloudlet(ctx context.Context, in *dmeproto
 	return out, nil
 }
 
-func (c *match_Engine_RestClient) VerifyLocation(ctx context.Context, in *dmeproto.VerifyLocationRequest, opts ...grpc.CallOption) (*dmeproto.VerifyLocationReply, error) {
+func (c *dmeRestClient) VerifyLocation(ctx context.Context, in *dmeproto.VerifyLocationRequest, opts ...grpc.CallOption) (*dmeproto.VerifyLocationReply, error) {
 	out := new(dmeproto.VerifyLocationReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/verifylocation",
 		c.client, in, out)
@@ -77,7 +77,7 @@ func (c *match_Engine_RestClient) VerifyLocation(ctx context.Context, in *dmepro
 	return out, nil
 }
 
-func (c *match_Engine_RestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocationRequest, opts ...grpc.CallOption) (*dmeproto.GetLocationReply, error) {
+func (c *dmeRestClient) GetLocation(ctx context.Context, in *dmeproto.GetLocationRequest, opts ...grpc.CallOption) (*dmeproto.GetLocationReply, error) {
 	out := new(dmeproto.GetLocationReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/getlocation",
 		c.client, in, out)
@@ -88,7 +88,7 @@ func (c *match_Engine_RestClient) GetLocation(ctx context.Context, in *dmeproto.
 	return out, nil
 }
 
-func (c *match_Engine_RestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
+func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.DynamicLocGroupRequest, opts ...grpc.CallOption) (*dmeproto.DynamicLocGroupReply, error) {
 	out := new(dmeproto.DynamicLocGroupReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/addusertogroup",
 		c.client, in, out)
@@ -99,7 +99,7 @@ func (c *match_Engine_RestClient) AddUserToGroup(ctx context.Context, in *dmepro
 	return out, nil
 }
 
-func (c *match_Engine_RestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInstListRequest, opts ...grpc.CallOption) (*dmeproto.AppInstListReply, error) {
+func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInstListRequest, opts ...grpc.CallOption) (*dmeproto.AppInstListReply, error) {
 	out := new(dmeproto.AppInstListReply)
 	err := util.CallRESTPost("https://"+c.addr+"/v1/getappinstlist",
 		c.client, in, out)
@@ -143,7 +143,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			log.Printf("Error: unable to connect to dme addr %v\n", dme.HttpAddr)
 			return false
 		}
-		client = NewMatch_Engine_RestClient(httpClient, dme.DmeLocal.HttpAddr)
+		client = NewdmeRestClient(httpClient, dme.DmeLocal.HttpAddr)
 	} else {
 		conn, err := dme.DmeLocal.ConnectAPI(apiConnectTimeout)
 		if err != nil {

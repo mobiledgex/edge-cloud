@@ -192,7 +192,6 @@ func runTests(dirName string, fileName string, apiType string, depth int) (int, 
 				cmdstr += fmt.Sprintf("-apitype %s ", apiType)
 			}
 			cmd := exec.Command("sh", "-c", cmdstr)
-			//fmt.Printf("%s\n", cmdstr)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			cmd.Stdout = &out
