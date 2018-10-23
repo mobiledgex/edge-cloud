@@ -9,227 +9,251 @@ using DistributedMatchEngine;
 
 namespace MexGrpcSampleConsoleApp
 {
-    class Program
+  class Program
+  {
+    static void Main(string[] args)
     {
-        static void Main(string[] args)
-        {
-            Console.WriteLine("Hello MEX GRPC Library Sample App!");
+      Console.WriteLine("Hello MEX GRPC Library Sample App!");
 
 
-            var mexGrpcLibApp = new MexGrpcLibApp();
-            mexGrpcLibApp.RunSampleFlow();
-        }
+      var mexGrpcLibApp = new MexGrpcLibApp();
+      mexGrpcLibApp.RunSampleFlow();
+    }
+  }
+
+  public class TokenException : Exception
+  {
+    public TokenException(string message)
+        : base(message)
+    {
     }
 
-    public class TokenException : Exception
+    public TokenException(string message, Exception innerException)
+        : base(message, innerException)
     {
-        public TokenException(string message)
-            :base(message)
-        {
-        }
-
-        public TokenException(string message, Exception innerException)
-            : base(message, innerException)
-        {
-        }
     }
+  }
 
-    class MexGrpcLibApp
+  class MexGrpcLibApp
+  {
+    Loc location;
+    System.Guid uuid;
+    string sessionCookie;
+
+    string dmeHost = "tdg.dme.mobiledgex.net"; // DME server hostname or ip.
+    int dmePort = 50051; // DME port.
+
+    Match_Engine_Api.Match_Engine_ApiClient client;
+
+    public void RunSampleFlow()
     {
-        Loc location;
-        System.Guid uuid;
-        string sessionCookie;
 
-        string dmeHost = "tdg.dme.mobiledgex.net"; // DME server hostname or ip.
-        int dmePort = 50051; // DME port.
+      uuid = System.Guid.NewGuid();
+      location = getLocation();
+      string uri = dmeHost + ":" + dmePort;
+      string devName = "EmptyMatchEngineApp";
+      string appName = "EMptyMatchEngineApp";
 
-        Match_Engine_Api.Match_Engine_ApiClient client;
+      // Channel:
+      // TODO: Load from file or iostream, securely generate keys, etc.
+      var clientKeyPair = new KeyCertificatePair(Credentials.clientCrt, Credentials.clientKey);
+      var sslCredentials = new SslCredentials(Credentials.caCrt, clientKeyPair);
+      Channel channel = new Channel(uri, sslCredentials);
 
-        public void RunSampleFlow()
-        {
+      client = new DistributedMatchEngine.Match_Engine_Api.Match_Engine_ApiClient(channel);
 
-            uuid = System.Guid.NewGuid();
-            location = getLocation();
-            string uri = dmeHost + ":" + dmePort;
+      var registerClientRequest = CreateRegisterClientRequest(devName, appName, "1.0");
+      var regReply = client.RegisterClient(registerClientRequest);
 
-            // Channel:
-            // TODO: Load from file or iostream, securely generate keys, etc.
-            var clientKeyPair = new KeyCertificatePair(Credentials.clientCrt, Credentials.clientKey);
-            var sslCredentials = new SslCredentials(Credentials.caCrt, clientKeyPair);
-            Channel channel = new Channel(uri, sslCredentials);
+      Console.WriteLine("RegisterClient Reply: " + regReply);
+      Console.WriteLine("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
 
-            client = new DistributedMatchEngine.Match_Engine_Api.Match_Engine_ApiClient(channel);
+      // Store sessionCookie, for later use in future requests.
+      sessionCookie = regReply.SessionCookie;
 
-            var registerClientRequest = CreateRequest(uuid, location, "", "");
-            var regReply = client.RegisterClient(registerClientRequest);
+      // Request the token from the TokenServer:
+      string token = null;
+      try
+      {
+        token = RetrieveToken(regReply.TokenServerURI);
+        Console.WriteLine("VerifyLocation pre-query sessionCookie: " + sessionCookie);
+        Console.WriteLine("VerifyLocation pre-query TokenServer token: " + token);
+      }
+      catch (System.Net.WebException we)
+      {
+        Debug.WriteLine(we.ToString());
 
-            Console.WriteLine("RegisterClient Reply: " + regReply);
-            Console.WriteLine("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
-
-            // Store sessionCookie, for later use in future requests.
-            sessionCookie = regReply.SessionCookie;
-
-            // Request the token from the TokenServer:
-            string token = null;
-            try
-            {
-                token = RetrieveToken(regReply.TokenServerURI);
-                Console.WriteLine("VerifyLocation pre-query sessionCookie: " + sessionCookie);
-                Console.WriteLine("VerifyLocation pre-query TokenServer token: " + token);
-            }
-            catch (System.Net.WebException we)
-            {
-                Debug.WriteLine(we.ToString());
-
-            }
-            if (token == null) {
-                return;
-            }
+      }
+      if (token == null)
+      {
+        return;
+      }
 
 
-            // Call the remainder. Verify and Find cloudlet.
+      // Call the remainder. Verify and Find cloudlet.
 
-            // Async versions also exist:
-            var verifyResponse = VerifyLocation(token);
-            Console.WriteLine("VerifyLocation Status: " + verifyResponse.GpsLocationStatus);
-            Console.WriteLine("VerifyLocation Accuracy: " + verifyResponse.GPSLocationAccuracyKM);
+      // Async version can also be used. Blocking:
+      var verifyResponse = VerifyLocation(token);
+      Console.WriteLine("VerifyLocation Status: " + verifyResponse.GpsLocationStatus);
+      Console.WriteLine("VerifyLocation Accuracy: " + verifyResponse.GPSLocationAccuracyKM);
 
-
-            // Straight blocking GRPC call:
-            var findCloudletResponse = FindCloudlet();
-            Console.WriteLine("FindCloudlet Status: " + findCloudletResponse.Status);
-        }
-
-
-        Match_Engine_Request CreateRequest(System.Guid aUuid, Loc aLocation, String token, String session)
-        {
-            var request = new Match_Engine_Request
-            {
-                Ver = 1,
-                IdType = DistributedMatchEngine.IDTypes.Ipaddr,
-                Uuid = aUuid.ToString(),
-                Id = "", // TBD
-                CarrierID = 3L, // TBD
-                CarrierName = "T-Mobile", // Case sensitive CarrierName.
-                Tower = 5L, // TBD
-                GpsLocation = aLocation,
-                AppId = 5011,
-                Protocol = Google.Protobuf.ByteString.CopyFromUtf8("http"),
-                ServerPort = Google.Protobuf.ByteString.CopyFromUtf8("1234"),
-                DevName = "EmptyMatchEngineApp",
-                AppName = "EmptyMatchEngineApp",
-                AppVers = "1",
-                SessionCookie = session ?? "",
-                VerifyLocToken = token ?? ""
-            };
-            return request;
-        }
-
-        static String parseToken(String uri)
-        {
-            string[] uriandparams = uri.Split('?');
-            if (uriandparams.Length < 1)
-            {
-                return null;
-            }
-            string parameterStr = uriandparams[1];
-            if (parameterStr.Equals(""))
-            {
-                return null;
-            }
-
-            string[] parameters = parameterStr.Split('&');
-            if (parameters.Length < 1)
-            {
-                return null;
-            }
-
-            foreach (string keyValueStr in parameters)
-            {
-                string[] keyValue = keyValueStr.Split('=');
-                if (keyValue[0].Equals("dt-id"))
-                {
-                    return keyValue[1];
-                }
-            }
-
-            return null;
-        }
-
-        string RetrieveToken(string tokenServerURI)
-        {
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(tokenServerURI);
-            httpWebRequest.AllowAutoRedirect = false;
-
-            HttpWebResponse response = null;
-            string token = null;
-            string uriLocation = null;
-            // 303 See Other is behavior is different between standard C#
-            // and what's potentially in Unity.
-            try
-            {
-                response = (HttpWebResponse)httpWebRequest.GetResponse();
-                if (response != null) {
-                    if (response.StatusCode != HttpStatusCode.SeeOther) {
-                        throw new TokenException("Expected an HTTP 303 SeeOther.");
-                    }
-                    uriLocation = response.Headers["Location"];
-                }
-            }
-            catch (System.Net.WebException we)
-            {
-                response = (HttpWebResponse)we.Response;
-                if (response != null)
-                {
-                    if (response.StatusCode != HttpStatusCode.SeeOther)
-                    {
-                        throw new TokenException("Expected an HTTP 303 SeeOther.", we);
-                    }
-                    uriLocation = response.Headers["Location"];
-                }
-            }
-
-            if (uriLocation != null)
-            {
-                token = parseToken(uriLocation);
-            }
-            return token;
-        }
-
-        Match_Engine_Loc_Verify VerifyLocation(string token)
-        {
-            // Use verifyLocation, Async call:
-            var verifyLocationRequest = CreateRequest(uuid, location, token, sessionCookie);
-            var verifyResult = client.VerifyLocation(verifyLocationRequest);
-            return verifyResult;
-        }
-
-        Match_Engine_Reply FindCloudlet()
-        {
-            // Create a synchronous request for FindCloudlet using RegisterClient reply's Session Cookie (TokenServerURI is now invalid):
-            var findCloudletRequest = CreateRequest(uuid, location, "", sessionCookie);
-            var findCloudletReply = client.FindCloudlet(findCloudletRequest);
-
-            return findCloudletReply;
-        }
-
-        Loc getLocation()
-        {
-            // TODO
-            return new DistributedMatchEngine.Loc
-            {
-                Long = -122.149349,
-                Lat = 37.459609
-            };
-        }
-
+      // Blocking GRPC call:
+      var findCloudletResponse = FindCloudlet();
+      Console.WriteLine("FindCloudlet Status: " + findCloudletResponse.Status);
+      Console.WriteLine("FindCloudlet FQDN Location: " + findCloudletResponse.FQDN);
     }
 
 
-    static class Credentials
+    RegisterClientRequest CreateRegisterClientRequest(string devName, string appName, string appVersion)
     {
-        // Root CA:
-        public static string caCrt = @"-----BEGIN CERTIFICATE-----
+      var request = new RegisterClientRequest
+      {
+        Ver = 1,
+        DevName = devName,
+        AppName = appName,
+        AppVers = appVersion
+      };
+      return request;
+    }
+
+    VerifyLocationRequest CreateVerifyLocationRequest(string carrierName, Loc gpsLocation, string verifyLocationToken)
+    {
+      var request = new VerifyLocationRequest
+      {
+        Ver = 1,
+        SessionCookie = sessionCookie,
+        CarrierName = carrierName,
+        GpsLocation = gpsLocation,
+        VerifyLocToken = verifyLocationToken
+      };
+      return request;
+    }
+
+    FindCloudletRequest CreateFindCloudletRequest(string carrierName, Loc gpsLocation)
+    {
+      var request = new FindCloudletRequest
+      {
+        Ver = 1,
+        SessionCookie = sessionCookie,
+        CarrierName = carrierName,
+        GpsLocation = gpsLocation
+      };
+      return request;
+    }
+
+    static String parseToken(String uri)
+    {
+      string[] uriandparams = uri.Split('?');
+      if (uriandparams.Length < 1)
+      {
+        return null;
+      }
+      string parameterStr = uriandparams[1];
+      if (parameterStr.Equals(""))
+      {
+        return null;
+      }
+
+      string[] parameters = parameterStr.Split('&');
+      if (parameters.Length < 1)
+      {
+        return null;
+      }
+
+      foreach (string keyValueStr in parameters)
+      {
+        string[] keyValue = keyValueStr.Split('=');
+        if (keyValue[0].Equals("dt-id"))
+        {
+          return keyValue[1];
+        }
+      }
+
+      return null;
+    }
+
+    string RetrieveToken(string tokenServerURI)
+    {
+      HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(tokenServerURI);
+      httpWebRequest.AllowAutoRedirect = false;
+
+      HttpWebResponse response = null;
+      string token = null;
+      string uriLocation = null;
+      // 303 See Other is behavior is different between standard C#
+      // and what's potentially in Unity.
+      try
+      {
+        response = (HttpWebResponse)httpWebRequest.GetResponse();
+        if (response != null)
+        {
+          if (response.StatusCode != HttpStatusCode.SeeOther)
+          {
+            throw new TokenException("Expected an HTTP 303 SeeOther.");
+          }
+          uriLocation = response.Headers["Location"];
+        }
+      }
+      catch (System.Net.WebException we)
+      {
+        response = (HttpWebResponse)we.Response;
+        if (response != null)
+        {
+          if (response.StatusCode != HttpStatusCode.SeeOther)
+          {
+            throw new TokenException("Expected an HTTP 303 SeeOther.", we);
+          }
+          uriLocation = response.Headers["Location"];
+        }
+      }
+
+      if (uriLocation != null)
+      {
+        token = parseToken(uriLocation);
+      }
+      return token;
+    }
+
+    VerifyLocationReply VerifyLocation(string token)
+    {
+      var verifyLocationRequest = CreateVerifyLocationRequest(getCarrierName(), getLocation(), token);
+      var verifyResult = client.VerifyLocation(verifyLocationRequest);
+      return verifyResult;
+    }
+
+    FindCloudletReply FindCloudlet()
+    {
+      // Create a synchronous request for FindCloudlet using RegisterClient reply's Session Cookie (TokenServerURI is now invalid):
+      var findCloudletRequest = CreateFindCloudletRequest(getCarrierName(), getLocation());
+      var findCloudletReply = client.FindCloudlet(findCloudletRequest);
+
+      return findCloudletReply;
+    }
+
+    // TODO: The app must retrieve form they platform this case sensitive value before each DME GRPC call.
+    // The device is potentially mobile and may have data roaming.
+    String getCarrierName() {
+      return "TDG";
+    }
+
+    // TODO: The client must retrieve a real GPS location from the platform, even if it is just the last known location,
+    // possibly asynchronously.
+    Loc getLocation()
+    {
+      return new DistributedMatchEngine.Loc
+      {
+        Long = -122.149349,
+        Lat = 37.459609
+      };
+    }
+
+  }
+
+
+  static class Credentials
+  {
+    // Root CA:
+    public static string caCrt = @"-----BEGIN CERTIFICATE-----
 MIIE4jCCAsqgAwIBAgIBATANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDEwZtZXgt
 Y2EwHhcNMTgwODIwMDMwNzQwWhcNMjAwMjIwMDMwNzQwWjARMQ8wDQYDVQQDEwZt
 ZXgtY2EwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCk45wuENmZk/ok
@@ -259,8 +283,8 @@ mbSi8TUL2D7kA5StYElnJ4G2o4Bmymu8XxcZhDfeH0LJ8lqP7TyRnkL2jmNYm6be
 LggXHNeu
 -----END CERTIFICATE-----";
 
-        // Client Crt:
-        public static string clientCrt = @"-----BEGIN CERTIFICATE-----
+    // Client Crt:
+    public static string clientCrt = @"-----BEGIN CERTIFICATE-----
 MIIEOjCCAiKgAwIBAgIQMCuDiDXhpNOKRvn69uSbCjANBgkqhkiG9w0BAQsFADAR
 MQ8wDQYDVQQDEwZtZXgtY2EwHhcNMTgwODIwMDMxMDI0WhcNMjAwMjIwMDMwNzM5
 WjAVMRMwEQYDVQQDEwptZXgtY2xpZW50MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
@@ -286,8 +310,8 @@ y9MuVRwaDfGMKBYZ8Urr+RDxoDQwObvYQNIW9wVLoCGRuj3qt0BtTLkOuHvNCox1
 GJJmmOKzRetckg3+ZSu7ET2YDuB3TDxPvDyc4Tq8
 -----END CERTIFICATE-----";
 
-        // Client Private Key:
-        public static string clientKey = @"-----BEGIN RSA PRIVATE KEY-----
+    // Client Private Key:
+    public static string clientKey = @"-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAzLaPAPOAUzV49VXgiYsDZTQ/zyCtsr0w3Ge/tvIck2Mm2FtA
 Z88roRV2UPrviEZPBL+o/JPiShfgqj1cLU1GyRr4uyezYl9AIig9/2xjYnkcXg6e
 3QG75lOaX2zH9mrYAm/N2hNzJwe9ZWBibXMDwFN4cptyygZuQ86SnK4j+6h1SVmN
@@ -314,5 +338,5 @@ FPkUdQKBgGhCavU72BxbSIFBsLuw07+DQ7aU00JFkqEFYrK2Y0KbtRzi5s0f8sTQ
 m67Ck9nZhhvdpunWWeynM8rjJy4MPUJWZeJmo8OAxOAdmdXs8cmykqfNb+0uC35b
 i4CrX+qG6rq9Y4/kVJ4jWdUbpAN7gp+vCMBUGZ0HuYtxlkRH4y6G
 -----END RSA PRIVATE KEY-----";
-    }
+  }
 }
