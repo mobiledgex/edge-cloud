@@ -13,6 +13,7 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.protobuf.ByteString;
 import com.mobiledgex.matchingengine.util.MexLocation;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,7 +36,15 @@ public class LimitsTest {
     public static final String TAG = "LimitsTest";
     public static final long GRPC_TIMEOUT_MS = 10000;
 
+    public static final String developerName = "EmptyMatchEngineApp";
+    public static final String applicationname = "EmptyMatchEngineApp";
+
     FusedLocationProviderClient fusedLocationClient;
+
+    public static String hostOverride = "tdg.dme.mobiledgex.net";
+    public static int portOverride = 50051;
+
+    public boolean useHostOverride = false;
 
 
     @Before
@@ -105,50 +114,24 @@ public class LimitsTest {
         return networkOperatorName;
     }
 
-    public MatchingEngineRequest createMockMatchingEngineRequest(String networkOperatorName, MatchingEngine me, Location location) {
-        AppClient.Match_Engine_Request request;
-
-        // Directly create request for testing:
-        LocOuterClass.Loc aLoc = LocOuterClass.Loc.newBuilder()
-                .setLat(location.getLatitude())
-                .setLong(location.getLongitude())
-                .build();
-
-        request = AppClient.Match_Engine_Request.newBuilder()
-                .setVer(5)
-                .setIdType(AppClient.IDTypes.IPADDR)
-                .setId("")
-                .setCarrierID(3l) // uint64 --> String? mnc, mcc?
-                .setCarrierName(networkOperatorName) // Mobile Network Carrier
-                .setTower(0) // cid and lac (int)
-                .setGpsLocation(aLoc)
-                .setAppId(5011l) // uint64 --> String again. TODO: Clarify use.
-                .setProtocol(ByteString.copyFromUtf8("http")) // This one is appId context sensitive.
-                .setServerPort(ByteString.copyFromUtf8("1234")) // App dependent.
-                .setDevName("EmptyMatchEngineApp") // From signing certificate?
-                .setAppName("EmptyMatchEngineApp")
-                .setAppVers("1") // Or versionName, which is visual name?
-                .setSessionCookie(me.getSessionCookie() == null ? "" : me.getSessionCookie())
-                .setVerifyLocToken(me.getTokenServerToken() == null ? "" : me.getTokenServerToken()) // Present only for VerifyLocation.
-                .build();
-
-        return new MatchingEngineRequest(request, me.getHost(), me.getPort());
-    }
-
-    // Every call needs registration to be called first.
-    public void registerClient(String carrierName, MatchingEngine me, Location location) {
-        AppClient.Match_Engine_Status registerResponse;
-        MatchingEngineRequest regRequest = createMockMatchingEngineRequest(carrierName, me, location);
+    // Every call needs registration to be called first at some point.
+    public void registerClient(Context context, String carrierName, MatchingEngine me) {
+        AppClient.RegisterClientReply registerReply;
+        AppClient.RegisterClientRequest regRequest = MockUtils.createMockRegisterClientRequest(developerName, me.getAppName(context), me);
         try {
-            registerResponse = me.registerClient(regRequest, GRPC_TIMEOUT_MS);
+            if (useHostOverride) {
+                registerReply = me.registerClient(regRequest, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+            } else {
+                registerReply = me.registerClient(context, regRequest, GRPC_TIMEOUT_MS);
+            }
             assertEquals("Response SessionCookie should equal MatchingEngine SessionCookie",
-                    registerResponse.getSessionCookie(), me.getSessionCookie());
+                    registerReply.getSessionCookie(), me.getSessionCookie());
         } catch (ExecutionException ee) {
-            Log.i(TAG, Log.getStackTraceString(ee));
-            assertTrue("ExecutionException registering client", false);
-        } catch (InterruptedException ie) {
-            Log.i(TAG, Log.getStackTraceString(ie));
-            assertTrue("InterruptedException registering client", false);
+            Log.e(TAG, Log.getStackTraceString(ee));
+            Assert.assertTrue("ExecutionException registering client", false);
+        } catch (InterruptedException ioe) {
+            Log.e(TAG, Log.getStackTraceString(ioe));
+            Assert.assertTrue("InterruptedException registering client", false);
         }
 
     }
@@ -165,7 +148,8 @@ public class LimitsTest {
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
-        AppClient.Match_Engine_Loc_Verify response1 = null;
+        AppClient.VerifyLocationReply verifyLocationReply1 = null;
+        AppClient.VerifyLocationReply verifyLocationReply2 = null;
 
         enableMockLocation(context,true);
         Location loc = createLocation("basicLatencyTest", -122.149349, 37.459609);
@@ -180,11 +164,15 @@ public class LimitsTest {
 
             long sum1 = 0, sum2 = 0;
             String carrierName = getCarrierName(context);
-            registerClient(carrierName, me, location);
-            MatchingEngineRequest request = createMockMatchingEngineRequest(carrierName, me, location);
+            registerClient(context, carrierName, me);
+            AppClient.VerifyLocationRequest verifyLocationRequest1 = MockUtils.createMockVerifyLocationRequest(carrierName, me, location);
             for (int i = 0; i < elapsed1.length; i++) {
                 start = System.currentTimeMillis();
-                response1 = me.verifyLocation(request, GRPC_TIMEOUT_MS);
+                if (useHostOverride) {
+                    verifyLocationReply1 = me.verifyLocation(verifyLocationRequest1, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+                } else {
+                    verifyLocationReply1 = me.verifyLocation(context, verifyLocationRequest1, GRPC_TIMEOUT_MS);
+                }
                 elapsed1[i] = System.currentTimeMillis() - start;
             }
 
@@ -193,17 +181,22 @@ public class LimitsTest {
                 sum1 += elapsed1[i];
             }
             Log.i("basicLatencyTest", "Average1: " + sum1 / elapsed1.length);
-            assert (response1 != null);
+            assert (verifyLocationReply1 != null);
 
             // Future
-            request = createMockMatchingEngineRequest(carrierName, me, location);
-            AppClient.Match_Engine_Loc_Verify response2 = null;
+            registerClient(context, carrierName, me);
+            AppClient.VerifyLocationRequest verifyLocationRequest2 = MockUtils.createMockVerifyLocationRequest(carrierName, me, location);
             try {
                 for (int i = 0; i < elapsed2.length; i++) {
                     start = System.currentTimeMillis();
-                    Future<AppClient.Match_Engine_Loc_Verify> locFuture = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
+                    Future<AppClient.VerifyLocationReply> locFuture;
+                    if (useHostOverride) {
+                        locFuture = me.verifyLocationFuture(verifyLocationRequest2, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+                    } else {
+                        locFuture = me.verifyLocationFuture(context, verifyLocationRequest2, GRPC_TIMEOUT_MS);
+                    }
                     // Do something busy()
-                    response2 = locFuture.get();
+                    verifyLocationReply2 = locFuture.get();
                     elapsed2[i] = System.currentTimeMillis() - start;
                 }
                 for (int i = 0; i < elapsed2.length; i++) {
@@ -211,7 +204,7 @@ public class LimitsTest {
                     sum2 += elapsed2[i];
                 }
                 Log.i("basicLatencyTest", "Average2: " + sum2 / elapsed2.length);
-                assert (response2 != null);
+                assert (verifyLocationReply2 != null);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
@@ -243,15 +236,15 @@ public class LimitsTest {
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
-        AppClient.Match_Engine_Loc_Verify response1 = null;
+        AppClient.VerifyLocationReply verifyLocationReply1 = null;
 
         enableMockLocation(context,true);
         Location loc = createLocation("basicLatencyTest", -122.149349, 37.459609);
 
         final long start = System.currentTimeMillis();
         final long elapsed2[] = new long[20];
-        final Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[elapsed2.length];
-        final AppClient.Match_Engine_Loc_Verify responses[] = new AppClient.Match_Engine_Loc_Verify[elapsed2.length];
+        final Future<AppClient.VerifyLocationReply> responseFutures[] = new Future[elapsed2.length];
+        final AppClient.VerifyLocationReply responses[] = new AppClient.VerifyLocationReply[elapsed2.length];
         try {
             setMockLocation(context, loc);
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
@@ -259,16 +252,20 @@ public class LimitsTest {
 
             long sum2 = 0;
             String carrierName = getCarrierName(context);
-            registerClient(carrierName, me, location);
-            MatchingEngineRequest request;
+            registerClient(context, carrierName, me);
+            AppClient.VerifyLocationRequest request;
 
             // Future
-            request = createMockMatchingEngineRequest(carrierName, me, location);
-            AppClient.Match_Engine_Loc_Verify response2 = null;
+            request = MockUtils.createMockVerifyLocationRequest(carrierName, me, location);
+            AppClient.VerifyLocationReply response2 = null;
             try {
                 // Background launch all:
                 for (int i = 0; i < elapsed2.length; i++) {
-                    responseFutures[i] = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
+                    if (useHostOverride) {
+                        responseFutures[i] = me.verifyLocationFuture(request, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+                    } else {
+                        responseFutures[i] = me.verifyLocationFuture(context, request, GRPC_TIMEOUT_MS);
+                    }
                     elapsed2[i] = 0;
                 }
                 // Because everything is ultimately a Future (not callbacks) to be used with other
@@ -371,8 +368,8 @@ public class LimitsTest {
         Location loc = createLocation("basicLatencyTest", -122.149349, 37.459609);
 
         final long elapsed[] = new long[concurrency];
-        final Future<AppClient.Match_Engine_Loc_Verify> responseFutures[] = new Future[elapsed.length];
-        final AppClient.Match_Engine_Loc_Verify responses[] = new AppClient.Match_Engine_Loc_Verify[elapsed.length];
+        final Future<AppClient.VerifyLocationReply> responseFutures[] = new Future[elapsed.length];
+        final AppClient.VerifyLocationReply responses[] = new AppClient.VerifyLocationReply[elapsed.length];
         try {
             setMockLocation(context, loc);
             location = mexLoc.getBlocking(context, GRPC_TIMEOUT_MS);
@@ -380,15 +377,19 @@ public class LimitsTest {
 
             long sum = 0;
             String carrierName = getCarrierName(context);
-            registerClient(carrierName, me, location);
-            MatchingEngineRequest request;
+            registerClient(context, carrierName, me);
+            AppClient.VerifyLocationRequest request;
 
             // Future
-            request = createMockMatchingEngineRequest(carrierName, me, location);
+            request = MockUtils.createMockVerifyLocationRequest(carrierName, me, location);
 
             // Background launch all:
             for (int i = 0; i < elapsed.length; i++) {
-                responseFutures[i] = me.verifyLocationFuture(request, GRPC_TIMEOUT_MS);
+                if (useHostOverride) {
+                    responseFutures[i] = me.verifyLocationFuture(request, hostOverride, portOverride, GRPC_TIMEOUT_MS);
+                } else {
+                    responseFutures[i] = me.verifyLocationFuture(context, request, GRPC_TIMEOUT_MS);
+                }
                 elapsed[i] = 0;
             }
             // Because everything is ultimately a Future (not callbacks) to be used with other
