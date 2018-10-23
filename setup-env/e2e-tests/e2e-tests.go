@@ -46,6 +46,7 @@ type e2e_test struct {
 	Name        string   `yaml:"name"`
 	IncludeFile string   `yaml:"includefile"`
 	Loops       int      `yaml:"loops"`
+	ApiType     string   `yaml:"api"`
 	Apifile     string   `yaml:"apifile"`
 	Actions     []string `yaml:"actions"`
 	Compareyaml struct {
@@ -114,7 +115,7 @@ func readYamlFile(fileName string, tests interface{}) bool {
 	return true
 }
 
-func runTests(dirName string, fileName string, depth int) (int, int, int) {
+func runTests(dirName string, fileName string, apiType string, depth int) (int, int, int) {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
@@ -134,6 +135,11 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 	for _, t := range testsToRun.Tests {
 		loopCount := 1
 		loopStr := ""
+		apitypestr := ""
+		if t.ApiType == "" {
+			t.ApiType = apiType
+		}
+
 		if t.Loops > loopCount {
 			loopCount = t.Loops
 		}
@@ -145,7 +151,10 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 			if namestr == "" && t.IncludeFile != "" {
 				namestr = "include: " + t.IncludeFile
 			}
-			f := indentstr + fileName
+			if t.ApiType != "" {
+				apitypestr = " (" + t.ApiType + ")"
+			}
+			f := indentstr + fileName + apitypestr
 			if len(f) > 30 {
 				f = f[0:27] + "..."
 			}
@@ -159,7 +168,7 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 					log.Fatalf("excessive include depth %d, possible loop: %s", depth, fileName)
 				}
 				fmt.Println()
-				nr, np, nf := runTests(dirName, t.IncludeFile, depth+1)
+				nr, np, nf := runTests(dirName, t.IncludeFile, t.ApiType, depth+1)
 				numTestsRun += nr
 				numPassed += np
 				numFailed += nf
@@ -179,8 +188,11 @@ func runTests(dirName string, fileName string, depth int) (int, int, int) {
 			if t.Compareyaml.Yaml1 != "" {
 				cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
 			}
+			if t.ApiType != "" {
+				cmdstr += fmt.Sprintf("-apitype %s ", apiType)
+			}
 			cmd := exec.Command("sh", "-c", cmdstr)
-
+			//fmt.Printf("%s\n", cmdstr)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			cmd.Stdout = &out
@@ -225,7 +237,7 @@ func main() {
 	if *testFile != "" {
 		dirName := path.Dir(*testFile)
 		fileName := path.Base(*testFile)
-		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, 0)
+		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, "", 0)
 		fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
 		if totalFailed > 0 {
 			fmt.Printf("Failed Tests: ")
@@ -233,7 +245,7 @@ func main() {
 				fmt.Printf("  %s: failures %d\n", t, f)
 			}
 			fmt.Printf("Logs in %s\n", *outputDir)
-                        os.Exit(1)
+			os.Exit(1)
 		}
 	}
 

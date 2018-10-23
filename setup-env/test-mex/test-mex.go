@@ -37,6 +37,7 @@ var (
 	deployment  *string
 	apiFile     *string
 	apiName     *string
+	apiType     *string
 	setupFile   *string
 	outputDir   *string
 	compareYaml *string
@@ -50,6 +51,7 @@ func init() {
 	actions = flag.String("actions", "", "one or more of: "+actionList+" separated by ,")
 	deployment = flag.String("deployment", "process", deploymentList)
 	apiFile = flag.String("apifile", "", "optional input yaml file for APIs")
+	apiType = flag.String("apitype", "", "optional api type - rest, or default grpc")
 	apiName = flag.String("apiname", "", "name of controller or DME API")
 	setupFile = flag.String("setupfile", "", "mandatory yml topology file")
 	outputDir = flag.String("outputdir", "", "option directory to store output and logs")
@@ -66,7 +68,6 @@ var actionChoices = map[string]string{
 	"ctrlcli":       "procname",
 	"ctrlinfo":      "procname",
 	"dmeapi":        "procname",
-	"dmerest":       "procname",
 	"deploy":        "",
 	"cleanup":       "",
 	"fetchlogs":     "",
@@ -141,6 +142,12 @@ func validateArgs() {
 		}
 	}
 
+	if *apiType != "" {
+		if *apiType != "rest" && *apiType != "grpc" {
+			fmt.Printf("ERROR - apitype invalid")
+			errFound = true
+		}
+	}
 	if *setupFile == "" {
 		fmt.Printf("ERROR -setupfile is mandatory\n")
 		errFound = true
@@ -302,20 +309,10 @@ func main() {
 			if !setupmex.UpdateAPIAddrs() {
 				errorsFound++
 			} else {
-				if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *outputDir) {
+				if !apis.RunDmeAPI(actionSubtype, actionParam, *apiFile, *apiType, *outputDir) {
 					log.Printf("Unable to run api for %s\n", action)
 					errorsFound++
 					errors = append(errors, "dme api failed")
-				}
-			}
-		case "dmerest":
-			if !setupmex.UpdateAPIAddrs() {
-				errorsFound++
-			} else {
-				if !apis.RunDmeRest(actionSubtype, actionParam, *apiFile, *outputDir) {
-					log.Printf("Unable to run api for %s\n", action)
-					errorsFound++
-					errors = append(errors, "dme rest failed")
 				}
 			}
 		case "cleanup":

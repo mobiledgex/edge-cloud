@@ -9,20 +9,24 @@ tests:
   - includefile: add_delete_2apps.yml
     loops: 2
   - includefile: get_appinstlist.yml
-  - includefile: get_appinstlist_rest.yml
+  - includefile: get_appinstlist.yml
+    api: rest
   - includefile: find_cloudlet.yml
     loops: 3
-  - includefile: find_cloudlet_rest.yml
+  - includefile: find_cloudlet.yml
+    api: rest
   - includefile: verify_loc.yml
     loops: 3 
-  - includefile: verify_loc_rest.yml
+  - includefile: verify_loc.yml
+    api: rest
   - includefile: ctrl_restart.yml
     loops: 2
   - includefile: restarts_2ctrls.yml
     loops: 2
   - includefile: verify_loc.yml
     loops: 2
-  - includefile: verify_loc_rest.yml
+  - includefile: verify_loc.yml
+    api: rest
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 
