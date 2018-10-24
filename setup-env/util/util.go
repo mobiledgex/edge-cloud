@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
@@ -16,6 +18,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gogo/protobuf/jsonpb"
+	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -594,4 +598,32 @@ func ControllerCLI(ctrl *ControllerProcess, args ...string) ([]byte, error) {
 	cmdargs = append(cmdargs, args...)
 	cmd := exec.Command("edgectl", cmdargs...)
 	return cmd.CombinedOutput()
+}
+
+func CallRESTPost(httpAddr string, client *http.Client, pb proto.Message, reply proto.Message) error {
+	str, err := new(jsonpb.Marshaler).MarshalToString(pb)
+	if err != nil {
+		log.Printf("Could not marshal request\n")
+		return err
+	}
+	bytesRep := []byte(str)
+	req, err := http.NewRequest("POST", httpAddr, bytes.NewBuffer(bytesRep))
+	if err != nil {
+		log.Printf("Failed to create a request\n")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Failed to HTTP <%s>\n", httpAddr)
+		return err
+	}
+	defer resp.Body.Close()
+	err = jsonpb.Unmarshal(resp.Body, reply)
+	if err != nil {
+		log.Printf("Failed to unmarshal reply\n")
+		body, _ := ioutil.ReadAll(resp.Body)
+		log.Printf("Body string: %s\n", string(body))
+		return err
+	}
+	return nil
 }
