@@ -12,25 +12,48 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
+// helper function to get the cert pool
+func getClientCertificate(tlsCertFile string) (tls.Certificate, error) {
+	if tlsCertFile == "" {
+		return tls.Certificate{}, nil
+	}
+	keyFile := strings.Replace(tlsCertFile, "crt", "key", 1)
+	certificate, err := tls.LoadX509KeyPair(
+		tlsCertFile,
+		keyFile,
+	)
+	if err != nil {
+		return tls.Certificate{}, err
+	}
+	return certificate, nil
+}
+
+// helper function to get the cert pool
+func getClientCertPool(tlsCertFile string) (*x509.CertPool, error) {
+	if tlsCertFile == "" {
+		return nil, nil
+	}
+	dir := path.Dir(tlsCertFile)
+	certPool := x509.NewCertPool()
+	bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
+	if err != nil {
+		return nil, err
+	}
+	ok := certPool.AppendCertsFromPEM(bs)
+	if !ok {
+		return nil, fmt.Errorf("fail to append certs")
+	}
+	return certPool, nil
+}
+
 // GetTLSClientDialOption gets options needed for TLS connection
 func GetTLSClientDialOption(addr string, tlsCertFile string) (grpc.DialOption, error) {
 	if tlsCertFile != "" {
-		dir := path.Dir(tlsCertFile)
-		keyFile := strings.Replace(tlsCertFile, "crt", "key", 1)
-
-		certPool := x509.NewCertPool()
-		bs, err := ioutil.ReadFile(dir + "/mex-ca.crt")
+		certPool, err := getClientCertPool(tlsCertFile)
 		if err != nil {
 			return nil, err
 		}
-		ok := certPool.AppendCertsFromPEM(bs)
-		if !ok {
-			return nil, fmt.Errorf("fail to append certs")
-		}
-		certificate, err := tls.LoadX509KeyPair(
-			tlsCertFile,
-			keyFile,
-		)
+		certificate, err := getClientCertificate(tlsCertFile)
 		if err != nil {
 			return nil, err
 		}
@@ -47,6 +70,28 @@ func GetTLSClientDialOption(addr string, tlsCertFile string) (grpc.DialOption, e
 	}
 	///no TLS
 	return grpc.WithInsecure(), nil
+}
+
+// GetTLSClientConfig gets TLS Config for REST api connection
+func GetTLSClientConfig(addr string, tlsCertFile string) (*tls.Config, error) {
+	if tlsCertFile != "" {
+		certPool, err := getClientCertPool(tlsCertFile)
+		if err != nil {
+			return nil, err
+		}
+		certificate, err := getClientCertificate(tlsCertFile)
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{certificate},
+			RootCAs:      certPool,
+		}
+		tlsConfig.BuildNameToCertificate()
+		return tlsConfig, nil
+	}
+	///no TLS - TODO NEED TO have non-secure connection
+	return nil, nil
 }
 
 // GetTLSServerCreds gets options needed for TLS connection.
