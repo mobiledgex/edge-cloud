@@ -370,8 +370,9 @@ public class MatchingEngine {
         Loc aLoc = androidLocToMexLoc(location);
 
         return AppClient.AppInstListRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
                 .setCarrierName(carrierName)
-                .setGpsLocation(aLoc) // Latest token is unknown until retrieved.
+                .setGpsLocation(aLoc)
                 .build();
     }
 
@@ -391,6 +392,8 @@ public class MatchingEngine {
         }
 
         return DynamicLocGroupRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
+                .setLgId(1001L) // FIXME: NOT IMPLEMENTED
                 .setCommType(commType)
                 .setUserData(userData == null ? "" : userData)
                 .build();
