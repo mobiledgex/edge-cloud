@@ -40,37 +40,35 @@ clusterflavors:
 
 clusters:
 - key:
-    name: autoclustersomeapplication
+    name: autoclustersomeapplication1
   defaultflavor:
     name: c1.small
 
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication
+      name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
   flavor:
     name: x1.small
   nodes: 3
   liveness: LivenessDynamic
 - key:
     clusterkey:
-      name: autoclustersomeapplication
+      name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
   flavor:
     name: x1.small
   nodes: 3
   liveness: LivenessDynamic
 
 operators:
-- key:
-    name: ATT
 - key:
     name: tmus
 
@@ -86,7 +84,7 @@ cloudlets:
 - key:
     operatorkey:
       name: tmus
-    name: tmocloud-1
+    name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
     lat: 31
@@ -94,7 +92,7 @@ cloudlets:
 - key:
     operatorkey:
       name: tmus
-    name: tmocloud-2
+    name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
     lat: 35
@@ -104,43 +102,43 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someapplication
+    name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
   cluster:
-    name: autoclustersomeapplication
+    name: autoclustersomeapplication1
 
 appinstances:
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
     id: 123
   cloudletloc:
     lat: 31
     long: -91
-  uri: someapplication.tmocloud-1.mobiledgex.net
+  uri: someapplication1.tmus-cloud-1.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication
+      name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
+  mappedpath: someapplication1
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
@@ -148,28 +146,28 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
     id: 123
   cloudletloc:
     lat: 35
     long: -95
-  uri: someapplication.tmocloud-2.mobiledgex.net
+  uri: someapplication1.tmus-cloud-2.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication
+      name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  mappedpath: someapplication
+  mappedpath: someapplication1
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7

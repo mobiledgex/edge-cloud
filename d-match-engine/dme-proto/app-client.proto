@@ -29,6 +29,10 @@ message RegisterClientRequest {
   string AppName = 3;
   // App Version
   string AppVers = 4;
+  // carrier name, not currently used
+  string CarrierName = 5;
+  // authentication token
+  string AuthToken = 6;
 }
 
 message RegisterClientReply {
@@ -140,7 +144,7 @@ message GetLocationReply {
 
 message AppInstListRequest {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Session Cookie from RegisterClientRequest
   string SessionCookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")

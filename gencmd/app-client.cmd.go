@@ -131,20 +131,24 @@ var DlgCommTypeStrings = []string{
 }
 
 func RegisterClientRequestSlicer(in *distributed_match_engine.RegisterClientRequest) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.DevName)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
+	s = append(s, in.CarrierName)
+	s = append(s, in.AuthToken)
 	return s
 }
 
 func RegisterClientRequestHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 6)
 	s = append(s, "Ver")
 	s = append(s, "DevName")
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
+	s = append(s, "CarrierName")
+	s = append(s, "AuthToken")
 	return s
 }
 
@@ -1166,6 +1170,8 @@ func init() {
 	RegisterClientRequestFlagSet.StringVar(&RegisterClientRequestIn.DevName, "devname", "", "DevName")
 	RegisterClientRequestFlagSet.StringVar(&RegisterClientRequestIn.AppName, "appname", "", "AppName")
 	RegisterClientRequestFlagSet.StringVar(&RegisterClientRequestIn.AppVers, "appvers", "", "AppVers")
+	RegisterClientRequestFlagSet.StringVar(&RegisterClientRequestIn.CarrierName, "carriername", "", "CarrierName")
+	RegisterClientRequestFlagSet.StringVar(&RegisterClientRequestIn.AuthToken, "authtoken", "", "AuthToken")
 	FindCloudletRequestFlagSet.Uint32Var(&FindCloudletRequestIn.Ver, "ver", 0, "Ver")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.CarrierName, "carriername", "", "CarrierName")

@@ -270,6 +270,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Config = app.Config
 		in.IpAccess = app.IpAccess
 		in.AppTemplate = app.AppTemplate
+		in.AuthPublicKey = app.AuthPublicKey
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -305,9 +306,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		// allocateIP also sets in.IpAccess to either Dedicated or Shared
-		err := allocateIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
-		if err != nil {
-			return err
+		if !defaultCloudlet {
+			err := allocateIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
+			if err != nil {
+				return err
+			}
 		}
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)

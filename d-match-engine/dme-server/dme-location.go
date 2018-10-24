@@ -6,37 +6,35 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	locapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
+	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string) error {
-	var key carrierAppKey
-	var found *carrierAppInst
-	var app *carrierApp
+	var key edgeproto.AppKey
+	var found *dmeAppInst
+	var app *dmeApp
 	var distance, d float64
-	var tbl *carrierApps
+	var tbl *dmeApps
 
-	tbl = carrierAppTbl
-	key.carrierName = mreq.CarrierName
-	key.appKey.DeveloperKey.Name = ckey.DevName
-	key.appKey.Name = ckey.AppName
-	key.appKey.Version = ckey.AppVers
+	tbl = dmeAppTbl
+	key.DeveloperKey.Name = ckey.DevName
+	key.Name = ckey.AppName
+	key.Version = ckey.AppVers
 
 	mreply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
 	mreply.GPS_Location_Accuracy_KM = -1
+
+	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
+		"appName", key.Name,
+		"appVersion", key.Version,
+		"devName", key.DeveloperKey.Name,
+		"GpsLocation", mreq.GpsLocation)
 
 	if mreq.GpsLocation == nil {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return fmt.Errorf("Missing GpsLocation")
 	}
-
-	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
-		"appName", key.appKey.Name,
-		"appVersion", key.appKey.Version,
-		"carrier", key.carrierName,
-		"devName", key.appKey.DeveloperKey.Name,
-		"lat", mreq.GpsLocation.Lat,
-		"long", mreq.GpsLocation.Long)
 
 	tbl.RLock()
 	app, ok := tbl.apps[key]
@@ -44,7 +42,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		tbl.RUnlock()
 		log.DebugLog(log.DebugLevelDmereq, "Could not find key in app table", "key", key)
 		// return loc unknown
-		return nil
+		return fmt.Errorf("app not found: %s", key)
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and TDG
@@ -56,13 +54,18 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
+		carr, ok := app.carriers[mreq.CarrierName]
+		if !ok {
+			tbl.RUnlock()
+			log.DebugLog(log.DebugLevelDmereq, "Could not carrier for app", "app", app, "carrierName", mreq.CarrierName)
+			return fmt.Errorf("carrier not found for app: %s", mreq.CarrierName)
+		}
 		distance = dmecommon.InfiniteDistance
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
-			"appName", key.appKey.Name,
-			"carrier", key.carrierName,
+			"appName", key.Name,
 			"lat", mreq.GpsLocation.Lat,
 			"long", mreq.GpsLocation.Long)
-		for _, c := range app.insts {
+		for _, c := range carr.insts {
 			d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
 			log.DebugLog(log.DebugLevelDmereq, "verify location at",
 				"lat", c.location.Lat,

@@ -57,7 +57,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -67,16 +67,18 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
   flavor:
     name: c1.small
   liveness: LivenessStatic
 
 operators:
 - key:
-    name: ATT
-- key:
     name: tmus
+- key:
+    name: azure
+- key:
+    name: gcp
 
 developers:
 - key:
@@ -96,7 +98,7 @@ cloudlets:
 - key:
     operatorkey:
       name: tmus
-    name: tmocloud-1
+    name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
     lat: 31
@@ -106,10 +108,30 @@ cloudlets:
 - key:
     operatorkey:
       name: tmus
-    name: tmocloud-2
+    name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
     lat: 35
+    long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: azure
+    name: azure-cloud-9
+  accessuri: cloud9.azure
+  location:
+    lat: 32
+    long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: gcp
+    name: gcp-cloud-10
+  accessuri: cloud2.gcp
+  location:
+    lat: 36
     long: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
@@ -118,28 +140,29 @@ apps:
 - key:
     developerkey:
       name: AcmeAppCo
-    name: someapplication
+    name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
+  ipaccess: IpAccessDedicatedOrShared
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
 
 appinstances:
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
     id: 123
   cloudletloc:
     lat: 31
@@ -150,9 +173,9 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-1
+      name: tmus-cloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
@@ -160,12 +183,12 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
     id: 123
   cloudletloc:
     lat: 35
@@ -176,9 +199,9 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: tmus
-      name: tmocloud-2
+      name: tmus-cloud-2
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
@@ -187,7 +210,7 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -195,7 +218,7 @@ appinstances:
       name: default
     id: 123
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small

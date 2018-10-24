@@ -1,0 +1,12 @@
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    id: 123

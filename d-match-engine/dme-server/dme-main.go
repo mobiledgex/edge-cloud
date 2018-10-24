@@ -116,33 +116,88 @@ func (s *server) GetLocation(ctx context.Context,
 	return reply, nil
 }
 
+func getAuthPublicKey(devname string, appname string, appvers string) (string, error) {
+	var key edgeproto.AppKey
+	var tbl *dmeApps
+	tbl = dmeAppTbl
+
+	key.DeveloperKey.Name = devname
+	key.Name = appname
+	key.Version = appvers
+	authkey := ""
+	foundApp := false
+	tbl.Lock()
+	app, ok := tbl.apps[key]
+	if ok {
+		authkey = app.authPublicKey
+		foundApp = true
+	}
+	tbl.Unlock()
+	if !foundApp {
+		return "", errors.New("app not found")
+	}
+	return authkey, nil
+}
+
 func (s *server) RegisterClient(ctx context.Context,
 	req *dme.RegisterClientRequest) (*dme.RegisterClientReply, error) {
 
-	// TODO: Authenticate client via req.AuthToken.
-	// We need to determine if the
-	// DevName/AppName/AppVers sent are valid and not spoofed.
-	// We do this by looking at the AuthToken sent by the client.
-	// There are several possible ways to validate.
-	// 1. During CreateDev, the developer uploads a public key.
-	// Before calling RegisterClient, app client will request
-	// auth token from developer. Developer will encrpyt token with
-	// their private key, send it to app, then app will send it as
-	// req.AuthToken. We will decrpyt using uploaded public key and
-	// check info in token. Info should include AppName, expiration, etc.
-	// 2. During CreateDev, we generate a pub/priv key pair and
-	// give the public key to the developer. Same as (1) except
-	// keys are reversed.
-	// 3. During CreateDev, developer gives URI and method to
-	// access their backend to validate tokens. On register client,
-	// we connect to their backend to validate the token.
+	mstatus := new(dme.RegisterClientReply)
 
+	log.DebugLog(log.DebugLevelDmereq, "RegisterClient received", "request", req)
+
+	if req.DevName == "" {
+		log.DebugLog(log.DebugLevelDmereq, "DevName cannot be empty")
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
+		return mstatus, errors.New("DevName cannot be empty")
+	}
+	if req.AppName == "" {
+		log.DebugLog(log.DebugLevelDmereq, "AppName cannot be empty")
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
+		return mstatus, errors.New("AppName cannot be empty")
+	}
+	if req.AppVers == "" {
+		log.DebugLog(log.DebugLevelDmereq, "AppVers cannot be empty")
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
+		return mstatus, errors.New("AppVers cannot be empty")
+	}
+	authkey, err := getAuthPublicKey(req.DevName, req.AppName, req.AppVers)
+	if err != nil {
+		log.DebugLog(log.DebugLevelDmereq, "fail to get public key", "err", err)
+		mstatus.Status = dme.ReplyStatus_RS_FAIL
+		return mstatus, err
+	}
+
+	//the token is currently optional, but once the SDK is enhanced to send one, it should
+	// be a mandatory parameter.  For now, only validate the token if we receive one
+	if req.AuthToken == "" {
+		if authkey != "" {
+			// we provisioned a key, and one was not provided.
+			log.DebugLog(log.DebugLevelDmereq, "App has token, none received")
+			mstatus.Status = dme.ReplyStatus_RS_FAIL
+			return mstatus, errors.New("No authtoken received")
+		}
+		// for now we will allow a tokenless register to pass if the app does not have one
+		log.DebugLog(log.DebugLevelDmereq, "Allowing register without token")
+
+	} else {
+		if authkey == "" {
+			log.DebugLog(log.DebugLevelDmereq, "No authkey provisioned to validate token")
+			mstatus.Status = dme.ReplyStatus_RS_FAIL
+			return mstatus, errors.New("No authkey found to validate token")
+		}
+		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.DevName, req.AppName, req.AppVers)
+		if err != nil {
+			log.DebugLog(log.DebugLevelDmereq, "Failed to verify token", "err", err)
+			mstatus.Status = dme.ReplyStatus_RS_FAIL
+			return mstatus, fmt.Errorf("failed to verify token - %s", err.Error())
+		}
+	}
 	key := dmecommon.CookieKey{
 		DevName: req.DevName,
 		AppName: req.AppName,
 		AppVers: req.AppVers,
 	}
-	mstatus := new(dme.RegisterClientReply)
 	cookie, err := dmecommon.GenerateCookie(&key, ctx)
 	if err != nil {
 		return mstatus, err

@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	url "net/url"
 
+	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -25,6 +28,7 @@ type dmeApiRequest struct {
 	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
 	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
 	TokenServerPath string                          `yaml:"token-server-path"`
+	ErrorExpected   string                          `yaml:"error-expected"`
 }
 
 type registration struct {
@@ -34,11 +38,11 @@ type registration struct {
 
 var apiRequest dmeApiRequest
 
-func readMERFile(merfile string) {
-	err := util.ReadYamlFile(merfile, &apiRequest, "", true)
+func readDMEApiFile(apifile string) {
+	err := util.ReadYamlFile(apifile, &apiRequest, "", true)
 	if err != nil {
-		if !util.IsYamlOk(err, "mer") {
-			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", merfile)
+		if !util.IsYamlOk(err, "dmeapi") {
+			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
 			os.Exit(1)
 		}
 	}
@@ -56,7 +60,7 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 	log.Printf("RunDmeAPI for api %s, %s\n", api, apiFile)
 	apiConnectTimeout := 5 * time.Second
 
-	readMERFile(apiFile)
+	readDMEApiFile(apiFile)
 
 	dme := util.GetDme(procname)
 	conn, err := dme.DmeLocal.ConnectAPI(apiConnectTimeout)
@@ -98,24 +102,43 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 	case "findcloudlet":
 		apiRequest.Fcreq.SessionCookie = sessionCookie
 		fc, err := client.FindCloudlet(ctx, &apiRequest.Fcreq)
-		sort.Slice(fc.Ports, func(i, j int) bool {
-			return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
-		})
+		if fc != nil {
+			sort.Slice(fc.Ports, func(i, j int) bool {
+				return fc.Ports[i].InternalPort < fc.Ports[j].InternalPort
+			})
+		}
 		dmereply = fc
 		dmeerror = err
 	case "register":
+		var expirySeconds int64 = 600
+		if strings.Contains(apiRequest.Rcreq.AuthToken, "GENTOKEN:") {
+			privKeyFile := filepath.Dir(apiFile) + "/" + strings.Split(apiRequest.Rcreq.AuthToken, ":")[1]
+			expTime := time.Now().Add(time.Duration(expirySeconds) * time.Second).Unix()
+			token, err := dmecommon.GenerateAuthToken(privKeyFile, apiRequest.Rcreq.DevName,
+				apiRequest.Rcreq.AppName, apiRequest.Rcreq.AppVers, expTime)
+			if err == nil {
+				log.Printf("Got AuthToken: %s\n", token)
+				apiRequest.Rcreq.AuthToken = token
+			} else {
+				log.Printf("Error getting AuthToken: %v\n", err)
+				return false
+			}
+		}
 		reply := new(dmeproto.RegisterClientReply)
 		reply, dmeerror = client.RegisterClient(ctx, &apiRequest.Rcreq)
-		dmereply = &registration{
-			Req:   apiRequest.Rcreq,
-			Reply: *reply,
+		if dmeerror == nil {
+			dmereply = &registration{
+				Req:   apiRequest.Rcreq,
+				Reply: *reply,
+			}
 		}
+
 	case "verifylocation":
 		tokSrvUrl := registerStatus.Reply.TokenServerURI
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
 
 		if tokSrvUrl == "" {
-			log.Printf("no token service URL in setup")
+			log.Printf("no token service URL in register response")
 			return false
 		}
 		//override the token server path if specified in the request.  This is used
@@ -161,12 +184,28 @@ func RunDmeAPI(api string, procname string, apiFile string, outputDir string) bo
 		log.Printf("Unsupported dme api %s\n", api)
 		return false
 	}
-	if dmeerror != nil {
-		log.Printf("Error in dme api %s -- %v\n", api, dmeerror)
-		return false
+	if dmeerror == nil {
+		// if the test is looking for an error, it needs to be there
+		if apiRequest.ErrorExpected != "" {
+			log.Printf("Missing error in DME API: %s", apiRequest.ErrorExpected)
+			return false
+		}
+	} else {
+		// see if the error was expected
+		if apiRequest.ErrorExpected != "" {
+			if strings.Contains(dmeerror.Error(), apiRequest.ErrorExpected) {
+				log.Printf("found expected error string in api response: %s", apiRequest.ErrorExpected)
+			} else {
+				log.Printf("Mismatched error in DME API: %s", apiRequest.ErrorExpected)
+				return false
+			}
+		} else {
+			log.Printf("Unexpected error in DME API: %s -- %v\n", api, dmeerror)
+			return false
+		}
 	}
 
-	log.Printf("DME REPLY %s\n", dmereply)
+	log.Printf("DME REPLY %v\n", dmereply)
 	out, ymlerror := yaml.Marshal(dmereply)
 	if ymlerror != nil {
 		fmt.Printf("Error: Unable to marshal %s reply: %v\n", api, ymlerror)

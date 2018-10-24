@@ -24,19 +24,21 @@ func (s *standaloneServer) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.App
 func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_ShowAppInstServer) error {
 	appInst := edgeproto.AppInst{}
 
-	tbl := carrierAppTbl
+	tbl := dmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
 
 	for _, a := range tbl.apps {
-		for _, c := range a.insts {
-			appInst.Key.AppKey = a.key.appKey
-			appInst.Key.CloudletKey = c.cloudletKey
-			appInst.Uri = c.uri
-			appInst.CloudletLoc = c.location
-			err := cb.Send(&appInst)
-			if err != nil {
-				return err
+		for _, c := range a.carriers {
+			for _, i := range c.insts {
+				appInst.Key.AppKey = a.appKey
+				appInst.Key.CloudletKey = i.cloudletKey
+				appInst.Uri = i.uri
+				appInst.CloudletLoc = i.location
+				err := cb.Send(&appInst)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

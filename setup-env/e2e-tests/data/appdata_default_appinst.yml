@@ -1,57 +1,9 @@
-flavors:
-- key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
-- key:
-    name: x1.small
-  ram: 2048
-  vcpus: 2
-  disk: 2
-- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
-
-
-clusters:
-- key:
-    name: SmallCluster
-  defaultflavor:
-    name: c1.small
-
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-
-apps:
-- key:
-    developerkey:
-      name: AcmeAppCo
-    name: someapplication
-    version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
-  imagetype: ImageTypeDocker
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
-
 appinstances:
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
-      name: someapplication
+      name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
