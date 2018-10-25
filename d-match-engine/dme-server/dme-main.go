@@ -173,7 +173,7 @@ func (s *server) RegisterClient(ctx context.Context,
 	if req.AuthToken == "" {
 		if authkey != "" {
 			// we provisioned a key, and one was not provided.
-			log.DebugLog(log.DebugLevelDmereq, "App has token, none received")
+			log.DebugLog(log.DebugLevelDmereq, "App has key, no token received")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
 			return mstatus, errors.New("No authtoken received")
 		}

@@ -6,6 +6,7 @@ type VerifyLocRR struct {
 	Reg   dme.RegisterClientRequest
 	Req   dme.VerifyLocationRequest
 	Reply dme.VerifyLocationReply
+	Error string
 }
 
 const Unknown = dme.VerifyLocationReply_LOC_UNKNOWN
@@ -57,10 +58,8 @@ var VerifyLocData = []VerifyLocRR{
 			CarrierName: "ATT",
 			GpsLocation: &dme.Loc{Lat: 52.65, Long: 10.341},
 		},
-		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Unknown,
-			GPS_Location_Accuracy_KM: -1,
-		},
+		Reply: dme.VerifyLocationReply{},
+		Error: "carrier not found for app",
 	},
 	VerifyLocRR{
 		Reg: dme.RegisterClientRequest{

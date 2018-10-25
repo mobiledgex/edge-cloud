@@ -76,24 +76,25 @@ func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
 
 	appsCheck := make(map[edgeproto.AppKey]*dummyDmeApp)
 	for _, inst := range appInsts {
-		appkey := inst.Key.AppKey
-		app, found := appsCheck[appkey]
+		app, found := appsCheck[inst.Key.AppKey]
 		if !found {
 			app = &dummyDmeApp{}
 			app.insts = make(map[edgeproto.CloudletKey]struct{})
-			appsCheck[appkey] = app
+			appsCheck[inst.Key.AppKey] = app
 		}
 		app.insts[inst.Key.CloudletKey] = struct{}{}
 	}
-	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of carrier apps")
+	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of apps")
+	totalInstances := 0
 	for k, app := range tbl.apps {
-		for _, c := range app.carriers {
-			appChk, found := appsCheck[k]
-			assert.True(t, found, "found app %s", k)
-			if !found {
-				continue
-			}
-			assert.Equal(t, len(appChk.insts), len(c.insts), "Number of cloudlets")
+		_, found := appsCheck[k]
+		assert.True(t, found, "found app %s", k)
+		if !found {
+			continue
+		}
+		for cname := range app.carriers {
+			totalInstances += len(app.carriers[cname].insts)
 		}
 	}
+	assert.Equal(t, totalInstances, len(appInsts), "Number of appInstances")
 }

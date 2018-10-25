@@ -57,7 +57,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		carr, ok := app.carriers[mreq.CarrierName]
 		if !ok {
 			tbl.RUnlock()
-			log.DebugLog(log.DebugLevelDmereq, "Could not carrier for app", "app", app, "carrierName", mreq.CarrierName)
+			log.DebugLog(log.DebugLevelDmereq, "Could not find carrier for app", "appKey", key, "carrierName", mreq.CarrierName)
 			return fmt.Errorf("carrier not found for app: %s", mreq.CarrierName)
 		}
 		distance = dmecommon.InfiniteDistance

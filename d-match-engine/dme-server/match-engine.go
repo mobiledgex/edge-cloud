@@ -68,6 +68,7 @@ func addApp(appInst *edgeproto.AppInst) {
 	tbl.Lock()
 	_, ok := tbl.apps[appkey]
 	if !ok {
+
 		// Key doesn't exists
 		app = new(dmeApp)
 		app.carriers = make(map[string]*dmeAppInsts)
@@ -91,7 +92,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		app.carriers[carrierName].insts = make(map[edgeproto.CloudletKey]*dmeAppInst)
 	}
 	if cl, foundAppInst := app.carriers[carrierName].insts[appInst.Key.CloudletKey]; foundAppInst {
-		// update existing carrier app inst
+		// update existing app inst
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
@@ -112,6 +113,7 @@ func addApp(appInst *edgeproto.AppInst) {
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.appKey.Name,
 			"appVersion", app.appKey.Version,
+			"cloudletKey", appInst.Key.CloudletKey,
 			"authPublicKey", appInst.AuthPublicKey,
 			"lat", cNew.location.Lat,
 			"long", cNew.location.Long)
@@ -154,10 +156,10 @@ func removeApp(appInst *edgeproto.AppInst) {
 					"appName", appkey.Name,
 					"appVersion", appkey.Version)
 			}
-			app.Unlock()
 		}
-		tbl.Unlock()
+		app.Unlock()
 	}
+	tbl.Unlock()
 }
 
 // pruneApps removes any data that was not sent by the controller.
