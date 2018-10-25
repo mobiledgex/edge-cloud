@@ -332,7 +332,7 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 			//if the carrier name was provided, only look for cloudlets for that carrier, or for public cloudlets
 			if mreq.CarrierName != "" && !isPublicCarrier(cname) && mreq.CarrierName != cname {
 				log.DebugLog(log.DebugLevelDmereq, "skipping cloudlet, mismatched carrier", "mreq.CarrierName", mreq.CarrierName, "i.cloudletKey.OperatorKey.Name", cname)
-				break
+				continue
 			}
 			for _, i := range c.insts {
 				cloc, exists := foundCloudlets[i.cloudletKey]
