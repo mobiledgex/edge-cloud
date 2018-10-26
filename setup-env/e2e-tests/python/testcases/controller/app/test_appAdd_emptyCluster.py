@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
-# EDGECLOUD-208 - now has lower case 'autocluster'
+# EDGECLOUD-208 - now has lower case 'autocluster' - fixed
+# EDGECLOUD-240 - creating an autocluster doesnot always pick the same default_flavor
 # create app with empty cluster and no cluster parm  
 # verify AutoCluster is created in Cluster and has smallest flavor
 # 
@@ -39,7 +40,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -58,7 +60,8 @@ class tc(unittest.TestCase):
 
         self.controller.create_developer(self.developer.developer) 
         self.controller.create_cluster_flavor(self.cluster_flavor.cluster_flavor)
-
+        self.controller.show_cluster_flavors()
+        #time.sleep(1)
     def test_CreateAppNoCluster(self):
         # print the existing apps 
         app_pre = self.controller.show_apps()
@@ -87,14 +90,17 @@ class tc(unittest.TestCase):
         # find app in list
         apptemp = self.app
         # controller creates cluster with AutoCluster + app_name since cluster is empty
-        apptemp.cluster_name = 'AutoCluster' + app_name  
-        found_app = self.app.exists(app_post)
+        apptemp.cluster_name = 'autocluster' + app_name  
+        found_app = apptemp.exists(app_post)
 
         # find autocluster in list
-        cluster = mex_controller.Cluster(cluster_name='AutoCluster' + app_name,
+        #time.sleep(1)
+        cluster = mex_controller.Cluster(cluster_name='autocluster' + app_name,
                                          default_flavor_name=cluster_flavor_name)
         found_cluster = cluster.exists(cluster_post)
 
+        self.controller.delete_app(self.app.app)
+        
         expect_equal(found_cluster, True, 'find cluster')
         expect_equal(found_app, True, 'find app')
         assert_expectations()
@@ -127,20 +133,23 @@ class tc(unittest.TestCase):
         # find app in list
         apptemp = self.app
         # controller creates cluster with AutoCluster + app_name since cluster is empty
-        apptemp.cluster_name = 'AutoCluster' + app_name
-        found_app = self.app.exists(app_post)
+        apptemp.cluster_name = 'autocluster' + app_name
+        found_app = apptemp.exists(app_post)
 
         # find autocluster in list
-        cluster = mex_controller.Cluster(cluster_name='AutoCluster' + app_name,
+        #time.sleep(1)
+        cluster = mex_controller.Cluster(cluster_name='autocluster' + app_name,
                                          default_flavor_name=cluster_flavor_name)
         found_cluster = cluster.exists(cluster_post)
 
+        self.controller.delete_app(self.app.app)
+        
         expect_equal(found_cluster, True, 'find cluster')
         expect_equal(found_app, True, 'find app')
         assert_expectations()
 
-    def tearDown(self):
-        self.controller.delete_app(self.app.app)
+    @classmethod
+    def tearDownClass(self):
         self.controller.delete_developer(self.developer.developer)
         self.controller.delete_cluster_flavor(self.cluster_flavor.cluster_flavor)
 

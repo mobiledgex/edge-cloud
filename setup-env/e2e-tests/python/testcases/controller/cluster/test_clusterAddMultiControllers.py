@@ -29,7 +29,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.cluster_name_1 = 'cluster1' + str(time.time())
         self.cluster_name_2 = 'cluster2' + str(time.time())
 
@@ -60,7 +61,7 @@ class tc(unittest.TestCase):
         create_cluster_resp_2 = self.controller_2.create_cluster(self.cluster_2.cluster)
 
         # print the cluster instances after adding 
-        time.sleep(1)
+        #time.sleep(1)
         cluster_resp_1 = self.controller_1.show_clusters()
         cluster_resp_2 = self.controller_2.show_clusters()
 

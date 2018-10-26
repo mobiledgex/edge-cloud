@@ -215,6 +215,26 @@ public class MatchingEngine {
         mNetworkManager = networkManager;
     }
 
+    public String getAppName(Context context) {
+        String applicationName = null;
+        // App
+        ApplicationInfo appInfo = context.getApplicationInfo();
+        String packageLabel = "";
+        if (context.getPackageManager() != null) {
+            CharSequence seq = appInfo.loadLabel(context.getPackageManager());
+            if (seq != null) {
+                packageLabel = seq.toString();
+            }
+        }
+        String appName;
+        if (applicationName == null || applicationName.equals("")) {
+            appName = packageLabel;
+        } else {
+            appName = applicationName;
+        }
+        return appName;
+    }
+
     public RegisterClientRequest createRegisterClientRequest(Context context, String developerName,
                                                              String applicationName, String appVersion) {
         if (!mMexLocationAllowed) {
@@ -350,8 +370,9 @@ public class MatchingEngine {
         Loc aLoc = androidLocToMexLoc(location);
 
         return AppClient.AppInstListRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
                 .setCarrierName(carrierName)
-                .setGpsLocation(aLoc) // Latest token is unknown until retrieved.
+                .setGpsLocation(aLoc)
                 .build();
     }
 
@@ -371,6 +392,8 @@ public class MatchingEngine {
         }
 
         return DynamicLocGroupRequest.newBuilder()
+                .setSessionCookie(mSessionCookie)
+                .setLgId(1001L) // FIXME: NOT IMPLEMENTED
                 .setCommType(commType)
                 .setUserData(userData == null ? "" : userData)
                 .build();
@@ -708,17 +731,16 @@ public class MatchingEngine {
 
     /**
      * Retrieve nearby AppInsts for registered application. This is a blocking call.
-     * @param context
      * @param request
      * @param timeoutInMilliseconds
      * @return
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    public AppInstListReply getAppInstList(Context context, AppInstListRequest request,
+    public AppInstListReply getAppInstList(AppInstListRequest request,
                                            long timeoutInMilliseconds)
             throws InterruptedException, ExecutionException {
-        String carrierName = retrieveNetworkCarrierName(context);
+        String carrierName = request.getCarrierName();
         return getAppInstList(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
     }
 
@@ -740,16 +762,14 @@ public class MatchingEngine {
 
     /**
      * Retrieve nearby AppInsts for registered application. Returns a Future.
-     * @param context
      * @param request
      * @param timeoutInMilliseconds
      * @return
      */
-    public Future<AppInstListReply> getAppInstListFuture(Context context,
-                                                         AppInstListRequest request,
+    public Future<AppInstListReply> getAppInstListFuture(AppInstListRequest request,
                                                          long timeoutInMilliseconds) {
 
-        String carrierName = retrieveNetworkCarrierName(context);
+        String carrierName = request.getCarrierName();
         return getAppInstListFuture(request, generateDmeHostAddress(carrierName), getPort(), timeoutInMilliseconds);
     }
     /**

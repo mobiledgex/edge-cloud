@@ -1,6 +1,5 @@
 # Makefile
 
-ABSPATH :=$(shell grealpath ../..)
 GRPCTOOLS_VERSION := Grpc.Tools.1.15.0
 TEMP_DIR := packages/$(GRPCTOOLS_VERSION)/tmp
 CURL_URL := https://www.nuget.org/api/v2/package/Grpc.Tools
@@ -31,7 +30,7 @@ build:
 	@echo Absolute Path for Proto files are: $(ABSOLUTEPATH)
 	mkdir -p $(APPCLIENTOUT)
 	@echo Generating GRPC source code...
-	$(PROTOC) -I$(ABSOLUTEPATH)/d-match-engine/dme-proto/ --csharp_out $(APPCLIENTOUT) --grpc_out $(APPCLIENTOUT) $(ABSOLUTEPATH)/d-match-engine/dme-proto/*.proto --plugin=protoc-gen-grpc=packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/grpc_csharp_plugin
+	$(PROTOC) -I$(ABSOLUTEPATH)/d-match-engine/dme-proto/ -I$(ABSOLUTEPATH)/edge-mvp/thrid_party/googleapis --csharp_out $(APPCLIENTOUT) --grpc_out $(APPCLIENTOUT) $(ABSOLUTEPATH)/d-match-engine/dme-proto/*.proto --plugin=protoc-gen-grpc=packages/$(GRPCTOOLS_VERSION)/tools/$(PLATFORM)/grpc_csharp_plugin
 	@echo Making Library...
 	$(shell MSBuild $(VSPROJECTROOT)/MatchingEngineSDK.sln > $(SOLUTIONLOG))
 	# Print unbounded log to screen:

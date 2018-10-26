@@ -27,7 +27,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         #controller_channel = grpc.insecure_channel(controller_address)
 
         self.mex_root_cert = self._findFile(mex_root_cert)
@@ -76,7 +77,7 @@ class tc(unittest.TestCase):
         expect_equal(found_cluster, True, 'found new cluster')
         assert_expectations()
 
-    def _findFile(self, path):
+    def _findFile(path):
         for dirname in sys.path:
             candidate = os.path.join(dirname, path)
             if os.path.isfile(candidate):

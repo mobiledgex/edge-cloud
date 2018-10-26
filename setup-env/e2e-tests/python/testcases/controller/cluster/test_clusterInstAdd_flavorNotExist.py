@@ -24,9 +24,12 @@ mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
 mex_key = 'localserver.key'
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -55,7 +58,7 @@ class tc(unittest.TestCase):
             print('create cluster instance failed')
 
         # print the cluster instances after adding 
-        time.sleep(1)
+        #time.sleep(1)
         clusterinst_resp = self.controller.show_cluster_instances()
 
         # verify clusterinst does not exist
@@ -68,10 +71,11 @@ class tc(unittest.TestCase):
 
         assert_expectations()
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         # delete cluster instance
         self.controller.delete_cluster(self.cluster.cluster)
-        time.sleep(1)
+        #time.sleep(1)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(tc)
