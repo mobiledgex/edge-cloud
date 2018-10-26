@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	url "net/url"
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
