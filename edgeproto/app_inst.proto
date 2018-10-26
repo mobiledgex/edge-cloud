@@ -70,7 +70,8 @@ message AppInst {
   // Template of kubernetes deployment yaml, from App definition
   string app_template = 18 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
  // public key used in authentication
-  string auth_public_key = 19 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];  option (protogen.generate_matches) = true;
+  string auth_public_key = 19 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];  
+  option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
