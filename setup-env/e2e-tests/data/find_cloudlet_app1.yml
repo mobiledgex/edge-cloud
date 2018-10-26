@@ -1,0 +1,10 @@
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+findcloudletrequest:
+  carriername: dmuus
+  gpslocation: 
+    lat: 36.00
+    long: -96.00
+

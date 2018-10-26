@@ -12,15 +12,6 @@ flavors:
 
 clusterflavors:
 - key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
     name: c1.small
   nodeflavor:
     name: x1.small
@@ -29,13 +20,17 @@ clusterflavors:
   numnodes: 3
   maxnodes: 3
   nummasters: 1
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
+  nummasters: 1
 
 clusters:
-- key:
-    name: autoclustersomeapplication2
-  defaultflavor:
-    name: c1.small
-  auto: true
 - key:
     name: autoclustersomeapplication1
   defaultflavor:
@@ -49,18 +44,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-1
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-1
+      name: dmuus-cloud-2
   flavor:
     name: c1.small
   liveness: LivenessDynamic
@@ -71,18 +55,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-2
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-2
+      name: dmuus-cloud-1
   flavor:
     name: c1.small
   liveness: LivenessDynamic
@@ -104,8 +77,8 @@ cloudlets:
 - key:
     operatorkey:
       name: dmuus
-    name: tmocloud-1
-  accessuri: dmuus.tmocloud-1
+    name: dmuus-cloud-1
+  accessuri: dmuus.dmuus-cloud-1
   location:
     long: -175
   ipsupport: IpSupportDynamic
@@ -113,8 +86,8 @@ cloudlets:
 - key:
     operatorkey:
       name: dmuus
-    name: tmocloud-2
-  accessuri: dmuus.tmocloud-2
+    name: dmuus-cloud-2
+  accessuri: dmuus.dmuus-cloud-2
   location:
     long: -174
   ipsupport: IpSupportDynamic
@@ -128,25 +101,12 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
+  ipaccess: IpAccessDedicatedOrShared
+  accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
   cluster:
     name: autoclustersomeapplication1
-  accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
-- key:
-    developerkey:
-      name: AcmeAppCo
-    name: someapplication2
-    version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
-  imagetype: ImageTypeDocker
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: autoclustersomeapplication2
-  accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
 
 appinstances:
 - key:
@@ -158,44 +118,19 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-2
-    id: 2
+      name: dmuus-cloud-1
+    id: 1
   cloudletloc:
-    long: -174
+    long: -175
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-2
+      name: dmuus-cloud-1
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-2
-    id: 2
-  cloudletloc:
-    long: -174
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-2
-  liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
@@ -208,44 +143,19 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-1
-    id: 1
+      name: dmuus-cloud-2
+    id: 2
   cloudletloc:
-    long: -175
+    long: -174
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: tmocloud-1
+      name: dmuus-cloud-2
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-1
-    id: 1
-  cloudletloc:
-    long: -175
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: tmocloud-1
-  liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small

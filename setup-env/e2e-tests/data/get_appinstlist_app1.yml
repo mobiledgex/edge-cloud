@@ -1,0 +1,11 @@
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+  authtoken: "GENTOKEN:authtoken_private.pem"
+appinstlistrequest:
+  carriername: dmuus
+  gpslocation: 
+    lat: 36.00
+    long: -96.00
+

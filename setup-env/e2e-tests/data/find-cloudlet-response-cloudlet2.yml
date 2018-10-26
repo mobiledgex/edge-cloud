@@ -1,15 +1,11 @@
-fqdn: tmocloud-2.dmuus.mobiledgex.net
-cloudletlocation:
-  lat: 35
-  long: -95
+fqdn: acmeappcosomeapplication10.dmuus-cloud-2.dmuus.mobiledgex.net
 ports:
 - proto: LProtoTCP
   internalport: 80
-  publicport: 10000
+  publicport: 80
 - proto: LProtoHTTP
   internalport: 443
   publicport: 443
-  publicpath: acmeappco/someapplication10/http443
 - proto: LProtoUDP
   internalport: 10002
   publicport: 10002

@@ -49,13 +49,15 @@ var FindCloudletData = []FindCloudletRR{
 			DevName: "Untomt",
 			AppName: "Untomt",
 			AppVers: "1.1",
-		},
+		}, // ATT does not exist and so should return default cloudlet
 		Req: dme.FindCloudletRequest{
 			CarrierName: "ATT",
 			GpsLocation: &dme.Loc{Lat: 52.65, Long: 10.341},
 		},
 		Reply: dme.FindCloudletReply{
-			Status: 2,
+			FQDN:             Cloudlets[4].Uri,
+			CloudletLocation: &Cloudlets[4].Location,
+			Status:           1,
 		},
 	},
 	FindCloudletRR{

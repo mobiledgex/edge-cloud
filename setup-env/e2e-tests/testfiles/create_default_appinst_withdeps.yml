@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: create default appinst including dependencies
+  apifile: "{{datadir}}/appdata_default_appinst_withdeps.yml"
+  actions: [ctrlapi-create,ctrlapi-show]

@@ -1,7 +1,0 @@
-match-engine-request:
-  carriername: dmuus
-  gpslocation: 
-    lat: 36.00
-    long: -96.00
-  appname: someapplication1 
-

@@ -12,14 +12,14 @@ tests:
     yaml2: "{{datadir}}/show10.yml"
     filetype: appdata
 
-- includefile: register.yml
+- includefile: register_app1.yml
 
 - name: get appinstlist
   actions: [dmeapi-getappinstlist] 
-  apifile: "{{datadir}}/mer_get_appinstlist_all.yml"
+  apifile: "{{datadir}}/get_appinstlist_app1.yml"
   compareyaml:
      yaml1: "{{outputdir}}/getappinstlist.yml"
-     yaml2: "{{datadir}}/get_appinstlist_result_all.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
      filetype: getappinstlist
 
 - name: stop and restart dme
@@ -27,11 +27,21 @@ tests:
 
 - name: get appinstlist
   actions: [dmeapi-getappinstlist]
-  apifile: "{{datadir}}/mer_get_appinstlist_all.yml"
+  apifile: "{{datadir}}/get_appinstlist_app1.yml"
   compareyaml:
      yaml1: "{{outputdir}}/getappinstlist.yml"
-     yaml2: "{{datadir}}/get_appinstlist_result_all.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
      filetype: getappinstlist
+
+- includefile: delete_default_appinst.yml
+
+- name: get appinstlist, expect app1 minus default
+  actions: [dmeapi-getappinstlist]
+  apifile: "{{datadir}}/get_appinstlist_app1.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getappinstlist.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_app1_no_default.yml"
+
  
 - name: delete provisioning, verify it is empty
   actions: [ctrlapi-delete,ctrlapi-show]
@@ -41,3 +51,14 @@ tests:
     yaml2: "{{datadir}}/appdata_empty.yml"
     filetype: appdata
 
+- includefile: create_default_appinst.yml
+
+- name: get appinstlist, expect default only
+  actions: [dmeapi-getappinstlist]
+  apifile: "{{datadir}}/get_appinstlist_app1.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getappinstlist.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_default.yml"
+     filetype: getappinstlist
+
+- includefile: delete_default_appinst_withdeps.yml

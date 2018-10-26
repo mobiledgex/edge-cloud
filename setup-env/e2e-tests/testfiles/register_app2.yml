@@ -1,0 +1,9 @@
+##
+description: executes matching engine request for register 
+
+tests:
+
+- name: send register api for app2
+  apifile: "{{datadir}}/register_app2.yml"
+  actions: [dmeapi-register]
+

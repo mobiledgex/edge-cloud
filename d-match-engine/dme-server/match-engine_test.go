@@ -17,7 +17,7 @@ func TestAddRemove(t *testing.T) {
 	setupMatchEngine()
 	appInsts := dmetest.GenerateAppInsts()
 
-	tbl := carrierAppTbl
+	tbl := dmeAppTbl
 
 	// add all data, check that number of instances matches
 	for _, inst := range appInsts {
@@ -67,32 +67,34 @@ func TestAddRemove(t *testing.T) {
 	assert.Equal(t, 0, len(tbl.apps))
 }
 
-type dummyCarrierApp struct {
+type dummyDmeApp struct {
 	insts map[edgeproto.CloudletKey]struct{}
 }
 
 func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
-	tbl := carrierAppTbl
+	tbl := dmeAppTbl
 
-	appsCheck := make(map[carrierAppKey]*dummyCarrierApp)
+	appsCheck := make(map[edgeproto.AppKey]*dummyDmeApp)
 	for _, inst := range appInsts {
-		key := carrierAppKey{}
-		setCarrierAppKey(inst, &key)
-		app, found := appsCheck[key]
+		app, found := appsCheck[inst.Key.AppKey]
 		if !found {
-			app = &dummyCarrierApp{}
+			app = &dummyDmeApp{}
 			app.insts = make(map[edgeproto.CloudletKey]struct{})
-			appsCheck[key] = app
+			appsCheck[inst.Key.AppKey] = app
 		}
 		app.insts[inst.Key.CloudletKey] = struct{}{}
 	}
-	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of carrier apps")
+	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of apps")
+	totalInstances := 0
 	for k, app := range tbl.apps {
-		appChk, found := appsCheck[k]
+		_, found := appsCheck[k]
 		assert.True(t, found, "found app %s", k)
 		if !found {
 			continue
 		}
-		assert.Equal(t, len(appChk.insts), len(app.insts), "Number of cloudlets")
+		for cname := range app.carriers {
+			totalInstances += len(app.carriers[cname].insts)
+		}
 	}
+	assert.Equal(t, totalInstances, len(appInsts), "Number of appInstances")
 }

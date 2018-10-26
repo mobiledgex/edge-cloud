@@ -1,4 +1,14 @@
 cloudlets:
+- carriername: azure
+  cloudletname: azure-cloud-9
+  gpslocation:
+    lat: 1
+    long: 9
+  distance: 11284.535631750952
+  appinstances:
+  - appname: someapplication1
+    appversion: "1.0"
+    fqdn: acmeappcosomeapplication110.azure-cloud-9.azure.mobiledgex.net
 - carriername: developer
   cloudletname: default
   gpslocation: {}
@@ -6,127 +16,94 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: default.developer.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: default.developer.mobiledgex.net
-- carriername: dmuus
-  cloudletname: tmocloud-1
+    fqdn: acmeappcosomeapplication110.default.developer.mobiledgex.net
+- carriername: gcp
+  cloudletname: gcp-cloud-10
   gpslocation:
-    long: -175
-  distance: 9020.118223772786
+    lat: 1
+    long: 10
+  distance: 11373.10678046936
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-1.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-1.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.gcp-cloud-10.gcp.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-10
+  cloudletname: dmuus-cloud-1
   gpslocation:
-    long: -166
-  distance: 8221.379797628093
+    lat: 1
+    long: 1
+  distance: 10570.971178689932
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-10.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-10.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-2
+  cloudletname: dmuus-cloud-2
   gpslocation:
-    long: -174
-  distance: 8930.796498002217
+    lat: 1
+    long: 2
+  distance: 10660.554090416144
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-2.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-2.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-3
+  cloudletname: dmuus-cloud-3
   gpslocation:
-    long: -173
-  distance: 8841.592529594249
+    lat: 1
+    long: 3
+  distance: 10750.046797594014
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-3.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-3.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-3.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-4
+  cloudletname: dmuus-cloud-4
   gpslocation:
-    long: -172
-  distance: 8752.516924767822
+    lat: 1
+    long: 4
+  distance: 10839.439254501909
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-4.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-4.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-4.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-5
+  cloudletname: dmuus-cloud-5
   gpslocation:
-    long: -171
-  distance: 8663.580485753291
+    lat: 1
+    long: 5
+  distance: 10928.721277244626
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-5.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-5.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-5.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-6
+  cloudletname: dmuus-cloud-6
   gpslocation:
-    long: -170
-  distance: 8574.794228073193
+    lat: 1
+    long: 6
+  distance: 11017.882528196287
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-6.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-6.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-6.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-7
+  cloudletname: dmuus-cloud-7
   gpslocation:
-    long: -169
-  distance: 8486.16939832425
+    lat: 1
+    long: 7
+  distance: 11106.912500109207
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-7.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-7.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-7.dmuus.mobiledgex.net
 - carriername: dmuus
-  cloudletname: tmocloud-8
+  cloudletname: dmuus-cloud-8
   gpslocation:
-    long: -168
-  distance: 8397.717492500102
+    lat: 1
+    long: 8
+  distance: 11195.800499853392
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: tmocloud-8.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-8.dmuus.mobiledgex.net
-- carriername: dmuus
-  cloudletname: tmocloud-9
-  gpslocation:
-    long: -167
-  distance: 8309.450274894869
-  appinstances:
-  - appname: someapplication1
-    appversion: "1.0"
-    fqdn: tmocloud-9.dmuus.mobiledgex.net
-  - appname: someapplication2
-    appversion: "1.0"
-    fqdn: tmocloud-9.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-8.dmuus.mobiledgex.net
