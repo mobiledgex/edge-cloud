@@ -4,7 +4,7 @@ description: executes matching engine request for register
 tests:
 
 - name: send register api
-  apifile: "{{datadir}}/mer_register.yml"
+  apifile: "{{datadir}}/register.yml"
   actions: [dmeapi-register]
 # This doesn't work in multiple setups because of different ips
 # TODO, figure how to deal with that

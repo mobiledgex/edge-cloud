@@ -1,0 +1,9 @@
+registerclientrequest:
+  devname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+verifylocationrequest:
+  carriername: dmuus
+  gpslocation: 
+    lat: -25.2744
+    long: 133.7751

@@ -2,14 +2,15 @@
 description: executes matching engine request for verify location using jims location and then with central dallas and then Australia. Verify results
 
 tests:
-- includefile: register.yml
 
 - name: Add and show provisioning
   apifile: "{{datadir}}/appdata.yml"
   actions: [ctrlapi-create,ctrlapi-show]
+
+- includefile: register.yml
  
 - name: verifylocation expected within 2km
-  apifile: "{{datadir}}/mer_jims_loc.yml"
+  apifile: "{{datadir}}/verloc_jims_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"
@@ -18,7 +19,7 @@ tests:
   loops: 3
 
 - name: verifylocation expected within 100km
-  apifile: "{{datadir}}/mer_dallas_loc.yml"
+  apifile: "{{datadir}}/verloc_dallas_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"
@@ -27,7 +28,7 @@ tests:
   loops: 3
 
 - name: verifylocation claiming to be in australia
-  apifile: "{{datadir}}/mer_australia_loc.yml"
+  apifile: "{{datadir}}/verloc_australia_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"
@@ -36,7 +37,7 @@ tests:
   loops: 3
 
 - name: verifylocation claiming to be in s.dakota
-  apifile: "{{datadir}}/mer_south_dakota_loc.yml"
+  apifile: "{{datadir}}/verloc_south_dakota_loc.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"
@@ -45,7 +46,7 @@ tests:
   loops: 3
 
 - name: verifylocation with expired token
-  apifile: "{{datadir}}/mer_expired_token.yml"
+  apifile: "{{datadir}}/verloc_expired_token.yml"
   actions: [dmeapi-verifylocation]
   compareyaml:
     yaml1: "{{outputdir}}/verifylocation.yml"

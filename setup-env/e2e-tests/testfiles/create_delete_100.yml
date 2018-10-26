@@ -16,7 +16,7 @@ tests:
 
 - name: get cloudlets
   actions: [dmeapi-getcloudlets]
-  apifile: "{{datadir}}/mer_get_cloudlets.yml"
+  apifile: "{{datadir}}/find_cloudlet_get_cloudlets.yml"
      #filetype: getcloudlets
 
 - name: delete provisioning 100 cloudlets

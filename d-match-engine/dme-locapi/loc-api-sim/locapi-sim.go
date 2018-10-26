@@ -155,9 +155,12 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	if req.Token == "" || req.Lat == 0 || req.Long == 0 {
+	//lat and long 0 are technically valid, if unlikely. But if both are zero
+	//we will consider this an error
+	if req.Token == "" || (req.Lat == 0 && req.Long == 0) {
 		log.Printf("missing field in request %+v\n", req)
 		http.Error(w, "missing field", 400)
+		return
 	}
 
 	ip, valid, err := locutil.DecodeToken(req.Token)

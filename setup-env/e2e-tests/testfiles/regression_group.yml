@@ -16,7 +16,6 @@ tests:
   - includefile: find_cloudlet.yml
     api: rest
   - includefile: verify_loc.yml
-    loops: 3 
   - includefile: verify_loc.yml
     api: rest
   - includefile: ctrl_restart.yml
@@ -24,7 +23,7 @@ tests:
   - includefile: restarts_2ctrls.yml
     loops: 2
   - includefile: verify_loc.yml
-    loops: 2
+    loops: 1
   - includefile: verify_loc.yml
     api: rest
   - includefile: default_cluster_test.yml
