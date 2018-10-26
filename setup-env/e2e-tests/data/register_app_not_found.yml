@@ -1,0 +1,7 @@
+registerclientrequest:
+  carriername: tmus
+  devname: AcmeAppCo
+  appname: nonexistentapplication
+  appvers: "1.0"
+error-expected: "app not found"
+

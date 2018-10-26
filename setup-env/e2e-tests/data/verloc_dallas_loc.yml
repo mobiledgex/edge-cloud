@@ -1,9 +1,10 @@
 registerclientrequest:
   devname: AcmeAppCo
-  appname: someapplication
+  appname: someapplication1
   appvers: "1.0"
 verifylocationrequest:
   carriername: tmus
   gpslocation: 
-    lat: 32.013988
-    long: -96.598243
+    lat: 32.8510877
+    long: -96.8014146
+

@@ -1,0 +1,6 @@
+findcloudletrequest:
+  carriername: tmus
+  devname: AcmeAppCo
+  appname: someapplication1
+  appvers: "1.0"
+

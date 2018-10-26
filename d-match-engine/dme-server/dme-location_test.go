@@ -34,8 +34,11 @@ func TestVerifyLoc(t *testing.T) {
 		assert.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 
-		reply, _ := serv.VerifyLocation(ctx, &rr.Req)
-		assert.Nil(t, err, "verify location")
-		assert.Equal(t, &rr.Reply, reply, "VerifyLocData[%d]", ii)
+		reply, err := serv.VerifyLocation(ctx, &rr.Req)
+		if err != nil {
+			assert.Contains(t, err.Error(), rr.Error, "VerifyLocData[%d]", ii)
+		} else {
+			assert.Equal(t, &rr.Reply, reply, "VerifyLocData[%d]", ii)
+		}
 	}
 }

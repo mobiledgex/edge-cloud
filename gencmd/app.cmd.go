@@ -142,7 +142,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -158,11 +158,12 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
 	s = append(s, in.AppTemplate)
+	s = append(s, in.AuthPublicKey)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 10)
+	s := make([]string, 0, 11)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -175,6 +176,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
 	s = append(s, "AppTemplate")
+	s = append(s, "AuthPublicKey")
 	return s
 }
 
@@ -416,6 +418,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
 	AppFlagSet.StringVar(&AppIn.AppTemplate, "apptemplate", "", "AppTemplate")
+	AppFlagSet.StringVar(&AppIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -463,6 +466,9 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("apptemplate").Changed {
 		AppIn.Fields = append(AppIn.Fields, "11")
+	}
+	if AppFlagSet.Lookup("authpublickey").Changed {
+		AppIn.Fields = append(AppIn.Fields, "12")
 	}
 }
 
