@@ -1,0 +1,12 @@
+fqdn: acmeappcosomeapplication10.azure-cloud-9.azure.mobiledgex.net
+ports:
+- proto: LProtoTCP
+  internalport: 80
+  publicport: 80
+- proto: LProtoHTTP
+  internalport: 443
+  publicport: 443
+- proto: LProtoUDP
+  internalport: 10002
+  publicport: 10002
+status: FIND_FOUND

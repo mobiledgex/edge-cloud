@@ -98,7 +98,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -115,7 +115,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -129,7 +129,7 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -141,7 +141,7 @@ crms:
     name: crm2
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -153,7 +153,7 @@ crms:
     name: crm3
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-3"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-3"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -165,7 +165,7 @@ crms:
     name: crm4
     apiaddr: "0.0.0.0:55094"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-4"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-4"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -177,7 +177,7 @@ crms:
     name: crm5
     apiaddr: "0.0.0.0:55095"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-5"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-5"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -189,7 +189,7 @@ crms:
     name: crm6
     apiaddr: "0.0.0.0:55096"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-6"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-6"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -201,7 +201,7 @@ crms:
     name: crm7
     apiaddr: "0.0.0.0:55097"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-7"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-7"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -213,7 +213,7 @@ crms:
     name: crm8
     apiaddr: "0.0.0.0:55098"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-8"}'
+    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-8"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -225,7 +225,7 @@ crms:
     name: crm9
     apiaddr: "0.0.0.0:55099"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-9"}'
+    cloudletkey: '{"operator_key":{"name":"azure"},"name":"azure-cloud-9"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -237,7 +237,7 @@ crms:
     name: crm10
     apiaddr: "0.0.0.0:55100"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-10"}'
+    cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcp-cloud-10"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"

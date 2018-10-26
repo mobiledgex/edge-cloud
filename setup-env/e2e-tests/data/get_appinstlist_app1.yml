@@ -1,8 +1,9 @@
 registerclientrequest:
   devname: AcmeAppCo
-  appname: someapplication
+  appname: someapplication1
   appvers: "1.0"
-findcloudletrequest:
+  authtoken: "GENTOKEN:authtoken_private.pem"
+appinstlistrequest:
   carriername: tmus
   gpslocation: 
     lat: 36.00

@@ -65,15 +65,15 @@ func TestNotify(t *testing.T) {
 }
 
 func waitForAppInst(appInst *edgeproto.AppInst) {
-	tbl := carrierAppTbl
+	tbl := dmeAppTbl
 
-	key := carrierAppKey{}
-	setCarrierAppKey(appInst, &key)
-
+	appkey := appInst.Key.AppKey
 	for i := 0; i < 10; i++ {
-		if app, found := tbl.apps[key]; found {
-			if _, found := app.insts[appInst.Key.CloudletKey]; found {
-				break
+		if app, found := tbl.apps[appkey]; found {
+			for _, c := range app.carriers {
+				if _, found := c.insts[appInst.Key.CloudletKey]; found {
+					break
+				}
 			}
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -81,18 +81,18 @@ func waitForAppInst(appInst *edgeproto.AppInst) {
 }
 
 func waitForNoAppInst(appInst *edgeproto.AppInst) {
-	tbl := carrierAppTbl
+	tbl := dmeAppTbl
 
-	key := carrierAppKey{}
-	setCarrierAppKey(appInst, &key)
-
+	appkey := appInst.Key.AppKey
 	for i := 0; i < 10; i++ {
-		app, found := tbl.apps[key]
+		app, found := tbl.apps[appkey]
 		if !found {
 			break
 		}
-		if _, found := app.insts[appInst.Key.CloudletKey]; !found {
-			break
+		for _, c := range app.carriers {
+			if _, found := c.insts[appInst.Key.CloudletKey]; !found {
+				break
+			}
 		}
 		time.Sleep(10 * time.Millisecond)
 	}

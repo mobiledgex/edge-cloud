@@ -14,18 +14,16 @@ tests:
     yaml2: "{{outputdir}}/show-commands.yml"
     filetype: appdata
 
-- includefile: register.yml
-
-- name: find cloudlet, expect nothing
-  apifile: "{{datadir}}/mer.yml"
-  actions: [dmeapi-findcloudlet]
+- includefile: register_app_not_found.yml
 
 - name: create default_appinst appinst
-  apifile: "{{datadir}}/appdata_default_appinst.yml"
+  apifile: "{{datadir}}/appdata_default_appinst_withdeps.yml"
   actions: [ctrlapi-create,ctrlapi-show]
+ 
+- includefile: register_app1.yml
 
 - name: find cloudlet with default_appinst appinst only
-  apifile: "{{datadir}}/mer.yml"
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
@@ -37,27 +35,54 @@ tests:
   actions: [ctrlapi-create]
 
 - name: find cloudlet, expect to see cloudlet1
-  apifile: "{{datadir}}/mer.yml"
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
     filetype: findcloudlet
-  loops: 2
  
 - name: create appinst2
   apifile: "{{datadir}}/appinst2.yml"
   actions: [ctrlapi-create]
 
+- name: create azure instance
+  apifile: "{{datadir}}/appinst_azure.yml"
+  actions: [ctrlapi-create]
+
 - name: find cloudlet, expect to see cloudlet2
-  apifile: "{{datadir}}/mer.yml"
+  apifile: "{{datadir}}/find_cloudlet_app1.yml"
   actions: [dmeapi-findcloudlet]
   compareyaml:
     yaml1: "{{outputdir}}/findcloudlet.yml"
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
 
-- name: delete provisioning
+- name: find between cloudlet1 and azure, expect cloudlet1
+  apifile: "{{datadir}}/find_cloudlet_between_cl1_azure.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet1.yml"
+    filetype: findcloudlet
+
+- name: delete cloudlet1
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appinst1.yml"
+
+- name: find between cloudlet1 and azure, expect azure
+  apifile: "{{datadir}}/find_cloudlet_between_cl1_azure.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-azure.yml"
+    filetype: findcloudlet
+
+- name: delete azure instance
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appinst_azure.yml"
+
+- name: delete rest of provisioning
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appdata.yml"
 

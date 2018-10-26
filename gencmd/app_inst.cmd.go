@@ -100,7 +100,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -148,11 +148,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
 	s = append(s, in.AppTemplate)
+	s = append(s, in.AuthPublicKey)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -187,6 +188,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
 	s = append(s, "AppTemplate")
+	s = append(s, "AuthPublicKey")
 	return s
 }
 
@@ -338,6 +340,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AppTemplate = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AuthPublicKey = ""
 	}
 }
 
@@ -738,6 +743,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.AppTemplate, "apptemplate", "", "AppTemplate")
+	AppInstFlagSet.StringVar(&AppInstIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -858,6 +864,9 @@ func AppInstSetFields() {
 	}
 	if AppInstNoConfigFlagSet.Lookup("apptemplate").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "18")
+	}
+	if AppInstFlagSet.Lookup("authpublickey").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "19")
 	}
 }
 

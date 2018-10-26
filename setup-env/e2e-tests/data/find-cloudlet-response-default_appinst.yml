@@ -1,14 +1,13 @@
-fqdn: default.developer.mobiledgex.net
-cloudletlocation: {}
+status: FIND_FOUND
+fqdn: acmeappcosomeapplication110.default.developer.mobiledgex.net
 ports:
 - proto: LProtoTCP
   internalport: 80
-  publicport: 10017
+  publicport: 80
 - proto: LProtoHTTP
   internalport: 443
   publicport: 443
-  publicpath: acmeappco/someapplication10/http443
 - proto: LProtoUDP
   internalport: 10002
-  publicport: 10019
-status: FIND_FOUND
+  publicport: 10002
+cloudletlocation: {}

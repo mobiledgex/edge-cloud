@@ -1,6 +1,8 @@
 package edgeproto
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"errors"
 	fmt "fmt"
 	"sort"
@@ -204,6 +206,16 @@ func (s *App) Validate(fields map[string]struct{}) error {
 		}
 		if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
 			return err
+		}
+	}
+	if s.AuthPublicKey != "" {
+		block, _ := pem.Decode([]byte(s.AuthPublicKey))
+		if block == nil {
+			return errors.New("Failed to decode public key")
+		}
+		_, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			return errors.New("Failed to parse public key: " + err.Error())
 		}
 	}
 	return nil

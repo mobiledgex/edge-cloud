@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: delete default appinst including dependencies
+  apifile: "{{datadir}}/appdata_default_appinst_withdeps.yml"
+  actions: [ctrlapi-delete,ctrlapi-show]
