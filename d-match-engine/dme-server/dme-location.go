@@ -31,7 +31,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		"devName", key.DeveloperKey.Name,
 		"GpsLocation", mreq.GpsLocation)
 
-	if mreq.GpsLocation == nil {
+	if mreq.GpsLocation == nil || (mreq.GpsLocation.Lat == 0 && mreq.GpsLocation.Long == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return fmt.Errorf("Missing GpsLocation")
 	}
@@ -50,10 +50,14 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	case "tdg":
 		fallthrough
 	case "TDG":
+		if mreq.VerifyLocToken == "" {
+			return fmt.Errorf("verifyloc token required")
+		}
 		result := locapi.CallTDGLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
+		// non-API based location uses cloudlets and so default and public cloudlets are not applicable
 		carr, ok := app.carriers[mreq.CarrierName]
 		if !ok {
 			tbl.RUnlock()

@@ -89,6 +89,15 @@ var Cloudlets = []Cloudlet{
 		Ip:          []byte{13, 1, 13, 1},
 		Location:    dme.Loc{Lat: 47.6062, Long: 122.3321},
 	},
+	Cloudlet{
+		Id:          555,
+		CarrierId:   5,
+		CarrierName: "developer",
+		Name:        "default",
+		Uri:         "15.1.15.1",
+		Ip:          []byte{14, 1, 14, 1},
+		Location:    dme.Loc{Lat: 29.66, Long: -82.33},
+	},
 }
 
 func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
