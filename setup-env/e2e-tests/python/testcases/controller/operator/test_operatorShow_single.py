@@ -26,7 +26,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -47,13 +48,12 @@ class tc(unittest.TestCase):
         # found operator
         found_operator = self.operator.exists(operator_post)
 
+        self.controller.delete_operator(self.operator.operator)
+
         expect_equal(found_operator, True, 'find operator')
         expect(len(operator_pre) > 1, 'find operator count pre')
         expect_equal(len(operator_post), 1, 'find single operator count')
         assert_expectations()
-
-    def tearDown(self):
-        self.controller.delete_operator(self.operator.operator)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(tc)

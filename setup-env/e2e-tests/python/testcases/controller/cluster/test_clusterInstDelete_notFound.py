@@ -28,7 +28,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.cluster_name = 'cluster' + str(time.time())
 
         self.controller = mex_controller.Controller(controller_address = controller_address,
@@ -60,11 +61,11 @@ class tc(unittest.TestCase):
             print('delete cluster failed')
 
         # print the cluster instances after adding 
-        time.sleep(1)
+        #time.sleep(1)
         clusterinst_after_add = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Key not found', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<>  not ready, state is CloudletStateNotPresent', 'error details')
 
         expect_equal(len(clusterinst_after_add), len(clusterinst_before), 'count after add')
 
@@ -81,7 +82,7 @@ class tc(unittest.TestCase):
             print('delete cluster failed')
 
         # print the cluster instances after adding
-        time.sleep(1)
+        #time.sleep(1)
         clusterinst_after_add = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
@@ -102,7 +103,7 @@ class tc(unittest.TestCase):
             print('delete cluster failed')
 
         # print the cluster instances after adding
-        time.sleep(1)
+        #time.sleep(1)
         clusterinst_after_add = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')

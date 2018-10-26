@@ -27,7 +27,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -51,7 +52,7 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Invalid cluster name', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<>  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 
@@ -70,7 +71,7 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Invalid cluster name', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<name:"tmus" >  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 
@@ -89,7 +90,7 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Invalid cluster name', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<> name:"tmocloud-1"  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 
@@ -108,7 +109,7 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Invalid operator name', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<>  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 
@@ -127,7 +128,7 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'Invalid cluster name', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<>  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 

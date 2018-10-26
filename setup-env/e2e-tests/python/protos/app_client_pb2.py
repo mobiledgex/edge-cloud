@@ -13,6 +13,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+import annotations_pb2 as annotations__pb2
 import loc_pb2 as loc__pb2
 import appcommon_pb2 as appcommon__pb2
 
@@ -22,9 +23,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='distributed_match_engine',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x10\x61pp-client.proto\x12\x18\x64istributed_match_engine\x1a\tloc.proto\x1a\x0f\x61ppcommon.proto\"\xf2\x02\n\x14Match_Engine_Request\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x31\n\x06IdType\x18\x02 \x01(\x0e\x32!.distributed_match_engine.IDTypes\x12\n\n\x02Id\x18\x03 \x01(\t\x12\x0c\n\x04Uuid\x18\x04 \x01(\t\x12\x11\n\tCarrierID\x18\x05 \x01(\x04\x12\x13\n\x0b\x43\x61rrierName\x18\x06 \x01(\t\x12\r\n\x05Tower\x18\x07 \x01(\x04\x12\x32\n\x0bGpsLocation\x18\x08 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\r\n\x05\x41ppId\x18\t \x01(\x04\x12\x10\n\x08Protocol\x18\n \x01(\x0c\x12\x12\n\nServerPort\x18\x0b \x01(\x0c\x12\x0f\n\x07\x44\x65vName\x18\x0c \x01(\t\x12\x0f\n\x07\x41ppName\x18\r \x01(\t\x12\x0f\n\x07\x41ppVers\x18\x0e \x01(\t\x12\x15\n\rSessionCookie\x18\x0f \x01(\t\x12\x16\n\x0eVerifyLocToken\x18\x10 \x01(\t\"\xe9\x02\n\x12Match_Engine_Reply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x0b\n\x03uri\x18\x02 \x01(\t\x12\x12\n\nservice_ip\x18\x03 \x01(\x0c\x12\x14\n\x0cservice_port\x18\x04 \x01(\r\x12\x38\n\x11\x63loudlet_location\x18\x05 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x30\n\x05ports\x18\x08 \x03(\x0b\x32!.distributed_match_engine.AppPort\x12H\n\x06Status\x18\x06 \x01(\x0e\x32\x38.distributed_match_engine.Match_Engine_Reply.Find_Status\x12\x15\n\rSessionCookie\x18\x07 \x01(\t\"B\n\x0b\x46ind_Status\x12\x10\n\x0c\x46IND_UNKNOWN\x10\x00\x12\x0e\n\nFIND_FOUND\x10\x01\x12\x11\n\rFIND_NOTFOUND\x10\x02\"\xd9\x04\n\x17Match_Engine_Loc_Verify\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12T\n\x0ctower_status\x18\x02 \x01(\x0e\x32>.distributed_match_engine.Match_Engine_Loc_Verify.Tower_Status\x12\x62\n\x13gps_location_status\x18\x03 \x01(\x0e\x32\x45.distributed_match_engine.Match_Engine_Loc_Verify.GPS_Location_Status\x12 \n\x18GPS_Location_Accuracy_KM\x18\x04 \x01(\x01\"i\n\x0cTower_Status\x12\x11\n\rTOWER_UNKNOWN\x10\x00\x12 \n\x1c\x43ONNECTED_TO_SPECIFIED_TOWER\x10\x01\x12$\n NOT_CONNECTED_TO_SPECIFIED_TOWER\x10\x02\"\xe9\x01\n\x13GPS_Location_Status\x12\x0f\n\x0bLOC_UNKNOWN\x10\x00\x12\x10\n\x0cLOC_VERIFIED\x10\x01\x12\x1d\n\x19LOC_MISMATCH_SAME_COUNTRY\x10\x02\x12\x1e\n\x1aLOC_MISMATCH_OTHER_COUNTRY\x10\x03\x12\x1d\n\x19LOC_ROAMING_COUNTRY_MATCH\x10\x04\x12 \n\x1cLOC_ROAMING_COUNTRY_MISMATCH\x10\x05\x12\x1a\n\x16LOC_ERROR_UNAUTHORIZED\x10\x06\x12\x13\n\x0fLOC_ERROR_OTHER\x10\x07\"\x97\x02\n\x10Match_Engine_Loc\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x45\n\x06Status\x18\x02 \x01(\x0e\x32\x35.distributed_match_engine.Match_Engine_Loc.Loc_Status\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\x12\r\n\x05Tower\x18\x04 \x01(\x04\x12\x36\n\x0fNetworkLocation\x18\x05 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x15\n\rSessionCookie\x18\x06 \x01(\t\"<\n\nLoc_Status\x12\x0f\n\x0bLOC_UNKNOWN\x10\x00\x12\r\n\tLOC_FOUND\x10\x01\x12\x0e\n\nLOC_DENIED\x10\x02\"\xfe\x01\n\x13Match_Engine_Status\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12G\n\x06Status\x18\x02 \x01(\x0e\x32\x37.distributed_match_engine.Match_Engine_Status.ME_Status\x12\x11\n\tErrorCode\x18\x03 \x01(\r\x12\x15\n\rSessionCookie\x18\x04 \x01(\t\x12\x13\n\x0bGroupCookie\x18\x05 \x01(\t\x12\x16\n\x0eTokenServerURI\x18\x06 \x01(\t\":\n\tME_Status\x12\x10\n\x0cME_UNDEFINED\x10\x00\x12\x0e\n\nME_SUCCESS\x10\x01\x12\x0b\n\x07ME_FAIL\x10\x02\"?\n\x0b\x41ppinstance\x12\x0f\n\x07\x41ppname\x18\x01 \x01(\t\x12\x12\n\nAppversion\x18\x02 \x01(\t\x12\x0b\n\x03Uri\x18\x03 \x01(\t\"\xc0\x01\n\x10\x43loudletLocation\x12\x13\n\x0b\x43\x61rrierName\x18\x01 \x01(\t\x12\x14\n\x0c\x43loudletName\x18\x02 \x01(\t\x12\x32\n\x0bGpsLocation\x18\x03 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x10\n\x08\x44istance\x18\x04 \x01(\x01\x12;\n\x0c\x41ppinstances\x18\x05 \x03(\x0b\x32%.distributed_match_engine.Appinstance\"\xf2\x01\n\x19Match_Engine_AppInst_List\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12M\n\x06Status\x18\x02 \x01(\x0e\x32=.distributed_match_engine.Match_Engine_AppInst_List.AI_Status\x12=\n\tCloudlets\x18\x03 \x03(\x0b\x32*.distributed_match_engine.CloudletLocation\":\n\tAI_Status\x12\x10\n\x0c\x41I_UNDEFINED\x10\x00\x12\x0e\n\nAI_SUCCESS\x10\x01\x12\x0b\n\x07\x41I_FAIL\x10\x02\"\x99\x03\n\x12\x44ynamicLocGroupAdd\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x31\n\x06IdType\x18\x02 \x01(\x0e\x32!.distributed_match_engine.IDTypes\x12\n\n\x02Id\x18\x03 \x01(\t\x12\x0c\n\x04Uuid\x18\x04 \x01(\t\x12\x11\n\tCarrierID\x18\x05 \x01(\x04\x12\x13\n\x0b\x43\x61rrierName\x18\x06 \x01(\t\x12\r\n\x05Tower\x18\x07 \x01(\x04\x12\x32\n\x0bGpsLocation\x18\x08 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x0c\n\x04LgId\x18\t \x01(\x04\x12\x15\n\rSessionCookie\x18\n \x01(\t\x12J\n\x08\x43ommType\x18\x0b \x01(\x0e\x32\x38.distributed_match_engine.DynamicLocGroupAdd.DlgCommType\x12\x10\n\x08UserData\x18\x0c \x01(\t\";\n\x0b\x44lgCommType\x12\x10\n\x0c\x44lgUndefined\x10\x00\x12\r\n\tDlgSecure\x10\x01\x12\x0b\n\x07\x44lgOpen\x10\x02*=\n\x07IDTypes\x12\x10\n\x0cID_UNDEFINED\x10\x00\x12\x08\n\x04IMEI\x10\x01\x12\n\n\x06MSISDN\x10\x02\x12\n\n\x06IPADDR\x10\x03\x32\xc3\x05\n\x10Match_Engine_Api\x12n\n\x0c\x46indCloudlet\x12..distributed_match_engine.Match_Engine_Request\x1a,.distributed_match_engine.Match_Engine_Reply\"\x00\x12u\n\x0eVerifyLocation\x12..distributed_match_engine.Match_Engine_Request\x1a\x31.distributed_match_engine.Match_Engine_Loc_Verify\"\x00\x12k\n\x0bGetLocation\x12..distributed_match_engine.Match_Engine_Request\x1a*.distributed_match_engine.Match_Engine_Loc\"\x00\x12q\n\x0eRegisterClient\x12..distributed_match_engine.Match_Engine_Request\x1a-.distributed_match_engine.Match_Engine_Status\"\x00\x12o\n\x0e\x41\x64\x64UserToGroup\x12,.distributed_match_engine.DynamicLocGroupAdd\x1a-.distributed_match_engine.Match_Engine_Status\"\x00\x12w\n\x0eGetAppInstList\x12..distributed_match_engine.Match_Engine_Request\x1a\x33.distributed_match_engine.Match_Engine_AppInst_List\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x10\x61pp-client.proto\x12\x18\x64istributed_match_engine\x1a\x11\x61nnotations.proto\x1a\tloc.proto\x1a\x0f\x61ppcommon.proto\"W\n\x15RegisterClientRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x0f\n\x07\x44\x65vName\x18\x02 \x01(\t\x12\x0f\n\x07\x41ppName\x18\x03 \x01(\t\x12\x0f\n\x07\x41ppVers\x18\x04 \x01(\t\"\x88\x01\n\x13RegisterClientReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x35\n\x06status\x18\x02 \x01(\x0e\x32%.distributed_match_engine.ReplyStatus\x12\x15\n\rSessionCookie\x18\x03 \x01(\t\x12\x16\n\x0eTokenServerURI\x18\x04 \x01(\t\"\x82\x01\n\x13\x46indCloudletRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x15\n\rSessionCookie\x18\x02 \x01(\t\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\x12\x32\n\x0bGpsLocation\x18\x04 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\"\xa5\x02\n\x11\x46indCloudletReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x46\n\x06status\x18\x02 \x01(\x0e\x32\x36.distributed_match_engine.FindCloudletReply.FindStatus\x12\x0c\n\x04\x46QDN\x18\x03 \x01(\t\x12\x30\n\x05ports\x18\x04 \x03(\x0b\x32!.distributed_match_engine.AppPort\x12\x38\n\x11\x63loudlet_location\x18\x05 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\"A\n\nFindStatus\x12\x10\n\x0c\x46IND_UNKNOWN\x10\x00\x12\x0e\n\nFIND_FOUND\x10\x01\x12\x11\n\rFIND_NOTFOUND\x10\x02\"\x9c\x01\n\x15VerifyLocationRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x15\n\rSessionCookie\x18\x02 \x01(\t\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\x12\x32\n\x0bGpsLocation\x18\x04 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x16\n\x0eVerifyLocToken\x18\x05 \x01(\t\"\xcd\x04\n\x13VerifyLocationReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12P\n\x0ctower_status\x18\x02 \x01(\x0e\x32:.distributed_match_engine.VerifyLocationReply.Tower_Status\x12^\n\x13gps_location_status\x18\x03 \x01(\x0e\x32\x41.distributed_match_engine.VerifyLocationReply.GPS_Location_Status\x12 \n\x18GPS_Location_Accuracy_KM\x18\x04 \x01(\x01\"i\n\x0cTower_Status\x12\x11\n\rTOWER_UNKNOWN\x10\x00\x12 \n\x1c\x43ONNECTED_TO_SPECIFIED_TOWER\x10\x01\x12$\n NOT_CONNECTED_TO_SPECIFIED_TOWER\x10\x02\"\xe9\x01\n\x13GPS_Location_Status\x12\x0f\n\x0bLOC_UNKNOWN\x10\x00\x12\x10\n\x0cLOC_VERIFIED\x10\x01\x12\x1d\n\x19LOC_MISMATCH_SAME_COUNTRY\x10\x02\x12\x1e\n\x1aLOC_MISMATCH_OTHER_COUNTRY\x10\x03\x12\x1d\n\x19LOC_ROAMING_COUNTRY_MATCH\x10\x04\x12 \n\x1cLOC_ROAMING_COUNTRY_MISMATCH\x10\x05\x12\x1a\n\x16LOC_ERROR_UNAUTHORIZED\x10\x06\x12\x13\n\x0fLOC_ERROR_OTHER\x10\x07\"M\n\x12GetLocationRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x15\n\rSessionCookie\x18\x02 \x01(\t\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\"\x80\x02\n\x10GetLocationReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x45\n\x06Status\x18\x02 \x01(\x0e\x32\x35.distributed_match_engine.GetLocationReply.Loc_Status\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\x12\r\n\x05Tower\x18\x04 \x01(\x04\x12\x36\n\x0fNetworkLocation\x18\x05 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\"<\n\nLoc_Status\x12\x0f\n\x0bLOC_UNKNOWN\x10\x00\x12\r\n\tLOC_FOUND\x10\x01\x12\x0e\n\nLOC_DENIED\x10\x02\"\x81\x01\n\x12\x41ppInstListRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x15\n\rSessionCookie\x18\x02 \x01(\t\x12\x13\n\x0b\x43\x61rrierName\x18\x03 \x01(\t\x12\x32\n\x0bGpsLocation\x18\x04 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\"@\n\x0b\x41ppinstance\x12\x0f\n\x07\x41ppname\x18\x01 \x01(\t\x12\x12\n\nAppversion\x18\x02 \x01(\t\x12\x0c\n\x04\x46QDN\x18\x03 \x01(\t\"\xc0\x01\n\x10\x43loudletLocation\x12\x13\n\x0b\x43\x61rrierName\x18\x01 \x01(\t\x12\x14\n\x0c\x43loudletName\x18\x02 \x01(\t\x12\x32\n\x0bGpsLocation\x18\x03 \x01(\x0b\x32\x1d.distributed_match_engine.Loc\x12\x10\n\x08\x44istance\x18\x04 \x01(\x01\x12;\n\x0c\x41ppinstances\x18\x05 \x03(\x0b\x32%.distributed_match_engine.Appinstance\"\xe0\x01\n\x10\x41ppInstListReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x44\n\x06Status\x18\x02 \x01(\x0e\x32\x34.distributed_match_engine.AppInstListReply.AI_Status\x12=\n\tCloudlets\x18\x03 \x03(\x0b\x32*.distributed_match_engine.CloudletLocation\":\n\tAI_Status\x12\x10\n\x0c\x41I_UNDEFINED\x10\x00\x12\x0e\n\nAI_SUCCESS\x10\x01\x12\x0b\n\x07\x41I_FAIL\x10\x02\"\xe9\x01\n\x16\x44ynamicLocGroupRequest\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x15\n\rSessionCookie\x18\x02 \x01(\t\x12\x0c\n\x04LgId\x18\x03 \x01(\x04\x12N\n\x08\x43ommType\x18\x0b \x01(\x0e\x32<.distributed_match_engine.DynamicLocGroupRequest.DlgCommType\x12\x10\n\x08UserData\x18\x0c \x01(\t\";\n\x0b\x44lgCommType\x12\x10\n\x0c\x44lgUndefined\x10\x00\x12\r\n\tDlgSecure\x10\x01\x12\x0b\n\x07\x44lgOpen\x10\x02\"\x82\x01\n\x14\x44ynamicLocGroupReply\x12\x0b\n\x03ver\x18\x01 \x01(\r\x12\x35\n\x06status\x18\x02 \x01(\x0e\x32%.distributed_match_engine.ReplyStatus\x12\x11\n\tErrorCode\x18\x03 \x01(\r\x12\x13\n\x0bGroupCookie\x18\x05 \x01(\t*=\n\x07IDTypes\x12\x10\n\x0cID_UNDEFINED\x10\x00\x12\x08\n\x04IMEI\x10\x01\x12\n\n\x06MSISDN\x10\x02\x12\n\n\x06IPADDR\x10\x03*<\n\x0bReplyStatus\x12\x10\n\x0cRS_UNDEFINED\x10\x00\x12\x0e\n\nRS_SUCCESS\x10\x01\x12\x0b\n\x07RS_FAIL\x10\x02\x32\xe6\x06\n\x10Match_Engine_Api\x12\x8f\x01\n\x0eRegisterClient\x12/.distributed_match_engine.RegisterClientRequest\x1a-.distributed_match_engine.RegisterClientReply\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/registerclient:\x01*\x12\x87\x01\n\x0c\x46indCloudlet\x12-.distributed_match_engine.FindCloudletRequest\x1a+.distributed_match_engine.FindCloudletReply\"\x1b\x82\xd3\xe4\x93\x02\x15\"\x10/v1/findcloudlet:\x01*\x12\x8f\x01\n\x0eVerifyLocation\x12/.distributed_match_engine.VerifyLocationRequest\x1a-.distributed_match_engine.VerifyLocationReply\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/verifylocation:\x01*\x12\x83\x01\n\x0bGetLocation\x12,.distributed_match_engine.GetLocationRequest\x1a*.distributed_match_engine.GetLocationReply\"\x1a\x82\xd3\xe4\x93\x02\x14\"\x0f/v1/getlocation:\x01*\x12\x91\x01\n\x0e\x41\x64\x64UserToGroup\x12\x30.distributed_match_engine.DynamicLocGroupRequest\x1a..distributed_match_engine.DynamicLocGroupReply\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/addusertogroup:\x01*\x12\x89\x01\n\x0eGetAppInstList\x12,.distributed_match_engine.AppInstListRequest\x1a*.distributed_match_engine.AppInstListReply\"\x1d\x82\xd3\xe4\x93\x02\x17\"\x12/v1/getappinstlist:\x01*b\x06proto3')
   ,
-  dependencies=[loc__pb2.DESCRIPTOR,appcommon__pb2.DESCRIPTOR,])
+  dependencies=[annotations__pb2.DESCRIPTOR,loc__pb2.DESCRIPTOR,appcommon__pb2.DESCRIPTOR,])
 
 _IDTYPES = _descriptor.EnumDescriptor(
   name='IDTypes',
@@ -51,21 +52,51 @@ _IDTYPES = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2871,
-  serialized_end=2932,
+  serialized_start=2828,
+  serialized_end=2889,
 )
 _sym_db.RegisterEnumDescriptor(_IDTYPES)
 
 IDTypes = enum_type_wrapper.EnumTypeWrapper(_IDTYPES)
+_REPLYSTATUS = _descriptor.EnumDescriptor(
+  name='ReplyStatus',
+  full_name='distributed_match_engine.ReplyStatus',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='RS_UNDEFINED', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='RS_SUCCESS', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='RS_FAIL', index=2, number=2,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=2891,
+  serialized_end=2951,
+)
+_sym_db.RegisterEnumDescriptor(_REPLYSTATUS)
+
+ReplyStatus = enum_type_wrapper.EnumTypeWrapper(_REPLYSTATUS)
 ID_UNDEFINED = 0
 IMEI = 1
 MSISDN = 2
 IPADDR = 3
+RS_UNDEFINED = 0
+RS_SUCCESS = 1
+RS_FAIL = 2
 
 
-_MATCH_ENGINE_REPLY_FIND_STATUS = _descriptor.EnumDescriptor(
-  name='Find_Status',
-  full_name='distributed_match_engine.Match_Engine_Reply.Find_Status',
+_FINDCLOUDLETREPLY_FINDSTATUS = _descriptor.EnumDescriptor(
+  name='FindStatus',
+  full_name='distributed_match_engine.FindCloudletReply.FindStatus',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -84,14 +115,14 @@ _MATCH_ENGINE_REPLY_FIND_STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=743,
-  serialized_end=809,
+  serialized_start=683,
+  serialized_end=748,
 )
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_REPLY_FIND_STATUS)
+_sym_db.RegisterEnumDescriptor(_FINDCLOUDLETREPLY_FINDSTATUS)
 
-_MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS = _descriptor.EnumDescriptor(
+_VERIFYLOCATIONREPLY_TOWER_STATUS = _descriptor.EnumDescriptor(
   name='Tower_Status',
-  full_name='distributed_match_engine.Match_Engine_Loc_Verify.Tower_Status',
+  full_name='distributed_match_engine.VerifyLocationReply.Tower_Status',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -110,14 +141,14 @@ _MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1072,
-  serialized_end=1177,
+  serialized_start=1158,
+  serialized_end=1263,
 )
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS)
+_sym_db.RegisterEnumDescriptor(_VERIFYLOCATIONREPLY_TOWER_STATUS)
 
-_MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS = _descriptor.EnumDescriptor(
+_VERIFYLOCATIONREPLY_GPS_LOCATION_STATUS = _descriptor.EnumDescriptor(
   name='GPS_Location_Status',
-  full_name='distributed_match_engine.Match_Engine_Loc_Verify.GPS_Location_Status',
+  full_name='distributed_match_engine.VerifyLocationReply.GPS_Location_Status',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -156,14 +187,14 @@ _MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1180,
-  serialized_end=1413,
+  serialized_start=1266,
+  serialized_end=1499,
 )
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS)
+_sym_db.RegisterEnumDescriptor(_VERIFYLOCATIONREPLY_GPS_LOCATION_STATUS)
 
-_MATCH_ENGINE_LOC_LOC_STATUS = _descriptor.EnumDescriptor(
+_GETLOCATIONREPLY_LOC_STATUS = _descriptor.EnumDescriptor(
   name='Loc_Status',
-  full_name='distributed_match_engine.Match_Engine_Loc.Loc_Status',
+  full_name='distributed_match_engine.GetLocationReply.Loc_Status',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -182,40 +213,14 @@ _MATCH_ENGINE_LOC_LOC_STATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1635,
-  serialized_end=1695,
+  serialized_start=1777,
+  serialized_end=1837,
 )
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_LOC_LOC_STATUS)
+_sym_db.RegisterEnumDescriptor(_GETLOCATIONREPLY_LOC_STATUS)
 
-_MATCH_ENGINE_STATUS_ME_STATUS = _descriptor.EnumDescriptor(
-  name='ME_Status',
-  full_name='distributed_match_engine.Match_Engine_Status.ME_Status',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='ME_UNDEFINED', index=0, number=0,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='ME_SUCCESS', index=1, number=1,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='ME_FAIL', index=2, number=2,
-      serialized_options=None,
-      type=None),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=1894,
-  serialized_end=1952,
-)
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_STATUS_ME_STATUS)
-
-_MATCH_ENGINE_APPINST_LIST_AI_STATUS = _descriptor.EnumDescriptor(
+_APPINSTLISTREPLY_AI_STATUS = _descriptor.EnumDescriptor(
   name='AI_Status',
-  full_name='distributed_match_engine.Match_Engine_AppInst_List.AI_Status',
+  full_name='distributed_match_engine.AppInstListReply.AI_Status',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -237,11 +242,11 @@ _MATCH_ENGINE_APPINST_LIST_AI_STATUS = _descriptor.EnumDescriptor(
   serialized_start=2399,
   serialized_end=2457,
 )
-_sym_db.RegisterEnumDescriptor(_MATCH_ENGINE_APPINST_LIST_AI_STATUS)
+_sym_db.RegisterEnumDescriptor(_APPINSTLISTREPLY_AI_STATUS)
 
-_DYNAMICLOCGROUPADD_DLGCOMMTYPE = _descriptor.EnumDescriptor(
+_DYNAMICLOCGROUPREQUEST_DLGCOMMTYPE = _descriptor.EnumDescriptor(
   name='DlgCommType',
-  full_name='distributed_match_engine.DynamicLocGroupAdd.DlgCommType',
+  full_name='distributed_match_engine.DynamicLocGroupRequest.DlgCommType',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -260,207 +265,43 @@ _DYNAMICLOCGROUPADD_DLGCOMMTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2810,
-  serialized_end=2869,
+  serialized_start=2634,
+  serialized_end=2693,
 )
-_sym_db.RegisterEnumDescriptor(_DYNAMICLOCGROUPADD_DLGCOMMTYPE)
+_sym_db.RegisterEnumDescriptor(_DYNAMICLOCGROUPREQUEST_DLGCOMMTYPE)
 
 
-_MATCH_ENGINE_REQUEST = _descriptor.Descriptor(
-  name='Match_Engine_Request',
-  full_name='distributed_match_engine.Match_Engine_Request',
+_REGISTERCLIENTREQUEST = _descriptor.Descriptor(
+  name='RegisterClientRequest',
+  full_name='distributed_match_engine.RegisterClientRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_Request.ver', index=0,
+      name='ver', full_name='distributed_match_engine.RegisterClientRequest.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='IdType', full_name='distributed_match_engine.Match_Engine_Request.IdType', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Id', full_name='distributed_match_engine.Match_Engine_Request.Id', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Uuid', full_name='distributed_match_engine.Match_Engine_Request.Uuid', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='CarrierID', full_name='distributed_match_engine.Match_Engine_Request.CarrierID', index=4,
-      number=5, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='CarrierName', full_name='distributed_match_engine.Match_Engine_Request.CarrierName', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Tower', full_name='distributed_match_engine.Match_Engine_Request.Tower', index=6,
-      number=7, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='GpsLocation', full_name='distributed_match_engine.Match_Engine_Request.GpsLocation', index=7,
-      number=8, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='AppId', full_name='distributed_match_engine.Match_Engine_Request.AppId', index=8,
-      number=9, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Protocol', full_name='distributed_match_engine.Match_Engine_Request.Protocol', index=9,
-      number=10, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='ServerPort', full_name='distributed_match_engine.Match_Engine_Request.ServerPort', index=10,
-      number=11, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='DevName', full_name='distributed_match_engine.Match_Engine_Request.DevName', index=11,
-      number=12, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='AppName', full_name='distributed_match_engine.Match_Engine_Request.AppName', index=12,
-      number=13, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='AppVers', full_name='distributed_match_engine.Match_Engine_Request.AppVers', index=13,
-      number=14, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='SessionCookie', full_name='distributed_match_engine.Match_Engine_Request.SessionCookie', index=14,
-      number=15, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='VerifyLocToken', full_name='distributed_match_engine.Match_Engine_Request.VerifyLocToken', index=15,
-      number=16, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=75,
-  serialized_end=445,
-)
-
-
-_MATCH_ENGINE_REPLY = _descriptor.Descriptor(
-  name='Match_Engine_Reply',
-  full_name='distributed_match_engine.Match_Engine_Reply',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_Reply.ver', index=0,
-      number=1, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='uri', full_name='distributed_match_engine.Match_Engine_Reply.uri', index=1,
+      name='DevName', full_name='distributed_match_engine.RegisterClientRequest.DevName', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='service_ip', full_name='distributed_match_engine.Match_Engine_Reply.service_ip', index=2,
-      number=3, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
+      name='AppName', full_name='distributed_match_engine.RegisterClientRequest.AppName', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='service_port', full_name='distributed_match_engine.Match_Engine_Reply.service_port', index=3,
-      number=4, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='cloudlet_location', full_name='distributed_match_engine.Match_Engine_Reply.cloudlet_location', index=4,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='ports', full_name='distributed_match_engine.Match_Engine_Reply.ports', index=5,
-      number=8, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Status', full_name='distributed_match_engine.Match_Engine_Reply.Status', index=6,
-      number=6, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='SessionCookie', full_name='distributed_match_engine.Match_Engine_Reply.SessionCookie', index=7,
-      number=7, type=9, cpp_type=9, label=1,
+      name='AppVers', full_name='distributed_match_engine.RegisterClientRequest.AppVers', index=3,
+      number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -470,7 +311,6 @@ _MATCH_ENGINE_REPLY = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _MATCH_ENGINE_REPLY_FIND_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -478,41 +318,264 @@ _MATCH_ENGINE_REPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=448,
-  serialized_end=809,
+  serialized_start=93,
+  serialized_end=180,
 )
 
 
-_MATCH_ENGINE_LOC_VERIFY = _descriptor.Descriptor(
-  name='Match_Engine_Loc_Verify',
-  full_name='distributed_match_engine.Match_Engine_Loc_Verify',
+_REGISTERCLIENTREPLY = _descriptor.Descriptor(
+  name='RegisterClientReply',
+  full_name='distributed_match_engine.RegisterClientReply',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_Loc_Verify.ver', index=0,
+      name='ver', full_name='distributed_match_engine.RegisterClientReply.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='tower_status', full_name='distributed_match_engine.Match_Engine_Loc_Verify.tower_status', index=1,
+      name='status', full_name='distributed_match_engine.RegisterClientReply.status', index=1,
       number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='gps_location_status', full_name='distributed_match_engine.Match_Engine_Loc_Verify.gps_location_status', index=2,
+      name='SessionCookie', full_name='distributed_match_engine.RegisterClientReply.SessionCookie', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='TokenServerURI', full_name='distributed_match_engine.RegisterClientReply.TokenServerURI', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=183,
+  serialized_end=319,
+)
+
+
+_FINDCLOUDLETREQUEST = _descriptor.Descriptor(
+  name='FindCloudletRequest',
+  full_name='distributed_match_engine.FindCloudletRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.FindCloudletRequest.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='SessionCookie', full_name='distributed_match_engine.FindCloudletRequest.SessionCookie', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='CarrierName', full_name='distributed_match_engine.FindCloudletRequest.CarrierName', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='GpsLocation', full_name='distributed_match_engine.FindCloudletRequest.GpsLocation', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=322,
+  serialized_end=452,
+)
+
+
+_FINDCLOUDLETREPLY = _descriptor.Descriptor(
+  name='FindCloudletReply',
+  full_name='distributed_match_engine.FindCloudletReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.FindCloudletReply.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='distributed_match_engine.FindCloudletReply.status', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='FQDN', full_name='distributed_match_engine.FindCloudletReply.FQDN', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ports', full_name='distributed_match_engine.FindCloudletReply.ports', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='cloudlet_location', full_name='distributed_match_engine.FindCloudletReply.cloudlet_location', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _FINDCLOUDLETREPLY_FINDSTATUS,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=455,
+  serialized_end=748,
+)
+
+
+_VERIFYLOCATIONREQUEST = _descriptor.Descriptor(
+  name='VerifyLocationRequest',
+  full_name='distributed_match_engine.VerifyLocationRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.VerifyLocationRequest.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='SessionCookie', full_name='distributed_match_engine.VerifyLocationRequest.SessionCookie', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='CarrierName', full_name='distributed_match_engine.VerifyLocationRequest.CarrierName', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='GpsLocation', full_name='distributed_match_engine.VerifyLocationRequest.GpsLocation', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='VerifyLocToken', full_name='distributed_match_engine.VerifyLocationRequest.VerifyLocToken', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=751,
+  serialized_end=907,
+)
+
+
+_VERIFYLOCATIONREPLY = _descriptor.Descriptor(
+  name='VerifyLocationReply',
+  full_name='distributed_match_engine.VerifyLocationReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.VerifyLocationReply.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='tower_status', full_name='distributed_match_engine.VerifyLocationReply.tower_status', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='gps_location_status', full_name='distributed_match_engine.VerifyLocationReply.gps_location_status', index=2,
       number=3, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='GPS_Location_Accuracy_KM', full_name='distributed_match_engine.Match_Engine_Loc_Verify.GPS_Location_Accuracy_KM', index=3,
+      name='GPS_Location_Accuracy_KM', full_name='distributed_match_engine.VerifyLocationReply.GPS_Location_Accuracy_KM', index=3,
       number=4, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
@@ -523,8 +586,8 @@ _MATCH_ENGINE_LOC_VERIFY = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS,
-    _MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS,
+    _VERIFYLOCATIONREPLY_TOWER_STATUS,
+    _VERIFYLOCATIONREPLY_GPS_LOCATION_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -532,57 +595,95 @@ _MATCH_ENGINE_LOC_VERIFY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=812,
-  serialized_end=1413,
+  serialized_start=910,
+  serialized_end=1499,
 )
 
 
-_MATCH_ENGINE_LOC = _descriptor.Descriptor(
-  name='Match_Engine_Loc',
-  full_name='distributed_match_engine.Match_Engine_Loc',
+_GETLOCATIONREQUEST = _descriptor.Descriptor(
+  name='GetLocationRequest',
+  full_name='distributed_match_engine.GetLocationRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_Loc.ver', index=0,
+      name='ver', full_name='distributed_match_engine.GetLocationRequest.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Status', full_name='distributed_match_engine.Match_Engine_Loc.Status', index=1,
+      name='SessionCookie', full_name='distributed_match_engine.GetLocationRequest.SessionCookie', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='CarrierName', full_name='distributed_match_engine.GetLocationRequest.CarrierName', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1501,
+  serialized_end=1578,
+)
+
+
+_GETLOCATIONREPLY = _descriptor.Descriptor(
+  name='GetLocationReply',
+  full_name='distributed_match_engine.GetLocationReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.GetLocationReply.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='Status', full_name='distributed_match_engine.GetLocationReply.Status', index=1,
       number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='CarrierName', full_name='distributed_match_engine.Match_Engine_Loc.CarrierName', index=2,
+      name='CarrierName', full_name='distributed_match_engine.GetLocationReply.CarrierName', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Tower', full_name='distributed_match_engine.Match_Engine_Loc.Tower', index=3,
+      name='Tower', full_name='distributed_match_engine.GetLocationReply.Tower', index=3,
       number=4, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='NetworkLocation', full_name='distributed_match_engine.Match_Engine_Loc.NetworkLocation', index=4,
+      name='NetworkLocation', full_name='distributed_match_engine.GetLocationReply.NetworkLocation', index=4,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='SessionCookie', full_name='distributed_match_engine.Match_Engine_Loc.SessionCookie', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -591,7 +692,7 @@ _MATCH_ENGINE_LOC = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _MATCH_ENGINE_LOC_LOC_STATUS,
+    _GETLOCATIONREPLY_LOC_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -599,57 +700,43 @@ _MATCH_ENGINE_LOC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1416,
-  serialized_end=1695,
+  serialized_start=1581,
+  serialized_end=1837,
 )
 
 
-_MATCH_ENGINE_STATUS = _descriptor.Descriptor(
-  name='Match_Engine_Status',
-  full_name='distributed_match_engine.Match_Engine_Status',
+_APPINSTLISTREQUEST = _descriptor.Descriptor(
+  name='AppInstListRequest',
+  full_name='distributed_match_engine.AppInstListRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_Status.ver', index=0,
+      name='ver', full_name='distributed_match_engine.AppInstListRequest.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Status', full_name='distributed_match_engine.Match_Engine_Status.Status', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='ErrorCode', full_name='distributed_match_engine.Match_Engine_Status.ErrorCode', index=2,
-      number=3, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='SessionCookie', full_name='distributed_match_engine.Match_Engine_Status.SessionCookie', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='SessionCookie', full_name='distributed_match_engine.AppInstListRequest.SessionCookie', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='GroupCookie', full_name='distributed_match_engine.Match_Engine_Status.GroupCookie', index=4,
-      number=5, type=9, cpp_type=9, label=1,
+      name='CarrierName', full_name='distributed_match_engine.AppInstListRequest.CarrierName', index=2,
+      number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='TokenServerURI', full_name='distributed_match_engine.Match_Engine_Status.TokenServerURI', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
+      name='GpsLocation', full_name='distributed_match_engine.AppInstListRequest.GpsLocation', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -658,7 +745,6 @@ _MATCH_ENGINE_STATUS = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _MATCH_ENGINE_STATUS_ME_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -666,8 +752,8 @@ _MATCH_ENGINE_STATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1698,
-  serialized_end=1952,
+  serialized_start=1840,
+  serialized_end=1969,
 )
 
 
@@ -693,7 +779,7 @@ _APPINSTANCE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Uri', full_name='distributed_match_engine.Appinstance.Uri', index=2,
+      name='FQDN', full_name='distributed_match_engine.Appinstance.FQDN', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -711,8 +797,8 @@ _APPINSTANCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1954,
-  serialized_end=2017,
+  serialized_start=1971,
+  serialized_end=2035,
 )
 
 
@@ -770,34 +856,34 @@ _CLOUDLETLOCATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2020,
-  serialized_end=2212,
+  serialized_start=2038,
+  serialized_end=2230,
 )
 
 
-_MATCH_ENGINE_APPINST_LIST = _descriptor.Descriptor(
-  name='Match_Engine_AppInst_List',
-  full_name='distributed_match_engine.Match_Engine_AppInst_List',
+_APPINSTLISTREPLY = _descriptor.Descriptor(
+  name='AppInstListReply',
+  full_name='distributed_match_engine.AppInstListReply',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.Match_Engine_AppInst_List.ver', index=0,
+      name='ver', full_name='distributed_match_engine.AppInstListReply.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Status', full_name='distributed_match_engine.Match_Engine_AppInst_List.Status', index=1,
+      name='Status', full_name='distributed_match_engine.AppInstListReply.Status', index=1,
       number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Cloudlets', full_name='distributed_match_engine.Match_Engine_AppInst_List.Cloudlets', index=2,
+      name='Cloudlets', full_name='distributed_match_engine.AppInstListReply.Cloudlets', index=2,
       number=3, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -808,7 +894,7 @@ _MATCH_ENGINE_APPINST_LIST = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _MATCH_ENGINE_APPINST_LIST_AI_STATUS,
+    _APPINSTLISTREPLY_AI_STATUS,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -816,97 +902,48 @@ _MATCH_ENGINE_APPINST_LIST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2215,
+  serialized_start=2233,
   serialized_end=2457,
 )
 
 
-_DYNAMICLOCGROUPADD = _descriptor.Descriptor(
-  name='DynamicLocGroupAdd',
-  full_name='distributed_match_engine.DynamicLocGroupAdd',
+_DYNAMICLOCGROUPREQUEST = _descriptor.Descriptor(
+  name='DynamicLocGroupRequest',
+  full_name='distributed_match_engine.DynamicLocGroupRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ver', full_name='distributed_match_engine.DynamicLocGroupAdd.ver', index=0,
+      name='ver', full_name='distributed_match_engine.DynamicLocGroupRequest.ver', index=0,
       number=1, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='IdType', full_name='distributed_match_engine.DynamicLocGroupAdd.IdType', index=1,
-      number=2, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Id', full_name='distributed_match_engine.DynamicLocGroupAdd.Id', index=2,
-      number=3, type=9, cpp_type=9, label=1,
+      name='SessionCookie', full_name='distributed_match_engine.DynamicLocGroupRequest.SessionCookie', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='Uuid', full_name='distributed_match_engine.DynamicLocGroupAdd.Uuid', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='CarrierID', full_name='distributed_match_engine.DynamicLocGroupAdd.CarrierID', index=4,
-      number=5, type=4, cpp_type=4, label=1,
+      name='LgId', full_name='distributed_match_engine.DynamicLocGroupRequest.LgId', index=2,
+      number=3, type=4, cpp_type=4, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='CarrierName', full_name='distributed_match_engine.DynamicLocGroupAdd.CarrierName', index=5,
-      number=6, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='Tower', full_name='distributed_match_engine.DynamicLocGroupAdd.Tower', index=6,
-      number=7, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='GpsLocation', full_name='distributed_match_engine.DynamicLocGroupAdd.GpsLocation', index=7,
-      number=8, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='LgId', full_name='distributed_match_engine.DynamicLocGroupAdd.LgId', index=8,
-      number=9, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='SessionCookie', full_name='distributed_match_engine.DynamicLocGroupAdd.SessionCookie', index=9,
-      number=10, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='CommType', full_name='distributed_match_engine.DynamicLocGroupAdd.CommType', index=10,
+      name='CommType', full_name='distributed_match_engine.DynamicLocGroupRequest.CommType', index=3,
       number=11, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='UserData', full_name='distributed_match_engine.DynamicLocGroupAdd.UserData', index=11,
+      name='UserData', full_name='distributed_match_engine.DynamicLocGroupRequest.UserData', index=4,
       number=12, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -917,7 +954,7 @@ _DYNAMICLOCGROUPADD = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
-    _DYNAMICLOCGROUPADD_DLGCOMMTYPE,
+    _DYNAMICLOCGROUPREQUEST_DLGCOMMTYPE,
   ],
   serialized_options=None,
   is_extendable=False,
@@ -926,79 +963,164 @@ _DYNAMICLOCGROUPADD = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=2460,
-  serialized_end=2869,
+  serialized_end=2693,
 )
 
-_MATCH_ENGINE_REQUEST.fields_by_name['IdType'].enum_type = _IDTYPES
-_MATCH_ENGINE_REQUEST.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
-_MATCH_ENGINE_REPLY.fields_by_name['cloudlet_location'].message_type = loc__pb2._LOC
-_MATCH_ENGINE_REPLY.fields_by_name['ports'].message_type = appcommon__pb2._APPPORT
-_MATCH_ENGINE_REPLY.fields_by_name['Status'].enum_type = _MATCH_ENGINE_REPLY_FIND_STATUS
-_MATCH_ENGINE_REPLY_FIND_STATUS.containing_type = _MATCH_ENGINE_REPLY
-_MATCH_ENGINE_LOC_VERIFY.fields_by_name['tower_status'].enum_type = _MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS
-_MATCH_ENGINE_LOC_VERIFY.fields_by_name['gps_location_status'].enum_type = _MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS
-_MATCH_ENGINE_LOC_VERIFY_TOWER_STATUS.containing_type = _MATCH_ENGINE_LOC_VERIFY
-_MATCH_ENGINE_LOC_VERIFY_GPS_LOCATION_STATUS.containing_type = _MATCH_ENGINE_LOC_VERIFY
-_MATCH_ENGINE_LOC.fields_by_name['Status'].enum_type = _MATCH_ENGINE_LOC_LOC_STATUS
-_MATCH_ENGINE_LOC.fields_by_name['NetworkLocation'].message_type = loc__pb2._LOC
-_MATCH_ENGINE_LOC_LOC_STATUS.containing_type = _MATCH_ENGINE_LOC
-_MATCH_ENGINE_STATUS.fields_by_name['Status'].enum_type = _MATCH_ENGINE_STATUS_ME_STATUS
-_MATCH_ENGINE_STATUS_ME_STATUS.containing_type = _MATCH_ENGINE_STATUS
+
+_DYNAMICLOCGROUPREPLY = _descriptor.Descriptor(
+  name='DynamicLocGroupReply',
+  full_name='distributed_match_engine.DynamicLocGroupReply',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ver', full_name='distributed_match_engine.DynamicLocGroupReply.ver', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='status', full_name='distributed_match_engine.DynamicLocGroupReply.status', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ErrorCode', full_name='distributed_match_engine.DynamicLocGroupReply.ErrorCode', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='GroupCookie', full_name='distributed_match_engine.DynamicLocGroupReply.GroupCookie', index=3,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=2696,
+  serialized_end=2826,
+)
+
+_REGISTERCLIENTREPLY.fields_by_name['status'].enum_type = _REPLYSTATUS
+_FINDCLOUDLETREQUEST.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
+_FINDCLOUDLETREPLY.fields_by_name['status'].enum_type = _FINDCLOUDLETREPLY_FINDSTATUS
+_FINDCLOUDLETREPLY.fields_by_name['ports'].message_type = appcommon__pb2._APPPORT
+_FINDCLOUDLETREPLY.fields_by_name['cloudlet_location'].message_type = loc__pb2._LOC
+_FINDCLOUDLETREPLY_FINDSTATUS.containing_type = _FINDCLOUDLETREPLY
+_VERIFYLOCATIONREQUEST.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
+_VERIFYLOCATIONREPLY.fields_by_name['tower_status'].enum_type = _VERIFYLOCATIONREPLY_TOWER_STATUS
+_VERIFYLOCATIONREPLY.fields_by_name['gps_location_status'].enum_type = _VERIFYLOCATIONREPLY_GPS_LOCATION_STATUS
+_VERIFYLOCATIONREPLY_TOWER_STATUS.containing_type = _VERIFYLOCATIONREPLY
+_VERIFYLOCATIONREPLY_GPS_LOCATION_STATUS.containing_type = _VERIFYLOCATIONREPLY
+_GETLOCATIONREPLY.fields_by_name['Status'].enum_type = _GETLOCATIONREPLY_LOC_STATUS
+_GETLOCATIONREPLY.fields_by_name['NetworkLocation'].message_type = loc__pb2._LOC
+_GETLOCATIONREPLY_LOC_STATUS.containing_type = _GETLOCATIONREPLY
+_APPINSTLISTREQUEST.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
 _CLOUDLETLOCATION.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
 _CLOUDLETLOCATION.fields_by_name['Appinstances'].message_type = _APPINSTANCE
-_MATCH_ENGINE_APPINST_LIST.fields_by_name['Status'].enum_type = _MATCH_ENGINE_APPINST_LIST_AI_STATUS
-_MATCH_ENGINE_APPINST_LIST.fields_by_name['Cloudlets'].message_type = _CLOUDLETLOCATION
-_MATCH_ENGINE_APPINST_LIST_AI_STATUS.containing_type = _MATCH_ENGINE_APPINST_LIST
-_DYNAMICLOCGROUPADD.fields_by_name['IdType'].enum_type = _IDTYPES
-_DYNAMICLOCGROUPADD.fields_by_name['GpsLocation'].message_type = loc__pb2._LOC
-_DYNAMICLOCGROUPADD.fields_by_name['CommType'].enum_type = _DYNAMICLOCGROUPADD_DLGCOMMTYPE
-_DYNAMICLOCGROUPADD_DLGCOMMTYPE.containing_type = _DYNAMICLOCGROUPADD
-DESCRIPTOR.message_types_by_name['Match_Engine_Request'] = _MATCH_ENGINE_REQUEST
-DESCRIPTOR.message_types_by_name['Match_Engine_Reply'] = _MATCH_ENGINE_REPLY
-DESCRIPTOR.message_types_by_name['Match_Engine_Loc_Verify'] = _MATCH_ENGINE_LOC_VERIFY
-DESCRIPTOR.message_types_by_name['Match_Engine_Loc'] = _MATCH_ENGINE_LOC
-DESCRIPTOR.message_types_by_name['Match_Engine_Status'] = _MATCH_ENGINE_STATUS
+_APPINSTLISTREPLY.fields_by_name['Status'].enum_type = _APPINSTLISTREPLY_AI_STATUS
+_APPINSTLISTREPLY.fields_by_name['Cloudlets'].message_type = _CLOUDLETLOCATION
+_APPINSTLISTREPLY_AI_STATUS.containing_type = _APPINSTLISTREPLY
+_DYNAMICLOCGROUPREQUEST.fields_by_name['CommType'].enum_type = _DYNAMICLOCGROUPREQUEST_DLGCOMMTYPE
+_DYNAMICLOCGROUPREQUEST_DLGCOMMTYPE.containing_type = _DYNAMICLOCGROUPREQUEST
+_DYNAMICLOCGROUPREPLY.fields_by_name['status'].enum_type = _REPLYSTATUS
+DESCRIPTOR.message_types_by_name['RegisterClientRequest'] = _REGISTERCLIENTREQUEST
+DESCRIPTOR.message_types_by_name['RegisterClientReply'] = _REGISTERCLIENTREPLY
+DESCRIPTOR.message_types_by_name['FindCloudletRequest'] = _FINDCLOUDLETREQUEST
+DESCRIPTOR.message_types_by_name['FindCloudletReply'] = _FINDCLOUDLETREPLY
+DESCRIPTOR.message_types_by_name['VerifyLocationRequest'] = _VERIFYLOCATIONREQUEST
+DESCRIPTOR.message_types_by_name['VerifyLocationReply'] = _VERIFYLOCATIONREPLY
+DESCRIPTOR.message_types_by_name['GetLocationRequest'] = _GETLOCATIONREQUEST
+DESCRIPTOR.message_types_by_name['GetLocationReply'] = _GETLOCATIONREPLY
+DESCRIPTOR.message_types_by_name['AppInstListRequest'] = _APPINSTLISTREQUEST
 DESCRIPTOR.message_types_by_name['Appinstance'] = _APPINSTANCE
 DESCRIPTOR.message_types_by_name['CloudletLocation'] = _CLOUDLETLOCATION
-DESCRIPTOR.message_types_by_name['Match_Engine_AppInst_List'] = _MATCH_ENGINE_APPINST_LIST
-DESCRIPTOR.message_types_by_name['DynamicLocGroupAdd'] = _DYNAMICLOCGROUPADD
+DESCRIPTOR.message_types_by_name['AppInstListReply'] = _APPINSTLISTREPLY
+DESCRIPTOR.message_types_by_name['DynamicLocGroupRequest'] = _DYNAMICLOCGROUPREQUEST
+DESCRIPTOR.message_types_by_name['DynamicLocGroupReply'] = _DYNAMICLOCGROUPREPLY
 DESCRIPTOR.enum_types_by_name['IDTypes'] = _IDTYPES
+DESCRIPTOR.enum_types_by_name['ReplyStatus'] = _REPLYSTATUS
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Match_Engine_Request = _reflection.GeneratedProtocolMessageType('Match_Engine_Request', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_REQUEST,
+RegisterClientRequest = _reflection.GeneratedProtocolMessageType('RegisterClientRequest', (_message.Message,), dict(
+  DESCRIPTOR = _REGISTERCLIENTREQUEST,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_Request)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.RegisterClientRequest)
   ))
-_sym_db.RegisterMessage(Match_Engine_Request)
+_sym_db.RegisterMessage(RegisterClientRequest)
 
-Match_Engine_Reply = _reflection.GeneratedProtocolMessageType('Match_Engine_Reply', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_REPLY,
+RegisterClientReply = _reflection.GeneratedProtocolMessageType('RegisterClientReply', (_message.Message,), dict(
+  DESCRIPTOR = _REGISTERCLIENTREPLY,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_Reply)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.RegisterClientReply)
   ))
-_sym_db.RegisterMessage(Match_Engine_Reply)
+_sym_db.RegisterMessage(RegisterClientReply)
 
-Match_Engine_Loc_Verify = _reflection.GeneratedProtocolMessageType('Match_Engine_Loc_Verify', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_LOC_VERIFY,
+FindCloudletRequest = _reflection.GeneratedProtocolMessageType('FindCloudletRequest', (_message.Message,), dict(
+  DESCRIPTOR = _FINDCLOUDLETREQUEST,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_Loc_Verify)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.FindCloudletRequest)
   ))
-_sym_db.RegisterMessage(Match_Engine_Loc_Verify)
+_sym_db.RegisterMessage(FindCloudletRequest)
 
-Match_Engine_Loc = _reflection.GeneratedProtocolMessageType('Match_Engine_Loc', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_LOC,
+FindCloudletReply = _reflection.GeneratedProtocolMessageType('FindCloudletReply', (_message.Message,), dict(
+  DESCRIPTOR = _FINDCLOUDLETREPLY,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_Loc)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.FindCloudletReply)
   ))
-_sym_db.RegisterMessage(Match_Engine_Loc)
+_sym_db.RegisterMessage(FindCloudletReply)
 
-Match_Engine_Status = _reflection.GeneratedProtocolMessageType('Match_Engine_Status', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_STATUS,
+VerifyLocationRequest = _reflection.GeneratedProtocolMessageType('VerifyLocationRequest', (_message.Message,), dict(
+  DESCRIPTOR = _VERIFYLOCATIONREQUEST,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_Status)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.VerifyLocationRequest)
   ))
-_sym_db.RegisterMessage(Match_Engine_Status)
+_sym_db.RegisterMessage(VerifyLocationRequest)
+
+VerifyLocationReply = _reflection.GeneratedProtocolMessageType('VerifyLocationReply', (_message.Message,), dict(
+  DESCRIPTOR = _VERIFYLOCATIONREPLY,
+  __module__ = 'app_client_pb2'
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.VerifyLocationReply)
+  ))
+_sym_db.RegisterMessage(VerifyLocationReply)
+
+GetLocationRequest = _reflection.GeneratedProtocolMessageType('GetLocationRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETLOCATIONREQUEST,
+  __module__ = 'app_client_pb2'
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.GetLocationRequest)
+  ))
+_sym_db.RegisterMessage(GetLocationRequest)
+
+GetLocationReply = _reflection.GeneratedProtocolMessageType('GetLocationReply', (_message.Message,), dict(
+  DESCRIPTOR = _GETLOCATIONREPLY,
+  __module__ = 'app_client_pb2'
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.GetLocationReply)
+  ))
+_sym_db.RegisterMessage(GetLocationReply)
+
+AppInstListRequest = _reflection.GeneratedProtocolMessageType('AppInstListRequest', (_message.Message,), dict(
+  DESCRIPTOR = _APPINSTLISTREQUEST,
+  __module__ = 'app_client_pb2'
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.AppInstListRequest)
+  ))
+_sym_db.RegisterMessage(AppInstListRequest)
 
 Appinstance = _reflection.GeneratedProtocolMessageType('Appinstance', (_message.Message,), dict(
   DESCRIPTOR = _APPINSTANCE,
@@ -1014,19 +1136,26 @@ CloudletLocation = _reflection.GeneratedProtocolMessageType('CloudletLocation', 
   ))
 _sym_db.RegisterMessage(CloudletLocation)
 
-Match_Engine_AppInst_List = _reflection.GeneratedProtocolMessageType('Match_Engine_AppInst_List', (_message.Message,), dict(
-  DESCRIPTOR = _MATCH_ENGINE_APPINST_LIST,
+AppInstListReply = _reflection.GeneratedProtocolMessageType('AppInstListReply', (_message.Message,), dict(
+  DESCRIPTOR = _APPINSTLISTREPLY,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.Match_Engine_AppInst_List)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.AppInstListReply)
   ))
-_sym_db.RegisterMessage(Match_Engine_AppInst_List)
+_sym_db.RegisterMessage(AppInstListReply)
 
-DynamicLocGroupAdd = _reflection.GeneratedProtocolMessageType('DynamicLocGroupAdd', (_message.Message,), dict(
-  DESCRIPTOR = _DYNAMICLOCGROUPADD,
+DynamicLocGroupRequest = _reflection.GeneratedProtocolMessageType('DynamicLocGroupRequest', (_message.Message,), dict(
+  DESCRIPTOR = _DYNAMICLOCGROUPREQUEST,
   __module__ = 'app_client_pb2'
-  # @@protoc_insertion_point(class_scope:distributed_match_engine.DynamicLocGroupAdd)
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.DynamicLocGroupRequest)
   ))
-_sym_db.RegisterMessage(DynamicLocGroupAdd)
+_sym_db.RegisterMessage(DynamicLocGroupRequest)
+
+DynamicLocGroupReply = _reflection.GeneratedProtocolMessageType('DynamicLocGroupReply', (_message.Message,), dict(
+  DESCRIPTOR = _DYNAMICLOCGROUPREPLY,
+  __module__ = 'app_client_pb2'
+  # @@protoc_insertion_point(class_scope:distributed_match_engine.DynamicLocGroupReply)
+  ))
+_sym_db.RegisterMessage(DynamicLocGroupReply)
 
 
 
@@ -1036,62 +1165,62 @@ _MATCH_ENGINE_API = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=2935,
-  serialized_end=3642,
+  serialized_start=2954,
+  serialized_end=3824,
   methods=[
+  _descriptor.MethodDescriptor(
+    name='RegisterClient',
+    full_name='distributed_match_engine.Match_Engine_Api.RegisterClient',
+    index=0,
+    containing_service=None,
+    input_type=_REGISTERCLIENTREQUEST,
+    output_type=_REGISTERCLIENTREPLY,
+    serialized_options=_b('\202\323\344\223\002\027\"\022/v1/registerclient:\001*'),
+  ),
   _descriptor.MethodDescriptor(
     name='FindCloudlet',
     full_name='distributed_match_engine.Match_Engine_Api.FindCloudlet',
-    index=0,
+    index=1,
     containing_service=None,
-    input_type=_MATCH_ENGINE_REQUEST,
-    output_type=_MATCH_ENGINE_REPLY,
-    serialized_options=None,
+    input_type=_FINDCLOUDLETREQUEST,
+    output_type=_FINDCLOUDLETREPLY,
+    serialized_options=_b('\202\323\344\223\002\025\"\020/v1/findcloudlet:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='VerifyLocation',
     full_name='distributed_match_engine.Match_Engine_Api.VerifyLocation',
-    index=1,
+    index=2,
     containing_service=None,
-    input_type=_MATCH_ENGINE_REQUEST,
-    output_type=_MATCH_ENGINE_LOC_VERIFY,
-    serialized_options=None,
+    input_type=_VERIFYLOCATIONREQUEST,
+    output_type=_VERIFYLOCATIONREPLY,
+    serialized_options=_b('\202\323\344\223\002\027\"\022/v1/verifylocation:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='GetLocation',
     full_name='distributed_match_engine.Match_Engine_Api.GetLocation',
-    index=2,
-    containing_service=None,
-    input_type=_MATCH_ENGINE_REQUEST,
-    output_type=_MATCH_ENGINE_LOC,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='RegisterClient',
-    full_name='distributed_match_engine.Match_Engine_Api.RegisterClient',
     index=3,
     containing_service=None,
-    input_type=_MATCH_ENGINE_REQUEST,
-    output_type=_MATCH_ENGINE_STATUS,
-    serialized_options=None,
+    input_type=_GETLOCATIONREQUEST,
+    output_type=_GETLOCATIONREPLY,
+    serialized_options=_b('\202\323\344\223\002\024\"\017/v1/getlocation:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='AddUserToGroup',
     full_name='distributed_match_engine.Match_Engine_Api.AddUserToGroup',
     index=4,
     containing_service=None,
-    input_type=_DYNAMICLOCGROUPADD,
-    output_type=_MATCH_ENGINE_STATUS,
-    serialized_options=None,
+    input_type=_DYNAMICLOCGROUPREQUEST,
+    output_type=_DYNAMICLOCGROUPREPLY,
+    serialized_options=_b('\202\323\344\223\002\027\"\022/v1/addusertogroup:\001*'),
   ),
   _descriptor.MethodDescriptor(
     name='GetAppInstList',
     full_name='distributed_match_engine.Match_Engine_Api.GetAppInstList',
     index=5,
     containing_service=None,
-    input_type=_MATCH_ENGINE_REQUEST,
-    output_type=_MATCH_ENGINE_APPINST_LIST,
-    serialized_options=None,
+    input_type=_APPINSTLISTREQUEST,
+    output_type=_APPINSTLISTREPLY,
+    serialized_options=_b('\202\323\344\223\002\027\"\022/v1/getappinstlist:\001*'),
   ),
 ])
 _sym_db.RegisterServiceDescriptor(_MATCH_ENGINE_API)

@@ -32,7 +32,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -99,7 +100,8 @@ class tc(unittest.TestCase):
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(self):
         self.controller.delete_cluster(self.cluster.cluster)
         self.controller.delete_developer(self.developer.developer)
 

@@ -36,7 +36,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -71,7 +72,7 @@ class tc(unittest.TestCase):
         found_app = self.app.exists(apps_post)
 
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(error.details(), 'invalid Image Type', 'error details')
+        expect_equal(error.details(), 'invalid IpAccess', 'error details')
         expect_equal(found_app, False, 'find app')
         expect_equal(len(apps_post), len(apps_pre), 'num developer')
                 

@@ -179,6 +179,7 @@ class Cluster():
                                       default_flavor = clusterflavor_pb2.ClusterFlavorKey(name = default_flavor_name)
                                      )
     def __eq__(self, c):
+        print(c.key.name, self.cluster_name, c.default_flavor.name, self.flavor_name)
         if c.key.name == self.cluster_name and c.default_flavor.name == self.flavor_name:
             #print('contains')
             return True
@@ -500,7 +501,7 @@ class Controller():
         self.developer_stub = developer_pb2_grpc.DeveloperApiStub(controller_channel)
 
     def create_cluster_flavor(self, cluster_flavor):
-        logger.info('create cluster on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
+        logger.info('create cluster flavor on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
 
         resp = self.cluster_flavor_stub.CreateClusterFlavor(cluster_flavor)
 
@@ -510,6 +511,17 @@ class Controller():
         logger.info('delete cluster flavor on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
 
         resp = self.cluster_flavor_stub.DeleteClusterFlavor(cluster_flavor)
+
+        return resp
+
+    def show_cluster_flavors(self):
+        logger.info('show cluster flavors on {}'.format(self.address))
+
+        resp = list(self.cluster_flavor_stub.ShowClusterFlavor(clusterflavor_pb2.ClusterFlavor()))
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('cluster flavor list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
 
         return resp
 
@@ -676,6 +688,7 @@ class Controller():
 
         self.response = resp
         for s in resp:
+            logger.debug(s)
             if "Created successfully" in str(s):
                 success = True
         if not success:

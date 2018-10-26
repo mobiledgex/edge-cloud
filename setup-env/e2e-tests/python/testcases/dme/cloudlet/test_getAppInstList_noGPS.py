@@ -49,7 +49,7 @@ class tc(unittest.TestCase):
         channel = grpc.secure_channel(dme_address, credentials)
 
         self.stub = app_client_pb2_grpc.Match_Engine_ApiStub(channel)
-        self.req = app_client_pb2.Match_Engine_Request(CarrierName = 'TMUS',
+        self.req = app_client_pb2.RegisterClientRequest(
                                                   DevName = 'AcmeAppCo'
                                                  )
         self.regResp = self.stub.RegisterClient(self.req)
@@ -59,7 +59,7 @@ class tc(unittest.TestCase):
         print("turl=",self.regResp.TokenServerURI)
 
     def test_GetCloudletsNoGPS(self):
-        get_cloudlets_req = app_client_pb2.Match_Engine_Request(
+        get_cloudlets_req = app_client_pb2.AppInstListRequest(
                                                                )
 
         print(get_cloudlets_req)
