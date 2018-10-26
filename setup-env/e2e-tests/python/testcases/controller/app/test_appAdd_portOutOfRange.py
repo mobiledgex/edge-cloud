@@ -14,7 +14,11 @@ import logging
 
 import mex_controller
 
+stamp = str(int(time.time()))
 controller_address = '127.0.0.1:55001'
+app_name = 'appname' + stamp
+app_version = '1.0'
+developer_name = 'developer' + stamp
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
@@ -24,7 +28,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -37,7 +42,10 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeDocker', 
+        app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicated',
                                  access_ports='tcp:0')
         try:
@@ -61,6 +69,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicated',
                                  access_ports='tcp:-1')
         try:
@@ -84,6 +95,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicated',
                                  access_ports='tcp:65536')
         try:
@@ -107,6 +121,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicated',
                                  access_ports='tcp:1,tcp:65537,tcp:65535')
         try:
@@ -129,7 +146,10 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeDocker', 
+        app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:0')
 
@@ -154,6 +174,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:-1')
         try:
@@ -177,6 +200,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:65536')
         try:
@@ -200,6 +226,9 @@ class tc(unittest.TestCase):
         # create the app with no parms
         error = None
         app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
                                  ip_access='IpAccessDedicatedOrShared',
                                  access_ports='udp:1,udp:65537,udp:65535')
         try:

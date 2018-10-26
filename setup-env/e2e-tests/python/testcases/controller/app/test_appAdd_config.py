@@ -34,7 +34,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -73,6 +74,8 @@ class tc(unittest.TestCase):
         # look for AccessLayerL7 since it is not sent in create
         found_app = self.app.exists(app_post)
 
+        self.controller.delete_app(self.app.app)
+        
         expect_equal(found_app, True, 'find app')
         assert_expectations()
 
@@ -98,11 +101,13 @@ class tc(unittest.TestCase):
         # look for AccessLayerL7 since it is not sent in create
         found_app = self.app.exists(app_post)
 
+        self.controller.delete_app(self.app.app)
+        
         expect_equal(found_app, True, 'find app')
         assert_expectations()
 
-    def tearDown(self):
-        self.controller.delete_app(self.app.app)
+    @classmethod
+    def tearDownClassxs(self):
         self.controller.delete_cluster(self.cluster.cluster)
         self.controller.delete_developer(self.developer.developer)
 

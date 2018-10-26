@@ -43,17 +43,19 @@ class tc(unittest.TestCase):
         channel = grpc.secure_channel(dme_address, credentials)
 
         self.stub = app_client_pb2_grpc.Match_Engine_ApiStub(channel)
-        req = app_client_pb2.Match_Engine_Request(CarrierName = 'TMUS',
-                                                  DevName = 'AcmeAppCo'
-                                                 ) 
+        req = app_client_pb2.RegisterClientRequest(
+                                                     DevName = 'AcmeAppCo'
+        ) 
         regResp = self.stub.RegisterClient(req)
-                                              
-        self.locreq = app_client_pb2.Match_Engine_Request(CarrierName = 'TMUS',
-                                                          DevName = 'AcmeAppCo',
-                                                          AppName = 'someApplication',
-                                                          AppVers = '1.0',
+        print('cookie',regResp.SessionCookie)
+        print('tokenuri',regResp.TokenServerURI)
+        print(regResp)
+        self.locreq = app_client_pb2.VerifyLocationRequest(CarrierName = 'TMUS',
+                                                          #DevName = 'AcmeAppCo',
+                                                          #AppName = 'someApplication',
+                                                          #AppVers = '1.0',
 #                                                          GpsLocation = loc_pb2.Loc(lat=49.8614, long=8.5676),
-                                                          VerifyLocToken = "0000000001",
+                                                          #VerifyLocToken = "0000000001",
                                                           SessionCookie = regResp.SessionCookie
                                                          )
 
