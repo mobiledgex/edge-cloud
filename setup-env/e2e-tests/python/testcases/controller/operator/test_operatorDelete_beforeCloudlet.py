@@ -68,7 +68,7 @@ class tc(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         self.controller.delete_cloudlet(self.cloudlet.cloudlet)
-        time.sleep(1) # wait for cloudlet to be deleted
+        #time.sleep(1) # wait for cloudlet to be deleted
         self.controller.delete_operator(self.operator.operator)
 
 if __name__ == '__main__':

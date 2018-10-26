@@ -614,6 +614,8 @@ class Controller():
         logger.info('delete cloudlet on {}. \n\t{}'.format(self.address, str(cloudlet_instance).replace('\n','\n\t')))
 
         resp = self.cloudlet_stub.DeleteCloudlet(cloudlet_instance)
+        for s in resp:
+            print(s)
 
         return resp
 
@@ -699,7 +701,9 @@ class Controller():
     def delete_app_instance(self, app_instance):
         logger.info('delete app instance on {}. \n\t{}'.format(self.address, str(app_instance).replace('\n','\n\t')))
         resp = self.appinst_stub.DeleteAppInst(app_instance)
-
+        for s in resp:
+            print(s)
+        
         return resp
 
     #def create_developer(self, dev_instance):
