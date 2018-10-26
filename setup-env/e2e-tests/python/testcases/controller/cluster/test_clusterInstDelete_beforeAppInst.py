@@ -108,7 +108,7 @@ class tc(unittest.TestCase):
 
     def tearDown(self):
         self.controller.delete_app_instance(self.app_instance.app_instance)
-        time.sleep(1) # wait till app instance is actually deleted else delete app will fail
+        #time.sleep(1) # wait till app instance is actually deleted else delete app will fail
         self.controller.delete_app(self.app.app)
         self.controller.delete_cluster_instance(self.cluster_instance.cluster_instance)
         self.controller.delete_cluster(self.cluster.cluster)
