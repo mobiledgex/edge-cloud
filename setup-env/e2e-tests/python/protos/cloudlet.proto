@@ -106,6 +106,8 @@ message CloudletInfo {
   CloudletState state = 3;
   // Id of client assigned by server (internal use only)
   int64 notify_id = 4;
+  // Connected controller unique id
+  string controller = 5;
   // Maximum Ram in MB on the Cloudlet
   uint64 os_max_ram = 6;
   // Maximum number of VCPU cores on the Cloudlet

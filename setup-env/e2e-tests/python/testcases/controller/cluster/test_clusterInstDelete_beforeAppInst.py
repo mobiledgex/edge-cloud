@@ -36,7 +36,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,

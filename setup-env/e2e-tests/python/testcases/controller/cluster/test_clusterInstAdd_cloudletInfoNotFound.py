@@ -16,6 +16,11 @@ import logging
 import mex_controller
 
 controller_address = '127.0.0.1:55001'
+stamp = str(time.time())
+cluster_name = 'cluster' + stamp
+operator_name = 'dmuus'
+cloud_name = 'cloudlet' + stamp 
+flavor_name = 'c1.small'
 
 mex_root_cert = 'mex-ca.crt'
 mex_cert = 'localserver.crt'
@@ -25,13 +30,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
-        stamp = str(time.time())
-        cluster_name = 'cluster' + stamp
-        operator_name = 'dmuus'
-        cloud_name = 'cloudlet' + stamp 
-        flavor_name = 'c1.small'
-
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -69,13 +69,13 @@ class tc(unittest.TestCase):
         clusterinst_post = self.controller.show_cluster_instances()
 
         expect_equal(self.controller.response.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(self.controller.response.details(), 'No resource information found for Cloudlet', 'error details')
+        expect_equal(self.controller.response.details(), 'Cloudlet operator_key:<name:"' + operator_name + '" > name:"' + cloud_name + '"  not ready, state is CloudletStateNotPresent', 'error details')
         expect_equal(len(clusterinst_pre), len(clusterinst_post), 'same number of cluster')
         assert_expectations()
 
-    def tearDown(self):
-        self.controller.delete_cluster(self.cluster.cluster)
-        self.controller.delete_cloudlet(self.cloudlet.cloudlet)
+#    def tearDown(self):
+#        self.controller.delete_cluster(self.cluster.cluster)
+#        self.controller.delete_cloudlet(self.cloudlet.cloudlet)
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(tc)

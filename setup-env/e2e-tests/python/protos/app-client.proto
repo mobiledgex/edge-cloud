@@ -3,6 +3,7 @@
 syntax = "proto3";
 package distributed_match_engine;
 
+import "annotations.proto";
 import "loc.proto";
 import "appcommon.proto";
 
@@ -13,63 +14,78 @@ enum IDTypes {
   IPADDR = 3;
 }
 
-message Match_Engine_Request {
-  uint32 ver = 1;
-  // User ID type - IMEI, MSISDN etc
-  IDTypes IdType = 2;
-  // Actual ID
-  string Id = 3;
-  // App/OS generated ID
-  string Uuid = 4;
-  // The carrier ID that user is connected to ("Mobile Country Code")
-  uint64 CarrierID = 5;
-  // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 6;
-  // The tower that user is currently connected to
-  uint64 Tower = 7;
-  // The GPS location of the user 
-  Loc GpsLocation = 8;
-  // Edge-cloud assigned application ID
-  uint64 AppId = 9;
-  // Protocol application uses
-  bytes Protocol = 10;
-  // The protocol port on the server side
-  bytes ServerPort = 11;
-  // App Developer Name
-  string DevName = 12;
-  // App Name
-  string AppName = 13;
-  // App Version
-  string AppVers = 14;
-  // DME Session Cookie; Not used for Register
-  string SessionCookie = 15;
-  // token used for location verification
-  string VerifyLocToken = 16;
+enum ReplyStatus {
+  RS_UNDEFINED = 0;
+  RS_SUCCESS = 1;
+  RS_FAIL = 2;
 }
 
-message Match_Engine_Reply {
+message RegisterClientRequest {
+  // API version
   uint32 ver = 1;
-  // domain name
-  string uri = 2;
-  // ip of the app service
-  bytes service_ip = 3; // deprecated
-  // port of the app service?
-  uint32 service_port = 4; // deprecated
-  // location of the cloudlet?
-  Loc cloudlet_location = 5;
-  // list of ports and L7 paths
-  repeated AppPort ports = 8;
-  enum Find_Status {
+  // App Developer Name
+  string DevName = 2;
+  // App Name
+  string AppName = 3;
+  // App Version
+  string AppVers = 4;
+}
+
+message RegisterClientReply {
+  // API version
+  uint32 ver = 1;
+  // Status of the reply
+  ReplyStatus status = 2;
+  // Session Cookie to be used in later API calls
+  string SessionCookie = 3;
+  // URI for Token Server
+  string TokenServerURI = 4;
+}
+
+message FindCloudletRequest {
+  // API version
+  uint32 ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+  // The GPS location of the user
+  Loc GpsLocation = 4;
+}
+
+message FindCloudletReply {
+  // API version
+  uint32 ver = 1;
+  enum FindStatus {
     FIND_UNKNOWN = 0;
     FIND_FOUND = 1;
     FIND_NOTFOUND = 2;
   }
   // Status return
-  Find_Status Status = 6;
-  string SessionCookie = 7;
+  FindStatus status = 2;
+  // Full Qualified Domain Name of Closest App instance
+  string FQDN = 3;
+  // List of ports and L7 paths to connect to App instance
+  repeated AppPort ports = 4;
+  // Location of the cloudlet
+  Loc cloudlet_location = 5;
 }
 
-message Match_Engine_Loc_Verify {
+message VerifyLocationRequest {
+  // API version
+  uint32 ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+  // The GPS location to verify
+  Loc GpsLocation = 4;
+  // token used for location verification, app must retrieve from TokenServerURI
+  string VerifyLocToken = 5;
+}
+
+message VerifyLocationReply {
+  // API version
   uint32 ver = 1;
   // Status of the reply
   enum Tower_Status {
@@ -95,7 +111,16 @@ message Match_Engine_Loc_Verify {
   double GPS_Location_Accuracy_KM = 4;
 }
 
-message Match_Engine_Loc {
+message GetLocationRequest {
+  // API version
+  uint32 ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+}
+
+message GetLocationReply {
   uint32 ver = 1;
   // Status of the reply
   enum Loc_Status {
@@ -111,45 +136,43 @@ message Match_Engine_Loc {
   uint64 Tower = 4;
   // The GPS location of the user 
   Loc NetworkLocation = 5;
-  // DME Session Cookie
-  string SessionCookie = 6;
 }
 
-message Match_Engine_Status {
+message AppInstListRequest {
+  // API version
   uint32 ver = 1;
-  // Status of the reply
-  enum ME_Status {
-    ME_UNDEFINED = 0;
-    ME_SUCCESS = 1;
-    ME_FAIL = 2;
-  }
-  ME_Status Status = 2;
-  // Error Code based on Failure
-  uint32 ErrorCode = 3;
-  // DME Session Cookie
-  string SessionCookie = 4;
-    // Group Cookie for Secure Group Communication
-  string GroupCookie = 5;
-  // URI for Token Server
-  string TokenServerURI = 6;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 3;
+  // The GPS location of the user 
+  Loc GpsLocation = 4;
 }
 
 message Appinstance{
+  // App Instance Name
   string Appname = 1;
+  // App Instance Version
   string Appversion = 2;
-  string Uri = 3;
+  // App Instance FQDN
+  string FQDN = 3;
 }
 
 message CloudletLocation {
-     string CarrierName = 1;
-     string CloudletName = 2;
-     Loc GpsLocation = 3;
-     //distance of cloudlet vs loc in request
-     double Distance = 4;
-     repeated Appinstance Appinstances = 5;
+  // The carrier name that user is connected to ("Cellular Carrier Name")
+  string CarrierName = 1;
+  // Cloudlet Name
+  string CloudletName = 2;
+  // The GPS Location of the user
+  Loc GpsLocation = 3;
+  // Distance of cloudlet vs loc in request
+  double Distance = 4;
+  // App instances
+  repeated Appinstance Appinstances = 5;
 }
 
-message Match_Engine_AppInst_List {
+message AppInstListReply {
+  // API version
   uint32 ver = 1;
   // Status of the reply
   enum AI_Status {
@@ -161,26 +184,12 @@ message Match_Engine_AppInst_List {
   repeated CloudletLocation Cloudlets = 3;
 }
 
-message DynamicLocGroupAdd {
+message DynamicLocGroupRequest {
   uint32 ver = 1;
-  // User ID type - IMEI, MSISDN etc
-  IDTypes IdType = 2;
-  // Actual ID
-  string Id = 3;
-  // App/OS generated ID
-  string Uuid = 4;
-  // The carrier ID that user is connected to ("Mobile Country Code")
-  uint64 CarrierID = 5;
-  // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 6;
-  // The tower that user is currently connected to
-  uint64 Tower = 7;
-  // The GPS location of the user 
-  Loc GpsLocation = 8;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
   // Dynamic Location Group Id
-  uint64 LgId = 9;
-  // DME Session Cookie
-  string SessionCookie = 10;
+  uint64 LgId = 3;
   // Use Secure communication or Open with the group
   enum DlgCommType {
     DlgUndefined = 0;
@@ -192,13 +201,53 @@ message DynamicLocGroupAdd {
   string UserData = 12;
 }
 
+message DynamicLocGroupReply {
+  uint32 ver = 1;
+  // Status of the reply
+  ReplyStatus status = 2;
+  // Error Code based on Failure
+  uint32 ErrorCode = 3;
+  // Group Cookie for Secure Group Communication
+  string GroupCookie = 5;
+}
+
 service Match_Engine_Api {
-  rpc FindCloudlet(Match_Engine_Request) returns (Match_Engine_Reply) {}
-  rpc VerifyLocation(Match_Engine_Request) returns (Match_Engine_Loc_Verify) {}
-  rpc GetLocation(Match_Engine_Request) returns (Match_Engine_Loc) {}
-  rpc RegisterClient(Match_Engine_Request) returns (Match_Engine_Status) {}
-  rpc AddUserToGroup(DynamicLocGroupAdd) returns (Match_Engine_Status) {}
-  rpc GetAppInstList(Match_Engine_Request) returns (Match_Engine_AppInst_List) {}
+  rpc RegisterClient(RegisterClientRequest) returns (RegisterClientReply) {
+      option (google.api.http) = {
+      post: "/v1/registerclient"
+      body: "*"
+    };
+  }
+  rpc FindCloudlet(FindCloudletRequest) returns (FindCloudletReply) {
+    option (google.api.http) = {
+      post: "/v1/findcloudlet"
+      body: "*"
+    };
+  }
+  rpc VerifyLocation(VerifyLocationRequest) returns (VerifyLocationReply) {
+    option (google.api.http) = {
+      post: "/v1/verifylocation"
+      body: "*"
+    };
+  }
+  rpc GetLocation(GetLocationRequest) returns (GetLocationReply) {
+    option (google.api.http) = {
+      post: "/v1/getlocation"
+      body: "*"
+    };
+  }
+  rpc AddUserToGroup(DynamicLocGroupRequest) returns (DynamicLocGroupReply) {
+    option (google.api.http) = {
+      post: "/v1/addusertogroup"
+      body: "*"
+    };
+  }
+  rpc GetAppInstList(AppInstListRequest) returns (AppInstListReply) {
+    option (google.api.http) = {
+      post: "/v1/getappinstlist"
+      body: "*"
+    };
+  }
 }
 
 

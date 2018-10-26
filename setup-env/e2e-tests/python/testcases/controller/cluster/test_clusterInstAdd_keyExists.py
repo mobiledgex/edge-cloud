@@ -26,7 +26,8 @@ logger.setLevel(logging.DEBUG)
 
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         cluster_name = 'cluster' + str(time.time())
         operator_name = 'dmuus'
         cloud_name = 'tmocloud-1'
@@ -52,7 +53,7 @@ class tc(unittest.TestCase):
         # create a new cluster and cluster instance
         create_cluster_resp = self.controller.create_cluster(self.cluster.cluster)
         self.controller.create_cluster_instance(self.cluster_instance.cluster_instance)
-        time.sleep(1)
+        #time.sleep(1)
 
         # create the cluster instance which already exists
         try:
