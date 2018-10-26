@@ -22,7 +22,8 @@ mex_key = 'localserver.key'
 
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         cluster_name = 'cluster' + str(time.time())
         operator_name = 'dmuus'
         cloud_name = 'tmocloud-1'

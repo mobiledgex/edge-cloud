@@ -16,6 +16,11 @@ import mex_controller
 
 controller_address = '127.0.0.1:55001'
 
+stamp = str(int(time.time()))
+app_name = 'appname' + stamp
+app_version = '1.0'
+developer_name = 'developer' + stamp
+
 access_ports = 'tcp:1'
 
 mex_root_cert = 'mex-ca.crt'
@@ -26,7 +31,8 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 class tc(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         self.controller = mex_controller.Controller(controller_address = controller_address,
                                                     root_cert = mex_root_cert,
                                                     key = mex_key,
@@ -39,7 +45,11 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeUnknown')
+        app = mex_controller.App(image_type='ImageTypeUnknown',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
+        )
         try:
             resp = self.controller.create_app(app.app)
         #except Exception as e:
@@ -61,7 +71,11 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeDocker')
+        app = mex_controller.App(image_type='ImageTypeDocker',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
+        )
         try:
             resp = self.controller.create_app(app.app)
         #except Exception as e:
@@ -83,7 +97,11 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type='ImageTypeQCOW')
+        app = mex_controller.App(image_type='ImageTypeQCOW',
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
+        )
         try:
             resp = self.controller.create_app(app.app)
         #except Exception as e:
@@ -105,7 +123,11 @@ class tc(unittest.TestCase):
 
         # create the app with no parms
         error = None
-        app = mex_controller.App(image_type=3)
+        app = mex_controller.App(image_type=3,
+                                 developer_name=developer_name,
+                                 app_name=app_name,
+                                 app_version=app_version,
+        )
         try:
             resp = self.controller.create_app(app.app)
         #except Exception as e:
@@ -117,7 +139,7 @@ class tc(unittest.TestCase):
         app_post = self.controller.show_apps()
 
         expect_equal(error.code(), grpc.StatusCode.UNKNOWN, 'status code')
-        expect_equal(error.details(), 'invalid Image Type', 'error details')
+        expect_equal(error.details(), 'invalid ImageType', 'error details')
         expect_equal(len(app_pre), len(app_post), 'same number of apps')
         assert_expectations()
 

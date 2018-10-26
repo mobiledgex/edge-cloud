@@ -79,4 +79,6 @@ enum CRMOverride {
   IgnoreCRM = 2;
   // Ignore Transient State (only admin should use if CRM crashed)
   IgnoreTransientState = 3;
+  // Ignore CRM and Transient State
+  IgnoreCRMandTransientState = 4;
 }

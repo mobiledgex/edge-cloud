@@ -14,41 +14,48 @@ class Match_Engine_ApiStub(object):
     Args:
       channel: A grpc.Channel.
     """
+    self.RegisterClient = channel.unary_unary(
+        '/distributed_match_engine.Match_Engine_Api/RegisterClient',
+        request_serializer=app__client__pb2.RegisterClientRequest.SerializeToString,
+        response_deserializer=app__client__pb2.RegisterClientReply.FromString,
+        )
     self.FindCloudlet = channel.unary_unary(
         '/distributed_match_engine.Match_Engine_Api/FindCloudlet',
-        request_serializer=app__client__pb2.Match_Engine_Request.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_Reply.FromString,
+        request_serializer=app__client__pb2.FindCloudletRequest.SerializeToString,
+        response_deserializer=app__client__pb2.FindCloudletReply.FromString,
         )
     self.VerifyLocation = channel.unary_unary(
         '/distributed_match_engine.Match_Engine_Api/VerifyLocation',
-        request_serializer=app__client__pb2.Match_Engine_Request.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_Loc_Verify.FromString,
+        request_serializer=app__client__pb2.VerifyLocationRequest.SerializeToString,
+        response_deserializer=app__client__pb2.VerifyLocationReply.FromString,
         )
     self.GetLocation = channel.unary_unary(
         '/distributed_match_engine.Match_Engine_Api/GetLocation',
-        request_serializer=app__client__pb2.Match_Engine_Request.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_Loc.FromString,
-        )
-    self.RegisterClient = channel.unary_unary(
-        '/distributed_match_engine.Match_Engine_Api/RegisterClient',
-        request_serializer=app__client__pb2.Match_Engine_Request.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_Status.FromString,
+        request_serializer=app__client__pb2.GetLocationRequest.SerializeToString,
+        response_deserializer=app__client__pb2.GetLocationReply.FromString,
         )
     self.AddUserToGroup = channel.unary_unary(
         '/distributed_match_engine.Match_Engine_Api/AddUserToGroup',
-        request_serializer=app__client__pb2.DynamicLocGroupAdd.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_Status.FromString,
+        request_serializer=app__client__pb2.DynamicLocGroupRequest.SerializeToString,
+        response_deserializer=app__client__pb2.DynamicLocGroupReply.FromString,
         )
     self.GetAppInstList = channel.unary_unary(
         '/distributed_match_engine.Match_Engine_Api/GetAppInstList',
-        request_serializer=app__client__pb2.Match_Engine_Request.SerializeToString,
-        response_deserializer=app__client__pb2.Match_Engine_AppInst_List.FromString,
+        request_serializer=app__client__pb2.AppInstListRequest.SerializeToString,
+        response_deserializer=app__client__pb2.AppInstListReply.FromString,
         )
 
 
 class Match_Engine_ApiServicer(object):
   # missing associated documentation comment in .proto file
   pass
+
+  def RegisterClient(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
 
   def FindCloudlet(self, request, context):
     # missing associated documentation comment in .proto file
@@ -65,13 +72,6 @@ class Match_Engine_ApiServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def GetLocation(self, request, context):
-    # missing associated documentation comment in .proto file
-    pass
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def RegisterClient(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -95,35 +95,35 @@ class Match_Engine_ApiServicer(object):
 
 def add_Match_Engine_ApiServicer_to_server(servicer, server):
   rpc_method_handlers = {
+      'RegisterClient': grpc.unary_unary_rpc_method_handler(
+          servicer.RegisterClient,
+          request_deserializer=app__client__pb2.RegisterClientRequest.FromString,
+          response_serializer=app__client__pb2.RegisterClientReply.SerializeToString,
+      ),
       'FindCloudlet': grpc.unary_unary_rpc_method_handler(
           servicer.FindCloudlet,
-          request_deserializer=app__client__pb2.Match_Engine_Request.FromString,
-          response_serializer=app__client__pb2.Match_Engine_Reply.SerializeToString,
+          request_deserializer=app__client__pb2.FindCloudletRequest.FromString,
+          response_serializer=app__client__pb2.FindCloudletReply.SerializeToString,
       ),
       'VerifyLocation': grpc.unary_unary_rpc_method_handler(
           servicer.VerifyLocation,
-          request_deserializer=app__client__pb2.Match_Engine_Request.FromString,
-          response_serializer=app__client__pb2.Match_Engine_Loc_Verify.SerializeToString,
+          request_deserializer=app__client__pb2.VerifyLocationRequest.FromString,
+          response_serializer=app__client__pb2.VerifyLocationReply.SerializeToString,
       ),
       'GetLocation': grpc.unary_unary_rpc_method_handler(
           servicer.GetLocation,
-          request_deserializer=app__client__pb2.Match_Engine_Request.FromString,
-          response_serializer=app__client__pb2.Match_Engine_Loc.SerializeToString,
-      ),
-      'RegisterClient': grpc.unary_unary_rpc_method_handler(
-          servicer.RegisterClient,
-          request_deserializer=app__client__pb2.Match_Engine_Request.FromString,
-          response_serializer=app__client__pb2.Match_Engine_Status.SerializeToString,
+          request_deserializer=app__client__pb2.GetLocationRequest.FromString,
+          response_serializer=app__client__pb2.GetLocationReply.SerializeToString,
       ),
       'AddUserToGroup': grpc.unary_unary_rpc_method_handler(
           servicer.AddUserToGroup,
-          request_deserializer=app__client__pb2.DynamicLocGroupAdd.FromString,
-          response_serializer=app__client__pb2.Match_Engine_Status.SerializeToString,
+          request_deserializer=app__client__pb2.DynamicLocGroupRequest.FromString,
+          response_serializer=app__client__pb2.DynamicLocGroupReply.SerializeToString,
       ),
       'GetAppInstList': grpc.unary_unary_rpc_method_handler(
           servicer.GetAppInstList,
-          request_deserializer=app__client__pb2.Match_Engine_Request.FromString,
-          response_serializer=app__client__pb2.Match_Engine_AppInst_List.SerializeToString,
+          request_deserializer=app__client__pb2.AppInstListRequest.FromString,
+          response_serializer=app__client__pb2.AppInstListReply.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

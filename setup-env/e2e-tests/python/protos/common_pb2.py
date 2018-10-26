@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='edgeproto',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x0c\x63ommon.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto*H\n\x08Liveness\x12\x13\n\x0fLivenessUnknown\x10\x00\x12\x12\n\x0eLivenessStatic\x10\x01\x12\x13\n\x0fLivenessDynamic\x10\x02*L\n\tIpSupport\x12\x14\n\x10IpSupportUnknown\x10\x00\x12\x13\n\x0fIpSupportStatic\x10\x01\x12\x14\n\x10IpSupportDynamic\x10\x02*i\n\x08IpAccess\x12\x13\n\x0fIpAccessUnknown\x10\x00\x12\x15\n\x11IpAccessDedicated\x10\x01\x12\x1d\n\x19IpAccessDedicatedOrShared\x10\x02\x12\x12\n\x0eIpAccessShared\x10\x03*\xde\x01\n\x0cTrackedState\x12\x17\n\x13TrackedStateUnknown\x10\x00\x12\x0e\n\nNotPresent\x10\x01\x12\x13\n\x0f\x43reateRequested\x10\x02\x12\x0c\n\x08\x43reating\x10\x03\x12\x0f\n\x0b\x43reateError\x10\x04\x12\t\n\x05Ready\x10\x05\x12\x13\n\x0fUpdateRequested\x10\x06\x12\x0c\n\x08Updating\x10\x07\x12\x0f\n\x0bUpdateError\x10\x08\x12\x13\n\x0f\x44\x65leteRequested\x10\t\x12\x0c\n\x08\x44\x65leting\x10\n\x12\x0f\n\x0b\x44\x65leteError\x10\x0b*[\n\x0b\x43RMOverride\x12\x0e\n\nNoOverride\x10\x00\x12\x13\n\x0fIgnoreCRMErrors\x10\x01\x12\r\n\tIgnoreCRM\x10\x02\x12\x18\n\x14IgnoreTransientState\x10\x03\x62\x06proto3')
+  serialized_pb=_b('\n\x0c\x63ommon.proto\x12\tedgeproto\x1a\x11\x61nnotations.proto*H\n\x08Liveness\x12\x13\n\x0fLivenessUnknown\x10\x00\x12\x12\n\x0eLivenessStatic\x10\x01\x12\x13\n\x0fLivenessDynamic\x10\x02*L\n\tIpSupport\x12\x14\n\x10IpSupportUnknown\x10\x00\x12\x13\n\x0fIpSupportStatic\x10\x01\x12\x14\n\x10IpSupportDynamic\x10\x02*i\n\x08IpAccess\x12\x13\n\x0fIpAccessUnknown\x10\x00\x12\x15\n\x11IpAccessDedicated\x10\x01\x12\x1d\n\x19IpAccessDedicatedOrShared\x10\x02\x12\x12\n\x0eIpAccessShared\x10\x03*\xde\x01\n\x0cTrackedState\x12\x17\n\x13TrackedStateUnknown\x10\x00\x12\x0e\n\nNotPresent\x10\x01\x12\x13\n\x0f\x43reateRequested\x10\x02\x12\x0c\n\x08\x43reating\x10\x03\x12\x0f\n\x0b\x43reateError\x10\x04\x12\t\n\x05Ready\x10\x05\x12\x13\n\x0fUpdateRequested\x10\x06\x12\x0c\n\x08Updating\x10\x07\x12\x0f\n\x0bUpdateError\x10\x08\x12\x13\n\x0f\x44\x65leteRequested\x10\t\x12\x0c\n\x08\x44\x65leting\x10\n\x12\x0f\n\x0b\x44\x65leteError\x10\x0b*{\n\x0b\x43RMOverride\x12\x0e\n\nNoOverride\x10\x00\x12\x13\n\x0fIgnoreCRMErrors\x10\x01\x12\r\n\tIgnoreCRM\x10\x02\x12\x18\n\x14IgnoreTransientState\x10\x03\x12\x1e\n\x1aIgnoreCRMandTransientState\x10\x04\x62\x06proto3')
   ,
   dependencies=[annotations__pb2.DESCRIPTOR,])
 
@@ -195,11 +195,15 @@ _CRMOVERRIDE = _descriptor.EnumDescriptor(
       name='IgnoreTransientState', index=3, number=3,
       serialized_options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='IgnoreCRMandTransientState', index=4, number=4,
+      serialized_options=None,
+      type=None),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=530,
-  serialized_end=621,
+  serialized_end=653,
 )
 _sym_db.RegisterEnumDescriptor(_CRMOVERRIDE)
 
@@ -230,6 +234,7 @@ NoOverride = 0
 IgnoreCRMErrors = 1
 IgnoreCRM = 2
 IgnoreTransientState = 3
+IgnoreCRMandTransientState = 4
 
 
 DESCRIPTOR.enum_types_by_name['Liveness'] = _LIVENESS
