@@ -324,3 +324,60 @@ func TestFormNginxProxyRequest(t *testing.T) {
 	}
 	fmt.Println(*pl)
 }
+
+func TestGetSvcExternalIP(t *testing.T) {
+	home := os.Getenv("HOME")
+	eip, err := getSvcExternalIP("testapp", home+"/.mobiledgex/aks-testcluster.kubeconfig")
+	if err != nil {
+		t.Errorf("error %v", err)
+		return
+	}
+	fmt.Println("external IP", eip)
+}
+
+func TestLookupDNS(t *testing.T) {
+	ipa, err := LookupDNS("google.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println(ipa)
+}
+
+func TestWaitforDNSRegistration(t *testing.T) {
+	err := WaitforDNSRegistration("google.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	fmt.Println("google.com ok")
+	err = WaitforDNSRegistration("asdfasdfasdfasdfasdfasdfasdfadsfadf.com")
+	if err != nil {
+		fmt.Println("timeout as expected")
+		fmt.Println("returned err", err)
+	} else {
+		t.Errorf("unexpected success")
+	}
+}
+
+func TestURI2FQDN(t *testing.T) {
+	fqdn := uri2fqdn("http://google.com")
+	if fqdn != "google.com" {
+		t.Errorf("expected google.com, got %s", fqdn)
+	}
+	fqdn = uri2fqdn("https://google.com")
+	if fqdn != "google.com" {
+		t.Errorf("expected google.com,got %s", fqdn)
+	}
+}
+
+func TestValidateURI(t *testing.T) {
+	err := validateURI("http://google.com")
+	if err != nil {
+		t.Error(err)
+	}
+	err = validateURI("google.com")
+	if err != nil {
+		t.Error(err)
+	}
+}

@@ -622,7 +622,7 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 		return err
 	}
 	if mf.Metadata.DNSZone == "" {
-		return fmt.Errorf("missing dns zone in manifest")
+		return fmt.Errorf("missing dns zone in manifest, metadata %v", mf.Metadata)
 	}
 	found := 0
 	for _, s := range sl {
@@ -1004,7 +1004,7 @@ func RemoveMEXAgentManifest(mf *Manifest) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "removed rootlb", "name", mf.Spec.RootLB)
 	if mf.Metadata.DNSZone == "" {
-		return fmt.Errorf("missing dns zone in manifest")
+		return fmt.Errorf("missing dns zone in manifest, metadata %v", mf.Metadata)
 	}
 	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
 		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
@@ -1210,7 +1210,10 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "waiting for cloudflare...")
 	//once successfully inserted the A record will take a bit of time, but not too long due to fast cloudflare anycast
-	time.Sleep(10 * time.Second) //XXX verify by doing a DNS lookup
+	err = WaitforDNSRegistration(fqdn)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -2110,4 +2113,33 @@ func parseKCPid(ln string, key string) int {
 		return 0
 	}
 	return pidnum
+}
+
+func LookupDNS(name string) (string, error) {
+	ips, err := net.LookupIP(name)
+	if err != nil {
+		return "", fmt.Errorf("DNS lookup error, %s, %v", name, err)
+	}
+	if len(ips) == 0 {
+		return "", fmt.Errorf("no DNS records, %s", name)
+	}
+	for _, ip := range ips {
+		return ip.String(), nil //XXX return only first one
+	}
+	return "", fmt.Errorf("no IP in DNS record for %s", name)
+}
+
+func WaitforDNSRegistration(name string) error {
+	var ipa string
+	var err error
+
+	for i := 0; i < 100; i++ {
+		ipa, err = LookupDNS(name)
+		if err == nil && ipa != "" {
+			return nil
+		}
+		time.Sleep(3 * time.Second)
+	}
+	log.DebugLog(log.DebugLevelMexos, "DNS lookup timed out", "name", name)
+	return fmt.Errorf("error, timed out while looking up DNS for name %s", name)
 }
