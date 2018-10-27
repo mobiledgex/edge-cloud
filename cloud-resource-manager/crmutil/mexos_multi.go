@@ -15,6 +15,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
+	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -34,6 +35,7 @@ metadata:
   zone: {{.Zone}}
   location: {{.Location}}
   project: {{.Project}}
+  dnszone: {{.DNSZone}}
   resourcegroup: {{.ResourceGroup}}
 spec:
   flags: {{.Flags}}
@@ -84,6 +86,7 @@ func fillClusterTemplateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.Clus
 		Kind:          clusterInst.Flavor.Name,
 		ResourceGroup: clusterInst.Key.CloudletKey.Name + "_" + clusterInst.Key.ClusterKey.Name,
 		Flavor:        clusterInst.Flavor.Name,
+		DNSZone:       "mobiledgex.net",
 		RootLB:        rootLB.Name,
 		NetworkScheme: "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
 	}
@@ -522,6 +525,7 @@ metadata:
   tags: {{.Tags}}
   tenant: {{.Tenant}}
   operator: {{.Operator}}
+  dnszone: {{.DNSZone}}
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
@@ -550,6 +554,7 @@ metadata:
   tags: {{.Tags}}
   tenant: {{.Tenant}}
   operator: {{.Operator}}
+  dnszone: {{.DNSZone}}
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
@@ -569,6 +574,7 @@ func MEXAppCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, 
 	log.DebugLog(log.DebugLevelMexos, "mex create app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
 	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "fillAppTemplate error", "error", err)
 		return err
 	}
 	return MEXAppCreateAppManifest(mf)
@@ -579,6 +585,7 @@ func MEXAppDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, 
 	log.DebugLog(log.DebugLevelMexos, "mex delete app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
 	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "fillAppTemplate error", "error", err)
 		return err
 	}
 	return MEXAppDeleteAppManifest(mf)
@@ -616,6 +623,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 			Tags:        util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
 			Key:         clusterInst.Key.ClusterKey.Name,
 			Tenant:      util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
+			DNSZone:     "mobiledgex.net",
 			Operator:    util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
 			RootLB:      rootLB.Name,
 			Image:       appInst.ImagePath,
@@ -642,6 +650,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 			RootLB:        rootLB.Name,
 			Image:         appInst.ImagePath,
 			ImageFlavor:   appInst.Flavor.Name,
+			DNSZone:       "mobiledgex.net",
 			ImageType:     imageType,
 			ProxyPath:     appInst.Key.AppKey.Name,
 			AppURI:        appInst.Uri,
@@ -654,10 +663,12 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	default:
 		return nil, fmt.Errorf("unknown image type %s", imageType)
 	}
+	log.DebugLog(log.DebugLevelMexos, "filled app manifest", "mf", mf)
 	err = addPorts(mf, appInst)
 	if err != nil {
 		return nil, err
 	}
+	log.DebugLog(log.DebugLevelMexos, "added port to app manifest", "mf", mf)
 	return mf, nil
 }
 
@@ -758,7 +769,6 @@ func genKubeManifest(mf *Manifest) (string, error) {
 //MEXAppCreateAppManifest creates app instances on the cluster platform
 func MEXAppCreateAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "create app from manifest", "mf", mf)
-
 	kubeManifest := ""
 	if mf.Spec.ImageType == "ImageTypeDocker" {
 		// Generate deployment file
@@ -768,7 +778,6 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 			return err
 		}
 	}
-
 	switch mf.Metadata.Operator {
 	case "gcp":
 		if mf.Spec.ImageType == "ImageTypeDocker" {
@@ -827,6 +836,38 @@ func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 	return name, nil
 }
 
+type ingressItem struct {
+	IP string `json:"ip"`
+}
+
+type loadBalancerItem struct {
+	Ingresses []ingressItem `json:"ingress"`
+}
+
+type statusItem struct {
+	LoadBalancer loadBalancerItem `json:"loadBalancer"`
+}
+
+type metadataItem struct {
+	Name              string `json:"name"`
+	Namespace         string `json:"namespace"`
+	CreationTimestamp string `json:"creationTimestamp"`
+	ResourceVersion   string `json:"resourceVersion"`
+	UID               string `json:"uid"`
+}
+
+type svcItem struct {
+	APIVersion string       `json:"apiVersion"`
+	Kind       string       `json:"kind"`
+	Metadata   metadataItem `json:"metadata"`
+	Spec       interface{}  `json:"spec"`
+	Status     statusItem   `json:"status"`
+}
+
+type svcItems struct {
+	Items []svcItem `json:"items"`
+}
+
 func runKubectlCreateApp(mf *Manifest, kubeManifest string) error {
 	kconf, err := getKconf(mf, false)
 	if err != nil {
@@ -847,9 +888,148 @@ func runKubectlCreateApp(mf *Manifest, kubeManifest string) error {
 
 	out, err = sh.Command("kubectl", "create", "-f", kfile, "--kubeconfig="+kconf).Output()
 	if err != nil {
-		return fmt.Errorf("error creating app, %s, %v, %v", out, mf, err)
+		return fmt.Errorf("error creating app, %s, %v, %v", out, err, mf)
+	}
+	err = createAppDNS(mf, kconf)
+	if err != nil {
+		return fmt.Errorf("error creating dns entry for app, %v, %v", err, mf)
 	}
 	return nil
+}
+
+func isDomainName(s string) bool {
+	l := len(s)
+	if l == 0 || l > 254 || l == 254 && s[l-1] != '.' {
+		return false
+	}
+
+	last := byte('.')
+	ok := false // Ok once we've seen a letter.
+	partlen := 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		default:
+			return false
+		case 'a' <= c && c <= 'z' || 'A' <= c && c <= 'Z' || c == '_':
+			ok = true
+			partlen++
+		case '0' <= c && c <= '9':
+			// fine
+			partlen++
+		case c == '-':
+			// Byte before dash cannot be dot.
+			if last == '.' {
+				return false
+			}
+			partlen++
+		case c == '.':
+			// Byte before dot cannot be dot, dash.
+			if last == '.' || last == '-' {
+				return false
+			}
+			if partlen > 63 || partlen == 0 {
+				return false
+			}
+			partlen = 0
+		}
+		last = c
+	}
+	if last == '-' || partlen > 63 {
+		return false
+	}
+
+	return ok
+}
+
+func validateURI(uri string) error {
+	if isDomainName(uri) {
+		return nil
+	}
+	fqdn := uri2fqdn(uri)
+	if isDomainName(fqdn) {
+		return nil
+	}
+	return fmt.Errorf("URI %s is not a valid domain name", uri)
+}
+
+func createAppDNS(mf *Manifest, kconf string) error {
+	if err := CheckCredentialsCF(); err != nil {
+		return err
+	}
+	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", err)
+	}
+	if mf.Spec.URI == "" {
+		return fmt.Errorf("URI not specified %v", mf)
+	}
+	err := validateURI(mf.Spec.URI)
+	if err != nil {
+		return err
+	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
+	}
+	externalIP, err := getSvcExternalIP(mf.Metadata.Name, kconf)
+	if err != nil {
+		return err
+	}
+	fqdn := uri2fqdn(mf.Spec.URI)
+	//TODO: if there is a DNS record left over from previous runs, clean it up before adding new record
+	if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", externalIP, 1, false); err != nil {
+		return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, externalIP, err)
+	}
+	//log.DebugLog(log.DebugLevelMexos, "waiting for DNS record to be created on cloudflare...")
+	//err = WaitforDNSRegistration(fqdn)
+	//if err != nil {
+	//	return err
+	//}
+	log.DebugLog(log.DebugLevelMexos, "registered DNS name, may still need to wait for propagation", "name", fqdn, "externalIP", externalIP)
+	return nil
+}
+
+func uri2fqdn(uri string) string {
+	fqdn := strings.Replace(uri, "http://", "", 1)
+	fqdn = strings.Replace(fqdn, "https://", "", 1)
+	return fqdn
+}
+
+func getSvcExternalIP(name string, kconf string) (string, error) {
+	log.DebugLog(log.DebugLevelMexos, "got service  external IP", "name", name)
+	svcName := name + "-service"
+	externalIP := ""
+	var out []byte
+	var err error
+	//wait for Load Balancer to assign external IP address. It takes a variable amount of time.
+	for i := 0; i < 100; i++ {
+		out, err = sh.Command("kubectl", "get", "svc", "--kubeconfig="+kconf, "-o", "json").Output()
+		if err != nil {
+			return "", fmt.Errorf("error getting svc %s, %s, %v", name, out, err)
+		}
+		svcs := &svcItems{}
+		err = json.Unmarshal(out, svcs)
+		if err != nil {
+			return "", fmt.Errorf("error unmarshalling svc json, %v", err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "getting exteralIP, examine list of services", "name", name, "svcs", svcs)
+		for _, item := range svcs.Items {
+			if item.Metadata.Name != svcName {
+				continue
+			}
+			for _, ingress := range item.Status.LoadBalancer.Ingresses {
+				if ingress.IP != "" {
+					externalIP = ingress.IP
+					log.DebugLog(log.DebugLevelMexos, "got externaIP for app", "externalIP", externalIP)
+					return externalIP, nil
+				}
+			}
+		}
+		time.Sleep(3 * time.Second)
+	}
+	if externalIP == "" {
+		return "", fmt.Errorf("timed out trying to get externalIP")
+	}
+	return externalIP, nil
 }
 
 //MEXAppDeleteManifest kills app
@@ -894,6 +1074,12 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 }
 
 func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
+	if err := CheckCredentialsCF(); err != nil {
+		return err
+	}
+	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", err)
+	}
 	kconf, err := getKconf(mf, false)
 	if err != nil {
 		return fmt.Errorf("error deleting app due to kconf,  %v, %v", mf, err)
@@ -908,6 +1094,21 @@ func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
 	out, err := sh.Command("kubectl", "delete", "-f", kfile, "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
+	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing dns zone, metadata %v", mf.Metadata)
+	}
+	fqdn := uri2fqdn(mf.Spec.URI)
+	dr, err := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if err != nil {
+		return fmt.Errorf("cannot get dns records for %s, %s, %v", mf.Metadata.DNSZone, fqdn, err)
+	}
+	for _, d := range dr {
+		if d.Type == "A" && d.Name == fqdn {
+			if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, d.ID); err != nil {
+				return fmt.Errorf("cannot delete DNS record, %v", d)
+			}
+		}
 	}
 	return nil
 }

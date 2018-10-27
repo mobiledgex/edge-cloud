@@ -11,6 +11,7 @@ metadata:
   location: testlocation
   resourcegroup: mobiledgex
   operator: mex-tdg
+  dnszone: mobiledgex.net
 spec:
   flags: force
   flavor: x1.medium
