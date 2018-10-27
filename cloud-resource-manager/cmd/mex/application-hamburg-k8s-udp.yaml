@@ -7,6 +7,7 @@ metadata:
   tags: testappudp-k8s-tag
   tenant: testtenant
   operator: mex-tdg
+  dnszone: mobiledgex.net
 spec:
   flags: none
   key: testcluster
