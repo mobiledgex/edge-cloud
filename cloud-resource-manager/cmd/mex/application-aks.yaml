@@ -1,12 +1,13 @@
 apiVersion: v1
 kind: application
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+resource: azure-aks-centralus
 metadata:
   kind: mex-app-k8s
   name: testapp
   tags: testapp-k8s-tag
   tenant: testtenant
   operator: azure
+  dnszone: mobiledgex.net
 spec:
   flags: none
   key: aks-testcluster
@@ -15,6 +16,7 @@ spec:
   proxypath: testapp
   flavor: x1.medium
   uri: https://testapp.testcloudlet.azure.mobiledgex.net
+  ipaccess: IpAccessShared
   kubemanifesttemplate: 
   ports:
   - name: lprotohttp1

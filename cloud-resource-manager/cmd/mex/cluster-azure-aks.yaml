@@ -12,6 +12,7 @@ metadata:
   location: centralus
   project:
   resourcegroup: testclustergroup
+  dnszone: mobiledgex.net
 spec:
   flags:
   flavor:
