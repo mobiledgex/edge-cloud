@@ -102,7 +102,13 @@
   tasks:
   - name: stop locsim process
     shell: "pkill -9 loc-api-sim||true"
-    when: item.hostname == inventory_hostname
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
+    with_items:
+       -  "{{ locsims }}"
+
+  - name: stop locsim docker container
+    shell: "docker kill $(docker ps|grep {{item.locapisimlocal.name}}|cut -d' ' -f 1)||true"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ locsims }}"
 
@@ -118,7 +124,13 @@
   tasks:
   - name: stop toksim process
     shell: "pkill -9 tok-srv-sim||true"
-    when: item.hostname == inventory_hostname
+    when: item.hostname == inventory_hostname 
+    with_items:
+       -  "{{ toksims }}"
+
+  - name: stop toksim docker container
+    shell: "docker kill $(docker ps|grep {{item.toksrvsimlocal.name}}|cut -d' ' -f 1)||true"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ toksims }}"
 
