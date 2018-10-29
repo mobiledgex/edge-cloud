@@ -2,10 +2,10 @@
 vars:
 - locverurl: "http://37.50.143.118:8888/verifyLocation"
 - toksrvurl: "http://37.50.143.118:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
-- bonnctrl: "tdg2.ctrl.mobiledgex.net"
-- bonndme: "tdg2.dme.mobiledgex.net"
-- bonncrm: "tdg2.crm.mobiledgex.net"
-- vm1_external_ip: 37.50.143.104
+- bonnctrl: "tdg3.ctrl.mobiledgex.net"
+- bonndme: "tdg3.dme.mobiledgex.net"
+- bonncrm: "tdg3.crm.mobiledgex.net"
+- vm1_external_ip: 37.50.143.115
 - vm1_internal_ip: 127.0.0.1
 
 cloudflare:
@@ -13,13 +13,13 @@ cloudflare:
   records:
   - name: "{{bonndme}}"
     type: A
-    content: 37.50.143.104
+    content: 37.50.143.115
   - name: "{{bonncrm}}"
     type: A
-    content: 37.50.143.104
+    content: 37.50.143.115
   - name: "{{bonnctrl}}"
     type: A
-    content: 37.50.143.104
+    content: 37.50.143.115
 
 etcds:
 - etcdlocal:

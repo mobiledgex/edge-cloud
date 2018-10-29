@@ -25,11 +25,16 @@
   - "{{ setupfile }}"
 
   tasks:
-  - name: "check controller binary installed {{ controller_remote_bin }} on {{ inventory_hostname }}"
-    stat:
-      path: "{{ controller_remote_bin }}"
-    register: ctrl_stat
-    failed_when: ctrl_stat.stat.exists == False
+
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
+
+  - name: docker login to mex repo
+    docker_login:
+      registry: registry.mobiledgex.net:5000
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
+
  
   - name: set tls option
     set_fact:

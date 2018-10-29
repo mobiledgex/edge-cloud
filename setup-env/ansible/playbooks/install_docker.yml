@@ -65,4 +65,12 @@
         state: file
         mode: "u+rwx,g+rx,o+rx"
          
-    
+  - name: install pip
+    package:
+       name: pip
+       state: present
+
+  - name: pip install docker
+    pip:
+       name: docker
+           
