@@ -15,6 +15,9 @@ build:
 
 # to use protodoc, make sure you run:
 # go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
+# go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 protodoc:
 	protoc ${INCLUDE} --doc_out=./doc --doc_opt=html,index.html *.proto
 	protoc ${INCLUDE} --doc_out=./doc --doc_opt=markdown,README.md *.proto
+	#swagger annotations for REST APIs
+	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true:./doc  *.proto
