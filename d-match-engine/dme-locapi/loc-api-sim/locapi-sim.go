@@ -46,7 +46,7 @@ func printUsage() {
 }
 
 func showIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("doing showIndex")
+	log.Printf("doing showIndex for request: %v\n", r)
 	rc := "/verifyLocation -- verifies the location of an token vs lat and long\n"
 	rc += "/updateLocation -- adds or replaces an IP->location entry\n"
 	rc += "/showLocations -- shows current locations\n"
@@ -165,12 +165,12 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 
 	ip, valid, err := locutil.DecodeToken(req.Token)
 	if !valid {
-		http.Error(w, "Token is not valid or expired", 401)
-		return
+		// give a similar error to what we get from the real server
+		resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
+		resp.Message = "ERROR REASON: crisp_soap_fault || RESULT: invalidToken || DETAILS: The provided token is invalid and cannot be processed."
 	} else if err != nil {
-		//likely a badly formatted token
-		http.Error(w, err.Error(), 400)
-		return
+		resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
+		resp.Message = "ERROR REASON: crisp_soap_fault || RESULT: invalidToken || DETAILS: The provided token is invalid and cannot be processed."
 	} else {
 		foundLoc, err := findLocForIP(ip)
 		if err != nil {
