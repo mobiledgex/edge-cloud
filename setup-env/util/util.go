@@ -159,6 +159,12 @@ type DeploymentData struct {
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 
+type errorReply struct {
+	Code    int
+	Message string
+	Details []string
+}
+
 //these are strings which may be present in the yaml but not in the corresponding data structures.
 //These are the only allowed exceptions to the strict yaml unmarshalling
 var yamlExceptions = map[string]map[string]bool{
@@ -618,11 +624,23 @@ func CallRESTPost(httpAddr string, client *http.Client, pb proto.Message, reply 
 		return err
 	}
 	defer resp.Body.Close()
-	err = jsonpb.Unmarshal(resp.Body, reply)
+	body, _ := ioutil.ReadAll(resp.Body)
+	reader := bytes.NewReader(body)
+	err = jsonpb.Unmarshal(reader, reply)
+
 	if err != nil {
-		log.Printf("Failed to unmarshal reply\n")
-		body, _ := ioutil.ReadAll(resp.Body)
-		log.Printf("Body string: %s\n", string(body))
+		log.Printf("Failed to unmarshal reply : %s %v\n", body, err)
+		//try to unmarshal it as an error yaml reply
+		var ereply errorReply
+		err2 := json.Unmarshal(body, &ereply)
+		if err2 == nil {
+			log.Printf("Reply is an error response, message: %+v\n", ereply.Message)
+			return fmt.Errorf("Error reply message: %s", ereply.Message)
+		}
+		// not an error reply either
+		log.Printf("Failed to unmarshal as an error reply : %s %v\n", body, err2)
+
+		// return the original error
 		return err
 	}
 	return nil
