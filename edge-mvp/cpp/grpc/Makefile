@@ -37,9 +37,9 @@ GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
 # Run "brew install coreutils" to get "grealpath" for protoc's requirement of absolute paths
-ABSOLUTEPATH := $(shell grealpath ../..)
+ABSOLUTEPATH := $(shell grealpath ../../..)
 PROTOS_PATH = $(ABSOLUTEPATH)/d-match-engine/dme-proto
-THIRD_PARTY_PROTOS_PATH = $(ABSOLUTEPATH)/edge-mvp/thrid_party
+THIRD_PARTY_PROTOS_PATH = $(ABSOLUTEPATH)/edge-mvp/third_party
 
 PROTO_INCLUDE_DIRECTORIES := $(PROTOS_PATH) $(THIRD_PARTY_PROTOS_PATH)/googleapis
 

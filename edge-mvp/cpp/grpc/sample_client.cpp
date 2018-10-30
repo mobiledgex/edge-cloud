@@ -1,4 +1,5 @@
 #include <grpcpp/grpcpp.h>
+
 #include <iostream>
 
 #include <curl/curl.h>
@@ -19,7 +20,7 @@ class MexGrpcClient {
   public:
     unsigned long timeoutSec = 5000;
     const string appName = "EmptyMatchEngineApp"; // Your application name
-    const string devName = "EmptyMatchEngineAPp"; // Your developer name
+    const string devName = "EmptyMatchEngineApp"; // Your developer name
     const string appVersionStr = "1.0";
 
     MexGrpcClient(std::shared_ptr<Channel> channel)
@@ -27,7 +28,7 @@ class MexGrpcClient {
 
     // Retrieve the carrier name of the cellular network interface.
     string getCarrierName() {
-        return string("TDG"); 
+        return string("TDG");
     }
 
     // A C++ GPS location provider/binding is needed here.
@@ -138,7 +139,6 @@ class MexGrpcClient {
         tokenizedRequest->CopyFrom(*request);
 
         tokenizedRequest->set_verifyloctoken(token);
-
         grpc::Status grpcStatus = stub_->VerifyLocation(&context, *tokenizedRequest, &reply);
 
         return grpcStatus;
@@ -156,17 +156,21 @@ class MexGrpcClient {
     }
 
     string getToken(const string &uri) {
+        cout << "In getToken" << endl;
         if (uri.length() == 0) {
+            cerr << "No URI to get token!" << endl;
             return NULL;
         }
 
-        // Since GPRC's Channel is somewhat hidden,
+        // Since GPRC's Channel is somewhat hidden
         // we can use CURL here instead.
         CURL *curl = curl_easy_init();
         if (curl == NULL) {
+            cerr << "Curl could not be initialized." << endl;
             return NULL;
         }
         CURLcode res;
+        cout << "uri: " << uri << endl;
         curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, false);  // Do not follow redirect.
         curl_easy_setopt(curl, CURLOPT_HEADER, 1);              // Keep headers.
@@ -176,8 +180,8 @@ class MexGrpcClient {
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
 
         res = curl_easy_perform(curl);
-        if (res == CURLE_OK) {
-            cout << "Retrieved TokenServer token: " << token << endl;
+        if (res != CURLE_OK) {
+           cerr << "Error getting token: " << res << endl;
         }
 
         curl_easy_cleanup(curl);
@@ -185,7 +189,7 @@ class MexGrpcClient {
         return token;
     }
 
-   private:
+  private:
     std::unique_ptr<Match_Engine_Api::Stub> stub_;
     string token;  // short lived carrier dt-id token.
     string tokenserveruri;
@@ -196,12 +200,12 @@ class MexGrpcClient {
         string foundToken;
         size_t vpos = queryParameter.find("=");
 
-        //cout << "Query: " << queryParameter << " Query size: " << queryParameter.length() << endl;
-        string valPart = queryParameter.substr(vpos, queryParameter.length()-1);
         string key = queryParameter.substr(0, vpos);
-        //cout << "Key: " << key << " Remaining Part: " << valPart << endl;
+        cout << "Key: " << key << endl;
+        vpos += 1; // skip over '='
+        string valPart = queryParameter.substr(vpos, queryParameter.length());
         if ((key == keyFind) && (vpos != std::string::npos)) {
-            vpos += 1;
+
             if (vpos < queryParameter.length()) {
                 foundToken = queryParameter.substr(vpos, queryParameter.length());
             }
@@ -212,7 +216,8 @@ class MexGrpcClient {
     static string parseToken(const string &locationUri) {
         // Looking for carrier dt-id: <token> in the URL, and ignoring everything else.
         size_t pos = locationUri.find("?");
-        string uriParameters = locationUri.substr(pos + 1, locationUri.length());
+        pos += 1;
+        string uriParameters = locationUri.substr(pos, locationUri.length() - pos);
         pos = 0;
         size_t start = 0;
         string foundToken;
@@ -232,8 +237,8 @@ class MexGrpcClient {
                 foundToken = parseParameter(queryParameter, keyFind);
                 break;
             } else {
-                queryParameter = uriParameters.substr(start, pos-start);
-                cout << "Substring 2: " << queryParameter << endl;
+                queryParameter = uriParameters.substr(start, pos - start);
+                cout << "Substring: " << queryParameter << endl;
                 foundToken = parseParameter(queryParameter, keyFind);
             }
 
@@ -247,12 +252,27 @@ class MexGrpcClient {
         return foundToken;
     }
 
+    static string trimStringEol(const string &stringBuf) {
+        size_t size = stringBuf.length();
+
+        // HTTP/1.1 RFC 2616: Should only be "\r\n" (and not '\n')
+        if (size >= 2 && (stringBuf[size-2] == '\r' && stringBuf[size-1] == '\n')) {
+            size_t seol = size-2;
+            return stringBuf.substr(0,seol);
+        } else {
+            // Not expected EOL format, returning as-is.
+            return stringBuf;
+        }
+
+    }
+
     // Callback function to retrieve headers, called once per header line.
     static size_t header_callback(const char *buffer, size_t size, size_t n_items, void *userdata) {
         size_t bufferLen = n_items * size;
 
         // Need to get "Location: ....dt-id=ABCDEF01234"
-        string stringBuf = string(buffer);
+        string stringBuf(buffer);
+        stringBuf = trimStringEol(stringBuf);
 
         string key = "";
         string value = "";
@@ -266,10 +286,10 @@ class MexGrpcClient {
             key = stringBuf.substr(0, colonPos);
             if (key == "Location") {
                 // Skip blank
-                blankPos = stringBuf.find(" ");
+                blankPos = stringBuf.find(" ") + 1;
                 if ((blankPos != std::string::npos) &&
                     (blankPos < stringBuf.length())) {
-                    value = stringBuf.substr(blankPos + 1, stringBuf.length());
+                    value = stringBuf.substr(blankPos, stringBuf.length() - blankPos);
                     cout << "Location Header Value: " << value << endl;
                     *token = parseToken(value);
                 }
@@ -283,7 +303,7 @@ class MexGrpcClient {
 
 int main() {
     cout << "Hello C++ MEX GRPC Lib" << endl;
-    string host = "tdg.dme.mobiledgex.net:50051";
+    string host = "tdg2.dme.mobiledgex.net:50051";
 
     // Credentials, Mutual Authentication:
     grpc::SslCredentialsOptions credentials;
