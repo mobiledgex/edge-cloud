@@ -44,5 +44,11 @@ test:
 test-debug:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
+# will 1)export PYTHONPATH 2)stop and start processes 3)run python testscases
+# can use: "make test-python" to run all tests
+# can use: "make test-python dir=controller/operator" to run only the operator testcases or any directory specified
+test-python:
+	bash ./setup-env/e2e-tests/python/tools/run_all_tests.sh
+
 clean:
 	go clean ./...
