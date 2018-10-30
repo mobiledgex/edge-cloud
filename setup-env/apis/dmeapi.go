@@ -37,6 +37,10 @@ type registration struct {
 	Reply dmeproto.RegisterClientReply   `yaml:"registerclientreply"`
 }
 
+type RegisterReplyWithError struct {
+	dmeproto.RegisterClientReply
+}
+
 var apiRequest dmeApiRequest
 
 // REST client implementation of Match_Engine_ApiClient interface
@@ -113,7 +117,7 @@ func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInst
 	}
 	return out, nil
 }
-  
+
 func readDMEApiFile(apifile string) {
 	err := util.ReadYamlFile(apifile, &apiRequest, "", true)
 	if err != nil {
@@ -283,7 +287,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			if strings.Contains(dmeerror.Error(), apiRequest.ErrorExpected) {
 				log.Printf("found expected error string in api response: %s", apiRequest.ErrorExpected)
 			} else {
-				log.Printf("Mismatched error in DME API: %s", apiRequest.ErrorExpected)
+				log.Printf("Mismatched error in DME API: %s Expected: %s", dmeerror.Error(), apiRequest.ErrorExpected)
 				return false
 			}
 		} else {

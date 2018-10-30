@@ -11,3 +11,6 @@ build:
 	protoc ${INCLUDE} --gomex_out=plugins=grpc+mex,${BUILTIN}:. *.proto
 	protoc ${INCLUDE} --cmd_out=${BUILTIN}:../../gencmd *.proto
 	protoc ${INCLUDE} --grpc-gateway_out=${BUILTIN}:. *.proto
+	# swagger annotations for REST APIs
+	# go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	protoc ${INCLUDE} --swagger_out=logtostderr=true,allow_merge=true,merge_file_name=app-client:. *.proto
