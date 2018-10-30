@@ -25,11 +25,16 @@
   - "{{ setupfile }}"
 
   tasks:
-  - name: "check controller binary installed {{ controller_remote_bin }} on {{ inventory_hostname }}"
-    stat:
-      path: "{{ controller_remote_bin }}"
-    register: ctrl_stat
-    failed_when: ctrl_stat.stat.exists == False
+
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
+
+  - name: docker login to mex repo
+    docker_login:
+      registry: registry.mobiledgex.net:5000
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
+
  
   - name: set tls option
     set_fact:
@@ -92,7 +97,7 @@
        image: "{{ item.dockerimage }}"
        name: "{{ item.dmelocal.name }}"
        env_file: "{{remote_log_path}}//{{item.dmelocal.name}}.env"
-       command: "dme-server --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq"
+       command: "dme-server --apiAddr {{ item.dmelocal.apiaddr }} --httpAddr {{ item.dmelocal.httpaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq"
        network_mode: host
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
@@ -103,7 +108,7 @@
         envvar:  "{% if dmes[0].envvars['LOCAPI_USER'] is defined %} export LOCAPI_USER={{ dmes[0].envvars['LOCAPI_USER'] }} LOCAPI_PASSWD={{ dmes[0].envvars['LOCAPI_PASSWD']}}  {% else %} true {% endif %}" 
 
   - name: start up dme-server process
-    shell: "{{ envvar }} && nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
+    shell: "{{ envvar }} && nohup {{ dme_remote_bin }} --apiAddr {{ item.dmelocal.apiaddr }} --httpAddr {{ item.dmelocal.httpaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq > {{ remote_log_path }}/{{ item.dmelocal.name }}.log 2>&1 &"
     when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ dmes }}"
@@ -174,15 +179,22 @@
 
   tasks:
 
-  - name: check locsim binary exists
-    stat:
-      path: "{{ locsim_remote_bin }}"
-    register: loc_stat
-    failed_when: loc_stat.stat.exists == False
+  - name: start up locsim container
+    docker_container:
+       pull: yes
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.locapisimlocal.name }}"
+       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}"
+       network_mode: host
+       volumes:
+         - /var/tmp:/var/tmp
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ locsims }}"
 
   - name: start up locsim process
     shell: "nohup {{ locsim_remote_bin }} --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }} > {{ remote_log_path }}/{{ item.locapisimlocal.name }}.log 2>&1 &"
-    when: item.hostname == inventory_hostname
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ locsims }}"
 
@@ -197,15 +209,20 @@
 
   tasks:
 
-  - name: check toksim binary exists
-    stat:
-      path: "{{ toksim_remote_bin }}"
-    register: tok_stat
-    failed_when: tok_stat.stat.exists == False
-
   - name: start up toksim process
-    shell: "nohup {{ toksim_remote_bin }} --port {{ item.toksrvsimlocal.port }} --token '{{ item.toksrvsimlocal.token }}' > {{ remote_log_path }}/{{ item.toksrvsimlocal.name }}.log 2>&1 &"
-    when: item.hostname == inventory_hostname
+    shell: "nohup {{ toksim_remote_bin }} --port {{ item.toksrvsimlocal.port }} > {{ remote_log_path }}/{{ item.toksrvsimlocal.name }}.log 2>&1 &"
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
+    with_items:
+       -  "{{ toksims }}"
+
+  - name: start up toksim container
+    docker_container:
+       pull: yes
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.toksrvsimlocal.name }}"
+       command: "tok-srv-sim --port {{ item.toksrvsimlocal.port }} "
+       network_mode: host
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ toksims }}"
 
