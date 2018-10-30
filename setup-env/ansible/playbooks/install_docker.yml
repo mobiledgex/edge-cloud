@@ -1,0 +1,76 @@
+
+- hosts: all
+  user: root
+  tasks:
+  - name: Add Docker GPG key for Ubuntu
+    apt_key: 
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Add Docker GPG key for Centos
+    rpm_key:
+      key: https://download.docker.com/linux/centos/gpg
+      state: present
+    when: ansible_distribution == "CentOS"
+
+  - name: Add Docker apt repository for Ubuntu
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Add Docker repo for Centos
+    get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo
+    when: ansible_distribution == "CentOS"
+
+  - name: Install docker packages for Ubuntu
+    package:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    with_items:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - software-properties-common
+      - docker-ce
+    when: ansible_distribution == "Ubuntu"
+
+  - name: Install docker packages for Centos
+    package:
+      name: "{{ item }}"
+      state: present
+      update_cache: yes
+    with_items:
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - ca-certificates
+      - curl
+      - docker-ce
+    when: ansible_distribution == "CentOS"
+
+
+  - name: install docker-compose
+    command: "curl -L \"https://github.com/docker/compose/releases/download/1.22.0/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}\" -o /usr/local/bin/docker-compose"
+    args:
+      warn: false
+ 
+   
+  - name: make docker-compose executable
+    file:
+        path: /usr/local/bin/docker-compose
+        state: file
+        mode: "u+rwx,g+rx,o+rx"
+         
+  - name: install pip
+    package:
+       name: pip
+       state: present
+
+  - name: pip install docker
+    pip:
+       name: docker
+           

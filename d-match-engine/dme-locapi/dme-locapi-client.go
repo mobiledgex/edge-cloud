@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/log"
 
@@ -19,7 +20,7 @@ import (
 
 type LocationResponseMessage struct {
 	MatchingDegree string `json:"matchingDegree"`
-	Error          string `json:"error"`
+	Message        string `json:"message"`
 }
 
 //format of the HTTP request body.  Token is used for validation of location, but
@@ -111,8 +112,11 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string)
 	}
 
 	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "match degree:", lrmResp.MatchingDegree)
-	if lrmResp.Error != "" {
-		log.WarnLog("Error received in token response", "err", lrmResp.Error)
+	if lrmResp.Message != "" {
+		log.WarnLog("Error message received in token response", "err", lrmResp.Message)
+		if strings.Contains(lrmResp.Message, "invalidToken") {
+			return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_UNAUTHORIZED}
+		}
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	l, err := strconv.ParseInt(lrmResp.MatchingDegree, 10, 32)

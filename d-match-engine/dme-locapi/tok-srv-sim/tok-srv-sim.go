@@ -26,7 +26,7 @@ func printUsage() {
 }
 
 func showIndex(w http.ResponseWriter, r *http.Request) {
-	log.Println("doing showIndex")
+	log.Printf("doing showIndex for request: %v\n", r)
 	rc := "/its -- Identity Token Server Get Token\n"
 	w.Write([]byte(rc))
 }
