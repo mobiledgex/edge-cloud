@@ -1756,15 +1756,15 @@ func FormNginxProxyRequest(ports []PortDetail, ipaddr string, name string) (*str
 		case "LProtoHTTP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "internal": "%d", "origin":"%s:%d", "path":"/%s"}`,
-					p.MexProto, p.PublicPort, p.InternalPort, ipaddr, p.PublicPort, p.PublicPath))
+					p.MexProto, p.PublicPort, p.InternalPort, ipaddr, p.InternalPort, p.PublicPath))
 		case "LProtoTCP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
-					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+					p.MexProto, p.PublicPort, ipaddr, p.InternalPort))
 		case "LProtoUDP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
-					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+					p.MexProto, p.PublicPort, ipaddr, p.InternalPort))
 		default:
 			log.DebugLog(log.DebugLevelMexos, "invalid mexproto", "port", p)
 		}
