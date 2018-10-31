@@ -44,7 +44,9 @@ class tc(unittest.TestCase):
 
         self.stub = app_client_pb2_grpc.Match_Engine_ApiStub(channel)
         req = app_client_pb2.RegisterClientRequest(
-                                                     DevName = 'AcmeAppCo'
+                                                     DevName = 'AcmeAppCo',
+                                                     AppName = 'someapplication',
+                                                     AppVers = '1.0'
         ) 
         regResp = self.stub.RegisterClient(req)
         print('cookie',regResp.SessionCookie)
