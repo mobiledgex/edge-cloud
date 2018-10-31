@@ -18,11 +18,13 @@ $ e2e-tests -testfile deploy_start_create.yml  -setupfile local_multi.yml -stop
 ### Run the testcases
 There is a seperate directory for each testcase type. This is the structure
     
-    |--controller  - contains controller testcases
-    |  |--cluster  - cluster and cluster instance testcases
-    |  |--app      - app testcases
-    |  |--operator - operator testcases
-    |  |--developer- developer testcases
+    |--controller    - contains controller testcases
+    |  |--cluster    - cluster and cluster instance testcases
+    |  |--app        - app testcases
+    |  |--operator   - operator testcases
+    |  |--developer  - developer testcases
+    |  |--flavor     - flavor testcasesa
+    |  |--controller - controller specific testcases
     |--dme         - dme testcases
        |--cloudlet - cloudlet testcases 
        |--location - location testcases
