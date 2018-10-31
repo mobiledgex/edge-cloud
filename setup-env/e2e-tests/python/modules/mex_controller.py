@@ -4,9 +4,10 @@ import copy
 import os
 import logging
 from pprint import pprint
+import controller_pb2
+import controller_pb2_grpc
 import cluster_pb2
 import cluster_pb2_grpc
-import clusterflavor_pb2
 import clusterinst_pb2
 import clusterinst_pb2_grpc
 import cloudlet_pb2
@@ -139,7 +140,10 @@ class Flavor():
         del passed_args['self']
 
         self.flavor_name = flavor_name
-
+        self.ram = ram
+        self.vcpus = vcpus
+        self.disk = disk
+        
         flavor_dict = {}
         for a in passed_args:
             if passed_args[a] is not None:
@@ -148,13 +152,30 @@ class Flavor():
                 elif a == 'ram':
                     flavor_dict['ram'] = ram
                 elif a == 'vcpus':
-                    flavor_dict['vcus'] = vcpus
+                    flavor_dict['vcpus'] = vcpus
                 elif a == 'disk':
                     flavor_dict['disk'] = disk
 
         self.flavor = flavor_pb2.Flavor(**flavor_dict
                                      )
         #print(self.flavor)
+
+    def __eq__(self, c):
+        if c.key.name == self.flavor_name and c.ram == self.ram and c.vcpus == self.vcpus and c.disk == self.disk:
+            return True
+
+    def exists(self, op_list):
+        logger.info('checking flavor exists')
+        
+        found = False
+        for c in op_list:
+            if self.__eq__(c):
+                found = True
+                logger.info('flavor found')
+                break
+        if not found:
+            logger.error('ERROR: flavor NOT found')
+        return found
 
 class ClusterFlavor():
     def __init__(self, cluster_flavor_name=None, node_flavor_name=None, master_flavor_name=None, number_nodes=None,max_nodes=None, number_masters=None):
@@ -489,6 +510,7 @@ class Controller():
         else:
                 controller_channel = grpc.insecure_channel(controller_address)
 
+        self.controller_stub = controller_pb2_grpc.ControllerApiStub(controller_channel)
         self.cluster_flavor_stub = clusterflavor_pb2_grpc.ClusterFlavorApiStub(controller_channel)
         self.cluster_stub = cluster_pb2_grpc.ClusterApiStub(controller_channel)
         self.clusterinst_stub = clusterinst_pb2_grpc.ClusterInstApiStub(controller_channel)
@@ -499,6 +521,22 @@ class Controller():
         self.appinst_stub = app_inst_pb2_grpc.AppInstApiStub(controller_channel)
         self.operator_stub = operator_pb2_grpc.OperatorApiStub(controller_channel)
         self.developer_stub = developer_pb2_grpc.DeveloperApiStub(controller_channel)
+
+    def show_controllers(self, address=None):
+        logger.info('show controllers on {}. \n\t{}'.format(self.address, str(address).replace('\n','\n\t')))
+
+        resp = None
+        if address:
+            resp = list(self.controller_stub.ShowController(controller_pb2.Controller(key = controller_pb2.ControllerKey(addr=address))))
+        else:
+            resp = list(self.controller_stub.ShowController(controller_pb2.Controller()))
+
+        if logging.getLogger().getEffectiveLevel() == 10: # debug level
+            logger.debug('controller list:')
+            for c in resp:
+                print('\t{}'.format(str(c).replace('\n','\n\t')))
+
+        return resp
 
     def create_cluster_flavor(self, cluster_flavor):
         logger.info('create cluster flavor on {}. \n\t{}'.format(self.address, str(cluster_flavor).replace('\n','\n\t')))
@@ -619,12 +657,30 @@ class Controller():
 
         return resp
 
-    def show_flavors(self):
-        logger.info('show flavors on {}.'.format(self.address))
+    def create_flavor(self, flavor_instance):
+        logger.info('create flavor on {}. \n\t{}'.format(self.address, str(flavor_instance).replace('\n','\n\t')))
 
-        resp = list(self.flavor_stub.ShowFlavor(flavor_pb2.Flavor()))
+        resp = self.flavor_stub.CreateFlavor(flavor_instance)
+
+        return resp
+
+    def update_flavor(self, flavor_instance):
+        logger.info('update flavor on {}. \n\t{}'.format(self.address, str(flavor_instance).replace('\n','\n\t')))
+
+        resp = self.flavor_stub.UpdateFlavor(flavor_instance)
+
+        return resp
+
+    def show_flavors(self, flavor_instance=None):
+        logger.info('show flavors on {}. \n\t{}'.format(self.address, str(flavor_instance).replace('\n','\n\t')))
+
+        resp = None
+        if flavor_instance:
+            resp = list(self.flavor_stub.ShowFlavor(flavor_instance))
+        else:
+            resp = list(self.flavor_stub.ShowFlavor(flavor_pb2.Flavor()))
         if logging.getLogger().getEffectiveLevel() == 10: # debug level
-            logger.debug('cluster list:')
+            logger.debug('flavor list:')
             for c in resp:
                 print('\t{}'.format(str(c).replace('\n','\n\t')))
 
