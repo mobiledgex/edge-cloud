@@ -18,7 +18,6 @@ ENV PATH="/go/bin:${PATH}"
 COPY . .
 RUN go get github.com/grpc-ecosystem/grpc-gateway; exit 0
 RUN go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc; exit 0
-RUN go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc; exit 0
 RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
 RUN make tools
 RUN make clean
