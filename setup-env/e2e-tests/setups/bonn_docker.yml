@@ -1,7 +1,7 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- locverurl: "https://lvs.vse.telekom-dienste.de/simulator/verifyLocalisation"
-- toksrvurl: "https://mobile-token.telekom.de/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- locverurl: "https://lvs.vse.telekom-dienste.de/verifyLocalisation"
+- toksrvurl: "https://mobile-token.telekom.de/its?followURL%3Dhttps%3A%2F%2Fdme.mobiledgex.net%2FverifyLoc"
 - bonnctrl: "tdg2.ctrl.mobiledgex.net"
 - bonndme: "tdg2.dme.mobiledgex.net"
 - bonncrm: "tdg2.crm.mobiledgex.net"
@@ -29,14 +29,14 @@ locsims:
     geofile: "{{datadir}}/geocode.dat"
     country: GE
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
 
 toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
 etcds:
 - etcdlocal:
     name: etcd1
@@ -73,7 +73,7 @@ controllers:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
    
 dmes:
 - dmelocal:
@@ -92,7 +92,7 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
 
 
 crms:
@@ -107,7 +107,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:   
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
 
 - crmlocal:
     name: crm2
@@ -120,7 +120,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101
 
 - crmlocal:
     name: crm3
@@ -133,4 +133,4 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1101

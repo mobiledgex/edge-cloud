@@ -55,6 +55,7 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string,
 		log.WarnLog("Error, no followURL in tokSrvUrl")
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
+	serviceURL = url.PathEscape(serviceURL)
 	var lrm LocationRequestMessage
 	lrm.Lat = lat
 	lrm.Long = long
@@ -127,9 +128,9 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string,
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 
-	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "match degree:", lrmResp.MatchingDegree)
-	if lrmResp.Message != "" {
-		log.WarnLog("Error message received in token response", "err", lrmResp.Message)
+	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "lrmResp:", lrmResp)
+	if lrmResp.Message != "" && lrmResp.Message != "ok" {
+		log.WarnLog("Error message received in token response", "Message", lrmResp.Message)
 		if strings.Contains(lrmResp.Message, "invalidToken") {
 			return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_UNAUTHORIZED}
 		}
