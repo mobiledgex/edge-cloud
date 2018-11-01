@@ -1,7 +1,7 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- locverurl: "http://37.50.143.118:8888/verifyLocation"
-- toksrvurl: "http://37.50.143.118:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- locverurl: "https://lvs.vse.telekom-dienste.de/simulator/verifyLocalisation"
+- toksrvurl: "https://mobile-token.telekom.de/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
 - bonnctrl: "tdg2.ctrl.mobiledgex.net"
 - bonndme: "tdg2.dme.mobiledgex.net"
 - bonncrm: "tdg2.crm.mobiledgex.net"
@@ -21,6 +21,22 @@ cloudflare:
     type: A
     content: 37.50.143.104
 
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: "{{datadir}}/locsim.yml"
+    geofile: "{{datadir}}/geocode.dat"
+    country: GE
+  hostname: "{{vm1_external_ip}}"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+  hostname: "{{vm1_external_ip}}"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
 etcds:
 - etcdlocal:
     name: etcd1
@@ -57,7 +73,7 @@ controllers:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1028
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
    
 dmes:
 - dmelocal:
@@ -76,8 +92,7 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1028
-
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
 
 
 crms:
@@ -85,18 +100,31 @@ crms:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tdgcloud1"}'
+    cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:   
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1028
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
 
 - crmlocal:
     name: crm2
     apiaddr: "0.0.0.0:55092"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{bonncrm}}"
+  envvars:
+     OS_AUTH_URL: ""
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031
+
+- crmlocal:
+    name: crm3
+    apiaddr: "0.0.0.0:55093"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn3cloudlet"}'
     tls:
@@ -105,4 +133,4 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1028
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1031

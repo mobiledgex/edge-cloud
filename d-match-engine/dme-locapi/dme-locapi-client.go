@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -26,10 +27,11 @@ type LocationResponseMessage struct {
 //format of the HTTP request body.  Token is used for validation of location, but
 //IP address is still present to allow locations to be updated for the simulator
 type LocationRequestMessage struct {
-	Lat       float64       `json:"latitude" yaml:"lat"`
-	Long      float64       `json:"longitude" yaml:"long"`
-	Token     util.TDGToken `json:"token" yaml:"token"`
-	Ipaddress string        `json:"ipaddr,omitempty" yaml:"ipaddr"`
+	Lat        float64       `json:"latitude" yaml:"lat"`
+	Long       float64       `json:"longitude" yaml:"long"`
+	Token      util.TDGToken `json:"token" yaml:"token"`
+	Ipaddress  string        `json:"ipaddr,omitempty" yaml:"ipaddr"`
+	ServiceURL string        `json:"serviceUrl,omitempty" yaml:"serviceUrl"`
 }
 
 func basicAuth(username, password string) string {
@@ -38,12 +40,26 @@ func basicAuth(username, password string) string {
 }
 
 // CallTDGLocationVerifyAPI REST API client for the TDG implementation of Location verification API
-func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string) dmecommon.LocationResult {
+func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string, tokSrvUrl string) dmecommon.LocationResult {
 
+	//for TDG, the serviceURL is the value of the query parameter "followURL" in the token service URL
+	u, err := url.Parse(tokSrvUrl)
+	if err != nil {
+		// should never happen unless there is a provisioning error
+		log.WarnLog("Error, cannot parse tokSrvUrl")
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
+	}
+	qvals := u.Query()
+	serviceURL := qvals.Get("followURL")
+	if serviceURL == "" {
+		log.WarnLog("Error, no followURL in tokSrvUrl")
+		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
+	}
 	var lrm LocationRequestMessage
 	lrm.Lat = lat
 	lrm.Long = long
 	lrm.Token = util.TDGToken(token)
+	lrm.ServiceURL = serviceURL
 
 	b, err := json.Marshal(lrm)
 	if err != nil {
