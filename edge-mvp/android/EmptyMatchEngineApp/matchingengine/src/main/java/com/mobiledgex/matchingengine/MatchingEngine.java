@@ -264,7 +264,7 @@ public class MatchingEngine {
 
         try {
             pInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            versionName = (appVersion == null) ? pInfo.versionName : appVersion;
+            versionName = (appVersion == null || appVersion.isEmpty()) ? pInfo.versionName : appVersion;
         } catch (PackageManager.NameNotFoundException nfe) {
             nfe.printStackTrace();
             // Hard stop, or continue?
