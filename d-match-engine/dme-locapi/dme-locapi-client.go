@@ -46,13 +46,13 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string,
 	u, err := url.Parse(tokSrvUrl)
 	if err != nil {
 		// should never happen unless there is a provisioning error
-		log.WarnLog("Error, cannot parse tokSrvUrl")
+		log.WarnLog("Error, cannot parse tokSrvUrl", "url", tokSrvUrl)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	qvals := u.Query()
 	serviceURL := qvals.Get("followURL")
 	if serviceURL == "" {
-		log.WarnLog("Error, no followURL in tokSrvUrl")
+		log.WarnLog("Error, no followURL in tokSrvUrl", "url", tokSrvUrl)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
 	serviceURL = url.PathEscape(serviceURL)
