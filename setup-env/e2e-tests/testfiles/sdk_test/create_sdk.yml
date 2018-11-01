@@ -1,0 +1,8 @@
+##
+##
+
+tests:
+
+- name: create provisioning
+  apifile: "{{datadir}}/sdk_test/appdata_sdk.yml"
+  actions: [ctrlapi-create,ctrlapi-show]
