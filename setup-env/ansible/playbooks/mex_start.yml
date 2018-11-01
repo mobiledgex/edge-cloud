@@ -184,7 +184,7 @@
        pull: yes
        image: "{{ item.dockerimage }}"
        name: "{{ item.locapisimlocal.name }}"
-       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}"
+       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}  --geofile {{ item.locapisimlocal.geofile }} --country {{ item.locapisimlocal.country }}"
        network_mode: host
        volumes:
          - /var/tmp:/var/tmp

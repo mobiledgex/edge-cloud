@@ -157,7 +157,7 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	}
 	//lat and long 0 are technically valid, if unlikely. But if both are zero
 	//we will consider this an error
-	if req.Token == "" || (req.Lat == 0 && req.Long == 0) {
+	if req.Token == "" || (req.Lat == 0 && req.Long == 0) || req.ServiceURL == "" {
 		log.Printf("missing field in request %+v\n", req)
 		http.Error(w, "missing field", 400)
 		return
