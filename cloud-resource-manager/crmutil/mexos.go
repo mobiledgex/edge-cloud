@@ -1210,10 +1210,10 @@ func ActivateFQDNA(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "waiting for cloudflare...")
 	//once successfully inserted the A record will take a bit of time, but not too long due to fast cloudflare anycast
-	err = WaitforDNSRegistration(fqdn)
-	if err != nil {
-		return err
-	}
+	//err = WaitforDNSRegistration(fqdn)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 
@@ -1514,13 +1514,13 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "created mexregistrysecret docker secret")
-	cmd = fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, kubeManifest)
+	cmd = fmt.Sprintf("cat <<'EOF'> %s.yaml \n%s\nEOF", mf.Metadata.Name, kubeManifest)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error writing KubeManifest, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "wrote Kube Manifest file")
-	cmd = fmt.Sprintf("%s kubectl create -f %s", kp.kubeconfig, mf.Metadata.Name)
+	cmd = fmt.Sprintf("%s kubectl create -f %s.yaml", kp.kubeconfig, mf.Metadata.Name)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
@@ -1573,14 +1573,28 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 			return err
 		}
 	}
-
 	log.DebugLog(log.DebugLevelMexos, "added nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
-	cmd = fmt.Sprintf(`%s kubectl patch svc %s-service -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, mf.Metadata.Name, kp.ipaddr)
+	cmd = fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
+		return fmt.Errorf("can not get list of services, %s, %v", out, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", mf.Metadata.Name, "externalIPs", kp.ipaddr)
+	svcs := &svcItems{}
+	err = json.Unmarshal([]byte(out), svcs)
+	if err != nil {
+		return fmt.Errorf("can not unmarshal svc json, %v", err)
+	}
+	for _, item := range svcs.Items {
+		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
+			continue
+		}
+		cmd = fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, item.Metadata.Name, kp.ipaddr)
+		out, err = kp.client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", item.Metadata.Name, "externalIPs", kp.ipaddr)
+	}
 	return nil
 }
 
@@ -1756,15 +1770,15 @@ func FormNginxProxyRequest(ports []PortDetail, ipaddr string, name string) (*str
 		case "LProtoHTTP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "internal": "%d", "origin":"%s:%d", "path":"/%s"}`,
-					p.MexProto, p.PublicPort, p.InternalPort, ipaddr, p.PublicPort, p.PublicPath))
+					p.MexProto, p.PublicPort, p.InternalPort, ipaddr, p.InternalPort, p.PublicPath))
 		case "LProtoTCP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
-					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+					p.MexProto, p.PublicPort, ipaddr, p.InternalPort))
 		case "LProtoUDP":
 			portstrs = append(portstrs,
 				fmt.Sprintf(`{"mexproto":"%s", "external": "%d", "origin": "%s:%d"}`,
-					p.MexProto, p.PublicPort, ipaddr, p.PublicPort))
+					p.MexProto, p.PublicPort, ipaddr, p.InternalPort))
 		default:
 			log.DebugLog(log.DebugLevelMexos, "invalid mexproto", "port", p)
 		}
@@ -1865,21 +1879,19 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 	return 0, fmt.Errorf("timeout error verifying kubectl proxy")
 }
 
-//DestroyKubernetesAppManifest destroys kubernetes app
-func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
+func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	log.DebugLog(log.DebugLevelMexos, "delete kubernetes app", "mf", mf)
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
 	}
 	if rootLB == nil {
-		return fmt.Errorf("cannot destroy kubernetes app manifest, rootLB is null")
+		return fmt.Errorf("cannot remove kubernetes app manifest, rootLB is null")
 	}
 	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
 		return fmt.Errorf("empty app URI")
 	}
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
-
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name for kubernetes deployment")
 	}
@@ -1904,12 +1916,27 @@ func DestroyKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
 	}
-	cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, mf.Metadata.Name+"-service")
+	cmd := fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
 	out, err := kp.client.Output(cmd)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "error deleting kubernetes service", "name", mf.Metadata.Name, "cmd", cmd, "out", out, "err", err)
-	} else {
-		log.DebugLog(log.DebugLevelMexos, "deleted service", "name", mf.Metadata.Name)
+		return fmt.Errorf("can not get list of services, %s, %v", out, err)
+	}
+	svcs := &svcItems{}
+	err = json.Unmarshal([]byte(out), svcs)
+	if err != nil {
+		return fmt.Errorf("can not unmarshal svc json, %v", err)
+	}
+	for _, item := range svcs.Items {
+		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
+			continue
+		}
+		cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, item.Metadata.Name)
+		out, err := kp.client.Output(cmd)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "error deleting kubernetes service", "name", item.Metadata.Name, "cmd", cmd, "out", out, "err", err)
+		} else {
+			log.DebugLog(log.DebugLevelMexos, "deleted service", "name", item.Metadata.Name)
+		}
 	}
 	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
 	out, err = kp.client.Output(cmd)
@@ -2059,8 +2086,7 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 	return nil
 }
 
-//DestroyQCOW2AppManifest destroys qcow2 app
-func DestroyQCOW2AppManifest(mf *Manifest) error {
+func DeleteQCOW2AppManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name, no openstack kvm to delete")
 	}

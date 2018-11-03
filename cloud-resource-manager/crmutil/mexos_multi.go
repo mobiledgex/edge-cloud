@@ -47,15 +47,16 @@ spec:
 `
 
 type templateFill struct {
-	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone string
-	ImageFlavor, Location, RootLB, ResourceGroup            string
-	StorageSpec, NetworkScheme, MasterFlavor, Topology      string
-	NodeFlavor, Operator, Key, Image, Options               string
-	ImageType, AppURI, ProxyPath                            string
-	ExternalNetwork, Project, AppTemplate                   string
-	ExternalRouter, Flags, IpAccess                         string
-	NumMasters, NumNodes                                    int
-	Command                                                 []string
+	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone                         string
+	ImageFlavor, Location, RootLB, ResourceGroup                                    string
+	StorageSpec, NetworkScheme, MasterFlavor, Topology                              string
+	NodeFlavor, Operator, Key, Image, Options                                       string
+	ImageType, AppURI, ProxyPath                                                    string
+	ExternalNetwork, Project, AppTemplate                                           string
+	ExternalRouter, Flags, IpAccess                                                 string
+	NumMasters, NumNodes                                                            int
+	ConfigDetailDeployment, ConfigDetailResources, ConfigKind, ConfigDetailManifest string
+	Command                                                                         []string
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
@@ -526,6 +527,13 @@ metadata:
   tenant: {{.Tenant}}
   operator: {{.Operator}}
   dnszone: {{.DNSZone}}
+config:
+  kind: {{.ConfigKind}}
+  source:
+  detail:
+    resources: {{.ConfigDetailResources}}
+    deployment: {{.ConfigDetailDeployment}}
+    manifest: {{.ConfigDetailManifest}}
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
@@ -591,10 +599,22 @@ func MEXAppDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, 
 	return MEXAppDeleteAppManifest(mf)
 }
 
+var validDeployments = []string{"kubernetes", "kvm"} // TODO "docker", ...
+
+func isValidDeploymentType(appDeploymentType string) bool {
+	for _, d := range validDeployments {
+		if appDeploymentType == d {
+			return true
+		}
+	}
+	return false
+}
+
 func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
 	var data templateFill
 	var err error
 	var mf *Manifest
+	log.DebugLog(log.DebugLevelMexos, "fill app template", "appinst", appInst, "clusterInst", clusterInst)
 	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
 	if !ok {
 		return nil, fmt.Errorf("cannot find imagetype in map")
@@ -615,31 +635,68 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	if len(appInst.Key.AppKey.Name) < 3 {
 		log.DebugLog(log.DebugLevelMexos, "warning, very short appkey name", "name", appInst.Key.AppKey.Name)
 	}
+	config, err := ParseAppInstConfig(appInst.Config)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing appinst config %s, %v", appInst.Config, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "appinst config", "config", config)
+	appDeploymentType := ""
 	switch imageType {
-	case "ImageTypeDocker": //XXX assume kubernetes
+	case "ImageTypeDocker":
+		appDeploymentType = "kubernetes"
+	case "ImageTypeQCOW":
+		appDeploymentType = "kvm"
+	default:
+		return nil, fmt.Errorf("unknown image type %s", imageType)
+	}
+	if config.Kind == "config" {
+		appDeploymentType = config.ConfigDetail.Deployment
+	}
+	if !isValidDeploymentType(appDeploymentType) {
+		return nil, fmt.Errorf("invalid deployment type, '%s'", appDeploymentType)
+	}
+	log.DebugLog(log.DebugLevelMexos, "app deploying", "imageType", imageType, "deploymentType", appDeploymentType)
+	switch appDeploymentType {
+	case "kubernetes":
+		if imageType != "ImageTypeDocker" {
+			return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
+		}
 		data = templateFill{
-			Kind:        clusterInst.Flavor.Name,
-			Name:        util.K8SSanitize(appInst.Key.AppKey.Name),
-			Tags:        util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
-			Key:         clusterInst.Key.ClusterKey.Name,
-			Tenant:      util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
-			DNSZone:     "mobiledgex.net",
-			Operator:    util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
-			RootLB:      rootLB.Name,
-			Image:       appInst.ImagePath,
-			ImageType:   imageType,
-			ImageFlavor: appInst.Flavor.Name,
-			ProxyPath:   util.K8SSanitize(appInst.Key.AppKey.Name),
-			AppURI:      appInst.Uri,
-			IpAccess:    ipAccess,
-			AppTemplate: appInst.AppTemplate,
-			Command:     strings.Split(appInst.Config, " "), //TODO: honor quote-escaped sequences
+			Kind:                   clusterInst.Flavor.Name,
+			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
+			Tags:                   util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
+			Key:                    clusterInst.Key.ClusterKey.Name,
+			Tenant:                 util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
+			DNSZone:                "mobiledgex.net",
+			Operator:               util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
+			RootLB:                 rootLB.Name,
+			Image:                  appInst.ImagePath,
+			ImageType:              imageType,
+			ImageFlavor:            appInst.Flavor.Name,
+			ProxyPath:              util.K8SSanitize(appInst.Key.AppKey.Name),
+			AppURI:                 appInst.Uri,
+			IpAccess:               ipAccess,
+			AppTemplate:            appInst.AppTemplate,
+			ConfigKind:             config.Kind,
+			ConfigDetailDeployment: config.ConfigDetail.Deployment,
+			ConfigDetailResources:  config.ConfigDetail.Resources,
+			ConfigDetailManifest:   config.ConfigDetail.Manifest,
+		}
+		if config.Kind == "command" {
+			data.Command = config.Command
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {
 			return nil, err
 		}
-	case "ImageTypeQCOW":
+	//case "docker":
+	//	if imageType != "ImageTypeDocker" {
+	//		return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
+	//	}
+	case "kvm":
+		if imageType != "ImageTypeQCOW" {
+			return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
+		}
 		data = templateFill{
 			Kind:          clusterInst.Flavor.Name,
 			Name:          appInst.Key.AppKey.Name,
@@ -722,11 +779,55 @@ spec:
 {{- end}}
 `
 
+func ParseAppInstConfigDetail(conf []byte) (*AppInstConfigDetail, error) {
+	confDetail := &AppInstConfigDetail{}
+	err := json.Unmarshal(conf, confDetail)
+	if err != nil {
+		return nil, err
+	}
+	return confDetail, nil
+}
+
+func ParseAppInstConfig(configStr string) (*AppInstConfig, error) {
+	if configStr == "" {
+		return &AppInstConfig{Kind: "command", Source: "", Command: []string{}}, nil
+	}
+	if strings.HasPrefix(configStr, "http://") ||
+		strings.HasPrefix(configStr, "https://") {
+		resp, err := http.Get(configStr)
+		if err != nil {
+			return nil, fmt.Errorf("cannot get config from %s, %v", configStr, err)
+		}
+		defer resp.Body.Close()
+		configBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("cannot read config from %s, %v", configStr, err)
+		}
+		confDetail, err := ParseAppInstConfigDetail(configBytes)
+		if err != nil {
+			return nil, fmt.Errorf("cannot parse app inst config detail from %s, %v", configStr, err)
+		}
+		return &AppInstConfig{Kind: "config", Source: configStr, ConfigDetail: *confDetail}, nil
+	}
+	cmd, err := ParseAppInstConfigCommand(configStr)
+	if err != nil {
+		return nil, fmt.Errorf("cannot parse config command string %s, %v", configStr, err)
+	}
+	return &AppInstConfig{Kind: "command", Source: configStr, Command: cmd}, nil
+}
+
+func ParseAppInstConfigCommand(configStr string) ([]string, error) {
+	// XXX  Not sure what Jon wants in terms of format of this string.
+	// XXX I am preserving his split string call here.
+	return strings.Split(configStr, " "), nil
+}
+
 func genKubeManifest(mf *Manifest) (string, error) {
 	if mf.Spec.KubeManifestTemplate == "" {
 		// Who/What generates the template, and where it comes from
 		// is TBD. If no template, use a default simple template.
 		if mf.Spec.IpAccess == edgeproto.IpAccess_name[int32(edgeproto.IpAccess_IpAccessShared)] {
+			log.DebugLog(log.DebugLevelMexos, "using builtin simple shared kubernetes template")
 			mf.Spec.KubeManifestTemplate = kubeManifestSimpleShared
 		} else {
 			return "", fmt.Errorf("No default template for dedicated IpAccess. Please specify template.")
@@ -735,6 +836,7 @@ func genKubeManifest(mf *Manifest) (string, error) {
 	// Template string is assumed to be contents of template unless
 	// it starts with http:// or file://
 	tmplDef := mf.Spec.KubeManifestTemplate
+	log.DebugLog(log.DebugLevelMexos, "genenrating kubernetes manifest from template", "template", tmplDef)
 	if strings.HasPrefix(mf.Spec.KubeManifestTemplate, "http://") {
 		resp, err := http.Get(tmplDef)
 		if err != nil {
@@ -766,43 +868,101 @@ func genKubeManifest(mf *Manifest) (string, error) {
 	return buf.String(), err
 }
 
+func retrieveKubeManifest(manifestSpec string) (string, error) {
+	if strings.HasPrefix(manifestSpec, "http://") ||
+		strings.HasPrefix(manifestSpec, "https://") {
+		resp, err := http.Get(manifestSpec)
+		if err != nil {
+			return "", fmt.Errorf("cannot get manifest from %s, %v", manifestSpec, err)
+		}
+		defer resp.Body.Close()
+		manifestBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", fmt.Errorf("cannot read manifest from %s, %v", manifestSpec, err)
+		}
+		return string(manifestBytes), nil
+	}
+	return "", fmt.Errorf("invalid manifest location %s", manifestSpec)
+}
+
+func getAppDeploymentType(mf *Manifest) (string, error) {
+	appDeploymentType := ""
+	if mf.Config.Kind == "config" {
+		appDeploymentType = mf.Config.ConfigDetail.Deployment
+	} else {
+		switch mf.Spec.ImageType {
+		case "ImageTypeDocker":
+			appDeploymentType = "kubernetes"
+		case "ImageTypeQCOW":
+			appDeploymentType = "kvm"
+		default:
+			return "", fmt.Errorf("unknown spec.image type '%s'", mf.Spec.ImageType)
+		}
+	}
+	if !isValidDeploymentType(appDeploymentType) {
+		return "", fmt.Errorf("invalid deployment type, '%s'", appDeploymentType)
+	}
+	return appDeploymentType, nil
+}
+
+func getKubeManifest(mf *Manifest, appDeploymentType string) (string, error) {
+	var err error
+	kubeManifest := ""
+	if appDeploymentType == "kubernetes" {
+		if mf.Config.ConfigDetail.Manifest == "" {
+			// Generate deployment file
+			log.DebugLog(log.DebugLevelMexos, "genenrating kubernetes manifest from template")
+			kubeManifest, err = genKubeManifest(mf)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "error generating kubernetes manifest from template", "error", err)
+				return "", err
+			}
+			log.DebugLog(log.DebugLevelMexos, "generated kubernetes manifest from builtin template")
+		} else {
+			kubeManifest, err = retrieveKubeManifest(mf.Config.ConfigDetail.Manifest)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "error retrieving kubernetes manifest", "source", mf.Config.ConfigDetail.Manifest, "error", err)
+				return "", err
+			}
+			log.DebugLog(log.DebugLevelMexos, "retrieved kubernetes manifest", "source", mf.Config.ConfigDetail.Manifest)
+		}
+	}
+	if kubeManifest == "" {
+		log.DebugLog(log.DebugLevelMexos, "error, cannot retrieve, or generate; empty kube manifest")
+		return "", fmt.Errorf("empty kubemanifest")
+	}
+	return kubeManifest, nil
+}
+
 //MEXAppCreateAppManifest creates app instances on the cluster platform
 func MEXAppCreateAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "create app from manifest", "mf", mf)
-	kubeManifest := ""
-	if mf.Spec.ImageType == "ImageTypeDocker" {
-		// Generate deployment file
-		var err error
-		kubeManifest, err = genKubeManifest(mf)
-		if err != nil {
-			return err
-		}
+	appDeploymentType, err := getAppDeploymentType(mf)
+	if err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "app deployment", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
+	kubeManifest, err := getKubeManifest(mf, appDeploymentType)
+	if err != nil {
+		return err
 	}
 	switch mf.Metadata.Operator {
 	case "gcp":
-		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlCreateApp(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" { // XXX gcp requires raw
-			return fmt.Errorf("not yet supported")
-		} else {
-			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
-		}
+		fallthrough
 	case "azure":
-		if mf.Spec.ImageType == "ImageTypeDocker" {
+		if appDeploymentType == "kubernetes" {
 			return runKubectlCreateApp(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" { // XXX azure requires vhd
+		} else if appDeploymentType == "kvm" {
 			return fmt.Errorf("not yet supported")
-		} else {
-			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
+		return fmt.Errorf("unknown deployment type %s", appDeploymentType)
 	default:
-		if mf.Spec.ImageType == "ImageTypeDocker" {
+		if appDeploymentType == "kubernetes" {
 			return CreateKubernetesAppManifest(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
+		} else if appDeploymentType == "kvm" {
 			return CreateQCOW2AppManifest(mf)
-		} else {
-			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
+		return fmt.Errorf("unknown deployment type %s", appDeploymentType)
 	}
 }
 
@@ -991,6 +1151,7 @@ func createAppDNS(mf *Manifest, kconf string) error {
 func uri2fqdn(uri string) string {
 	fqdn := strings.Replace(uri, "http://", "", 1)
 	fqdn = strings.Replace(fqdn, "https://", "", 1)
+	//XXX assumes no trailing elements
 	return fqdn
 }
 
@@ -1013,7 +1174,7 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 		}
 		log.DebugLog(log.DebugLevelMexos, "getting exteralIP, examine list of services", "name", name, "svcs", svcs)
 		for _, item := range svcs.Items {
-			if item.Metadata.Name != svcName {
+			if item.Metadata.Name != svcName { // FIXME name may be appname-service or appname-tcp-service or appname-udp-service
 				continue
 			}
 			for _, ingress := range item.Status.LoadBalancer.Ingresses {
@@ -1034,40 +1195,31 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 
 //MEXAppDeleteManifest kills app
 func MEXAppDeleteAppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "delete app", "mf", mf)
-
-	kubeManifest := ""
-	if mf.Spec.ImageType == "ImageTypeDocker" {
-		// Generate deployment file
-		var err error
-		kubeManifest, err = genKubeManifest(mf)
-		if err != nil {
-			return err
-		}
+	log.DebugLog(log.DebugLevelMexos, "delete app with manifest", "mf", mf)
+	appDeploymentType, err := getAppDeploymentType(mf)
+	if err != nil {
+		return err
 	}
-
+	log.DebugLog(log.DebugLevelMexos, "app delete", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
+	kubeManifest, err := getKubeManifest(mf, appDeploymentType)
+	if err != nil {
+		return err
+	}
 	switch mf.Metadata.Operator {
 	case "gcp":
-		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return runKubectlDeleteApp(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
-			return fmt.Errorf("not yet supported")
-		} else {
-			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
-		}
+		fallthrough
 	case "azure":
-		if mf.Spec.ImageType == "ImageTypeDocker" {
+		if appDeploymentType == "kubernetes" {
 			return runKubectlDeleteApp(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
+		} else if appDeploymentType == "kvm" {
 			return fmt.Errorf("not yet supported")
-		} else {
-			return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 		}
+		return fmt.Errorf("unknown image type %s", appDeploymentType)
 	default:
-		if mf.Spec.ImageType == "ImageTypeDocker" {
-			return DestroyKubernetesAppManifest(mf, kubeManifest)
-		} else if mf.Spec.ImageType == "ImageTypeQCOW" {
-			return DestroyQCOW2AppManifest(mf)
+		if appDeploymentType == "kubernetes" {
+			return DeleteKubernetesAppManifest(mf, kubeManifest)
+		} else if appDeploymentType == "kvm" {
+			return DeleteQCOW2AppManifest(mf)
 		}
 		return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 	}
