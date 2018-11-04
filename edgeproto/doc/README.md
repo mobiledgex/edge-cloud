@@ -205,6 +205,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
 | cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster on which the App can be instantiated. If not specified during create, a cluster will be automatically created. If specified, it must exist. |
 | app_template | [string](#string) |  | Template of kubernetes deployment yaml. Who/What sets this is TDB, but it should not be directly exposed to the user, because we do not want to expose kubernetes to the user. However, because we currently don&#39;t have any other way to set it, for flexibility, for now it is exposed to the user. |
+| auth_public_key | [string](#string) |  | public key used for authentication |
 
 
 
@@ -297,6 +298,7 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
 | allocated_ip | [string](#string) |  | allocated IP for dedicated access |
 | app_template | [string](#string) |  | Template of kubernetes deployment yaml, from App definition |
+| auth_public_key | [string](#string) |  | public key used in authentication |
 
 
 
