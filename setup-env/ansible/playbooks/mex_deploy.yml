@@ -114,6 +114,7 @@
 
   vars_files:
   - mex_vars.yml
+  - "{{ setupfile }}"
 
   tasks:
   - name: copy locsim binary
@@ -128,6 +129,15 @@
        dest: "{{ locsim_remote_data_dir }}"
        mode: 0755
     ignore_errors: yes
+
+  - name: copy locsim geo file
+    copy:
+       src: "{{item.locapisimlocal.geofile}}"
+       dest: "{{ locsim_remote_data_dir }}"
+       mode: 0755
+    with_items:
+     - "{{ locsims }}" 
+  
 
 - name: deploy binary to remote toksims
   gather_facts: yes

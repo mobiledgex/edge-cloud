@@ -10,7 +10,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string) error {
+func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string, tokSrvUrl string) error {
 	var key edgeproto.AppKey
 	var found *dmeAppInst
 	var app *dmeApp
@@ -53,7 +53,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		if mreq.VerifyLocToken == "" {
 			return fmt.Errorf("verifyloc token required")
 		}
-		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken)
+		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken, tokSrvUrl)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:

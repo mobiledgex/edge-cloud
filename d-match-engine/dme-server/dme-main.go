@@ -94,7 +94,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 	if !ok {
 		return reply, errors.New("No valid session cookie")
 	}
-	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl)
+	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl, *tokSrvUrl)
 	if err != nil {
 		return nil, err
 	}
