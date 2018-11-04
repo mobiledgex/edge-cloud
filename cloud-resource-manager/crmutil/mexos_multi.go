@@ -792,6 +792,14 @@ func ParseAppInstConfig(configStr string) (*AppInstConfig, error) {
 	if configStr == "" {
 		return &AppInstConfig{Kind: "command", Source: "", Command: []string{}}, nil
 	}
+	if strings.HasPrefix(configStr, "{") {
+		confDetail := &AppInstConfigDetail{}
+		err := json.Unmarshal([]byte(configStr), confDetail)
+		if err != nil {
+			return nil, fmt.Errorf("cannot unmarshal json config str, err %v, config `%s`", err, configStr)
+		}
+		return &AppInstConfig{Kind: "config", Source: configStr, ConfigDetail: *confDetail}, nil
+	}
 	if strings.HasPrefix(configStr, "http://") ||
 		strings.HasPrefix(configStr, "https://") {
 		resp, err := http.Get(configStr)
