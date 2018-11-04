@@ -115,6 +115,7 @@ func addApp(appInst *edgeproto.AppInst) {
 			"appVersion", app.appKey.Version,
 			"cloudletKey", appInst.Key.CloudletKey,
 			"authPublicKey", appInst.AuthPublicKey,
+			"uri", appInst.Uri,
 			"lat", cNew.location.Lat,
 			"long", cNew.location.Long)
 	}
@@ -312,6 +313,29 @@ func isPublicCarrier(carriername string) bool {
 	return false
 }
 
+func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
+	var tbl *dmeApps
+	tbl = dmeAppTbl
+
+	tbl.RLock()
+	for _, a := range tbl.apps {
+		// if the app it itself a platform app, it is not returned here
+		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
+			continue
+		}
+
+		c, defaultCarrierFound := a.carriers[cloudcommon.OperatorDeveloper]
+		if defaultCarrierFound {
+			for _, i := range c.insts {
+				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
+					clist.Fqdns = append(clist.Fqdns, i.uri)
+				}
+			}
+		}
+	}
+	tbl.RUnlock()
+}
+
 func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
 	var tbl *dmeApps
 	tbl = dmeAppTbl
@@ -340,8 +364,9 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 					cloc = new(dme.CloudletLocation)
 					var d float64
 
-					if mreq.CarrierName == cloudcommon.OperatorDeveloper {
+					if i.cloudletKey == cloudcommon.DefaultCloudletKey {
 						// there is no real distance as this is a fake cloudlet.
+						// TODO: should we even return this any more in GetAppInstList?
 						d = dmecommon.InfiniteDistance
 					} else {
 						d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)

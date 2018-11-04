@@ -12,11 +12,11 @@ cloudlets:
 - carriername: developer
   cloudletname: default
   gpslocation: {}
-  distance: 10546.953164702378
+  distance: 100000
   appinstances:
   - appname: someapplication1
     appversion: "1.0"
-    fqdn: acmeappcosomeapplication110.default.developer.mobiledgex.net
+    fqdn: default.someapplication1.AcmeAppCo.com
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:

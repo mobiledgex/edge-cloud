@@ -93,6 +93,32 @@
         ]
       }
     },
+    "/v1/getfqdnlist": {
+      "post": {
+        "operationId": "GetFqdnList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineFqdnListReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineFqdnListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Match_Engine_Api"
+        ]
+      }
+    },
     "/v1/getlocation": {
       "post": {
         "operationId": "GetLocation",
@@ -212,6 +238,16 @@
       ],
       "default": "FIND_UNKNOWN"
     },
+    "FqdnListReplyFL_Status": {
+      "type": "string",
+      "enum": [
+        "FL_UNDEFINED",
+        "FL_SUCCESS",
+        "FL_FAIL"
+      ],
+      "default": "FL_UNDEFINED",
+      "title": "Status of the reply"
+    },
     "GetLocationReplyLoc_Status": {
       "type": "string",
       "enum": [
@@ -250,7 +286,7 @@
     "distributed_match_engineAppInstListReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -269,7 +305,7 @@
     "distributed_match_engineAppInstListRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -401,7 +437,7 @@
     "distributed_match_engineDynamicLocGroupRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64"
         },
@@ -426,7 +462,7 @@
     "distributed_match_engineFindCloudletReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -455,7 +491,7 @@
     "distributed_match_engineFindCloudletRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -474,10 +510,43 @@
         }
       }
     },
-    "distributed_match_engineGetLocationReply": {
+    "distributed_match_engineFqdnListReply": {
       "type": "object",
       "properties": {
         "ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "Status": {
+          "$ref": "#/definitions/FqdnListReplyFL_Status"
+        },
+        "Fqdns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "distributed_match_engineFqdnListRequest": {
+      "type": "object",
+      "properties": {
+        "Ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "SessionCookie": {
+          "type": "string",
+          "title": "Session Cookie from RegisterClientRequest"
+        }
+      }
+    },
+    "distributed_match_engineGetLocationReply": {
+      "type": "object",
+      "properties": {
+        "Ver": {
           "type": "integer",
           "format": "int64"
         },
@@ -502,7 +571,7 @@
     "distributed_match_engineGetLocationRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -576,12 +645,12 @@
     "distributed_match_engineRegisterClientReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "status": {
+        "Status": {
           "$ref": "#/definitions/distributed_match_engineReplyStatus",
           "title": "Status of the reply"
         },
@@ -598,7 +667,7 @@
     "distributed_match_engineRegisterClientRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -614,6 +683,14 @@
         "AppVers": {
           "type": "string",
           "title": "App Version"
+        },
+        "CarrierName": {
+          "type": "string",
+          "title": "carrier name, not currently used"
+        },
+        "AuthToken": {
+          "type": "string",
+          "title": "authentication token"
         }
       }
     },
@@ -650,7 +727,7 @@
     "distributed_match_engineVerifyLocationRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"

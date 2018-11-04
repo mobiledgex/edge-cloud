@@ -21,6 +21,7 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
@@ -118,8 +119,9 @@ type TokSimProcess struct {
 }
 type SampleAppProcess struct {
 	process.SampleAppLocal
-	Args     []string
-	Hostname string
+	Args        []string
+	Hostname    string
+	DockerImage string
 }
 type InfluxProcess struct {
 	process.InfluxLocal
@@ -533,6 +535,15 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 	return nil
 }
 
+func removeAppinstUris(appdata *edgeproto.ApplicationData) {
+	for i, ai := range appdata.AppInstances {
+		if ai.Key.CloudletKey != cloudcommon.DefaultCloudletKey {
+			appdata.AppInstances[i].Uri = ""
+		}
+	}
+
+}
+
 //compares two yaml files for equivalence
 //TODO need to handle different types of interfaces besides appdata, currently using
 //that to sort
@@ -556,6 +567,11 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
 		a1.Sort()
 		a2.Sort()
+		// Appinstance URIs usually not provisioned, as they are inherited from the cloudlet. However
+		// they are provioned for the default appinst.  So we cannot use "nocmp".  Loop through and remove the URIs
+		// for non-defaultCloudlets so that the comparison will succeeed
+		removeAppinstUris(&a1)
+		removeAppinstUris(&a2)
 		y1 = a1
 		y2 = a2
 	} else if fileType == "findcloudlet" {

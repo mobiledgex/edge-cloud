@@ -23,6 +23,8 @@ It has these top-level messages:
 	Appinstance
 	CloudletLocation
 	AppInstListReply
+	FqdnListRequest
+	FqdnListReply
 	DynamicLocGroupRequest
 	DynamicLocGroupReply
 	AppPort
@@ -67,6 +69,9 @@ var DynamicLocGroupRequestInCommType string
 var FindCloudletRequestIn distributed_match_engine.FindCloudletRequest
 var FindCloudletRequestFlagSet = pflag.NewFlagSet("FindCloudletRequest", pflag.ExitOnError)
 var FindCloudletRequestNoConfigFlagSet = pflag.NewFlagSet("FindCloudletRequestNoConfig", pflag.ExitOnError)
+var FqdnListRequestIn distributed_match_engine.FqdnListRequest
+var FqdnListRequestFlagSet = pflag.NewFlagSet("FqdnListRequest", pflag.ExitOnError)
+var FqdnListRequestNoConfigFlagSet = pflag.NewFlagSet("FqdnListRequestNoConfig", pflag.ExitOnError)
 var GetLocationRequestIn distributed_match_engine.GetLocationRequest
 var GetLocationRequestFlagSet = pflag.NewFlagSet("GetLocationRequest", pflag.ExitOnError)
 var GetLocationRequestNoConfigFlagSet = pflag.NewFlagSet("GetLocationRequestNoConfig", pflag.ExitOnError)
@@ -122,6 +127,12 @@ var AI_StatusStrings = []string{
 	"AI_UNDEFINED",
 	"AI_SUCCESS",
 	"AI_FAIL",
+}
+
+var FL_StatusStrings = []string{
+	"FL_UNDEFINED",
+	"FL_SUCCESS",
+	"FL_FAIL",
 }
 
 var DlgCommTypeStrings = []string{
@@ -821,6 +832,85 @@ func AppInstListReplyWriteOutputOne(obj *distributed_match_engine.AppInstListRep
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func FqdnListRequestSlicer(in *distributed_match_engine.FqdnListRequest) []string {
+	s := make([]string, 0, 2)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, in.SessionCookie)
+	return s
+}
+
+func FqdnListRequestHeaderSlicer() []string {
+	s := make([]string, 0, 2)
+	s = append(s, "Ver")
+	s = append(s, "SessionCookie")
+	return s
+}
+
+func FqdnListRequestWriteOutputArray(objs []*distributed_match_engine.FqdnListRequest) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FqdnListRequestHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FqdnListRequestSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FqdnListRequestWriteOutputOne(obj *distributed_match_engine.FqdnListRequest) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FqdnListRequestHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FqdnListRequestSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
+	s := make([]string, 0, 3)
+	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
+	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
+	if in.Fqdns == nil {
+		in.Fqdns = make([]string, 1)
+	}
+	s = append(s, in.Fqdns[0])
+	return s
+}
+
+func FqdnListReplyHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Ver")
+	s = append(s, "Status")
+	s = append(s, "Fqdns")
+	return s
+}
+
+func FqdnListReplyWriteOutputArray(objs []*distributed_match_engine.FqdnListReply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FqdnListReplyHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FqdnListReplySlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FqdnListReplyWriteOutputOne(obj *distributed_match_engine.FqdnListReply) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FqdnListReplyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FqdnListReplySlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func DynamicLocGroupRequestSlicer(in *distributed_match_engine.DynamicLocGroupRequest) []string {
 	s := make([]string, 0, 5)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
@@ -1156,6 +1246,47 @@ func GetAppInstLists(data []distributed_match_engine.AppInstListRequest, err *er
 	}
 }
 
+var GetFqdnListCmd = &cobra.Command{
+	Use: "GetFqdnList",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// if we got this far, usage has been met.
+		cmd.SilenceUsage = true
+		return GetFqdnList(&FqdnListRequestIn)
+	},
+}
+
+func GetFqdnList(in *distributed_match_engine.FqdnListRequest) error {
+	if Match_Engine_ApiCmd == nil {
+		return fmt.Errorf("Match_Engine_Api client not initialized")
+	}
+	ctx := context.Background()
+	obj, err := Match_Engine_ApiCmd.GetFqdnList(ctx, in)
+	if err != nil {
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("GetFqdnList failed: %s", errstr)
+	}
+	FqdnListReplyWriteOutputOne(obj)
+	return nil
+}
+
+func GetFqdnLists(data []distributed_match_engine.FqdnListRequest, err *error) {
+	if *err != nil {
+		return
+	}
+	for ii, _ := range data {
+		fmt.Printf("GetFqdnList %v\n", data[ii])
+		myerr := GetFqdnList(&data[ii])
+		if myerr != nil {
+			*err = myerr
+			break
+		}
+	}
+}
+
 var Match_Engine_ApiCmds = []*cobra.Command{
 	RegisterClientCmd,
 	FindCloudletCmd,
@@ -1163,6 +1294,7 @@ var Match_Engine_ApiCmds = []*cobra.Command{
 	GetLocationCmd,
 	AddUserToGroupCmd,
 	GetAppInstListCmd,
+	GetFqdnListCmd,
 }
 
 func init() {
@@ -1218,6 +1350,8 @@ func init() {
 	AppInstListRequestIn.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
 	AppInstListRequestFlagSet.Int64Var(&AppInstListRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
 	AppInstListRequestFlagSet.Int32Var(&AppInstListRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	FqdnListRequestFlagSet.Uint32Var(&FqdnListRequestIn.Ver, "ver", 0, "Ver")
+	FqdnListRequestFlagSet.StringVar(&FqdnListRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	DynamicLocGroupRequestFlagSet.Uint32Var(&DynamicLocGroupRequestIn.Ver, "ver", 0, "Ver")
 	DynamicLocGroupRequestFlagSet.StringVar(&DynamicLocGroupRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	DynamicLocGroupRequestFlagSet.Uint64Var(&DynamicLocGroupRequestIn.LgId, "lgid", 0, "LgId")
@@ -1229,6 +1363,7 @@ func init() {
 	GetLocationCmd.Flags().AddFlagSet(GetLocationRequestFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupRequestFlagSet)
 	GetAppInstListCmd.Flags().AddFlagSet(AppInstListRequestFlagSet)
+	GetFqdnListCmd.Flags().AddFlagSet(FqdnListRequestFlagSet)
 }
 
 func Match_Engine_ApiAllowNoConfig() {
@@ -1238,6 +1373,7 @@ func Match_Engine_ApiAllowNoConfig() {
 	GetLocationCmd.Flags().AddFlagSet(GetLocationRequestNoConfigFlagSet)
 	AddUserToGroupCmd.Flags().AddFlagSet(DynamicLocGroupRequestNoConfigFlagSet)
 	GetAppInstListCmd.Flags().AddFlagSet(AppInstListRequestNoConfigFlagSet)
+	GetFqdnListCmd.Flags().AddFlagSet(FqdnListRequestNoConfigFlagSet)
 }
 
 func parseDynamicLocGroupRequestEnums() error {

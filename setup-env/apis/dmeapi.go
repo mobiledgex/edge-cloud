@@ -28,6 +28,7 @@ type dmeApiRequest struct {
 	Glreq           dmeproto.GetLocationRequest     `yaml:"getlocationrequest"`
 	Dlreq           dmeproto.DynamicLocGroupRequest `yaml:"dynamiclocgrouprequest"`
 	Aireq           dmeproto.AppInstListRequest     `yaml:"appinstlistrequest"`
+	Fqreq           dmeproto.FqdnListRequest        `yaml:"fqdnlistrequest"`
 	TokenServerPath string                          `yaml:"token-server-path"`
 	ErrorExpected   string                          `yaml:"error-expected"`
 }
@@ -102,6 +103,17 @@ func (c *dmeRestClient) AddUserToGroup(ctx context.Context, in *dmeproto.Dynamic
 		c.client, in, out)
 	if err != nil {
 		log.Printf("addusertogroup rest API failed\n")
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dmeRestClient) GetFqdnList(ctx context.Context, in *dmeproto.FqdnListRequest, opts ...grpc.CallOption) (*dmeproto.FqdnListReply, error) {
+	out := new(dmeproto.FqdnListReply)
+	err := util.CallRESTPost("https://"+c.addr+"/v1/getfqdnlist",
+		c.client, in, out)
+	if err != nil {
+		log.Printf("getfqdnlist rest API failed\n")
 		return nil, err
 	}
 	return out, nil
@@ -255,7 +267,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		// unlike the other responses, this is a slice of multiple entries which needs
 		// to be sorted to allow a consistent yaml compare
 		apiRequest.Aireq.SessionCookie = sessionCookie
-		log.Printf("DME REQUEST: %+v\n", apiRequest.Aireq)
+		log.Printf("aiRequest: %+v\n", apiRequest.Aireq)
 		mel, err := client.GetAppInstList(ctx, &apiRequest.Aireq)
 		if err == nil {
 			sort.Slice((*mel).Cloudlets, func(i, j int) bool {
@@ -270,6 +282,17 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 
 		}
 		dmereply = mel
+		dmeerror = err
+	case "getfqdnlist":
+		apiRequest.Fqreq.SessionCookie = sessionCookie
+		log.Printf("fqdnRequest: %+v\n", apiRequest.Fqreq)
+		resp, err := client.GetFqdnList(ctx, &apiRequest.Fqreq)
+		if err == nil {
+			sort.Slice((*resp).Fqdns, func(i, j int) bool {
+				return (*resp).Fqdns[i] < (*resp).Fqdns[j]
+			})
+		}
+		dmereply = resp
 		dmeerror = err
 	default:
 		log.Printf("Unsupported dme api %s\n", api)
