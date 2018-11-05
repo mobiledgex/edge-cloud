@@ -318,9 +318,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Uri = ""
-	}
-	if _, found := tags["nocmp"]; found {
 		in.MappedPorts = nil
 	}
 	if _, found := tags["nocmp"]; found {

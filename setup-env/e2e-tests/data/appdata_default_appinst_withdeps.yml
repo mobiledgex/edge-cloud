@@ -62,5 +62,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  uri: default.someapplication.acme.com
 
 
