@@ -131,6 +131,16 @@ cloudlets:
     long: -7.1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG2
+    name: menlopark1cloudlet
+  accessuri:
+  location:
+    lat: 37.4529598
+    long: -122.1817252
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 
 

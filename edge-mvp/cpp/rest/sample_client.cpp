@@ -81,7 +81,7 @@ class MexRestClient {
         location["altitude"] = 100;
         location["course"] = 0;
         location["speed"] = 2;
-        location["timestamp"] = currentGoogleTimestamp();
+        location["timestamp"] = "2008-09-08T22:47:31-07:00"; // currentGoogleTimestamp();
 
         return location;
     }
