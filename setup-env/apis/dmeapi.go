@@ -276,7 +276,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			//appinstances within the cloudlet must be sorted too
 			for _, c := range (*mel).Cloudlets {
 				sort.Slice(c.Appinstances, func(i, j int) bool {
-					return c.Appinstances[i].Appname < c.Appinstances[j].Appname
+					return c.Appinstances[i].AppName < c.Appinstances[j].AppName
 				})
 			}
 
@@ -288,8 +288,8 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		log.Printf("fqdnRequest: %+v\n", apiRequest.Fqreq)
 		resp, err := client.GetFqdnList(ctx, &apiRequest.Fqreq)
 		if err == nil {
-			sort.Slice((*resp).Fqdns, func(i, j int) bool {
-				return (*resp).Fqdns[i] < (*resp).Fqdns[j]
+			sort.Slice((*resp).AppFqdns, func(i, j int) bool {
+				return (*resp).AppFqdns[i].FQDN < (*resp).AppFqdns[j].FQDN
 			})
 		}
 		dmereply = resp

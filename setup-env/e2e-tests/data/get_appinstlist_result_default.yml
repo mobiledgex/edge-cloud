@@ -5,4 +5,11 @@ cloudlets:
   distance: 100000
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+    - proto: LProtoUDP
+      internalport: 10002

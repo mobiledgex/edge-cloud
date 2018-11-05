@@ -283,6 +283,27 @@
       "default": "TOWER_UNKNOWN",
       "title": "Status of the reply"
     },
+    "distributed_match_engineAppFqdn": {
+      "type": "object",
+      "properties": {
+        "AppName": {
+          "type": "string",
+          "title": "App  Name"
+        },
+        "AppVers": {
+          "type": "string",
+          "title": "App Version"
+        },
+        "DevName": {
+          "type": "string",
+          "title": "developer name"
+        },
+        "FQDN": {
+          "type": "string",
+          "title": "App FQDN"
+        }
+      }
+    },
     "distributed_match_engineAppInstListReply": {
       "type": "object",
       "properties": {
@@ -351,17 +372,24 @@
     "distributed_match_engineAppinstance": {
       "type": "object",
       "properties": {
-        "Appname": {
+        "AppName": {
           "type": "string",
           "title": "App Instance Name"
         },
-        "Appversion": {
+        "AppVers": {
           "type": "string",
           "title": "App Instance Version"
         },
         "FQDN": {
           "type": "string",
           "title": "App Instance FQDN"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineAppPort"
+          },
+          "title": "ports to access app"
         }
       }
     },
@@ -518,14 +546,14 @@
           "format": "int64",
           "title": "API version"
         },
-        "Status": {
-          "$ref": "#/definitions/FqdnListReplyFL_Status"
-        },
-        "Fqdns": {
+        "AppFqdns": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/distributed_match_engineAppFqdn"
           }
+        },
+        "Status": {
+          "$ref": "#/definitions/FqdnListReplyFL_Status"
         }
       }
     },

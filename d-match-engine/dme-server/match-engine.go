@@ -328,7 +328,8 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		if defaultCarrierFound {
 			for _, i := range c.insts {
 				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
-					clist.Fqdns = append(clist.Fqdns, i.uri)
+					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDN: i.uri}
+					clist.AppFqdns = append(clist.AppFqdns, &aq)
 				}
 			}
 		}
@@ -377,9 +378,10 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 					cloc.Distance = d
 				}
 				ai := dme.Appinstance{}
-				ai.Appname = a.appKey.Name
-				ai.Appversion = a.appKey.Version
+				ai.AppName = a.appKey.Name
+				ai.AppVers = a.appKey.Version
 				ai.FQDN = i.uri
+				ai.Ports = copyPorts(i)
 				cloc.Appinstances = append(cloc.Appinstances, &ai)
 				foundCloudlets[i.cloudletKey] = cloc
 			}

@@ -7,8 +7,18 @@ cloudlets:
   distance: 11284.535631750952
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.azure-cloud-9.azure.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
@@ -17,8 +27,18 @@ cloudlets:
   distance: 11373.10678046936
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.gcp-cloud-10.gcp.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-1
   gpslocation:
@@ -27,8 +47,18 @@ cloudlets:
   distance: 10570.971178689932
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-2
   gpslocation:
@@ -37,8 +67,18 @@ cloudlets:
   distance: 10660.554090416144
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-3
   gpslocation:
@@ -47,8 +87,18 @@ cloudlets:
   distance: 10750.046797594014
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-3.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-4
   gpslocation:
@@ -57,8 +107,18 @@ cloudlets:
   distance: 10839.439254501909
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-4.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-5
   gpslocation:
@@ -67,8 +127,18 @@ cloudlets:
   distance: 10928.721277244626
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-5.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-6
   gpslocation:
@@ -77,8 +147,18 @@ cloudlets:
   distance: 11017.882528196287
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-6.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-7
   gpslocation:
@@ -87,8 +167,18 @@ cloudlets:
   distance: 11106.912500109207
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-7.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002
 - carriername: tmus
   cloudletname: tmus-cloud-8
   gpslocation:
@@ -97,5 +187,15 @@ cloudlets:
   distance: 11195.800499853392
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
+    appvers: "1.0"
     fqdn: acmeappcosomeapplication110.tmus-cloud-8.tmus.mobiledgex.net
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+      publicport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+      publicport: 443
+    - proto: LProtoUDP
+      internalport: 10002
+      publicport: 10002

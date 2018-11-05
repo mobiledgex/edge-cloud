@@ -155,11 +155,13 @@ message AppInstListRequest {
 
 message Appinstance{
   // App Instance Name
-  string Appname = 1;
+  string AppName = 1;
   // App Instance Version
-  string Appversion = 2;
+  string AppVers = 2;
   // App Instance FQDN
   string FQDN = 3;
+  // ports to access app
+  repeated AppPort ports = 4;
 }
 
 message CloudletLocation {
@@ -195,6 +197,17 @@ message FqdnListRequest {
   string SessionCookie = 2;
 }
 
+message AppFqdn{
+  // App  Name
+  string AppName = 1;
+  // App Version
+  string AppVers = 2;
+  // developer name
+  string DevName = 3;
+  // App FQDN
+  string FQDN = 4;
+}
+
 message FqdnListReply{
   // API version
   uint32 ver = 1;
@@ -204,8 +217,8 @@ message FqdnListReply{
     FL_SUCCESS = 1;
     FL_FAIL = 2;
   }
-  FL_Status Status = 2;
-  repeated string Fqdns = 3;
+  repeated AppFqdn AppFqdns = 3;
+  FL_Status Status = 4;
 }
 
 message DynamicLocGroupRequest {

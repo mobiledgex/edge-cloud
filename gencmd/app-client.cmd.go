@@ -24,6 +24,7 @@ It has these top-level messages:
 	CloudletLocation
 	AppInstListReply
 	FqdnListRequest
+	AppFqdn
 	FqdnListReply
 	DynamicLocGroupRequest
 	DynamicLocGroupReply
@@ -636,18 +637,32 @@ func AppInstListRequestWriteOutputOne(obj *distributed_match_engine.AppInstListR
 	}
 }
 func AppinstanceSlicer(in *distributed_match_engine.Appinstance) []string {
-	s := make([]string, 0, 3)
-	s = append(s, in.Appname)
-	s = append(s, in.Appversion)
+	s := make([]string, 0, 4)
+	s = append(s, in.AppName)
+	s = append(s, in.AppVers)
 	s = append(s, in.FQDN)
+	if in.Ports == nil {
+		in.Ports = make([]*distributed_match_engine.AppPort, 1)
+	}
+	if in.Ports[0] == nil {
+		in.Ports[0] = &distributed_match_engine.AppPort{}
+	}
+	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
+	s = append(s, in.Ports[0].PublicPath)
 	return s
 }
 
 func AppinstanceHeaderSlicer() []string {
-	s := make([]string, 0, 3)
-	s = append(s, "Appname")
-	s = append(s, "Appversion")
+	s := make([]string, 0, 4)
+	s = append(s, "AppName")
+	s = append(s, "AppVers")
 	s = append(s, "FQDN")
+	s = append(s, "Ports-Proto")
+	s = append(s, "Ports-InternalPort")
+	s = append(s, "Ports-PublicPort")
+	s = append(s, "Ports-PublicPath")
 	return s
 }
 
@@ -700,9 +715,19 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	if in.Appinstances[0] == nil {
 		in.Appinstances[0] = &distributed_match_engine.Appinstance{}
 	}
-	s = append(s, in.Appinstances[0].Appname)
-	s = append(s, in.Appinstances[0].Appversion)
+	s = append(s, in.Appinstances[0].AppName)
+	s = append(s, in.Appinstances[0].AppVers)
 	s = append(s, in.Appinstances[0].FQDN)
+	if in.Appinstances[0].Ports == nil {
+		in.Appinstances[0].Ports = make([]*distributed_match_engine.AppPort, 1)
+	}
+	if in.Appinstances[0].Ports[0] == nil {
+		in.Appinstances[0].Ports[0] = &distributed_match_engine.AppPort{}
+	}
+	s = append(s, distributed_match_engine.LProto_name[int32(in.Appinstances[0].Ports[0].Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].PublicPort), 10))
+	s = append(s, in.Appinstances[0].Ports[0].PublicPath)
 	return s
 }
 
@@ -719,9 +744,13 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Speed")
 	s = append(s, "GpsLocation-Timestamp")
 	s = append(s, "Distance")
-	s = append(s, "Appinstances-Appname")
-	s = append(s, "Appinstances-Appversion")
+	s = append(s, "Appinstances-AppName")
+	s = append(s, "Appinstances-AppVers")
 	s = append(s, "Appinstances-FQDN")
+	s = append(s, "Appinstances-Ports-Proto")
+	s = append(s, "Appinstances-Ports-InternalPort")
+	s = append(s, "Appinstances-Ports-PublicPort")
+	s = append(s, "Appinstances-Ports-PublicPath")
 	return s
 }
 
@@ -782,9 +811,19 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	if in.Cloudlets[0].Appinstances[0] == nil {
 		in.Cloudlets[0].Appinstances[0] = &distributed_match_engine.Appinstance{}
 	}
-	s = append(s, in.Cloudlets[0].Appinstances[0].Appname)
-	s = append(s, in.Cloudlets[0].Appinstances[0].Appversion)
+	s = append(s, in.Cloudlets[0].Appinstances[0].AppName)
+	s = append(s, in.Cloudlets[0].Appinstances[0].AppVers)
 	s = append(s, in.Cloudlets[0].Appinstances[0].FQDN)
+	if in.Cloudlets[0].Appinstances[0].Ports == nil {
+		in.Cloudlets[0].Appinstances[0].Ports = make([]*distributed_match_engine.AppPort, 1)
+	}
+	if in.Cloudlets[0].Appinstances[0].Ports[0] == nil {
+		in.Cloudlets[0].Appinstances[0].Ports[0] = &distributed_match_engine.AppPort{}
+	}
+	s = append(s, distributed_match_engine.LProto_name[int32(in.Cloudlets[0].Appinstances[0].Ports[0].Proto)])
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].InternalPort), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].PublicPort), 10))
+	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].PublicPath)
 	return s
 }
 
@@ -803,9 +842,13 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Cloudlets-GpsLocation-Speed")
 	s = append(s, "Cloudlets-GpsLocation-Timestamp")
 	s = append(s, "Cloudlets-Distance")
-	s = append(s, "Cloudlets-Appinstances-Appname")
-	s = append(s, "Cloudlets-Appinstances-Appversion")
+	s = append(s, "Cloudlets-Appinstances-AppName")
+	s = append(s, "Cloudlets-Appinstances-AppVers")
 	s = append(s, "Cloudlets-Appinstances-FQDN")
+	s = append(s, "Cloudlets-Appinstances-Ports-Proto")
+	s = append(s, "Cloudlets-Appinstances-Ports-InternalPort")
+	s = append(s, "Cloudlets-Appinstances-Ports-PublicPort")
+	s = append(s, "Cloudlets-Appinstances-Ports-PublicPath")
 	return s
 }
 
@@ -869,22 +912,72 @@ func FqdnListRequestWriteOutputOne(obj *distributed_match_engine.FqdnListRequest
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func AppFqdnSlicer(in *distributed_match_engine.AppFqdn) []string {
+	s := make([]string, 0, 4)
+	s = append(s, in.AppName)
+	s = append(s, in.AppVers)
+	s = append(s, in.DevName)
+	s = append(s, in.FQDN)
+	return s
+}
+
+func AppFqdnHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "AppName")
+	s = append(s, "AppVers")
+	s = append(s, "DevName")
+	s = append(s, "FQDN")
+	return s
+}
+
+func AppFqdnWriteOutputArray(objs []*distributed_match_engine.AppFqdn) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppFqdnHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppFqdnSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppFqdnWriteOutputOne(obj *distributed_match_engine.AppFqdn) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppFqdnHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppFqdnSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
-	if in.Fqdns == nil {
-		in.Fqdns = make([]string, 1)
+	if in.AppFqdns == nil {
+		in.AppFqdns = make([]*distributed_match_engine.AppFqdn, 1)
 	}
-	s = append(s, in.Fqdns[0])
+	if in.AppFqdns[0] == nil {
+		in.AppFqdns[0] = &distributed_match_engine.AppFqdn{}
+	}
+	s = append(s, in.AppFqdns[0].AppName)
+	s = append(s, in.AppFqdns[0].AppVers)
+	s = append(s, in.AppFqdns[0].DevName)
+	s = append(s, in.AppFqdns[0].FQDN)
+	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
 	return s
 }
 
 func FqdnListReplyHeaderSlicer() []string {
 	s := make([]string, 0, 3)
 	s = append(s, "Ver")
+	s = append(s, "AppFqdns-AppName")
+	s = append(s, "AppFqdns-AppVers")
+	s = append(s, "AppFqdns-DevName")
+	s = append(s, "AppFqdns-FQDN")
 	s = append(s, "Status")
-	s = append(s, "Fqdns")
 	return s
 }
 
