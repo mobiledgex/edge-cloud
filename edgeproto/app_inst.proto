@@ -40,7 +40,7 @@ message AppInst {
   // Cached location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // URI to connect to this instance
-  string uri = 4 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  string uri = 4 [(protogen.backend) = true];
   // Cluster instance on which this is instatiated (not specifiable by user)
   ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)

@@ -11,6 +11,9 @@ tests:
   - includefile: get_appinstlist.yml
   - includefile: get_appinstlist.yml
     api: rest
+  - includefile: get_fqdnlist.yml
+  - includefile: get_fqdnlist.yml
+    api: rest
   - includefile: find_cloudlet.yml
     loops: 3
   - includefile: find_cloudlet.yml

@@ -102,6 +102,7 @@ type ctxCookieKey struct{}
 func VerifyCookie(cookie string) (*CookieKey, error) {
 
 	if cookie == "" {
+		log.DebugLog(log.DebugLevelDmereq, "missing cookie VerifyCookie")
 		return nil, fmt.Errorf("missing cookie")
 	}
 	claims := dmeClaims{}
@@ -181,6 +182,8 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 	case *dme.DynamicLocGroupRequest:
 		cookie = typ.SessionCookie
 	case *dme.AppInstListRequest:
+		cookie = typ.SessionCookie
+	case *dme.FqdnListRequest:
 		cookie = typ.SessionCookie
 	}
 	if !allow {
