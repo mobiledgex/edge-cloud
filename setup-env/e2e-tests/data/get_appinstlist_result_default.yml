@@ -2,8 +2,15 @@ cloudlets:
 - carriername: developer
   cloudletname: default
   gpslocation: {}
-  distance: 10546.953164702378
+  distance: 100000
   appinstances:
   - appname: someapplication1
-    appversion: "1.0"
-    fqdn: acmeappcosomeapplication110.default.developer.mobiledgex.net
+    appvers: "1.0"
+    fqdn: default.someapplication.acme.com
+    ports:
+    - proto: LProtoTCP
+      internalport: 80
+    - proto: LProtoHTTP
+      internalport: 443
+    - proto: LProtoUDP
+      internalport: 10002

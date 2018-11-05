@@ -146,7 +146,13 @@
   tasks:
   - name: stop sample app process
     shell: "pkill -9 {{ item.sampleapplocal.exename }} || true"
-    when: item.hostname == inventory_hostname
+    when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
        -  "{{ sampleapps }}"
+
+  - name: stop sampleapp docker container
+    shell: "docker kill $(docker ps|grep {{item.sampleapplocal.name}}|cut -d' ' -f 1)||true"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+      -  "{{ sampleapps }}"
 

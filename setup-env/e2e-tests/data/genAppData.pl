@@ -37,12 +37,11 @@ my $Usage = "
            -operator <Operator name>
            -app <App names list separated by comma, e.g. app1,app2>
            -developer <developer name>
-           -cloudlet <cloudlet name, will have cloudlet id number appended>
            -max <max cloudlets to create>
            -help <show this message>
 
      Example:
-        ./genAppData.pl -operator OP1 -developer Dev1 -app app1,app2 -cloudlet cloudlet -max 100 > appdata_100.yml\n";
+        ./genAppData.pl -operator OP1 -developer Dev1 -app app1,app2 -max 100 > appdata_100.yml\n";
 
 
 
@@ -147,11 +146,11 @@ sub genLatLongs{
 	return;
       }
       my $operator = $Operator;
-      # the last 2 will be azure and gcp
-      if ($c == $Max - 1) {
+      # the last 2 will be azure and gcp if we have 10
+      if ($c == 9) {
           $operator = "azure";
       }
-      if ($c == $Max){
+      if ($c == 10){
           $operator = "gcp";
       }
       if ($type eq "cloudlets"){
@@ -192,7 +191,14 @@ developers:
   username: $Developer-user
   passhash: 123456789012345670
   address: 1234 $Developer street
-  email: $Developer\@gmail.com\n\n")
+  email: $Developer\@gmail.com
+- key:
+    name: platos
+  username: platos-user
+  passhash: 123456789012345670
+  address: 1234 platos street
+  email: platos\@gmail.com
+\n\n")
 }
 
 sub genFlavor{
@@ -252,6 +258,7 @@ sub genApp{
 
 }
 
+
 sub genDefaultAppInst{
    my $app = shift;
 
@@ -267,6 +274,40 @@ sub genDefaultAppInst{
         name: developer
       name: default
     id: 123
+  uri: default.$app.$Developer.com
+\n")
+}
+
+sub genplatosAppInst{
+   print(
+"- key:
+    appkey:
+      developerkey:
+        name: platos
+      name: PlatosEnablingLayer
+      version: \"1.0\"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  uri: default.platosenablement.platos.com
+\n")
+}
+
+sub genplatosApp{
+print(
+"- key:
+    developerkey:
+      name: platos
+    name: PlatosEnablingLayer
+    version: \"1.0\"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  accessports: \"tcp:64000\"
+  ipaccess: IpAccessDedicatedOrShared
 \n")
 }
 
@@ -300,6 +341,7 @@ if ($GenCloudletInfo) {
 genDeveloper();
 
 print "apps:\n";
+genplatosApp();
 my @apps = split(",", $App);
 foreach my $app(@apps){
    genApp($app);
@@ -309,3 +351,4 @@ genLatLongs("appinstances");
 foreach my $app(@apps){
    genDefaultAppInst($app);
 }
+genplatosAppInst();

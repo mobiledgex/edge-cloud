@@ -180,8 +180,27 @@ developers:
   passhash: 123456789012345670
   address: 1234 AcmeAppCo street
   email: AcmeAppCo@gmail.com
+- key:
+    name: platos
+  username: platos-user
+  passhash: 123456789012345670
+  address: 1234 platos street
+  email: platos@gmail.com
+
 
 apps:
+- key:
+    developerkey:
+      name: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  accessports: "tcp:64000"
+  ipaccess: IpAccessDedicatedOrShared
+
 - key:
     developerkey:
        name: AcmeAppCo
@@ -555,6 +574,7 @@ appinstances:
         name: developer
       name: default
     id: 123
+  uri: default.someapplication1.AcmeAppCo.com
 
 - key:
     appkey:
@@ -567,4 +587,18 @@ appinstances:
         name: developer
       name: default
     id: 123
+  uri: default.someapplication2.AcmeAppCo.com
+
+- key:
+    appkey:
+      developerkey:
+        name: platos
+      name: PlatosEnablingLayer
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  uri: default.platosenablement.platos.com
 
