@@ -102,8 +102,7 @@ type ctxCookieKey struct{}
 func VerifyCookie(cookie string) (*CookieKey, error) {
 
 	if cookie == "" {
-		log.WarnLog("missing cookie in VerifyCookie")
-
+		log.DebugLog(log.DebugLevelDmereq, "missing cookie VerifyCookie")
 		return nil, fmt.Errorf("missing cookie")
 	}
 	claims := dmeClaims{}

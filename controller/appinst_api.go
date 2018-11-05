@@ -316,7 +316,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 
 		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
-			if !defaultCloudlet {
+			if defaultCloudlet {
+				if in.Uri == "" {
+					return errors.New("URI is required for default cloudlet")
+				}
+			} else {
 				in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
 				if cloudletRefs.RootLbPorts == nil {
 					cloudletRefs.RootLbPorts = make(map[int32]int32)
@@ -344,7 +348,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			}
 		} else {
-			if !defaultCloudlet {
+			if defaultCloudlet {
+				if in.Uri == "" {
+					return errors.New("URI is required for default cloudlet")
+				}
+			} else {
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key)
 				for ii, _ := range ports {
 					ports[ii].PublicPort = ports[ii].InternalPort

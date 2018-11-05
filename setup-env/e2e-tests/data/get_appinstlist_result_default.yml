@@ -6,6 +6,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
+    fqdn: default.someapplication.acme.com
     ports:
     - proto: LProtoTCP
       internalport: 80

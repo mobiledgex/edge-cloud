@@ -1,10 +1,5 @@
 flavors:
 - key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
-- key:
     name: x1.tiny
   ram: 1024
   vcpus: 1
@@ -14,6 +9,11 @@ flavors:
   ram: 2048
   vcpus: 2
   disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 
 clusterflavors:
 - key:
@@ -104,16 +104,6 @@ cloudlets:
 - key:
     operatorkey:
       name: tmus
-    name: tmus-cloud-1
-  accessuri: cloud1.tmo
-  location:
-    lat: 40
-    long: -99
-  ipsupport: IpSupportDynamic
-  numdynamicips: 100
-- key:
-    operatorkey:
-      name: tmus
     name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
@@ -141,6 +131,16 @@ cloudlets:
     long: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-1
+  accessuri: cloud1.tmo
+  location:
+    lat: 40
+    long: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 100
 
 apps:
 - key:
@@ -263,6 +263,7 @@ appinstances:
         name: developer
       name: default
     id: 123
+  uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   imagepath: dummyvalue
   imagetype: ImageTypeDocker

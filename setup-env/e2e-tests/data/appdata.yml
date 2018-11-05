@@ -257,5 +257,6 @@ appinstances:
   liveness: LivenessStatic
   imagepath: dummyvalue
   imagetype: ImageTypeDocker
+  uri: default.samsungenablement.samsung.com
   flavor:
     name: x1.small
