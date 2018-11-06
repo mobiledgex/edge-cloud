@@ -353,8 +353,7 @@
   version = "1.1.3"
 
 [[projects]]
-  branch = "master"
-  digest = "1:084d2467e050c9b85fcd2a12a78e753f433b2b06195342525cdead989246da94"
+  digest = "1:e05853f7ff5ea1e7653d228bf349c76372b80a30209ed888f0b18d75f959f46c"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "k8s-prov/azure",
@@ -363,7 +362,8 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "ff25bf912e214004660a67725a69ea5690a13230"
+  revision = "2f0b4892bbfa22d022ea9b0fe70ed508643413b0"
+  version = "v0.0.2"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -845,6 +845,7 @@
     "github.com/gogo/gateway",
     "github.com/gogo/googleapis/google/api",
     "github.com/gogo/protobuf/gogoproto",
+    "github.com/gogo/protobuf/jsonpb",
     "github.com/gogo/protobuf/proto",
     "github.com/gogo/protobuf/protoc-gen-gogo",
     "github.com/gogo/protobuf/protoc-gen-gogo/descriptor",

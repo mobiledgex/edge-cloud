@@ -1,7 +1,15 @@
+- hosts: mexservers
+  user: root
+  gather_facts: no
 
-- hosts: all
+  tasks:
+  - name: install python
+    raw: "grep Ubuntu /etc/os-release && apt-get -y install python"
+
+- hosts: mexservers
   user: root
   tasks:
+
   - name: Add Docker GPG key for Ubuntu
     apt_key: 
       url: https://download.docker.com/linux/ubuntu/gpg
@@ -67,7 +75,7 @@
          
   - name: install pip
     package:
-       name: pip
+       name: python-pip
        state: present
 
   - name: pip install docker

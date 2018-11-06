@@ -1,5 +1,10 @@
 flavors:
 - key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
     name: x1.small
   ram: 2048
   vcpus: 2
@@ -9,11 +14,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-- key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
 
 clusterflavors:
 - key:
@@ -93,18 +93,14 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
+- key:
+    name: platos
+  username: sammy
+  passhash: aaaabbbccdfdfad444449941
+  address: 1 Samstreet, platos Town, South Korea
+  email: platos@xxxx.com
 
 cloudlets:
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-1
-  accessuri: cloud1.tmo
-  location:
-    lat: 40
-    long: -99
-  ipsupport: IpSupportDynamic
-  numdynamicips: 100
 - key:
     operatorkey:
       name: dmuus
@@ -135,6 +131,16 @@ cloudlets:
     long: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-1
+  accessuri: cloud1.tmo
+  location:
+    lat: 40
+    long: -99
+  ipsupport: IpSupportDynamic
+  numdynamicips: 100
 
 apps:
 - key:
@@ -160,6 +166,19 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+- key:
+    developerkey:
+      name: platos
+    name: PlatosEnablingLayer
+    version: "1.0"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  ipaccess: IpAccessDedicatedOrShared
+  accessports: tcp:64000
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
 
 appinstances:
 - key:
@@ -176,6 +195,7 @@ appinstances:
   cloudletloc:
     lat: 40
     long: -99
+  uri: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -202,6 +222,7 @@ appinstances:
   cloudletloc:
     lat: 35
     long: -95
+  uri: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -225,8 +246,26 @@ appinstances:
         name: developer
       name: default
     id: 123
+  uri: someapp1.acmeappco.com
   liveness: LivenessStatic
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: platos
+      name: PlatosEnablingLayer
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  uri: default.platosenablement.platos.com
+  liveness: LivenessStatic
+  imagepath: dummyvalue
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
