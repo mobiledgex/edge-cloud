@@ -20,7 +20,7 @@
         "operationId": "AddUserToGroup",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineDynamicLocGroupReply"
             }
@@ -46,7 +46,7 @@
         "operationId": "FindCloudlet",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineFindCloudletReply"
             }
@@ -72,7 +72,7 @@
         "operationId": "GetAppInstList",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineAppInstListReply"
             }
@@ -93,12 +93,38 @@
         ]
       }
     },
+    "/v1/getfqdnlist": {
+      "post": {
+        "operationId": "GetFqdnList",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineFqdnListReply"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/distributed_match_engineFqdnListRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Match_Engine_Api"
+        ]
+      }
+    },
     "/v1/getlocation": {
       "post": {
         "operationId": "GetLocation",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineGetLocationReply"
             }
@@ -124,7 +150,7 @@
         "operationId": "RegisterClient",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineRegisterClientReply"
             }
@@ -150,7 +176,7 @@
         "operationId": "VerifyLocation",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/distributed_match_engineVerifyLocationReply"
             }
@@ -212,6 +238,16 @@
       ],
       "default": "FIND_UNKNOWN"
     },
+    "FqdnListReplyFL_Status": {
+      "type": "string",
+      "enum": [
+        "FL_UNDEFINED",
+        "FL_SUCCESS",
+        "FL_FAIL"
+      ],
+      "default": "FL_UNDEFINED",
+      "title": "Status of the reply"
+    },
     "GetLocationReplyLoc_Status": {
       "type": "string",
       "enum": [
@@ -247,10 +283,31 @@
       "default": "TOWER_UNKNOWN",
       "title": "Status of the reply"
     },
+    "distributed_match_engineAppFqdn": {
+      "type": "object",
+      "properties": {
+        "AppName": {
+          "type": "string",
+          "title": "App  Name"
+        },
+        "AppVers": {
+          "type": "string",
+          "title": "App Version"
+        },
+        "DevName": {
+          "type": "string",
+          "title": "developer name"
+        },
+        "FQDN": {
+          "type": "string",
+          "title": "App FQDN"
+        }
+      }
+    },
     "distributed_match_engineAppInstListReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -269,7 +326,7 @@
     "distributed_match_engineAppInstListRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -315,17 +372,24 @@
     "distributed_match_engineAppinstance": {
       "type": "object",
       "properties": {
-        "Appname": {
+        "AppName": {
           "type": "string",
           "title": "App Instance Name"
         },
-        "Appversion": {
+        "AppVers": {
           "type": "string",
           "title": "App Instance Version"
         },
         "FQDN": {
           "type": "string",
           "title": "App Instance FQDN"
+        },
+        "ports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineAppPort"
+          },
+          "title": "ports to access app"
         }
       }
     },
@@ -401,7 +465,7 @@
     "distributed_match_engineDynamicLocGroupRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64"
         },
@@ -426,7 +490,7 @@
     "distributed_match_engineFindCloudletReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -455,7 +519,7 @@
     "distributed_match_engineFindCloudletRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -474,10 +538,43 @@
         }
       }
     },
-    "distributed_match_engineGetLocationReply": {
+    "distributed_match_engineFqdnListReply": {
       "type": "object",
       "properties": {
         "ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "AppFqdns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/distributed_match_engineAppFqdn"
+          }
+        },
+        "Status": {
+          "$ref": "#/definitions/FqdnListReplyFL_Status"
+        }
+      }
+    },
+    "distributed_match_engineFqdnListRequest": {
+      "type": "object",
+      "properties": {
+        "Ver": {
+          "type": "integer",
+          "format": "int64",
+          "title": "API version"
+        },
+        "SessionCookie": {
+          "type": "string",
+          "title": "Session Cookie from RegisterClientRequest"
+        }
+      }
+    },
+    "distributed_match_engineGetLocationReply": {
+      "type": "object",
+      "properties": {
+        "Ver": {
           "type": "integer",
           "format": "int64"
         },
@@ -502,7 +599,7 @@
     "distributed_match_engineGetLocationRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -576,12 +673,12 @@
     "distributed_match_engineRegisterClientReply": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "status": {
+        "Status": {
           "$ref": "#/definitions/distributed_match_engineReplyStatus",
           "title": "Status of the reply"
         },
@@ -598,7 +695,7 @@
     "distributed_match_engineRegisterClientRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -614,6 +711,14 @@
         "AppVers": {
           "type": "string",
           "title": "App Version"
+        },
+        "CarrierName": {
+          "type": "string",
+          "title": "carrier name, not currently used"
+        },
+        "AuthToken": {
+          "type": "string",
+          "title": "authentication token"
         }
       }
     },
@@ -650,7 +755,7 @@
     "distributed_match_engineVerifyLocationRequest": {
       "type": "object",
       "properties": {
-        "ver": {
+        "Ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"

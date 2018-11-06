@@ -1,0 +1,9 @@
+appfqdns:
+- appname: someapplication1
+  appvers: "1.0"
+  devname: AcmeAppCo
+  fqdn: default.someapplication1.AcmeAppCo.com
+- appname: someapplication2
+  appvers: "1.0"
+  devname: AcmeAppCo
+  fqdn: default.someapplication2.AcmeAppCo.com

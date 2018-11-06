@@ -22,6 +22,7 @@ tests:
      yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
      filetype: getappinstlist
 
+
 - name: stop and restart dme
   actions: [stop=dme1,start=dme1,sleep=1]
 

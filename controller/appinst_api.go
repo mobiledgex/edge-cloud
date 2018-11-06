@@ -316,34 +316,47 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 
 		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
-			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
-			if cloudletRefs.RootLbPorts == nil {
-				cloudletRefs.RootLbPorts = make(map[int32]int32)
-			}
-			ii := 0
-			p := RootLBSharedPortBegin
-			for ; p < 65000 && ii < len(ports); p++ {
-				if ports[ii].Proto == dme.LProto_LProtoHTTP {
-					// L7 access, don't need to allocate
-					// a public port, but rather an L7 path.
-					ports[ii].PublicPort = int32(cloudcommon.RootLBL7Port)
-					ports[ii].PublicPath = cloudcommon.GetL7Path(&in.Key, &ports[ii])
+			if defaultCloudlet {
+				if in.Uri == "" {
+					return errors.New("URI is required for default cloudlet")
+				}
+			} else {
+				in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
+				if cloudletRefs.RootLbPorts == nil {
+					cloudletRefs.RootLbPorts = make(map[int32]int32)
+				}
+
+				ii := 0
+				p := RootLBSharedPortBegin
+				for ; p < 65000 && ii < len(ports); p++ {
+					if ports[ii].Proto == dme.LProto_LProtoHTTP {
+						// L7 access, don't need to allocate
+						// a public port, but rather an L7 path.
+						ports[ii].PublicPort = int32(cloudcommon.RootLBL7Port)
+						ports[ii].PublicPath = cloudcommon.GetL7Path(&in.Key, &ports[ii])
+						ii++
+						continue
+					}
+					// L4 access
+					if _, found := cloudletRefs.RootLbPorts[p]; found {
+						continue
+					}
+					ports[ii].PublicPort = p
+					cloudletRefs.RootLbPorts[p] = 1
 					ii++
-					continue
+					cloudletRefsChanged = true
 				}
-				// L4 access
-				if _, found := cloudletRefs.RootLbPorts[p]; found {
-					continue
-				}
-				ports[ii].PublicPort = p
-				cloudletRefs.RootLbPorts[p] = 1
-				ii++
-				cloudletRefsChanged = true
 			}
 		} else {
-			in.Uri = cloudcommon.GetAppFQDN(&in.Key)
-			for ii, _ := range ports {
-				ports[ii].PublicPort = ports[ii].InternalPort
+			if defaultCloudlet {
+				if in.Uri == "" {
+					return errors.New("URI is required for default cloudlet")
+				}
+			} else {
+				in.Uri = cloudcommon.GetAppFQDN(&in.Key)
+				for ii, _ := range ports {
+					ports[ii].PublicPort = ports[ii].InternalPort
+				}
 			}
 		}
 		if len(ports) > 0 {

@@ -2,6 +2,7 @@ package com.mobiledgex.matchingengine.util;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Build;
 import android.util.Base64;
 import android.util.Log;
 
@@ -19,6 +20,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
@@ -88,7 +90,20 @@ public class OkHttpSSLChannelHelper {
             keyStr = keyStr.replace("-----BEGIN RSA PRIVATE KEY-----\n", "");
             keyStr = keyStr.replace("-----END RSA PRIVATE KEY-----", "");
             byte[] decodedKey = Base64.decode(keyStr, Base64.DEFAULT);
-            privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+
+            //For Android 6.0 and older, we need to use the BouncyCastle provider.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Log.i("getPrivateKey", "SDK version = "+Build.VERSION.SDK_INT+". Don't need BouncyCastle");
+                privateKey = KeyFactory.getInstance("RSA").generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+            } else {
+                Log.i("getPrivateKey", "SDK version = "+Build.VERSION.SDK_INT+". We DO need BouncyCastle");
+                try {
+                    privateKey = KeyFactory.getInstance("RSA", "BC")
+                            .generatePrivate(new PKCS8EncodedKeySpec(decodedKey));
+                } catch (NoSuchProviderException e) {
+                    throw new KeyStoreException("Could not use BouncyCastle provider.", e);
+                }
+            }
         } finally {
             if (clientPrivateKeyStream != null) {
                 clientPrivateKeyStream.close();
