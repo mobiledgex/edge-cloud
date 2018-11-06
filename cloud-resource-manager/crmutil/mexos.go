@@ -48,18 +48,40 @@ type MEXRootLB struct {
 //MEXRootLBMap maps name of rootLB to rootLB instance
 var MEXRootLBMap = make(map[string]*MEXRootLB)
 
-//ValidClusterFlavors lists all valid flavor names
-var ValidClusterFlavors = []string{
-	"x1.tiny", "x1.medium", "x1.small", "x1.large", "x1.xlarge", "x1.xxlarge",
-}
-
 var defaultPrivateNetRange = "10.101.X.0/24"
 
 //AvailableClusterFlavors lists currently available flavors
 var AvailableClusterFlavors = []*ClusterFlavor{
 	&ClusterFlavor{
+		Name:           "x1.tiny",
+		Kind:           "mex-cluster-flavor",
+		PlatformFlavor: "m4.small",
+		Status:         "active",
+		NumNodes:       2,
+		NumMasterNodes: 1,
+		Topology:       "type-1",
+		NetworkSpec:    "priv-subnet,mex-k8s-net-1," + defaultPrivateNetRange,
+		StorageSpec:    "default",
+		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-tiny", Type: "k8s-node"},
+		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-tiny", Type: "k8s-master"},
+	},
+	&ClusterFlavor{
+		Name:           "x1.small",
+		Kind:           "mex-cluster-flavor",
+		PlatformFlavor: "m4.medium",
+		Status:         "active",
+		NumNodes:       2,
+		NumMasterNodes: 1,
+		Topology:       "type-1",
+		NetworkSpec:    "priv-subnet,mex-k8s-net-1," + defaultPrivateNetRange,
+		StorageSpec:    "default",
+		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-small", Type: "k8s-node"},
+		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-small", Type: "k8s-master"},
+	},
+	&ClusterFlavor{
 		Name:           "x1.medium",
 		Kind:           "mex-cluster-flavor",
+		PlatformFlavor: "m4.large",
 		Status:         "active",
 		NumNodes:       2,
 		NumMasterNodes: 1,
@@ -68,6 +90,19 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 		StorageSpec:    "default",
 		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-medium", Type: "k8s-node"},
 		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-medium", Type: "k8s-master"},
+	},
+	&ClusterFlavor{
+		Name:           "x1.large",
+		Kind:           "mex-cluster-flavor",
+		PlatformFlavor: "m4.xlarge",
+		Status:         "active",
+		NumNodes:       2,
+		NumMasterNodes: 1,
+		Topology:       "type-1",
+		NetworkSpec:    "priv-subnet,mex-k8s-net-1," + defaultPrivateNetRange,
+		StorageSpec:    "default",
+		NodeFlavor:     ClusterNodeFlavor{Name: "k8s-large", Type: "k8s-node"},
+		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-large", Type: "k8s-master"},
 	},
 }
 
@@ -97,6 +132,7 @@ var IsValidMEXOSEnv = false
 type ClusterFlavor struct {
 	Kind           string
 	Name           string
+	PlatformFlavor string
 	Status         string
 	NumNodes       int
 	MaxNodes       int
@@ -205,16 +241,23 @@ func ValidateMEXOSEnv(osEnvValid bool) bool {
 }
 
 func AddFlavorManifest(mf *Manifest) error {
-	if mf.Spec.Flavor != "x1.medium" {
-		log.DebugLog(log.DebugLevelMexos, "unsupported flavor type", "spec", mf.Spec)
-		return fmt.Errorf("unsupported flavor type %s, detail %v", mf.Spec.Flavor, mf.Spec.FlavorDetail)
+	_, err := GetClusterFlavor(mf.Spec.Flavor)
+	if err != nil {
+		return err
 	}
+	// Adding flavors in platforms cannot be done dynamically. For example, x1.xlarge cannot be
+	// implemented in currently DT cloudlets. Controller can learn what flavors available. Not create new ones.
 	return nil
 }
 
-func GetClusterFlavor(mf *Manifest) (*ClusterFlavor, error) {
-	log.DebugLog(log.DebugLevelMexos, "get cluster flavor", "mf", mf, "flavor", AvailableClusterFlavors[0])
-	return AvailableClusterFlavors[0], nil
+func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
+	log.DebugLog(log.DebugLevelMexos, "get cluster flavor", "flavor", flavor)
+	for _, flav := range AvailableClusterFlavors {
+		if flav.Name == flavor {
+			return flav, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported flavor %s", flavor)
 }
 
 //mexCreateClusterKubernetes creates a cluster of nodes. It can take a while, so call from a goroutine.
@@ -231,15 +274,9 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	if mf.Spec.Flavor == "" {
 		return fmt.Errorf("empty flavor")
 	}
-	if err = ValidateFlavor(mf.Spec.Flavor); err != nil {
-		return fmt.Errorf("invalid flavor")
-	}
-	cf, err := GetClusterFlavor(mf)
+	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
 		return err
-	}
-	if cf.NumNodes < 1 {
-		return fmt.Errorf("invalid flavor profile, %v", cf)
 	}
 	//TODO more than one networks
 	if mf.Spec.NetworkScheme == "" {
@@ -265,6 +302,7 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("invalid tag, %v", err)
 	}
+	mf.Metadata.Tags += "," + cf.PlatformFlavor
 	//TODO add whole manifest yaml->json into stringified property of the kvm instance for later
 	//XXX should check for quota, permissions, access control, etc. here
 	//guid := xid.New().String()
@@ -462,20 +500,6 @@ func ValidateTenant(tenant string) error {
 		return fmt.Errorf("emtpy tenant")
 	}
 	return nil
-}
-
-//ValidateFlavor parses and validates flavor
-func ValidateFlavor(flavor string) error {
-	if flavor != "x1.medium" {
-		return fmt.Errorf("invalid flavor")
-	}
-	return nil
-}
-
-//IsFlavorSupported checks whether flavor is supported currently
-func IsFlavorSupported(flavor string) bool {
-	//XXX we only support x1.medium for now
-	return flavor == "x1.medium"
 }
 
 func getRootLB(name string) (*MEXRootLB, error) {
@@ -1231,13 +1255,10 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if rootLB == nil {
 		return false, fmt.Errorf("cannot check if cluster is ready, rootLB is null")
 	}
-	cf, err := GetClusterFlavor(mf)
+	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "invalid flavor kind can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
 		return false, err
-	}
-	if cf.NumNodes < 1 {
-		return false, fmt.Errorf("invalid flavor profile, %v", cf)
 	}
 	name, err := FindClusterWithKey(mf.Spec.Key)
 	if err != nil {
