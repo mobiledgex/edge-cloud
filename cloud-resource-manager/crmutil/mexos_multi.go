@@ -1138,21 +1138,32 @@ func createAppDNS(mf *Manifest, kconf string) error {
 	if mf.Metadata.DNSZone == "" {
 		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
 	}
-	externalIP, err := getSvcExternalIP(mf.Metadata.Name, kconf)
+	serviceNames, err := getSvcNames(mf.Metadata.Name, kconf)
 	if err != nil {
 		return err
 	}
-	fqdn := uri2fqdn(mf.Spec.URI)
-	//TODO: if there is a DNS record left over from previous runs, clean it up before adding new record
-	if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", externalIP, 1, false); err != nil {
-		return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, externalIP, err)
+	if len(serviceNames) < 1 {
+		return fmt.Errorf("no service names starting with %s", mf.Metadata.Name)
 	}
-	//log.DebugLog(log.DebugLevelMexos, "waiting for DNS record to be created on cloudflare...")
-	//err = WaitforDNSRegistration(fqdn)
-	//if err != nil {
-	//	return err
-	//}
-	log.DebugLog(log.DebugLevelMexos, "registered DNS name, may still need to wait for propagation", "name", fqdn, "externalIP", externalIP)
+
+	fqdnBase := uri2fqdn(mf.Spec.URI)
+	for _, sn := range serviceNames {
+		externalIP, err := getSvcExternalIP(sn, kconf)
+		if err != nil {
+			return err
+		}
+		fqdn := sn + "." + fqdnBase
+		//TODO: if there is a DNS record left over from previous runs, clean it up before adding new record
+		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", externalIP, 1, false); err != nil {
+			return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, externalIP, err)
+		}
+		//log.DebugLog(log.DebugLevelMexos, "waiting for DNS record to be created on cloudflare...")
+		//err = WaitforDNSRegistration(fqdn)
+		//if err != nil {
+		//	return err
+		//}
+		log.DebugLog(log.DebugLevelMexos, "registered DNS name, may still need to wait for propagation", "name", fqdn, "externalIP", externalIP)
+	}
 	return nil
 }
 
@@ -1163,8 +1174,28 @@ func uri2fqdn(uri string) string {
 	return fqdn
 }
 
+func getSvcNames(name string, kconf string) ([]string, error) {
+	out, err := sh.Command("kubectl", "get", "svc", "--kubeconfig="+kconf, "-o", "json").Output()
+	if err != nil {
+		return nil, fmt.Errorf("error getting svc %s, %s, %v", name, out, err)
+	}
+	svcs := &svcItems{}
+	err = json.Unmarshal(out, svcs)
+	if err != nil {
+		return nil, fmt.Errorf("error unmarshalling svc json, %v", err)
+	}
+	var serviceNames []string
+	for _, item := range svcs.Items {
+		if strings.HasPrefix(item.Metadata.Name, name) {
+			serviceNames = append(serviceNames, item.Metadata.Name)
+		}
+	}
+	log.DebugLog(log.DebugLevelMexos, "service names", "names", serviceNames)
+	return serviceNames, nil
+}
+
 func getSvcExternalIP(name string, kconf string) (string, error) {
-	log.DebugLog(log.DebugLevelMexos, "got service  external IP", "name", name)
+	log.DebugLog(log.DebugLevelMexos, "get service external IP", "name", name)
 	svcName := name + "-service"
 	externalIP := ""
 	var out []byte
