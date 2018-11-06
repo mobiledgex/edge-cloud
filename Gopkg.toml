@@ -110,3 +110,7 @@ required = [
 [[constraint]]
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
   version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/mobiledgex/edge-cloud-infra"
+  version = "0.0.2"
