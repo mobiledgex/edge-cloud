@@ -98,4 +98,19 @@ type Manifest struct {
 	Resource   string         `json:"resource"`
 	Metadata   MetadataDetail `json:"metadata"`
 	Spec       SpecDetail     `json:"spec"`
+	Config     AppInstConfig  `json:"config"`
+}
+
+type AppInstConfigDetail struct {
+	Deployment string `json:"deployment"`
+	Resources  string `json:"resources"`
+	Template   string `json:"template"`
+	Manifest   string `json:"manifest"`
+}
+
+type AppInstConfig struct {
+	Kind         string              `json:"kind"`
+	Source       string              `json:"source"`
+	Command      []string            `json:"command"`
+	ConfigDetail AppInstConfigDetail `json:"detail"`
 }
