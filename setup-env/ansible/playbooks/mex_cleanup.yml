@@ -143,8 +143,10 @@
     file:
       path: "{{ remote_log_path }}"
       state: absent
+    ignore_errors: yes
  
   - name: delete tls dir
     file:
       path: "{{ remote_tls_path }}"
       state: absent
+    ignore_errors: yes

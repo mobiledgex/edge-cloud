@@ -21,7 +21,7 @@
         "operationId": "CreateApp",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -48,7 +48,7 @@
         "operationId": "CreateAppInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -75,7 +75,7 @@
         "operationId": "CreateCloudlet",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -102,7 +102,7 @@
         "operationId": "CreateCluster",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -129,7 +129,7 @@
         "operationId": "CreateClusterFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -156,7 +156,7 @@
         "operationId": "CreateClusterInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -183,7 +183,7 @@
         "operationId": "CreateDeveloper",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -210,7 +210,7 @@
         "operationId": "CreateFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -237,7 +237,7 @@
         "operationId": "CreateOperator",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -264,7 +264,7 @@
         "operationId": "DeleteApp",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -291,7 +291,7 @@
         "operationId": "DeleteAppInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -318,7 +318,7 @@
         "operationId": "DeleteCloudlet",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -345,7 +345,7 @@
         "operationId": "DeleteCluster",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -372,7 +372,7 @@
         "operationId": "DeleteClusterFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -399,7 +399,7 @@
         "operationId": "DeleteClusterInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -426,7 +426,7 @@
         "operationId": "DeleteDeveloper",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -453,7 +453,7 @@
         "operationId": "DeleteFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -480,7 +480,7 @@
         "operationId": "DeleteOperator",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -507,7 +507,7 @@
         "operationId": "ShowApp",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoApp"
             }
@@ -534,7 +534,7 @@
         "operationId": "ShowAppInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoAppInst"
             }
@@ -561,7 +561,7 @@
         "operationId": "ShowAppInstInfo",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoAppInstInfo"
             }
@@ -588,7 +588,7 @@
         "operationId": "ShowAppInstMetrics",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoAppInstMetrics"
             }
@@ -615,7 +615,7 @@
         "operationId": "ShowCloudlet",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoCloudlet"
             }
@@ -642,7 +642,7 @@
         "operationId": "ShowCloudletInfo",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoCloudletInfo"
             }
@@ -669,7 +669,7 @@
         "operationId": "ShowCloudletMetrics",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoCloudletMetrics"
             }
@@ -696,7 +696,7 @@
         "operationId": "ShowCluster",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoCluster"
             }
@@ -723,7 +723,7 @@
         "operationId": "ShowClusterFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoClusterFlavor"
             }
@@ -750,7 +750,7 @@
         "operationId": "ShowClusterInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoClusterInst"
             }
@@ -777,7 +777,7 @@
         "operationId": "ShowClusterInstInfo",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoClusterInstInfo"
             }
@@ -804,7 +804,7 @@
         "operationId": "ShowController",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoController"
             }
@@ -831,7 +831,7 @@
         "operationId": "ShowDeveloper",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoDeveloper"
             }
@@ -858,7 +858,7 @@
         "operationId": "ShowFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoFlavor"
             }
@@ -885,7 +885,7 @@
         "operationId": "ShowNode",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoNode"
             }
@@ -912,7 +912,7 @@
         "operationId": "ShowNodeLocal",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoNode"
             }
@@ -939,7 +939,7 @@
         "operationId": "ShowOperator",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoOperator"
             }
@@ -966,7 +966,7 @@
         "operationId": "UpdateApp",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -993,7 +993,7 @@
         "operationId": "UpdateAppInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1020,7 +1020,7 @@
         "operationId": "UpdateCloudlet",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1047,7 +1047,7 @@
         "operationId": "UpdateCluster",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1074,7 +1074,7 @@
         "operationId": "UpdateClusterFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1101,7 +1101,7 @@
         "operationId": "UpdateClusterInst",
         "responses": {
           "200": {
-            "description": "A successful response.(streaming responses)",
+            "description": "(streaming responses)",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1128,7 +1128,7 @@
         "operationId": "UpdateDeveloper",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1155,7 +1155,7 @@
         "operationId": "UpdateFlavor",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1182,7 +1182,7 @@
         "operationId": "UpdateOperator",
         "responses": {
           "200": {
-            "description": "A successful response.",
+            "description": "",
             "schema": {
               "$ref": "#/definitions/edgeprotoResult"
             }
@@ -1330,6 +1330,10 @@
         "app_template": {
           "type": "string",
           "description": "Template of kubernetes deployment yaml.\nWho/What sets this is TDB, but it should not be directly\nexposed to the user, because we do not want to expose\nkubernetes to the user. However, because we currently don't have any\nother way to set it, for flexibility, for now it is exposed to the user."
+        },
+        "auth_public_key": {
+          "type": "string",
+          "title": "public key used for authentication"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
@@ -1413,6 +1417,10 @@
         "app_template": {
           "type": "string",
           "title": "Template of kubernetes deployment yaml, from App definition"
+        },
+        "auth_public_key": {
+          "type": "string",
+          "title": "public key used in authentication"
         }
       },
       "description": "AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.\nWhen an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.\nMany of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer."

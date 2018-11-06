@@ -64,6 +64,27 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	return reply, nil
 }
 
+func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dme.FqdnListReply, error) {
+	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList", "req", req)
+	flist := new(dme.FqdnListReply)
+
+	ckey, ok := dmecommon.CookieFromContext(ctx)
+	if !ok {
+		return nil, errors.New("No valid session cookie")
+	}
+	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
+	if err != nil {
+		return nil, err
+	}
+	// normal applications are not allowed to access this, only special platform developer/app combos
+	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
+		return nil, fmt.Errorf("API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
+	}
+
+	getFqdnList(req, flist)
+	return flist, nil
+}
+
 func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest) (*dme.AppInstListReply, error) {
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
@@ -94,7 +115,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 	if !ok {
 		return reply, errors.New("No valid session cookie")
 	}
-	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl)
+	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl, *tokSrvUrl)
 	if err != nil {
 		return nil, err
 	}

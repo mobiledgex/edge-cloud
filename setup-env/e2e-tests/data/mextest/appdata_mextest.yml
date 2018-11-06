@@ -38,8 +38,8 @@ clusterinsts:
       name: testappcluster
     cloudletkey:
       operatorkey:
-        name: gcp
-      name: centraluscloudlet
+        name: jlm
+      name: bonntestcloudlet
   flavor:
     name: x1.medium
   liveness: LivenessStatic
@@ -47,10 +47,6 @@ clusterinsts:
 operators:
 - key:
     name: jlm
-- key: 
-    name: azure
-- key:
-    name: gcp
 
 developers:
 - key:
@@ -61,16 +57,6 @@ developers:
   email: empty@xxxx.com
 
 cloudlets:
-- key:
-    operatorkey:
-      name: gcp
-    name: centraluscloudlet
-  accessuri: 
-  location:
-    lat: 44.977300
-    long: -93.265469
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
 
 - key:
     operatorkey:
@@ -117,29 +103,6 @@ apps:
   ipaccess: IpAccessShared
 
 appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: centraluscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: testappcluster
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: centraluscloudlet
-  liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
-  flavor:
-    name: x1.small
 
 - key:
     appkey:

@@ -1,0 +1,29 @@
+##
+##
+
+tests:
+
+- name: create and verify provisioning for 2 apps, 10 instances
+  actions: [ctrlapi-create,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_10.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/show10.yml"
+    filetype: appdata
+
+- name: get fqdnlist
+  actions: [dmeapi-getfqdnlist] 
+  apifile: "{{datadir}}/get_fqdnlist_samsung.yml"
+  compareyaml:
+     yaml1: "{{outputdir}}/getfqdnlist.yml"
+     yaml2: "{{datadir}}/get_fqdnlist_result.yml"
+     filetype: getfqdnlist
+
+ 
+- name: delete provisioning, verify it is empty
+  actions: [ctrlapi-delete,ctrlapi-show]
+  apifile: "{{datadir}}/appdata_10.yml"
+  compareyaml:
+    yaml1: "{{outputdir}}/show-commands.yml"
+    yaml2: "{{datadir}}/appdata_empty.yml"
+    filetype: appdata
