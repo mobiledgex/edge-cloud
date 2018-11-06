@@ -9,12 +9,13 @@ import unittest
 import grpc
 import sys
 import time
+import os
 from delayedassert import expect, expect_equal, assert_expectations
 import logging
 
 import mex_controller
 
-controller_address = '127.0.0.1:55001'
+controller_address = os.getenv('AUTOMATION_CONTROLLER_ADDRESS', '127.0.0.1:55001')
 
 operator_name = 'developer'
 
