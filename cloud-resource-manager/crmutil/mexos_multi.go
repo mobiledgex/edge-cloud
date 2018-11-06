@@ -1153,7 +1153,16 @@ func createAppDNS(mf *Manifest, kconf string) error {
 			return err
 		}
 		fqdn := sn + "." + fqdnBase
-		//TODO: if there is a DNS record left over from previous runs, clean it up before adding new record
+		recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+		if derr == nil {
+			for _, rec := range recs {
+				if rec.Type == "A" && rec.Name == fqdn {
+					if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+						return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+					}
+				}
+			}
+		}
 		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", externalIP, 1, false); err != nil {
 			return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, externalIP, err)
 		}
@@ -1211,9 +1220,9 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("error unmarshalling svc json, %v", err)
 		}
-		log.DebugLog(log.DebugLevelMexos, "getting exteralIP, examine list of services", "name", name, "svcs", svcs)
+		log.DebugLog(log.DebugLevelMexos, "getting externalIP, examine list of services", "name", name, "svcs", svcs)
 		for _, item := range svcs.Items {
-			if item.Metadata.Name != svcName { // FIXME name may be appname-service or appname-tcp-service or appname-udp-service
+			if item.Metadata.Name != svcName {
 				continue
 			}
 			for _, ingress := range item.Status.LoadBalancer.Ingresses {
