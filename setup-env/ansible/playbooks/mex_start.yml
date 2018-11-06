@@ -184,7 +184,7 @@
        pull: yes
        image: "{{ item.dockerimage }}"
        name: "{{ item.locapisimlocal.name }}"
-       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}"
+       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}  --geofile {{ item.locapisimlocal.geofile }} --country {{ item.locapisimlocal.country }}"
        network_mode: host
        volumes:
          - /var/tmp:/var/tmp
@@ -236,18 +236,24 @@
   - "{{ setupfile }}"
 
   tasks:
-  - name: check sample app binary exists
-    stat:
-      path: "{{ remote_bin_path }}/{{ item.sampleapplocal.exename }}"
-    register: samp_stat
-    failed_when: samp_stat.stat.exists == False
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
+
+  - name: docker login to developer repo
+    docker_login:
+      registry: "{{ item.dockerimage }}"
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items: 
+      - "{{ sampleapps }}"
+
+  - name: start up application container
+    docker_container:
+       pull: yes
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.sampleapplocal.name }}"
+       network_mode: host
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ sampleapps }}"
-
-
-  - name: start up sample app process
-    shell: "nohup {{ remote_bin_path }}/{{ item.sampleapplocal.exename }} {{ item.sampleapplocal.args |join(' ') }} > {{ remote_log_path }}/{{ item.sampleapplocal.name }}.log 2>&1 &"
-    when: item.hostname == inventory_hostname
-    with_items:
-       -  "{{ sampleapps }}"
-

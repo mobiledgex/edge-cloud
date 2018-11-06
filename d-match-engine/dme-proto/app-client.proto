@@ -22,7 +22,7 @@ enum ReplyStatus {
 
 message RegisterClientRequest {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // App Developer Name
   string DevName = 2;
   // App Name
@@ -37,9 +37,9 @@ message RegisterClientRequest {
 
 message RegisterClientReply {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Status of the reply
-  ReplyStatus status = 2;
+  ReplyStatus Status = 2;
   // Session Cookie to be used in later API calls
   string SessionCookie = 3;
   // URI for Token Server
@@ -48,7 +48,7 @@ message RegisterClientReply {
 
 message FindCloudletRequest {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Session Cookie from RegisterClientRequest
   string SessionCookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
@@ -59,7 +59,7 @@ message FindCloudletRequest {
 
 message FindCloudletReply {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   enum FindStatus {
     FIND_UNKNOWN = 0;
     FIND_FOUND = 1;
@@ -77,7 +77,7 @@ message FindCloudletReply {
 
 message VerifyLocationRequest {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Session Cookie from RegisterClientRequest
   string SessionCookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
@@ -117,7 +117,7 @@ message VerifyLocationReply {
 
 message GetLocationRequest {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Session Cookie from RegisterClientRequest
   string SessionCookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
@@ -125,7 +125,7 @@ message GetLocationRequest {
 }
 
 message GetLocationReply {
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Status of the reply
   enum Loc_Status {
     LOC_UNKNOWN = 0;
@@ -155,11 +155,13 @@ message AppInstListRequest {
 
 message Appinstance{
   // App Instance Name
-  string Appname = 1;
+  string AppName = 1;
   // App Instance Version
-  string Appversion = 2;
+  string AppVers = 2;
   // App Instance FQDN
   string FQDN = 3;
+  // ports to access app
+  repeated AppPort ports = 4;
 }
 
 message CloudletLocation {
@@ -177,7 +179,7 @@ message CloudletLocation {
 
 message AppInstListReply {
   // API version
-  uint32 ver = 1;
+  uint32 Ver = 1;
   // Status of the reply
   enum AI_Status {
     AI_UNDEFINED = 0;
@@ -188,8 +190,39 @@ message AppInstListReply {
   repeated CloudletLocation Cloudlets = 3;
 }
 
-message DynamicLocGroupRequest {
+message FqdnListRequest {
+  // API version
+  uint32 Ver = 1;
+  // Session Cookie from RegisterClientRequest
+  string SessionCookie = 2;
+}
+
+message AppFqdn{
+  // App  Name
+  string AppName = 1;
+  // App Version
+  string AppVers = 2;
+  // developer name
+  string DevName = 3;
+  // App FQDN
+  string FQDN = 4;
+}
+
+message FqdnListReply{
+  // API version
   uint32 ver = 1;
+  // Status of the reply
+  enum FL_Status {
+    FL_UNDEFINED = 0;
+    FL_SUCCESS = 1;
+    FL_FAIL = 2;
+  }
+  repeated AppFqdn AppFqdns = 3;
+  FL_Status Status = 4;
+}
+
+message DynamicLocGroupRequest {
+  uint32 Ver = 1;
   // Session Cookie from RegisterClientRequest
   string SessionCookie = 2;
   // Dynamic Location Group Id
@@ -249,6 +282,12 @@ service Match_Engine_Api {
   rpc GetAppInstList(AppInstListRequest) returns (AppInstListReply) {
     option (google.api.http) = {
       post: "/v1/getappinstlist"
+      body: "*"
+    };
+  }
+   rpc GetFqdnList(FqdnListRequest) returns (FqdnListReply) {
+    option (google.api.http) = {
+      post: "/v1/getfqdnlist"
       body: "*"
     };
   }

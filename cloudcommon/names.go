@@ -19,6 +19,22 @@ var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
 var OperatorDeveloper = "developer"
 
+var Developerplatos = "platos"
+
+var PlatosEnablingLayer = "PlatosEnablingLayer"
+
+// PlatformApps is the set of all special "platform" developers.   Key
+// is DeveloperName:AppName.  Currently only platos's Enabling layer is included.
+var platformApps = map[string]bool{
+	Developerplatos + ":" + PlatosEnablingLayer: true,
+}
+
+// IsPlatformApp true if the developer/app combo is a platform app
+func IsPlatformApp(devname string, appname string) bool {
+	_, ok := platformApps[devname+":"+appname]
+	return ok
+}
+
 var AllocatedIpDynamic = "dynamic"
 
 var RootLBL7Port = 443
