@@ -32,7 +32,18 @@ clusters:
   defaultflavor:
     name: x1.medium
 
+
 clusterinsts:
+- key:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
 - key:
     clusterkey:
       name: testappcluster
@@ -43,8 +54,9 @@ clusterinsts:
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
 operators:
+- key:
+    name: gcp
 - key:
     name: jlm
 
@@ -56,41 +68,12 @@ developers:
   address: 000 Nowhere Street, Gainesville, FL 32604
   email: empty@xxxx.com
 
-cloudlets:
-
-- key:
-    operatorkey:
-      name: jlm
-    name: buckhorntestcloudlet
-  accessuri: 
-  location:
-    lat: 50.737
-    long: 7.098
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
 apps:
 - key:
     developerkey:
       name: MobiledgeX SDK Demo
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp 
-  imagetype: ImageTypeDocker
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: testappcluster
-  config: "simapp -port 7777"
-  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
-  accessports: "http:7777"
-  ipaccess: IpAccessDedicated
-
-- key:
-    developerkey:
-      name: MobiledgeX SDK Demo
-    name: MobiledgeX SDK Demo
-    version: "1.1"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
   imagetype: ImageTypeDocker
   defaultflavor:
@@ -100,16 +83,59 @@ apps:
   config: "simapp -port 7777"
   apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
   accessports: "tcp:7777"
-  ipaccess: IpAccessShared
+  ipaccess: IpAccessDedicatedOrShared
+
+cloudlets:
+- key:
+    operatorkey:
+      name: gcp
+    name: centraluscloudlet
+  accessuri: 
+  location:
+    lat: 32.77
+    long: -96.7
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: jlm
+    name: buckhorntestcloudlet
+  accessuri:
+  location:
+    lat: 50.737
+    long: 7.098
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: centraluscloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
 
 - key:
     appkey:
       developerkey:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
-      version: "1.1"
+      version: "1.0"
     cloudletkey:
       operatorkey:
         name: jlm
@@ -123,7 +149,7 @@ appinstances:
         name: jlm
       name: buckhorntestcloudlet
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
+
+

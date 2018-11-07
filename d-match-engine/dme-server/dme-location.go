@@ -37,9 +37,10 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	}
 
 	tbl.RLock()
+	defer tbl.RUnlock()
+
 	app, ok := tbl.apps[key]
 	if !ok {
-		tbl.RUnlock()
 		log.DebugLog(log.DebugLevelDmereq, "Could not find key in app table", "key", key)
 		// return loc unknown
 		return fmt.Errorf("app not found: %s", key)
@@ -60,7 +61,6 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		// non-API based location uses cloudlets and so default and public cloudlets are not applicable
 		carr, ok := app.carriers[mreq.CarrierName]
 		if !ok {
-			tbl.RUnlock()
 			log.DebugLog(log.DebugLevelDmereq, "Could not find carrier for app", "appKey", key, "carrierName", mreq.CarrierName)
 			return fmt.Errorf("carrier not found for app: %s", mreq.CarrierName)
 		}
@@ -98,8 +98,6 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 			"uri", found.uri)
 
 	}
-
-	tbl.RUnlock()
 	return nil
 }
 

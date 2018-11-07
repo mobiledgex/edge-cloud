@@ -121,6 +121,7 @@ type SampleAppProcess struct {
 	process.SampleAppLocal
 	Args        []string
 	Hostname    string
+	Command     string
 	DockerImage string
 }
 type InfluxProcess struct {
