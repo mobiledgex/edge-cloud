@@ -13,6 +13,7 @@ import (
 // the Sanitize functions below to replace the new characters.
 var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z .&,!]*$")
 var k8sMatch = regexp.MustCompile("^[0-9a-zA-Z][-0-9a-zA-Z.]*$")
+var emailMatch = regexp.MustCompile(`(.+)@(.+)\.(.+)`)
 
 func ValidName(name string) bool {
 	return nameMatch.MatchString(name)
@@ -27,6 +28,10 @@ func ValidIp(ip []byte) bool {
 		return false
 	}
 	return true
+}
+
+func ValidEmail(email string) bool {
+	return emailMatch.MatchString(email)
 }
 
 // DockerSanitize sanitizes the name string (which is assumed to be a
