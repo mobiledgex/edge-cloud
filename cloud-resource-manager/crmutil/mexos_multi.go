@@ -1123,6 +1123,9 @@ func validateURI(uri string) error {
 }
 
 func createAppDNS(mf *Manifest, kconf string) error {
+	if mf.Metadata.Operator != "gcp" && mf.Metadata.Operator != "azure" {
+		return fmt.Errorf("error, invalid code path")
+	}
 	if err := CheckCredentialsCF(); err != nil {
 		return err
 	}
@@ -1146,7 +1149,10 @@ func createAppDNS(mf *Manifest, kconf string) error {
 	if len(serviceNames) < 1 {
 		return fmt.Errorf("no service names starting with %s", mf.Metadata.Name)
 	}
-
+	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if derr != nil {
+		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, err)
+	}
 	fqdnBase := uri2fqdn(mf.Spec.URI)
 	for _, sn := range serviceNames {
 		externalIP, err := getSvcExternalIP(sn, kconf)
@@ -1154,14 +1160,12 @@ func createAppDNS(mf *Manifest, kconf string) error {
 			return err
 		}
 		fqdn := sn + "." + fqdnBase
-		recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
-		if derr == nil {
-			for _, rec := range recs {
-				if rec.Type == "A" && rec.Name == fqdn {
-					if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
-						return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
-					}
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
 				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
 			}
 		}
 		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", externalIP, 1, false); err != nil {
@@ -1173,6 +1177,52 @@ func createAppDNS(mf *Manifest, kconf string) error {
 		//	return err
 		//}
 		log.DebugLog(log.DebugLevelMexos, "registered DNS name, may still need to wait for propagation", "name", fqdn, "externalIP", externalIP)
+	}
+	return nil
+}
+
+func deleteAppDNS(mf *Manifest, kconf string) error {
+	if mf.Metadata.Operator != "gcp" && mf.Metadata.Operator != "azure" {
+		return fmt.Errorf("error, invalid code path")
+	}
+	if err := CheckCredentialsCF(); err != nil {
+		return err
+	}
+	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", err)
+	}
+	if mf.Spec.URI == "" {
+		return fmt.Errorf("URI not specified %v", mf)
+	}
+	err := validateURI(mf.Spec.URI)
+	if err != nil {
+		return err
+	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
+	}
+	serviceNames, err := getSvcNames(mf.Metadata.Name, kconf)
+	if err != nil {
+		return err
+	}
+	if len(serviceNames) < 1 {
+		return fmt.Errorf("no service names starting with %s", mf.Metadata.Name)
+	}
+	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if derr != nil {
+		return fmt.Errorf("cannot get dns records for dns zone %s, error %v", mf.Metadata.DNSZone, err)
+	}
+	fqdnBase := uri2fqdn(mf.Spec.URI)
+	for _, sn := range serviceNames {
+		fqdn := sn + "." + fqdnBase
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+				}
+			}
+		}
+		log.DebugLog(log.DebugLevelMexos, "deleted DNS name", "name", fqdn)
 	}
 	return nil
 }
@@ -1291,7 +1341,13 @@ func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
 		return err
 	}
 	defer os.Remove(kfile)
-
+	serviceNames, err := getSvcNames(mf.Metadata.Name, kconf)
+	if err != nil {
+		return err
+	}
+	if len(serviceNames) < 1 {
+		return fmt.Errorf("no service names starting with %s", mf.Metadata.Name)
+	}
 	out, err := sh.Command("kubectl", "delete", "-f", kfile, "--kubeconfig="+kconf).CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("error deleting app, %s, %v, %v", out, mf, err)
@@ -1299,15 +1355,19 @@ func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
 	if mf.Metadata.DNSZone == "" {
 		return fmt.Errorf("missing dns zone, metadata %v", mf.Metadata)
 	}
-	fqdn := uri2fqdn(mf.Spec.URI)
+	fqdnBase := uri2fqdn(mf.Spec.URI)
 	dr, err := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
 	if err != nil {
-		return fmt.Errorf("cannot get dns records for %s, %s, %v", mf.Metadata.DNSZone, fqdn, err)
+		return fmt.Errorf("cannot get dns records for %s, %v", mf.Metadata.DNSZone, err)
 	}
-	for _, d := range dr {
-		if d.Type == "A" && d.Name == fqdn {
-			if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, d.ID); err != nil {
-				return fmt.Errorf("cannot delete DNS record, %v", d)
+	for _, sn := range serviceNames {
+		fqdn := sn + "." + fqdnBase
+		for _, d := range dr {
+			if d.Type == "A" && d.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, d.ID); err != nil {
+					return fmt.Errorf("cannot delete DNS record, %v", d)
+				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
 			}
 		}
 	}
