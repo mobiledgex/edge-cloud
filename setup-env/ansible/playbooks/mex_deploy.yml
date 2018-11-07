@@ -155,24 +155,6 @@
        mode: 0755
 
 
-- name: deploy binaries to remote sampleapps
-  gather_facts: yes
-  user: root
-  hosts: sampleapps
-
-  vars_files:
-  - mex_vars.yml
-  - "{{ setupfile }}"
-
-  tasks:
-  - name: copy sampleapp binary
-    copy:
-       src: "{{ local_binpath}}/{{ item.sampleapplocal.exename }}"
-       dest: "{{ remote_bin_path }}"
-       mode: 0755
-    with_items:
-       "{{ sampleapps }}"
-
 - name: install etcd to remote etcd nodes
   gather_facts: yes
   user: root

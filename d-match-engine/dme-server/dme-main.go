@@ -148,12 +148,14 @@ func getAuthPublicKey(devname string, appname string, appvers string) (string, e
 	authkey := ""
 	foundApp := false
 	tbl.Lock()
+	defer tbl.Unlock()
+
 	app, ok := tbl.apps[key]
 	if ok {
 		authkey = app.authPublicKey
 		foundApp = true
 	}
-	tbl.Unlock()
+
 	if !foundApp {
 		return "", errors.New("app not found")
 	}
