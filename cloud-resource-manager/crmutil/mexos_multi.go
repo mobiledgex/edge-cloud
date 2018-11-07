@@ -1037,6 +1037,7 @@ type svcItems struct {
 }
 
 func runKubectlCreateApp(mf *Manifest, kubeManifest string) error {
+	log.DebugLog(log.DebugLevelMexos, "run kubectl create app", "mf", mf, "kubeManifest", kubeManifest)
 	kconf, err := getKconf(mf, false)
 	if err != nil {
 		return fmt.Errorf("error creating app due to kconf %v, %v", mf, err)
@@ -1205,7 +1206,6 @@ func getSvcNames(name string, kconf string) ([]string, error) {
 
 func getSvcExternalIP(name string, kconf string) (string, error) {
 	log.DebugLog(log.DebugLevelMexos, "get service external IP", "name", name)
-	svcName := name + "-service"
 	externalIP := ""
 	var out []byte
 	var err error
@@ -1222,7 +1222,8 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 		}
 		log.DebugLog(log.DebugLevelMexos, "getting externalIP, examine list of services", "name", name, "svcs", svcs)
 		for _, item := range svcs.Items {
-			if item.Metadata.Name != svcName {
+			log.DebugLog(log.DebugLevelMexos, "svc item", "item", item, "name", name)
+			if item.Metadata.Name != name {
 				continue
 			}
 			for _, ingress := range item.Status.LoadBalancer.Ingresses {
