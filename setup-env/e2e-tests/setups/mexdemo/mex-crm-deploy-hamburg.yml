@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: crmhamburg
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1001
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
         imagePullPolicy: Always
         env:
          - name: MEX_CF_USER
@@ -29,8 +29,8 @@ spec:
            value: sandhill
          - name: MEX_DIR
            value: /root/.mobiledgex
-         - name: OS_AUTH_URL
-           value: https://hamedgecloud.telekom.de:5000/v2.0
+#         - name: OS_AUTH_URL
+#           value: https://hamedgecloud.telekom.de:5000/v2.0
          - name: OS_CACERT
            value: /root/.mobiledgex/telesec_chain.crt
          - name: OS_USERNAME

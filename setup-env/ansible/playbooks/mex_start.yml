@@ -248,12 +248,23 @@
     with_items: 
       - "{{ sampleapps }}"
 
-  - name: start up application container
+  - name: start up application container with command
+    docker_container:
+       pull: yes
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.sampleapplocal.name }}"
+       entrypoint: "{{ item.command }}" 
+       network_mode: host
+    when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command != ""
+    with_items:
+       -  "{{ sampleapps }}"
+
+  - name: start up application container no command
     docker_container:
        pull: yes
        image: "{{ item.dockerimage }}"
        name: "{{ item.sampleapplocal.name }}"
        network_mode: host
-    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command == ""
     with_items:
        -  "{{ sampleapps }}"

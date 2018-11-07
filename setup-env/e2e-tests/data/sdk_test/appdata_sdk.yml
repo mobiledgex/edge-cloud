@@ -138,6 +138,20 @@ apps:
 - key:
     developerkey:
       name: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:64000"
+  ipaccess: IpAccessDedicatedOrShared
+
+- key:
+    developerkey:
+      name: Samsung
     name: EmptyMatchEngineApp
     version: "1.0"
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
@@ -172,7 +186,6 @@ apps:
     name: SmallCluster
   config: "http://35.199.188.102/apps/simapp.yaml"
   accessports: "tcp:7777"
-  
 
 appinstances:
 - key:
@@ -258,8 +271,22 @@ appinstances:
         name: TDG
       name: bonn3cloudlet
   liveness: LivenessStatic
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
-  imagetype: ImageTypeDocker
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: mexdemoapp.default.mobiledgex.net
   flavor:
     name: x1.small
 
@@ -275,5 +302,23 @@ appinstances:
       name: default
     id: 123
   liveness: LivenessStatic
+  uri: samsung.empty.default
   flavor:
     name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: Samsung
+      name: SamsungEnablingLayer
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: samsung.enabling.layer
+  flavor:
+    name: x1.small
+
+
