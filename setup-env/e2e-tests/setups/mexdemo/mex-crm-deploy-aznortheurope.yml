@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: crmaznortheurope
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0919
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
         imagePullPolicy: Always
         env:
          - name: MEX_CF_USER
@@ -31,8 +31,8 @@ spec:
            value: /root/.mobiledgex
          - name: PATH
            value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin 
-         - name: OS_AUTH_URL
-           value: DUMMY
+#         - name: OS_AUTH_URL
+#           value: DUMMY
          - name: OS_CACERT
            value: DUMMY
          - name: OS_USERNAME

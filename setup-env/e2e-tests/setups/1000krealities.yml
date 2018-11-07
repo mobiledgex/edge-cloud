@@ -1,0 +1,36 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- bonnvm: 37.50.143.116
+- berlinvm: 80.187.128.11
+- hamburgvm: 80.187.132.10
+- dockerimage: "registry.mobiledgex.net:5001/1000realities/1000realitiesapp"
+
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: 1000krealities.bonn.tdg.mobiledgex.net
+    type: A
+    content: "{{bonnvm}}"
+  - name: 1000krealities.berlin.tdg.mobiledgex.net
+    type: A
+    content: "{{berlinvm}}"
+  - name: 1000krealities.hamburg.tdg.mobiledgex.net
+    type: A
+    content: "{{hamburgvm}}"
+
+
+sampleapps:
+- sampleapplocal:
+    name: 100krealities-bonn
+  hostname: "{{bonnvm}}"
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: 100krealities-berlin
+  hostname: "{{berlinvm}}"
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: 100krealities-hamburg
+  hostname: "{{hamburgvm}}"
+  dockerimage: "{{dockerimage}}"
