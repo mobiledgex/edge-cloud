@@ -1605,6 +1605,17 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if err != nil {
 		return fmt.Errorf("can not unmarshal svc json, %v", err)
 	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
+	}
+	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
+	}
+	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if derr != nil {
+		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, err)
+	}
+	fqdnBase := uri2fqdn(mf.Spec.URI)
 	for _, item := range svcs.Items {
 		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
 			continue
@@ -1615,6 +1626,19 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
 		}
 		log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", item.Metadata.Name, "externalIPs", kp.ipaddr)
+		fqdn := item.Metadata.Name + "." + fqdnBase
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
+			}
+		}
+		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", rootLBIPaddr, 1, false); err != nil {
+			return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, rootLBIPaddr, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "created DNS record", "name", fqdn, "addr", rootLBIPaddr)
 	}
 	return nil
 }
@@ -1928,6 +1952,10 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if mf.Spec.ProxyPath == "" {
 		return fmt.Errorf("empty kubernetes proxy path")
 	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
+	}
+
 	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
@@ -1947,6 +1975,15 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if err != nil {
 		return fmt.Errorf("can not unmarshal svc json, %v", err)
 	}
+	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
+	}
+	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if derr != nil {
+		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, derr)
+	}
+	fqdnBase := uri2fqdn(mf.Spec.URI)
+	//FIXME use k8s manifest file to delete the whole services and deployments
 	for _, item := range svcs.Items {
 		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
 			continue
@@ -1958,6 +1995,15 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		} else {
 			log.DebugLog(log.DebugLevelMexos, "deleted service", "name", item.Metadata.Name)
 		}
+		fqdn := item.Metadata.Name + "." + fqdnBase
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
+			}
+		}
 	}
 	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
 	out, err = kp.client.Output(cmd)
@@ -1966,6 +2012,7 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", mf.Metadata.Name)
 	//TODO: remove security rules
+
 	return nil
 }
 
