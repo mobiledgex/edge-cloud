@@ -18,12 +18,46 @@
   revision = "324ae0e800450fcd92c5753005d07388037b29ac"
 
 [[projects]]
+  digest = "1:5d3e23515e7916c152cc665eda0f7eaf6fdf8fdfe7c3dbac97049bcbd649b33f"
+  name = "github.com/Knetic/govaluate"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d216395917cc49052c7c7094cf57f09657ca08a8"
+  version = "v3.0.0"
+
+[[projects]]
   digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   pruneopts = "UT"
   revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
   version = "v9"
+
+[[projects]]
+  digest = "1:2f30fb22e56424a767d5734756a4cffc489fcbac43146edb15ca5bf4e233cf0d"
+  name = "github.com/casbin/casbin"
+  packages = [
+    ".",
+    "config",
+    "effect",
+    "model",
+    "persist",
+    "persist/file-adapter",
+    "rbac",
+    "rbac/default-role-manager",
+    "util",
+  ]
+  pruneopts = "UT"
+  revision = "695c374a6617e9cdc930e8666307a772577cbd70"
+  version = "v1.6.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:8ee97be9fd8326cd1755fe49d65d63890ba60a2c9aa82b2db8a18934ced02212"
+  name = "github.com/casbin/gorm-adapter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e56c6daebd5e8c657caf3bdf3a647803cf7b242d"
 
 [[projects]]
   digest = "1:3535f00c607f3993a1a2f1cbb1b3faa3bf8903f9edc77c1386491882d3b2754c"
@@ -345,12 +379,79 @@
   revision = "dd349441af25132d146d7095c6693a15431fc9b1"
 
 [[projects]]
+  digest = "1:235ae01f32fb5f12c5f6d2e0e05ab48e651ab31c126e45a4efc4f510810941ac"
+  name = "github.com/jinzhu/gorm"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6ed508ec6a4ecb3531899a69cbc746ccf65a4166"
+  version = "v1.9.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fd97437fbb6b7dce04132cf06775bd258cce305c44add58eb55ca86c6c325160"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "04140366298a54a039076d798123ffa108fff46c"
+
+[[projects]]
   digest = "1:b1d4df033414c1a0d85fa7037b9aaf03746314811c860a95ea2d5fd481cd6c35"
   name = "github.com/json-iterator/go"
   packages = ["."]
   pruneopts = "UT"
   revision = "ca39e5af3ece67bbcda3d0f4f56a8e24d9f2dad4"
   version = "1.1.3"
+
+[[projects]]
+  digest = "1:9acadb9c8c15b8a9f635a7fa960c9a522b001a3919bc03df92ac26c372476aff"
+  name = "github.com/labstack/echo"
+  packages = [
+    ".",
+    "middleware",
+  ]
+  pruneopts = "UT"
+  revision = "1abaa3049251d17932e4313c2d6165073fd07fd8"
+  version = "v3.3.6"
+
+[[projects]]
+  digest = "1:568171fc14a3d819b112c3e219d351ea7b05e8dad7935c4168c6b3373244a686"
+  name = "github.com/labstack/gommon"
+  packages = [
+    "bytes",
+    "color",
+    "log",
+    "random",
+  ]
+  pruneopts = "UT"
+  revision = "2a618302b929cc20862dda3aa6f02f64dbe740dd"
+  version = "v0.2.7"
+
+[[projects]]
+  digest = "1:8ef506fc2bb9ced9b151dafa592d4046063d744c646c1bbe801982ce87e4bc24"
+  name = "github.com/lib/pq"
+  packages = [
+    ".",
+    "oid",
+  ]
+  pruneopts = "UT"
+  revision = "4ded0e9383f75c197b3a2aaa6d590ac52df6fd79"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:c658e84ad3916da105a761660dcaeb01e63416c8ec7bc62256a9b411a05fcd67"
+  name = "github.com/mattn/go-colorable"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
+  version = "v0.0.9"
+
+[[projects]]
+  digest = "1:0981502f9816113c9c8c4ac301583841855c8cf4da8c72f696b3ebedf6d0e4e5"
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6ca4dbf54d38eea1a992b3c722a76a5d1c4cb25c"
+  version = "v0.0.4"
 
 [[projects]]
   digest = "1:e05853f7ff5ea1e7653d228bf349c76372b80a30209ed888f0b18d75f959f46c"
@@ -473,6 +574,22 @@
   version = "v1.2.1"
 
 [[projects]]
+  digest = "1:c468422f334a6b46a19448ad59aaffdfc0a36b08fdcc1c749a0b29b6453d7e59"
+  name = "github.com/valyala/bytebufferpool"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:268b8bce0064e8c057d7b913605459f9a26dcab864c0886a56d196540fbf003f"
+  name = "github.com/valyala/fasttemplate"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
   digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
   name = "go.uber.org/atomic"
   packages = ["."]
@@ -505,13 +622,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9afabdd2e2c14e87265299bc728d31fa84788e5ed66d87850e6195f28a8fdb73"
+  digest = "1:4ed6f399808e498062fd42c6300531d566e4f62642667ac454890a52e479b1d2"
   name = "golang.org/x/crypto"
   packages = [
+    "acme",
+    "acme/autocert",
     "curve25519",
     "ed25519",
     "ed25519/internal/edwards25519",
     "internal/chacha20",
+    "pbkdf2",
     "poly1305",
     "ssh",
     "ssh/terminal",
@@ -832,6 +952,8 @@
   input-imports = [
     "github.com/AsGz/geo/georeverse",
     "github.com/asaskevich/govalidator",
+    "github.com/casbin/casbin",
+    "github.com/casbin/gorm-adapter",
     "github.com/cespare/xxhash",
     "github.com/cloudflare/cloudflare-go",
     "github.com/codeskyblue/go-sh",
@@ -867,6 +989,10 @@
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
     "github.com/influxdata/influxdb/client/v2",
+    "github.com/jinzhu/gorm",
+    "github.com/labstack/echo",
+    "github.com/labstack/echo/middleware",
+    "github.com/lib/pq",
     "github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure",
     "github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud",
     "github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi",
@@ -879,6 +1005,7 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
     "go.uber.org/zap",
+    "golang.org/x/crypto/pbkdf2",
     "golang.org/x/net/context",
     "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",

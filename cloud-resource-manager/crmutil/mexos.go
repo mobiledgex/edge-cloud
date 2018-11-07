@@ -2223,6 +2223,8 @@ func LookupDNS(name string) (string, error) {
 	return "", fmt.Errorf("no IP in DNS record for %s", name)
 }
 
+var dnsRegisterRetryDelay time.Duration = 3 * time.Second
+
 func WaitforDNSRegistration(name string) error {
 	var ipa string
 	var err error
@@ -2232,7 +2234,7 @@ func WaitforDNSRegistration(name string) error {
 		if err == nil && ipa != "" {
 			return nil
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(dnsRegisterRetryDelay)
 	}
 	log.DebugLog(log.DebugLevelMexos, "DNS lookup timed out", "name", name)
 	return fmt.Errorf("error, timed out while looking up DNS for name %s", name)

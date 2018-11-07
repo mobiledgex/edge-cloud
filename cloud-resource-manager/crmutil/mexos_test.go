@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -358,6 +359,7 @@ func TestWaitforDNSRegistration(t *testing.T) {
 		return
 	}
 	fmt.Println("google.com ok")
+	dnsRegisterRetryDelay = time.Millisecond
 	err = WaitforDNSRegistration("asdfasdfasdfasdfasdfasdfasdfadsfadf.com")
 	if err != nil {
 		fmt.Println("timeout as expected")
