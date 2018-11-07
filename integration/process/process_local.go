@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"sync"
 	"time"
 
@@ -289,6 +290,112 @@ func (p *InfluxLocal) Stop() {
 
 func (p *InfluxLocal) ResetData() error {
 	return os.RemoveAll(p.DataDir)
+}
+
+// Postgres Sql
+type SqlLocal struct {
+	Name     string
+	DataDir  string
+	HttpAddr string
+	Username string
+	Dbname   string
+	TLS      TLSCerts
+	cmd      *exec.Cmd
+}
+
+func (p *SqlLocal) Start(logfile string) error {
+	args := []string{"-D", p.DataDir, "start"}
+	options := []string{}
+	addr := []string{}
+	if p.HttpAddr != "" {
+		addr = strings.Split(p.HttpAddr, ":")
+		if len(addr) == 2 {
+			options = append(options, "-p")
+			options = append(options, addr[1])
+		}
+	}
+	if p.TLS.ServerCert != "" {
+		// files server.crt and server.key must exist
+		// in server's data directory (note: this is untested).
+		options = append(options, "-l")
+	}
+	if len(options) > 0 {
+		args = append(args, "-o")
+		args = append(args, strings.Join(options, " "))
+	}
+	var err error
+	p.cmd, err = StartLocal(p.Name, "pg_ctl", args, logfile)
+	if err != nil {
+		return err
+	}
+	// wait until pg_ctl script exits (means postgres service is ready)
+	state, err := p.cmd.Process.Wait()
+	if err != nil {
+		return fmt.Errorf("failed wait for pg_ctl, %s", err.Error())
+	}
+	if !state.Exited() {
+		return fmt.Errorf("pg_ctl not exited")
+	}
+	if !state.Success() {
+		return fmt.Errorf("pg_ctl failed, see script output")
+	}
+
+	// create primary user
+	out, err := p.runPsql([]string{"-c", "select rolname from pg_roles",
+		"postgres"})
+	if err != nil {
+		p.Stop()
+		return fmt.Errorf("sql: failed to list postgres roles, %s", err.Error())
+	}
+	if !strings.Contains(string(out), p.Username) {
+		out, err = p.runPsql([]string{"-c",
+			fmt.Sprintf("create user %s", p.Username), "postgres"})
+		fmt.Println(string(out))
+		if err != nil {
+			p.Stop()
+			return fmt.Errorf("sql: failed to create user %s, %s",
+				p.Username, err.Error())
+		}
+	}
+
+	// create user database
+	out, err = p.runPsql([]string{"-c", "select datname from pg_database",
+		"postgres"})
+	if err != nil {
+		p.Stop()
+		return fmt.Errorf("sql: failed to list databases, %s", err.Error())
+	}
+	if !strings.Contains(string(out), p.Dbname) {
+		out, err = p.runPsql([]string{"-c",
+			fmt.Sprintf("create database %s", p.Dbname), "postgres"})
+		fmt.Println(string(out))
+		if err != nil {
+			p.Stop()
+			return fmt.Errorf("sql: failed to create user %s, %s",
+				p.Username, err.Error())
+		}
+	}
+	return nil
+}
+func (p *SqlLocal) Stop() {
+	exec.Command("pg_ctl", "-D", p.DataDir, "stop").CombinedOutput()
+}
+func (p *SqlLocal) InitDataDir() error {
+	err := os.RemoveAll(p.DataDir)
+	if err != nil {
+		return err
+	}
+	_, err = exec.Command("initdb", p.DataDir).CombinedOutput()
+	return err
+}
+func (p *SqlLocal) runPsql(args []string) ([]byte, error) {
+	if p.HttpAddr != "" {
+		addr := strings.Split(p.HttpAddr, ":")
+		if len(addr) == 2 {
+			args = append([]string{"-h", addr[0], "-p", addr[1]}, args...)
+		}
+	}
+	return exec.Command("psql", args...).CombinedOutput()
 }
 
 // Support funcs
