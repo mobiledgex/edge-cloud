@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmazwestus2
+  name: crmmsoftwestus2
   labels:
-    app: crmazwestus2
+    app: crmmsoftwestus2
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmazwestus2
+      app: crmmsoftwestus2
   template:
     metadata:
       labels:
-        app: crmazwestus2
+        app: crmmsoftwestus2
     spec:
       containers:
-      - name: crmazwestus2
+      - name: crmmsoftwestus2
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
         imagePullPolicy: Always
         env:
@@ -53,7 +53,7 @@ spec:
          - bash 
         args:
          - "-c"
-         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"azwestus2cloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller:37001 --tls /root/tls/mex-server.crt --d mexos"
+         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"microsoftwestus2cloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller:37001 --tls /root/tls/mex-server.crt --d mexos"
       imagePullSecrets:
        - name: mexreg-secret 
 

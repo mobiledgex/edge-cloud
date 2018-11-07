@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmazwestus2
+  name: crmmsofteastus
   labels:
-    app: crmazwestus2
+    app: crmmsofteastus
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmazwestus2
+      app: crmmsofteastus
   template:
     metadata:
       labels:
-        app: crmazwestus2
+        app: crmmsofteastus
     spec:
       containers:
-      - name: crmazwestus2
+      - name: crmmsofteastus2
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
         imagePullPolicy: Always
         env:
@@ -44,16 +44,16 @@ spec:
          - name: OS_REGION_NAME
            value: DUMMY
          - name: CLOUDLET_REGION
-           value: westus2
+           value: eastus
          - name: CLOUDLET_ZONE
-           value: westus2
+           value: eastus
          - name: CLOUDLET_LOCATION
-           value: westus2
+           value: eastus
         command:
          - bash 
         args:
          - "-c"
-         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"azwestus2cloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller:37001 --tls /root/tls/mex-server.crt --d mexos"
+         - "crmserver --cloudletKey '{\"operator_key\":{\"name\":\"azure\"},\"name\":\"microsofteastuscloudlet\"}' --apiAddr 0.0.0.0:55091 --notifyAddrs controller:37001 --tls /root/tls/mex-server.crt --d mexos"
       imagePullSecrets:
        - name: mexreg-secret 
 

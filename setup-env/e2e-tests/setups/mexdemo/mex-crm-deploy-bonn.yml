@@ -20,7 +20,7 @@ spec:
          - "fmbncisrs101.tacn.detemobil.de"
       containers:
       - name: crmbonn
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1001
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
         imagePullPolicy: Always
         env:
          - name: MEX_CF_USER
@@ -33,8 +33,8 @@ spec:
            value: sandhill
          - name: MEX_DIR
            value: /root/.mobiledgex
-         - name: OS_AUTH_URL
-           value: https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
+#         - name: OS_AUTH_URL
+#           value: https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
          - name: OS_CACERT
            value: /root/.mobiledgex/bonnedgecloudtelekomde.crt
          - name: OS_USERNAME
