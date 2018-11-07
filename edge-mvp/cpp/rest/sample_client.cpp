@@ -5,8 +5,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include <algorithm>
-
+// Test only credentials.
 #include "test_credentials.hpp"
 
 using namespace std;
@@ -27,7 +26,7 @@ class MexRestClient {
     string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
 
     unsigned long timeoutSec = 5000;
-    unsigned int dmePort = 38001;
+    unsigned int dmePort = 38001; // HTTP REST port
     const string appName = "EmptyMatchEngineApp"; // Your application name
     const string devName = "EmptyMatchEngineApp"; // Your developer name
     const string appVersionStr = "1.0";
@@ -81,7 +80,7 @@ class MexRestClient {
         location["altitude"] = 100;
         location["course"] = 0;
         location["speed"] = 2;
-        location["timestamp"] = "2008-09-08T22:47:31-07:00"; // currentGoogleTimestamp();
+        location["timestamp"] = "2018-11-09T15:47:31-07:00"; // currentGoogleTimestamp();
 
         return location;
     }
@@ -114,7 +113,7 @@ class MexRestClient {
     json createFindCloudletRequest(const string carrierName, const json gpslocation) {
         json findCloudletRequest;
 
-        findCloudletRequest["vers"] = 1;
+        findCloudletRequest["ver"] = 1;
         findCloudletRequest["SessionCookie"] = sessioncookie;
         findCloudletRequest["CarrierName"] = carrierName;
         findCloudletRequest["GpsLocation"] = gpslocation;
@@ -158,7 +157,6 @@ class MexRestClient {
             }
         }
         json replyData = json::parse(responseData);
-        cout << "Reply: [" << replyData.dump() << "]" << endl;
         return replyData;
     }
 
@@ -167,9 +165,7 @@ class MexRestClient {
         string *buf = ((string*)replyBuf);
 
         if (contentptr != NULL && buf) {
-            string *buf = ((string*)replyBuf);
             buf->append((char*)contentptr, dataSize);
-
             cout << "Data Size: " << dataSize << endl;
             //cout << "Current replyBuf: [" << *buf << "]" << endl;
         }
@@ -205,7 +201,6 @@ class MexRestClient {
         tokenizedRequest["GpsLocation"] = request["GpsLocation"];
         tokenizedRequest["VerifyLocToken"] = token;
 
-        cout << "VeriyLocation actual call..." << endl;
         json jreply = postRequest(baseuri + verifylocationAPI, tokenizedRequest.dump(), reply, getReplyCallback);
         return jreply;
 
@@ -224,8 +219,6 @@ class MexRestClient {
             return NULL;
         }
 
-        // Since GPRC's Channel is somewhat hidden
-        // we can use CURL here instead.
         CURL *curl = curl_easy_init();
         if (curl == NULL) {
             cerr << "Curl could not be initialized." << endl;
@@ -372,10 +365,9 @@ class MexRestClient {
 };
 
 int main() {
-    cout << "Hello C++ MEX REST Lib" << endl;
+    cout << "Hello C++ MEX REST Sample Client" << endl;
     curl_global_init(CURL_GLOBAL_DEFAULT);
 
-    // Credentials, Mutual Authentication:
     unique_ptr<MexRestClient> mexClient = unique_ptr<MexRestClient>(new MexRestClient());
 
     try {
@@ -396,9 +388,7 @@ int main() {
             return 1;
         } else {
             cout << "REST RegisterClient Status: "
-                 << "Version: " << registerClientReply["ver"]
-                 << ", Client Status: " << registerClientReply["status"]
-                 << ", SessionCookie: " << registerClientReply["SessionCookie"]
+                 << ", Dump: [" << registerClientReply.dump() << "]"
                  << endl
                  << endl;
         }
@@ -441,11 +431,12 @@ int main() {
         }
         else {
             cout << "REST FindCloudlet Status: "
-                 << "Version: " << findCloudletReply["ver"]
+                 << "Version: " << findCloudletReply["Ver"]
                  << ", Location Found Status: " << findCloudletReply["status"]
-                 << ", Location of cloudlet. Latitude: " << findCloudletReply["cloudlet_location"]["lat"]
-                 << ", Longitude: " << findCloudletReply["cloudlet_location"]["long"]
-                 << ", Cloudlet FQDN: " << findCloudletReply["fqdn"] << endl;
+                 << ", Location of Cloudlet, Longitude: " << findCloudletReply["cloudlet_location"]["long"]
+                 << ", Latitude: " << findCloudletReply["cloudlet_location"]["lat"]
+                 << ", Cloudlet FQDN: " << findCloudletReply["FQDN"]
+                 << endl;
             json ports = findCloudletReply["ports"];
             size_t size = ports.size();
             for(const auto &appPort : ports) {
@@ -456,6 +447,7 @@ int main() {
                      << endl;
             }
         }
+        cout << "FindCloudletReply: Dump: " << findCloudletReply.dump() << endl;
 
         cout << endl;
 
