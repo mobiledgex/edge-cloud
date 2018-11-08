@@ -114,7 +114,7 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 		return pubKey, nil
 	})
 	if err != nil {
-		log.WarnLog("error in verifycookie", "cookie", cookie, "err", err)
+		log.InfoLog("error in verifycookie", "cookie", cookie, "err", err)
 		return nil, err
 	}
 	if claims.Key == nil {
@@ -122,8 +122,8 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 		return nil, errors.New("No Key data in cookie")
 	}
 
-	if claims.ExpiresAt < time.Now().Unix() {
-		log.InfoLog("cookie is expired", "cookie", cookie, "expiresAt", claims.ExpiresAt)
+	if claims.ExpiresAt < time.Now().Unix() || claims.IssuedAt > time.Now().Unix() {
+		log.InfoLog("cookie is expired", "cookie", cookie, "claims", claims)
 		return nil, errors.New("Expired cookie")
 	}
 

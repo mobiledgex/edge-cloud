@@ -9,13 +9,14 @@ import unittest
 import grpc
 import sys
 import time
+import os
 from delayedassert import expect, expect_equal, assert_expectations
 import logging
 
 import mex_controller
 
-controller_address_1 = '127.0.0.1:55001'
-controller_address_2 = '127.0.0.1:55002'
+controller_address_1 = os.getenv('AUTOMATION_CONTROLLER_ADDRESS', '127.0.0.1:55001')
+controller_address_2 = os.getenv('AUTOMATION_CONTROLLER_ADDRESS_2', '127.0.0.1:55002')
 
 stamp = str(time.time())
 operator_name_1 = 'operator_1 ' + stamp

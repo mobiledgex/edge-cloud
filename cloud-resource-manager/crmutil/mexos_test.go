@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -327,7 +328,14 @@ func TestFormNginxProxyRequest(t *testing.T) {
 
 func TestGetSvcExternalIP(t *testing.T) {
 	home := os.Getenv("HOME")
-	eip, err := getSvcExternalIP("testapp", home+"/.mobiledgex/aks-testcluster.kubeconfig")
+	path := home + "/.mobiledgex/aks-testcluster.kubeconfig"
+
+	_, err := os.Stat(path)
+	if err != nil {
+		fmt.Println("skip getSvcExternalIP test")
+		return
+	}
+	eip, err := getSvcExternalIP("testapp", path)
 	if err != nil {
 		t.Errorf("error %v", err)
 		return
@@ -351,6 +359,7 @@ func TestWaitforDNSRegistration(t *testing.T) {
 		return
 	}
 	fmt.Println("google.com ok")
+	dnsRegisterRetryDelay = time.Millisecond
 	err = WaitforDNSRegistration("asdfasdfasdfasdfasdfasdfasdfadsfadf.com")
 	if err != nil {
 		fmt.Println("timeout as expected")
