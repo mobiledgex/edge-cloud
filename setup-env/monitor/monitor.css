@@ -1,0 +1,28 @@
+table.hovertable {
+	font-family: verdana,arial,sans-serif;
+	font-size:10px;
+	color:#002200;
+	border-width: 1px;
+	border-color: #999999;
+	border-collapse: collapse;
+}
+table.hovertable th {
+	background-color:#00ccb4;
+	border-width: 1px;
+	padding: 8px;
+	border-style: solid;
+	border-color: #003300;
+
+}
+table.hovertable tr {
+	background-color:#d0dfe2;
+
+}
+table.hovertable td {
+	border-width: 1px;
+	padding: 8px;
+        white-space: nowrap;
+	border-style: solid;
+	border-color: #003300;
+}
+}
