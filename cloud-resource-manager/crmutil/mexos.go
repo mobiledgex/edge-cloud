@@ -920,8 +920,17 @@ func RunMEXOSAgentService(mf *Manifest, rootLB *MEXRootLB) error {
 	if err != nil {
 		return err
 	}
+	out, err := client.Output("systemctl stop mexosagent.service")
+	if err != nil {
+		log.InfoLog("warning: cannot stop mexosagent.service", "out", out, "err", err)
+	}
+	out, err = client.Output("systemctl disable mexosagent.service")
+	if err != nil {
+		log.InfoLog("warning: cannot disable mexosagent.service", "out", out, "err", err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "stopped mexosagent service")
 	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@registry.mobiledgex.net:files-repo/mobiledgex/mexosagent /usr/local/bin/", mexEnv["MEX_SSH_KEY"])
-	out, err := client.Output(cmd)
+	out, err = client.Output(cmd)
 	if err != nil {
 		log.InfoLog("error: cannot download mexosagent from registry", "error", err, "out", out)
 		return err
