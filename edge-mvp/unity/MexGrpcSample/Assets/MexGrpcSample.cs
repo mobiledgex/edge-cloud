@@ -26,10 +26,16 @@ public class MexGrpcSample : MonoBehaviour
     Loc location;
     System.Guid uuid;
     string sessionCookie;
+    string token;
+    string authToken = ""; // MEX Developer supplied and updated authToken.
 
-    string dmeHost = "tdg.dme.mobiledgex.net"; // DME server hostname or ip.
+    string dmeHost = "tdg2.dme.mobiledgex.net"; // DME server hostname or ip.
     int dmePort = 50051; // DME port.
 
+    string developerName = "EmptyMatchEngineApp";
+    string applicationName = "EmptyMatchEngineApp";
+    string appVer = "1.0";
+    
     Match_Engine_Api.Match_Engine_ApiClient client;
 
     StatusContainer statusContainer;
@@ -60,9 +66,9 @@ public class MexGrpcSample : MonoBehaviour
         var sslCredentials = new SslCredentials(Credentials.caCrt, clientKeyPair);
         Channel channel = new Channel(uri, sslCredentials);
 
-        client = new DistributedMatchEngine.Match_Engine_Api.Match_Engine_ApiClient(channel);
+        client = new Match_Engine_Api.Match_Engine_ApiClient(channel);
 
-        var registerClientRequest = CreateRequest(uuid, location, "", "");
+        var registerClientRequest = CreateRegisterClientRequest(developerName, applicationName, appVer, getCarrierName(), "");
         var regReply = client.RegisterClient(registerClientRequest);
 
         Console.WriteLine("RegisterClient Reply: " + regReply);
@@ -75,14 +81,15 @@ public class MexGrpcSample : MonoBehaviour
         sessionCookie = regReply.SessionCookie;
 
         // Request the token from the TokenServer:
-        string token = RetrieveToken(regReply.TokenServerURI);
+        this.token = RetrieveToken(regReply.TokenServerURI);
+
         statusContainer.Post("VerifyLocation pre-query sessionCookie: " + sessionCookie);
         statusContainer.Post("VerifyLocation pre-query TokenServer token: " + token);
 
         // Call the remainder. Verify and Find cloudlet.
 
         // Async versions also exist:
-        var verifyResponse = VerifyLocation(token);
+        var verifyResponse = VerifyLocation();
         Console.WriteLine("VerifyLocation Status: " + verifyResponse.GpsLocationStatus);
         Console.WriteLine("VerifyLocation Accuracy: " + verifyResponse.GPSLocationAccuracyKM);
         statusContainer.Post("VerifyLocation Status: " + verifyResponse.GpsLocationStatus);
@@ -95,26 +102,40 @@ public class MexGrpcSample : MonoBehaviour
         statusContainer.Post("FindCloudlet Status: " + findCloudletResponse.Status);
     }
 
-    Match_Engine_Request CreateRequest(System.Guid aUuid, Loc aLocation, String token, String session)
+    RegisterClientRequest CreateRegisterClientRequest(string devName, string appName, string appVers, string carrierName, string anAuthToken)
     {
-        var request = new Match_Engine_Request
+        var request = new RegisterClientRequest
         {
             Ver = 1,
-            IdType = DistributedMatchEngine.IDTypes.Ipaddr,
-            Uuid = aUuid.ToString(),
-            Id = "", // TBD
-            CarrierID = 3L, // TBD
-            CarrierName = "T-Mobile",
-            Tower = 5L, // TBD
-            GpsLocation = aLocation,
-            AppId = 5011,
-            Protocol = Google.Protobuf.ByteString.CopyFromUtf8("http"),
-            ServerPort = Google.Protobuf.ByteString.CopyFromUtf8("1234"),
-            DevName = "EmptyMatchEngineApp",
-            AppName = "EmptyMatchEngineApp",
-            AppVers = "1",
-            SessionCookie = session ?? "",
-            VerifyLocToken = token ?? ""
+            DevName = devName,
+            AppName = appName,
+            AppVers = appVers,
+            CarrierName = carrierName,
+            AuthToken = anAuthToken == "" ? authToken : anAuthToken
+        };
+        return request;
+    }
+
+    VerifyLocationRequest CreateVerifyLocationRequest(string carrierName, Loc gpsLocation)
+    {
+        var request = new VerifyLocationRequest
+        {
+            Ver = 1,
+            SessionCookie = sessionCookie,
+            CarrierName = carrierName,
+            GpsLocation = gpsLocation,
+            VerifyLocToken = ""
+        };
+        return request;
+    }
+
+    FindCloudletRequest CreateFindCloudletRequest(string carrierName, Loc gpsLocation)
+    {
+        var request = new FindCloudletRequest
+        {
+            SessionCookie = sessionCookie,
+            CarrierName = carrierName,
+            GpsLocation = gpsLocation
         };
         return request;
     }
@@ -156,7 +177,7 @@ public class MexGrpcSample : MonoBehaviour
         httpWebRequest.AllowAutoRedirect = false;
 
         HttpWebResponse response = null;
-        string token = null;
+        string atoken = null;
         string uriLocation = null;
         // 303 See Other is behavior is different between standard C#
         // and what's potentially in Unity.
@@ -187,27 +208,32 @@ public class MexGrpcSample : MonoBehaviour
 
         if (uriLocation != null)
         {
-            token = parseToken(uriLocation);
+            atoken = parseToken(uriLocation);
         }
-        return token;
+        return atoken;
     }
 
 
-    Match_Engine_Loc_Verify VerifyLocation(string token)
+    VerifyLocationReply VerifyLocation()
     {
         // Use verifyLocation, Async call:
-        var verifyLocationRequest = CreateRequest(uuid, location, token, sessionCookie);
+        var verifyLocationRequest = CreateVerifyLocationRequest(getCarrierName(), getLocation());
         var verifyResult = client.VerifyLocation(verifyLocationRequest);
         return verifyResult;
     }
 
-    Match_Engine_Reply FindCloudlet()
+    FindCloudletReply FindCloudlet()
     {
         // Create a synchronous request for FindCloudlet using RegisterClient reply's Session Cookie (TokenServerURI is now invalid):
-        var findCloudletRequest = CreateRequest(uuid, location, "", sessionCookie);
+        var findCloudletRequest = CreateFindCloudletRequest(getCarrierName(), getLocation());
         var findCloudletReply = client.FindCloudlet(findCloudletRequest);
 
         return findCloudletReply;
+    }
+
+    // This could change on every tower change.
+    string getCarrierName() {
+        return "TDG";
     }
 
     Loc getLocation()
@@ -216,7 +242,16 @@ public class MexGrpcSample : MonoBehaviour
         return new DistributedMatchEngine.Loc
         {
             Long = -122.149349,
-            Lat = 37.459609
+            Lat = 37.459609,
+            Altitude = 0,
+            Course = 0,
+            HorizontalAccuracy = 0,
+            VerticalAccuracy = 0,
+            Speed = 5,
+            Timestamp = new Google.Protobuf.WellKnownTypes.Timestamp {
+                Nanos = 10000,
+                Seconds = 1000
+            }
         };
     }
 }

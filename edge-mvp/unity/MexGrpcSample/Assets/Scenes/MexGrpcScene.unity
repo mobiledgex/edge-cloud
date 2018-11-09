@@ -452,8 +452,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f1f2f8cbf90814f489cc25dc97fce665, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  status: 
-  scrollViewText: {fileID: 0}
 --- !u!1 &510302972
 GameObject:
   m_ObjectHideFlags: 0
@@ -807,8 +805,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ac2ce3ad0cb14c0483bc14c7d2338fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  button1: {fileID: 809187004}
-  mexGrpcSample: {fileID: 1890424540}
 --- !u!1 &812860956
 GameObject:
   m_ObjectHideFlags: 0
