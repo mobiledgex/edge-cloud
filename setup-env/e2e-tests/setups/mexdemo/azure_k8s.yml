@@ -18,27 +18,52 @@ cloudflare:
   - name: mexdemo.ctrl.mobiledgex.net
     type: A
     content: 40.122.66.18
-  - name: mobiledgexsdkdemo.centraluscloudlet.tdg.mobiledgex.net
-    type: A
-    content: 40.113.219.126
-  - name: mobiledgexsdkdemo.westuscloudlet.tdg.mobiledgex.net
-    type: A
-    content: 40.118.185.214
-  - name: mobiledgexsdkdemo.bonncloudlet.tdg.mobiledgex.net
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.bonndemocloudlet.tdg.mobiledgex.net
     type: A
     content: 37.50.143.101
-  - name: mobiledgexsdkdemo.azcentraluscloudlet.azure.mobiledgex.net
+  - name: mobiledgexsdkdemofacedetectiondemo10.bonndemocloudlet.tdg.mobiledgex.net
     type: A
-    content: 40.113.226.72
-  - name: mobiledgexsdkdemo.aznortheuropecloudlet.azure.mobiledgex.net
+    content: 37.50.143.101
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.hamburgdemocloudlet.tdg.mobiledgex.net
     type: A
-    content: 40.113.70.39
-  - name: mobiledgexsdkdemo.berlincloudlet.tdg.mobiledgex.net
+    content: 80.187.132.8
+  - name: mobiledgexsdkdemofacedetectiondemo10.hamburgdemocloudlet.tdg.mobiledgex.net
+    type: A
+    content: 80.187.132.8
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.berlindemocloudlet.tdg.mobiledgex.net
     type: A
     content: 80.187.128.15
-  - name: mexdemo.metrics.tdg.mobiledgex.net
+  - name: mobiledgexsdkdemofacedetectiondemo10.berlindemocloudlet.tdg.mobiledgex.net
     type: A
-    content: 40.113.246.128
+    content: 80.187.128.15
+  - name: mobiledgexsdkdemofacedetectiondemo10.microsoftwestus2cloudlet.azure.mobiledgex.net
+    type: A
+    content: 52.183.46.191
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.microsoftwestus2cloudlet.azure.mobiledgex.net
+    type: A
+    content: 52.183.46.191
+  - name: mobiledgexsdkdemofacedetectiondemo10.microsofteastuscloudlet.azure.mobiledgex.net
+    type: A
+    content: 168.62.183.61
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.microsofteastuscloudlet.azure.mobiledgex.net
+    type: A
+    content: 168.62.183.61
+  - name: mobiledgexsdkdemofacedetectiondemo10.microsoftnortheuropecloudlet.azure.mobiledgex.net
+    type: A
+    content: 40.127.161.115
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.microsoftnortheuropecloudlet.azure.mobiledgex.net
+    type: A
+    content: 40.127.161.115
+  - name: mobiledgexsdkdemofacedetectiondemo10.microsoftbaskingridgecloudlet.azure.mobiledgex.net
+    type: A
+    content: 192.168.104.83
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.microsoftbaskingridgecloudlet.azure.mobiledgex.net
+    type: A
+    content: 192.168.104.83
+  - name: mexdemo.monitor.mobiledgex.net
+    type: A
+    content: 168.61.152.107
+
 
 tlscerts:
 - commonname: mexdemo
