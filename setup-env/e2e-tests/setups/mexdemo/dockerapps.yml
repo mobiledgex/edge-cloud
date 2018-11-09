@@ -1,0 +1,41 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- bonnvm: 37.50.143.101
+- berlinvm: 80.187.128.15
+- hamburgvm: 80.187.132.8
+- dockerimage-face: "registry.mobiledgex.net:5000/mobiledgex/facedetection"
+- dockerimage-mexdemo: "registry.mobiledgex.net:5000/mobiledgex/simapp"
+
+sampleapps:
+- sampleapplocal:
+    name: facedetection-bonn
+  hostname: "{{bonnvm}}"
+  dockerimage: "{{dockerimage-face}}"
+
+- sampleapplocal:
+    name: facedetection-berlin
+  hostname: "{{berlinvm}}"
+  dockerimage: "{{dockerimage-face}}"
+
+- sampleapplocal:
+    name: facedetection-hamburg
+  hostname: "{{hamburgvm}}"
+  dockerimage: "{{dockerimage-face}}"
+
+- sampleapplocal:
+    name: mexdemo-bonn
+  hostname: "{{bonnvm}}"
+  dockerimage: "{{dockerimage-mexdemo}}"
+  command: "simapp -port 7777"
+
+- sampleapplocal:
+    name: mexdemo-berlin
+  hostname: "{{berlinvm}}"
+  dockerimage: "{{dockerimage-mexdemo}}"
+  command: "simapp -port 7777"
+
+- sampleapplocal:
+    name: mexdemo-hamburg
+  hostname: "{{hamburgvm}}"
+  dockerimage: "{{dockerimage-mexdemo}}"
+  command: "simapp -port 7777"

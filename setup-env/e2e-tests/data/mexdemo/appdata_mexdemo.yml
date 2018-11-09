@@ -84,6 +84,18 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: azure
+      name: microsoftbaskingridgecloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
+
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
       name: microsoftwestus2cloudlet
   flavor:
     name: x1.medium
@@ -155,6 +167,16 @@ cloudlets:
   location:
     lat: 53.1424
     long: -7.6921
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+- key:
+    operatorkey:
+      name: azure
+    name: microsoftbaskingridgecloudlet
+  accessuri:
+  location:
+    lat: 40.682
+    long: -74.682
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -307,7 +329,29 @@ appinstances:
     appkey:
       developerkey:
         name: MobiledgeX SDK Demo
-      name: Face Detection Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftbaskingridgecloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftbaskingridgecloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -330,7 +374,7 @@ appinstances:
     appkey:
       developerkey:
         name: MobiledgeX SDK Demo
-      name: Face Detection Demo
+      name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -354,7 +398,7 @@ appinstances:
     appkey:
       developerkey:
         name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
+      name: Face Detection Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -376,7 +420,7 @@ appinstances:
     appkey:
       developerkey:
         name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
+      name: Face Detection Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -390,6 +434,119 @@ appinstances:
       operatorkey:
         name: azure
       name: microsofteastuscloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftbaskingridgecloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftbaskingridgecloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftnortheuropecloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: microsoftnortheuropecloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: hamburgdemocloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: hamburgdemocloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonndemocloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonndemocloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: berlindemocloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: berlindemocloudlet
   liveness: LivenessStatic
   flavor:
     name: x1.small

@@ -1,0 +1,42 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- bonnvm: 37.50.143.102
+- berlinvm: 80.187.128.26
+- hamburgvm: 80.187.132.20
+- dockerimage: "registry.mobiledgex.net:5003/edgemesh/supernode"
+
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: edgemeshsupernode.bonn.tdg.mobiledgex.net
+    type: A
+    content: "{{bonnvm}}"
+  - name: edgemeshsupernode.berlin.tdg.mobiledgex.net
+    type: A
+    content: "{{berlinvm}}"
+  - name: edgemeshsupernode.hamburg.tdg.mobiledgex.net
+    type: A
+    content: "{{hamburgvm}}"
+
+
+sampleapps:
+- sampleapplocal:
+    name: edgemeshsupernode-bonn
+  hostname: "{{bonnvm}}"
+  volumemounts: 
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: edgemeshsupernode-berlin
+  hostname: "{{berlinvm}}"
+  volumemounts:
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: edgemeshsupernode-hamburg
+  hostname: "{{hamburgvm}}"
+  volumemounts:
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
