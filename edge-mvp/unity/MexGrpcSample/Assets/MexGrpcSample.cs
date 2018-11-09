@@ -3,6 +3,7 @@
 using Grpc.Core;
 using System;
 using System.Net;
+using System.Text;
 
 using DistributedMatchEngine;
 
@@ -21,10 +22,6 @@ public class TokenException : Exception
 
 public class MexGrpcSample : MonoBehaviour
 {
-
-    // Simple tracking for test. These don't change much per call:
-    Loc location;
-    System.Guid uuid;
     string sessionCookie;
     string token;
     string authToken = ""; // MEX Developer supplied and updated authToken.
@@ -35,7 +32,7 @@ public class MexGrpcSample : MonoBehaviour
     string developerName = "EmptyMatchEngineApp";
     string applicationName = "EmptyMatchEngineApp";
     string appVer = "1.0";
-    
+
     Match_Engine_Api.Match_Engine_ApiClient client;
 
     StatusContainer statusContainer;
@@ -43,6 +40,9 @@ public class MexGrpcSample : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        Environment.SetEnvironmentVariable("GRPC_TRACE", "api");
+        Environment.SetEnvironmentVariable("GRPC_VERBOSITY", "debug");
+        Grpc.Core.GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
         statusContainer = GameObject.Find("/UICanvas/SampleOutput").GetComponent<StatusContainer>();
         RunSampleFlow();
     }
@@ -54,10 +54,8 @@ public class MexGrpcSample : MonoBehaviour
     }
 
 
-    public void RunSampleFlow() {
-
-        uuid = System.Guid.NewGuid();
-        location = getLocation();
+    public void RunSampleFlow()
+    {
         string uri = dmeHost + ":" + dmePort;
 
         // Channel:
@@ -70,11 +68,13 @@ public class MexGrpcSample : MonoBehaviour
 
         var registerClientRequest = CreateRegisterClientRequest(developerName, applicationName, appVer, getCarrierName(), "");
         var regReply = client.RegisterClient(registerClientRequest);
+        this.authToken = registerClientRequest.AuthToken; // Developer supplied.
 
         Console.WriteLine("RegisterClient Reply: " + regReply);
+
         Console.WriteLine("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
-        //statusTarget.Post("RegisterClient Reply: " + regReply);
-        statusContainer.Post("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
+        statusContainer.Post("RegisterClient TokenServerURI: " + regReply);
+        this.authToken = registerClientRequest.AuthToken;
 
 
         // Store sessionCookie, for later use in future requests.
@@ -94,12 +94,34 @@ public class MexGrpcSample : MonoBehaviour
         Console.WriteLine("VerifyLocation Accuracy: " + verifyResponse.GPSLocationAccuracyKM);
         statusContainer.Post("VerifyLocation Status: " + verifyResponse.GpsLocationStatus);
         statusContainer.Post("VerifyLocation Accuracy: " + verifyResponse.GPSLocationAccuracyKM);
-
+        var vrSb = new StringBuilder();
+        vrSb.Append("VerifyLocation Status:")
+            .Append(", Status: " + verifyResponse.ToString());
+        statusContainer.Post(vrSb.ToString());
 
         // Straight blocking GRPC call:
         var findCloudletResponse = FindCloudlet();
         Console.WriteLine("FindCloudlet Status: " + findCloudletResponse.Status);
-        statusContainer.Post("FindCloudlet Status: " + findCloudletResponse.Status);
+        Console.WriteLine("FindCloudlet FQDN Location: " + findCloudletResponse.FQDN);
+
+        var strBuilder = new StringBuilder();
+        strBuilder.Append("FindCloudlet: ")
+                  .Append(", Version: " + findCloudletResponse.Ver)
+                  .Append(", Location Found Status: " + findCloudletResponse.Status)
+                  .Append(", Location of cloudlet. Latitude: " + findCloudletResponse.CloudletLocation.Lat)
+                  .Append(", Longitude: " + findCloudletResponse.CloudletLocation.Long)
+                  .Append(", Cloudlet FQDN: " + findCloudletResponse.FQDN + "\n");
+
+        Google.Protobuf.Collections.RepeatedField<AppPort> ports = findCloudletResponse.Ports;
+        foreach (AppPort appPort in findCloudletResponse.Ports)
+        {
+            strBuilder.Append(", AppPort: Protocol: " + appPort.Proto)
+                      .Append(", AppPort: Internal Port: " + appPort.InternalPort)
+                      .Append(", AppPort: Public Port: " + appPort.PublicPort)
+                      .Append(", AppPort: Public Path: " + appPort.PublicPath);
+        }
+        statusContainer.Post(strBuilder.ToString());
+
     }
 
     RegisterClientRequest CreateRegisterClientRequest(string devName, string appName, string appVers, string carrierName, string anAuthToken)
@@ -118,13 +140,16 @@ public class MexGrpcSample : MonoBehaviour
 
     VerifyLocationRequest CreateVerifyLocationRequest(string carrierName, Loc gpsLocation)
     {
+        if (this.token == null) {
+            Console.WriteLine("Missing TOKEN!!!!!!");
+        }
         var request = new VerifyLocationRequest
         {
             Ver = 1,
             SessionCookie = sessionCookie,
             CarrierName = carrierName,
             GpsLocation = gpsLocation,
-            VerifyLocToken = ""
+            VerifyLocToken = this.token
         };
         return request;
     }

@@ -1,7 +1,7 @@
 # Makefile
 
 ABSPATH :=$(shell grealpath ../..)
-GRPCTOOLS_VERSION := Grpc.Tools.1.15.0
+GRPCTOOLS_VERSION := Grpc.Tools.1.16.0
 TEMP_DIR := packages/$(GRPCTOOLS_VERSION)/tmp
 CURL_URL := https://www.nuget.org/api/v2/package/Grpc.Tools
 PROTOC := protoc
