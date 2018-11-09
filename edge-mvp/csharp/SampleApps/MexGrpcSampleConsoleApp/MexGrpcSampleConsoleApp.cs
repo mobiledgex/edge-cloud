@@ -97,7 +97,7 @@ namespace MexGrpcSampleConsoleApp
       // Blocking GRPC call:
       var findCloudletResponse = FindCloudlet();
       Console.WriteLine("FindCloudlet Status: " + findCloudletResponse.Status);
-      Console.WriteLine("FindCloudlet FQDN Location: " + findCloudletResponse.FQDN);
+      Console.WriteLine("FindCloudlet Response: " + findCloudletResponse);
     }
 
 
