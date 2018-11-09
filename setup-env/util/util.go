@@ -119,10 +119,11 @@ type TokSimProcess struct {
 }
 type SampleAppProcess struct {
 	process.SampleAppLocal
-	Args        []string
-	Hostname    string
-	Command     string
-	DockerImage string
+	Args         []string
+	Hostname     string
+	Command      string
+	VolumeMounts []string
+	DockerImage  string
 }
 type InfluxProcess struct {
 	process.InfluxLocal
