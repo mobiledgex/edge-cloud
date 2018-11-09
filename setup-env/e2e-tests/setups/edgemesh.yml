@@ -1,0 +1,42 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- buckhornvm: 37.50.143.102
+- beaconvm: 80.187.128.26
+- hawkinsvm: 80.187.132.20
+- dockerimage: "registry.mobiledgex.net:5003/edgemesh/supernode"
+
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: edgemeshsupernode.buckhorn.gddt.mobiledgex.net
+    type: A
+    content: "{{buckhornvm}}"
+  - name: edgemeshsupernode.beacon.gddt.mobiledgex.net
+    type: A
+    content: "{{beaconvm}}"
+  - name: edgemeshsupernode.hawkins.gddt.mobiledgex.net
+    type: A
+    content: "{{hawkinsvm}}"
+
+
+sampleapps:
+- sampleapplocal:
+    name: edgemeshsupernode-buckhorn
+  hostname: "{{buckhornvm}}"
+  volumemounts: 
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: edgemeshsupernode-beacon
+  hostname: "{{beaconvm}}"
+  volumemounts:
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
+
+- sampleapplocal:
+    name: edgemeshsupernode-hawkins
+  hostname: "{{hawkinsvm}}"
+  volumemounts:
+    - /data:/usr/local/etc/edgemesh
+  dockerimage: "{{dockerimage}}"
