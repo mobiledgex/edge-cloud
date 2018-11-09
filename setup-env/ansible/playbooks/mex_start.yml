@@ -255,6 +255,7 @@
        name: "{{ item.sampleapplocal.name }}"
        entrypoint: "{{ item.command }}" 
        network_mode: host
+       volumes: "{{ item.volumemounts }}"
     when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command != ""
     with_items:
        -  "{{ sampleapps }}"
@@ -265,6 +266,7 @@
        image: "{{ item.dockerimage }}"
        name: "{{ item.sampleapplocal.name }}"
        network_mode: host
+       volumes: "{{ item.volumemounts }}"
     when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command == ""
     with_items:
        -  "{{ sampleapps }}"
