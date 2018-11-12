@@ -24,8 +24,7 @@ type dmeAppInst struct {
 	location dme.Loc
 	id       uint64
 	// Ports and L7 Paths
-	ports         []dme.AppPort
-	authPublicKey string
+	ports []dme.AppPort
 }
 
 type dmeAppInsts struct {
@@ -107,7 +106,6 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.location = appInst.CloudletLoc
 		cNew.id = appInst.Key.Id
 		cNew.ports = appInst.MappedPorts
-		cNew.authPublicKey = appInst.AuthPublicKey
 		app.carriers[carrierName].insts[cNew.cloudletKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.appKey.Name,
