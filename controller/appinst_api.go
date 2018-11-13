@@ -260,17 +260,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.CloudletLoc = dme.Loc{}
 		}
 
-		// cache app path in app inst
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return errors.New("Specified app not found")
 		}
-		in.ImagePath = app.ImagePath
-		in.ImageType = app.ImageType
-		in.Config = app.Config
 		in.IpAccess = app.IpAccess
-		in.AppTemplate = app.AppTemplate
-		in.AuthPublicKey = app.AuthPublicKey
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -411,9 +405,7 @@ func (s *AppInstApi) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	// don't allow updates to cached fields
 	if in.Fields != nil {
 		for _, field := range in.Fields {
-			if field == edgeproto.AppInstFieldImagePath {
-				return errors.New("Cannot specify image path as it is inherited from specified app")
-			} else if strings.HasPrefix(field, edgeproto.AppInstFieldCloudletLoc) {
+			if strings.HasPrefix(field, edgeproto.AppInstFieldCloudletLoc) {
 				return errors.New("Cannot specify cloudlet location fields as they are inherited from specified cloudlet")
 			}
 		}

@@ -11,6 +11,7 @@ import (
 //ControllerData contains cache data for controller
 type ControllerData struct {
 	CRMRootLB            *MEXRootLB
+	AppCache             edgeproto.AppCache
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
@@ -25,6 +26,7 @@ type ControllerData struct {
 // NewControllerData creates a new instance to track data from the controller
 func NewControllerData() *ControllerData {
 	cd := &ControllerData{}
+	edgeproto.InitAppCache(&cd.AppCache)
 	edgeproto.InitAppInstCache(&cd.AppInstCache)
 	edgeproto.InitCloudletCache(&cd.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&cd.AppInstInfoCache)
@@ -265,6 +267,13 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			return
 		}
 	}
+	app := edgeproto.App{}
+	found = cd.AppCache.Get(&key.AppKey, &app)
+	if !found {
+		log.DebugLog(log.DebugLevelMexos, "App not found for AppInst", "key", key)
+		return
+	}
+
 	// do request
 	log.DebugLog(log.DebugLevelMexos, "appInstChanged", "appInst", appInst)
 	if appInst.State == edgeproto.TrackedState_CreateRequested {
@@ -305,7 +314,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
 				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
 			}
-			err = MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			err = MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
 
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
@@ -348,7 +357,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
 				return
 			}
-			err = MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst)
+			err = MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)

@@ -150,8 +150,6 @@ appinstances:
         name: dmuus
       name: dmuus-cloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   mappedports:
   - proto: LProtoTCP
     internalport: 80
@@ -190,8 +188,6 @@ appinstances:
         name: dmuus
       name: dmuus-cloud-2
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   mappedports:
   - proto: LProtoTCP
     internalport: 80

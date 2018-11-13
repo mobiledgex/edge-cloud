@@ -13,11 +13,13 @@ import (
 func TestVerifyLoc(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
-	appInsts := dmetest.GenerateAppInsts()
 
 	// add all data
-	for _, inst := range appInsts {
-		addApp(inst)
+	for _, app := range dmetest.GenerateApps() {
+		addApp(app)
+	}
+	for _, inst := range dmetest.GenerateAppInsts() {
+		addAppInst(inst)
 	}
 	serv := server{}
 	// test verify location

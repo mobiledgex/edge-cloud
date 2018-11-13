@@ -15,24 +15,28 @@ import (
 func TestAddRemove(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
+	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
 	tbl := dmeAppTbl
 
 	// add all data, check that number of instances matches
-	for _, inst := range appInsts {
+	for _, inst := range apps {
 		addApp(inst)
+	}
+	for _, inst := range appInsts {
+		addAppInst(inst)
 	}
 	checkAllData(t, appInsts)
 
 	// re-add data, counts should remain unchanged
 	for _, inst := range appInsts {
-		addApp(inst)
+		addAppInst(inst)
 	}
 	checkAllData(t, appInsts)
 
 	// delete one data, check new counts
-	removeApp(appInsts[0])
+	removeAppInst(appInsts[0])
 	remaining := appInsts[1:]
 	checkAllData(t, remaining)
 	serv := server{}
@@ -61,8 +65,8 @@ func TestAddRemove(t *testing.T) {
 	}
 
 	// delete all data
-	for _, inst := range appInsts {
-		removeApp(inst)
+	for _, app := range apps {
+		removeApp(app)
 	}
 	assert.Equal(t, 0, len(tbl.apps))
 }
