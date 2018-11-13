@@ -10,6 +10,7 @@ func NewNotifyHandler(influxQ *InfluxQ) *notify.DefaultHandler {
 	handler.SendFlavor = &flavorApi
 	handler.SendClusterFlavor = &clusterFlavorApi
 	handler.SendClusterInst = &clusterInstApi
+	handler.SendApp = &appApi
 	handler.SendAppInst = &appInstApi
 	handler.SendCloudlet = &cloudletApi
 	handler.RecvAppInstInfo = &appInstInfoApi

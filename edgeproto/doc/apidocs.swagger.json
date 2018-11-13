@@ -1368,14 +1368,6 @@
           "$ref": "#/definitions/edgeprotoLiveness",
           "title": "Liveness of instance (see Liveness)"
         },
-        "image_path": {
-          "type": "string",
-          "title": "URI from which to download image"
-        },
-        "image_type": {
-          "$ref": "#/definitions/edgeprotoImageType",
-          "title": "Image type (see ImageType)"
-        },
         "mapped_ports": {
           "type": "array",
           "items": {
@@ -1383,17 +1375,13 @@
           },
           "description": "For instances accessible via a shared load balancer, defines the external\nports on the shared load balancer that map to the internal ports\nExternal ports should be appended to the Uri for L4 access."
         },
-        "config": {
-          "type": "string",
-          "description": "URI of resource to be used to establish config for App."
-        },
         "flavor": {
           "$ref": "#/definitions/edgeprotoFlavorKey",
           "title": "Flavor defining resource requirements"
         },
         "ip_access": {
           "$ref": "#/definitions/edgeprotoIpAccess",
-          "title": "IP access type"
+          "title": "IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst"
         },
         "state": {
           "$ref": "#/definitions/edgeprotoTrackedState",
@@ -1413,14 +1401,6 @@
         "allocated_ip": {
           "type": "string",
           "title": "allocated IP for dedicated access"
-        },
-        "app_template": {
-          "type": "string",
-          "title": "Template of kubernetes deployment yaml, from App definition"
-        },
-        "auth_public_key": {
-          "type": "string",
-          "title": "public key used in authentication"
         }
       },
       "description": "AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.\nWhen an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.\nMany of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer."
@@ -2286,6 +2266,9 @@
           "type": "integer",
           "format": "int64",
           "title": "Protocol version supported by sender"
+        },
+        "app": {
+          "$ref": "#/definitions/edgeprotoApp"
         },
         "appInst": {
           "$ref": "#/definitions/edgeprotoAppInst"

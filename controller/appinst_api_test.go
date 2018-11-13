@@ -149,9 +149,6 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	filter.Key.AppKey = testutil.AppData[0].Key
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	assert.Nil(t, err, "show app inst data")
-	for _, inst := range show.Data {
-		assert.Equal(t, newPath, inst.Config, "check app inst")
-	}
 	assert.True(t, len(show.Data) > 0, "number of matching app insts")
 
 	// update cloudlet and check that app insts are updated

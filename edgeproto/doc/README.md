@@ -287,18 +287,13 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | uri | [string](#string) |  | URI to connect to this instance |
 | cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instatiated (not specifiable by user) |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
-| image_path | [string](#string) |  | URI from which to download image |
-| image_type | [ImageType](#edgeproto.ImageType) |  | Image type (see ImageType) |
 | mapped_ports | [distributed_match_engine.AppPort](#distributed_match_engine.AppPort) | repeated | For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access. |
-| config | [string](#string) |  | URI of resource to be used to establish config for App. |
 | flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor defining resource requirements |
-| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type |
+| ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst |
 | state | [TrackedState](#edgeproto.TrackedState) |  | Current state of the AppInst on the Cloudlet |
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
 | allocated_ip | [string](#string) |  | allocated IP for dedicated access |
-| app_template | [string](#string) |  | Template of kubernetes deployment yaml, from App definition |
-| auth_public_key | [string](#string) |  | public key used in authentication |
 
 
 
@@ -1330,6 +1325,7 @@ NoticyReply is sent from server to client.
 | ----- | ---- | ----- | ----------- |
 | action | [NoticeAction](#edgeproto.NoticeAction) |  | Action to perform |
 | version | [uint32](#uint32) |  | Protocol version supported by sender |
+| app | [App](#edgeproto.App) |  |  |
 | appInst | [AppInst](#edgeproto.AppInst) |  |  |
 | cloudlet | [Cloudlet](#edgeproto.Cloudlet) |  |  |
 | flavor | [Flavor](#edgeproto.Flavor) |  |  |

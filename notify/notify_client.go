@@ -47,6 +47,7 @@ type Client struct {
 }
 
 type ClientRecvAllMaps struct {
+	Apps           map[edgeproto.AppKey]struct{}
 	AppInsts       map[edgeproto.AppInstKey]struct{}
 	Cloudlets      map[edgeproto.CloudletKey]struct{}
 	Flavors        map[edgeproto.FlavorKey]struct{}
@@ -71,6 +72,12 @@ type SendClusterInstInfoHandler interface {
 type SendNodeHandler interface {
 	GetAllKeys(keys map[edgeproto.NodeKey]struct{})
 	Get(key *edgeproto.NodeKey, buf *edgeproto.Node) bool
+}
+
+type RecvAppHandler interface {
+	Update(in *edgeproto.App, rev int64)
+	Delete(in *edgeproto.App, rev int64)
+	Prune(keys map[edgeproto.AppKey]struct{})
 }
 
 type RecvAppInstHandler interface {
@@ -108,6 +115,7 @@ type ClientHandler interface {
 	SendCloudletInfoHandler() SendCloudletInfoHandler
 	SendClusterInstInfoHandler() SendClusterInstInfoHandler
 	SendNodeHandler() SendNodeHandler
+	RecvAppHandler() RecvAppHandler
 	RecvAppInstHandler() RecvAppInstHandler
 	RecvCloudletHandler() RecvCloudletHandler
 	RecvFlavorHandler() RecvFlavorHandler
@@ -127,6 +135,7 @@ type ClientStats struct {
 	NodesSent            uint64
 	MetricsSent          uint64
 	MetricsDropped       uint64
+	AppRecv              uint64
 	AppInstRecv          uint64
 	CloudletRecv         uint64
 	FlavorRecv           uint64
@@ -304,10 +313,12 @@ func (s *Client) negotiate(stream edgeproto.NotifyApi_StreamNoticeClient) error 
 func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 	// server will send all data first
 	allMaps := &ClientRecvAllMaps{}
+	allMaps.Apps = make(map[edgeproto.AppKey]struct{})
 	allMaps.AppInsts = make(map[edgeproto.AppInstKey]struct{})
 	allMaps.Cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	allMaps.Flavors = make(map[edgeproto.FlavorKey]struct{})
 	allMaps.ClusterFlavors = make(map[edgeproto.ClusterFlavorKey]struct{})
+	recvApp := s.handler.RecvAppHandler()
 	recvAppInst := s.handler.RecvAppInstHandler()
 	recvCloudlet := s.handler.RecvCloudletHandler()
 	recvFlavor := s.handler.RecvFlavorHandler()
@@ -322,6 +333,10 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			break
 		}
 		if allMaps != nil && reply.Action == edgeproto.NoticeAction_UPDATE {
+			app := reply.GetApp()
+			if app != nil {
+				allMaps.Apps[app.Key] = struct{}{}
+			}
 			appInst := reply.GetAppInst()
 			if appInst != nil {
 				allMaps.AppInsts[appInst.Key] = struct{}{}
@@ -340,6 +355,9 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 			}
 		}
 		if reply.Action == edgeproto.NoticeAction_SENDALL_END {
+			if recvApp != nil {
+				recvApp.Prune(allMaps.Apps)
+			}
 			if recvAppInst != nil {
 				recvAppInst.Prune(allMaps.AppInsts)
 			}
@@ -409,6 +427,22 @@ func (s *Client) recv(stream edgeproto.NotifyApi_StreamNoticeClient) {
 				recvClusterInst.Delete(clusterInst, 0)
 			}
 			s.stats.ClusterInstRecv++
+			s.stats.Recv++
+		}
+		app := reply.GetApp()
+		if recvApp != nil && app != nil {
+			if reply.Action == edgeproto.NoticeAction_UPDATE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client App update",
+					"key", app.Key.GetKeyString())
+				recvApp.Update(app, 0)
+			} else if reply.Action == edgeproto.NoticeAction_DELETE {
+				log.DebugLog(log.DebugLevelNotify,
+					"client App delete",
+					"key", app.Key.GetKeyString())
+				recvApp.Delete(app, 0)
+			}
+			s.stats.AppRecv++
 			s.stats.Recv++
 		}
 		appInst := reply.GetAppInst()

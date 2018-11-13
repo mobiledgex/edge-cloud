@@ -112,6 +112,18 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	return &inst
 }
 
+func GenerateApps() []*edgeproto.App {
+	apps := make([]*edgeproto.App, 0)
+	for _, a := range Apps {
+		app := &edgeproto.App{}
+		app.Key.Name = a.Name
+		app.Key.DeveloperKey.Name = a.Developer
+		app.Key.Version = a.Vers
+		apps = append(apps, app)
+	}
+	return apps
+}
+
 func GenerateAppInsts() []*edgeproto.AppInst {
 	insts := make([]*edgeproto.AppInst, 0)
 	for _, c := range Cloudlets {
