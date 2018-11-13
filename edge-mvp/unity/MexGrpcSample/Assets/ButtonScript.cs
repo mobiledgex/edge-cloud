@@ -3,11 +3,11 @@
 using UnityEngine.UI;
 
 public class ButtonScript : MonoBehaviour {
-    public Button button1;
+    public Button startGprcButton;
     public MexGrpcSample mexGrpcSample;
 
     void Start () {
-        Button btn = button1.GetComponent<Button>();
+        Button btn = startGprcButton.GetComponent<Button>();
         btn.onClick.AddListener(TaskOnClick);
     }
 
