@@ -8,6 +8,8 @@ import (
 //NewNotifyHandler instantiates new notify handler
 func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
 	h := notify.DefaultHandler{}
+	h.SendApp = &cd.AppCache
+	h.RecvApp = &cd.AppCache
 	h.SendAppInst = &cd.AppInstCache
 	h.RecvAppInst = &cd.AppInstCache
 	h.SendCloudlet = &cd.CloudletCache

@@ -108,8 +108,6 @@ appinstances:
     long: -91
   uri: someapplication1.tmus-cloud-1.mobiledgex.net
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 - key:
@@ -128,8 +126,6 @@ appinstances:
     long: -95
   uri: someapplication1.tmus-cloud-2.mobiledgex.net
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 

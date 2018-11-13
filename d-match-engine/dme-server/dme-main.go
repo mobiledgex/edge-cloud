@@ -251,9 +251,11 @@ func main() {
 
 	if *standalone {
 		fmt.Printf("Running in Standalone Mode with test instances\n")
-		appInsts := dmetest.GenerateAppInsts()
-		for _, inst := range appInsts {
-			addApp(inst)
+		for _, app := range dmetest.GenerateApps() {
+			addApp(app)
+		}
+		for _, inst := range dmetest.GenerateAppInsts() {
+			addAppInst(inst)
 		}
 		listAppinstTbl()
 	} else {
@@ -284,6 +286,7 @@ func main() {
 
 	if *standalone {
 		saServer := standaloneServer{}
+		edgeproto.RegisterAppApiServer(s, &saServer)
 		edgeproto.RegisterAppInstApiServer(s, &saServer)
 	}
 

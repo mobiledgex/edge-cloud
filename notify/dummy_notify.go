@@ -12,6 +12,7 @@ import (
 
 type DummyHandler struct {
 	DefaultHandler
+	AppCache             edgeproto.AppCache
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
@@ -24,6 +25,7 @@ type DummyHandler struct {
 
 func NewDummyHandler() *DummyHandler {
 	h := &DummyHandler{}
+	edgeproto.InitAppCache(&h.AppCache)
 	edgeproto.InitAppInstCache(&h.AppInstCache)
 	edgeproto.InitCloudletCache(&h.CloudletCache)
 	edgeproto.InitAppInstInfoCache(&h.AppInstInfoCache)
@@ -32,6 +34,8 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
+	h.DefaultHandler.SendApp = &h.AppCache
+	h.DefaultHandler.RecvApp = &h.AppCache
 	h.DefaultHandler.SendAppInst = &h.AppInstCache
 	h.DefaultHandler.RecvAppInst = &h.AppInstCache
 	h.DefaultHandler.SendCloudlet = &h.CloudletCache
@@ -52,6 +56,7 @@ func NewDummyHandler() *DummyHandler {
 }
 
 func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
+	s.AppCache.SetNotifyCb(mgr.UpdateApp)
 	s.AppInstCache.SetNotifyCb(mgr.UpdateAppInst)
 	s.CloudletCache.SetNotifyCb(mgr.UpdateCloudlet)
 	s.FlavorCache.SetNotifyCb(mgr.UpdateFlavor)
@@ -68,7 +73,8 @@ func (s *DummyHandler) SetClientCb(cl *Client) {
 type CacheType int
 
 const (
-	AppInstType CacheType = iota
+	AppType     CacheType = iota
+	AppInstType           = iota
 	CloudletType
 	FlavorType
 	ClusterFlavorType
@@ -85,6 +91,8 @@ type WaitForCache interface {
 func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 	var cache WaitForCache
 	switch typ {
+	case AppType:
+		cache = &s.AppCache
 	case AppInstType:
 		cache = &s.AppInstCache
 	case CloudletType:
@@ -127,6 +135,10 @@ func (s *DummyHandler) WaitForClusterInstInfo(count int) {
 
 func (s *DummyHandler) WaitForCloudletInfo(count int) {
 	WaitFor(&s.CloudletInfoCache, count)
+}
+
+func (s *DummyHandler) WaitForApps(count int) {
+	WaitFor(&s.AppCache, count)
 }
 
 func (s *DummyHandler) WaitForAppInsts(count int) {

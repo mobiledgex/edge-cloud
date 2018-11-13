@@ -100,7 +100,6 @@ type ctxCookieKey struct{}
 
 // returns Peer IP or Error
 func VerifyCookie(cookie string) (*CookieKey, error) {
-
 	if cookie == "" {
 		log.DebugLog(log.DebugLevelDmereq, "missing cookie VerifyCookie")
 		return nil, fmt.Errorf("missing cookie")

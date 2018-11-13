@@ -45,19 +45,13 @@ message AppInst {
   ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 6 [(protogen.backend) = true];
-  // URI from which to download image
-  string image_path = 7 [(protogen.backend) = true];
-  // Image type (see ImageType)
-  ImageType image_type = 8 [(protogen.backend) = true];
   // For instances accessible via a shared load balancer, defines the external
   // ports on the shared load balancer that map to the internal ports
   // External ports should be appended to the Uri for L4 access.
   repeated distributed_match_engine.AppPort mapped_ports = 9 [(gogoproto.nullable) = false, (protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
-  // URI of resource to be used to establish config for App.
-  string config = 11 [(protogen.backend) = true];
   // Flavor defining resource requirements
   FlavorKey flavor = 12 [(gogoproto.nullable) = false, (protogen.backend) = true];
-  // IP access type
+  // IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst
   IpAccess ip_access = 13 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Current state of the AppInst on the Cloudlet
   TrackedState state = 14 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
@@ -67,17 +61,13 @@ message AppInst {
   CRMOverride crm_override = 16 [(protocmd.hidetag) = "nocmp"];
   // allocated IP for dedicated access
   string allocated_ip = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
-  // Template of kubernetes deployment yaml, from App definition
-  string app_template = 18 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
- // public key used in authentication
-  string auth_public_key = 19 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];  
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_wait_for_state) = "TrackedState";
-  option (protocmd.noconfig) = "CloudletLoc,ImagePath,ImageType,MappedPorts,MappedPath,ConfigMap,Uri,Liveness,ClusterInstKey,PublicIp,AppTemplate";
+  option (protocmd.noconfig) = "CloudletLoc,MappedPorts,Uri,Liveness,ClusterInstKey,";
 }
 
 service AppInstApi {

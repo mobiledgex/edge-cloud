@@ -578,9 +578,9 @@ spec:
 `
 
 //MEXAppCreateAppInst creates app inst with templated manifest
-func MEXAppCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
+func MEXAppCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, app *edgeproto.App) error {
 	log.DebugLog(log.DebugLevelMexos, "mex create app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
-	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	mf, err := fillAppTemplate(rootLB, appInst, app, clusterInst)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fillAppTemplate error", "error", err)
 		return err
@@ -589,9 +589,9 @@ func MEXAppCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, 
 }
 
 //MEXAppDeleteAppInst deletes app with templated manifest
-func MEXAppDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst) error {
+func MEXAppDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, app *edgeproto.App) error {
 	log.DebugLog(log.DebugLevelMexos, "mex delete app inst", "rootlb", rootLB, "clusterinst", clusterInst, "appinst", appInst)
-	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	mf, err := fillAppTemplate(rootLB, appInst, app, clusterInst)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "fillAppTemplate error", "error", err)
 		return err
@@ -610,12 +610,12 @@ func isValidDeploymentType(appDeploymentType string) bool {
 	return false
 }
 
-func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
+func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgeproto.App, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
 	var data templateFill
 	var err error
 	var mf *Manifest
 	log.DebugLog(log.DebugLevelMexos, "fill app template", "appinst", appInst, "clusterInst", clusterInst)
-	imageType, ok := edgeproto.ImageType_name[int32(appInst.ImageType)]
+	imageType, ok := edgeproto.ImageType_name[int32(app.ImageType)]
 	if !ok {
 		return nil, fmt.Errorf("cannot find imagetype in map")
 	}
@@ -635,9 +635,9 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 	if len(appInst.Key.AppKey.Name) < 3 {
 		log.DebugLog(log.DebugLevelMexos, "warning, very short appkey name", "name", appInst.Key.AppKey.Name)
 	}
-	config, err := ParseAppInstConfig(appInst.Config)
+	config, err := ParseAppInstConfig(app.Config)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing appinst config %s, %v", appInst.Config, err)
+		return nil, fmt.Errorf("error parsing appinst config %s, %v", app.Config, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "appinst config", "config", config)
 	appDeploymentType := ""
@@ -670,13 +670,13 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 			DNSZone:                "mobiledgex.net",
 			Operator:               util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
 			RootLB:                 rootLB.Name,
-			Image:                  appInst.ImagePath,
+			Image:                  app.ImagePath,
 			ImageType:              imageType,
 			ImageFlavor:            appInst.Flavor.Name,
 			ProxyPath:              util.K8SSanitize(appInst.Key.AppKey.Name),
 			AppURI:                 appInst.Uri,
 			IpAccess:               ipAccess,
-			AppTemplate:            appInst.AppTemplate,
+			AppTemplate:            app.AppTemplate,
 			ConfigKind:             config.Kind,
 			ConfigDetailDeployment: config.ConfigDetail.Deployment,
 			ConfigDetailResources:  config.ConfigDetail.Resources,
@@ -705,7 +705,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, clusterInst 
 			Tenant:        appInst.Key.AppKey.Name + "-tenant",
 			Operator:      clusterInst.Key.CloudletKey.OperatorKey.Name,
 			RootLB:        rootLB.Name,
-			Image:         appInst.ImagePath,
+			Image:         app.ImagePath,
 			ImageFlavor:   appInst.Flavor.Name,
 			DNSZone:       "mobiledgex.net",
 			ImageType:     imageType,

@@ -6,6 +6,7 @@ package notify
 // depending upon what the calling code wants to implement.
 type DefaultHandler struct {
 	// server handlers
+	SendApp             SendAppHandler
 	SendAppInst         SendAppInstHandler
 	SendCloudlet        SendCloudletHandler
 	SendFlavor          SendFlavorHandler
@@ -21,11 +22,16 @@ type DefaultHandler struct {
 	SendClusterInstInfo SendClusterInstInfoHandler
 	SendCloudletInfo    SendCloudletInfoHandler
 	SendNode            SendNodeHandler
+	RecvApp             RecvAppHandler
 	RecvAppInst         RecvAppInstHandler
 	RecvCloudlet        RecvCloudletHandler
 	RecvFlavor          RecvFlavorHandler
 	RecvClusterFlavor   RecvClusterFlavorHandler
 	RecvClusterInst     RecvClusterInstHandler
+}
+
+func (s *DefaultHandler) SendAppHandler() SendAppHandler {
+	return s.SendApp
 }
 
 func (s *DefaultHandler) SendAppInstHandler() SendAppInstHandler {
@@ -82,6 +88,10 @@ func (s *DefaultHandler) SendCloudletInfoHandler() SendCloudletInfoHandler {
 
 func (s *DefaultHandler) SendNodeHandler() SendNodeHandler {
 	return s.SendNode
+}
+
+func (s *DefaultHandler) RecvAppHandler() RecvAppHandler {
+	return s.RecvApp
 }
 
 func (s *DefaultHandler) RecvAppInstHandler() RecvAppInstHandler {
