@@ -40,7 +40,7 @@ android {
         main {
             proto {
                 srcDirs '../../../../d-match-engine/dme-proto'
-                srcDirs '../../../thrid_party/googleapis'
+                srcDirs '../../../third_party/googleapis'
             }
             java {
             }

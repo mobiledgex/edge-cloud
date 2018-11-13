@@ -37,22 +37,19 @@ namespace MexGrpcSampleConsoleApp
   class MexGrpcLibApp
   {
     Loc location;
-    System.Guid uuid;
     string sessionCookie;
 
-    string dmeHost = "tdg.dme.mobiledgex.net"; // DME server hostname or ip.
+    string dmeHost = "tdg2.dme.mobiledgex.net"; // DME server hostname or ip.
     int dmePort = 50051; // DME port.
 
     Match_Engine_Api.Match_Engine_ApiClient client;
 
     public void RunSampleFlow()
     {
-
-      uuid = System.Guid.NewGuid();
       location = getLocation();
       string uri = dmeHost + ":" + dmePort;
       string devName = "EmptyMatchEngineApp";
-      string appName = "EMptyMatchEngineApp";
+      string appName = "EmptyMatchEngineApp";
 
       // Channel:
       // TODO: Load from file or iostream, securely generate keys, etc.
@@ -100,7 +97,7 @@ namespace MexGrpcSampleConsoleApp
       // Blocking GRPC call:
       var findCloudletResponse = FindCloudlet();
       Console.WriteLine("FindCloudlet Status: " + findCloudletResponse.Status);
-      Console.WriteLine("FindCloudlet FQDN Location: " + findCloudletResponse.FQDN);
+      Console.WriteLine("FindCloudlet Response: " + findCloudletResponse);
     }
 
 
