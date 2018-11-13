@@ -959,7 +959,7 @@ func StartProcesses(processName string, outputDir string) bool {
 
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name, outputDir)
-			err := dme.Start(logfile, process.WithDebug("locapi,dmedb,dmereq"))
+			err := dme.Start(logfile, process.WithDebug("locapi,dmedb,dmereq,notify"))
 			if err != nil {
 				log.Printf("Error on DME startup: %v", err)
 				return false

@@ -927,33 +927,12 @@ other way to set it, for flexibility, for now it is exposed to the user. </p></t
                 </tr>
               
                 <tr>
-                  <td>image_path</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>URI from which to download image </p></td>
-                </tr>
-              
-                <tr>
-                  <td>image_type</td>
-                  <td><a href="#edgeproto.ImageType">ImageType</a></td>
-                  <td></td>
-                  <td><p>Image type (see ImageType) </p></td>
-                </tr>
-              
-                <tr>
                   <td>mapped_ports</td>
                   <td><a href="#distributed_match_engine.AppPort">distributed_match_engine.AppPort</a></td>
                   <td>repeated</td>
                   <td><p>For instances accessible via a shared load balancer, defines the external
 ports on the shared load balancer that map to the internal ports
 External ports should be appended to the Uri for L4 access. </p></td>
-                </tr>
-              
-                <tr>
-                  <td>config</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>URI of resource to be used to establish config for App. </p></td>
                 </tr>
               
                 <tr>
@@ -967,7 +946,7 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td>ip_access</td>
                   <td><a href="#edgeproto.IpAccess">IpAccess</a></td>
                   <td></td>
-                  <td><p>IP access type </p></td>
+                  <td><p>IP access type. If set to SharedOrDedicated on App, one will be chosen for AppInst </p></td>
                 </tr>
               
                 <tr>
@@ -996,20 +975,6 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>allocated IP for dedicated access </p></td>
-                </tr>
-              
-                <tr>
-                  <td>app_template</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>Template of kubernetes deployment yaml, from App definition </p></td>
-                </tr>
-              
-                <tr>
-                  <td>auth_public_key</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>public key used in authentication </p></td>
                 </tr>
               
             </tbody>
@@ -3280,6 +3245,13 @@ Certs for accessing cloudlet site </p></td>
                   <td><a href="#uint32">uint32</a></td>
                   <td></td>
                   <td><p>Protocol version supported by sender </p></td>
+                </tr>
+              
+                <tr>
+                  <td>app</td>
+                  <td><a href="#edgeproto.App">App</a></td>
+                  <td></td>
+                  <td><p> </p></td>
                 </tr>
               
                 <tr>

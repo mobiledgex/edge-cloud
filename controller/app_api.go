@@ -11,6 +11,7 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -28,12 +29,16 @@ func InitAppApi(sync *Sync) {
 	appApi.sync = sync
 	appApi.store = edgeproto.NewAppStore(sync.store)
 	edgeproto.InitAppCache(&appApi.cache)
+	appApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateApp)
 	sync.RegisterCache(&appApi.cache)
-	appApi.cache.SetUpdatedCb(appApi.UpdatedCb)
 }
 
 func (s *AppApi) HasApp(key *edgeproto.AppKey) bool {
 	return s.cache.HasKey(key)
+}
+
+func (s *AppApi) GetAllKeys(keys map[edgeproto.AppKey]struct{}) {
+	s.cache.GetAllKeys(keys)
 }
 
 func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
@@ -222,31 +227,6 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
-}
-
-func (s *AppApi) UpdatedCb(old *edgeproto.App, new *edgeproto.App) {
-	if old == nil {
-		return
-	}
-	if old.ImagePath != new.ImagePath || old.ImageType != new.ImageType ||
-		old.Config != new.Config || old.AppTemplate != new.AppTemplate {
-		log.DebugLog(log.DebugLevelApi, "updating image path")
-		appInstApi.cache.Mux.Lock()
-		for _, inst := range appInstApi.cache.Objs {
-			if inst.Key.AppKey.Matches(&new.Key) {
-				old := inst
-				inst.ImagePath = new.ImagePath
-				inst.ImageType = new.ImageType
-				inst.Config = new.Config
-				inst.AppTemplate = new.AppTemplate
-				// TODO: update mapped ports if needed
-				if appInstApi.cache.NotifyCb != nil {
-					appInstApi.cache.NotifyCb(&inst.Key, old)
-				}
-			}
-		}
-		appInstApi.cache.Mux.Unlock()
-	}
 }
 
 // GetClusterFlavorForFlavor finds the smallest cluster flavor whose
