@@ -9,25 +9,41 @@ import (
 )
 
 // Implement notify.RecvAppInstHandler
+type AppHandler struct {
+}
+
 type AppInstHandler struct {
 }
 
-func (s *AppInstHandler) Update(in *edgeproto.AppInst, rev int64) {
+func (s *AppHandler) Update(in *edgeproto.App, rev int64) {
 	addApp(in)
 }
 
-func (s *AppInstHandler) Delete(in *edgeproto.AppInst, rev int64) {
+func (s *AppHandler) Delete(in *edgeproto.App, rev int64) {
 	removeApp(in)
 }
 
-func (s *AppInstHandler) Prune(keys map[edgeproto.AppInstKey]struct{}) {
+func (s *AppHandler) Prune(keys map[edgeproto.AppKey]struct{}) {
 	pruneApps(keys)
+}
+
+func (s *AppInstHandler) Update(in *edgeproto.AppInst, rev int64) {
+	addAppInst(in)
+}
+
+func (s *AppInstHandler) Delete(in *edgeproto.AppInst, rev int64) {
+	removeAppInst(in)
+}
+
+func (s *AppInstHandler) Prune(keys map[edgeproto.AppInstKey]struct{}) {
+	pruneAppInsts(keys)
 }
 
 var nodeCache edgeproto.NodeCache
 
 func NewNotifyHandler() *notify.DefaultHandler {
 	handler := notify.DefaultHandler{}
+	handler.RecvApp = &AppHandler{}
 	handler.RecvAppInst = &AppInstHandler{}
 	edgeproto.InitNodeCache(&nodeCache)
 	handler.SendNode = &nodeCache

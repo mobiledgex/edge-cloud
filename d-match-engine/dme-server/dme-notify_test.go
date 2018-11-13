@@ -13,6 +13,7 @@ import (
 func TestNotify(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
 	setupMatchEngine()
+	apps := dmetest.GenerateApps()
 	appInsts := dmetest.GenerateAppInsts()
 
 	// test dummy server sending notices to dme
@@ -29,6 +30,9 @@ func TestNotify(t *testing.T) {
 	client.Start()
 
 	// create data on server side
+	for _, app := range apps {
+		serverHandler.AppCache.Update(app, 0)
+	}
 	for _, appInst := range appInsts {
 		serverHandler.AppInstCache.Update(appInst, 0)
 	}

@@ -43,6 +43,7 @@ func TestNotify(t *testing.T) {
 	// Wait until it's connected
 	clientDME.WaitForConnect(1)
 	clientCRM.WaitForConnect(1)
+	assert.Equal(t, 0, len(dmeHandler.AppCache.Objs), "num Apps")
 	assert.Equal(t, 0, len(dmeHandler.AppInstCache.Objs), "num appInsts")
 	assert.Equal(t, uint64(0), clientDME.stats.Recv, "num updates")
 	assert.Equal(t, NotifyVersion, clientDME.version, "version")
@@ -51,14 +52,25 @@ func TestNotify(t *testing.T) {
 	checkServerConnections(t, &serverMgr, 2)
 
 	// Create some app insts which will trigger updates
+	serverHandler.AppCache.Update(&testutil.AppData[0], 0)
+	serverHandler.AppCache.Update(&testutil.AppData[1], 0)
+	serverHandler.AppCache.Update(&testutil.AppData[2], 0)
+	serverHandler.AppCache.Update(&testutil.AppData[3], 0)
+	serverHandler.AppCache.Update(&testutil.AppData[4], 0)
+	dmeHandler.WaitForAppInsts(5)
+	assert.Equal(t, 5, len(dmeHandler.AppCache.Objs), "num Apps")
+	stats := serverMgr.GetStats(clientDME.GetLocalAddr())
+	assert.Equal(t, uint64(5), stats.AppsSent)
+
+	// Create some app insts which will trigger updates
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[0], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[1], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[2], 0)
 	dmeHandler.WaitForAppInsts(3)
 	assert.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
 	assert.Equal(t, uint64(3), clientDME.stats.AppInstRecv, "app inst updates")
-	assert.Equal(t, uint64(3), clientDME.stats.Recv, "num updates")
-	stats := serverMgr.GetStats(clientDME.GetLocalAddr())
+	assert.Equal(t, uint64(8), clientDME.stats.Recv, "num updates")
+	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	assert.Equal(t, uint64(3), stats.AppInstsSent)
 
 	// Kill connection out from under the code, forcing reconnect
@@ -74,18 +86,20 @@ func TestNotify(t *testing.T) {
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[3], 0)
 	dmeHandler.WaitForAppInsts(4)
 	assert.Equal(t, 4, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(7), clientDME.stats.Recv, "num updates")
+	assert.Equal(t, uint64(17), clientDME.stats.Recv, "num updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	assert.Equal(t, uint64(4), stats.AppInstsSent)
+	assert.Equal(t, uint64(5), stats.AppsSent)
 
 	// Delete an inst
 	serverHandler.AppInstCache.Delete(&testutil.AppInstData[0], 0)
 	dmeHandler.WaitForAppInsts(3)
 	assert.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(8), clientDME.stats.Recv, "num updates")
+	assert.Equal(t, uint64(18), clientDME.stats.Recv, "num updates")
 	assert.Equal(t, uint64(8), clientDME.stats.AppInstRecv, "app inst updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	assert.Equal(t, uint64(5), stats.AppInstsSent)
+	assert.Equal(t, uint64(5), stats.AppsSent)
 
 	// Stop DME, check that server closes connection as well
 	fmt.Println("DME stop")
@@ -155,11 +169,13 @@ func TestNotify(t *testing.T) {
 	crmHandler.WaitForFlavors(3)
 	crmHandler.WaitForClusterFlavors(3)
 	crmHandler.WaitForClusterInsts(2)
+	crmHandler.WaitForApps(1)
 	crmHandler.WaitForAppInsts(2)
 	assert.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
 	assert.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
 	assert.Equal(t, 3, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
 	assert.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
+	assert.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
 	assert.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	serverHandler.FlavorCache.Delete(&testutil.FlavorData[1], 0)
 	serverHandler.ClusterFlavorCache.Delete(&testutil.ClusterFlavorData[1], 0)

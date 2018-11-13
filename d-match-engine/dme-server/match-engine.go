@@ -24,8 +24,7 @@ type dmeAppInst struct {
 	location dme.Loc
 	id       uint64
 	// Ports and L7 Paths
-	ports         []dme.AppPort
-	authPublicKey string
+	ports []dme.AppPort
 }
 
 type dmeAppInsts struct {
@@ -56,32 +55,38 @@ func cloudletKeyEqual(key1 *edgeproto.CloudletKey, key2 *edgeproto.CloudletKey) 
 	return key1.GetKeyString() == key2.GetKeyString()
 }
 
-func addApp(appInst *edgeproto.AppInst) {
-	var cNew *dmeAppInst
-	var app *dmeApp
-	var tbl *dmeApps
-
-	tbl = dmeAppTbl
-	appkey := appInst.Key.AppKey
-	carrierName := appInst.Key.CloudletKey.OperatorKey.Name
+func addApp(in *edgeproto.App) {
+	tbl := dmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
-	_, ok := tbl.apps[appkey]
+	app, ok := tbl.apps[in.Key]
 	if !ok {
-
 		// Key doesn't exists
 		app = new(dmeApp)
 		app.carriers = make(map[string]*dmeAppInsts)
-		app.carriers[carrierName] = new(dmeAppInsts)
-		app.carriers[carrierName].insts = make(map[edgeproto.CloudletKey]*dmeAppInst)
-		app.appKey = appkey
-		app.authPublicKey = appInst.AuthPublicKey
-		tbl.apps[appkey] = app
+		app.appKey = in.Key
+		tbl.apps[in.Key] = app
 		log.DebugLog(log.DebugLevelDmedb, "Adding app",
-			"appName", appkey.Name,
-			"appVersion", appkey.Version)
-	} else {
-		app = tbl.apps[appkey]
+			"key", in.Key)
+	}
+	app.Lock()
+	defer app.Unlock()
+	app.authPublicKey = in.AuthPublicKey
+}
+
+func addAppInst(appInst *edgeproto.AppInst) {
+	var cNew *dmeAppInst
+
+	carrierName := appInst.Key.CloudletKey.OperatorKey.Name
+
+	tbl := dmeAppTbl
+	appkey := appInst.Key.AppKey
+	tbl.Lock()
+	defer tbl.Unlock()
+	app, ok := tbl.apps[appkey]
+	if !ok {
+		log.DebugLog(log.DebugLevelDmedb, "addAppInst: app not found", "key", appInst.Key)
+		return
 	}
 	app.Lock()
 	if _, foundCarrier := app.carriers[carrierName]; foundCarrier {
@@ -107,13 +112,11 @@ func addApp(appInst *edgeproto.AppInst) {
 		cNew.location = appInst.CloudletLoc
 		cNew.id = appInst.Key.Id
 		cNew.ports = appInst.MappedPorts
-		cNew.authPublicKey = appInst.AuthPublicKey
 		app.carriers[carrierName].insts[cNew.cloudletKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.appKey.Name,
 			"appVersion", app.appKey.Version,
 			"cloudletKey", appInst.Key.CloudletKey,
-			"authPublicKey", appInst.AuthPublicKey,
 			"uri", appInst.Uri,
 			"lat", cNew.location.Lat,
 			"long", cNew.location.Long)
@@ -121,7 +124,19 @@ func addApp(appInst *edgeproto.AppInst) {
 	app.Unlock()
 }
 
-func removeApp(appInst *edgeproto.AppInst) {
+func removeApp(in *edgeproto.App) {
+	tbl := dmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+	app, ok := tbl.apps[in.Key]
+	if ok {
+		app.Lock()
+		delete(tbl.apps, in.Key)
+		app.Unlock()
+	}
+}
+
+func removeAppInst(appInst *edgeproto.AppInst) {
 	var app *dmeApp
 	var tbl *dmeApps
 
@@ -161,7 +176,21 @@ func removeApp(appInst *edgeproto.AppInst) {
 }
 
 // pruneApps removes any data that was not sent by the controller.
-func pruneApps(appInsts map[edgeproto.AppInstKey]struct{}) {
+func pruneApps(apps map[edgeproto.AppKey]struct{}) {
+	tbl := dmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+	for key, app := range tbl.apps {
+		app.Lock()
+		if _, found := apps[key]; !found {
+			delete(tbl.apps, key)
+		}
+		app.Unlock()
+	}
+}
+
+// pruneApps removes any data that was not sent by the controller.
+func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 
 	tbl := dmeAppTbl

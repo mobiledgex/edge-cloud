@@ -37,6 +37,11 @@ var NotifyRetryTime time.Duration = 250 * time.Millisecond
 
 const NotifyVersion uint32 = 1
 
+type SendAppHandler interface {
+	GetAllKeys(keys map[edgeproto.AppKey]struct{})
+	Get(key *edgeproto.AppKey, buf *edgeproto.App) bool
+}
+
 type SendAppInstHandler interface {
 	GetAllKeys(keys map[edgeproto.AppInstKey]struct{})
 	Get(key *edgeproto.AppInstKey, buf *edgeproto.AppInst) bool
@@ -94,6 +99,7 @@ type RecvNodeHandler interface {
 }
 
 type ServerHandler interface {
+	SendAppHandler() SendAppHandler
 	SendAppInstHandler() SendAppInstHandler
 	SendCloudletHandler() SendCloudletHandler
 	SendFlavorHandler() SendFlavorHandler
@@ -107,6 +113,7 @@ type ServerHandler interface {
 }
 
 type ServerStats struct {
+	AppsSent           uint64
 	AppInstsSent       uint64
 	CloudletsSent      uint64
 	FlavorsSent        uint64
@@ -123,6 +130,7 @@ type ServerStats struct {
 // they are changed.
 type Server struct {
 	peerAddr       string
+	apps           map[edgeproto.AppKey]struct{}
 	appInsts       map[edgeproto.AppInstKey]struct{}
 	cloudlets      map[edgeproto.CloudletKey]struct{}
 	flavors        map[edgeproto.FlavorKey]struct{}
@@ -208,6 +216,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 
 	server := Server{}
 	server.peerAddr = peerAddr
+	server.apps = make(map[edgeproto.AppKey]struct{})
 	server.appInsts = make(map[edgeproto.AppInstKey]struct{})
 	server.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 	server.flavors = make(map[edgeproto.FlavorKey]struct{})
@@ -289,6 +298,19 @@ func (mgr *ServerMgr) GetStats(peerAddr string) *ServerStats {
 	return stats
 }
 
+func (mgr *ServerMgr) UpdateApp(key *edgeproto.AppKey, old *edgeproto.App) {
+	mgr.mux.Lock()
+	defer mgr.mux.Unlock()
+	for _, server := range mgr.table {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorDME {
+			// Apps to crm triggered by AppInst update
+			continue
+		}
+
+		server.UpdateApp(key)
+	}
+}
+
 func (mgr *ServerMgr) UpdateAppInst(key *edgeproto.AppInstKey, old *edgeproto.AppInst) {
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
@@ -353,6 +375,13 @@ func (s *Server) wakeup() {
 	}
 }
 
+func (s *Server) UpdateApp(key *edgeproto.AppKey) {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.apps[*key] = struct{}{}
+	s.wakeup()
+}
+
 func (s *Server) UpdateAppInst(key *edgeproto.AppInstKey) {
 	s.mux.Lock()
 	defer s.mux.Unlock()
@@ -361,6 +390,8 @@ func (s *Server) UpdateAppInst(key *edgeproto.AppInstKey) {
 			// not tracked by this client
 			return
 		}
+		// for crm, also trigger sending app
+		s.apps[key.AppKey] = struct{}{}
 	}
 	s.appInsts[*key] = struct{}{}
 	s.wakeup()
@@ -446,23 +477,27 @@ func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error 
 func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 	var err error
 	var notice edgeproto.NoticeReply
+	var noticeApp edgeproto.NoticeReply_App
 	var noticeAppInst edgeproto.NoticeReply_AppInst
 	var noticeCloudlet edgeproto.NoticeReply_Cloudlet
 	var noticeFlavor edgeproto.NoticeReply_Flavor
 	var noticeClusterFlavor edgeproto.NoticeReply_ClusterFlavor
 	var noticeClusterInst edgeproto.NoticeReply_ClusterInst
+	var app edgeproto.App
 	var appInst edgeproto.AppInst
 	var cloudlet edgeproto.Cloudlet
 	var flavor edgeproto.Flavor
 	var clusterflavor edgeproto.ClusterFlavor
 	var clusterInst edgeproto.ClusterInst
 
+	noticeApp.App = &app
 	noticeAppInst.AppInst = &appInst
 	noticeCloudlet.Cloudlet = &cloudlet
 	noticeFlavor.Flavor = &flavor
 	noticeClusterFlavor.ClusterFlavor = &clusterflavor
 	noticeClusterInst.ClusterInst = &clusterInst
 	sendAll := true
+	sendApp := s.handler.SendAppHandler()
 	sendAppInst := s.handler.SendAppInstHandler()
 	sendCloudlet := s.handler.SendCloudletHandler()
 	sendFlavor := s.handler.SendFlavorHandler()
@@ -486,16 +521,18 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 		s.mux.Lock()
 		if len(s.appInsts) == 0 && len(s.cloudlets) == 0 &&
 			len(s.flavors) == 0 && len(s.clusterInsts) == 0 &&
-			len(s.clusterflavors) == 0 && !s.done &&
-			!sendAll && stream.Context().Err() == nil {
+			len(s.clusterflavors) == 0 && len(s.apps) == 0 &&
+			!s.done && !sendAll && stream.Context().Err() == nil {
 			s.mux.Unlock()
 			continue
 		}
+		apps := s.apps
 		appInsts := s.appInsts
 		cloudlets := s.cloudlets
 		flavors := s.flavors
 		clusterflavors := s.clusterflavors
 		clusterInsts := s.clusterInsts
+		s.apps = make(map[edgeproto.AppKey]struct{})
 		s.appInsts = make(map[edgeproto.AppInstKey]struct{})
 		s.cloudlets = make(map[edgeproto.CloudletKey]struct{})
 		s.flavors = make(map[edgeproto.FlavorKey]struct{})
@@ -520,6 +557,10 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 				// triggered when registering a new CloudletInfo
 				// on receive, so there is no need to send all here.
 			} else {
+				if sendApp != nil {
+					sendApp.GetAllKeys(apps)
+					log.DebugLog(log.DebugLevelNotify, "all apps", "count", len(apps))
+				}
 				if sendAppInst != nil {
 					sendAppInst.GetAllKeys(appInsts)
 					log.DebugLog(log.DebugLevelNotify, "all AppInsts", "count", len(appInsts))
@@ -608,6 +649,33 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			break
 		}
 
+		if sendApp != nil {
+			// send apps
+			notice.Data = &noticeApp
+			for key, _ := range apps {
+				found := sendApp.Get(&key, &app)
+				if found {
+					notice.Action = edgeproto.NoticeAction_UPDATE
+				} else {
+					notice.Action = edgeproto.NoticeAction_DELETE
+					app.Key = key
+				}
+				log.DebugLog(log.DebugLevelNotify, "Send App",
+					"client", s.peerAddr,
+					"action", notice.Action,
+					"key", app.Key.GetKeyString())
+				err = stream.Send(&notice)
+				if err != nil {
+					break
+				}
+				s.stats.AppsSent++
+			}
+		}
+		if err != nil {
+			s.stats.SendErrors++
+			break
+		}
+
 		if sendAppInst != nil {
 			// send appInsts
 			notice.Data = &noticeAppInst
@@ -672,6 +740,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 			}
 			sendAll = false
 		}
+		apps = nil
 		appInsts = nil
 		cloudlets = nil
 		flavors = nil

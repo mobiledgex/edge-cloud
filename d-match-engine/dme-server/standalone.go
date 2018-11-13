@@ -2,22 +2,58 @@ package main
 
 import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"golang.org/x/net/context"
 )
 
 type standaloneServer struct{}
 
-func (s *standaloneServer) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
+func (s *standaloneServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	addApp(in)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *standaloneServer) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	removeApp(in)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *standaloneServer) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	addApp(in)
+	return &edgeproto.Result{}, nil
+}
+
+func (s *standaloneServer) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) error {
+	app := edgeproto.App{}
+
+	tbl := dmeAppTbl
+	tbl.Lock()
+	defer tbl.Unlock()
+
+	for key, a := range tbl.apps {
+		a.Lock()
+		app.Key = key
+		app.AuthPublicKey = a.authPublicKey
+		a.Unlock()
+		err := cb.Send(&app)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *standaloneServer) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) error {
+	addAppInst(in)
 	return nil
 }
 
 func (s *standaloneServer) DeleteAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_DeleteAppInstServer) error {
-	removeApp(in)
+	removeAppInst(in)
 	return nil
 }
 
 func (s *standaloneServer) UpdateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstApi_UpdateAppInstServer) error {
-	addApp(in)
+	addAppInst(in)
 	return nil
 }
 

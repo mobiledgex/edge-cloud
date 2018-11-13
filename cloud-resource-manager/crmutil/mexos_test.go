@@ -97,8 +97,6 @@ var AppInstData = []edgeproto.AppInst{ //nolint
 		ClusterInstKey: ClusterInstData[0].Key,
 		CloudletLoc:    CloudletData[0].Location,
 		Uri:            "https://mexlb.tdg.mobiledgex.net/pokemon-go", //XXX
-		ImagePath:      AppData[0].ImagePath,
-		ImageType:      AppData[0].ImageType,
 		Flavor:         FlavorData[0].Key,
 	},
 }
@@ -210,15 +208,21 @@ func TestGenDeployment(t *testing.T) {
 			Name: "c1.medium",
 		},
 	}
+	app := &edgeproto.App{
+		Key: edgeproto.AppKey{
+			DeveloperKey: edgeproto.DeveloperKey{
+				Name: "dev1",
+			},
+			Name:    "app1",
+			Version: "1.0.0",
+		},
+		ImagePath: "registry.mobiledgex.net:5000/dev1/app1/image",
+		ImageType: edgeproto.ImageType_ImageTypeDocker,
+		Config:    "app1 -d -v",
+	}
 	appInst := &edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey: edgeproto.AppKey{
-				DeveloperKey: edgeproto.DeveloperKey{
-					Name: "dev1",
-				},
-				Name:    "app1",
-				Version: "1.0.0",
-			},
+			AppKey: app.Key,
 			CloudletKey: edgeproto.CloudletKey{
 				OperatorKey: edgeproto.OperatorKey{
 					Name: "op1",
@@ -228,8 +232,6 @@ func TestGenDeployment(t *testing.T) {
 		},
 		ClusterInstKey: clusterInst.Key,
 		Uri:            "cloudlet1.op1.mobiledgex.net",
-		ImagePath:      "registry.mobiledgex.net:5000/dev1/app1/image",
-		ImageType:      edgeproto.ImageType_ImageTypeDocker,
 		MappedPorts: []dme.AppPort{
 			dme.AppPort{
 				Proto:        dme.LProto_LProtoUDP,
@@ -248,10 +250,9 @@ func TestGenDeployment(t *testing.T) {
 				PublicPath:   "dev1/app11000/http8080",
 			},
 		},
-		Config:   "app1 -d -v",
 		IpAccess: edgeproto.IpAccess_IpAccessShared,
 	}
-	mf, err := fillAppTemplate(rootLB, appInst, clusterInst)
+	mf, err := fillAppTemplate(rootLB, appInst, app, clusterInst)
 	fmt.Printf("mf: %v\n", mf)
 	if err != nil {
 		t.Error(err)
