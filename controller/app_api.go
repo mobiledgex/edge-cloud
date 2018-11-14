@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -99,6 +100,37 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
+	if in.Deployment == "" {
+		in.Deployment, err = cloudcommon.GetDeploymentType(in.ImageType)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
+	if !cloudcommon.IsValidDeploymentType(in.Deployment) {
+		return &edgeproto.Result{}, fmt.Errorf("invalid deployment, must be one of %v", cloudcommon.ValidDeployments)
+	}
+
+	if in.Config != "" {
+		configStr, err := cloudcommon.GetAppConfig(in)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+		in.Config = configStr
+		// do a quick parse just to make sure it's valid
+		_, err = cloudcommon.ParseAppConfig(in.Config)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
+
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	// Save manifest to app in case it was a remote target.
+	// Manifest is required on app delete and we'll be in trouble
+	// if remote target is unreachable or changed at that time.
+	in.DeploymentManifest = deploymf
 
 	// make sure cluster exists
 	// This is a separate STM to avoid ordering issues between

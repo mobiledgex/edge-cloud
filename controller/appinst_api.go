@@ -13,6 +13,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type AppInstApi struct {
@@ -323,15 +325,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				ii := 0
 				p := RootLBSharedPortBegin
 				for ; p < 65000 && ii < len(ports); p++ {
-					if ports[ii].Proto == dme.LProto_LProtoHTTP {
-						// L7 access, don't need to allocate
-						// a public port, but rather an L7 path.
-						ports[ii].PublicPort = int32(cloudcommon.RootLBL7Port)
-						ports[ii].PublicPath = cloudcommon.GetL7Path(&in.Key, &ports[ii])
-						ii++
-						continue
-					}
-					// L4 access
+					// each kubernetes service gets its own
+					// nginx proxy that runs in the rootLB,
+					// and http ports are also mapped to it,
+					// so there is no shared L7 port + path.
 					if _, found := cloudletRefs.RootLbPorts[p]; found {
 						continue
 					}
@@ -355,6 +352,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if len(ports) > 0 {
 			in.MappedPorts = ports
+			setPortFQDNPrefixes(in, &app)
 		}
 
 		// TODO: Make sure resources are available
@@ -638,4 +636,42 @@ func freeIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgepro
 		inst.AllocatedIp = ""
 		*refsChanged = true
 	}
+}
+
+func setPortFQDNPrefixes(in *edgeproto.AppInst, app *edgeproto.App) error {
+	// For Kubernetes deployments, the CRM sets the
+	// FQDN based on the service (load balancer) name
+	// in the kubernetes deployment manifest.
+	// The Controller needs to set a matching
+	// FQDNPrefix on the ports so the DME can tell the
+	// App Client the correct FQDN for a given port.
+	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
+		if err != nil {
+			return fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
+		}
+		for ii, _ := range in.MappedPorts {
+			err = setPortFQDNPrefix(&in.MappedPorts[ii], objs)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) error {
+	for _, obj := range objs {
+		ksvc, ok := obj.(*v1.Service)
+		if !ok {
+			continue
+		}
+		for _, kp := range ksvc.Spec.Ports {
+			if kp.TargetPort.IntValue() == int(port.InternalPort) {
+				port.FQDNPrefix = cloudcommon.FQDNPrefix(ksvc.Name)
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("no service for app port %d found in manifest", port.InternalPort)
 }

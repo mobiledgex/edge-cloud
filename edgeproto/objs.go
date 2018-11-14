@@ -350,6 +350,18 @@ func GetLProto(s string) (dme.LProto, error) {
 	return 0, fmt.Errorf("%s is not a supported Protocol", s)
 }
 
+func LProtoStr(proto dme.LProto) (string, error) {
+	switch proto {
+	case dme.LProto_LProtoTCP:
+		return "tcp", nil
+	case dme.LProto_LProtoUDP:
+		return "udp", nil
+	case dme.LProto_LProtoHTTP:
+		return "http", nil
+	}
+	return "", fmt.Errorf("Invalid proto %d", proto)
+}
+
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
 	strs := strings.Split(ports, ",")

@@ -39,7 +39,7 @@ message AppInst {
   AppInstKey key = 2 [(gogoproto.nullable) = false];
   // Cached location of the cloudlet
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
-  // URI to connect to this instance
+  // Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
   string uri = 4 [(protogen.backend) = true];
   // Cluster instance on which this is instatiated (not specifiable by user)
   ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
