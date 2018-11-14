@@ -251,13 +251,14 @@ func AddFlavorManifest(mf *Manifest) error {
 }
 
 func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
-	log.DebugLog(log.DebugLevelMexos, "get cluster flavor", "flavor", flavor)
-	for _, flav := range AvailableClusterFlavors {
-		if flav.Name == flavor {
-			return flav, nil
+	log.DebugLog(log.DebugLevelMexos, "get cluster flavor details", "cluster flavor", flavor)
+	for _, af := range AvailableClusterFlavors {
+		if af.Name == flavor {
+			log.DebugLog(log.DebugLevelMexos, "using cluster flavor", "cluster flavor", af)
+			return af, nil
 		}
 	}
-	return nil, fmt.Errorf("unsupported flavor %s", flavor)
+	return nil, fmt.Errorf("unsupported cluster flavor %s", flavor)
 }
 
 //mexCreateClusterKubernetes creates a cluster of nodes. It can take a while, so call from a goroutine.
@@ -272,10 +273,11 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 		return fmt.Errorf("can't create kubernetes cluster, rootLB is null")
 	}
 	if mf.Spec.Flavor == "" {
-		return fmt.Errorf("empty flavor")
+		return fmt.Errorf("empty cluster flavor")
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create cluster", "mf", mf)
 		return err
 	}
 	//TODO more than one networks
@@ -322,6 +324,7 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 		mf.Metadata.Tags,
 		mf.Metadata.Tenant,
 		1,
+		cf.PlatformFlavor,
 	)
 	if err != nil {
 		return fmt.Errorf("can't create k8s master, %v", err)
@@ -335,7 +338,9 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 			mf.Spec.NetworkScheme,
 			mf.Metadata.Tags,
 			mf.Metadata.Tenant,
-			i)
+			i,
+			cf.PlatformFlavor,
+		)
 		if err != nil {
 			return fmt.Errorf("can't create k8s node, %v", err)
 		}
@@ -661,13 +666,20 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 		if strings.Contains(mf.Spec.Options, "dhcp") {
 			netspec = netspec + ",dhcp"
 		}
+		cf, err := GetClusterFlavor(mf.Spec.Flavor)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create rootLB", "mf", mf, "rootLB", rootLB)
+			return fmt.Errorf("cannot create rootLB invalid platform flavor %v", err)
+		}
 		log.DebugLog(log.DebugLevelMexos, "creating agent node kvm", "mf", mf, "netspec", netspec)
-		err := oscli.CreateMEXKVM(rootLB.Name,
+		err = oscli.CreateMEXKVM(rootLB.Name,
 			"mex-agent-node", //important, don't change
 			netspec,
 			mf.Metadata.Tags,
 			mf.Metadata.Tenant,
-			1)
+			1,
+			cf.PlatformFlavor,
+		)
 		if err != nil {
 			log.DebugLog(log.DebugLevelMexos, "error while creating mex kvm", "error", err)
 			return err
@@ -1266,7 +1278,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "invalid flavor kind can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
+		log.DebugLog(log.DebugLevelMexos, "invalid cluster flavor, can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
 		return false, err
 	}
 	name, err := FindClusterWithKey(mf.Spec.Key)
@@ -1568,32 +1580,26 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		serr := oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
 		if serr != nil {
 			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
-			continue
 		}
 		serr = oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
 		if serr != nil {
 			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
-			continue
 		}
 		serr = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
 		if serr != nil {
 			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
-			continue
 		}
 		serr = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
 		if serr != nil {
 			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
-			continue
 		}
-		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
+		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR, strings.ToLower(port.Proto), sr, port.InternalPort)
 		if serr != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "internal port", port.InternalPort)
-			continue
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", allowedClientCIDR, "securityrule", sr, "internal port", port.InternalPort)
 		}
-		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
+		serr = oscli.AddSecurityRuleCIDR(allowedClientCIDR, strings.ToLower(port.Proto), sr, port.PublicPort)
 		if serr != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port.InternalPort)
-			continue
+			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", allowedClientCIDR, "securityrule", sr, "port", port.InternalPort)
 		}
 	}
 	if len(mf.Spec.Ports) > 0 {
