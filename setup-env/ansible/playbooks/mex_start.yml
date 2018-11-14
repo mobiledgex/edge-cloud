@@ -184,7 +184,7 @@
        pull: yes
        image: "{{ item.dockerimage }}"
        name: "{{ item.locapisimlocal.name }}"
-       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}  --geofile {{ item.locapisimlocal.geofile }} --country {{ item.locapisimlocal.country }}"
+       command: "loc-api-sim --port {{ item.locapisimlocal.port }} --file {{ locsim_remote_data_file }}  --geo {{ locsim_remote_data_dir }}/geocode.dat --country {{ item.locapisimlocal.country }}"
        network_mode: host
        volumes:
          - /var/tmp:/var/tmp
@@ -255,6 +255,7 @@
        name: "{{ item.sampleapplocal.name }}"
        entrypoint: "{{ item.command }}" 
        network_mode: host
+       restart_policy: unless-stopped
        volumes: "{{ item.volumemounts }}"
     when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command != ""
     with_items:
@@ -266,6 +267,7 @@
        image: "{{ item.dockerimage }}"
        name: "{{ item.sampleapplocal.name }}"
        network_mode: host
+       restart_policy: unless-stopped
        volumes: "{{ item.volumemounts }}"
     when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command == ""
     with_items:

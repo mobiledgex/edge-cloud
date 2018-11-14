@@ -29,6 +29,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		"appName", key.Name,
 		"appVersion", key.Version,
 		"devName", key.DeveloperKey.Name,
+		"VerifyLocToken", mreq.VerifyLocToken,
 		"GpsLocation", mreq.GpsLocation)
 
 	if mreq.GpsLocation == nil || (mreq.GpsLocation.Lat == 0 && mreq.GpsLocation.Long == 0) {
