@@ -10,7 +10,6 @@ import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.protobuf.ByteString;
 import com.mobiledgex.matchingengine.util.MexLocation;
 
 import org.junit.Assert;
@@ -24,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import distributed_match_engine.AppClient;
-import distributed_match_engine.LocOuterClass;
 import io.grpc.StatusRuntimeException;
 
 import static junit.framework.Assert.assertTrue;
@@ -37,14 +35,14 @@ public class LimitsTest {
     public static final long GRPC_TIMEOUT_MS = 10000;
 
     public static final String developerName = "EmptyMatchEngineApp";
-    public static final String applicationname = "EmptyMatchEngineApp";
+    public static final String applicationName = "EmptyMatchEngineApp";
 
     FusedLocationProviderClient fusedLocationClient;
 
-    public static String hostOverride = "tdg.dme.mobiledgex.net";
+    public static String hostOverride = "tdg2.dme.mobiledgex.net";
     public static int portOverride = 50051;
 
-    public boolean useHostOverride = false;
+    public boolean useHostOverride = true;
 
 
     @Before
@@ -117,7 +115,7 @@ public class LimitsTest {
     // Every call needs registration to be called first at some point.
     public void registerClient(Context context, String carrierName, MatchingEngine me) {
         AppClient.RegisterClientReply registerReply;
-        AppClient.RegisterClientRequest regRequest = MockUtils.createMockRegisterClientRequest(developerName, me.getAppName(context), me);
+        AppClient.RegisterClientRequest regRequest = MockUtils.createMockRegisterClientRequest(developerName, applicationName, me);
         try {
             if (useHostOverride) {
                 registerReply = me.registerClient(regRequest, hostOverride, portOverride, GRPC_TIMEOUT_MS);
@@ -211,16 +209,16 @@ public class LimitsTest {
             }
 
         } catch (IOException ioe) {
-            Log.i(TAG, Log.getStackTraceString(ioe));
+            Log.e(TAG, Log.getStackTraceString(ioe));
             assertFalse("basicLatencyTest: IOException!", true);
         } catch (ExecutionException ee) {
-            Log.i(TAG, Log.getStackTraceString(ee));
+            Log.e(TAG, Log.getStackTraceString(ee));
             assertFalse("basicLatencyTest: ExecutionException!", true);
         } catch (StatusRuntimeException sre) {
-            Log.i(TAG, Log.getStackTraceString(sre));
+            Log.e(TAG, Log.getStackTraceString(sre));
             assertFalse("basicLatencyTest: StatusRuntimeException!", true);
         }  catch (InterruptedException ie) {
-            Log.i(TAG, Log.getStackTraceString(ie));
+            Log.e(TAG, Log.getStackTraceString(ie));
             assertFalse("basicLatencyTest: InterruptedException!", true);
         } finally {
             enableMockLocation(context,false);

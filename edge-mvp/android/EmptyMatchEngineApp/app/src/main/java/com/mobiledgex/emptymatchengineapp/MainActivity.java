@@ -127,20 +127,6 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
             Intent intent = new Intent(this, FirstTimeUseActivity.class);
             startActivity(intent);
         }
-
-        // Set, or create create an App generated UUID for use in MatchingEngine, if there isn't one:
-        String uuidKey = getResources().getString(R.string.preference_mex_user_uuid);
-        String currentUUID = prefs.getString(uuidKey, "");
-        if (currentUUID.isEmpty()) {
-            UUID uuid = mMatchingEngine.createUUID();
-            mMatchingEngine.setUUID(uuid);
-            prefs.edit()
-                    .putString(uuidKey, uuid.toString())
-                    .apply();
-        } else {
-            mMatchingEngine.setUUID(UUID.fromString(currentUUID));
-        }
-
     }
 
     @Override

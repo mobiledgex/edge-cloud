@@ -204,8 +204,6 @@ appinstances:
         name: tmus
       name: tmus-cloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 - key:
@@ -231,8 +229,6 @@ appinstances:
         name: tmus
       name: tmus-cloud-2
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 - key:
@@ -248,8 +244,6 @@ appinstances:
     id: 123
   uri: someapp1.acmeappco.com
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 - key:
@@ -265,8 +259,6 @@ appinstances:
     id: 123
   uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
-  imagepath: dummyvalue
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 

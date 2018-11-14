@@ -142,18 +142,6 @@ public class MatchingEngine {
         return threadpool.submit(task);
     }
 
-    public UUID getUUID() {
-        return mUUID;
-    }
-
-    public void setUUID(UUID uuid) {
-        mUUID = uuid;
-    }
-
-    public UUID createUUID() {
-        return UUID.randomUUID();
-    }
-
     void setSessionCookie(String sessionCookie) {
         this.mSessionCookie = sessionCookie;
     }

@@ -41,7 +41,6 @@ var AppInstIn edgeproto.AppInst
 var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
 var AppInstInLiveness string
-var AppInstInImageType string
 var AppInstInMappedPortsProto string
 var AppInstInIpAccess string
 var AppInstInState string
@@ -100,7 +99,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 18)
+	s := make([]string, 0, 13)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -128,8 +127,6 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
 	s = append(s, in.ClusterInstKey.CloudletKey.Name)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
-	s = append(s, in.ImagePath)
-	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
 	if in.MappedPorts == nil {
 		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
 	}
@@ -137,7 +134,6 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
 	s = append(s, in.MappedPorts[0].PublicPath)
-	s = append(s, in.Config)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
@@ -147,13 +143,11 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
-	s = append(s, in.AppTemplate)
-	s = append(s, in.AuthPublicKey)
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 18)
+	s := make([]string, 0, 13)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -174,21 +168,16 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
 	s = append(s, "ClusterInstKey-CloudletKey-Name")
 	s = append(s, "Liveness")
-	s = append(s, "ImagePath")
-	s = append(s, "ImageType")
 	s = append(s, "MappedPorts-Proto")
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
 	s = append(s, "MappedPorts-PublicPath")
-	s = append(s, "Config")
 	s = append(s, "Flavor-Name")
 	s = append(s, "IpAccess")
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
-	s = append(s, "AppTemplate")
-	s = append(s, "AuthPublicKey")
 	return s
 }
 
@@ -334,12 +323,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AppTemplate = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AuthPublicKey = ""
 	}
 }
 
@@ -731,16 +714,11 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ImagePath, "imagepath", "", "ImagePath")
-	AppInstNoConfigFlagSet.StringVar(&AppInstInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
-	AppInstFlagSet.StringVar(&AppInstIn.Config, "config", "", "Config")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.AppTemplate, "apptemplate", "", "AppTemplate")
-	AppInstFlagSet.StringVar(&AppInstIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -835,15 +813,6 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
 	}
-	if AppInstNoConfigFlagSet.Lookup("imagepath").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "7")
-	}
-	if AppInstNoConfigFlagSet.Lookup("imagetype").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "8")
-	}
-	if AppInstFlagSet.Lookup("config").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "11")
-	}
 	if AppInstFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
@@ -858,12 +827,6 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("allocatedip").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "17")
-	}
-	if AppInstNoConfigFlagSet.Lookup("apptemplate").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "18")
-	}
-	if AppInstFlagSet.Lookup("authpublickey").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "19")
 	}
 }
 
@@ -906,18 +869,6 @@ func parseAppInstEnums() error {
 			AppInstIn.Liveness = edgeproto.Liveness(2)
 		default:
 			return errors.New("Invalid value for AppInstInLiveness")
-		}
-	}
-	if AppInstInImageType != "" {
-		switch AppInstInImageType {
-		case "ImageTypeUnknown":
-			AppInstIn.ImageType = edgeproto.ImageType(0)
-		case "ImageTypeDocker":
-			AppInstIn.ImageType = edgeproto.ImageType(1)
-		case "ImageTypeQCOW":
-			AppInstIn.ImageType = edgeproto.ImageType(2)
-		default:
-			return errors.New("Invalid value for AppInstInImageType")
 		}
 	}
 	if AppInstInMappedPortsProto != "" {

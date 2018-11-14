@@ -27,6 +27,8 @@ namespace DistributedMatchEngine {
     static readonly grpc::Marshaller<global::DistributedMatchEngine.DynamicLocGroupReply> __Marshaller_distributed_match_engine_DynamicLocGroupReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.DynamicLocGroupReply.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DistributedMatchEngine.AppInstListRequest> __Marshaller_distributed_match_engine_AppInstListRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.AppInstListRequest.Parser.ParseFrom);
     static readonly grpc::Marshaller<global::DistributedMatchEngine.AppInstListReply> __Marshaller_distributed_match_engine_AppInstListReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.AppInstListReply.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::DistributedMatchEngine.FqdnListRequest> __Marshaller_distributed_match_engine_FqdnListRequest = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.FqdnListRequest.Parser.ParseFrom);
+    static readonly grpc::Marshaller<global::DistributedMatchEngine.FqdnListReply> __Marshaller_distributed_match_engine_FqdnListReply = grpc::Marshallers.Create((arg) => global::Google.Protobuf.MessageExtensions.ToByteArray(arg), global::DistributedMatchEngine.FqdnListReply.Parser.ParseFrom);
 
     static readonly grpc::Method<global::DistributedMatchEngine.RegisterClientRequest, global::DistributedMatchEngine.RegisterClientReply> __Method_RegisterClient = new grpc::Method<global::DistributedMatchEngine.RegisterClientRequest, global::DistributedMatchEngine.RegisterClientReply>(
         grpc::MethodType.Unary,
@@ -70,6 +72,13 @@ namespace DistributedMatchEngine {
         __Marshaller_distributed_match_engine_AppInstListRequest,
         __Marshaller_distributed_match_engine_AppInstListReply);
 
+    static readonly grpc::Method<global::DistributedMatchEngine.FqdnListRequest, global::DistributedMatchEngine.FqdnListReply> __Method_GetFqdnList = new grpc::Method<global::DistributedMatchEngine.FqdnListRequest, global::DistributedMatchEngine.FqdnListReply>(
+        grpc::MethodType.Unary,
+        __ServiceName,
+        "GetFqdnList",
+        __Marshaller_distributed_match_engine_FqdnListRequest,
+        __Marshaller_distributed_match_engine_FqdnListReply);
+
     /// <summary>Service descriptor</summary>
     public static global::Google.Protobuf.Reflection.ServiceDescriptor Descriptor
     {
@@ -105,6 +114,11 @@ namespace DistributedMatchEngine {
       }
 
       public virtual global::System.Threading.Tasks.Task<global::DistributedMatchEngine.AppInstListReply> GetAppInstList(global::DistributedMatchEngine.AppInstListRequest request, grpc::ServerCallContext context)
+      {
+        throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
+      }
+
+      public virtual global::System.Threading.Tasks.Task<global::DistributedMatchEngine.FqdnListReply> GetFqdnList(global::DistributedMatchEngine.FqdnListRequest request, grpc::ServerCallContext context)
       {
         throw new grpc::RpcException(new grpc::Status(grpc::StatusCode.Unimplemented, ""));
       }
@@ -230,6 +244,22 @@ namespace DistributedMatchEngine {
       {
         return CallInvoker.AsyncUnaryCall(__Method_GetAppInstList, null, options, request);
       }
+      public virtual global::DistributedMatchEngine.FqdnListReply GetFqdnList(global::DistributedMatchEngine.FqdnListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetFqdnList(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual global::DistributedMatchEngine.FqdnListReply GetFqdnList(global::DistributedMatchEngine.FqdnListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.BlockingUnaryCall(__Method_GetFqdnList, null, options, request);
+      }
+      public virtual grpc::AsyncUnaryCall<global::DistributedMatchEngine.FqdnListReply> GetFqdnListAsync(global::DistributedMatchEngine.FqdnListRequest request, grpc::Metadata headers = null, global::System.DateTime? deadline = null, global::System.Threading.CancellationToken cancellationToken = default(global::System.Threading.CancellationToken))
+      {
+        return GetFqdnListAsync(request, new grpc::CallOptions(headers, deadline, cancellationToken));
+      }
+      public virtual grpc::AsyncUnaryCall<global::DistributedMatchEngine.FqdnListReply> GetFqdnListAsync(global::DistributedMatchEngine.FqdnListRequest request, grpc::CallOptions options)
+      {
+        return CallInvoker.AsyncUnaryCall(__Method_GetFqdnList, null, options, request);
+      }
       /// <summary>Creates a new instance of client from given <c>ClientBaseConfiguration</c>.</summary>
       protected override Match_Engine_ApiClient NewInstance(ClientBaseConfiguration configuration)
       {
@@ -247,7 +277,8 @@ namespace DistributedMatchEngine {
           .AddMethod(__Method_VerifyLocation, serviceImpl.VerifyLocation)
           .AddMethod(__Method_GetLocation, serviceImpl.GetLocation)
           .AddMethod(__Method_AddUserToGroup, serviceImpl.AddUserToGroup)
-          .AddMethod(__Method_GetAppInstList, serviceImpl.GetAppInstList).Build();
+          .AddMethod(__Method_GetAppInstList, serviceImpl.GetAppInstList)
+          .AddMethod(__Method_GetFqdnList, serviceImpl.GetFqdnList).Build();
     }
 
   }
