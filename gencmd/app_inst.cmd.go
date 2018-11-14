@@ -5,9 +5,7 @@ package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -118,10 +116,10 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Speed), 'e', -1, 32))
 	if in.CloudletLoc.Timestamp == nil {
-		in.CloudletLoc.Timestamp = &google_protobuf.Timestamp{}
+		in.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_CloudletLoc_TimestampTime := time.Unix(in.CloudletLoc.Timestamp.Seconds, int64(in.CloudletLoc.Timestamp.Nanos))
-	s = append(s, _CloudletLoc_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Nanos), 10))
 	s = append(s, in.Uri)
 	s = append(s, in.ClusterInstKey.ClusterKey.Name)
 	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
@@ -162,7 +160,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CloudletLoc-Altitude")
 	s = append(s, "CloudletLoc-Course")
 	s = append(s, "CloudletLoc-Speed")
-	s = append(s, "CloudletLoc-Timestamp")
+	s = append(s, "CloudletLoc-Timestamp-Seconds")
+	s = append(s, "CloudletLoc-Timestamp-Nanos")
 	s = append(s, "Uri")
 	s = append(s, "ClusterInstKey-ClusterKey-Name")
 	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
@@ -706,7 +705,7 @@ func init() {
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Altitude, "cloudletloc-altitude", 0, "CloudletLoc.Altitude")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Course, "cloudletloc-course", 0, "CloudletLoc.Course")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Speed, "cloudletloc-speed", 0, "CloudletLoc.Speed")
-	AppInstIn.CloudletLoc.Timestamp = &google_protobuf.Timestamp{}
+	AppInstIn.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")

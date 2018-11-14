@@ -31,14 +31,13 @@ It has these top-level messages:
 	AppPort
 	DlgMessage
 	DlgReply
+	Timestamp
 	Loc
 */
 package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -244,10 +243,10 @@ func FindCloudletRequestSlicer(in *distributed_match_engine.FindCloudletRequest)
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
 	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
-	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -263,7 +262,8 @@ func FindCloudletRequestHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Altitude")
 	s = append(s, "GpsLocation-Course")
 	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "GpsLocation-Timestamp-Seconds")
+	s = append(s, "GpsLocation-Timestamp-Nanos")
 	return s
 }
 
@@ -316,10 +316,10 @@ func FindCloudletReplySlicer(in *distributed_match_engine.FindCloudletReply) []s
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLocation.Speed), 'e', -1, 32))
 	if in.CloudletLocation.Timestamp == nil {
-		in.CloudletLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.CloudletLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_CloudletLocation_TimestampTime := time.Unix(in.CloudletLocation.Timestamp.Seconds, int64(in.CloudletLocation.Timestamp.Nanos))
-	s = append(s, _CloudletLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.CloudletLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.CloudletLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -339,7 +339,8 @@ func FindCloudletReplyHeaderSlicer() []string {
 	s = append(s, "CloudletLocation-Altitude")
 	s = append(s, "CloudletLocation-Course")
 	s = append(s, "CloudletLocation-Speed")
-	s = append(s, "CloudletLocation-Timestamp")
+	s = append(s, "CloudletLocation-Timestamp-Seconds")
+	s = append(s, "CloudletLocation-Timestamp-Nanos")
 	return s
 }
 
@@ -382,10 +383,10 @@ func VerifyLocationRequestSlicer(in *distributed_match_engine.VerifyLocationRequ
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
 	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
-	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
 	s = append(s, in.VerifyLocToken)
 	return s
 }
@@ -402,7 +403,8 @@ func VerifyLocationRequestHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Altitude")
 	s = append(s, "GpsLocation-Course")
 	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "GpsLocation-Timestamp-Seconds")
+	s = append(s, "GpsLocation-Timestamp-Nanos")
 	s = append(s, "VerifyLocToken")
 	return s
 }
@@ -527,10 +529,10 @@ func GetLocationReplySlicer(in *distributed_match_engine.GetLocationReply) []str
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.NetworkLocation.Speed), 'e', -1, 32))
 	if in.NetworkLocation.Timestamp == nil {
-		in.NetworkLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.NetworkLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_NetworkLocation_TimestampTime := time.Unix(in.NetworkLocation.Timestamp.Seconds, int64(in.NetworkLocation.Timestamp.Nanos))
-	s = append(s, _NetworkLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.NetworkLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.NetworkLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -547,7 +549,8 @@ func GetLocationReplyHeaderSlicer() []string {
 	s = append(s, "NetworkLocation-Altitude")
 	s = append(s, "NetworkLocation-Course")
 	s = append(s, "NetworkLocation-Speed")
-	s = append(s, "NetworkLocation-Timestamp")
+	s = append(s, "NetworkLocation-Timestamp-Seconds")
+	s = append(s, "NetworkLocation-Timestamp-Nanos")
 	return s
 }
 
@@ -590,10 +593,10 @@ func AppInstListRequestSlicer(in *distributed_match_engine.AppInstListRequest) [
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
 	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
-	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -609,7 +612,8 @@ func AppInstListRequestHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Altitude")
 	s = append(s, "GpsLocation-Course")
 	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "GpsLocation-Timestamp-Seconds")
+	s = append(s, "GpsLocation-Timestamp-Nanos")
 	return s
 }
 
@@ -704,10 +708,10 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
 	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_GpsLocation_TimestampTime := time.Unix(in.GpsLocation.Timestamp.Seconds, int64(in.GpsLocation.Timestamp.Nanos))
-	s = append(s, _GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.Distance), 'e', -1, 32))
 	if in.Appinstances == nil {
 		in.Appinstances = make([]*distributed_match_engine.Appinstance, 1)
@@ -742,7 +746,8 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Altitude")
 	s = append(s, "GpsLocation-Course")
 	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp")
+	s = append(s, "GpsLocation-Timestamp-Seconds")
+	s = append(s, "GpsLocation-Timestamp-Nanos")
 	s = append(s, "Distance")
 	s = append(s, "Appinstances-AppName")
 	s = append(s, "Appinstances-AppVers")
@@ -800,10 +805,10 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Speed), 'e', -1, 32))
 	if in.Cloudlets[0].GpsLocation.Timestamp == nil {
-		in.Cloudlets[0].GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+		in.Cloudlets[0].GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_Cloudlets_0__GpsLocation_TimestampTime := time.Unix(in.Cloudlets[0].GpsLocation.Timestamp.Seconds, int64(in.Cloudlets[0].GpsLocation.Timestamp.Nanos))
-	s = append(s, _Cloudlets_0__GpsLocation_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GpsLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GpsLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].Distance), 'e', -1, 32))
 	if in.Cloudlets[0].Appinstances == nil {
 		in.Cloudlets[0].Appinstances = make([]*distributed_match_engine.Appinstance, 1)
@@ -840,7 +845,8 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Cloudlets-GpsLocation-Altitude")
 	s = append(s, "Cloudlets-GpsLocation-Course")
 	s = append(s, "Cloudlets-GpsLocation-Speed")
-	s = append(s, "Cloudlets-GpsLocation-Timestamp")
+	s = append(s, "Cloudlets-GpsLocation-Timestamp-Seconds")
+	s = append(s, "Cloudlets-GpsLocation-Timestamp-Nanos")
 	s = append(s, "Cloudlets-Distance")
 	s = append(s, "Cloudlets-Appinstances-AppName")
 	s = append(s, "Cloudlets-Appinstances-AppVers")
@@ -1408,7 +1414,7 @@ func init() {
 	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
 	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
 	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	FindCloudletRequestIn.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	FindCloudletRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	FindCloudletRequestFlagSet.Int64Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
 	FindCloudletRequestFlagSet.Int32Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
 	VerifyLocationRequestFlagSet.Uint32Var(&VerifyLocationRequestIn.Ver, "ver", 0, "Ver")
@@ -1422,7 +1428,7 @@ func init() {
 	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
 	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
 	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	VerifyLocationRequestIn.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	VerifyLocationRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	VerifyLocationRequestFlagSet.Int64Var(&VerifyLocationRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
 	VerifyLocationRequestFlagSet.Int32Var(&VerifyLocationRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.VerifyLocToken, "verifyloctoken", "", "VerifyLocToken")
@@ -1440,7 +1446,7 @@ func init() {
 	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
 	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
 	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	AppInstListRequestIn.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+	AppInstListRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	AppInstListRequestFlagSet.Int64Var(&AppInstListRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
 	AppInstListRequestFlagSet.Int32Var(&AppInstListRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
 	FqdnListRequestFlagSet.Uint32Var(&FqdnListRequestIn.Ver, "ver", 0, "Ver")
