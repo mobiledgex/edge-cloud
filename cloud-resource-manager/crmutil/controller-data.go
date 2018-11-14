@@ -52,8 +52,9 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 		info.State = edgeproto.CloudletState_CloudletStateErrors
 		return
 	}
-
-	//XXX only return a subset and only max vals
+	//TODO: we currently only return a subset and only max vals. When telemetry available on openstack return more
+	//  possibly return quota information as well. The 'info' structure is too rigid. We need a way to return
+	//  platform specific generic variable content information.
 	for _, l := range limits {
 		if l.Name == "MaxTotalCores" {
 			info.OsMaxVcores = uint64(l.Value)
