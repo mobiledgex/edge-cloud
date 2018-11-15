@@ -82,12 +82,6 @@ operators:
 
 developers:
 - key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
     name: AcmeAppCo1
   username: acmeapp
   passhash: 8136f09c17354891c642b9b9f1722c34
@@ -99,28 +93,14 @@ developers:
   passhash: aaaabbbccdfdfad444449941
   address: 1 Samstreet, Samsung Town, South Korea
   email: samsung@xxxx.com
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
 
 cloudlets:
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-2
-  accessuri: cloud2.tmo
-  location:
-    lat: 35
-    long: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: azure
-    name: azure-cloud-9
-  accessuri: cloud9.azure
-  location:
-    lat: 32
-    long: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
 - key:
     operatorkey:
       name: gcp
@@ -141,8 +121,41 @@ cloudlets:
     long: -99
   ipsupport: IpSupportDynamic
   numdynamicips: 100
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-2
+  accessuri: cloud2.tmo
+  location:
+    lat: 35
+    long: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: azure
+    name: azure-cloud-9
+  accessuri: cloud9.azure
+  location:
+    lat: 32
+    long: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
+- key:
+    developerkey:
+      name: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  ipaccess: IpAccessDedicatedOrShared
+  accessports: tcp:64000
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
 - key:
     developerkey:
       name: AcmeAppCo
@@ -166,19 +179,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
-- key:
-    developerkey:
-      name: Samsung
-    name: SamsungEnablingLayer
-    version: "1.0"
-  imagepath: dummyvalue
-  imagetype: ImageTypeDocker
-  ipaccess: IpAccessDedicatedOrShared
-  accessports: tcp:64000
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: SmallCluster
+  packagename: com.acme.someapplication1
 
 appinstances:
 - key:
