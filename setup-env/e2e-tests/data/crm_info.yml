@@ -1,5 +1,10 @@
 flavors:
 - key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+- key:
     name: x1.tiny
   ram: 1024
   vcpus: 1
@@ -9,11 +14,6 @@ flavors:
   ram: 2048
   vcpus: 2
   disk: 2
-- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
 
 clusterflavors:
 - key:
@@ -125,6 +125,72 @@ apps:
     name: x1.small
   cluster:
     name: autoclustersomeapplication1
+  deployment: kubernetes
+  deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication1-tcp
+      labels:
+        run: someapplication1
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: tcp80
+        protocol: TCP
+        port: 80
+        targetPort: 80
+      - name: http443
+        protocol: TCP
+        port: 443
+        targetPort: 443
+      selector:
+        run: someapplication1
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: someapplication1-udp
+      labels:
+        run: someapplication1
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp10002
+        protocol: UDP
+        port: 10002
+        targetPort: 10002
+      selector:
+        run: someapplication1
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: someapplication1-deployment
+    spec:
+      selector:
+        matchLabels:
+          run: someapplication1
+      replicas: 2
+      template:
+        metadata:
+          labels:
+            run: someapplication1
+        spec:
+          volumes:
+          imagePullSecrets:
+          - name: mexregistrysecret
+          containers:
+          - name: someapplication1
+            image: mobiledgex_AcmeAppCo/someapplication1:1.0
+            imagePullPolicy: Always
+            ports:
+            - containerPort: 80
+            - containerPort: 443
+            - containerPort: 10002
+            command:
+            - ""
+  deploymentgenerator: kubernetes-basic
 
 appinstances:
 - key:
@@ -154,12 +220,15 @@ appinstances:
   - proto: LProtoTCP
     internalport: 80
     publicport: 80
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
   ipaccess: IpAccessDedicatedOrShared
@@ -192,12 +261,15 @@ appinstances:
   - proto: LProtoTCP
     internalport: 80
     publicport: 80
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
+    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002
+    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
   ipaccess: IpAccessDedicatedOrShared

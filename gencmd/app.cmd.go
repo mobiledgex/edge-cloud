@@ -142,7 +142,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 15)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -157,13 +157,17 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
 	s = append(s, in.Cluster.Name)
-	s = append(s, in.AppTemplate)
 	s = append(s, in.AuthPublicKey)
+	s = append(s, in.Command)
+	s = append(s, in.Annotations)
+	s = append(s, in.Deployment)
+	s = append(s, in.DeploymentManifest)
+	s = append(s, in.DeploymentGenerator)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 15)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -175,8 +179,12 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
 	s = append(s, "Cluster-Name")
-	s = append(s, "AppTemplate")
 	s = append(s, "AuthPublicKey")
+	s = append(s, "Command")
+	s = append(s, "Annotations")
+	s = append(s, "Deployment")
+	s = append(s, "DeploymentManifest")
+	s = append(s, "DeploymentGenerator")
 	return s
 }
 
@@ -201,6 +209,24 @@ func AppWriteOutputOne(obj *edgeproto.App) {
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func AppHideTags(in *edgeproto.App) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Deployment = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeploymentManifest = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DeploymentGenerator = ""
 	}
 }
 
@@ -376,6 +402,7 @@ func ShowApp(in *edgeproto.App) error {
 		if err != nil {
 			return fmt.Errorf("ShowApp recv failed: %s", err.Error())
 		}
+		AppHideTags(obj)
 		objs = append(objs, obj)
 	}
 	if len(objs) == 0 {
@@ -417,8 +444,12 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
-	AppFlagSet.StringVar(&AppIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppFlagSet.StringVar(&AppIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
+	AppFlagSet.StringVar(&AppIn.Command, "command", "", "Command")
+	AppFlagSet.StringVar(&AppIn.Annotations, "annotations", "", "Annotations")
+	AppFlagSet.StringVar(&AppIn.Deployment, "deployment", "", "Deployment")
+	AppFlagSet.StringVar(&AppIn.DeploymentManifest, "deploymentmanifest", "", "DeploymentManifest")
+	AppFlagSet.StringVar(&AppIn.DeploymentGenerator, "deploymentgenerator", "", "DeploymentGenerator")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -464,11 +495,23 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("cluster-name").Changed {
 		AppIn.Fields = append(AppIn.Fields, "10.1")
 	}
-	if AppFlagSet.Lookup("apptemplate").Changed {
-		AppIn.Fields = append(AppIn.Fields, "11")
-	}
 	if AppFlagSet.Lookup("authpublickey").Changed {
 		AppIn.Fields = append(AppIn.Fields, "12")
+	}
+	if AppFlagSet.Lookup("command").Changed {
+		AppIn.Fields = append(AppIn.Fields, "13")
+	}
+	if AppFlagSet.Lookup("annotations").Changed {
+		AppIn.Fields = append(AppIn.Fields, "14")
+	}
+	if AppFlagSet.Lookup("deployment").Changed {
+		AppIn.Fields = append(AppIn.Fields, "15")
+	}
+	if AppFlagSet.Lookup("deploymentmanifest").Changed {
+		AppIn.Fields = append(AppIn.Fields, "16")
+	}
+	if AppFlagSet.Lookup("deploymentgenerator").Changed {
+		AppIn.Fields = append(AppIn.Fields, "17")
 	}
 }
 

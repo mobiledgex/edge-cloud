@@ -65,6 +65,14 @@ func GetAppFQDN(key *edgeproto.AppInstKey) string {
 	return fmt.Sprintf("%s%s%s.%s.%s.%s", dev, app, ver, loc, oper, AppDNSRoot)
 }
 
+func FQDNPrefix(svcName string) string {
+	return svcName + "."
+}
+
+func ServiceFQDN(svcName, baseFQDN string) string {
+	return fmt.Sprintf("%s%s", FQDNPrefix(svcName), baseFQDN)
+}
+
 // GetL7Path gets the L7 path for L7 access behind the "shared"
 // global Load Balancer (reverse proxy). This only the path and
 // does not include the FQDN and port.
