@@ -79,7 +79,7 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 }
 
 // AndroidPackageConflicts returns true if an app with a different developer+name
-// has the same pacakge.  It is expect that different versions of the same app with
+// has the same package.  It is expect that different versions of the same app with
 // the same package however so we do not do a full key comparison
 func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	if a.AndroidPackageName == "" {
