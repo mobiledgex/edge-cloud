@@ -530,7 +530,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:        GetCloudletUsedRam(0, 1, 0),
 		UsedVcores:     GetCloudletUsedVcores(0, 1, 0),
 		UsedDisk:       GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts:    map[int32]int32{10000: 1},
+		RootLbPorts:    map[int32]int32{10000: 1, 10001: 1},
 		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1]:

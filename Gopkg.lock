@@ -454,7 +454,7 @@
   version = "v0.0.4"
 
 [[projects]]
-  digest = "1:e05853f7ff5ea1e7653d228bf349c76372b80a30209ed888f0b18d75f959f46c"
+  digest = "1:97cca7fda664cc9c573f3a90a3fdb54901c1ca3a649baa74a2bb48419c04a73e"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "k8s-prov/azure",
@@ -463,8 +463,8 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "2f0b4892bbfa22d022ea9b0fe70ed508643413b0"
-  version = "v0.0.2"
+  revision = "91679b7506b2f060f39d4032754f0b39980f7fb5"
+  version = "v0.0.4"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -1022,7 +1022,10 @@
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
     "k8s.io/apimachinery/pkg/apis/meta/v1",
+    "k8s.io/apimachinery/pkg/runtime",
+    "k8s.io/apimachinery/pkg/runtime/schema",
     "k8s.io/client-go/kubernetes",
+    "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
     "k8s.io/client-go/rest",
     "k8s.io/client-go/tools/clientcmd",
