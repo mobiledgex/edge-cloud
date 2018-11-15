@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"strings"
 	"text/template"
@@ -16,6 +15,7 @@ import (
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
 	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -47,16 +47,16 @@ spec:
 `
 
 type templateFill struct {
-	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone                         string
-	ImageFlavor, Location, RootLB, ResourceGroup                                    string
-	StorageSpec, NetworkScheme, MasterFlavor, Topology                              string
-	NodeFlavor, Operator, Key, Image, Options                                       string
-	ImageType, AppURI, ProxyPath                                                    string
-	ExternalNetwork, Project, AppTemplate                                           string
-	ExternalRouter, Flags, IpAccess                                                 string
-	NumMasters, NumNodes                                                            int
-	ConfigDetailDeployment, ConfigDetailResources, ConfigKind, ConfigDetailManifest string
-	Command                                                                         []string
+	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone             string
+	ImageFlavor, Location, RootLB, ResourceGroup                        string
+	StorageSpec, NetworkScheme, MasterFlavor, Topology                  string
+	NodeFlavor, Operator, Key, Image, Options                           string
+	ImageType, AppURI, ProxyPath                                        string
+	ExternalNetwork, Project, AppTemplate                               string
+	ExternalRouter, Flags, IpAccess                                     string
+	NumMasters, NumNodes                                                int
+	ConfigDetailDeployment, ConfigDetailResources, ConfigDetailManifest string
+	Command                                                             []string
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
@@ -528,12 +528,11 @@ metadata:
   operator: {{.Operator}}
   dnszone: {{.DNSZone}}
 config:
-  kind: {{.ConfigKind}}
+  kind:
   source:
   detail:
     resources: {{.ConfigDetailResources}}
     deployment: {{.ConfigDetailDeployment}}
-    manifest: {{.ConfigDetailManifest}}
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
@@ -563,6 +562,12 @@ metadata:
   tenant: {{.Tenant}}
   operator: {{.Operator}}
   dnszone: {{.DNSZone}}
+config:
+  kind:
+  source:
+  detail:
+    resources: {{.ConfigDetailResources}}
+    deployment: {{.ConfigDetailDeployment}}
 spec:
   flags: {{.Flags}}
   key: {{.Key}}
@@ -599,17 +604,6 @@ func MEXAppDeleteAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, 
 	return MEXAppDeleteAppManifest(mf)
 }
 
-var validDeployments = []string{"kubernetes", "kvm"} // TODO "docker", ...
-
-func isValidDeploymentType(appDeploymentType string) bool {
-	for _, d := range validDeployments {
-		if appDeploymentType == d {
-			return true
-		}
-	}
-	return false
-}
-
 func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgeproto.App, clusterInst *edgeproto.ClusterInst) (*Manifest, error) {
 	var data templateFill
 	var err error
@@ -635,32 +629,21 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	if len(appInst.Key.AppKey.Name) < 3 {
 		log.DebugLog(log.DebugLevelMexos, "warning, very short appkey name", "name", appInst.Key.AppKey.Name)
 	}
-	config, err := ParseAppInstConfig(app.Config)
+	config, err := cloudcommon.ParseAppConfig(app.Config)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing appinst config %s, %v", app.Config, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "appinst config", "config", config)
-	appDeploymentType := ""
-	switch imageType {
-	case "ImageTypeDocker":
-		appDeploymentType = "kubernetes"
-	case "ImageTypeQCOW":
-		appDeploymentType = "kvm"
-	default:
-		return nil, fmt.Errorf("unknown image type %s", imageType)
-	}
-	if config.Kind == "config" {
-		appDeploymentType = config.ConfigDetail.Deployment
-	}
-	if !isValidDeploymentType(appDeploymentType) {
-		return nil, fmt.Errorf("invalid deployment type, '%s'", appDeploymentType)
+	appDeploymentType := app.Deployment
+	if err != nil {
+		return nil, err
 	}
 	log.DebugLog(log.DebugLevelMexos, "app deploying", "imageType", imageType, "deploymentType", appDeploymentType)
+	if !cloudcommon.IsValidDeploymentForImage(app.ImageType, appDeploymentType) {
+		return nil, fmt.Errorf("deployment is not valid for image type")
+	}
 	switch appDeploymentType {
-	case "kubernetes":
-		if imageType != "ImageTypeDocker" {
-			return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
-		}
+	case cloudcommon.AppDeploymentTypeKubernetes:
 		data = templateFill{
 			Kind:                   clusterInst.Flavor.Name,
 			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
@@ -676,14 +659,9 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ProxyPath:              util.K8SSanitize(appInst.Key.AppKey.Name),
 			AppURI:                 appInst.Uri,
 			IpAccess:               ipAccess,
-			AppTemplate:            app.AppTemplate,
-			ConfigKind:             config.Kind,
-			ConfigDetailDeployment: config.ConfigDetail.Deployment,
-			ConfigDetailResources:  config.ConfigDetail.Resources,
-			ConfigDetailManifest:   config.ConfigDetail.Manifest,
-		}
-		if config.Kind == "command" {
-			data.Command = config.Command
+			ConfigDetailDeployment: app.Deployment,
+			ConfigDetailResources:  config.Resources,
+			Command:                strings.Split(app.Command, " "),
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
 		if err != nil {
@@ -693,25 +671,24 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	//	if imageType != "ImageTypeDocker" {
 	//		return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
 	//	}
-	case "kvm":
-		if imageType != "ImageTypeQCOW" {
-			return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
-		}
+	case cloudcommon.AppDeploymentTypeKVM:
 		data = templateFill{
-			Kind:          clusterInst.Flavor.Name,
-			Name:          appInst.Key.AppKey.Name,
-			Tags:          appInst.Key.AppKey.Name + "-qcow-tag",
-			Key:           clusterInst.Key.ClusterKey.Name,
-			Tenant:        appInst.Key.AppKey.Name + "-tenant",
-			Operator:      clusterInst.Key.CloudletKey.OperatorKey.Name,
-			RootLB:        rootLB.Name,
-			Image:         app.ImagePath,
-			ImageFlavor:   appInst.Flavor.Name,
-			DNSZone:       "mobiledgex.net",
-			ImageType:     imageType,
-			ProxyPath:     appInst.Key.AppKey.Name,
-			AppURI:        appInst.Uri,
-			NetworkScheme: "external-ip,external-network-shared",
+			Kind:                   clusterInst.Flavor.Name,
+			Name:                   appInst.Key.AppKey.Name,
+			Tags:                   appInst.Key.AppKey.Name + "-qcow-tag",
+			Key:                    clusterInst.Key.ClusterKey.Name,
+			Tenant:                 appInst.Key.AppKey.Name + "-tenant",
+			Operator:               clusterInst.Key.CloudletKey.OperatorKey.Name,
+			RootLB:                 rootLB.Name,
+			Image:                  app.ImagePath,
+			ImageFlavor:            appInst.Flavor.Name,
+			DNSZone:                "mobiledgex.net",
+			ImageType:              imageType,
+			ProxyPath:              appInst.Key.AppKey.Name,
+			AppURI:                 appInst.Uri,
+			NetworkScheme:          "external-ip,external-network-shared",
+			ConfigDetailDeployment: app.Deployment,
+			ConfigDetailResources:  config.Resources,
 		}
 		mf, err = templateUnmarshal(&data, yamlMEXAppQcow2)
 		if err != nil {
@@ -720,6 +697,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	default:
 		return nil, fmt.Errorf("unknown image type %s", imageType)
 	}
+	mf.Config.ConfigDetail.Manifest = app.DeploymentManifest
 	log.DebugLog(log.DebugLevelMexos, "filled app manifest", "mf", mf)
 	err = addPorts(mf, appInst)
 	if err != nil {
@@ -729,228 +707,12 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	return mf, nil
 }
 
-//XXX InternalPort used for both port and targetport
-var kubeManifestSimpleShared = `apiVersion: v1
-kind: Service
-metadata:
-  name: {{.Metadata.Name}}-service
-  labels:
-    run: {{.Metadata.Name}}
-spec:
-  type: LoadBalancer
-  ports:
-{{- range .Spec.Ports}}
-  - name: {{.Name}}
-    protocol: {{.Proto}}
-    port: {{.InternalPort}}
-    targetPort: {{.InternalPort}}
-{{- end}}
-  selector:
-    run: {{.Metadata.Name}}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: {{.Metadata.Name}}-deployment
-spec:
-  selector:
-    matchLabels:
-      run: {{.Metadata.Name}}
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        run: {{.Metadata.Name}}
-    spec:
-      volumes:
-      imagePullSecrets:
-      - name: mexregistrysecret
-      containers:
-      - name: {{.Metadata.Name}}
-        image: {{.Spec.Image}}
-        imagePullPolicy: Always
-        ports:
-{{- range .Spec.Ports}}
-        - containerPort: {{.InternalPort}}
-{{- end}}
-        command:
-{{- range .Spec.Command}}
-        - {{.}}
-{{- end}}
-`
-
-func ParseAppInstConfigDetail(conf []byte) (*AppInstConfigDetail, error) {
-	confDetail := &AppInstConfigDetail{}
-	err := json.Unmarshal(conf, confDetail)
-	if err != nil {
-		return nil, err
-	}
-	return confDetail, nil
-}
-
-func ParseAppInstConfig(configStr string) (*AppInstConfig, error) {
-	if configStr == "" {
-		return &AppInstConfig{Kind: "command", Source: "", Command: []string{}}, nil
-	}
-	if strings.HasPrefix(configStr, "{") {
-		confDetail := &AppInstConfigDetail{}
-		err := json.Unmarshal([]byte(configStr), confDetail)
-		if err != nil {
-			return nil, fmt.Errorf("cannot unmarshal json config str, err %v, config `%s`", err, configStr)
-		}
-		return &AppInstConfig{Kind: "config", Source: configStr, ConfigDetail: *confDetail}, nil
-	}
-	if strings.HasPrefix(configStr, "http://") ||
-		strings.HasPrefix(configStr, "https://") {
-		resp, err := http.Get(configStr)
-		if err != nil {
-			return nil, fmt.Errorf("cannot get config from %s, %v", configStr, err)
-		}
-		defer resp.Body.Close()
-		configBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return nil, fmt.Errorf("cannot read config from %s, %v", configStr, err)
-		}
-		confDetail, err := ParseAppInstConfigDetail(configBytes)
-		if err != nil {
-			return nil, fmt.Errorf("cannot parse app inst config detail from %s, %v", configStr, err)
-		}
-		return &AppInstConfig{Kind: "config", Source: configStr, ConfigDetail: *confDetail}, nil
-	}
-	cmd, err := ParseAppInstConfigCommand(configStr)
-	if err != nil {
-		return nil, fmt.Errorf("cannot parse config command string %s, %v", configStr, err)
-	}
-	return &AppInstConfig{Kind: "command", Source: configStr, Command: cmd}, nil
-}
-
-func ParseAppInstConfigCommand(configStr string) ([]string, error) {
-	// XXX  Not sure what Jon wants in terms of format of this string.
-	// XXX I am preserving his split string call here.
-	return strings.Split(configStr, " "), nil
-}
-
-func genKubeManifest(mf *Manifest) (string, error) {
-	if mf.Spec.KubeManifestTemplate == "" {
-		// Who/What generates the template, and where it comes from
-		// is TBD. If no template, use a default simple template.
-		if mf.Spec.IpAccess == edgeproto.IpAccess_name[int32(edgeproto.IpAccess_IpAccessShared)] {
-			log.DebugLog(log.DebugLevelMexos, "using builtin simple shared kubernetes template")
-			mf.Spec.KubeManifestTemplate = kubeManifestSimpleShared
-		} else {
-			return "", fmt.Errorf("No default template for dedicated IpAccess. Please specify template.")
-		}
-	}
-	// Template string is assumed to be contents of template unless
-	// it starts with http:// or file://
-	tmplDef := mf.Spec.KubeManifestTemplate
-	log.DebugLog(log.DebugLevelMexos, "genenrating kubernetes manifest from template", "template", tmplDef)
-	if strings.HasPrefix(mf.Spec.KubeManifestTemplate, "http://") {
-		resp, err := http.Get(tmplDef)
-		if err != nil {
-			return "", fmt.Errorf("can't get http template, %s", err.Error())
-		}
-		defer resp.Body.Close()
-		bytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("can't read http template, %s", err.Error())
-		}
-		tmplDef = string(bytes)
-	} else if strings.HasPrefix(mf.Spec.KubeManifestTemplate, "file://") {
-		filename := mf.Spec.KubeManifestTemplate[7:]
-		bytes, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return "", fmt.Errorf("can't read template file, %s", err.Error())
-		}
-		tmplDef = string(bytes)
-	}
-	tmpl, err := template.New("kubemanifest").Parse(tmplDef)
-	if err != nil {
-		return "", fmt.Errorf("unable to compile Kube Manifest Template: %s", err.Error())
-	}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, mf)
-	if err != nil {
-		return "", fmt.Errorf("unable to generate k8s deployment file: %s", err.Error())
-	}
-	return buf.String(), err
-}
-
-func retrieveKubeManifest(manifestSpec string) (string, error) {
-	if strings.HasPrefix(manifestSpec, "http://") ||
-		strings.HasPrefix(manifestSpec, "https://") {
-		resp, err := http.Get(manifestSpec)
-		if err != nil {
-			return "", fmt.Errorf("cannot get manifest from %s, %v", manifestSpec, err)
-		}
-		defer resp.Body.Close()
-		manifestBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", fmt.Errorf("cannot read manifest from %s, %v", manifestSpec, err)
-		}
-		return string(manifestBytes), nil
-	}
-	return "", fmt.Errorf("invalid manifest location %s", manifestSpec)
-}
-
-func getAppDeploymentType(mf *Manifest) (string, error) {
-	appDeploymentType := ""
-	if mf.Config.Kind == "config" {
-		appDeploymentType = mf.Config.ConfigDetail.Deployment
-	} else {
-		switch mf.Spec.ImageType {
-		case "ImageTypeDocker":
-			appDeploymentType = "kubernetes"
-		case "ImageTypeQCOW":
-			appDeploymentType = "kvm"
-		default:
-			return "", fmt.Errorf("unknown spec.image type '%s'", mf.Spec.ImageType)
-		}
-	}
-	if !isValidDeploymentType(appDeploymentType) {
-		return "", fmt.Errorf("invalid deployment type, '%s'", appDeploymentType)
-	}
-	return appDeploymentType, nil
-}
-
-func getKubeManifest(mf *Manifest, appDeploymentType string) (string, error) {
-	var err error
-	kubeManifest := ""
-	if appDeploymentType == "kubernetes" {
-		if mf.Config.ConfigDetail.Manifest == "" {
-			// Generate deployment file
-			log.DebugLog(log.DebugLevelMexos, "genenrating kubernetes manifest from template")
-			kubeManifest, err = genKubeManifest(mf)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "error generating kubernetes manifest from template", "error", err)
-				return "", err
-			}
-			log.DebugLog(log.DebugLevelMexos, "generated kubernetes manifest from builtin template")
-		} else {
-			kubeManifest, err = retrieveKubeManifest(mf.Config.ConfigDetail.Manifest)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "error retrieving kubernetes manifest", "source", mf.Config.ConfigDetail.Manifest, "error", err)
-				return "", err
-			}
-			log.DebugLog(log.DebugLevelMexos, "retrieved kubernetes manifest", "source", mf.Config.ConfigDetail.Manifest)
-		}
-	}
-	if kubeManifest == "" {
-		log.DebugLog(log.DebugLevelMexos, "error, cannot retrieve, or generate; empty kube manifest")
-		return "", fmt.Errorf("empty kubemanifest")
-	}
-	return kubeManifest, nil
-}
-
 //MEXAppCreateAppManifest creates app instances on the cluster platform
 func MEXAppCreateAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "create app from manifest", "mf", mf)
-	appDeploymentType, err := getAppDeploymentType(mf)
-	if err != nil {
-		return err
-	}
+	appDeploymentType := mf.Config.ConfigDetail.Deployment
 	log.DebugLog(log.DebugLevelMexos, "app deployment", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
-	kubeManifest, err := getKubeManifest(mf, appDeploymentType)
+	kubeManifest, err := cloudcommon.GetDeploymentManifest(mf.Config.ConfigDetail.Manifest)
 	if err != nil {
 		return err
 	}
@@ -1159,7 +921,7 @@ func createAppDNS(mf *Manifest, kconf string) error {
 		if err != nil {
 			return err
 		}
-		fqdn := sn + "." + fqdnBase
+		fqdn := cloudcommon.ServiceFQDN(sn, fqdnBase)
 		for _, rec := range recs {
 			if rec.Type == "A" && rec.Name == fqdn {
 				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
@@ -1214,7 +976,7 @@ func deleteAppDNS(mf *Manifest, kconf string) error {
 	}
 	fqdnBase := uri2fqdn(mf.Spec.URI)
 	for _, sn := range serviceNames {
-		fqdn := sn + "." + fqdnBase
+		fqdn := cloudcommon.ServiceFQDN(sn, fqdnBase)
 		for _, rec := range recs {
 			if rec.Type == "A" && rec.Name == fqdn {
 				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
@@ -1295,12 +1057,9 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 //MEXAppDeleteManifest kills app
 func MEXAppDeleteAppManifest(mf *Manifest) error {
 	log.DebugLog(log.DebugLevelMexos, "delete app with manifest", "mf", mf)
-	appDeploymentType, err := getAppDeploymentType(mf)
-	if err != nil {
-		return err
-	}
+	appDeploymentType := mf.Config.ConfigDetail.Deployment
 	log.DebugLog(log.DebugLevelMexos, "app delete", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
-	kubeManifest, err := getKubeManifest(mf, appDeploymentType)
+	kubeManifest, err := cloudcommon.GetDeploymentManifest(mf.Config.ConfigDetail.Manifest)
 	if err != nil {
 		return err
 	}
@@ -1361,7 +1120,7 @@ func runKubectlDeleteApp(mf *Manifest, kubeManifest string) error {
 		return fmt.Errorf("cannot get dns records for %s, %v", mf.Metadata.DNSZone, err)
 	}
 	for _, sn := range serviceNames {
-		fqdn := sn + "." + fqdnBase
+		fqdn := cloudcommon.ServiceFQDN(sn, fqdnBase)
 		for _, d := range dr {
 			if d.Type == "A" && d.Name == fqdn {
 				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, d.ID); err != nil {

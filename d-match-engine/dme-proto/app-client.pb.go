@@ -375,7 +375,7 @@ type FindCloudletReply struct {
 	Status FindCloudletReply_FindStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.FindCloudletReply_FindStatus" json:"status,omitempty"`
 	// Full Qualified Domain Name of Closest App instance
 	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
-	// List of ports and L7 paths to connect to App instance
+	// List of Service Endpoints for AppInst
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
 	// Location of the cloudlet
 	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
@@ -1717,6 +1717,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
 	if src.CloudletLocation != nil {
@@ -1887,6 +1888,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
 }
@@ -1939,6 +1941,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 					m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
 					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
 					m.Appinstances[i0].Ports[i1].PublicPath = src.Appinstances[i0].Ports[i1].PublicPath
+					m.Appinstances[i0].Ports[i1].FQDNPrefix = src.Appinstances[i0].Ports[i1].FQDNPrefix
 				}
 			}
 		}
@@ -2004,6 +2007,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath
+							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix
 						}
 					}
 				}

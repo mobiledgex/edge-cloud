@@ -111,6 +111,5 @@ type AppInstConfigDetail struct {
 type AppInstConfig struct {
 	Kind         string              `json:"kind"`
 	Source       string              `json:"source"`
-	Command      []string            `json:"command"`
 	ConfigDetail AppInstConfigDetail `json:"detail"`
 }
