@@ -7,7 +7,13 @@
 syntax = "proto3";
 package distributed_match_engine;
 
-import "google/protobuf/timestamp.proto";
+// This is a simple Timestamp message type
+// grpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string
+// which is a waste of a conversion, so we define our own
+message Timestamp {
+  int64 seconds = 1;
+  int32 nanos = 2;
+}
 
 message Loc {
   // latitude in WGS 84 coordinates
@@ -26,5 +32,5 @@ message Loc {
   // speed (IOS) / velocity (Android) (meters/sec)
   double speed = 7;
   // timestamp
-  google.protobuf.Timestamp timestamp = 8;
+  Timestamp timestamp = 8;
 }

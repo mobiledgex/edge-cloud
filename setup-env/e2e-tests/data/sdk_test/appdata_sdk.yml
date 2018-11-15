@@ -56,8 +56,8 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: xmobx
-      name: tmocloud1
+        name: GDDT
+      name: gddtcloud1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -103,9 +103,9 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: xmobx
-    name: tmocloud1
-  accessuri: cloud1.tmo
+      name: GDDT
+    name: gddtcloud1
+  accessuri: cloud1.gddt
   location:
     lat: 51.7374
     long: -7.0982
@@ -129,6 +129,16 @@ cloudlets:
   location:
     lat: 50.70
     long: -7.1
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: GDDT
+    name: menlopark1cloudlet
+  accessuri:
+  location:
+    lat: 37.4529598
+    long: -122.1817252
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -196,11 +206,10 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: xmobx
-      name: tmocloud1
+        name: GDDT
+      name: gddtcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -212,11 +221,10 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: xmobx
-      name: tmocloud1
+        name: GDDT
+      name: gddtcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -232,7 +240,6 @@ appinstances:
       name: gddtcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -248,7 +255,6 @@ appinstances:
       name: gddtcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
     

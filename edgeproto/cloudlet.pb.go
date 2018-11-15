@@ -25,7 +25,6 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "strconv"
-import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -1177,7 +1176,7 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 			m.Location.Speed = src.Location.Speed
 		}
 		if _, set := fmap["5.8"]; set && src.Location.Timestamp != nil {
-			m.Location.Timestamp = &google_protobuf.Timestamp{}
+			m.Location.Timestamp = &distributed_match_engine.Timestamp{}
 			if _, set := fmap["5.8.1"]; set {
 				m.Location.Timestamp.Seconds = src.Location.Timestamp.Seconds
 			}

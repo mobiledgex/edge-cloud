@@ -31,6 +31,7 @@
 		AppPort
 		DlgMessage
 		DlgReply
+		Timestamp
 		Loc
 */
 package distributed_match_engine
@@ -47,7 +48,6 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
-import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -1688,7 +1688,7 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1730,7 +1730,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 		m.CloudletLocation.Course = src.CloudletLocation.Course
 		m.CloudletLocation.Speed = src.CloudletLocation.Speed
 		if src.CloudletLocation.Timestamp != nil {
-			m.CloudletLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.CloudletLocation.Timestamp = &Timestamp{}
 			m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
 			m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
 		}
@@ -1767,7 +1767,7 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1827,7 +1827,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 		m.NetworkLocation.Course = src.NetworkLocation.Course
 		m.NetworkLocation.Speed = src.NetworkLocation.Speed
 		if src.NetworkLocation.Timestamp != nil {
-			m.NetworkLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.NetworkLocation.Timestamp = &Timestamp{}
 			m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
 			m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
 		}
@@ -1859,7 +1859,7 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1916,7 +1916,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1982,7 +1982,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 				m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
 				m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
 				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
 					m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
 					m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
 				}

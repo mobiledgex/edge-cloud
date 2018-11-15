@@ -16,10 +16,8 @@ It has these top-level messages:
 package gencmd
 
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-import google_protobuf "github.com/gogo/protobuf/types"
 import testgen "github.com/mobiledgex/edge-cloud/testgen"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -247,10 +245,10 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	s = append(s, strconv.FormatFloat(float64(in.Loc.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Loc.Speed), 'e', -1, 32))
 	if in.Loc.Timestamp == nil {
-		in.Loc.Timestamp = &google_protobuf.Timestamp{}
+		in.Loc.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_Loc_TimestampTime := time.Unix(in.Loc.Timestamp.Seconds, int64(in.Loc.Timestamp.Nanos))
-	s = append(s, _Loc_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.Loc.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Loc.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Lat), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Long), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.HorizontalAccuracy), 'e', -1, 32))
@@ -259,10 +257,10 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Speed), 'e', -1, 32))
 	if in.LocNonnull.Timestamp == nil {
-		in.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
+		in.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_LocNonnull_TimestampTime := time.Unix(in.LocNonnull.Timestamp.Seconds, int64(in.LocNonnull.Timestamp.Nanos))
-	s = append(s, _LocNonnull_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.LocNonnull.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.LocNonnull.Timestamp.Nanos), 10))
 	if in.RepeatedInt == nil {
 		in.RepeatedInt = make([]int64, 1)
 	}
@@ -345,10 +343,10 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Speed), 'e', -1, 32))
 	if in.RepeatedLoc[0].Timestamp == nil {
-		in.RepeatedLoc[0].Timestamp = &google_protobuf.Timestamp{}
+		in.RepeatedLoc[0].Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_RepeatedLoc_0__TimestampTime := time.Unix(in.RepeatedLoc[0].Timestamp.Seconds, int64(in.RepeatedLoc[0].Timestamp.Nanos))
-	s = append(s, _RepeatedLoc_0__TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.RepeatedLoc[0].Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.RepeatedLoc[0].Timestamp.Nanos), 10))
 	if in.RepeatedLocNonnull == nil {
 		in.RepeatedLocNonnull = make([]distributed_match_engine.Loc, 1)
 	}
@@ -360,10 +358,10 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Speed), 'e', -1, 32))
 	if in.RepeatedLocNonnull[0].Timestamp == nil {
-		in.RepeatedLocNonnull[0].Timestamp = &google_protobuf.Timestamp{}
+		in.RepeatedLocNonnull[0].Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_RepeatedLocNonnull_0__TimestampTime := time.Unix(in.RepeatedLocNonnull[0].Timestamp.Seconds, int64(in.RepeatedLocNonnull[0].Timestamp.Nanos))
-	s = append(s, _RepeatedLocNonnull_0__TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.RepeatedLocNonnull[0].Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.RepeatedLocNonnull[0].Timestamp.Nanos), 10))
 	return s
 }
 
@@ -407,7 +405,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "Loc-Altitude")
 	s = append(s, "Loc-Course")
 	s = append(s, "Loc-Speed")
-	s = append(s, "Loc-Timestamp")
+	s = append(s, "Loc-Timestamp-Seconds")
+	s = append(s, "Loc-Timestamp-Nanos")
 	s = append(s, "LocNonnull-Lat")
 	s = append(s, "LocNonnull-Long")
 	s = append(s, "LocNonnull-HorizontalAccuracy")
@@ -415,7 +414,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "LocNonnull-Altitude")
 	s = append(s, "LocNonnull-Course")
 	s = append(s, "LocNonnull-Speed")
-	s = append(s, "LocNonnull-Timestamp")
+	s = append(s, "LocNonnull-Timestamp-Seconds")
+	s = append(s, "LocNonnull-Timestamp-Nanos")
 	s = append(s, "RepeatedInt")
 	s = append(s, "Ip")
 	s = append(s, "Names")
@@ -440,7 +440,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "RepeatedLoc-Altitude")
 	s = append(s, "RepeatedLoc-Course")
 	s = append(s, "RepeatedLoc-Speed")
-	s = append(s, "RepeatedLoc-Timestamp")
+	s = append(s, "RepeatedLoc-Timestamp-Seconds")
+	s = append(s, "RepeatedLoc-Timestamp-Nanos")
 	s = append(s, "RepeatedLocNonnull-Lat")
 	s = append(s, "RepeatedLocNonnull-Long")
 	s = append(s, "RepeatedLocNonnull-HorizontalAccuracy")
@@ -448,7 +449,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "RepeatedLocNonnull-Altitude")
 	s = append(s, "RepeatedLocNonnull-Course")
 	s = append(s, "RepeatedLocNonnull-Speed")
-	s = append(s, "RepeatedLocNonnull-Timestamp")
+	s = append(s, "RepeatedLocNonnull-Timestamp-Seconds")
+	s = append(s, "RepeatedLocNonnull-Timestamp-Nanos")
 	return s
 }
 
@@ -604,7 +606,7 @@ func init() {
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Altitude, "loc-altitude", 0, "Loc.Altitude")
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Course, "loc-course", 0, "Loc.Course")
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Speed, "loc-speed", 0, "Loc.Speed")
-	TestGenIn.Loc.Timestamp = &google_protobuf.Timestamp{}
+	TestGenIn.Loc.Timestamp = &distributed_match_engine.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.Loc.Timestamp.Seconds, "loc-timestamp-seconds", 0, "Loc.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.Loc.Timestamp.Nanos, "loc-timestamp-nanos", 0, "Loc.Timestamp.Nanos")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Lat, "locnonnull-lat", 0, "LocNonnull.Lat")
@@ -614,7 +616,7 @@ func init() {
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Altitude, "locnonnull-altitude", 0, "LocNonnull.Altitude")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Course, "locnonnull-course", 0, "LocNonnull.Course")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Speed, "locnonnull-speed", 0, "LocNonnull.Speed")
-	TestGenIn.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
+	TestGenIn.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.LocNonnull.Timestamp.Seconds, "locnonnull-timestamp-seconds", 0, "LocNonnull.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.LocNonnull.Timestamp.Nanos, "locnonnull-timestamp-nanos", 0, "LocNonnull.Timestamp.Nanos")
 	TestGenFlagSet.BytesHexVar(&TestGenIn.Ip, "ip", nil, "Ip")
