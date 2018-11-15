@@ -1,26 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmcentralgcp
+  name: crmcmu
   labels:
-    app: crmcentralgcp
+    app: crmcmu
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmcentralgcp
+      app: crmcmu
   template:
     metadata:
       labels:
-        app: crmcentralgcp
+        app: crmcmu
     spec:
       containers:
-      - name: crmcentralgcp
+      - name: crmcmu
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
         imagePullPolicy: Always
         env:
-         - name: PATH
-           value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
          - name: MEX_CF_USER
            value: mobiledgex.ops@mobiledgex.com
          - name: MEX_CF_KEY
@@ -31,25 +29,31 @@ spec:
            value: sandhill
          - name: MEX_DIR
            value: /root/.mobiledgex
+         - name: OS_PROJECT_ID
+           value: 5e4192b32e004438ad59be8a8e03acea
+         - name: OS_USER_DOMAIN_NAME
+           value: default
+         - name: OS_TENANT_NAME
+           value: dummy
          - name: OS_AUTH_URL
-           value: NOTHING
+           value: http://cloudlet004.elijah.cs.cmu.edu:5000/v3
          - name: OS_CACERT
-           value: NOTHING
+           value: dummy
          - name: OS_USERNAME
-           value: mexadmin
+           value: mex
          - name: OS_PASSWORD
-           value: NOTHING
+           value: MEX$Admin12345
          - name: OS_REGION_NAME
            value: RegionOne
-         - name: OS_TENANT_NAME
-           value: mex
+         - name: OS_IDENTITY_API_VERSION
+           value: "3"
         command:
          - crmserver
         args:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"gcp\"},\"name\":\"centraluscloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"cmudemocloudlet\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
