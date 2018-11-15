@@ -1,5 +1,9 @@
 // TEST ONLY certificates.
 #include <string>
+#include <fstream>
+#include <iostream>
+
+using namespace std;
 
 class test_credentials {
 public:
@@ -12,5 +16,7 @@ public:
     // Client Private Key:
     std::string clientKey;
 
-    test_credentials();
+    test_credentials(const string caCertFile, const string clientCertFile, const string clientKeyFile);
+
+    void readPemFile(const string &filePath, string &out);
 };

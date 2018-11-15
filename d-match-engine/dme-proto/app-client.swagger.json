@@ -668,8 +668,7 @@
           "title": "speed (IOS) / velocity (Android) (meters/sec)"
         },
         "timestamp": {
-          "type": "string",
-          "format": "date-time",
+          "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "timestamp"
         }
       }
@@ -734,6 +733,20 @@
         "RS_FAIL"
       ],
       "default": "RS_UNDEFINED"
+    },
+    "distributed_match_engineTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "This is a simple Timestamp message type\ngrpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string\nwhich is a waste of a conversion, so we define our own"
     },
     "distributed_match_engineVerifyLocationReply": {
       "type": "object",
