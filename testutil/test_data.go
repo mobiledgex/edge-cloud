@@ -1,6 +1,7 @@
 package testutil
 
 import (
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -237,6 +238,10 @@ var CloudletData = []edgeproto.Cloudlet{
 		AccessUri:     "10.100.0.1",
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
+		Location: dme.Loc{
+			Lat:  37.338207,
+			Long: -121.886330,
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -246,6 +251,10 @@ var CloudletData = []edgeproto.Cloudlet{
 		AccessUri:     "ff.f8::1",
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
+		Location: dme.Loc{
+			Lat:  40.712776,
+			Long: -74.005974,
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -255,6 +264,10 @@ var CloudletData = []edgeproto.Cloudlet{
 		AccessUri:     "172.24.0.1",
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
+		Location: dme.Loc{
+			Lat:  37.774929,
+			Long: -122.419418,
+		},
 	},
 	edgeproto.Cloudlet{
 		Key: edgeproto.CloudletKey{
@@ -264,6 +277,10 @@ var CloudletData = []edgeproto.Cloudlet{
 		AccessUri:     "hi76.zerilu.com",
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 10,
+		Location: dme.Loc{
+			Lat:  21.306944,
+			Long: -157.858337,
+		},
 	},
 }
 var ClusterInstData = []edgeproto.ClusterInst{
