@@ -27,7 +27,21 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 	return false
 }
 
-func GetDeploymentType(imageType edgeproto.ImageType) (string, error) {
+func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
+	switch imageType {
+	case edgeproto.ImageType_ImageTypeDocker:
+		if deployment == AppDeploymentTypeKubernetes { // also later docker
+			return true
+		}
+	case edgeproto.ImageType_ImageTypeQCOW:
+		if deployment == AppDeploymentTypeKVM {
+			return true
+		}
+	}
+	return false
+}
+
+func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
 		return AppDeploymentTypeKubernetes, nil

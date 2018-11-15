@@ -11,7 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/deploygen"
 )
 
-var addr = flag.String("addr", "127.0.0.1:8000", "listener address")
+var addr = flag.String("addr", "127.0.0.1:61001", "listener address")
 
 func main() {
 	flag.Parse()

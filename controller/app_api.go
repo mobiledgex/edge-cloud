@@ -101,7 +101,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 	if in.Deployment == "" {
-		in.Deployment, err = cloudcommon.GetDeploymentType(in.ImageType)
+		in.Deployment, err = cloudcommon.GetDefaultDeploymentType(in.ImageType)
 		if err != nil {
 			return &edgeproto.Result{}, err
 		}
@@ -109,7 +109,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentType(in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("invalid deployment, must be one of %v", cloudcommon.ValidDeployments)
 	}
-
+	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
+		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
+	}
 	if in.Config != "" {
 		configStr, err := cloudcommon.GetAppConfig(in)
 		if err != nil {

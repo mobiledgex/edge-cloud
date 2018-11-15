@@ -11,7 +11,7 @@ import (
 )
 
 func SendReq(uri string, app *edgeproto.App) (string, error) {
-	spec, err := NewAppFromApp(app)
+	spec, err := NewAppSpec(app)
 	if err != nil {
 		return "", err
 	}
@@ -45,7 +45,7 @@ func RunGen(gen string, app *edgeproto.App) (string, error) {
 	if !found {
 		return "", fmt.Errorf("generator %s not found", gen)
 	}
-	spec, err := NewAppFromApp(app)
+	spec, err := NewAppSpec(app)
 	if err != nil {
 		return "", err
 	}

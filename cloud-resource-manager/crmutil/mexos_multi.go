@@ -639,6 +639,9 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 		return nil, err
 	}
 	log.DebugLog(log.DebugLevelMexos, "app deploying", "imageType", imageType, "deploymentType", appDeploymentType)
+	if !cloudcommon.IsValidDeploymentForImage(app.ImageType, appDeploymentType) {
+		return nil, fmt.Errorf("deployment is not valid for image type")
+	}
 	switch appDeploymentType {
 	case cloudcommon.AppDeploymentTypeKubernetes:
 		data = templateFill{

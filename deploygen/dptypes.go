@@ -30,7 +30,7 @@ type AppSpec struct {
 	Ports       []PortSpec `json:"ports"`
 }
 
-func NewAppFromApp(app *edgeproto.App) (*AppSpec, error) {
+func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 	out := &AppSpec{
 		Name:        app.Key.Name,
 		DevName:     app.Key.DeveloperKey.Name,
