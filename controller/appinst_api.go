@@ -163,7 +163,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if s.store.STMGet(stm, &in.Key, in) {
 				if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 					if in.State == edgeproto.TrackedState_CreateError {
-						cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to fix CreateError state"})
+						cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+						cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
 					}
 					return objstore.ErrKVStoreKeyExists
 				}
@@ -235,10 +236,16 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	}
 
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if s.store.STMGet(stm, &in.Key, nil) {
+		buf := in
+		if !defaultCloudlet {
+			// lookup already done, don't overwrite changes
+			buf = nil
+		}
+		if s.store.STMGet(stm, &in.Key, buf) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError {
 				if in.State == edgeproto.TrackedState_CreateError {
-					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to fix CreateError state"})
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteAppInst to remove and try again"})
 				}
 				return objstore.ErrKVStoreKeyExists
 			}
@@ -438,7 +445,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DeleteError {
-				cb.Send(&edgeproto.Result{Message: "Use CreateAppInst to fix DeleteError state"})
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateAppInst to rebuild, and try again"})
 			}
 			return errors.New("AppInst busy, cannot delete")
 		}
