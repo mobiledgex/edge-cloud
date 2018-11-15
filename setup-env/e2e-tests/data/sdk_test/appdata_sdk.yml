@@ -56,8 +56,8 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: T-Mobile
-      name: tmocloud1
+        name: TDG
+      name: tdgcloud1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -103,9 +103,9 @@ developers:
 cloudlets:
 - key:
     operatorkey:
-      name: T-Mobile
-    name: tmocloud1
-  accessuri: cloud1.tmo
+      name: TDG
+    name: tdgcloud1
+  accessuri: cloud1.tdg
   location:
     lat: 51.7374
     long: -7.0982
@@ -133,7 +133,7 @@ cloudlets:
   numdynamicips: 254
 - key:
     operatorkey:
-      name: TDG2
+      name: TDG
     name: menlopark1cloudlet
   accessuri:
   location:
@@ -206,11 +206,10 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: T-Mobile
-      name: tmocloud1
+        name: TDG
+      name: tdgcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -222,11 +221,10 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: T-Mobile
-      name: tmocloud1
+        name: TDG
+      name: tdgcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -242,7 +240,6 @@ appinstances:
       name: tdgcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
 
@@ -258,7 +255,6 @@ appinstances:
       name: tdgcloud1
     id: 5011
   liveness: LivenessStatic
-  imagetype: ImageTypeDocker
   flavor:
     name: x1.small
     

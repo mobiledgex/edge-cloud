@@ -47,14 +47,14 @@ class MexGrpcClient {
         location->set_speed(2);
 
         // Google's protobuf timestamp
-        auto microseconds = chrono::system_clock::now().time_since_epoch();
-        auto timestampPtr = new google::protobuf::Timestamp();
-        auto thousand = chrono::microseconds(1000);
-        auto ts_sec = duration_cast<std::chrono::milliseconds>(microseconds);
-        auto ts_ns = duration_cast<std::chrono::nanoseconds>(microseconds);
+        auto timestampPtr = new Timestamp();
+        auto ts_micro = std::chrono::system_clock::now().time_since_epoch();
+        auto ts_sec = duration_cast<std::chrono::seconds>(ts_micro);
+        auto ts_micro_remainder = ts_micro % std::chrono::microseconds(1000000);
+        auto ts_nano_remainder = duration_cast<std::chrono::nanoseconds>(ts_micro_remainder);
 
         timestampPtr->set_seconds(ts_sec.count());
-        timestampPtr->set_nanos((ts_ns % thousand).count());
+        timestampPtr->set_nanos(ts_nano_remainder.count());
 
         location->set_allocated_timestamp(timestampPtr);
         return location;
@@ -304,6 +304,7 @@ class MexGrpcClient {
 int main() {
     cout << "Hello C++ MEX GRPC Lib" << endl;
     string host = "tdg2.dme.mobiledgex.net:50051";
+    //string host = "127.0.0.1:50051";
 
     // Credentials, Mutual Authentication:
     grpc::SslCredentialsOptions credentials;

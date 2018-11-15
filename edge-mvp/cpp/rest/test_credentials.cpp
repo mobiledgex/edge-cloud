@@ -13,12 +13,10 @@ void test_credentials::readPemFile(const string &filePath, string &out) {
             return;
         }
 
-        cout << "Read for: " << filePath.c_str() << endl;
+        cout << "Reading: " << filePath.c_str() << endl;
         char *buf = new char[length+1];
         ifs.read(buf, length);
-        cout << "read." << endl;
         buf[length] = 0;
-        cout << "terminated" << endl;
 
         if (!ifs) {
             cerr << "Error reading file. What's read: " << ifs.gcount() << endl;
@@ -28,7 +26,6 @@ void test_credentials::readPemFile(const string &filePath, string &out) {
 
         out = buf;
         delete[] buf;
-        cout << "Read [" << out << "]" << endl;
     }
 }
 

@@ -14,8 +14,9 @@ using namespace nlohmann;
 
 class MexRestClient {
   public:
-    string carrierNameDefault = "tdg2";
+    string carrierNameDefault = "TDG";
     string baseDmeHost = "dme.mobiledgex.net";
+    //string baseDmeHost = "localhost";
     unsigned int dmePort = 38001; // HTTP REST port
 
     // API Paths:
@@ -49,6 +50,7 @@ class MexRestClient {
     }
 
     string generateDmeHostPath(string carrierName) {
+        return baseDmeHost;
         if (carrierName == "") {
             return carrierNameDefault + "." + baseDmeHost;
         }
@@ -62,14 +64,15 @@ class MexRestClient {
     }
 
     json currentGoogleTimestamp() {
-        // Google's protobuf timestamp format.
-        auto microseconds = std::chrono::system_clock::now().time_since_epoch();
-        auto ts_sec = duration_cast<std::chrono::milliseconds>(microseconds);
-        auto ts_ns = duration_cast<std::chrono::nanoseconds>(microseconds);
+        // REST Timestamp format based on Google's google.protobuf.Timestamp (RFC3339 string format)
+        auto ts_micro = std::chrono::system_clock::now().time_since_epoch();
+        auto ts_sec = duration_cast<std::chrono::seconds>(ts_micro);
+        auto ts_micro_remainder = ts_micro % std::chrono::microseconds(1000000);
+        auto ts_nano_remainder = duration_cast<std::chrono::nanoseconds>(ts_micro_remainder);
 
         json googleTimestamp;
         googleTimestamp["seconds"] = ts_sec.count();
-        googleTimestamp["nanos"] = ts_sec.count();
+        googleTimestamp["nanos"] = ts_nano_remainder.count();
 
         return googleTimestamp;
     }
@@ -84,7 +87,7 @@ class MexRestClient {
         location["altitude"] = 100;
         location["course"] = 0;
         location["speed"] = 2;
-        location["timestamp"] = "2018-11-09T15:47:31-07:00"; // currentGoogleTimestamp();
+        location["timestamp"] = currentGoogleTimestamp();
 
         return location;
     }
@@ -96,6 +99,8 @@ class MexRestClient {
         regClientRequest["AppName"] = appName;
         regClientRequest["DevName"] = devName;
         regClientRequest["AppVers"] = appVersionStr;
+        regClientRequest["CarrierName"] = getCarrierName();
+        regClientRequest["AuthToken"] = ""; // Developer supplied user auth token.
 
         return regClientRequest;
     }
@@ -124,7 +129,7 @@ class MexRestClient {
         return findCloudletRequest;
     }
 
-    json postRequest(const string &uri, const string &request,
+    json postRequest(const string &uri, const string &request, long &httpResponse,
             string &responseData, size_t (*responseCallback)(void *ptr, size_t size, size_t nmemb, void *s)) {
         CURL *curl;
         CURLcode res;
@@ -153,13 +158,18 @@ class MexRestClient {
             curl_easy_setopt(curl, CURLOPT_CAINFO, caCrtFile.c_str());
 
             // verify peer or disconnect
-            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+            //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 
             res = curl_easy_perform(curl);
+
+            cout << "Posting request: " << request << endl;
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponse);
+            cout << "Response Code: " << httpResponse << endl;
             if (res != CURLE_OK) {
                 cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
                 curl_easy_cleanup(curl);
             }
+
         }
 
         json replyData = json::parse(responseData);
@@ -179,8 +189,12 @@ class MexRestClient {
         return dataSize;
     }
 
-    json RegisterClient(const string &baseuri, const json &request, string &reply) {
-        json jreply = postRequest(baseuri + registerAPI, request.dump(), reply, getReplyCallback);
+    json RegisterClient(const string &baseuri, const json &request, string &reply, long &httpResponse) {
+        json jreply = postRequest(baseuri + registerAPI, request.dump(), httpResponse, reply, getReplyCallback);
+        cout << "RegClient jreply: " << jreply.dump() << endl;
+        if (httpResponse != 200) {
+            return jreply;
+        }
         tokenserveruri = jreply["TokenServerURI"];
         sessioncookie = jreply["SessionCookie"];
 
@@ -188,7 +202,7 @@ class MexRestClient {
     }
 
     // string formatted json args and reply.
-    json VerifyLocation(const string &baseuri, const json &request, string &reply) {
+    json VerifyLocation(const string &baseuri, const json &request, string &reply, long &httpResponse) {
         if (tokenserveruri.size() == 0) {
             cerr << "TokenURI is empty!" << endl;
             json empty;
@@ -206,12 +220,13 @@ class MexRestClient {
         tokenizedRequest["GpsLocation"] = request["GpsLocation"];
         tokenizedRequest["VerifyLocToken"] = token;
 
-        json jreply = postRequest(baseuri + verifylocationAPI, tokenizedRequest.dump(), reply, getReplyCallback);
+        cout << "Posting JSON: " << tokenizedRequest.dump() << endl;
+        json jreply = postRequest(baseuri + verifylocationAPI, tokenizedRequest.dump(), httpResponse, reply, getReplyCallback);
         return jreply;
     }
 
-    json FindCloudlet(const string &baseuri, const json &request, string &reply) {
-        json jreply = postRequest(baseuri + findcloudletAPI, request.dump(), reply, getReplyCallback);
+    json FindCloudlet(const string &baseuri, const json &request, string &reply, long &httpResponse) {
+        json jreply = postRequest(baseuri + findcloudletAPI, request.dump(), httpResponse, reply, getReplyCallback);
 
         return jreply;
     }
@@ -236,7 +251,7 @@ class MexRestClient {
 
         // Set return pointer (the token), for the header callback.
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(this->token));
-        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, token_header_callback);
 
         // SSL Setup:
         curl_easy_setopt(curl, CURLOPT_SSLCERT, clientCrtFile.c_str());
@@ -334,7 +349,7 @@ class MexRestClient {
     }
 
     // Callback function to retrieve headers, called once per header line.
-    static size_t header_callback(const char *buffer, size_t size, size_t n_items, void *userdata) {
+    static size_t token_header_callback(const char *buffer, size_t size, size_t n_items, void *userdata) {
         size_t bufferLen = n_items * size;
 
         // Need to get "Location: ....dt-id=ABCDEF01234"
@@ -375,6 +390,7 @@ int main() {
     unique_ptr<MexRestClient> mexClient = unique_ptr<MexRestClient>(new MexRestClient());
 
     try {
+        long httpResponse;
         string baseuri;
         json loc = mexClient->retrieveLocation();
 
@@ -385,12 +401,13 @@ int main() {
         baseuri = mexClient->generateBaseUri(mexClient->getCarrierName(), mexClient->dmePort);
         string strRegisterClientReply;
         json registerClientRequest = mexClient->createRegisterClientRequest();
-        json registerClientReply = mexClient->RegisterClient(baseuri, registerClientRequest, strRegisterClientReply);
+        json registerClientReply = mexClient->RegisterClient(baseuri, registerClientRequest, strRegisterClientReply, httpResponse);
 
         if (registerClientReply.size() == 0) {
             cerr << "REST RegisterClient Error: NO RESPONSE." << endl;
             return 1;
         } else {
+            cout << "REST http response code: " << httpResponse << endl;
             cout << "REST RegisterClient Status: "
                  << ", Dump: [" << registerClientReply.dump() << "]"
                  << endl
@@ -410,13 +427,14 @@ int main() {
         loc = mexClient->retrieveLocation();
         string strVerifyLocationReply;
         json verifyLocationRequest = mexClient->createVerifyLocationRequest(mexClient->getCarrierName(), loc, "");
-        json verifyLocationReply = mexClient->VerifyLocation(baseuri, verifyLocationRequest, strVerifyLocationReply);
+        json verifyLocationReply = mexClient->VerifyLocation(baseuri, verifyLocationRequest, strVerifyLocationReply, httpResponse);
 
         // Print some reply values out:
         if (verifyLocationReply.size() == 0) {
             cout << "REST VerifyLocation Status: NO RESPONSE" << endl;
         }
         else {
+            cout << "REST http response code: " << httpResponse << endl;
             cout << "[" << verifyLocationReply.dump() << "]" << endl;
         }
 
@@ -428,12 +446,13 @@ int main() {
         loc = mexClient->retrieveLocation();
         string strFindCloudletReply;
         json findCloudletRequest = mexClient->createFindCloudletRequest(mexClient->getCarrierName(), loc);
-        json findCloudletReply = mexClient->FindCloudlet(baseuri, findCloudletRequest, strFindCloudletReply);
+        json findCloudletReply = mexClient->FindCloudlet(baseuri, findCloudletRequest, strFindCloudletReply, httpResponse);
 
         if (findCloudletReply.size() == 0) {
             cout << "REST VerifyLocation Status: NO RESPONSE" << endl;
         }
         else {
+            cout << "REST http response code: " << httpResponse << endl;
             cout << "REST FindCloudlet Status: "
                  << "Version: " << findCloudletReply["Ver"]
                  << ", Location Found Status: " << findCloudletReply["status"]
