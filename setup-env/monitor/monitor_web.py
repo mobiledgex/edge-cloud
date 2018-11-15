@@ -93,9 +93,10 @@ class show_status:
           if (e.code == 404) and ("facedetection" in uri):
               ## this is ok, we need a health check url
               return type,name,uri,"OK"
-       except Exception as e:
-          print("Exception on post to url: %s" % e)
-          return type,name,uri,"FAIL"
+          return type,name,uri,"FAIL - %s %s" % (e.code,e.reason)
+       except Exception as e2:
+          print("Exception on post to url: %s -- %s" % (uri,e2.reason))
+          return type,name,uri,"FAIL - %s" % e2.reason
 
    def getUrisForApp(self, appname, port):
        ## todo: configurable endpoints
