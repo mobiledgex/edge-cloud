@@ -206,8 +206,8 @@ message AppFqdn{
   string DevName = 3;
   // App FQDN
   string FQDN = 4;
-  // android or iOS package, optional
-  string PackageName = 5;
+  // optional android package name
+  string AndroidPackageName = 5;
 }
 
 message FqdnListReply{

@@ -430,7 +430,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
-  packagename: com.acmeappco.someapplication1
+  androidpackagename: com.acmeappco.someapplication1
 - key:
     developerkey:
       name: AcmeAppCo
@@ -454,7 +454,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
-  packagename: com.acmeappco.someapplication2
+  androidpackagename: com.acmeappco.someapplication2
 
 appinstances:
 - key:

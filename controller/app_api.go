@@ -78,6 +78,25 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
+// AndroidPackageConflicts returns true if an app with a different developer+name
+// has the same pacakge.  It is expect that different versions of the same app with
+// the same package however so we do not do a full key comparison
+func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
+	if a.AndroidPackageName == "" {
+		return false
+	}
+	s.cache.Mux.Lock()
+	defer s.cache.Mux.Unlock()
+	for _, app := range s.cache.Objs {
+		if app.AndroidPackageName == a.AndroidPackageName {
+			if (a.Key.DeveloperKey.Name != app.Key.DeveloperKey.Name) || (a.Key.Name != app.Key.Name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	var err error
 
@@ -98,6 +117,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
+	}
+
+	if s.AndroidPackageConflicts(in) {
+		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
 	}
 
 	// make sure cluster exists
@@ -163,6 +186,9 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 }
 
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	if s.AndroidPackageConflicts(in) {
+		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
+	}
 	return s.store.Update(in, s.sync.syncWait)
 }
 

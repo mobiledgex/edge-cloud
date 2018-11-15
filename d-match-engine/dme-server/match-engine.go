@@ -33,10 +33,10 @@ type dmeAppInsts struct {
 
 type dmeApp struct {
 	sync.RWMutex
-	appKey        edgeproto.AppKey
-	carriers      map[string]*dmeAppInsts
-	authPublicKey string
-	packageName   string
+	appKey             edgeproto.AppKey
+	carriers           map[string]*dmeAppInsts
+	authPublicKey      string
+	androidPackageName string
 }
 
 type dmeApps struct {
@@ -73,7 +73,7 @@ func addApp(in *edgeproto.App) {
 	app.Lock()
 	defer app.Unlock()
 	app.authPublicKey = in.AuthPublicKey
-	app.packageName = in.PackageName
+	app.androidPackageName = in.AndroidPackageName
 }
 
 func addAppInst(appInst *edgeproto.AppInst) {
@@ -352,7 +352,7 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		if defaultCarrierFound {
 			for _, i := range c.insts {
 				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
-					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDN: i.uri, PackageName: a.packageName}
+					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDN: i.uri, AndroidPackageName: a.androidPackageName}
 					clist.AppFqdns = append(clist.AppFqdns, &aq)
 				}
 			}

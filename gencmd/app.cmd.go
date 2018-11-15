@@ -159,7 +159,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Cluster.Name)
 	s = append(s, in.AppTemplate)
 	s = append(s, in.AuthPublicKey)
-	s = append(s, in.PackageName)
+	s = append(s, in.AndroidPackageName)
 	return s
 }
 
@@ -178,7 +178,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Cluster-Name")
 	s = append(s, "AppTemplate")
 	s = append(s, "AuthPublicKey")
-	s = append(s, "PackageName")
+	s = append(s, "AndroidPackageName")
 	return s
 }
 
@@ -421,7 +421,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Cluster.Name, "cluster-name", "", "Cluster.Name")
 	AppFlagSet.StringVar(&AppIn.AppTemplate, "apptemplate", "", "AppTemplate")
 	AppFlagSet.StringVar(&AppIn.AuthPublicKey, "authpublickey", "", "AuthPublicKey")
-	AppFlagSet.StringVar(&AppIn.PackageName, "packagename", "", "PackageName")
+	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -473,7 +473,7 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("authpublickey").Changed {
 		AppIn.Fields = append(AppIn.Fields, "12")
 	}
-	if AppFlagSet.Lookup("packagename").Changed {
+	if AppFlagSet.Lookup("androidpackagename").Changed {
 		AppIn.Fields = append(AppIn.Fields, "13")
 	}
 }

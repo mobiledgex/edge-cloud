@@ -75,8 +75,8 @@ message App {
   string app_template = 11;
   // public key used for authentication
   string auth_public_key = 12;
-  // Android or iOS package/bundle name
-  string package_name = 13;
+  // Android package name, optional
+  string android_package_name = 13;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;

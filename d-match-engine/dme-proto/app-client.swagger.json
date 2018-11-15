@@ -302,9 +302,9 @@
           "type": "string",
           "title": "App FQDN"
         },
-        "PackageName": {
+        "AndroidPackageName": {
           "type": "string",
-          "title": "android or iOS package, optional"
+          "title": "optional android package name"
         }
       }
     },

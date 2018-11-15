@@ -33,7 +33,7 @@ func (s *standaloneServer) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAp
 		a.Lock()
 		app.Key = key
 		app.AuthPublicKey = a.authPublicKey
-		app.PackageName = a.packageName
+		app.AndroidPackageName = a.androidPackageName
 		a.Unlock()
 		err := cb.Send(&app)
 		if err != nil {

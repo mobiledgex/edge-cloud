@@ -1335,9 +1335,9 @@
           "type": "string",
           "title": "public key used for authentication"
         },
-        "package_name": {
+        "android_package_name": {
           "type": "string",
-          "title": "Android or iOS package/bundle name"
+          "title": "Android package name, optional"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."

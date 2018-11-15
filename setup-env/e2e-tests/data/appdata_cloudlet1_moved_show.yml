@@ -179,7 +179,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
-  packagename: com.acme.someapplication1
+  androidpackagename: com.acme.someapplication1
 
 appinstances:
 - key:
