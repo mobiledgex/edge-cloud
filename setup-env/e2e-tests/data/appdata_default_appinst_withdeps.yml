@@ -15,13 +15,22 @@ flavors:
   vcpus: 4
   disk: 4
 
+clusterflavors:
+- key:
+    name: c1.small
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
 
 clusters:
 - key:
     name: SmallCluster
   defaultflavor:
     name: c1.small
-
 
 developers:
 - key:

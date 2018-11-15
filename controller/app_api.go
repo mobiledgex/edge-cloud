@@ -266,29 +266,29 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 // GetClusterFlavorForFlavor finds the smallest cluster flavor whose
 // node flavor matches the passed in flavor.
 func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.ClusterFlavorKey, error) {
-	matchingFlavors := make([]*edgeproto.ClusterFlavor, 0)
+	matching := make([]*edgeproto.ClusterFlavor, 0)
 
 	clusterFlavorApi.cache.Mux.Lock()
 	defer clusterFlavorApi.cache.Mux.Unlock()
 	for _, val := range clusterFlavorApi.cache.Objs {
 		if val.NodeFlavor.Matches(flavorKey) {
-			matchingFlavors = append(matchingFlavors, val)
+			matching = append(matching, val)
 		}
 	}
-	if len(matchingFlavors) == 0 {
-		return nil, fmt.Errorf("No cluster flavors matching flavor %s found", flavorKey.Name)
+	if len(matching) == 0 {
+		return nil, fmt.Errorf("No cluster flavors with node flavor %s found", flavorKey.Name)
 	}
-	sort.Slice(matchingFlavors, func(i, j int) bool {
-		if matchingFlavors[i].MaxNodes < matchingFlavors[j].MaxNodes {
-			return true
+	sort.Slice(matching, func(i, j int) bool {
+		if matching[i].MaxNodes != matching[j].MaxNodes {
+			return matching[i].MaxNodes < matching[j].MaxNodes
 		}
-		if matchingFlavors[i].NumNodes < matchingFlavors[j].NumNodes {
-			return true
+		if matching[i].NumNodes != matching[j].NumNodes {
+			return matching[i].NumNodes < matching[j].NumNodes
 		}
-		if matchingFlavors[i].NumMasters < matchingFlavors[j].NumMasters {
-			return true
+		if matching[i].NumMasters != matching[j].NumMasters {
+			return matching[i].NumMasters < matching[j].NumMasters
 		}
-		return false
+		return matching[i].Key.Name < matching[j].Key.Name
 	})
-	return &matchingFlavors[0].Key, nil
+	return &matching[0].Key, nil
 }
