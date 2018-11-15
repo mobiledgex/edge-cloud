@@ -4,6 +4,7 @@
 
 CXX = g++
 CPPFLAGS += -I.
+CPPFLAGS += -I../common
 CXXFLAGS += -std=c++11
 LDFLAGS += -L/usr/local/lib \
            -ldl\
@@ -11,8 +12,8 @@ LDFLAGS += -L/usr/local/lib \
 
 all: sample_client
 
-sample_client: test_credentials.o sample_client.o
-	$(CXX) $^ $(LDFLAGS) -I. -L. -o $@
+sample_client: ../common/test_credentials.o sample_client.o
+	$(CXX) $^ $(LDFLAGS) $(CPPFLAGS) -L. -o $@
 
 clean:
 	rm -rf *.o sample_client

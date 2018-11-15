@@ -16,7 +16,6 @@ class MexRestClient {
   public:
     string carrierNameDefault = "TDG";
     string baseDmeHost = "dme.mobiledgex.net";
-    //string baseDmeHost = "localhost";
     unsigned int dmePort = 38001; // HTTP REST port
 
     // API Paths:
@@ -158,7 +157,7 @@ class MexRestClient {
             curl_easy_setopt(curl, CURLOPT_CAINFO, caCrtFile.c_str());
 
             // verify peer or disconnect
-            //curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 
             res = curl_easy_perform(curl);
 

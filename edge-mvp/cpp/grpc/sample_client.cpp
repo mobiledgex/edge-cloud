@@ -16,6 +16,14 @@ using grpc::Channel;
 using grpc::ClientContext;
 using grpc::Status;
 
+
+// Test Cert files:
+struct MutualAuthFiles {
+    const string caCrtFile = "../../../tls/out/mex-ca.crt";
+    const string clientCrtFile = "../../../tls/out/mex-client.crt";
+    const string clientKeyFile = "../../../tls/out/mex-client.key";
+} mutualAuthFiles;
+
 class MexGrpcClient {
   public:
     unsigned long timeoutSec = 5000;
@@ -179,6 +187,15 @@ class MexGrpcClient {
         curl_easy_setopt(curl, CURLOPT_HEADERDATA, &(this->token));
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_callback);
 
+        // SSL Setup:
+        curl_easy_setopt(curl, CURLOPT_SSLCERT, mutualAuthFiles.clientCrtFile.c_str());
+        curl_easy_setopt(curl, CURLOPT_SSLKEY, mutualAuthFiles.clientKeyFile.c_str());
+        // CA:
+        curl_easy_setopt(curl, CURLOPT_CAINFO, mutualAuthFiles.caCrtFile.c_str());
+
+        // verify peer or disconnect
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+
         res = curl_easy_perform(curl);
         if (res != CURLE_OK) {
            cerr << "Error getting token: " << res << endl;
@@ -304,11 +321,15 @@ class MexGrpcClient {
 int main() {
     cout << "Hello C++ MEX GRPC Lib" << endl;
     string host = "tdg2.dme.mobiledgex.net:50051";
-    //string host = "127.0.0.1:50051";
 
     // Credentials, Mutual Authentication:
+    unique_ptr<test_credentials> test_creds = unique_ptr<test_credentials>(
+            new test_credentials(
+                mutualAuthFiles.caCrtFile,
+                mutualAuthFiles.clientCrtFile,
+                mutualAuthFiles.clientKeyFile));
+
     grpc::SslCredentialsOptions credentials;
-    unique_ptr<test_credentials> test_creds = unique_ptr<test_credentials>(new test_credentials());
 
     credentials.pem_root_certs = test_creds->caCrt;
     credentials.pem_cert_chain = test_creds->clientCrt;
