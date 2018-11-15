@@ -1,26 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmcentralgcp
+  name: crmmunich
   labels:
-    app: crmcentralgcp
+    app: crmmunich
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmcentralgcp
+      app: crmmunich
   template:
     metadata:
       labels:
-        app: crmcentralgcp
+        app: crmmunich
     spec:
       containers:
-      - name: crmcentralgcp
+      - name: crmmunich
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
         imagePullPolicy: Always
         env:
-         - name: PATH
-           value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
          - name: MEX_CF_USER
            value: mobiledgex.ops@mobiledgex.com
          - name: MEX_CF_KEY
@@ -32,13 +30,13 @@ spec:
          - name: MEX_DIR
            value: /root/.mobiledgex
          - name: OS_AUTH_URL
-           value: NOTHING
+           value: https://munedgecloud.telekom.de:5000/v2.0
          - name: OS_CACERT
-           value: NOTHING
+           value: /root/.mobiledgex/telesec_chain.crt
          - name: OS_USERNAME
            value: mexadmin
          - name: OS_PASSWORD
-           value: NOTHING
+           value: E:KJU5H3%tw*rp4@
          - name: OS_REGION_NAME
            value: RegionOne
          - name: OS_TENANT_NAME
@@ -49,7 +47,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"gcp\"},\"name\":\"centraluscloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"munichdemocloudlet\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
