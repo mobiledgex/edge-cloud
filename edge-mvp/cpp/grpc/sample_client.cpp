@@ -68,7 +68,7 @@ class MexGrpcClient {
         return location;
     }
 
-    unique_ptr<RegisterClientRequest> createRegisterClientRequest() {
+    unique_ptr<RegisterClientRequest> createRegisterClientRequest(const string &authToken) {
         unique_ptr<RegisterClientRequest> request = unique_ptr<RegisterClientRequest>(new RegisterClientRequest());
 
         request->set_ver(1);
@@ -76,6 +76,7 @@ class MexGrpcClient {
         request->set_devname(devName);
         request->set_appname(appName);
         request->set_appvers(appVersionStr);
+        request->set_authtoken(authToken);
 
         return request;
     }
@@ -348,7 +349,7 @@ int main() {
              << endl;
 
         RegisterClientReply registerClientReply;
-        shared_ptr<RegisterClientRequest> registerClientRequest = unique_ptr<RegisterClientRequest>(mexClient->createRegisterClientRequest());
+        shared_ptr<RegisterClientRequest> registerClientRequest = unique_ptr<RegisterClientRequest>(mexClient->createRegisterClientRequest(""));
         grpc::Status grpcStatus = mexClient->RegisterClient(registerClientRequest, registerClientReply);
 
         if (!grpcStatus.ok()) {
