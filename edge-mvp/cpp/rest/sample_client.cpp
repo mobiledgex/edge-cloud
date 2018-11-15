@@ -49,7 +49,6 @@ class MexRestClient {
     }
 
     string generateDmeHostPath(string carrierName) {
-        return baseDmeHost;
         if (carrierName == "") {
             return carrierNameDefault + "." + baseDmeHost;
         }
@@ -161,9 +160,7 @@ class MexRestClient {
 
             res = curl_easy_perform(curl);
 
-            cout << "Posting request: " << request << endl;
             curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpResponse);
-            cout << "Response Code: " << httpResponse << endl;
             if (res != CURLE_OK) {
                 cout << "curl_easy_perform() failed: " << curl_easy_strerror(res) << endl;
                 curl_easy_cleanup(curl);
@@ -402,11 +399,11 @@ int main() {
         json registerClientRequest = mexClient->createRegisterClientRequest();
         json registerClientReply = mexClient->RegisterClient(baseuri, registerClientRequest, strRegisterClientReply, httpResponse);
 
+        cout << "REST http response code: " << httpResponse << endl;
         if (registerClientReply.size() == 0) {
             cerr << "REST RegisterClient Error: NO RESPONSE." << endl;
             return 1;
         } else {
-            cout << "REST http response code: " << httpResponse << endl;
             cout << "REST RegisterClient Status: "
                  << ", Dump: [" << registerClientReply.dump() << "]"
                  << endl
@@ -429,11 +426,11 @@ int main() {
         json verifyLocationReply = mexClient->VerifyLocation(baseuri, verifyLocationRequest, strVerifyLocationReply, httpResponse);
 
         // Print some reply values out:
+        cout << "REST http response code: " << httpResponse << endl;
         if (verifyLocationReply.size() == 0) {
             cout << "REST VerifyLocation Status: NO RESPONSE" << endl;
         }
         else {
-            cout << "REST http response code: " << httpResponse << endl;
             cout << "[" << verifyLocationReply.dump() << "]" << endl;
         }
 
@@ -447,11 +444,11 @@ int main() {
         json findCloudletRequest = mexClient->createFindCloudletRequest(mexClient->getCarrierName(), loc);
         json findCloudletReply = mexClient->FindCloudlet(baseuri, findCloudletRequest, strFindCloudletReply, httpResponse);
 
+        cout << "REST http response code: " << httpResponse << endl;
         if (findCloudletReply.size() == 0) {
             cout << "REST VerifyLocation Status: NO RESPONSE" << endl;
         }
         else {
-            cout << "REST http response code: " << httpResponse << endl;
             cout << "REST FindCloudlet Status: "
                  << "Version: " << findCloudletReply["Ver"]
                  << ", Location Found Status: " << findCloudletReply["status"]

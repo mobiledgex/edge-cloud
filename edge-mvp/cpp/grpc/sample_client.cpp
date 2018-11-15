@@ -221,11 +221,13 @@ class MexGrpcClient {
         string key = queryParameter.substr(0, vpos);
         cout << "Key: " << key << endl;
         vpos += 1; // skip over '='
-        string valPart = queryParameter.substr(vpos, queryParameter.length());
+        string valPart = queryParameter.substr(vpos, queryParameter.length() - vpos);
+        cout << "ValPart: " << valPart << endl;
         if ((key == keyFind) && (vpos != std::string::npos)) {
 
             if (vpos < queryParameter.length()) {
-                foundToken = queryParameter.substr(vpos, queryParameter.length());
+                foundToken = queryParameter.substr(vpos, queryParameter.length() - vpos);
+                cout << "Found Token: " << foundToken << endl;
             }
         }
         return foundToken;
