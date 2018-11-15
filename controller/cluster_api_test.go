@@ -20,6 +20,10 @@ func TestClusterApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
+	// create support data
+	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
+	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
+
 	testutil.InternalClusterTest(t, "cud", &clusterApi, testutil.ClusterData)
 
 	dummy.Stop()

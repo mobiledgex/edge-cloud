@@ -50,5 +50,16 @@ test-debug:
 test-python:
 	bash ./setup-env/e2e-tests/python/tools/run_all_tests.sh
 
+# start/restart local processes to run individual python or other tests against
+test-start:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+
+# restart process, clean data
+test-reset:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_reset_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+
+test-stop:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
+
 clean:
 	go clean ./...
