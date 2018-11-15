@@ -1,0 +1,7 @@
+##
+##
+description: Stops and cleans up any existing process data, restarts processes
+
+tests:
+ - includefile: stop_cleanup.yml
+ - includefile: deploy_start_create.yml
