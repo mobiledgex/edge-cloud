@@ -3,27 +3,21 @@ package com.mobiledgex.matchingengine;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.location.Location;
 import android.net.ConnectivityManager;
 import android.net.wifi.WifiManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
-import android.telephony.NeighboringCellInfo;
 import android.telephony.TelephonyManager;
 
-import com.google.protobuf.ByteString;
-import com.mobiledgex.matchingengine.util.OkHttpSSLChannelHelper;
-
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.util.List;
+import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -56,7 +50,10 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
 import android.content.pm.PackageInfo;
 import android.util.Log;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManagerFactory;
 
 
 // TODO: GRPC (which needs http/2).
@@ -865,41 +862,72 @@ public class MatchingEngine {
     }
 
     public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance()
-            throws IOException, InvalidKeySpecException, MexKeyStoreException, MexTrustStoreException,
-                KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
+            throws IOException, MexKeyStoreException,
+            KeyManagementException, KeyStoreException, NoSuchAlgorithmException {
         if (mMutualAuthSocketFactory != null) {
             return mMutualAuthSocketFactory;
         }
 
-        // FIXME: Temporary. This is NOT the right place to put the CA, cert and key.
-        // First, copy asset files to local storage
-        String outputDir = mContext.getFilesDir().getAbsolutePath();
-        OkHttpSSLChannelHelper.copyAssets(mContext, "mexcerts", outputDir);
-
-        String trustCaFilePath = outputDir + "/mex-ca.crt";
-        String clientCertFilePath = outputDir + "/mex-client.crt";
-        String privateKeyFilePath = outputDir + "/mex-client.key";
-
-        FileInputStream trustCAFis = null;
-        FileInputStream clientCertFis = null;
-        PrivateKey privateKey = OkHttpSSLChannelHelper.getPrivateKey(privateKeyFilePath);
+        // FIXME: Add link to instructions on how to create the .bks and .p12 files from existing cert/key files.
+        // FIXME: Still need to see about securing the BKS and P12 files with passwords, then securing those passwords too.
+        String serverBksFileName = "mexcerts/mex-ca.bks";
+        String clientKeyPairFileName = "mexcerts/mex-client.p12";
+        char[] serverBksPassword = "".toCharArray();
+        char[] clientKeyPairPassword = "".toCharArray();
 
         try {
-            trustCAFis = new FileInputStream(trustCaFilePath);
-            clientCertFis = new FileInputStream(clientCertFilePath);
-
-            mMutualAuthSocketFactory = OkHttpSSLChannelHelper.getMutualAuthSSLSocketFactory(
-                    trustCAFis,
-                    clientCertFis,
-                    privateKey);
-        } finally {
-            if (trustCAFis != null) {
-                trustCAFis.close();
-            }
-            if (clientCertFis != null) {
-                clientCertFis.close();
-            }
+            mMutualAuthSocketFactory = getMutualAuthSSLSocketFactoryInstance(serverBksFileName,
+                    clientKeyPairFileName, serverBksPassword, clientKeyPairPassword);
+        } catch (CertificateException ce) {
+            throw new MexKeyStoreException("MexKeyStoreException: ", ce);
+        } catch (UnrecoverableKeyException uke) {
+            throw new MexKeyStoreException("MexKeyStoreException: ", uke);
         }
+
+        return mMutualAuthSocketFactory;
+    }
+
+    /**
+     * This method creates an SSL Socket Factory using a server certificate Key Store in .bks
+     * (Bouncy Castle) format, and a client cert/key pair in .p12 (pkcs12) format.
+     *
+     * @param serverBksFileName  Server certificate Key Store in .bks format.
+     * @param clientKeyPairFileName  Client cert/key pair in .p12 format.
+     * @param serverBksPassword  Password for server certificate Key Store.
+     * @param clientKeyPairPassword  Password for client cert/key pair.
+     * @return
+     * @throws IOException
+     * @throws KeyManagementException
+     * @throws KeyStoreException
+     * @throws NoSuchAlgorithmException
+     * @throws CertificateException
+     * @throws UnrecoverableKeyException
+     */
+    public SSLSocketFactory getMutualAuthSSLSocketFactoryInstance(String serverBksFileName,
+                                                                  String clientKeyPairFileName,
+                                                                  char[] serverBksPassword,
+                                                                  char[] clientKeyPairPassword)
+            throws IOException, KeyManagementException, KeyStoreException, NoSuchAlgorithmException,
+                CertificateException, UnrecoverableKeyException {
+        if (mMutualAuthSocketFactory != null) {
+            return mMutualAuthSocketFactory;
+        }
+
+        KeyStore trustStore = KeyStore.getInstance("bks");
+        trustStore.load(mContext.getAssets().open(serverBksFileName), serverBksPassword);
+
+        KeyStore keyStore = KeyStore.getInstance("pkcs12");
+        keyStore.load(null, null);
+        keyStore.load(mContext.getAssets().open(clientKeyPairFileName), clientKeyPairPassword);
+
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance("X509");
+        trustManagerFactory.init(trustStore);
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("X509");
+        keyManagerFactory.init(keyStore, null);
+
+        SSLContext ctx  = SSLContext.getInstance("TLS");
+        ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), new SecureRandom());
+        mMutualAuthSocketFactory = ctx.getSocketFactory();
 
         return mMutualAuthSocketFactory;
     }
@@ -930,8 +958,6 @@ public class MatchingEngine {
                         .usePlaintext()
                         .build();
             }
-        } catch (InvalidKeySpecException ikse) {
-            throw new MexKeyStoreException("InvalidKeystore: ", ikse);
         } catch (KeyStoreException kse) {
             throw new MexKeyStoreException("MexKeyStoreException: ", kse);
         }
