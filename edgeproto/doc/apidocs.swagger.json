@@ -1225,6 +1225,10 @@
         "public_path": {
           "type": "string",
           "description": "Public facing path for HTTP L7 access."
+        },
+        "FQDN_prefix": {
+          "type": "string",
+          "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
         }
       },
       "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."
@@ -1313,7 +1317,7 @@
         },
         "access_ports": {
           "type": "string",
-          "description": "For Layer4 access, the ports the app listens on.\nThis is a comma separated list of protocol:port pairs, i.e.\ntcp:80,http:443,udp:10002.\nOnly tcp, udp, and http protocols are supported; tcp and udp are assumed\nto be L4, and http is assumed to be L7 access."
+          "description": "For Layer4 and Layer7 access, the ports the app listens on.\nThis is a comma separated list of protocol:port pairs, i.e.\ntcp:80,http:443,udp:10002.\nOnly tcp, udp, and http protocols are supported; tcp and udp are assumed\nto be L4, and http is assumed to be L7 access."
         },
         "config": {
           "type": "string",
@@ -1327,13 +1331,29 @@
           "$ref": "#/definitions/edgeprotoClusterKey",
           "description": "Cluster on which the App can be instantiated.\nIf not specified during create, a cluster will be automatically created.\nIf specified, it must exist."
         },
-        "app_template": {
-          "type": "string",
-          "description": "Template of kubernetes deployment yaml.\nWho/What sets this is TDB, but it should not be directly\nexposed to the user, because we do not want to expose\nkubernetes to the user. However, because we currently don't have any\nother way to set it, for flexibility, for now it is exposed to the user."
-        },
         "auth_public_key": {
           "type": "string",
           "title": "public key used for authentication"
+        },
+        "command": {
+          "type": "string",
+          "title": "Command to start service"
+        },
+        "annotations": {
+          "type": "string",
+          "title": "Annotations is a comma separated map of arbitrary key value pairs,\nfor example: key1=val1,key2=val2,key3=\"val 3\""
+        },
+        "deployment": {
+          "type": "string",
+          "title": "Deployment target (kubernetes, docker, kvm, etc)"
+        },
+        "deployment_manifest": {
+          "type": "string",
+          "title": "Deployment manifest is the deployment specific manifest file/config"
+        },
+        "deployment_generator": {
+          "type": "string",
+          "title": "Deployment generator target"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
@@ -1358,7 +1378,7 @@
         },
         "uri": {
           "type": "string",
-          "title": "URI to connect to this instance"
+          "description": "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access."
         },
         "cluster_inst_key": {
           "$ref": "#/definitions/edgeprotoClusterInstKey",

@@ -13,12 +13,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: developer
   cloudletname: default
   gpslocation: {}
@@ -30,10 +33,13 @@ cloudlets:
     ports:
     - proto: LProtoTCP
       internalport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
@@ -48,12 +54,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-1
   gpslocation:
@@ -68,12 +77,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-2
   gpslocation:
@@ -88,12 +100,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-3
   gpslocation:
@@ -108,12 +123,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-4
   gpslocation:
@@ -128,12 +146,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-5
   gpslocation:
@@ -148,12 +169,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-6
   gpslocation:
@@ -168,12 +192,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-7
   gpslocation:
@@ -188,12 +215,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: dmuus
   cloudletname: dmuus-cloud-8
   gpslocation:
@@ -208,9 +238,12 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.

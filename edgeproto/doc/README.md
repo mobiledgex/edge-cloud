@@ -200,12 +200,16 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | image_path | [string](#string) |  | URI from which to download image |
 | image_type | [ImageType](#edgeproto.ImageType) |  | Image type (see ImageType) |
 | ip_access | [IpAccess](#edgeproto.IpAccess) |  | IP access type |
-| access_ports | [string](#string) |  | For Layer4 access, the ports the app listens on. This is a comma separated list of protocol:port pairs, i.e. tcp:80,http:443,udp:10002. Only tcp, udp, and http protocols are supported; tcp and udp are assumed to be L4, and http is assumed to be L7 access. |
+| access_ports | [string](#string) |  | For Layer4 and Layer7 access, the ports the app listens on. This is a comma separated list of protocol:port pairs, i.e. tcp:80,http:443,udp:10002. Only tcp, udp, and http protocols are supported; tcp and udp are assumed to be L4, and http is assumed to be L7 access. |
 | config | [string](#string) |  | URI of resource to be used to establish config for App. |
 | default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
 | cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster on which the App can be instantiated. If not specified during create, a cluster will be automatically created. If specified, it must exist. |
-| app_template | [string](#string) |  | Template of kubernetes deployment yaml. Who/What sets this is TDB, but it should not be directly exposed to the user, because we do not want to expose kubernetes to the user. However, because we currently don&#39;t have any other way to set it, for flexibility, for now it is exposed to the user. |
 | auth_public_key | [string](#string) |  | public key used for authentication |
+| command | [string](#string) |  | Command to start service |
+| annotations | [string](#string) |  | Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=&#34;val 3&#34; |
+| deployment | [string](#string) |  | Deployment target (kubernetes, docker, kvm, etc) |
+| deployment_manifest | [string](#string) |  | Deployment manifest is the deployment specific manifest file/config |
+| deployment_generator | [string](#string) |  | Deployment generator target |
 
 
 
@@ -284,7 +288,7 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
 | key | [AppInstKey](#edgeproto.AppInstKey) |  | Unique identifier key |
 | cloudlet_loc | [distributed_match_engine.Loc](#distributed_match_engine.Loc) |  | Cached location of the cloudlet |
-| uri | [string](#string) |  | URI to connect to this instance |
+| uri | [string](#string) |  | Base FQDN (not really URI) for the App. See Service FQDN for endpoint access. |
 | cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instatiated (not specifiable by user) |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
 | mapped_ports | [distributed_match_engine.AppPort](#distributed_match_engine.AppPort) | repeated | For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access. |
