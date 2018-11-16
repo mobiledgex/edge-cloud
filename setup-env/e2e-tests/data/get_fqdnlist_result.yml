@@ -9,3 +9,4 @@ appfqdns:
   devname: AcmeAppCo
   fqdn: default.someapplication2.AcmeAppCo.com
   androidpackagename: com.acmeappco.someapplication2
+status: FL_SUCCESS
