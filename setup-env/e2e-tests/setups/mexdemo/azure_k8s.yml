@@ -20,10 +20,10 @@ cloudflare:
     content: 40.122.66.18
   - name: mobiledgexsdkdemomobiledgexsdkdemo10.bonndemocloudlet.tdg.mobiledgex.net
     type: A
-    content: 37.50.143.101
+    content: 37.50.143.107
   - name: mobiledgexsdkdemofacedetectiondemo10.bonndemocloudlet.tdg.mobiledgex.net
     type: A
-    content: 37.50.143.101
+    content: 37.50.143.107
   - name: mobiledgexsdkdemomobiledgexsdkdemo10.hamburgdemocloudlet.tdg.mobiledgex.net
     type: A
     content: 80.187.132.8

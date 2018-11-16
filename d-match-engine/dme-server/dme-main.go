@@ -82,6 +82,7 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 	}
 
 	getFqdnList(req, flist)
+	log.DebugLog(log.DebugLevelDmereq, "GetFqdnList returns", "status", flist.Status)
 	return flist, nil
 }
 
@@ -103,6 +104,7 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	}
 	alist := new(dme.AppInstListReply)
 	getAppInstList(ckey, req, alist)
+	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList returns", "status", alist.Status)
 	return alist, nil
 }
 
