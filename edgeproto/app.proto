@@ -75,8 +75,19 @@ message App {
   string app_template = 11;
   // public key used for authentication
   string auth_public_key = 12;
+  // Command to start service
+  string command = 13;
+  // Annotations is a comma separated map of arbitrary key value pairs,
+  // for example: key1=val1,key2=val2,key3="val 3"
+  string annotations = 14;
+  // Deployment target (kubernetes, docker, kvm, etc)
+  string deployment = 15 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Deployment manifest is the deployment specific manifest file/config
+  string deployment_manifest = 16 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Deployment generator target
+  string deployment_generator = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Android package name, optional
-  string android_package_name = 13;
+  string android_package_name = 18;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
