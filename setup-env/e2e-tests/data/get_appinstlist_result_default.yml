@@ -1,3 +1,4 @@
+status: AI_SUCCESS
 cloudlets:
 - carriername: developer
   cloudletname: default

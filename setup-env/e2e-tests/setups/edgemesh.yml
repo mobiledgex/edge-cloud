@@ -1,6 +1,6 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- buckhornvm: 37.50.143.102
+- buckhornvm: 37.50.143.114
 - beaconvm: 80.187.128.26
 - hawkinsvm: 80.187.132.20
 - dockerimage: "registry.mobiledgex.net:5003/edgemesh/supernode"
@@ -25,6 +25,7 @@ sampleapps:
   hostname: "{{buckhornvm}}"
   volumemounts: 
     - /data:/usr/local/etc/edgemesh
+  command: "/bin/sh -c /usr/bin/supernode"
   dockerimage: "{{dockerimage}}"
 
 - sampleapplocal:
@@ -32,6 +33,7 @@ sampleapps:
   hostname: "{{beaconvm}}"
   volumemounts:
     - /data:/usr/local/etc/edgemesh
+  command: "/bin/sh -c /usr/bin/supernode"
   dockerimage: "{{dockerimage}}"
 
 - sampleapplocal:
@@ -39,4 +41,5 @@ sampleapps:
   hostname: "{{hawkinsvm}}"
   volumemounts:
     - /data:/usr/local/etc/edgemesh
+  command: "/bin/sh -c /usr/bin/supernode"
   dockerimage: "{{dockerimage}}"

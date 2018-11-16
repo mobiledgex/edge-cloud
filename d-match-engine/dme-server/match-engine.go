@@ -358,6 +358,7 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 			}
 		}
 	}
+	clist.Status = dme.FqdnListReply_FL_SUCCESS
 }
 
 func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, clist *dme.AppInstListReply) {
@@ -414,6 +415,7 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 	for _, c := range foundCloudlets {
 		clist.Cloudlets = append(clist.Cloudlets, c)
 	}
+	clist.Status = dme.AppInstListReply_AI_SUCCESS
 }
 
 func listAppinstTbl() {

@@ -1,3 +1,4 @@
+status: AI_SUCCESS
 cloudlets:
 - carriername: azure
   cloudletname: azure-cloud-9
