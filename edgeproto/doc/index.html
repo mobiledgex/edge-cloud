@@ -701,7 +701,7 @@
                   <td>access_ports</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
-                  <td><p>For Layer4 and Layer7 access, the ports the app listens on.
+                  <td><p>For Layer4 access, the ports the app listens on.
 This is a comma separated list of protocol:port pairs, i.e.
 tcp:80,http:443,udp:10002.
 Only tcp, udp, and http protocols are supported; tcp and udp are assumed
@@ -729,6 +729,17 @@ to be L4, and http is assumed to be L7 access. </p></td>
                   <td><p>Cluster on which the App can be instantiated.
 If not specified during create, a cluster will be automatically created.
 If specified, it must exist. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>app_template</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Template of kubernetes deployment yaml.
+Who/What sets this is TDB, but it should not be directly
+exposed to the user, because we do not want to expose
+kubernetes to the user. However, because we currently don&#39;t have any
+other way to set it, for flexibility, for now it is exposed to the user. </p></td>
                 </tr>
               
                 <tr>
