@@ -1,11 +1,11 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- locverurl: "http://37.50.143.110:8888/verifyLocation"
-- toksrvurl: "http://37.50.143.110:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
-- bonnctrl: "tdg3.ctrl.mobiledgex.net"
-- bonndme: "tdg3.dme.mobiledgex.net"
-- bonncrm: "tdg3.crm.mobiledgex.net"
-- vm1_external_ip: 37.50.143.110
+- locverurl: "http://37.50.143.111:8888/verifyLocation"
+- toksrvurl: "http://37.50.143.111:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- bonnctrl: "tdg.ctrl.mobiledgex.net"
+- bonndme: "tdg.dme.mobiledgex.net"
+- bonncrm: "tdg.crm.mobiledgex.net"
+- vm1_external_ip: 37.50.143.111
 - vm1_internal_ip: 127.0.0.1
 
 cloudflare:
