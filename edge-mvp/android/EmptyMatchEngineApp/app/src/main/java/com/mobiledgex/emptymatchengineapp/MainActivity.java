@@ -2,6 +2,7 @@ package com.mobiledgex.emptymatchengineapp;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -256,15 +257,18 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
                     boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
 
-                    //MatchingEngineRequest req = mMatchingEngine.createRequest(ctx, location); // Regular use case.
-                    String host = "tdg.dme.mobiledgex.net"; // Override host.
+                    //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
+                    String carrierName = "TDG";                                             // Override carrierName
+                    //String host = mMatchingEngine.generateDmeHostAddress(carrierName);    // Regular use case
+                    String host = mMatchingEngine.generateDmeHostAddress(carrierName);      // Override carrier specific host name
                     int port = mMatchingEngine.getPort(); // Keep same port.
-                    String carrierName = "T-Mobile";
-                    String devName = "EmptyMatchEngineApp";
+
+                    String devName = "EmptyMatchEngineApp"; // Always supplied by application.
 
                     AppClient.RegisterClientRequest registerClientRequest =
                             mMatchingEngine.createRegisterClientRequest(ctx,
-                                    devName, "", "");
+                                    devName, mMatchingEngine.getAppName(ctx),
+                                    null, carrierName, null);
 
                     AppClient.RegisterClientReply registerStatus =
                             mMatchingEngine.registerClient(registerClientRequest,
@@ -299,23 +303,43 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         boolean first = true;
                         String appPortFormat = "{Protocol: %d, Container Port: %d, External Port: %d, Public Path: '%s'}";
                         for (Appcommon.AppPort aPort : ports) {
-                            if (first) {
-                                portListStr += String.format(Locale.getDefault(), appPortFormat,
-                                        aPort.getProto().getNumber(),
-                                        aPort.getInternalPort(),
-                                        aPort.getPublicPort(),
-                                        aPort.getPublicPath());
-                                ;
-                            } else {
-                                portListStr += ", " + String.format(Locale.getDefault(), appPortFormat,
-                                        aPort.getProto().getNumber(),
-                                        aPort.getInternalPort(),
-                                        aPort.getPublicPort(),
-                                        aPort.getPublicPath());
+                            if (!first) {
+                                portListStr += ", ";
+
                             }
+                            portListStr += String.format(Locale.getDefault(), appPortFormat,
+                                aPort.getProto().getNumber(),
+                                aPort.getInternalPort(),
+                                aPort.getPublicPort(),
+                                aPort.getPublicPath());
                         }
 
                         someText += "[Cloudlet App Ports: [" + portListStr + "]\n";
+
+                        String appInstListText = "";
+                        AppClient.AppInstListRequest appInstListRequest = mMatchingEngine.createAppInstListRequest(ctx, carrierName, location);
+                        AppClient.AppInstListReply appInstListReply = mMatchingEngine.getAppInstList(appInstListRequest,10000);
+                        for (AppClient.CloudletLocation cloudletLocation : appInstListReply.getCloudletsList()) {
+                            String location_carrierName = cloudletLocation.getCarrierName();
+                            String location_cloudletName = cloudletLocation.getCloudletName();
+                            double location_distance = cloudletLocation.getDistance();
+
+                            appInstListText += "[CloudletLocation: CarrierName: " + location_carrierName;
+                            appInstListText += ", CloudletName: " + location_cloudletName;
+                            appInstListText += ", Distance: " + location_distance;
+                            appInstListText += " , AppInstances: [";
+                            for (AppClient.Appinstance appinstance : cloudletLocation.getAppinstancesList()) {
+                                appInstListText += "Name: " + appinstance.getAppName()
+                                                + ", Version: " + appinstance.getAppVers()
+                                                + ", FQDN: " + appinstance.getFQDN()
+                                                + ", Ports: " + appinstance.getPortsList().toString();
+
+                            }
+                            appInstListText += "]]";
+                        }
+                        if (!appInstListText.isEmpty()) {
+                            someText += appInstListText;
+                        }
                     } else {
                         someText = "Cannot create request object.\n";
                         if (!mexAllowed) {
@@ -367,6 +391,8 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     sre.printStackTrace();
                 } catch (IllegalArgumentException iae) {
                     iae.printStackTrace();
+                } catch (Resources.NotFoundException nfe) {
+                    nfe.printStackTrace();
                 }
             }
         });

@@ -68,7 +68,6 @@ public class MatchingEngine {
     final ExecutorService threadpool;
 
     // State info for engine
-    private UUID mUUID;
     private String mSessionCookie;
     private String mTokenServerURI;
     private String mTokenServerToken;
@@ -201,27 +200,26 @@ public class MatchingEngine {
     }
 
     public String getAppName(Context context) {
-        String applicationName = null;
-        // App
-        ApplicationInfo appInfo = context.getApplicationInfo();
+        String appName = "";
         String packageLabel = "";
+
+        ApplicationInfo appInfo = context.getApplicationInfo();
         if (context.getPackageManager() != null) {
             CharSequence seq = appInfo.loadLabel(context.getPackageManager());
             if (seq != null) {
                 packageLabel = seq.toString();
             }
         }
-        String appName;
-        if (applicationName == null || applicationName.equals("")) {
+        if (packageLabel != null && !packageLabel.isEmpty()) {
             appName = packageLabel;
-        } else {
-            appName = applicationName;
         }
         return appName;
     }
 
     public RegisterClientRequest createRegisterClientRequest(Context context, String developerName,
-                                                             String applicationName, String appVersion) {
+                                                             String applicationName, String appVersion,
+                                                             String carrierName, String authToken)
+    {
         if (!mMexLocationAllowed) {
             Log.d(TAG, "Create Request disabled. Matching engine is not configured to allow use.");
             return null;
@@ -258,9 +256,12 @@ public class MatchingEngine {
             developerName = packageLabel; // From signing certificate?
         }
         return AppClient.RegisterClientRequest.newBuilder()
-                .setDevName(developerName)
+                .setDevName((developerName == null) ? "" : developerName)
                 .setAppName(appName)
                 .setAppVers(versionName)
+                .setCarrierName((carrierName == null || carrierName.equals(""))
+                        ? retrieveNetworkCarrierName(context) : carrierName)
+                .setAuthToken((authToken == null) ? "" : authToken)
                 .build();
     }
 
@@ -287,7 +288,9 @@ public class MatchingEngine {
 
         return AppClient.VerifyLocationRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
-                .setCarrierName(carrierName)
+                .setCarrierName(
+                        (carrierName == null || carrierName.equals(""))
+                            ? retrieveNetworkCarrierName(context) : carrierName)
                 .setGpsLocation(aLoc) // Latest token is unknown until retrieved.
                 .build();
     }
@@ -356,7 +359,8 @@ public class MatchingEngine {
 
         return AppClient.AppInstListRequest.newBuilder()
                 .setSessionCookie(mSessionCookie)
-                .setCarrierName(carrierName)
+                .setCarrierName((carrierName == null || carrierName.equals(""))
+                        ? retrieveNetworkCarrierName(context) : carrierName)
                 .setGpsLocation(aLoc)
                 .build();
     }
