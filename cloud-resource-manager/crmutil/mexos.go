@@ -21,6 +21,7 @@ import (
 	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 
 	"github.com/nanobox-io/golang-ssh"
@@ -1641,7 +1642,7 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
 		}
 		log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", item.Metadata.Name, "externalIPs", kp.ipaddr)
-		fqdn := item.Metadata.Name + "." + fqdnBase
+		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
 		for _, rec := range recs {
 			if rec.Type == "A" && rec.Name == fqdn {
 				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
@@ -1711,10 +1712,7 @@ func KubernetesApplyManifest(mf *Manifest) error {
 	if err != nil {
 		return err
 	}
-	kubeManifest, err := genKubeManifest(mf)
-	if err != nil {
-		return err
-	}
+	kubeManifest := mf.Config.ConfigDetail.Manifest
 	cmd := fmt.Sprintf("cat <<'EOF'> %s \n%s\nEOF", mf.Metadata.Name, kubeManifest)
 	out, err := kp.client.Output(cmd)
 	if err != nil {
@@ -2010,7 +2008,7 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		} else {
 			log.DebugLog(log.DebugLevelMexos, "deleted service", "name", item.Metadata.Name)
 		}
-		fqdn := item.Metadata.Name + "." + fqdnBase
+		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
 		for _, rec := range recs {
 			if rec.Type == "A" && rec.Name == fqdn {
 				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {

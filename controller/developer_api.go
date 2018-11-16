@@ -22,10 +22,6 @@ func InitDeveloperApi(sync *Sync) {
 	sync.RegisterCache(&developerApi.cache)
 }
 
-func (s *DeveloperApi) HasDeveloper(key *edgeproto.DeveloperKey) bool {
-	return s.cache.HasKey(key)
-}
-
 func (s *DeveloperApi) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
 	return s.store.Create(in, s.sync.syncWait)
 }

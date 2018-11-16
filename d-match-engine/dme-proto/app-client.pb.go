@@ -31,6 +31,7 @@
 		AppPort
 		DlgMessage
 		DlgReply
+		Timestamp
 		Loc
 */
 package distributed_match_engine
@@ -47,7 +48,6 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
-import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -375,7 +375,7 @@ type FindCloudletReply struct {
 	Status FindCloudletReply_FindStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.FindCloudletReply_FindStatus" json:"status,omitempty"`
 	// Full Qualified Domain Name of Closest App instance
 	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
-	// List of ports and L7 paths to connect to App instance
+	// List of Service Endpoints for AppInst
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
 	// Location of the cloudlet
 	CloudletLocation *Loc `protobuf:"bytes,5,opt,name=cloudlet_location,json=cloudletLocation" json:"cloudlet_location,omitempty"`
@@ -1696,7 +1696,7 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1725,6 +1725,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
 	if src.CloudletLocation != nil {
@@ -1737,7 +1738,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 		m.CloudletLocation.Course = src.CloudletLocation.Course
 		m.CloudletLocation.Speed = src.CloudletLocation.Speed
 		if src.CloudletLocation.Timestamp != nil {
-			m.CloudletLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.CloudletLocation.Timestamp = &Timestamp{}
 			m.CloudletLocation.Timestamp.Seconds = src.CloudletLocation.Timestamp.Seconds
 			m.CloudletLocation.Timestamp.Nanos = src.CloudletLocation.Timestamp.Nanos
 		}
@@ -1774,7 +1775,7 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1834,7 +1835,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 		m.NetworkLocation.Course = src.NetworkLocation.Course
 		m.NetworkLocation.Speed = src.NetworkLocation.Speed
 		if src.NetworkLocation.Timestamp != nil {
-			m.NetworkLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.NetworkLocation.Timestamp = &Timestamp{}
 			m.NetworkLocation.Timestamp.Seconds = src.NetworkLocation.Timestamp.Seconds
 			m.NetworkLocation.Timestamp.Nanos = src.NetworkLocation.Timestamp.Nanos
 		}
@@ -1866,7 +1867,7 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1895,6 +1896,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
 }
@@ -1922,7 +1924,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 		m.GpsLocation.Course = src.GpsLocation.Course
 		m.GpsLocation.Speed = src.GpsLocation.Speed
 		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+			m.GpsLocation.Timestamp = &Timestamp{}
 			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
 			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
 		}
@@ -1947,6 +1949,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 					m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
 					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
 					m.Appinstances[i0].Ports[i1].PublicPath = src.Appinstances[i0].Ports[i1].PublicPath
+					m.Appinstances[i0].Ports[i1].FQDNPrefix = src.Appinstances[i0].Ports[i1].FQDNPrefix
 				}
 			}
 		}
@@ -1987,7 +1990,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 				m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
 				m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
 				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = &google_protobuf.Timestamp{}
+					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
 					m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
 					m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
 				}
@@ -2012,6 +2015,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath
+							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix
 						}
 					}
 				}

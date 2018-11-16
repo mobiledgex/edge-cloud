@@ -701,7 +701,7 @@
                   <td>access_ports</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
-                  <td><p>For Layer4 access, the ports the app listens on.
+                  <td><p>For Layer4 and Layer7 access, the ports the app listens on.
 This is a comma separated list of protocol:port pairs, i.e.
 tcp:80,http:443,udp:10002.
 Only tcp, udp, and http protocols are supported; tcp and udp are assumed
@@ -732,21 +732,46 @@ If specified, it must exist. </p></td>
                 </tr>
               
                 <tr>
-                  <td>app_template</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>Template of kubernetes deployment yaml.
-Who/What sets this is TDB, but it should not be directly
-exposed to the user, because we do not want to expose
-kubernetes to the user. However, because we currently don&#39;t have any
-other way to set it, for flexibility, for now it is exposed to the user. </p></td>
-                </tr>
-              
-                <tr>
                   <td>auth_public_key</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>public key used for authentication </p></td>
+                </tr>
+              
+                <tr>
+                  <td>command</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Command to start service </p></td>
+                </tr>
+              
+                <tr>
+                  <td>annotations</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Annotations is a comma separated map of arbitrary key value pairs,
+for example: key1=val1,key2=val2,key3=&#34;val 3&#34; </p></td>
+                </tr>
+              
+                <tr>
+                  <td>deployment</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Deployment target (kubernetes, docker, kvm, etc) </p></td>
+                </tr>
+              
+                <tr>
+                  <td>deployment_manifest</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Deployment manifest is the deployment specific manifest file/config </p></td>
+                </tr>
+              
+                <tr>
+                  <td>deployment_generator</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Deployment generator target </p></td>
                 </tr>
               
                 <tr>
@@ -916,7 +941,7 @@ other way to set it, for flexibility, for now it is exposed to the user. </p></t
                   <td>uri</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
-                  <td><p>URI to connect to this instance </p></td>
+                  <td><p>Base FQDN (not really URI) for the App. See Service FQDN for endpoint access. </p></td>
                 </tr>
               
                 <tr>

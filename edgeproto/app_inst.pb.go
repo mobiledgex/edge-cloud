@@ -28,7 +28,6 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "time"
-import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -62,7 +61,7 @@ type AppInst struct {
 	Key AppInstKey `protobuf:"bytes,2,opt,name=key" json:"key"`
 	// Cached location of the cloudlet
 	CloudletLoc distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
-	// URI to connect to this instance
+	// Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
 	Uri string `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
 	// Cluster instance on which this is instatiated (not specifiable by user)
 	ClusterInstKey ClusterInstKey `protobuf:"bytes,5,opt,name=cluster_inst_key,json=clusterInstKey" json:"cluster_inst_key"`
@@ -1078,6 +1077,7 @@ const AppInstFieldMappedPortsProto = "9.1"
 const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
 const AppInstFieldMappedPortsPublicPath = "9.4"
+const AppInstFieldMappedPortsFQDNPrefix = "9.5"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldIpAccess = "13"
@@ -1111,6 +1111,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsInternalPort,
 	AppInstFieldMappedPortsPublicPort,
 	AppInstFieldMappedPortsPublicPath,
+	AppInstFieldMappedPortsFQDNPrefix,
 	AppInstFieldFlavorName,
 	AppInstFieldIpAccess,
 	AppInstFieldState,
@@ -1144,6 +1145,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsInternalPort:                  struct{}{},
 	AppInstFieldMappedPortsPublicPort:                    struct{}{},
 	AppInstFieldMappedPortsPublicPath:                    struct{}{},
+	AppInstFieldMappedPortsFQDNPrefix:                    struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldIpAccess:                                 struct{}{},
 	AppInstFieldState:                                    struct{}{},
@@ -1264,6 +1266,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 				fields[AppInstFieldMappedPortsPublicPath] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
+			if m.MappedPorts[i0].FQDNPrefix != o.MappedPorts[i0].FQDNPrefix {
+				fields[AppInstFieldMappedPortsFQDNPrefix] = struct{}{}
+				fields[AppInstFieldMappedPorts] = struct{}{}
+			}
 		}
 	}
 	if m.Flavor.Name != o.Flavor.Name {
@@ -1347,7 +1353,7 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			m.CloudletLoc.Speed = src.CloudletLoc.Speed
 		}
 		if _, set := fmap["3.8"]; set && src.CloudletLoc.Timestamp != nil {
-			m.CloudletLoc.Timestamp = &google_protobuf.Timestamp{}
+			m.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
 			if _, set := fmap["3.8.1"]; set {
 				m.CloudletLoc.Timestamp.Seconds = src.CloudletLoc.Timestamp.Seconds
 			}
@@ -1395,6 +1401,9 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			}
 			if _, set := fmap["9.4"]; set {
 				m.MappedPorts[i0].PublicPath = src.MappedPorts[i0].PublicPath
+			}
+			if _, set := fmap["9.5"]; set {
+				m.MappedPorts[i0].FQDNPrefix = src.MappedPorts[i0].FQDNPrefix
 			}
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -118,6 +119,39 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
+	if in.Deployment == "" {
+		in.Deployment, err = cloudcommon.GetDefaultDeploymentType(in.ImageType)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
+	if !cloudcommon.IsValidDeploymentType(in.Deployment) {
+		return &edgeproto.Result{}, fmt.Errorf("invalid deployment, must be one of %v", cloudcommon.ValidDeployments)
+	}
+	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
+		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
+	}
+	if in.Config != "" {
+		configStr, err := cloudcommon.GetAppConfig(in)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+		in.Config = configStr
+		// do a quick parse just to make sure it's valid
+		_, err = cloudcommon.ParseAppConfig(in.Config)
+		if err != nil {
+			return &edgeproto.Result{}, err
+		}
+	}
+
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	if err != nil {
+		return &edgeproto.Result{}, err
+	}
+	// Save manifest to app in case it was a remote target.
+	// Manifest is required on app delete and we'll be in trouble
+	// if remote target is unreachable or changed at that time.
+	in.DeploymentManifest = deploymf
 
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
@@ -258,29 +292,29 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 // GetClusterFlavorForFlavor finds the smallest cluster flavor whose
 // node flavor matches the passed in flavor.
 func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.ClusterFlavorKey, error) {
-	matchingFlavors := make([]*edgeproto.ClusterFlavor, 0)
+	matching := make([]*edgeproto.ClusterFlavor, 0)
 
 	clusterFlavorApi.cache.Mux.Lock()
 	defer clusterFlavorApi.cache.Mux.Unlock()
 	for _, val := range clusterFlavorApi.cache.Objs {
 		if val.NodeFlavor.Matches(flavorKey) {
-			matchingFlavors = append(matchingFlavors, val)
+			matching = append(matching, val)
 		}
 	}
-	if len(matchingFlavors) == 0 {
-		return nil, fmt.Errorf("No cluster flavors matching flavor %s found", flavorKey.Name)
+	if len(matching) == 0 {
+		return nil, fmt.Errorf("No cluster flavors with node flavor %s found", flavorKey.Name)
 	}
-	sort.Slice(matchingFlavors, func(i, j int) bool {
-		if matchingFlavors[i].MaxNodes < matchingFlavors[j].MaxNodes {
-			return true
+	sort.Slice(matching, func(i, j int) bool {
+		if matching[i].MaxNodes != matching[j].MaxNodes {
+			return matching[i].MaxNodes < matching[j].MaxNodes
 		}
-		if matchingFlavors[i].NumNodes < matchingFlavors[j].NumNodes {
-			return true
+		if matching[i].NumNodes != matching[j].NumNodes {
+			return matching[i].NumNodes < matching[j].NumNodes
 		}
-		if matchingFlavors[i].NumMasters < matchingFlavors[j].NumMasters {
-			return true
+		if matching[i].NumMasters != matching[j].NumMasters {
+			return matching[i].NumMasters < matching[j].NumMasters
 		}
-		return false
+		return matching[i].Key.Name < matching[j].Key.Name
 	})
-	return &matchingFlavors[0].Key, nil
+	return &matching[0].Key, nil
 }
