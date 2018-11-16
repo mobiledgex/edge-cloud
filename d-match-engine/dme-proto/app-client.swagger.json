@@ -301,6 +301,10 @@
         "FQDN": {
           "type": "string",
           "title": "App FQDN"
+        },
+        "AndroidPackageName": {
+          "type": "string",
+          "title": "optional android package name"
         }
       }
     },

@@ -205,12 +205,12 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
 | cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster on which the App can be instantiated. If not specified during create, a cluster will be automatically created. If specified, it must exist. |
 | auth_public_key | [string](#string) |  | public key used for authentication |
+| android_package_name | [string](#string) |  | Android package name, optional |
 | command | [string](#string) |  | Command to start service |
 | annotations | [string](#string) |  | Annotations is a comma separated map of arbitrary key value pairs, for example: key1=val1,key2=val2,key3=&#34;val 3&#34; |
 | deployment | [string](#string) |  | Deployment target (kubernetes, docker, kvm, etc) |
 | deployment_manifest | [string](#string) |  | Deployment manifest is the deployment specific manifest file/config |
 | deployment_generator | [string](#string) |  | Deployment generator target |
-
 
 
 
