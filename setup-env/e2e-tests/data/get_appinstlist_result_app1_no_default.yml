@@ -13,12 +13,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
@@ -33,12 +36,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-1
   gpslocation:
@@ -53,12 +59,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-2
   gpslocation:
@@ -73,12 +82,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-3
   gpslocation:
@@ -93,12 +105,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-4
   gpslocation:
@@ -113,12 +128,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-5
   gpslocation:
@@ -133,12 +151,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-6
   gpslocation:
@@ -153,12 +174,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-7
   gpslocation:
@@ -173,12 +197,15 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: tmus
   cloudletname: tmus-cloud-8
   gpslocation:
@@ -193,9 +220,12 @@ cloudlets:
     - proto: LProtoTCP
       internalport: 80
       publicport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
+      fqdnprefix: someapplication1-udp.

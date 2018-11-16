@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crmcmu
+  labels:
+    app: crmcmu
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crmcmu
+  template:
+    metadata:
+      labels:
+        app: crmcmu
+    spec:
+      containers:
+      - name: crmcmu
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        imagePullPolicy: Always
+        env:
+         - name: MEX_CF_USER
+           value: mobiledgex.ops@mobiledgex.com
+         - name: MEX_CF_KEY
+           value: 60632181cb3b7419304ffa820b2d99e292092
+         - name: MEX_SSH_KEY
+           value: id_rsa_mobiledgex
+         - name: MEX_DOCKER_REG_PASS
+           value: sandhill
+         - name: MEX_DIR
+           value: /root/.mobiledgex
+         - name: OS_PROJECT_ID
+           value: 5e4192b32e004438ad59be8a8e03acea
+         - name: OS_USER_DOMAIN_NAME
+           value: default
+         - name: OS_TENANT_NAME
+           value: dummy
+         - name: OS_AUTH_URL
+           value: http://cloudlet004.elijah.cs.cmu.edu:5000/v3
+         - name: OS_CACERT
+           value: dummy
+         - name: OS_USERNAME
+           value: mex
+         - name: OS_PASSWORD
+           value: MEX$Admin12345
+         - name: OS_REGION_NAME
+           value: RegionOne
+         - name: OS_IDENTITY_API_VERSION
+           value: "3"
+        command:
+         - crmserver
+        args:
+         - "--apiAddr"
+         - "0.0.0.0:55091"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"cmudemocloudlet\"}"
+         - "--notifyAddrs"
+         - "controller:37001"
+         - "--tls"
+         - "/root/tls/mex-server.crt"
+         - "--d"
+         - "mexos"
+
+      imagePullSecrets:
+       - name: mexreg-secret
+

@@ -17,7 +17,7 @@ type ClusterApi struct {
 
 var clusterApi = ClusterApi{}
 
-const ClusterAutoPrefix = "AutoCluster"
+const ClusterAutoPrefix = "autocluster"
 
 var ClusterAutoPrefixErr = fmt.Sprintf("Cluster name prefix \"%s\" is reserved",
 	ClusterAutoPrefix)
@@ -51,6 +51,9 @@ func (s *ClusterApi) Get(key *edgeproto.ClusterKey, buf *edgeproto.Cluster) bool
 func (s *ClusterApi) CreateCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
 	if strings.HasPrefix(in.Key.Name, ClusterAutoPrefix) {
 		return &edgeproto.Result{}, errors.New(ClusterAutoPrefixErr)
+	}
+	if in.DefaultFlavor.Name != "" && !clusterFlavorApi.HasClusterFlavor(&in.DefaultFlavor) {
+		return &edgeproto.Result{}, fmt.Errorf("default flavor %s not found", in.DefaultFlavor.Name)
 	}
 	in.Auto = false
 	return s.store.Create(in, s.sync.syncWait)

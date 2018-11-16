@@ -3,10 +3,9 @@
 
 package gencmd
 
+import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
-import google_protobuf "github.com/gogo/protobuf/types"
 import "strings"
-import "time"
 import "strconv"
 import "github.com/spf13/cobra"
 import "context"
@@ -108,10 +107,10 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, strconv.FormatFloat(float64(in.Location.Course), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Speed), 'e', -1, 32))
 	if in.Location.Timestamp == nil {
-		in.Location.Timestamp = &google_protobuf.Timestamp{}
+		in.Location.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	_Location_TimestampTime := time.Unix(in.Location.Timestamp.Seconds, int64(in.Location.Timestamp.Nanos))
-	s = append(s, _Location_TimestampTime.String())
+	s = append(s, strconv.FormatUint(uint64(in.Location.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Location.Timestamp.Nanos), 10))
 	s = append(s, edgeproto.IpSupport_name[int32(in.IpSupport)])
 	s = append(s, in.StaticIps)
 	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
@@ -131,7 +130,8 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Location-Altitude")
 	s = append(s, "Location-Course")
 	s = append(s, "Location-Speed")
-	s = append(s, "Location-Timestamp")
+	s = append(s, "Location-Timestamp-Seconds")
+	s = append(s, "Location-Timestamp-Nanos")
 	s = append(s, "IpSupport")
 	s = append(s, "StaticIps")
 	s = append(s, "NumDynamicIps")
@@ -720,7 +720,7 @@ func init() {
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
 	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Course, "location-course", 0, "Location.Course")
 	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.Speed, "location-speed", 0, "Location.Speed")
-	CloudletIn.Location.Timestamp = &google_protobuf.Timestamp{}
+	CloudletIn.Location.Timestamp = &distributed_match_engine.Timestamp{}
 	CloudletNoConfigFlagSet.Int64Var(&CloudletIn.Location.Timestamp.Seconds, "location-timestamp-seconds", 0, "Location.Timestamp.Seconds")
 	CloudletNoConfigFlagSet.Int32Var(&CloudletIn.Location.Timestamp.Nanos, "location-timestamp-nanos", 0, "Location.Timestamp.Nanos")
 	CloudletFlagSet.StringVar(&CloudletInIpSupport, "ipsupport", "", "one of [IpSupportUnknown IpSupportStatic IpSupportDynamic]")

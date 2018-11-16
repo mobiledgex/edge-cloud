@@ -3,7 +3,9 @@ appfqdns:
   appvers: "1.0"
   devname: AcmeAppCo
   fqdn: default.someapplication1.AcmeAppCo.com
+  androidpackagename: com.acmeappco.someapplication1
 - appname: someapplication2
   appvers: "1.0"
   devname: AcmeAppCo
   fqdn: default.someapplication2.AcmeAppCo.com
+  androidpackagename: com.acmeappco.someapplication2

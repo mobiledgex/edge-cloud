@@ -29,7 +29,6 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
-import google_protobuf "github.com/gogo/protobuf/types"
 
 import io "io"
 
@@ -1957,7 +1956,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 			m.Loc.Speed = src.Loc.Speed
 		}
 		if _, set := fmap["24.8"]; set && src.Loc.Timestamp != nil {
-			m.Loc.Timestamp = &google_protobuf.Timestamp{}
+			m.Loc.Timestamp = &distributed_match_engine.Timestamp{}
 			if _, set := fmap["24.8.1"]; set {
 				m.Loc.Timestamp.Seconds = src.Loc.Timestamp.Seconds
 			}
@@ -1989,7 +1988,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 			m.LocNonnull.Speed = src.LocNonnull.Speed
 		}
 		if _, set := fmap["25.8"]; set && src.LocNonnull.Timestamp != nil {
-			m.LocNonnull.Timestamp = &google_protobuf.Timestamp{}
+			m.LocNonnull.Timestamp = &distributed_match_engine.Timestamp{}
 			if _, set := fmap["25.8.1"]; set {
 				m.LocNonnull.Timestamp.Seconds = src.LocNonnull.Timestamp.Seconds
 			}
@@ -2131,7 +2130,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 				m.RepeatedLoc[i0].Speed = src.RepeatedLoc[i0].Speed
 			}
 			if _, set := fmap["35.8"]; set && src.RepeatedLoc[i0].Timestamp != nil {
-				m.RepeatedLoc[i0].Timestamp = &google_protobuf.Timestamp{}
+				m.RepeatedLoc[i0].Timestamp = &distributed_match_engine.Timestamp{}
 				if _, set := fmap["35.8.1"]; set {
 					m.RepeatedLoc[i0].Timestamp.Seconds = src.RepeatedLoc[i0].Timestamp.Seconds
 				}
@@ -2168,7 +2167,7 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 				m.RepeatedLocNonnull[i0].Speed = src.RepeatedLocNonnull[i0].Speed
 			}
 			if _, set := fmap["36.8"]; set && src.RepeatedLocNonnull[i0].Timestamp != nil {
-				m.RepeatedLocNonnull[i0].Timestamp = &google_protobuf.Timestamp{}
+				m.RepeatedLocNonnull[i0].Timestamp = &distributed_match_engine.Timestamp{}
 				if _, set := fmap["36.8.1"]; set {
 					m.RepeatedLocNonnull[i0].Timestamp.Seconds = src.RepeatedLocNonnull[i0].Timestamp.Seconds
 				}

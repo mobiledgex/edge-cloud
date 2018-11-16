@@ -16,15 +16,15 @@ spec:
     spec:
       containers:
       - name: crmcentralgcp
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1016
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
         imagePullPolicy: Always
         env:
          - name: PATH
            value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin
          - name: MEX_CF_USER
-           value: bob.bae@gmail.com
+           value: mobiledgex.ops@mobiledgex.com
          - name: MEX_CF_KEY
-           value: e6aefae8a9825d40dbf7eadb9a49967373847
+           value: 60632181cb3b7419304ffa820b2d99e292092
          - name: MEX_SSH_KEY
            value: id_rsa_mobiledgex
          - name: MEX_DOCKER_REG_PASS

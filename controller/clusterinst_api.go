@@ -119,7 +119,8 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 				if in.State == edgeproto.TrackedState_CreateError {
-					cb.Send(&edgeproto.Result{Message: "Use DeleteClusterInst to fix CreateError state"})
+					cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous create failed, %v", in.Errors)})
+					cb.Send(&edgeproto.Result{Message: "Use DeleteClusterInst to remove and try again"})
 				}
 				return objstore.ErrKVStoreKeyExists
 			}
@@ -251,7 +252,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DeleteError {
-				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to fix DeleteError state"})
+				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
+				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
 			}
 			return errors.New("ClusterInst busy, cannot delete")
 		}

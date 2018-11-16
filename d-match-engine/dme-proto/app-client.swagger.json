@@ -301,6 +301,10 @@
         "FQDN": {
           "type": "string",
           "title": "App FQDN"
+        },
+        "AndroidPackageName": {
+          "type": "string",
+          "title": "optional android package name"
         }
       }
     },
@@ -365,6 +369,10 @@
         "public_path": {
           "type": "string",
           "description": "Public facing path for HTTP L7 access."
+        },
+        "FQDN_prefix": {
+          "type": "string",
+          "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
         }
       },
       "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."
@@ -508,7 +516,7 @@
           "items": {
             "$ref": "#/definitions/distributed_match_engineAppPort"
           },
-          "title": "List of ports and L7 paths to connect to App instance"
+          "title": "List of Service Endpoints for AppInst"
         },
         "cloudlet_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
@@ -664,8 +672,7 @@
           "title": "speed (IOS) / velocity (Android) (meters/sec)"
         },
         "timestamp": {
-          "type": "string",
-          "format": "date-time",
+          "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "timestamp"
         }
       }
@@ -730,6 +737,20 @@
         "RS_FAIL"
       ],
       "default": "RS_UNDEFINED"
+    },
+    "distributed_match_engineTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "This is a simple Timestamp message type\ngrpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string\nwhich is a waste of a conversion, so we define our own"
     },
     "distributed_match_engineVerifyLocationReply": {
       "type": "object",

@@ -1225,6 +1225,10 @@
         "public_path": {
           "type": "string",
           "description": "Public facing path for HTTP L7 access."
+        },
+        "FQDN_prefix": {
+          "type": "string",
+          "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
         }
       },
       "description": "AppPort describes an L4 or L7 public access port/path mapping. This is used to track external to internal mappings for access via a shared load balancer or reverse proxy."
@@ -1279,11 +1283,24 @@
           "title": "speed (IOS) / velocity (Android) (meters/sec)"
         },
         "timestamp": {
-          "type": "string",
-          "format": "date-time",
+          "$ref": "#/definitions/distributed_match_engineTimestamp",
           "title": "timestamp"
         }
       }
+    },
+    "distributed_match_engineTimestamp": {
+      "type": "object",
+      "properties": {
+        "seconds": {
+          "type": "string",
+          "format": "int64"
+        },
+        "nanos": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "This is a simple Timestamp message type\ngrpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string\nwhich is a waste of a conversion, so we define our own"
     },
     "edgeprotoApp": {
       "type": "object",
@@ -1334,6 +1351,30 @@
         "auth_public_key": {
           "type": "string",
           "title": "public key used for authentication"
+        },
+        "command": {
+          "type": "string",
+          "title": "Command to start service"
+        },
+        "annotations": {
+          "type": "string",
+          "title": "Annotations is a comma separated map of arbitrary key value pairs,\nfor example: key1=val1,key2=val2,key3=\"val 3\""
+        },
+        "deployment": {
+          "type": "string",
+          "title": "Deployment target (kubernetes, docker, kvm, etc)"
+        },
+        "deployment_manifest": {
+          "type": "string",
+          "title": "Deployment manifest is the deployment specific manifest file/config"
+        },
+        "deployment_generator": {
+          "type": "string",
+          "title": "Deployment generator target"
+        },
+        "android_package_name": {
+          "type": "string",
+          "title": "Android package name, optional"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
@@ -1358,7 +1399,7 @@
         },
         "uri": {
           "type": "string",
-          "title": "URI to connect to this instance"
+          "description": "Base FQDN (not really URI) for the App. See Service FQDN for endpoint access."
         },
         "cluster_inst_key": {
           "$ref": "#/definitions/edgeprotoClusterInstKey",

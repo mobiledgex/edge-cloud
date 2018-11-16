@@ -69,7 +69,7 @@ message FindCloudletReply {
   FindStatus status = 2;
   // Full Qualified Domain Name of Closest App instance
   string FQDN = 3;
-  // List of ports and L7 paths to connect to App instance
+  // List of Service Endpoints for AppInst
   repeated AppPort ports = 4;
   // Location of the cloudlet
   Loc cloudlet_location = 5;
@@ -206,6 +206,8 @@ message AppFqdn{
   string DevName = 3;
   // App FQDN
   string FQDN = 4;
+  // optional android package name
+  string AndroidPackageName = 5;
 }
 
 message FqdnListReply{
