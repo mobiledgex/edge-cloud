@@ -1348,6 +1348,9 @@
           "type": "string",
           "title": "public key used for authentication"
         },
+        "android_package_name": {
+          "type": "string",
+          "title": "Android package name, optional"
         "command": {
           "type": "string",
           "title": "Command to start service"
