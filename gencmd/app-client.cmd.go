@@ -927,20 +927,22 @@ func FqdnListRequestWriteOutputOne(obj *distributed_match_engine.FqdnListRequest
 	}
 }
 func AppFqdnSlicer(in *distributed_match_engine.AppFqdn) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 5)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
 	s = append(s, in.DevName)
 	s = append(s, in.FQDN)
+	s = append(s, in.AndroidPackageName)
 	return s
 }
 
 func AppFqdnHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 5)
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
 	s = append(s, "DevName")
 	s = append(s, "FQDN")
+	s = append(s, "AndroidPackageName")
 	return s
 }
 
@@ -980,6 +982,7 @@ func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
 	s = append(s, in.AppFqdns[0].AppVers)
 	s = append(s, in.AppFqdns[0].DevName)
 	s = append(s, in.AppFqdns[0].FQDN)
+	s = append(s, in.AppFqdns[0].AndroidPackageName)
 	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
 	return s
 }
@@ -991,6 +994,7 @@ func FqdnListReplyHeaderSlicer() []string {
 	s = append(s, "AppFqdns-AppVers")
 	s = append(s, "AppFqdns-DevName")
 	s = append(s, "AppFqdns-FQDN")
+	s = append(s, "AppFqdns-AndroidPackageName")
 	s = append(s, "Status")
 	return s
 }
