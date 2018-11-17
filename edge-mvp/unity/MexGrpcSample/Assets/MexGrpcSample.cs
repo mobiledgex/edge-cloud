@@ -273,7 +273,7 @@ public class MexGrpcSample : MonoBehaviour
             HorizontalAccuracy = 0,
             VerticalAccuracy = 0,
             Speed = 5,
-            Timestamp = new Google.Protobuf.WellKnownTypes.Timestamp {
+            Timestamp = new DistributedMatchEngine.Timestamp {
                 Nanos = 10000,
                 Seconds = 1000
             }

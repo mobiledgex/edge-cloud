@@ -82,46 +82,47 @@ namespace DistributedMatchEngine {
             "aW5lLkNsb3VkbGV0TG9jYXRpb24iOgoJQUlfU3RhdHVzEhAKDEFJX1VOREVG",
             "SU5FRBAAEg4KCkFJX1NVQ0NFU1MQARILCgdBSV9GQUlMEAIiNQoPRnFkbkxp",
             "c3RSZXF1ZXN0EgsKA1ZlchgBIAEoDRIVCg1TZXNzaW9uQ29va2llGAIgASgJ",
-            "IkoKB0FwcEZxZG4SDwoHQXBwTmFtZRgBIAEoCRIPCgdBcHBWZXJzGAIgASgJ",
-            "Eg8KB0Rldk5hbWUYAyABKAkSDAoERlFEThgEIAEoCSLQAQoNRnFkbkxpc3RS",
-            "ZXBseRILCgN2ZXIYASABKA0SMwoIQXBwRnFkbnMYAyADKAsyIS5kaXN0cmli",
-            "dXRlZF9tYXRjaF9lbmdpbmUuQXBwRnFkbhJBCgZTdGF0dXMYBCABKA4yMS5k",
-            "aXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRnFkbkxpc3RSZXBseS5GTF9TdGF0",
-            "dXMiOgoJRkxfU3RhdHVzEhAKDEZMX1VOREVGSU5FRBAAEg4KCkZMX1NVQ0NF",
-            "U1MQARILCgdGTF9GQUlMEAIi6QEKFkR5bmFtaWNMb2NHcm91cFJlcXVlc3QS",
-            "CwoDVmVyGAEgASgNEhUKDVNlc3Npb25Db29raWUYAiABKAkSDAoETGdJZBgD",
-            "IAEoBBJOCghDb21tVHlwZRgLIAEoDjI8LmRpc3RyaWJ1dGVkX21hdGNoX2Vu",
-            "Z2luZS5EeW5hbWljTG9jR3JvdXBSZXF1ZXN0LkRsZ0NvbW1UeXBlEhAKCFVz",
-            "ZXJEYXRhGAwgASgJIjsKC0RsZ0NvbW1UeXBlEhAKDERsZ1VuZGVmaW5lZBAA",
-            "Eg0KCURsZ1NlY3VyZRABEgsKB0RsZ09wZW4QAiKCAQoURHluYW1pY0xvY0dy",
-            "b3VwUmVwbHkSCwoDdmVyGAEgASgNEjUKBnN0YXR1cxgCIAEoDjIlLmRpc3Ry",
-            "aWJ1dGVkX21hdGNoX2VuZ2luZS5SZXBseVN0YXR1cxIRCglFcnJvckNvZGUY",
-            "AyABKA0SEwoLR3JvdXBDb29raWUYBSABKAkqPQoHSURUeXBlcxIQCgxJRF9V",
-            "TkRFRklORUQQABIICgRJTUVJEAESCgoGTVNJU0ROEAISCgoGSVBBRERSEAMq",
-            "PAoLUmVwbHlTdGF0dXMSEAoMUlNfVU5ERUZJTkVEEAASDgoKUlNfU1VDQ0VT",
-            "UxABEgsKB1JTX0ZBSUwQAjLlBwoQTWF0Y2hfRW5naW5lX0FwaRKPAQoOUmVn",
-            "aXN0ZXJDbGllbnQSLy5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuUmVnaXN0",
-            "ZXJDbGllbnRSZXF1ZXN0Gi0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlJl",
-            "Z2lzdGVyQ2xpZW50UmVwbHkiHYLT5JMCFyISL3YxL3JlZ2lzdGVyY2xpZW50",
-            "OgEqEocBCgxGaW5kQ2xvdWRsZXQSLS5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
-            "bmUuRmluZENsb3VkbGV0UmVxdWVzdBorLmRpc3RyaWJ1dGVkX21hdGNoX2Vu",
-            "Z2luZS5GaW5kQ2xvdWRsZXRSZXBseSIbgtPkkwIVIhAvdjEvZmluZGNsb3Vk",
-            "bGV0OgEqEo8BCg5WZXJpZnlMb2NhdGlvbhIvLmRpc3RyaWJ1dGVkX21hdGNo",
-            "X2VuZ2luZS5WZXJpZnlMb2NhdGlvblJlcXVlc3QaLS5kaXN0cmlidXRlZF9t",
-            "YXRjaF9lbmdpbmUuVmVyaWZ5TG9jYXRpb25SZXBseSIdgtPkkwIXIhIvdjEv",
-            "dmVyaWZ5bG9jYXRpb246ASoSgwEKC0dldExvY2F0aW9uEiwuZGlzdHJpYnV0",
-            "ZWRfbWF0Y2hfZW5naW5lLkdldExvY2F0aW9uUmVxdWVzdBoqLmRpc3RyaWJ1",
-            "dGVkX21hdGNoX2VuZ2luZS5HZXRMb2NhdGlvblJlcGx5IhqC0+STAhQiDy92",
-            "MS9nZXRsb2NhdGlvbjoBKhKRAQoOQWRkVXNlclRvR3JvdXASMC5kaXN0cmli",
-            "dXRlZF9tYXRjaF9lbmdpbmUuRHluYW1pY0xvY0dyb3VwUmVxdWVzdBouLmRp",
-            "c3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5EeW5hbWljTG9jR3JvdXBSZXBseSId",
-            "gtPkkwIXIhIvdjEvYWRkdXNlcnRvZ3JvdXA6ASoSiQEKDkdldEFwcEluc3RM",
-            "aXN0EiwuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkFwcEluc3RMaXN0UmVx",
-            "dWVzdBoqLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5BcHBJbnN0TGlzdFJl",
-            "cGx5Ih2C0+STAhciEi92MS9nZXRhcHBpbnN0bGlzdDoBKhJ9CgtHZXRGcWRu",
-            "TGlzdBIpLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5GcWRuTGlzdFJlcXVl",
-            "c3QaJy5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRnFkbkxpc3RSZXBseSIa",
-            "gtPkkwIUIg8vdjEvZ2V0ZnFkbmxpc3Q6ASpiBnByb3RvMw=="));
+            "ImYKB0FwcEZxZG4SDwoHQXBwTmFtZRgBIAEoCRIPCgdBcHBWZXJzGAIgASgJ",
+            "Eg8KB0Rldk5hbWUYAyABKAkSDAoERlFEThgEIAEoCRIaChJBbmRyb2lkUGFj",
+            "a2FnZU5hbWUYBSABKAki0AEKDUZxZG5MaXN0UmVwbHkSCwoDdmVyGAEgASgN",
+            "EjMKCEFwcEZxZG5zGAMgAygLMiEuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5l",
+            "LkFwcEZxZG4SQQoGU3RhdHVzGAQgASgOMjEuZGlzdHJpYnV0ZWRfbWF0Y2hf",
+            "ZW5naW5lLkZxZG5MaXN0UmVwbHkuRkxfU3RhdHVzIjoKCUZMX1N0YXR1cxIQ",
+            "CgxGTF9VTkRFRklORUQQABIOCgpGTF9TVUNDRVNTEAESCwoHRkxfRkFJTBAC",
+            "IukBChZEeW5hbWljTG9jR3JvdXBSZXF1ZXN0EgsKA1ZlchgBIAEoDRIVCg1T",
+            "ZXNzaW9uQ29va2llGAIgASgJEgwKBExnSWQYAyABKAQSTgoIQ29tbVR5cGUY",
+            "CyABKA4yPC5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRHluYW1pY0xvY0dy",
+            "b3VwUmVxdWVzdC5EbGdDb21tVHlwZRIQCghVc2VyRGF0YRgMIAEoCSI7CgtE",
+            "bGdDb21tVHlwZRIQCgxEbGdVbmRlZmluZWQQABINCglEbGdTZWN1cmUQARIL",
+            "CgdEbGdPcGVuEAIiggEKFER5bmFtaWNMb2NHcm91cFJlcGx5EgsKA3ZlchgB",
+            "IAEoDRI1CgZzdGF0dXMYAiABKA4yJS5kaXN0cmlidXRlZF9tYXRjaF9lbmdp",
+            "bmUuUmVwbHlTdGF0dXMSEQoJRXJyb3JDb2RlGAMgASgNEhMKC0dyb3VwQ29v",
+            "a2llGAUgASgJKj0KB0lEVHlwZXMSEAoMSURfVU5ERUZJTkVEEAASCAoESU1F",
+            "SRABEgoKBk1TSVNEThACEgoKBklQQUREUhADKjwKC1JlcGx5U3RhdHVzEhAK",
+            "DFJTX1VOREVGSU5FRBAAEg4KClJTX1NVQ0NFU1MQARILCgdSU19GQUlMEAIy",
+            "5QcKEE1hdGNoX0VuZ2luZV9BcGkSjwEKDlJlZ2lzdGVyQ2xpZW50Ei8uZGlz",
+            "dHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlJlZ2lzdGVyQ2xpZW50UmVxdWVzdBot",
+            "LmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5SZWdpc3RlckNsaWVudFJlcGx5",
+            "Ih2C0+STAhciEi92MS9yZWdpc3RlcmNsaWVudDoBKhKHAQoMRmluZENsb3Vk",
+            "bGV0Ei0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLkZpbmRDbG91ZGxldFJl",
+            "cXVlc3QaKy5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuRmluZENsb3VkbGV0",
+            "UmVwbHkiG4LT5JMCFSIQL3YxL2ZpbmRjbG91ZGxldDoBKhKPAQoOVmVyaWZ5",
+            "TG9jYXRpb24SLy5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUuVmVyaWZ5TG9j",
+            "YXRpb25SZXF1ZXN0Gi0uZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5lLlZlcmlm",
+            "eUxvY2F0aW9uUmVwbHkiHYLT5JMCFyISL3YxL3ZlcmlmeWxvY2F0aW9uOgEq",
+            "EoMBCgtHZXRMb2NhdGlvbhIsLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5H",
+            "ZXRMb2NhdGlvblJlcXVlc3QaKi5kaXN0cmlidXRlZF9tYXRjaF9lbmdpbmUu",
+            "R2V0TG9jYXRpb25SZXBseSIagtPkkwIUIg8vdjEvZ2V0bG9jYXRpb246ASoS",
+            "kQEKDkFkZFVzZXJUb0dyb3VwEjAuZGlzdHJpYnV0ZWRfbWF0Y2hfZW5naW5l",
+            "LkR5bmFtaWNMb2NHcm91cFJlcXVlc3QaLi5kaXN0cmlidXRlZF9tYXRjaF9l",
+            "bmdpbmUuRHluYW1pY0xvY0dyb3VwUmVwbHkiHYLT5JMCFyISL3YxL2FkZHVz",
+            "ZXJ0b2dyb3VwOgEqEokBCg5HZXRBcHBJbnN0TGlzdBIsLmRpc3RyaWJ1dGVk",
+            "X21hdGNoX2VuZ2luZS5BcHBJbnN0TGlzdFJlcXVlc3QaKi5kaXN0cmlidXRl",
+            "ZF9tYXRjaF9lbmdpbmUuQXBwSW5zdExpc3RSZXBseSIdgtPkkwIXIhIvdjEv",
+            "Z2V0YXBwaW5zdGxpc3Q6ASoSfQoLR2V0RnFkbkxpc3QSKS5kaXN0cmlidXRl",
+            "ZF9tYXRjaF9lbmdpbmUuRnFkbkxpc3RSZXF1ZXN0GicuZGlzdHJpYnV0ZWRf",
+            "bWF0Y2hfZW5naW5lLkZxZG5MaXN0UmVwbHkiGoLT5JMCFCIPL3YxL2dldGZx",
+            "ZG5saXN0OgEqYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Api.AnnotationsReflection.Descriptor, global::DistributedMatchEngine.LocReflection.Descriptor, global::DistributedMatchEngine.AppcommonReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::DistributedMatchEngine.IDTypes), typeof(global::DistributedMatchEngine.ReplyStatus), }, new pbr::GeneratedClrTypeInfo[] {
@@ -138,7 +139,7 @@ namespace DistributedMatchEngine {
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.CloudletLocation), global::DistributedMatchEngine.CloudletLocation.Parser, new[]{ "CarrierName", "CloudletName", "GpsLocation", "Distance", "Appinstances" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppInstListReply), global::DistributedMatchEngine.AppInstListReply.Parser, new[]{ "Ver", "Status", "Cloudlets" }, null, new[]{ typeof(global::DistributedMatchEngine.AppInstListReply.Types.AI_Status) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListRequest), global::DistributedMatchEngine.FqdnListRequest.Parser, new[]{ "Ver", "SessionCookie" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppFqdn), global::DistributedMatchEngine.AppFqdn.Parser, new[]{ "AppName", "AppVers", "DevName", "FQDN" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppFqdn), global::DistributedMatchEngine.AppFqdn.Parser, new[]{ "AppName", "AppVers", "DevName", "FQDN", "AndroidPackageName" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.FqdnListReply), global::DistributedMatchEngine.FqdnListReply.Parser, new[]{ "Ver", "AppFqdns", "Status" }, null, new[]{ typeof(global::DistributedMatchEngine.FqdnListReply.Types.FL_Status) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupRequest), global::DistributedMatchEngine.DynamicLocGroupRequest.Parser, new[]{ "Ver", "SessionCookie", "LgId", "CommType", "UserData" }, null, new[]{ typeof(global::DistributedMatchEngine.DynamicLocGroupRequest.Types.DlgCommType) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.DynamicLocGroupReply), global::DistributedMatchEngine.DynamicLocGroupReply.Parser, new[]{ "Ver", "Status", "ErrorCode", "GroupCookie" }, null, null, null)
@@ -993,7 +994,7 @@ namespace DistributedMatchEngine {
         = pb::FieldCodec.ForMessage(34, global::DistributedMatchEngine.AppPort.Parser);
     private readonly pbc::RepeatedField<global::DistributedMatchEngine.AppPort> ports_ = new pbc::RepeatedField<global::DistributedMatchEngine.AppPort>();
     /// <summary>
-    /// List of ports and L7 paths to connect to App instance
+    /// List of Service Endpoints for AppInst
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public pbc::RepeatedField<global::DistributedMatchEngine.AppPort> Ports {
@@ -3243,6 +3244,7 @@ namespace DistributedMatchEngine {
       appVers_ = other.appVers_;
       devName_ = other.devName_;
       fQDN_ = other.fQDN_;
+      androidPackageName_ = other.androidPackageName_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -3307,6 +3309,20 @@ namespace DistributedMatchEngine {
       }
     }
 
+    /// <summary>Field number for the "AndroidPackageName" field.</summary>
+    public const int AndroidPackageNameFieldNumber = 5;
+    private string androidPackageName_ = "";
+    /// <summary>
+    /// optional android package name
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string AndroidPackageName {
+      get { return androidPackageName_; }
+      set {
+        androidPackageName_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as AppFqdn);
@@ -3324,6 +3340,7 @@ namespace DistributedMatchEngine {
       if (AppVers != other.AppVers) return false;
       if (DevName != other.DevName) return false;
       if (FQDN != other.FQDN) return false;
+      if (AndroidPackageName != other.AndroidPackageName) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -3334,6 +3351,7 @@ namespace DistributedMatchEngine {
       if (AppVers.Length != 0) hash ^= AppVers.GetHashCode();
       if (DevName.Length != 0) hash ^= DevName.GetHashCode();
       if (FQDN.Length != 0) hash ^= FQDN.GetHashCode();
+      if (AndroidPackageName.Length != 0) hash ^= AndroidPackageName.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -3363,6 +3381,10 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(34);
         output.WriteString(FQDN);
       }
+      if (AndroidPackageName.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(AndroidPackageName);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -3382,6 +3404,9 @@ namespace DistributedMatchEngine {
       }
       if (FQDN.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(FQDN);
+      }
+      if (AndroidPackageName.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(AndroidPackageName);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -3405,6 +3430,9 @@ namespace DistributedMatchEngine {
       }
       if (other.FQDN.Length != 0) {
         FQDN = other.FQDN;
+      }
+      if (other.AndroidPackageName.Length != 0) {
+        AndroidPackageName = other.AndroidPackageName;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -3431,6 +3459,10 @@ namespace DistributedMatchEngine {
           }
           case 34: {
             FQDN = input.ReadString();
+            break;
+          }
+          case 42: {
+            AndroidPackageName = input.ReadString();
             break;
           }
         }
