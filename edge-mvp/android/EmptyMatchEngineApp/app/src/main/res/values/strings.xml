@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">EmptyMatchEngineApp</string>
+    <string name="location_default_text">[Client Location: None]</string>
+    <string name="click_me_for_cloudlets_text">[Hello! Click the button to verify location and find the closest cloudlet!]</string>
 
     <!-- Strings related to Settings -->
     <string name="action_settings">Settings</string>

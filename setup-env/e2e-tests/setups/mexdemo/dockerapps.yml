@@ -1,6 +1,6 @@
 ## Replace the IPs below as needed with the values for your system
 vars:
-- bonnvm: 37.50.143.101
+- bonnvm: 37.50.143.107
 - berlinvm: 80.187.128.15
 - hamburgvm: 80.187.132.8
 - dockerimage-face: "registry.mobiledgex.net:5000/mobiledgex/facedetection"
