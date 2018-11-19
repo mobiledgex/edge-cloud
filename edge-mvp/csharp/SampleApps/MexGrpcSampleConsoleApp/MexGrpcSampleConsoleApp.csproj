@@ -6,13 +6,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="MatchingEngineGrpcLibrary">
-      <HintPath>..\..\MatchingEngineSDK\MatchingEngineGrpcLibrary\bin\Debug\netstandard2.0\MatchingEngineGrpcLibrary.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.6.1" />
-    <PackageReference Include="Grpc" Version="1.14.2" />
-    <PackageReference Include="Google.Api.Gax.Grpc" Version="2.5.0" />
+    <PackageReference Include="MobiledgeX.MatchingEngineGrpcLibrary" Version="1.3.0" />
   </ItemGroup>
 </Project>
