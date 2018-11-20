@@ -56,8 +56,8 @@ clusterinsts:
       name: SmallCluster
     cloudletkey:
       operatorkey:
-        name: GDDT
-      name: gddtcloud1
+        name: xmobx
+      name: tmocloud1
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -99,13 +99,22 @@ developers:
   passhash: 9999999222222222211111
   address: 000 Sooner Street, Norman, OK 73026
   email: lincolnr@xxxx.com
+- key:
+    name: Atlantic
+  username: atlantic
+  passhash: 9999999222222222211111
+  address: 123 atlantic drive
+  email: atlantic@xxxx.com
+
+
+
 
 cloudlets:
 - key:
     operatorkey:
-      name: GDDT
-    name: gddtcloud1
-  accessuri: cloud1.gddt
+      name: xmobx
+    name: tmocloud1
+  accessuri: cloud1.tmo
   location:
     lat: 51.7374
     long: -7.0982
@@ -129,16 +138,6 @@ cloudlets:
   location:
     lat: 50.70
     long: -7.1
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: GDDT
-    name: menlopark1cloudlet
-  accessuri:
-  location:
-    lat: 37.4529598
-    long: -122.1817252
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -167,6 +166,8 @@ apps:
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:4444
+  androidpackagename: com.platos.emptymatchengine
+  permitsplatformapps: true
   defaultflavor:
     name: x1.small
   cluster:
@@ -179,6 +180,8 @@ apps:
   imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:4444
+  androidpackagename: com.empty.emptymatchengineapp
+  permitsplatformapps: true
   defaultflavor:
     name: x1.small
   cluster:
@@ -190,12 +193,46 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
+  androidpackagename: com.mobiledgex.emptymatchengineapp
+  permitsplatformapps: true
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
-  config: "http://35.199.188.102/apps/simapp.yaml"
+  apptemplate: "http://35.199.188.102/apps/simapp.yaml"
   accessports: "tcp:7777"
+
+- key:
+    developerkey:
+      name: Atlantic
+    name: Atlantic Demo
+    version: "1.0"
+  imagepath: mobiledgex/atlantic/atlanticdemo
+  imagetype: ImageTypeDocker
+  androidpackagename: com.platos.test.atlantic
+  permitsplatformapps: true
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+  accessports: "http:443,tcp:8080"
+
+- key:
+    developerkey:
+      name: Atlantic
+    name: PillimoGo Demo
+    version: "1.0"
+  imagepath: mobiledgex/atlantic/pillimodemo
+  imagetype: ImageTypeDocker
+  androidpackagename: com.platos.test.pillimogo
+  permitsplatformapps: true
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+  accessports: "tcp:8081"
 
 appinstances:
 - key:
@@ -206,8 +243,8 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: GDDT
-      name: gddtcloud1
+        name: xmobx
+      name: tmocloud1
     id: 5011
   liveness: LivenessStatic
   flavor:
@@ -221,8 +258,8 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: GDDT
-      name: gddtcloud1
+        name: xmobx
+      name: tmocloud1
     id: 5011
   liveness: LivenessStatic
   flavor:
@@ -292,7 +329,7 @@ appinstances:
       name: default
     id: 123
   liveness: LivenessStatic
-  uri: mexdemoapp.default.mobiledgex.net
+  uri: mexdemoapp.mexdemo.mobiledgex.net
   flavor:
     name: x1.small
 
@@ -308,7 +345,7 @@ appinstances:
       name: default
     id: 123
   liveness: LivenessStatic
-  uri: platos.empty.default
+  uri: emptyapp.platos.mobiledgex.net
   flavor:
     name: x1.small
 - key:
@@ -323,8 +360,38 @@ appinstances:
       name: default
     id: 123
   liveness: LivenessStatic
-  uri: platos.enabling.layer
+  uri: platos.enabling.mobiledgex.net
   flavor:
     name: x1.small
 
+- key:
+    appkey:
+      developerkey:
+        name: Atlantic
+      name: Atlantic Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: atlanticdemo.atlantic.mobiledgex.net
+  flavor:
+    name: x1.small
 
+- key:
+    appkey:
+      developerkey:
+        name: Atlantic
+      name: PillimoGo Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: pillimogodemo.atlantic.mobiledgex.net
+  flavor:
+    name: x1.small

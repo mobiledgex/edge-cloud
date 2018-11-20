@@ -180,6 +180,7 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.someapplication1
+  permitsplatformapps: true
 
 appinstances:
 - key:

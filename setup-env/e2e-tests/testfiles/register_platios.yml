@@ -1,0 +1,7 @@
+##
+tests:
+
+- name: send register api with platos enabling layer
+  apifile: "{{datadir}}/register_platos.yml"
+  actions: [dmeapi-register]
+

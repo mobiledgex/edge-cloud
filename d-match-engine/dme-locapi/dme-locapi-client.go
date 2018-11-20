@@ -55,7 +55,8 @@ func CallGDDTLocationVerifyAPI(locVerUrl string, lat, long float64, token string
 		log.WarnLog("Error, no followURL in tokSrvUrl", "url", tokSrvUrl)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
-	serviceURL = url.PathEscape(serviceURL)
+	// If the service URL needs to be urlencoded, uncomment this.  Currently it is not
+	// serviceURL = url.PathEscape(serviceURL)
 	var lrm LocationRequestMessage
 	lrm.Lat = lat
 	lrm.Long = long

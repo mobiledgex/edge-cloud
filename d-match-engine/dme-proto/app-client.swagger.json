@@ -543,6 +543,18 @@
         "GpsLocation": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
+        },
+        "DevName": {
+          "type": "string",
+          "title": "DevName is applicable to Platform apps only"
+        },
+        "AppName": {
+          "type": "string",
+          "title": "App Name is applicable to Platform apps only"
+        },
+        "AppVers": {
+          "type": "string",
+          "title": "App Version is applicable to Platform apps only"
         }
       }
     },

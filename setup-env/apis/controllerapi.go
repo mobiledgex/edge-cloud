@@ -365,15 +365,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			//run in reverse order to delete child keys
 			err = runAppinstApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
-				// WORKAROUND: occasionally delete Appinst API fails due to "Cluster instance  not found"
-				// Usually (not always) it succeeds if we wait and retry.   So for this single case we will retry
-				//  after 3 seconds and hope it fixes things.
-				/// Testcase is still marked failed, but a successful deletion after the delay may
-				// prevent a bunch of other tests from failing later due to mismatched data.
-				// TODO: remove this workaround once the root cause is found.
-				time.Sleep(time.Second * 3)
-				err2 := runAppinstApi(ctrlapi, ctx, &appData, api)
-				log.Printf("Error in appinst API for %v retry %v \n", err, err2)
+				log.Printf("Error in appinst API %v \n", err)
 				rc = false
 			}
 			err = runClusterInstApi(ctrlapi, ctx, &appData, api)

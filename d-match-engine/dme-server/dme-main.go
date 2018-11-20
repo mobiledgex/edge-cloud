@@ -60,8 +60,9 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	if !ok {
 		return reply, errors.New("No valid session cookie")
 	}
-	findCloudlet(ckey, req, reply)
-	return reply, nil
+	err := findCloudlet(ckey, req, reply)
+	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
+	return reply, err
 }
 
 func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dme.FqdnListReply, error) {
