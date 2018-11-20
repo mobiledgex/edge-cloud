@@ -58,6 +58,22 @@ tests:
     yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
     filetype: findcloudlet
 
+- name: create samsung enabling layer
+  apifile: "{{datadir}}/appinst_samsung.yml"
+  actions: [ctrlapi-create]
+
+- name: register with samsung enabling layer
+  apifile: "{{datadir}}/register_samsung.yml"
+  actions: [dmeapi-register]
+
+- name: find cloudlet for app1, expect to see cloudlet2
+  apifile: "{{datadir}}/find_cloudlet_platform_app1.yml"
+  actions: [dmeapi-findcloudlet]
+  compareyaml:
+    yaml1: "{{outputdir}}/findcloudlet.yml"
+    yaml2: "{{datadir}}/find-cloudlet-response-cloudlet2.yml"
+    filetype: findcloudlet
+
 - name: find between cloudlet1 and azure, expect cloudlet1
   apifile: "{{datadir}}/find_cloudlet_between_cl1_azure.yml"
   actions: [dmeapi-findcloudlet]

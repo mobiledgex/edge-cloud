@@ -1375,6 +1375,11 @@
         "android_package_name": {
           "type": "string",
           "title": "Android package name, optional"
+        },
+        "permits_platform_apps": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Indicates whether or not playform apps are allowed to preform actions\non behalf of this app, such as FindCloudlet"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."

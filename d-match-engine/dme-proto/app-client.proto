@@ -55,6 +55,12 @@ message FindCloudletRequest {
   string CarrierName = 3;
   // The GPS location of the user
   Loc GpsLocation = 4;
+  // DevName is applicable to Platform apps only
+  string DevName = 5;
+  // App Name is applicable to Platform apps only
+  string AppName = 6;
+  // App Version is applicable to Platform apps only
+  string AppVers = 7;
 }
 
 message FindCloudletReply {

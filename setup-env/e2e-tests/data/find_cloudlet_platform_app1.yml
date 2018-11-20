@@ -1,9 +1,9 @@
-registerclientrequest:
+# this is a platform findcloudlet request because
+# it specifies the app within the api not the register
+findcloudletrequest:
   devname: AcmeAppCo
   appname: someapplication1
   appvers: "1.0"
-  authtoken: "GENTOKEN:authtoken_private.pem"
-findcloudletrequest:
   carriername: tmus
   gpslocation: 
     lat: 36.00

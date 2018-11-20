@@ -228,7 +228,7 @@ func RegisterClientReplyWriteOutputOne(obj *distributed_match_engine.RegisterCli
 	}
 }
 func FindCloudletRequestSlicer(in *distributed_match_engine.FindCloudletRequest) []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	s = append(s, in.CarrierName)
@@ -247,11 +247,14 @@ func FindCloudletRequestSlicer(in *distributed_match_engine.FindCloudletRequest)
 	}
 	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, in.DevName)
+	s = append(s, in.AppName)
+	s = append(s, in.AppVers)
 	return s
 }
 
 func FindCloudletRequestHeaderSlicer() []string {
-	s := make([]string, 0, 4)
+	s := make([]string, 0, 7)
 	s = append(s, "Ver")
 	s = append(s, "SessionCookie")
 	s = append(s, "CarrierName")
@@ -264,6 +267,9 @@ func FindCloudletRequestHeaderSlicer() []string {
 	s = append(s, "GpsLocation-Speed")
 	s = append(s, "GpsLocation-Timestamp-Seconds")
 	s = append(s, "GpsLocation-Timestamp-Nanos")
+	s = append(s, "DevName")
+	s = append(s, "AppName")
+	s = append(s, "AppVers")
 	return s
 }
 
@@ -1429,6 +1435,9 @@ func init() {
 	FindCloudletRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	FindCloudletRequestFlagSet.Int64Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
 	FindCloudletRequestFlagSet.Int32Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.DevName, "devname", "", "DevName")
+	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.AppName, "appname", "", "AppName")
+	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.AppVers, "appvers", "", "AppVers")
 	VerifyLocationRequestFlagSet.Uint32Var(&VerifyLocationRequestIn.Ver, "ver", 0, "Ver")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.CarrierName, "carriername", "", "CarrierName")
