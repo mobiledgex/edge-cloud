@@ -212,7 +212,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | deployment_manifest | [string](#string) |  | Deployment manifest is the deployment specific manifest file/config |
 | deployment_generator | [string](#string) |  | Deployment generator target |
 | android_package_name | [string](#string) |  | Android package name, optional |
-| permits_platform_apps | [bool](#bool) |  | Indicates whether or not playform apps are allowed to preform actions on behalf of this app, such as FindCloudlet |
+| permits_platform_apps | [bool](#bool) |  | Indicates whether or not platform apps are allowed to perform actions on behalf of this app, such as FindCloudlet |
 
 
 

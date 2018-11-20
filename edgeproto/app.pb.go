@@ -191,7 +191,7 @@ type App struct {
 	DeploymentGenerator string `protobuf:"bytes,17,opt,name=deployment_generator,json=deploymentGenerator,proto3" json:"deployment_generator,omitempty"`
 	// Android package name, optional
 	AndroidPackageName string `protobuf:"bytes,18,opt,name=android_package_name,json=androidPackageName,proto3" json:"android_package_name,omitempty"`
-	// Indicates whether or not playform apps are allowed to preform actions
+	// Indicates whether or not platform apps are allowed to perform actions
 	// on behalf of this app, such as FindCloudlet
 	PermitsPlatformApps bool `protobuf:"varint,19,opt,name=permits_platform_apps,json=permitsPlatformApps,proto3" json:"permits_platform_apps,omitempty"`
 }
