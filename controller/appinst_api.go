@@ -296,11 +296,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Info for cloudlet not found")
 			}
 		}
-		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
-			if in.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorGCP || in.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
-				return errors.New("IpAccess Shared is not supported by the given public cloud Operator")
-			}
-		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
 		cloudletRefsChanged := false
@@ -315,23 +310,36 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return err
 			}
 		}
-
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 
-		if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
-			if defaultCloudlet {
-				if in.Uri == "" {
-					return errors.New("URI is required for default cloudlet")
-				}
-			} else {
-				in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
-				if cloudletRefs.RootLbPorts == nil {
-					cloudletRefs.RootLbPorts = make(map[int32]int32)
-				}
+		if defaultCloudlet {
+			in.IpAccess = edgeproto.IpAccess_IpAccessDedicated
+			if in.Uri == "" {
+				return errors.New("URI (Public FQDN) is required for default cloudlet")
+			}
+		} else if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
+			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
+			if cloudletRefs.RootLbPorts == nil {
+				cloudletRefs.RootLbPorts = make(map[int32]int32)
+			}
 
-				ii := 0
-				p := RootLBSharedPortBegin
-				for ; p < 65000 && ii < len(ports); p++ {
+			p := RootLBSharedPortBegin
+			for ii, _ := range ports {
+				// Samsung enabling layer ignores port mapping.
+				// Attempt to use the internal port as the
+				// external port so port remap is not required.
+				eport := int32(-1)
+				if _, found := cloudletRefs.RootLbPorts[ports[ii].InternalPort]; !found {
+					// rootLB has its own ports it uses
+					// before any apps are even present.
+					iport := ports[ii].InternalPort
+					if iport != 22 && iport != 443 &&
+						iport != 18888 &&
+						iport != 18889 {
+						eport = iport
+					}
+				}
+				for ; p < 65000 && eport == int32(-1); p++ {
 					// each kubernetes service gets its own
 					// nginx proxy that runs in the rootLB,
 					// and http ports are also mapped to it,
@@ -339,27 +347,26 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					if _, found := cloudletRefs.RootLbPorts[p]; found {
 						continue
 					}
-					ports[ii].PublicPort = p
-					cloudletRefs.RootLbPorts[p] = 1
-					ii++
-					cloudletRefsChanged = true
+					eport = p
 				}
+				if eport == int32(-1) {
+					return errors.New("no free external ports")
+				}
+				ports[ii].PublicPort = eport
+				cloudletRefs.RootLbPorts[eport] = 1
+				cloudletRefsChanged = true
 			}
 		} else {
-			if defaultCloudlet {
-				if in.Uri == "" {
-					return errors.New("URI is required for default cloudlet")
-				}
-			} else {
-				in.Uri = cloudcommon.GetAppFQDN(&in.Key)
-				for ii, _ := range ports {
-					ports[ii].PublicPort = ports[ii].InternalPort
-				}
+			in.Uri = cloudcommon.GetAppFQDN(&in.Key)
+			for ii, _ := range ports {
+				ports[ii].PublicPort = ports[ii].InternalPort
 			}
 		}
 		if len(ports) > 0 {
 			in.MappedPorts = ports
-			setPortFQDNPrefixes(in, &app)
+			if !defaultCloudlet {
+				setPortFQDNPrefixes(in, &app)
+			}
 		}
 
 		// TODO: Make sure resources are available
@@ -601,36 +608,40 @@ func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto
 }
 
 func allocateIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) error {
+	if inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorGCP || inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
+		// public cloud implements dedicated access
+		inst.IpAccess = edgeproto.IpAccess_IpAccessDedicated
+		return nil
+	}
 	if inst.IpAccess == edgeproto.IpAccess_IpAccessShared {
 		// shared, so no allocation needed
 		return nil
 	}
+	if inst.IpAccess == edgeproto.IpAccess_IpAccessDedicatedOrShared {
+		// set to shared, as CRM does not implement dedicated
+		// ip assignment yet.
+		inst.IpAccess = edgeproto.IpAccess_IpAccessShared
+		return nil
+	}
+
 	// Allocate a dedicated IP
-	var err error
 	if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportStatic {
 		// TODO:
 		// parse cloudlet.StaticIps and refs.UsedStaticIps.
 		// pick a free one, put it in refs.UsedStaticIps, and
 		// set inst.AllocatedIp to the Ip.
-		err = errors.New("Static IPs not supported yet")
+		return errors.New("Static IPs not supported yet")
 	} else if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportDynamic {
 		// Note one dynamic IP is reserved for Global Reverse Proxy LB.
 		if refs.UsedDynamicIps+1 >= cloudlet.NumDynamicIps {
-			err = errors.New("No more dynamic IPs left")
-		} else {
-			refs.UsedDynamicIps++
-			inst.AllocatedIp = cloudcommon.AllocatedIpDynamic
-			*refsChanged = true
+			return errors.New("No more dynamic IPs left")
 		}
-	} else {
-		return errors.New("Invalid IpSupport type")
+		refs.UsedDynamicIps++
+		inst.AllocatedIp = cloudcommon.AllocatedIpDynamic
+		*refsChanged = true
+		return nil
 	}
-	if err != nil && inst.IpAccess == edgeproto.IpAccess_IpAccessDedicatedOrShared {
-		// downgrade to shared; no allocation needed
-		inst.IpAccess = edgeproto.IpAccess_IpAccessShared
-		err = nil
-	}
-	return err
+	return errors.New("Invalid IpSupport type")
 }
 
 func freeIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) {
