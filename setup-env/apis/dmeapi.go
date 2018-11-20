@@ -187,10 +187,11 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		//read the results from the last register so we can get the cookie.
 		//if the current app is different, re-register
 		readMatchEngineStatus(outputDir+"/register.yml", &registerStatus)
-		if registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
-			registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
-			registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers {
-			log.Printf("Re-registering for api %s\n", api)
+		if apiRequest.Rcreq.AppName != "" &&
+			(registerStatus.Req.DevName != apiRequest.Rcreq.DevName ||
+				registerStatus.Req.AppName != apiRequest.Rcreq.AppName ||
+				registerStatus.Req.AppVers != apiRequest.Rcreq.AppVers) {
+			log.Printf("Re-registering for api %s - %+v\n", api, apiRequest.Rcreq)
 			ok := RunDmeAPI("register", procname, apiFile, apiType, outputDir)
 			if !ok {
 				return false

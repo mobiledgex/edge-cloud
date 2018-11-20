@@ -67,6 +67,7 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
+import "strconv"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -142,7 +143,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -165,11 +166,12 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.DeploymentManifest)
 	s = append(s, in.DeploymentGenerator)
 	s = append(s, in.AndroidPackageName)
+	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 17)
+	s := make([]string, 0, 18)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -189,6 +191,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "DeploymentManifest")
 	s = append(s, "DeploymentGenerator")
 	s = append(s, "AndroidPackageName")
+	s = append(s, "PermitsPlatformApps")
 	return s
 }
 
@@ -456,6 +459,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.DeploymentManifest, "deploymentmanifest", "", "DeploymentManifest")
 	AppFlagSet.StringVar(&AppIn.DeploymentGenerator, "deploymentgenerator", "", "DeploymentGenerator")
 	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
+	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -524,6 +528,9 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("androidpackagename").Changed {
 		AppIn.Fields = append(AppIn.Fields, "18")
+	}
+	if AppFlagSet.Lookup("permitsplatformapps").Changed {
+		AppIn.Fields = append(AppIn.Fields, "19")
 	}
 }
 

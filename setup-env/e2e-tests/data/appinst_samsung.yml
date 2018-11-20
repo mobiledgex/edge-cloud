@@ -1,0 +1,13 @@
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: Samsung
+      name: SamsungEnablingLayer
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  uri: default.samsungenablement.samsung.com
