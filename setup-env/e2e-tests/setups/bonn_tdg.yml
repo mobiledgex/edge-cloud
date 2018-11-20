@@ -29,14 +29,14 @@ locsims:
     geofile: "{{datadir}}/geocode.dat"
     country: GE
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
 
 toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
 
 etcds:
 - etcdlocal:
@@ -74,7 +74,7 @@ controllers:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
    
 dmes:
 - dmelocal:
@@ -93,7 +93,7 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
 
 crms:
 - crmlocal:
@@ -107,7 +107,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:   
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
 
 - crmlocal:
     name: crm2
@@ -120,7 +120,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
 
 - crmlocal:
     name: crm3
@@ -133,4 +133,4 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1115
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
