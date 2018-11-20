@@ -17,15 +17,6 @@ flavors:
 
 clusterflavors:
 - key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
     name: c1.small
   nodeflavor:
     name: x1.small
@@ -42,6 +33,15 @@ clusterflavors:
     name: x1.medium
   numnodes: 3
   maxnodes: 4
+  nummasters: 1
+- key:
+    name: c1.tiny
+  nodeflavor:
+    name: x1.tiny
+  masterflavor:
+    name: x1.tiny
+  numnodes: 2
+  maxnodes: 2
   nummasters: 1
 
 clusters:
@@ -207,7 +207,7 @@ appinstances:
   cloudletloc:
     lat: 31
     long: -91
-  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+  uri: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -223,7 +223,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 10000
+    publicport: 443
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -231,8 +231,9 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
+  ipaccess: IpAccessDedicatedOrShared
   state: Ready
+  allocatedip: dynamic
 - key:
     appkey:
       developerkey:
@@ -247,7 +248,7 @@ appinstances:
   cloudletloc:
     lat: 35
     long: -95
-  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -263,7 +264,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 10000
+    publicport: 443
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -271,6 +272,7 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
+  ipaccess: IpAccessDedicatedOrShared
   state: Ready
+  allocatedip: dynamic
 

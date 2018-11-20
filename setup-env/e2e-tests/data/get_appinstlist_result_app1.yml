@@ -34,10 +34,13 @@ cloudlets:
     ports:
     - proto: LProtoTCP
       internalport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
+      fqdnprefix: someapplication1-udp.
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
@@ -70,7 +73,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-1.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -78,7 +81,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -93,7 +96,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-2.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -101,7 +104,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -116,7 +119,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-3.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-3.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -124,7 +127,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -139,7 +142,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-4.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-4.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -147,7 +150,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -162,7 +165,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-5.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-5.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -170,7 +173,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -185,7 +188,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-6.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-6.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -193,7 +196,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -208,7 +211,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-7.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-7.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -216,7 +219,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
@@ -231,7 +234,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: dmuus-cloud-8.dmuus.mobiledgex.net
+    fqdn: acmeappcosomeapplication110.dmuus-cloud-8.dmuus.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -239,7 +242,7 @@ cloudlets:
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
-      publicport: 10000
+      publicport: 443
       fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
