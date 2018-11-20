@@ -11,7 +11,10 @@ cloudlets:
     ports:
     - proto: LProtoTCP
       internalport: 80
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoHTTP
       internalport: 443
+      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
+      fqdnprefix: someapplication1-udp.
