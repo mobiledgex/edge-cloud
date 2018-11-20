@@ -547,7 +547,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:        GetCloudletUsedRam(0, 1, 0),
 		UsedVcores:     GetCloudletUsedVcores(0, 1, 0),
 		UsedDisk:       GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts:    map[int32]int32{10000: 1, 10001: 1},
+		RootLbPorts:    map[int32]int32{80: 1, 10000: 1},
 		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1]:
@@ -558,10 +558,10 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 			ClusterData[2].Key,
 			ClusterAutoData[1].Key,
 		},
-		UsedRam:        GetCloudletUsedRam(0, 2, 1),
-		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),
-		UsedDisk:       GetCloudletUsedDisk(0, 2, 1),
-		UsedDynamicIps: 1,
+		UsedRam:     GetCloudletUsedRam(0, 2, 1),
+		UsedVcores:  GetCloudletUsedVcores(0, 2, 1),
+		UsedDisk:    GetCloudletUsedDisk(0, 2, 1),
+		RootLbPorts: map[int32]int32{10000: 1, 11111: 1},
 	},
 	// ClusterInstData[2,6]:
 	edgeproto.CloudletRefs{

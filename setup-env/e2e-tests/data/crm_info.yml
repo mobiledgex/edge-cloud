@@ -1,10 +1,5 @@
 flavors:
 - key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
-- key:
     name: x1.tiny
   ram: 1024
   vcpus: 1
@@ -14,6 +9,11 @@ flavors:
   ram: 2048
   vcpus: 2
   disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
 
 clusterflavors:
 - key:
@@ -207,7 +207,7 @@ appinstances:
   cloudletloc:
     lat: 31
     long: -91
-  uri: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
+  uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -223,7 +223,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 443
+    publicport: 10000
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -231,9 +231,8 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessDedicatedOrShared
+  ipaccess: IpAccessShared
   state: Ready
-  allocatedip: dynamic
 - key:
     appkey:
       developerkey:
@@ -248,7 +247,7 @@ appinstances:
   cloudletloc:
     lat: 35
     long: -95
-  uri: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
+  uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -264,7 +263,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 443
+    publicport: 10000
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -272,7 +271,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessDedicatedOrShared
+  ipaccess: IpAccessShared
   state: Ready
-  allocatedip: dynamic
 
