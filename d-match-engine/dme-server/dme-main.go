@@ -60,6 +60,15 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	if !ok {
 		return reply, errors.New("No valid session cookie")
 	}
+	if req.CarrierName == "" {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
+
+		return reply, errors.New("missing carrierName")
+	}
+	if req.GpsLocation == nil || (req.GpsLocation.Lat == 0 && req.GpsLocation.Long == 0) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
+		return reply, errors.New("Missing GpsLocation")
+	}
 	err := findCloudlet(ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
