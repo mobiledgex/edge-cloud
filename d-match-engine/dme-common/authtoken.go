@@ -38,12 +38,6 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 		return err
 	}
 
-	//check token is not expired
-	if authClaims.ExpiresAt < time.Now().Unix() {
-		log.InfoLog("token is expired", "token", token, "expiresAt", authClaims.ExpiresAt)
-		return errors.New("Expired token")
-	}
-
 	//check that the values in the token match
 	if devname != authClaims.DevName {
 		return errors.New("token developer mismatch")
