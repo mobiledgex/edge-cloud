@@ -23,21 +23,6 @@ cloudlets:
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
-- carriername: developer
-  cloudletname: default
-  gpslocation: {}
-  distance: 100000
-  appinstances:
-  - appname: someapplication1
-    appvers: "1.0"
-    fqdn: default.someapplication1.AcmeAppCo.com
-    ports:
-    - proto: LProtoTCP
-      internalport: 80
-    - proto: LProtoHTTP
-      internalport: 443
-    - proto: LProtoUDP
-      internalport: 10002
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
