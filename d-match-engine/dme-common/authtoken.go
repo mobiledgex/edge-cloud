@@ -34,8 +34,8 @@ func VerifyAuthToken(token string, pubkey string, devname string, appname string
 	})
 
 	if err != nil {
-		log.WarnLog("error in parse claims", "token", token, "err", err)
-		return errors.New("unable to verify token against key")
+		log.InfoLog("error in parse claims", "token", token, "err", err)
+		return err
 	}
 
 	//check token is not expired
