@@ -436,13 +436,11 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 					cloc = new(dme.CloudletLocation)
 					var d float64
 
+					// do not return the default instance
 					if i.cloudletKey == cloudcommon.DefaultCloudletKey {
-						// there is no real distance as this is a fake cloudlet.
-						// TODO: should we even return this any more in GetAppInstList?
-						d = dmecommon.InfiniteDistance
-					} else {
-						d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
+						continue
 					}
+					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
 					cloc.GpsLocation = &i.location
 					cloc.CarrierName = i.cloudletKey.OperatorKey.Name
 					cloc.CloudletName = i.cloudletKey.Name
