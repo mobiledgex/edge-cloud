@@ -1915,6 +1915,11 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 	}
 	cl1.Close() //nolint
 	cl2.Close() //nolint
+	err = oscli.AddSecurityRuleCIDR(GetAllowedClientCIDR(), "tcp", oscli.GetDefaultSecurityRule(), maxPort)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "warning, error while adding external ingress security rule for kubeproxy", "error", err, "port", maxPort)
+	}
+	log.DebugLog(log.DebugLevelMexos, "added external ingress security rule for kubeproxy", "port", maxPort)
 	cmd = "ps wwh -C kubectl -o args"
 	for i := 0; i < 5; i++ {
 		//verify
