@@ -1,0 +1,7 @@
+##
+tests:
+
+- name: send register api with samsung enabling layer
+  apifile: "{{datadir}}/register_samsung.yml"
+  actions: [dmeapi-register]
+

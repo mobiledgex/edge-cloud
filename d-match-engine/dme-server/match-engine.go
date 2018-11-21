@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"net"
 	"sync"
@@ -33,10 +34,11 @@ type dmeAppInsts struct {
 
 type dmeApp struct {
 	sync.RWMutex
-	appKey             edgeproto.AppKey
-	carriers           map[string]*dmeAppInsts
-	authPublicKey      string
-	androidPackageName string
+	appKey              edgeproto.AppKey
+	carriers            map[string]*dmeAppInsts
+	authPublicKey       string
+	androidPackageName  string
+	permitsPlatformApps bool
 }
 
 type dmeApps struct {
@@ -68,12 +70,15 @@ func addApp(in *edgeproto.App) {
 		app.appKey = in.Key
 		tbl.apps[in.Key] = app
 		log.DebugLog(log.DebugLevelDmedb, "Adding app",
-			"key", in.Key)
+			"key", in.Key,
+			"package", in.AndroidPackageName,
+			"PermitsPlatformApps", in.PermitsPlatformApps)
 	}
 	app.Lock()
 	defer app.Unlock()
 	app.authPublicKey = in.AuthPublicKey
 	app.androidPackageName = in.AndroidPackageName
+	app.permitsPlatformApps = in.PermitsPlatformApps
 }
 
 func addAppInst(appInst *edgeproto.AppInst) {
@@ -273,7 +278,27 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 	return maxDistance, updated
 }
 
-func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) {
+// returns true if if the requested app allows the registered app to
+// access APIs on its behalf
+func requestedAppPermitsRegisteredApp(requestedApp edgeproto.AppKey, registeredApp edgeproto.AppKey) bool {
+	// if the 2 apps match, allow it.  It means the client requested the same app as was registered
+	var tbl *dmeApps
+	tbl = dmeAppTbl
+
+	if requestedApp == registeredApp {
+		return true
+	}
+	if !cloudcommon.IsPlatformApp(registeredApp.DeveloperKey.Name, registeredApp.Name) {
+		return false
+	}
+	// now find the app and see if it permits platform apps
+	tbl.Lock()
+	defer tbl.Unlock()
+	app, ok := tbl.apps[requestedApp]
+	return ok && app.permitsPlatformApps
+}
+
+func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mreply *dme.FindCloudletReply) error {
 	var appkey edgeproto.AppKey
 	publicCloudPadding := 100.0 // public clouds have to be this much closer in km
 	appkey.DeveloperKey.Name = ckey.DevName
@@ -281,6 +306,21 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 	appkey.Version = ckey.AppVers
 	mreply.Status = dme.FindCloudletReply_FIND_NOTFOUND
 	mreply.CloudletLocation = &dme.Loc{}
+
+	// specifying an app in the request is allowed for platform apps only,
+	// and should require permission from the developer of the actual app
+	if mreq.AppName != "" || mreq.DevName != "" || mreq.AppVers != "" {
+		var reqkey edgeproto.AppKey
+		reqkey.DeveloperKey.Name = mreq.DevName
+		reqkey.Name = mreq.AppName
+		reqkey.Version = mreq.AppVers
+		if !requestedAppPermitsRegisteredApp(reqkey, appkey) {
+			return fmt.Errorf("Access to requested app: Devname: %s Appname: %s AppVers: %s not allowed for the registered app: Devname: %s Appname: %s Appvers: %s",
+				mreq.DevName, mreq.AppName, mreq.AppVers, appkey.DeveloperKey.Name, appkey.Name, appkey.Version)
+		}
+		//update the appkey to use the requested key
+		appkey = reqkey
+	}
 
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.DeveloperKey.Name, "version", appkey.Version)
 
@@ -326,6 +366,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 		log.DebugLog(log.DebugLevelDmereq, "findCloudlet returning FIND_NOTFOUND")
 
 	}
+	return nil
 }
 
 func isPublicCarrier(carriername string) bool {
@@ -345,6 +386,11 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	for _, a := range tbl.apps {
 		// if the app it itself a platform app, it is not returned here
 		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
+			continue
+		}
+		// if the app does not permit platform apps to access it, skip it
+		if !a.permitsPlatformApps {
+			log.DebugLog(log.DebugLevelDmereq, "skipping non permitted app for getFqdnList", "appkey", a.appKey)
 			continue
 		}
 

@@ -88,6 +88,9 @@ message App {
   string deployment_generator = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Android package name, optional
   string android_package_name = 18;
+  // Indicates whether or not platform apps are allowed to perform actions
+	// on behalf of this app, such as FindCloudlet
+  bool permits_platform_apps = 19;
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
