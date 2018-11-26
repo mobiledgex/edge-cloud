@@ -237,6 +237,7 @@ apps:
   cluster:
     name: jlmappcluster
   apptemplate: "http://35.199.188.102/apps/mobiledgexsdkdemo.yaml"
+  command: "simapp -port 7777"
 
 - key:
     developerkey:
