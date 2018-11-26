@@ -17,7 +17,7 @@ spec:
       hostAliases:
        - ip: "37.50.143.121"
          hostnames:
-         - "fmbncisrs101.tacn.detemobil.de"
+         - "bonnedgecloud.telekom.de"
       containers:
       - name: crmbonn
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
@@ -34,13 +34,13 @@ spec:
          - name: MEX_DIR
            value: /root/.mobiledgex
          - name: OS_AUTH_URL
-           value: https://fmbncisrs101.tacn.detemobil.de:5000/v2.0
+           value: https://bonnedgecloud.telekom.de:5000/v2.0
          - name: OS_CACERT
            value: /root/.mobiledgex/bonnedgecloudtelekomde.crt
          - name: OS_USERNAME
            value: mexadmin
          - name: OS_PASSWORD
-           value: MEX$Admin12345 
+           value: kj&shy2%Jt5F4$Wz
          - name: OS_REGION_NAME
            value: RegionOne
          - name: OS_TENANT_NAME

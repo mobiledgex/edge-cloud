@@ -89,7 +89,6 @@ clusterinsts:
     name: x1.medium
   liveness: LivenessStatic
 
-
 - key:
     clusterkey:
       name: jlmappcluster
@@ -112,6 +111,16 @@ clusterinsts:
     name: x1.medium
   liveness: LivenessStatic
 
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
 
 
 operators:
@@ -202,6 +211,16 @@ cloudlets:
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
+- key:
+    operatorkey:
+      name: azure
+    name: azcentraluscloudlet
+  accessuri:
+  location:
+    lat: 41.878
+    long: -93.0977
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
 - key:
@@ -217,7 +236,7 @@ apps:
     name: x1.small
   cluster:
     name: jlmappcluster
-  config: "http://35.199.188.102/apps/mobiledgexsdkdemo.yaml"
+  apptemplate: "http://35.199.188.102/apps/mobiledgexsdkdemo.yaml"
 
 - key:
     developerkey:
@@ -232,7 +251,7 @@ apps:
     name: x1.small
   cluster:
     name: jlmappcluster
-  config: "http://35.199.188.102/apps/apptemplate.yaml"
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
 
 appinstances:
 - key:
@@ -550,3 +569,46 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+  liveness: LivenessStatic
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azcentraluscloudlet
+  liveness: LivenessStatic
+
