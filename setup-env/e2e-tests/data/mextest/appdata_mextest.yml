@@ -80,7 +80,7 @@ apps:
     name: x1.small
   cluster:
     name: testappcluster
-  config: "simapp -port 7777"
+  command: "simapp -port 7777"
   apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
   accessports: "tcp:7777"
   ipaccess: IpAccessDedicatedOrShared
