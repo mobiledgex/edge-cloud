@@ -86,6 +86,10 @@ type K8sDeploymentStep struct {
 	CopyFiles   []K8CopyFile
 }
 
+type VaultProcess struct {
+	process.Vault
+	Hostname string
+}
 type EtcdProcess struct {
 	process.EtcdLocal
 	Hostname string
@@ -154,6 +158,7 @@ type DeploymentData struct {
 	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
 	Locsims       []LocSimProcess     `yaml:"locsims"`
 	Toksims       []TokSimProcess     `yaml:"toksims"`
+	Vaults        []VaultProcess      `yaml:"vaults"`
 	Etcds         []EtcdProcess       `yaml:"etcds"`
 	Controllers   []ControllerProcess `yaml:"controllers"`
 	Dmes          []DmeProcess        `yaml:"dmes"`
