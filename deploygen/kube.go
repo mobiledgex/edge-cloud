@@ -172,6 +172,7 @@ spec:
         ports:
 {{- range .Ports}}
         - containerPort: {{.Port}}
+          protocol: {{.KubeProto}}
 {{- end}}
         command:
 {{- range .Command}}
