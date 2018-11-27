@@ -44,7 +44,7 @@ public class EngineCallTest {
 
     FusedLocationProviderClient fusedLocationClient;
 
-    public static String hostOverride = "tdg2.dme.mobiledgex.net";
+    public static String hostOverride = "tdg.dme.mobiledgex.net";
     public static int portOverride = 50051;
 
     public boolean useHostOverride = true;
@@ -287,7 +287,7 @@ public class EngineCallTest {
             try {
                 // Non-Mock.
                 AppClient.RegisterClientRequest registerClientRequest = me.createRegisterClientRequest(
-                        context, developerName, "", "");
+                        context, developerName, null, null, null, null);
                 AppClient.RegisterClientReply registerStatusReply = me.registerClient(registerClientRequest, me.getHost(), me.getPort(), GRPC_TIMEOUT_MS);
             } catch (IllegalArgumentException iae) {
                 Log.i(TAG, "Expected exception for registerClient. Mex Disabled.");
@@ -889,8 +889,8 @@ public class EngineCallTest {
             }
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_UNDEFINED, list.getStatus());
-            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
@@ -938,8 +938,8 @@ public class EngineCallTest {
             AppClient.AppInstListReply list = listFuture.get();
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_UNDEFINED, list.getStatus());
-            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }

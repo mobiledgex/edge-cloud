@@ -25,6 +25,7 @@ public class MockUtils {
         Location loc = new Location(provider);
         loc.setLongitude(longitude);
         loc.setLatitude(latitude);
+        loc.setTime(System.currentTimeMillis());
         return loc;
     }
 
@@ -32,6 +33,9 @@ public class MockUtils {
         return LocOuterClass.Loc.newBuilder()
                 .setLat(location.getLatitude())
                 .setLong(location.getLongitude())
+                .setTimestamp(LocOuterClass.Timestamp.newBuilder()
+                        .setSeconds(System.currentTimeMillis()/1000)
+                        .build())
                 .build();
     }
     public static AppClient.RegisterClientRequest createMockRegisterClientRequest(String developerName,
