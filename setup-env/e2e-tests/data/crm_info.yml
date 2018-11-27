@@ -186,8 +186,11 @@ apps:
             imagePullPolicy: Always
             ports:
             - containerPort: 80
+              protocol: TCP
             - containerPort: 443
+              protocol: TCP
             - containerPort: 10002
+              protocol: UDP
             command:
             - ""
   deploymentgenerator: kubernetes-basic
