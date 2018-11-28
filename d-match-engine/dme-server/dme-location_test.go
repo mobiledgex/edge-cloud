@@ -6,13 +6,16 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
 )
 
 func TestVerifyLoc(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelDmereq)
 	setupMatchEngine()
+	setupJwks()
 
 	// add all data
 	for _, app := range dmetest.GenerateApps() {
@@ -33,7 +36,7 @@ func TestVerifyLoc(t *testing.T) {
 		// bypassing the interceptor which sets up the cookie key.
 		// So set it on the context manually.
 		ckey, err := dmecommon.VerifyCookie(regReply.SessionCookie)
-		assert.Nil(t, err, "verify cookie")
+		require.Nil(t, err, "verify cookie")
 		ctx = dmecommon.NewCookieContext(ctx, ckey)
 
 		reply, err := serv.VerifyLocation(ctx, &rr.Req)
@@ -42,5 +45,15 @@ func TestVerifyLoc(t *testing.T) {
 		} else {
 			assert.Equal(t, &rr.Reply, reply, "VerifyLocData[%d]", ii)
 		}
+	}
+}
+
+func setupJwks() {
+	// setup fake JWT key
+	dmecommon.Jwks.Init("foo", "dme", "roleID", "secretID")
+	dmecommon.Jwks.Meta.CurrentVersion = 1
+	dmecommon.Jwks.Keys[1] = &vault.JWK{
+		Secret:  "12345",
+		Refresh: "1s",
 	}
 }
