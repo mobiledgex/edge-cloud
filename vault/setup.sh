@@ -89,3 +89,6 @@ vault write auth/approle/role/rotator period="720h" policies="rotator"
 # get rotator app roleID and generate secretID
 vault read auth/approle/role/rotator/role-id
 vault write -f auth/approle/role/rotator/secret-id
+
+# generate secret string:
+# openssl rand -base64 128

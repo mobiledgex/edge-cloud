@@ -41,6 +41,10 @@ spec:
            value: mexserver
          - name: LOCAPI_PASSWD
            value: seC2835!
+	 - name: VAULT_ROLE_ID
+	   value: b95e3309-5964-89a2-5647-e86f745f20c7
+	 - name: VAULT_SECRET_ID
+	   value: 3f6f9e6b-f679-7525-c391-105e9b787758
          
       imagePullSecrets:
        - name: mexreg-secret 
