@@ -7,10 +7,8 @@ import (
 	"time"
 
 	"github.com/casbin/casbin"
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -28,6 +26,7 @@ type Server struct {
 type ServerConfig struct {
 	ServAddr      string
 	SqlAddr       string
+	VaultAddr     string
 	RunLocal      bool
 	InitLocal     bool
 	IgnoreEnv     bool
@@ -71,6 +70,8 @@ func RunServer(config *ServerConfig) (*Server, error) {
 			return nil, fmt.Errorf("create default rbac model failed, %s", err.Error())
 		}
 	}
+
+	InitVault(config.VaultAddr)
 
 	server := Server{config: *config}
 	if config.RunLocal {
@@ -118,21 +119,8 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	// accessible routes
 	e.POST(root+"/usercreate", CreateUser)
 	// authenticated routes - jwt middleware
-	pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicKey))
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse public key")
-	}
 	auth := e.Group(root + "/auth")
-	jwtconfig := middleware.JWTConfig{
-		SigningKey:    pubKey,
-		SigningMethod: "RS256",
-		Claims:        &UserClaims{},
-		ErrorHandler: func(err error) error {
-			fmt.Printf("jwt failed: %s\n", err.Error())
-			return nil
-		},
-	}
-	auth.Use(middleware.JWTWithConfig(jwtconfig))
+	auth.Use(AuthCookie)
 	// authenticated routes - rbac via casbin (false arg disables logging)
 	enforcer = casbin.NewEnforcer(config.RbacModelPath, adapter, false)
 	// authenticated routes - gorm router
