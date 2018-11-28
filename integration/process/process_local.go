@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -18,6 +19,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon/influxsup"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // Local processes all run in the same global namespace, using different
@@ -41,7 +43,7 @@ type EtcdLocal struct {
 func (p *EtcdLocal) Start(logfile string) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "etcd", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "etcd", args, nil, logfile)
 	return err
 }
 
@@ -91,7 +93,7 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "controller", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "controller", args, nil, logfile)
 	return err
 }
 
@@ -197,8 +199,26 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "-d")
 		args = append(args, options.Debug)
 	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.DmeRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.DmeSecretID),
+		}
+		log.Printf("dme envs: %v\n", envs)
+	}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, "dme-server", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "dme-server", args, envs, logfile)
 	return err
 }
 
@@ -251,7 +271,7 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "crmserver", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "crmserver", args, nil, logfile)
 	return err
 }
 
@@ -280,7 +300,7 @@ func (p *InfluxLocal) Start(logfile string) error {
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
-	p.cmd, err = StartLocal(p.Name, "influxd", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "influxd", args, nil, logfile)
 	return err
 }
 
@@ -324,7 +344,7 @@ func (p *SqlLocal) Start(logfile string) error {
 		args = append(args, strings.Join(options, " "))
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "pg_ctl", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "pg_ctl", args, nil, logfile)
 	if err != nil {
 		return err
 	}
@@ -398,10 +418,148 @@ func (p *SqlLocal) runPsql(args []string) ([]byte, error) {
 	return exec.Command("psql", args...).CombinedOutput()
 }
 
+// Vault
+type Vault struct {
+	Name        string
+	DmeSecret   string
+	McormSecret string
+	cmd         *exec.Cmd
+}
+
+// In dev mode, Vault is locked to below address
+var VaultAddress = "http://127.0.0.1:8200"
+
+type VaultRoles struct {
+	DmeRoleID       string `json:"dmeroleid"`
+	DmeSecretID     string `json:"dmesecretid"`
+	MCORMRoleID     string `json:"mcormroleid"`
+	MCORMSecretID   string `json:"mcormsecretid"`
+	RotatorRoleID   string `json:"rotatorroleid"`
+	RotatorSecretID string `json:"rotatorsecretid"`
+}
+
+func (p *Vault) Start(logfile string, opts ...StartOp) error {
+	// Note: for e2e tests, vault is started in dev mode.
+	// In dev mode, vault is automatically unsealed, TLS is disabled,
+	// data is in-memory only, and root key is printed during startup.
+	// DO NOT run Vault in dev mode for production setups.
+	if p.DmeSecret == "" {
+		p.DmeSecret = "dme-secret"
+	}
+	if p.McormSecret == "" {
+		p.McormSecret = "mcorm-secret"
+	}
+
+	args := []string{"server", "-dev"}
+	var err error
+	p.cmd, err = StartLocal(p.Name, "vault", args, nil, logfile)
+	if err != nil {
+		return err
+	}
+	// wait until vault is online and ready
+	for ii := 0; ii < 10; ii++ {
+		var serr error
+		p.run("vault", "status", &serr)
+		if serr == nil {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	// run setup script
+	gopath := os.Getenv("GOPATH")
+	setup := gopath + "/src/github.com/mobiledgex/edge-cloud/vault/setup.sh"
+	out := p.run("/bin/sh", setup, &err)
+	if err != nil {
+		fmt.Println(out)
+	}
+	// get roleIDs and secretIDs
+	roles := VaultRoles{}
+	p.getAppRole("dme", &roles.DmeRoleID, &roles.DmeSecretID, &err)
+	p.getAppRole("mcorm", &roles.MCORMRoleID, &roles.MCORMSecretID, &err)
+	p.getAppRole("rotator", &roles.RotatorRoleID, &roles.RotatorSecretID, &err)
+	p.putSecret("dme", p.DmeSecret+"-old", &err)
+	p.putSecret("dme", p.DmeSecret, &err)
+	p.putSecret("mcorm", p.McormSecret+"-old", &err)
+	p.putSecret("mcorm", p.McormSecret, &err)
+	if err != nil {
+		p.Stop()
+		return err
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.RolesFile != "" {
+		roleYaml, err := yaml.Marshal(&roles)
+		if err != nil {
+			p.Stop()
+			return err
+		}
+		err = ioutil.WriteFile(options.RolesFile, roleYaml, 0644)
+		if err != nil {
+			p.Stop()
+			return err
+		}
+	}
+	return err
+}
+
+func (p *Vault) Stop() {
+	StopLocal(p.cmd)
+}
+
+func (p *Vault) getAppRole(name string, roleID, secretID *string, err *error) {
+	if *err != nil {
+		return
+	}
+	out := p.run("vault", fmt.Sprintf("read auth/approle/role/%s/role-id", name), err)
+	vals := p.mapVals(out)
+	if val, ok := vals["role_id"]; ok {
+		*roleID = val
+	}
+	out = p.run("vault", fmt.Sprintf("write -f auth/approle/role/%s/secret-id", name), err)
+	vals = p.mapVals(out)
+	if val, ok := vals["secret_id"]; ok {
+		*secretID = val
+	}
+}
+
+func (p *Vault) putSecret(name, secret string, err *error) {
+	p.run("vault", fmt.Sprintf("kv put jwtkeys/%s secret=%s", name, secret), err)
+}
+
+func (p *Vault) run(bin, args string, err *error) string {
+	if *err != nil {
+		return ""
+	}
+	cmd := exec.Command(bin, strings.Split(args, " ")...)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("VAULT_ADDR=%s", VaultAddress))
+	out, cerr := cmd.CombinedOutput()
+	if cerr != nil {
+		*err = fmt.Errorf("cmd '%s %s' failed, %s", bin, args, cerr.Error())
+		return string(out)
+	}
+	return string(out)
+}
+
+func (p *Vault) mapVals(resp string) map[string]string {
+	vals := make(map[string]string)
+	for _, line := range strings.Split(resp, "\n") {
+		pair := strings.Fields(strings.TrimSpace(line))
+		if len(pair) != 2 {
+			continue
+		}
+		vals[pair[0]] = pair[1]
+	}
+	return vals
+}
+
 // Support funcs
 
-func StartLocal(name, bin string, args []string, logfile string) (*exec.Cmd, error) {
+func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {
 	cmd := exec.Command(bin, args...)
+	if envs != nil {
+		cmd.Env = append(cmd.Env, envs...)
+	}
 	if logfile == "" {
 		writer := NewColorWriter(name)
 		cmd.Stdout = writer
@@ -450,7 +608,7 @@ func (p *LocApiSimLocal) Start(logfile string) error {
 		args = append(args, "-country", p.Country)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "loc-api-sim", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "loc-api-sim", args, nil, logfile)
 	return err
 }
 
@@ -473,7 +631,7 @@ func (p *TokSrvSimLocal) Start(logfile string) error {
 		args = append(args, p.Token)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "tok-srv-sim", args, logfile)
+	p.cmd, err = StartLocal(p.Name, "tok-srv-sim", args, nil, logfile)
 	return err
 }
 
@@ -491,7 +649,7 @@ type SampleAppLocal struct {
 
 func (p *SampleAppLocal) Start(logfile string) error {
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.Exename, p.Args, logfile)
+	p.cmd, err = StartLocal(p.Name, p.Exename, p.Args, nil, logfile)
 	return err
 }
 

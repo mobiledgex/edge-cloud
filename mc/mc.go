@@ -16,6 +16,7 @@ var localSql = flag.Bool("localSql", false, "Run local postgres db")
 var initSql = flag.Bool("initSql", false, "Init db when using localSql")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 
 var sigChan chan os.Signal
 
@@ -27,6 +28,7 @@ func main() {
 	config := orm.ServerConfig{
 		ServAddr:  *addr,
 		SqlAddr:   *sqlAddr,
+		VaultAddr: *vaultAddr,
 		RunLocal:  *localSql,
 		InitLocal: *initSql,
 	}

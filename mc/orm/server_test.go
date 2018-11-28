@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,6 +28,13 @@ func TestServer(t *testing.T) {
 	server, err := RunServer(&config)
 	require.Nil(t, err, "run server")
 	defer server.Stop()
+
+	Jwks.Init("addr", "mcorm", "roleID", "secretID")
+	Jwks.Meta.CurrentVersion = 1
+	Jwks.Keys[1] = &vault.JWK{
+		Secret:  "12345",
+		Refresh: "1s",
+	}
 
 	err = server.WaitUntilReady()
 	require.Nil(t, err, "server online")

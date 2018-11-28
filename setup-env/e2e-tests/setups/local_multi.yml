@@ -31,6 +31,11 @@ toksims:
     port: 9999
   hostname: "127.0.0.1"
 
+vaults:
+- vault:
+    name: vault
+  hostname: "127.0.0.1"
+
 influxs:
 - influxlocal:
     name: influx1
