@@ -1,5 +1,6 @@
 package com.mobiledgex.matchingengine;
 
+import android.app.UiAutomation;
 import android.content.Context;
 import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
@@ -44,7 +45,7 @@ public class EngineCallTest {
 
     FusedLocationProviderClient fusedLocationClient;
 
-    public static String hostOverride = "tdg.dme.mobiledgex.net";
+    public static String hostOverride = "tdg2.dme.mobiledgex.net";
     public static int portOverride = 50051;
 
     public boolean useHostOverride = true;
@@ -53,13 +54,13 @@ public class EngineCallTest {
     public void grantPermissions() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.READ_PHONE_STATE");
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_COARSE_LOCATION");
-
+            UiAutomation uiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.READ_PHONE_STATE");
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.ACCESS_COARSE_LOCATION");
         }
     }
 
