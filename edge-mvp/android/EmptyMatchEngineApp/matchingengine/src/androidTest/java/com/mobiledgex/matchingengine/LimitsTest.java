@@ -1,5 +1,6 @@
 package com.mobiledgex.matchingengine;
 
+import android.app.UiAutomation;
 import android.content.Context;
 import android.location.Location;
 import android.os.AsyncTask;
@@ -49,12 +50,13 @@ public class LimitsTest {
     public void grantPermissions() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.READ_PHONE_STATE");
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_COARSE_LOCATION");
+            UiAutomation uiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.READ_PHONE_STATE");
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.ACCESS_COARSE_LOCATION");
         }
     }
 
