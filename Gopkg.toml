@@ -134,3 +134,7 @@ required = [
 [[constraint]]
   branch = "master"
   name = "github.com/casbin/gorm-adapter"
+
+[[constraint]]
+  name = "github.com/hashicorp/vault"
+  version = "0.11.5"

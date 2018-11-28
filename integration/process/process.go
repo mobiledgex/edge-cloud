@@ -62,13 +62,18 @@ type InfluxProcess interface {
 // options
 
 type StartOptions struct {
-	Debug string
+	Debug     string
+	RolesFile string
 }
 
 type StartOp func(op *StartOptions)
 
 func WithDebug(debug string) StartOp {
 	return func(op *StartOptions) { op.Debug = debug }
+}
+
+func WithRolesFile(rolesfile string) StartOp {
+	return func(op *StartOptions) { op.RolesFile = rolesfile }
 }
 
 func (s *StartOptions) ApplyStartOptions(opts ...StartOp) {

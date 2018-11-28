@@ -37,6 +37,7 @@ var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to cl
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
+var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -257,6 +258,8 @@ func main() {
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NodeDME, &myCloudletKey, &myNode.Key)
+
+	dmecommon.InitVault(*vaultAddr)
 
 	setupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)

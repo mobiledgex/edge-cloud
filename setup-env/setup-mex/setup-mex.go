@@ -108,6 +108,11 @@ func ensureProcesses(processNames []string) bool {
 //and some unique arguments to look for for pgrep. Returns info about
 // the hostname, process executable and arguments
 func findProcess(processName string) (string, string, string) {
+	for _, v := range util.Deployment.Vaults {
+		if v.Name == processName {
+			return v.Hostname, "vault", "-dev"
+		}
+	}
 	for _, etcd := range util.Deployment.Etcds {
 		if etcd.Name == processName {
 			return etcd.Hostname, "etcd", "-name " + etcd.Name
@@ -344,7 +349,7 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim", "influx"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim", "influx", "vault"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
 	}
@@ -456,6 +461,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	fmt.Fprintln(invfile, "ansible_ssh_private_key_file=~/.mobiledgex/id_rsa_mobiledgex")
 
 	allRemoteServers := make(map[string]string)
+	vaultRemoteServers := make(map[string]string)
 	etcdRemoteServers := make(map[string]string)
 	influxRemoteServers := make(map[string]string)
 	ctrlRemoteServers := make(map[string]string)
@@ -465,6 +471,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	tokSrvSimulators := make(map[string]string)
 	sampleApps := make(map[string]string)
 
+	for _, p := range util.Deployment.Vaults {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			vaultRemoteServers[i] = p.Name
+			foundServer = true
+		}
+	}
 	for _, p := range util.Deployment.Etcds {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
@@ -562,6 +579,14 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	fmt.Fprintln(invfile, "[mexservers]")
 	for s := range allRemoteServers {
 		fmt.Fprintln(invfile, s)
+	}
+
+	if len(vaultRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[vaults]")
+		for s := range vaultRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
 	}
 	if len(etcdRemoteServers) > 0 {
 		fmt.Fprintln(invfile, "")
@@ -875,7 +900,22 @@ func StartProcesses(processName string, outputDir string) bool {
 	if util.IsK8sDeployment() {
 		return true //nothing to do for k8s
 	}
+	rolesfile := outputDir + "/roles.yaml"
 	util.PrintStepBanner("starting local processes")
+	for _, v := range util.Deployment.Vaults {
+		if processName != "" && processName != v.Name {
+			continue
+		}
+		if isLocalIP(v.Hostname) {
+			log.Printf("Starting Vault %+v", v)
+			logfile := getLogFile(v.Name, outputDir)
+			err := v.Start(logfile, process.WithRolesFile(rolesfile))
+			if err != nil {
+				log.Printf("Error on Vault startup: %v", err)
+				return false
+			}
+		}
+	}
 	for _, etcd := range util.Deployment.Etcds {
 		if processName != "" && processName != etcd.Name {
 			continue
@@ -959,7 +999,7 @@ func StartProcesses(processName string, outputDir string) bool {
 
 			log.Printf("Starting DME %+v\n", dme)
 			logfile := getLogFile(dme.Name, outputDir)
-			err := dme.Start(logfile, process.WithDebug("locapi,dmedb,dmereq,notify"))
+			err := dme.Start(logfile, process.WithRolesFile(rolesfile), process.WithDebug("locapi,dmedb,dmereq,notify"))
 			if err != nil {
 				log.Printf("Error on DME startup: %v", err)
 				return false
