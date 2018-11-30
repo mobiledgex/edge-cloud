@@ -38,6 +38,8 @@ enum ImageType {
   ImageTypeDocker= 1;
   // QCOW2 virtual machine image type
   ImageTypeQCOW = 2;
+  // Helm chart
+  ImageTypeHelm = 3;
 }
 
 // Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.

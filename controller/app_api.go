@@ -111,6 +111,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
+		} else if in.ImageType == edgeproto.ImageType_ImageTypeHelm {
+			in.ImagePath = "mobiledgex/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name)
 		} else {
 			in.ImagePath = "qcow path not determined yet"
 		}

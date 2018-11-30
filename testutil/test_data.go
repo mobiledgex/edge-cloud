@@ -206,6 +206,18 @@ var AppData = []edgeproto.App{
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
 	},
+	edgeproto.App{
+		Key: edgeproto.AppKey{
+			DeveloperKey: DevData[3].Key,
+			Name:         "helmApp",
+			Version:      "0.0.1",
+		},
+		ImageType:     edgeproto.ImageType_ImageTypeHelm,
+		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
+		AccessPorts:   "udp:2024",
+		DefaultFlavor: FlavorData[2].Key,
+		Cluster:       ClusterData[2].Key,
+	},
 }
 var OperatorData = []edgeproto.Operator{
 	edgeproto.Operator{
@@ -426,6 +438,15 @@ var AppInstData = []edgeproto.AppInst{
 		Uri:         "harrypotter.sf.mex.io",
 		// Cluster is ClusterAutoData[1]
 	},
+	edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:      AppData[5].Key,
+			CloudletKey: CloudletData[2].Key,
+			Id:          1,
+		},
+		CloudletLoc: CloudletData[2].Location,
+		// Cluster is ClusterData[2]
+	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
 	edgeproto.AppInstInfo{
@@ -442,6 +463,9 @@ var AppInstInfoData = []edgeproto.AppInstInfo{
 	},
 	edgeproto.AppInstInfo{
 		Key: AppInstData[4].Key,
+	},
+	edgeproto.AppInstInfo{
+		Key: AppInstData[5].Key,
 	},
 }
 var CloudletInfoData = []edgeproto.CloudletInfo{

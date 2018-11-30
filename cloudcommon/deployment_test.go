@@ -48,6 +48,12 @@ func TestDeployment(t *testing.T) {
 	app.DeploymentGenerator = ""
 	testAppDeployment(t, app, true)
 
+	// helm with no manifest
+	app.Deployment = AppDeploymentTypeHelm
+	app.DeploymentManifest = ""
+	app.DeploymentGenerator = ""
+	testAppDeployment(t, app, true)
+
 	// untested - remote generator
 
 	// negative test - invalid generator
