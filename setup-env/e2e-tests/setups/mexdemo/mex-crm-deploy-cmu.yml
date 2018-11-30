@@ -15,7 +15,7 @@ spec:
         app: crmcmu
     spec:
       containers:
-      - name: crmmcmu
+      - name: crmcmu
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1120
         imagePullPolicy: Always
         env:
