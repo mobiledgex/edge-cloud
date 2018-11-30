@@ -60,10 +60,22 @@ cloudflare:
   - name: mobiledgexsdkdemomobiledgexsdkdemo10.microsoftbaskingridgecloudlet.azure.mobiledgex.net
     type: A
     content: 192.168.104.83
+  - name: mobiledgexsdkdemofacedetectiondemo10.azcentraluscloudlet.azure.mobiledgex.net
+    type: A
+    content: 23.99.193.4
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.azcentraluscloudlet.azure.mobiledgex.net
+    type: A
+    content: 23.99.193.4
+  - name: mobiledgexsdkdemofacedetectiondemo10.cmulivingedgecloudlet.tdg.mobiledgex.net
+    type: A
+    content: 128.2.208.35
+  - name: mobiledgexsdkdemomobiledgexsdkdemo10.cmulivingedgecloudlet.tdg.mobiledgex.net
+    type: A
+    content: 128.2.208.35
+
   - name: mexdemo.monitor.mobiledgex.net
     type: A
     content: 168.61.152.107
-
 
 tlscerts:
 - commonname: mexdemo

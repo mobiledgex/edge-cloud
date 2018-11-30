@@ -53,6 +53,7 @@
        name: "{{ item.controllerlocal.name }}"
        command: "controller --etcdUrls {{ item.controllerlocal.etcdaddrs }} --apiAddr {{ item.controllerlocal.apiaddr }} --notifyAddr {{ item.controllerlocal.notifyaddr }} --httpAddr {{ item.controllerlocal.httpaddr }} {{ tlsopt }}  -d etcd,api,notify"
        network_mode: host
+       restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ controllers }}"
@@ -99,6 +100,7 @@
        env_file: "{{remote_log_path}}//{{item.dmelocal.name}}.env"
        command: "dme-server --apiAddr {{ item.dmelocal.apiaddr }} --httpAddr {{ item.dmelocal.httpaddr }} --notifyAddrs {{ item.dmelocal.notifyaddrs }} --locverurl \"{{ item.dmelocal.locverurl }}\" --toksrvurl \"{{ item.dmelocal.toksrvurl }}\" --carrier {{ item.dmelocal.carrier }} --cloudletKey '{{ item.dmelocal.cloudletkey }}' {{ tlsopt }} -d locapi,dmedb,dmereq"
        network_mode: host
+       restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ dmes }}"
@@ -158,6 +160,7 @@
       env_file: "{{remote_log_path}}/{{item.crmlocal.name}}.env"
       command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos"
       network_mode: host
+      restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ crms }}"
@@ -188,6 +191,7 @@
        network_mode: host
        volumes:
          - /var/tmp:/var/tmp
+       restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ locsims }}"
@@ -222,6 +226,7 @@
        name: "{{ item.toksrvsimlocal.name }}"
        command: "tok-srv-sim --port {{ item.toksrvsimlocal.port }} "
        network_mode: host
+       restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ toksims }}"
