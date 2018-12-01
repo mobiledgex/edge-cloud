@@ -42,11 +42,21 @@ func TestDeployment(t *testing.T) {
 	app.DeploymentGenerator = deploygen.KubernetesBasic
 	testAppDeployment(t, app, true)
 
+	// Docker image type for Kubernetes deployment
+	app.ImageType = edgeproto.ImageType_ImageTypeDocker
+	testValidImageDeployment(t, app, true)
+
 	// kvm with no deployment is ok
 	app.Deployment = AppDeploymentTypeKVM
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
 	testAppDeployment(t, app, true)
+
+	// untested - remote generator
+
+	// QCOW image type for KVM deployment
+	app.ImageType = edgeproto.ImageType_ImageTypeQCOW
+	testValidImageDeployment(t, app, true)
 
 	// helm with no manifest
 	app.Deployment = AppDeploymentTypeHelm
@@ -54,13 +64,23 @@ func TestDeployment(t *testing.T) {
 	app.DeploymentGenerator = ""
 	testAppDeployment(t, app, true)
 
-	// untested - remote generator
+	// No image type for Helm deployment
+	app.ImageType = edgeproto.ImageType_ImageTypeUnknown
+	testValidImageDeployment(t, app, true)
+
+	// negative test - invalid image type for helm deployment
+	app.ImageType = edgeproto.ImageType_ImageTypeDocker
+	testValidImageDeployment(t, app, false)
 
 	// negative test - invalid generator
 	app.Deployment = AppDeploymentTypeKubernetes
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = "invalid"
 	testAppDeployment(t, app, false)
+
+	// negative test - invalid image type
+	app.ImageType = edgeproto.ImageType_ImageTypeQCOW
+	testValidImageDeployment(t, app, false)
 }
 
 func testAppDeployment(t *testing.T, app *edgeproto.App, valid bool) {
@@ -72,4 +92,15 @@ func testAppDeployment(t *testing.T, app *edgeproto.App, valid bool) {
 	} else {
 		require.NotNil(t, err)
 	}
+}
+
+func testValidImageDeployment(t *testing.T, app *edgeproto.App, valid bool) {
+	fmt.Printf("test deployment %s, image %s\n", app.Deployment, app.ImageType)
+	v := IsValidDeploymentForImage(app.ImageType, app.Deployment)
+	if valid {
+		require.True(t, v)
+	} else {
+		require.False(t, v)
+	}
+
 }

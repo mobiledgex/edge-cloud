@@ -39,7 +39,7 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 		if deployment == AppDeploymentTypeKVM {
 			return true
 		}
-	case edgeproto.ImageType_ImageTypeHelm:
+	case edgeproto.ImageType_ImageTypeUnknown:
 		if deployment == AppDeploymentTypeHelm {
 			return true
 		}
@@ -53,8 +53,6 @@ func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 		return AppDeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_ImageTypeQCOW:
 		return AppDeploymentTypeKVM, nil
-	case edgeproto.ImageType_ImageTypeHelm:
-		return AppDeploymentTypeHelm, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }
@@ -73,9 +71,6 @@ func GetAppDeploymentManifest(app *edgeproto.App) (string, error) {
 			return "", fmt.Errorf("failed to use default deployment generator %s, %s", app.Deployment, err.Error())
 		}
 		return str, nil
-	} else if app.Deployment == AppDeploymentTypeHelm {
-		// TODO - need to pass config file for helm chart
-		return "", nil
 	}
 	// no manifest specified
 	return "", nil

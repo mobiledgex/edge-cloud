@@ -101,7 +101,6 @@ var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",
 	"ImageTypeQCOW",
-	"ImageTypeHelm",
 }
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
@@ -226,9 +225,6 @@ func AppHideTags(in *edgeproto.App) {
 	tags := make(map[string]struct{})
 	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
 		tags[tag] = struct{}{}
-	}
-	if _, found := tags["nocmp"]; found {
-		in.Deployment = ""
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DeploymentManifest = ""
@@ -446,7 +442,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
 	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
-	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW ImageTypeHelm]")
+	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
 	AppFlagSet.StringVar(&AppInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
@@ -544,8 +540,6 @@ func parseAppEnums() error {
 			AppIn.ImageType = edgeproto.ImageType(1)
 		case "ImageTypeQCOW":
 			AppIn.ImageType = edgeproto.ImageType(2)
-		case "ImageTypeHelm":
-			AppIn.ImageType = edgeproto.ImageType(3)
 		default:
 			return errors.New("Invalid value for AppInImageType")
 		}

@@ -1647,16 +1647,16 @@ func deleteDNSRecords(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
 }
 func validateCommon(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name for kubernetes deployment")
+		return fmt.Errorf("missing name for the deployment")
 	}
 	if mf.Spec.Key == "" {
-		return fmt.Errorf("empty kubernetes cluster name")
+		return fmt.Errorf("empty cluster name")
 	}
 	if mf.Spec.Image == "" {
-		return fmt.Errorf("empty kubernetes image")
+		return fmt.Errorf("empty image")
 	}
 	if mf.Spec.ProxyPath == "" {
-		return fmt.Errorf("empty kubernetes proxy path")
+		return fmt.Errorf("empty proxy path")
 	}
 	if mf.Metadata.DNSZone == "" {
 		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
@@ -1671,7 +1671,7 @@ func DeleteHelmAppManifest(mf *Manifest) error {
 		return err
 	}
 	if rootLB == nil {
-		return fmt.Errorf("cannot create kubernetes app manifest, rootLB is null")
+		return fmt.Errorf("cannot create helm app, rootLB is null")
 	}
 	if err = validateCommon(mf); err != nil {
 		return err
@@ -1705,7 +1705,7 @@ func CreateHelmAppManifest(mf *Manifest) error {
 		return err
 	}
 	if rootLB == nil {
-		return fmt.Errorf("cannot create kubernetes app manifest, rootLB is null")
+		return fmt.Errorf("cannot create kubernetes app, rootLB is null")
 	}
 	if err = validateCommon(mf); err != nil {
 		return err

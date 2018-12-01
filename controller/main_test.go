@@ -94,15 +94,15 @@ func TestController(t *testing.T) {
 	testutil.ClientClusterInstTest(t, "cud", clusterInstClient, testutil.ClusterInstData)
 	testutil.ClientAppInstTest(t, "cud", appInstClient, testutil.AppInstData)
 
-	dmeNotify.WaitForAppInsts(5)
+	dmeNotify.WaitForAppInsts(6)
 	crmNotify.WaitForFlavors(3)
 	crmNotify.WaitForClusterFlavors(3)
 
-	assert.Equal(t, 5, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	assert.Equal(t, 6, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	assert.Equal(t, 3, len(crmNotify.FlavorCache.Objs), "num flavors")
 	assert.Equal(t, 3, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
 	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
-	assert.Equal(t, 5, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
+	assert.Equal(t, 6, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
 	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
 
