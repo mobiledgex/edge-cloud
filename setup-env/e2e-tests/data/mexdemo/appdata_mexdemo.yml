@@ -122,6 +122,16 @@ clusterinsts:
     name: x1.medium
   liveness: LivenessStatic
 
+- key:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: cmulivingedgecloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
 
 operators:
 - key:
@@ -186,6 +196,18 @@ cloudlets:
   location:
     lat: 40.682
     long: -74.682
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+
+
+- key:
+    operatorkey:
+      name: TDG
+    name: cmulivingedgecloudlet
+  accessuri:
+  location:
+    lat: 40.443322
+    long: -79.943583
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -413,6 +435,53 @@ appinstances:
   flavor:
     name: x1.small
 
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: cmulivingedgecloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: cmulivingedgecloudlet
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicatedOrShared
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: cmulivingedgecloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: jlmappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: cmulivingedgecloudlet
+  liveness: LivenessStatic
+  ipaccess: IpAccessDedicatedOrShared
+  flavor:
+    name: x1.small
+
+
 
 - key:
     appkey:
@@ -612,4 +681,5 @@ appinstances:
         name: azure
       name: azcentraluscloudlet
   liveness: LivenessStatic
+
 
