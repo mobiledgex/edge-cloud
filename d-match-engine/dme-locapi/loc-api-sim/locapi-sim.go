@@ -166,10 +166,10 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 	ip, valid, err := locutil.DecodeToken(req.Token)
 	if !valid {
 		// give a similar error to what we get from the real server
-		resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
+		resp.MatchingDegree = "-1"
 		resp.Message = "ERROR REASON: crisp_soap_fault || RESULT: invalidToken || DETAILS: The provided token is invalid and cannot be processed."
 	} else if err != nil {
-		resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
+		resp.MatchingDegree = "-1"
 		resp.Message = "ERROR REASON: crisp_soap_fault || RESULT: invalidToken || DETAILS: The provided token is invalid and cannot be processed."
 	} else {
 		foundLoc, err := findLocForIP(ip)
