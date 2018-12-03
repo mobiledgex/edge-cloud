@@ -51,7 +51,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"jlm\"},\"name\":\"bonntestcloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"bonntestcloudlet\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
