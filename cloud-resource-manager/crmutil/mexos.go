@@ -1671,7 +1671,7 @@ func DeleteHelmAppManifest(mf *Manifest) error {
 		return err
 	}
 	if rootLB == nil {
-		return fmt.Errorf("cannot create helm app, rootLB is null")
+		return fmt.Errorf("cannot delete helm app, rootLB is null")
 	}
 	if err = validateCommon(mf); err != nil {
 		return err
@@ -1705,7 +1705,7 @@ func CreateHelmAppManifest(mf *Manifest) error {
 		return err
 	}
 	if rootLB == nil {
-		return fmt.Errorf("cannot create kubernetes app, rootLB is null")
+		return fmt.Errorf("cannot create helm app, rootLB is null")
 	}
 	if err = validateCommon(mf); err != nil {
 		return err
