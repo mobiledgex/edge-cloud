@@ -81,7 +81,7 @@ message App {
   // for example: key1=val1,key2=val2,key3="val 3"
   string annotations = 14;
   // Deployment target (kubernetes, docker, kvm, etc)
-  string deployment = 15 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  string deployment = 15 [(protogen.backend) = true];
   // Deployment manifest is the deployment specific manifest file/config
   string deployment_manifest = 16 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
   // Deployment generator target
