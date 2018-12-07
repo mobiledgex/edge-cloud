@@ -105,16 +105,6 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
 	}
-	if in.ImagePath == "" {
-		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = "mobiledgex_" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
-				util.DockerSanitize(in.Key.Name) + ":" +
-				util.DockerSanitize(in.Key.Version)
-		} else {
-			in.ImagePath = "qcow path not determined yet"
-		}
-	}
 
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
@@ -131,6 +121,21 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
 	}
+	if in.ImagePath == "" {
+		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
+			in.ImagePath = "mobiledgex_" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name) + ":" +
+				util.DockerSanitize(in.Key.Version)
+		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+			in.ImagePath = "mobiledgex/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name)
+		} else {
+			in.ImagePath = "qcow path not determined yet"
+		}
+	}
+
 	if in.Config != "" {
 		configStr, err := cloudcommon.GetAppConfig(in)
 		if err != nil {

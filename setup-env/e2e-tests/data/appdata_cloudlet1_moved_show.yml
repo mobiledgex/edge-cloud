@@ -150,6 +150,7 @@ apps:
     version: "1.0"
   imagepath: dummyvalue
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:64000
   defaultflavor:
@@ -163,6 +164,7 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
@@ -180,6 +182,31 @@ apps:
     /QIDAQAB
     -----END PUBLIC KEY-----
   androidpackagename: com.acme.someapplication1
+  permitsplatformapps: true
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: helmApplication
+    version: "1.0"
+  imagepath: mobiledgex/AcmeAppCo/helmApplication
+  deployment: helm
+  ipaccess: IpAccessDedicated
+  accessports: udp:20002
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  authpublickey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
+    TkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0
+    VU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC
+    GJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS
+    z3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m
+    QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
+    /QIDAQAB
+    -----END PUBLIC KEY-----
+  androidpackagename: com.acme.helmApplication
   permitsplatformapps: true
 
 appinstances:
@@ -246,6 +273,28 @@ appinstances:
     id: 123
   uri: someapp1.acmeappco.com
   liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: helmApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 1
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+  liveness: LivenessStatic
+  uri: helmAppication.acmeappco.com
   flavor:
     name: x1.small
 - key:

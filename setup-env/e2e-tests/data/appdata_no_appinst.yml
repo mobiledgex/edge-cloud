@@ -150,6 +150,7 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   defaultflavor:
     name: x1.small
   cluster:
@@ -167,6 +168,7 @@ apps:
     version: "1.0"
   imagepath: dummyvalue
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   defaultflavor:
     name: x1.small
   cluster:
