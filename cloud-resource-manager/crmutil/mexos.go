@@ -11,17 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
-
-	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
-	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
-
-	//"github.com/mobiledgex/edge-cloud/edgeproto"
 	valid "github.com/asaskevich/govalidator"
 	"github.com/codeskyblue/go-sh"
+	"github.com/ghodss/yaml"
+	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
+	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare" //"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
-
 	"github.com/nanobox-io/golang-ssh"
 	"github.com/parnurzeal/gorequest"
 	//"github.com/fsouza/go-dockerclient"
@@ -1475,6 +1471,252 @@ type kubernetesServiceAbbrev struct {
 	Spec ksaSpec `json:"spec"`
 }
 
+func addSecurityRules(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
+	rootLBIPaddr, err := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, rootLB.Name)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", err)
+		return fmt.Errorf("cannot deploy kubernetes app, cannot get rootlb IP")
+	}
+	sr := oscli.GetDefaultSecurityRule()
+	allowedClientCIDR := GetAllowedClientCIDR()
+	for _, port := range mf.Spec.Ports {
+		for _, sec := range []struct {
+			addr string
+			port int
+		}{
+			{rootLBIPaddr + "/32", port.PublicPort},
+			{kp.ipaddr + "/32", port.PublicPort},
+			{allowedClientCIDR, port.PublicPort},
+			{rootLBIPaddr + "/32", port.InternalPort},
+			{kp.ipaddr + "/32", port.InternalPort},
+			{allowedClientCIDR, port.InternalPort},
+		} {
+			err := oscli.AddSecurityRuleCIDR(sec.addr, strings.ToLower(port.Proto), sr, sec.port)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "cidr", sec.addr, "securityrule", sr, "port", sec.port)
+			}
+		}
+	}
+	if len(mf.Spec.Ports) > 0 {
+		err = AddNginxProxy(rootLB.Name, mf.Metadata.Name, kp.ipaddr, mf.Spec.Ports)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "cannot add nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
+			return err
+		}
+	}
+	log.DebugLog(log.DebugLevelMexos, "added nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
+	return nil
+}
+
+func deleteSecurityRules(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
+	log.DebugLog(log.DebugLevelMexos, "delete spec ports", "ports", mf.Spec.Ports)
+	err := DeleteNginxProxy(rootLB.Name, mf.Metadata.Name)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
+	}
+
+	// TODO - implement the clean up of security rules
+	return nil
+}
+
+func addDNSRecords(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
+	rootLBIPaddr, err := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, rootLB.Name)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", err)
+		return fmt.Errorf("cannot deploy kubernetes app, cannot get rootlb IP")
+	}
+	cmd := fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
+	out, err := kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can not get list of services, %s, %v", out, err)
+	}
+	svcs := &svcItems{}
+	err = json.Unmarshal([]byte(out), svcs)
+	if err != nil {
+		return fmt.Errorf("can not unmarshal svc json, %v", err)
+	}
+	if err := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); err != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", err)
+	}
+	recs, err := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if err != nil {
+		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, err)
+	}
+	fqdnBase := uri2fqdn(mf.Spec.URI)
+	for _, item := range svcs.Items {
+		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
+			continue
+		}
+		cmd = fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, item.Metadata.Name, kp.ipaddr)
+		out, err = kp.client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", item.Metadata.Name, "externalIPs", kp.ipaddr)
+		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
+			}
+		}
+		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", rootLBIPaddr, 1, false); err != nil {
+			return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, rootLBIPaddr, err)
+		}
+		log.DebugLog(log.DebugLevelMexos, "created DNS record", "name", fqdn, "addr", rootLBIPaddr)
+	}
+	return nil
+}
+
+func deleteDNSRecords(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
+	cmd := fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
+	out, err := kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("can not get list of services, %s, %v", out, err)
+	}
+	svcs := &svcItems{}
+	err = json.Unmarshal([]byte(out), svcs)
+	if err != nil {
+		return fmt.Errorf("can not unmarshal svc json, %v", err)
+	}
+	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
+		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
+	}
+	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
+	if derr != nil {
+		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, derr)
+	}
+	fqdnBase := uri2fqdn(mf.Spec.URI)
+	//FIXME use k8s manifest file to delete the whole services and deployments
+	for _, item := range svcs.Items {
+		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
+			continue
+		}
+		cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, item.Metadata.Name)
+		out, err := kp.client.Output(cmd)
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "error deleting kubernetes service", "name", item.Metadata.Name, "cmd", cmd, "out", out, "err", err)
+		} else {
+			log.DebugLog(log.DebugLevelMexos, "deleted service", "name", item.Metadata.Name)
+		}
+		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
+		for _, rec := range recs {
+			if rec.Type == "A" && rec.Name == fqdn {
+				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
+					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
+				}
+				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
+			}
+		}
+	}
+	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
+	out, err = kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
+	}
+
+	return nil
+}
+func validateCommon(mf *Manifest) error {
+	if mf.Metadata.Name == "" {
+		return fmt.Errorf("missing name for the deployment")
+	}
+	if mf.Spec.Key == "" {
+		return fmt.Errorf("empty cluster name")
+	}
+	if mf.Spec.Image == "" {
+		return fmt.Errorf("empty image")
+	}
+	if mf.Spec.ProxyPath == "" {
+		return fmt.Errorf("empty proxy path")
+	}
+	if mf.Metadata.DNSZone == "" {
+		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
+	}
+	return nil
+}
+
+func DeleteHelmAppManifest(mf *Manifest) error {
+	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app", "mf", mf)
+	rootLB, err := getRootLB(mf.Spec.RootLB)
+	if err != nil {
+		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot delete helm app, rootLB is null")
+	}
+	if err = validateCommon(mf); err != nil {
+		return err
+	}
+	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	if err != nil {
+		return err
+	}
+	// remove DNS entries
+	if err = deleteDNSRecords(rootLB, mf, kp); err != nil {
+		return err
+	}
+	// remove Security rules
+	if err = deleteSecurityRules(rootLB, mf, kp); err != nil {
+		return err
+	}
+
+	cmd := fmt.Sprintf("%s helm delete %s", kp.kubeconfig, mf.Metadata.Name)
+	out, err := kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deleting helm chart, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "removed helm chart")
+	return nil
+}
+
+func CreateHelmAppManifest(mf *Manifest) error {
+	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "mf", mf)
+	rootLB, err := getRootLB(mf.Spec.RootLB)
+	if err != nil {
+		return err
+	}
+	if rootLB == nil {
+		return fmt.Errorf("cannot create helm app, rootLB is null")
+	}
+	if err = validateCommon(mf); err != nil {
+		return err
+	}
+	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
+	if err != nil {
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "will launch app into cluster", "kubeconfig", kp.kubeconfig, "ipaddr", kp.ipaddr)
+
+	cmd := fmt.Sprintf("%s helm init --wait", kp.kubeconfig)
+	out, err := kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error initializing tiller for app, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "helm tiller initialized")
+
+	cmd = fmt.Sprintf("%s helm install %s --name %s", kp.kubeconfig, mf.Spec.Image, mf.Metadata.Name)
+	out, err = kp.client.Output(cmd)
+	if err != nil {
+		return fmt.Errorf("error deploying helm chart, %s, %s, %v", cmd, out, err)
+	}
+	log.DebugLog(log.DebugLevelMexos, "applied helm chart")
+	// Add security rules
+	if err = addSecurityRules(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot create security rules", "error", err)
+		return err
+	}
+	log.DebugLog(log.DebugLevelMexos, "add spec ports", "ports", mf.Spec.Ports)
+	// Add DNS Zone
+	if err = addDNSRecords(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot add DNS entries", "error", err)
+		return err
+	}
+	return nil
+}
+
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
 func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	log.DebugLog(log.DebugLevelMexos, "create kubernetes app", "mf", mf)
@@ -1485,20 +1727,11 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 	if rootLB == nil {
 		return fmt.Errorf("cannot create kubernetes app manifest, rootLB is null")
 	}
+	if err = validateCommon(mf); err != nil {
+		return err
+	}
 	if mf.Spec.URI == "" { //XXX TODO register to the DNS registry for public IP app,controller needs to tell us which kind of app
 		return fmt.Errorf("empty app URI")
-	}
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name for kubernetes deployment")
-	}
-	if mf.Spec.Key == "" {
-		return fmt.Errorf("empty kubernetes cluster name")
-	}
-	if mf.Spec.Image == "" {
-		return fmt.Errorf("empty kubernetes image")
-	}
-	if mf.Spec.ProxyPath == "" {
-		return fmt.Errorf("empty kubernetes proxy path")
 	}
 	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
@@ -1551,89 +1784,19 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		return fmt.Errorf("error deploying kubernetes app, %s, %s, %v", cmd, out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "applied kubernetes manifest")
+	// Add security rules
+	if err = addSecurityRules(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot create security rules", "error", err)
+		return err
+	}
 	log.DebugLog(log.DebugLevelMexos, "add spec ports", "ports", mf.Spec.Ports)
-	rootLBIPaddr, ierr := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, rootLB.Name)
-	if ierr != nil {
-		log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", ierr)
-		return fmt.Errorf("cannot deploy kubernetes app, cannot get rootlb IP")
-	}
-	sr := oscli.GetDefaultSecurityRule()
-	allowedClientCIDR := GetAllowedClientCIDR()
-	for _, port := range mf.Spec.Ports {
-		for _, sec := range []struct {
-			addr string
-			port int
-		}{
-			{rootLBIPaddr + "/32", port.PublicPort},
-			{kp.ipaddr + "/32", port.PublicPort},
-			{allowedClientCIDR, port.PublicPort},
-			{rootLBIPaddr + "/32", port.InternalPort},
-			{kp.ipaddr + "/32", port.InternalPort},
-			{allowedClientCIDR, port.InternalPort},
-		} {
-			serr := oscli.AddSecurityRuleCIDR(sec.addr, strings.ToLower(port.Proto), sr, sec.port)
-			if serr != nil {
-				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "cidr", sec.addr, "securityrule", sr, "port", sec.port)
-			}
-		}
-	}
-	if len(mf.Spec.Ports) > 0 {
-		err = AddNginxProxy(rootLB.Name, mf.Metadata.Name, kp.ipaddr, mf.Spec.Ports)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "cannot add nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
-			return err
-		}
-	}
-	log.DebugLog(log.DebugLevelMexos, "added nginx proxy", "name", mf.Metadata.Name, "ports", mf.Spec.Ports)
-	cmd = fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
-	out, err = kp.client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("can not get list of services, %s, %v", out, err)
-	}
-	svcs := &svcItems{}
-	err = json.Unmarshal([]byte(out), svcs)
-	if err != nil {
-		return fmt.Errorf("can not unmarshal svc json, %v", err)
-	}
-	if mf.Metadata.DNSZone == "" {
-		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
-	}
-	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
-		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
-	}
-	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
-	if derr != nil {
-		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, err)
-	}
-	fqdnBase := uri2fqdn(mf.Spec.URI)
-	for _, item := range svcs.Items {
-		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
-			continue
-		}
-		cmd = fmt.Sprintf(`%s kubectl patch svc %s -p '{"spec":{"externalIPs":["%s"]}}'`, kp.kubeconfig, item.Metadata.Name, kp.ipaddr)
-		out, err = kp.client.Output(cmd)
-		if err != nil {
-			return fmt.Errorf("error patching for kubernetes service, %s, %s, %v", cmd, out, err)
-		}
-		log.DebugLog(log.DebugLevelMexos, "patched externalIPs on service", "service", item.Metadata.Name, "externalIPs", kp.ipaddr)
-		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
-		for _, rec := range recs {
-			if rec.Type == "A" && rec.Name == fqdn {
-				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
-					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
-				}
-				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
-			}
-		}
-		if err := cloudflare.CreateDNSRecord(mf.Metadata.DNSZone, fqdn, "A", rootLBIPaddr, 1, false); err != nil {
-			return fmt.Errorf("can't create DNS record for %s,%s, %v", fqdn, rootLBIPaddr, err)
-		}
-		log.DebugLog(log.DebugLevelMexos, "created DNS record", "name", fqdn, "addr", rootLBIPaddr)
+	// Add DNS Zone
+	if err = addDNSRecords(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot add DNS entries", "error", err)
+		return err
 	}
 	return nil
 }
-
-//TODO `helm` support
 
 type kubeParam struct {
 	kubeconfig string
@@ -1929,82 +2092,27 @@ func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		return fmt.Errorf("empty app URI")
 	}
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name for kubernetes deployment")
-	}
 	//if !strings.Contains(mf.Spec.Flavor, "kubernetes") {
 	//	return fmt.Errorf("unsupported kubernetes flavor %s", mf.Spec.Flavor)
 	//}
-	if mf.Spec.Key == "" {
-		return fmt.Errorf("empty kubernetes cluster name")
+	if err = validateCommon(mf); err != nil {
+		return err
 	}
-	if mf.Spec.Image == "" {
-		return fmt.Errorf("empty kubernetes image")
-	}
-	if mf.Spec.ProxyPath == "" {
-		return fmt.Errorf("empty kubernetes proxy path")
-	}
-	if mf.Metadata.DNSZone == "" {
-		return fmt.Errorf("missing DNS zone, metadata %v", mf.Metadata)
-	}
-
 	kp, err := ValidateKubernetesParameters(rootLB, mf.Spec.Key)
 	if err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "delete spec ports", "ports", mf.Spec.Ports)
-	err = DeleteNginxProxy(rootLB.Name, mf.Metadata.Name)
-	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
+	// Clean up security rules and nginx proxy
+	if err = deleteSecurityRules(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot clean up security rules", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
+		return err
 	}
-	cmd := fmt.Sprintf("%s kubectl get svc -o json", kp.kubeconfig)
-	out, err := kp.client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("can not get list of services, %s, %v", out, err)
-	}
-	svcs := &svcItems{}
-	err = json.Unmarshal([]byte(out), svcs)
-	if err != nil {
-		return fmt.Errorf("can not unmarshal svc json, %v", err)
-	}
-	if cerr := cloudflare.InitAPI(mexEnv["MEX_CF_USER"], mexEnv["MEX_CF_KEY"]); cerr != nil {
-		return fmt.Errorf("cannot init cloudflare api, %v", cerr)
-	}
-	recs, derr := cloudflare.GetDNSRecords(mf.Metadata.DNSZone)
-	if derr != nil {
-		return fmt.Errorf("error getting dns records for %s, %v", mf.Metadata.DNSZone, derr)
-	}
-	fqdnBase := uri2fqdn(mf.Spec.URI)
-	//FIXME use k8s manifest file to delete the whole services and deployments
-	for _, item := range svcs.Items {
-		if !strings.HasPrefix(item.Metadata.Name, mf.Metadata.Name) {
-			continue
-		}
-		cmd := fmt.Sprintf("%s kubectl delete service %s", kp.kubeconfig, item.Metadata.Name)
-		out, err := kp.client.Output(cmd)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "error deleting kubernetes service", "name", item.Metadata.Name, "cmd", cmd, "out", out, "err", err)
-		} else {
-			log.DebugLog(log.DebugLevelMexos, "deleted service", "name", item.Metadata.Name)
-		}
-		fqdn := cloudcommon.ServiceFQDN(item.Metadata.Name, fqdnBase)
-		for _, rec := range recs {
-			if rec.Type == "A" && rec.Name == fqdn {
-				if err := cloudflare.DeleteDNSRecord(mf.Metadata.DNSZone, rec.ID); err != nil {
-					return fmt.Errorf("cannot delete existing DNS record %v, %v", rec, err)
-				}
-				log.DebugLog(log.DebugLevelMexos, "deleted DNS record", "name", fqdn)
-			}
-		}
-	}
-	cmd = fmt.Sprintf("%s kubectl delete deploy %s", kp.kubeconfig, mf.Metadata.Name+"-deployment")
-	out, err = kp.client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("error deleting kubernetes deployment, %s, %s, %v", cmd, out, err)
+	// Clean up DNS entries
+	if err = deleteDNSRecords(rootLB, mf, kp); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot clean up DNS entries", "name", mf.Metadata.Name, "rootlb", rootLB.Name, "error", err)
+		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", mf.Metadata.Name)
-	//TODO: remove security rules
-
 	return nil
 }
 
@@ -2041,21 +2149,13 @@ func CreateQCOW2AppManifest(mf *Manifest) error {
 		!strings.HasPrefix(mf.Spec.Image, "https://") {
 		return fmt.Errorf("unsupported qcow2 image spec %s", mf.Spec.Image)
 	}
-	if mf.Metadata.Name == "" {
-		return fmt.Errorf("missing name for qcow2 deployment")
-	}
 	if !strings.Contains(mf.Spec.Flavor, "qcow2") {
 		return fmt.Errorf("unsupported qcow2 flavor %s", mf.Spec.Flavor)
 	}
-	if mf.Spec.Key == "" {
-		return fmt.Errorf("empty qcow2 cluster name")
+	if err := validateCommon(mf); err != nil {
+		return err
 	}
-	if mf.Spec.Image == "" {
-		return fmt.Errorf("empty qcow2 image")
-	}
-	if mf.Spec.ProxyPath == "" {
-		return fmt.Errorf("empty qcow2 proxy path")
-	}
+
 	savedQcowName := mf.Metadata.Name + ".qcow2" // XXX somewhere safe instead
 	alreadyExist := false
 	images, err := oscli.ListImages()
