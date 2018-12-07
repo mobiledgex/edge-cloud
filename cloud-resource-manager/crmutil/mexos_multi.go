@@ -581,6 +581,35 @@ spec:
   ipaccess: {{.IpAccess}}
   networkscheme: {{.NetworkScheme}}
 `
+var yamlMEXAppHelm = `apiVersion: v1
+kind: mex-helm-application
+resource: helm
+metadata:
+  kind: {{.Kind}}
+  name: {{.Name}}
+  tags: {{.Tags}}
+  tenant: {{.Tenant}}
+  operator: {{.Operator}}
+  dnszone: {{.DNSZone}}
+config:
+  kind:
+  source:
+  detail:
+    resources: {{.ConfigDetailResources}}
+    deployment: {{.ConfigDetailDeployment}}
+spec:
+  flags: {{.Flags}}
+  key: {{.Key}}
+  rootlb: {{.RootLB}}
+  image: {{.Image}}
+  imagetype: {{.ImageType}}
+  imageflavor: {{.ImageFlavor}}
+  proxypath: {{.ProxyPath}}
+  flavor: {{.Flavor}}
+  uri: {{.AppURI}}
+  ipaccess: {{.IpAccess}}
+  networkscheme: {{.NetworkScheme}}
+`
 
 //MEXAppCreateAppInst creates app inst with templated manifest
 func MEXAppCreateAppInst(rootLB *MEXRootLB, clusterInst *edgeproto.ClusterInst, appInst *edgeproto.AppInst, app *edgeproto.App) error {
@@ -694,6 +723,29 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 		if err != nil {
 			return nil, err
 		}
+	case cloudcommon.AppDeploymentTypeHelm:
+		data = templateFill{
+			Kind:                   clusterInst.Flavor.Name,
+			Name:                   appInst.Key.AppKey.Name,
+			Tags:                   appInst.Key.AppKey.Name + "-helm-tag",
+			Key:                    clusterInst.Key.ClusterKey.Name,
+			Tenant:                 appInst.Key.AppKey.Name + "-tenant",
+			Operator:               clusterInst.Key.CloudletKey.OperatorKey.Name,
+			RootLB:                 rootLB.Name,
+			Image:                  app.ImagePath,
+			ImageFlavor:            appInst.Flavor.Name,
+			DNSZone:                "mobiledgex.net",
+			ImageType:              imageType,
+			ProxyPath:              appInst.Key.AppKey.Name,
+			AppURI:                 appInst.Uri,
+			NetworkScheme:          "external-ip,external-network-shared",
+			ConfigDetailDeployment: app.Deployment,
+			ConfigDetailResources:  config.Resources,
+		}
+		mf, err = templateUnmarshal(&data, yamlMEXAppHelm)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, fmt.Errorf("unknown image type %s", imageType)
 	}
@@ -720,17 +772,21 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 	case "gcp":
 		fallthrough
 	case "azure":
-		if appDeploymentType == "kubernetes" {
+		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 			return runKubectlCreateApp(mf, kubeManifest)
-		} else if appDeploymentType == "kvm" {
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeKVM {
+			return fmt.Errorf("not yet supported")
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 			return fmt.Errorf("not yet supported")
 		}
 		return fmt.Errorf("unknown deployment type %s", appDeploymentType)
 	default:
-		if appDeploymentType == "kubernetes" {
+		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 			return CreateKubernetesAppManifest(mf, kubeManifest)
-		} else if appDeploymentType == "kvm" {
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeKVM {
 			return CreateQCOW2AppManifest(mf)
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+			return CreateHelmAppManifest(mf)
 		}
 		return fmt.Errorf("unknown deployment type %s", appDeploymentType)
 	}
@@ -1067,17 +1123,21 @@ func MEXAppDeleteAppManifest(mf *Manifest) error {
 	case "gcp":
 		fallthrough
 	case "azure":
-		if appDeploymentType == "kubernetes" {
+		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 			return runKubectlDeleteApp(mf, kubeManifest)
-		} else if appDeploymentType == "kvm" {
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeKVM {
+			return fmt.Errorf("not yet supported")
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
 			return fmt.Errorf("not yet supported")
 		}
 		return fmt.Errorf("unknown image type %s", appDeploymentType)
 	default:
-		if appDeploymentType == "kubernetes" {
+		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 			return DeleteKubernetesAppManifest(mf, kubeManifest)
-		} else if appDeploymentType == "kvm" {
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeKVM {
 			return DeleteQCOW2AppManifest(mf)
+		} else if appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+			return DeleteHelmAppManifest(mf)
 		}
 		return fmt.Errorf("unknown image type %s", mf.Spec.ImageType)
 	}
