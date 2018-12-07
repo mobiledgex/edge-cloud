@@ -194,9 +194,6 @@ func (s *App) Validate(fields map[string]struct{}) error {
 	if err = s.GetKey().Validate(); err != nil {
 		return err
 	}
-	if _, found := fields[AppFieldImageType]; found && s.ImageType == ImageType_ImageTypeUnknown {
-		return errors.New("Please specify Image Type")
-	}
 	if err = s.ValidateEnums(); err != nil {
 		return err
 	}

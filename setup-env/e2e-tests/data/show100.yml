@@ -3166,6 +3166,7 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_Dev1/app1:1.0
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
@@ -3178,6 +3179,7 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_Dev1/app2:1.0
   imagetype: ImageTypeDocker
+  deployment: kubernetes
   accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
