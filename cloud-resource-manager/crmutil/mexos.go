@@ -3,10 +3,8 @@ package crmutil
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
-	"net/http"
 	"os"
 	"reflect"
 	"strconv"
@@ -25,15 +23,21 @@ import (
 	//"github.com/fsouza/go-dockerclient"
 )
 
+//mexEnv contains backward compatibility and other environment vars.
+//The variables with hard-coded defaults here are for backwards compatibilty
 var mexEnv = map[string]string{
 	"MEX_DEBUG":           os.Getenv("MEX_DEBUG"),
 	"MEX_DIR":             os.Getenv("HOME") + "/.mobiledgex",
 	"MEX_CF_KEY":          os.Getenv("MEX_CF_KEY"),
 	"MEX_CF_USER":         os.Getenv("MEX_CF_USER"),
 	"MEX_DOCKER_REG_PASS": os.Getenv("MEX_DOCKER_REG_PASS"),
+	"MEX_REGISTRY_USER":   "mobiledgex",
 	"MEX_AGENT_PORT":      "18889",
-	"MEX_SSH_KEY":         "id_rsa_mobiledgex",
+	"MEX_REGISTRY":        "registry.mobiledgex.net",
 	"MEX_DOCKER_REGISTRY": "registry.mobiledgex.net:5000",
+	"MEX_K8S_USER":        "bob",                // backward compatibility => root
+	"MEX_SSH_KEY":         "id_rsa_mobiledgex",  // backward compatibility => id_rsa_mex
+	"MEX_OS_IMAGE":        "mobiledgex-16.04-2", // backward compatibility => mobiledgex
 }
 
 //MEXRootLB has rootLB data
@@ -102,6 +106,8 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 		MasterFlavor:   ClusterMasterFlavor{Name: "k8s-large", Type: "k8s-master"},
 	},
 }
+
+var sshOpts = []string{"StrictHostKeyChecking=no", "UserKnownHostsFile=/dev/null"}
 
 //IsValidMEXOSEnv caches the validity of the env
 var IsValidMEXOSEnv = false
@@ -184,12 +190,20 @@ func MEXInit() {
 func MEXCheckEnvVars(mf *Manifest) error {
 	// secrets to be passed via Env var still : MEX_CF_KEY, MEX_CF_USER, MEX_DOCKER_REG_PASS
 	// TODO: use `secrets` or `vault`
-	for _, evar := range []string{"MEX_CF_KEY", "MEX_CF_USER", "MEX_DOCKER_REG_PASS", "MEX_DIR"} {
+	for _, evar := range []string{"MEX_CF_KEY", "MEX_CF_USER", "MEX_DOCKER_REG_PASS", "MEX_DIR", "MEX_REGISTRY_USER"} {
 		if _, ok := mexEnv[evar]; !ok {
 			return fmt.Errorf("missing env var %s", evar)
 		}
 	}
-	//TODO need to allow users to save the environment under platform name inside .mobiledgex
+	//original base VM image uses id_rsa_mobiledgex key
+	if mexEnv["MEX_OS_IMAGE"] == "mobiledgex-16.04-2" && mexEnv["MEX_SSH_KEY"] != "id_rsa_mobiledgex" {
+		return fmt.Errorf("os image %s cannot use key %s", mexEnv["MEX_OS_IMAGE"], mexEnv["MEX_SSH_KEY"])
+	}
+	//packer VM image uses id_rsa_mex key
+	if mexEnv["MEX_OS_IMAGE"] == "mobiledgex" && mexEnv["MEX_SSH_KEY"] != "id_rsa_mex" {
+		return fmt.Errorf("os image %s cannot use key %s", mexEnv["MEX_OS_IMAGE"], mexEnv["MEX_SSH_KEY"])
+	}
+	//TODO need to allow users to save the environment under platform name inside .mobiledgex or Vault
 	return nil
 }
 
@@ -214,7 +228,7 @@ func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
 	}
 	setPlatConf(rootLB, mf)
 	if rootLB == nil {
-		log.DebugLog(log.DebugLevelMexos, "newrootlbmanifest, rootLB is null")
+		log.DebugLog(log.DebugLevelMexos, "error, newrootlbmanifest, rootLB is null")
 	}
 	return rootLB, nil
 }
@@ -226,12 +240,11 @@ func DeleteRootLB(rootLBName string) {
 
 //ValidateMEXOSEnv makes sure the environment is valid for mexos
 func ValidateMEXOSEnv(osEnvValid bool) bool {
+	IsValidMEXOSEnv = false
 	if !osEnvValid {
 		log.DebugLog(log.DebugLevelMexos, "invalid mex env")
-		IsValidMEXOSEnv = false
 		return false
 	}
-	//XXX do more validation on internal env vars
 	IsValidMEXOSEnv = true
 	log.DebugLog(log.DebugLevelMexos, "valid mex env")
 	return IsValidMEXOSEnv
@@ -700,17 +713,11 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 		privateNetCIDR := strings.Replace(defaultPrivateNetRange, "X", "0", 1)
 		allowedClientCIDR := GetAllowedClientCIDR()
 		for _, p := range ports {
-			err := oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", "tcp", ruleName, p)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "error", err, "rootlbIP", rootLBIPaddr, "rulename", ruleName, "port", p)
-			}
-			err = oscli.AddSecurityRuleCIDR(privateNetCIDR, "tcp", ruleName, p)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "error", err, "privatenet", privateNetCIDR, "rulename", ruleName, "port", p)
-			}
-			err = oscli.AddSecurityRuleCIDR(allowedClientCIDR, "tcp", ruleName, p)
-			if err != nil {
-				log.DebugLog(log.DebugLevelMexos, "warning, error while adding external  ingress security rule", "error", err, "rulename", ruleName, "port", p)
+			for _, cidr := range []string{rootLBIPaddr + "/32", privateNetCIDR, allowedClientCIDR} {
+				err := oscli.AddSecurityRuleCIDR(cidr, "tcp", ruleName, p)
+				if err != nil {
+					log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "error", err, "cidr", cidr, "rulename", ruleName, "port", p)
+				}
 			}
 		}
 		//TODO: removal of security rules. Needs to be done for general resource per VM object.
@@ -779,7 +786,7 @@ func CopySSHCredential(serverName, networkName, userName string) error {
 		return err
 	}
 	kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
-	out, err := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, kf, "root@"+addr+":").Output()
+	out, err := sh.Command("scp", "-o", sshOpts[0], "-o", sshOpts[1], "-i", kf, kf, "root@"+addr+":").Output()
 	if err != nil {
 		return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
 	}
@@ -797,6 +804,7 @@ func GetSSHClient(serverName, networkName, userName string) (ssh.Client, error) 
 	if err != nil {
 		return nil, fmt.Errorf("cannot get ssh client, %v", err)
 	}
+	log.DebugLog(log.DebugLevelMexos, "got ssh client", "addr", addr, "key", auth)
 	return client, nil
 }
 
@@ -817,6 +825,7 @@ func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 	}
 	running := false
 	for i := 0; i < 10; i++ {
+		log.DebugLog(log.DebugLevelMexos, "waiting for rootlb...")
 		_, err := client.Output("grep done /tmp/mobiledgex.log") //XXX beware of use of word done
 		if err == nil {
 			log.DebugLog(log.DebugLevelMexos, "rootlb is running", "name", rootLB)
@@ -826,7 +835,6 @@ func WaitForRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 			}
 			break
 		}
-		log.DebugLog(log.DebugLevelMexos, "waiting for rootlb...")
 		time.Sleep(30 * time.Second)
 	}
 	if !running {
@@ -929,46 +937,37 @@ func RunMEXOSAgentService(mf *Manifest, rootLB *MEXRootLB) error {
 	if err != nil {
 		return err
 	}
-	out, err := client.Output("systemctl stop mexosagent.service")
-	if err != nil {
-		log.InfoLog("warning: cannot stop mexosagent.service", "out", out, "err", err)
+	for _, act := range []string{"stop", "disable"} {
+		out, err := client.Output("systemctl " + act + " mexosagent.service")
+		if err != nil {
+			log.InfoLog("warning: cannot "+act+" mexosagent.service", "out", out, "err", err)
+		}
 	}
-	out, err = client.Output("systemctl disable mexosagent.service")
-	if err != nil {
-		log.InfoLog("warning: cannot disable mexosagent.service", "out", out, "err", err)
+	log.DebugLog(log.DebugLevelMexos, "copying new mexosagent service")
+	for _, dest := range []struct{ path, name string }{
+		{"/usr/local/bin/", "mexosagent"},
+		{"/lib/systemd/system/", "mexosagent.service"},
+	} {
+		cmd := fmt.Sprintf("scp -o %s -o %s -i %s %s@%s:files-repo/mobiledgex/%s %s", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], mexEnv["MEX_REGISTRY_USER"], mexEnv["MEX_REGISTRY"], dest.name, dest.path)
+		out, err := client.Output(cmd)
+		if err != nil {
+			log.InfoLog("error: cannot download from registry", "fn", dest.name, "path", dest.path, "error", err, "out", out)
+			return err
+		}
+		out, err = client.Output("chmod a+rx " + dest.path + dest.name)
+		if err != nil {
+			log.InfoLog("error: cannot chmod", "error", err, "fn", dest.name, "path", dest.path)
+			return err
+		}
 	}
-	log.DebugLog(log.DebugLevelMexos, "stopped mexosagent service")
-	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@registry.mobiledgex.net:files-repo/mobiledgex/mexosagent /usr/local/bin/", mexEnv["MEX_SSH_KEY"])
-	out, err = client.Output(cmd)
-	if err != nil {
-		log.InfoLog("error: cannot download mexosagent from registry", "error", err, "out", out)
-		return err
+	log.DebugLog(log.DebugLevelMexos, "starting mexosagent.service")
+	for _, act := range []string{"enable", "start"} {
+		out, err := client.Output("systemctl " + act + " mexosagent.service")
+		if err != nil {
+			log.InfoLog("warning: cannot "+act+" mexosagent.service", "out", out, "err", err)
+		}
 	}
-	out, err = client.Output("chmod a+rx /usr/local/bin/mexosagent")
-	if err != nil {
-		log.InfoLog("error: cannot chmod mexosagent", "error", err)
-		return err
-	}
-	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@registry.mobiledgex.net:files-repo/mobiledgex/mexosagent.service /lib/systemd/system/", mexEnv["MEX_SSH_KEY"])
-	out, err = client.Output(cmd)
-	if err != nil {
-		log.InfoLog("error: cannot download mexosagent from registry", "error", err, "out", out)
-		return err
-	}
-	//out, err = client.Output("mexosagent -cert /root -debug")
-	//if err != nil {
-	//	log.DebugLog(log.DebugLevelMexos, "cannot run mexosagent", "error", err)
-	//	return err
-	//}
-	out, err = client.Output("systemctl enable mexosagent.service")
-	if err != nil {
-		log.InfoLog("warning: cannot enable mexosagent.service", "out", out, "err", err)
-	}
-	out, err = client.Output("systemctl start mexosagent.service")
-	if err != nil {
-		log.InfoLog("warning: cannot start mexosagent.service", "out", out, "err", err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "started mexosagent service")
+	log.DebugLog(log.DebugLevelMexos, "started mexosagent.service")
 	return nil
 }
 
@@ -998,7 +997,7 @@ func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
 	dockerinstanceName := fmt.Sprintf("%s-%s", mf.Metadata.Name, rootLB.Name)
 	if mf.Spec.DockerRegistry == "" {
 		log.DebugLog(log.DebugLevelMexos, "warning, empty docker registry spec, using default.")
-		mf.Spec.DockerRegistry = "registry.mobiledgex.net:5000" // XXX
+		mf.Spec.DockerRegistry = mexEnv["MEX_DOCKER_REGISTRY"]
 	}
 	cmd = fmt.Sprintf("cat .docker-pass| docker login -u mobiledgex --password-stdin %s", mf.Spec.DockerRegistry)
 	out, err = client.Output(cmd)
@@ -1080,26 +1079,6 @@ func CheckCredentialsCF() error {
 	return nil
 }
 
-func downloadFile(url, fname string) error {
-	log.DebugLog(log.DebugLevelMexos, "attempt to retrieve file from url", "file", fname, "URL", url)
-	resp, err := http.Get(url)
-	if err != nil {
-		return fmt.Errorf("cannot get file from URL %s, %v", url, err)
-	}
-	fileout, err := os.Create(fname)
-	if err != nil {
-		return fmt.Errorf("can't create file %s,%v", fname, err)
-	}
-	_, err = io.Copy(fileout, resp.Body)
-	if err != nil {
-		return fmt.Errorf("can't write file %s, %v", fname, err)
-	}
-	resp.Body.Close() // nolint
-	fileout.Close()   // nolint
-	log.DebugLog(log.DebugLevelMexos, "retrieved file from URL", "URL", url, "file", fname)
-	return nil
-}
-
 func checkPEMFile(fn string) error {
 	content, err := ioutil.ReadFile(fn)
 	if err != nil {
@@ -1124,15 +1103,26 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if rootLB == nil {
 		return fmt.Errorf("cannot acquire certs, rootLB is null")
 	}
-	certRegistryURL := "http://registry.mobiledgex.net:8080/certs/" + fqdn //XXX parameterize this
-	url := certRegistryURL + "/fullchain.cer"                              // some clients require fullchain cert
-	certfile := "cert.pem"                                                 //XXX better file location
-	keyfile := "key.pem"                                                   //XXX better location
-	err := downloadFile(url, certfile)
-	if err == nil && checkPEMFile(certfile) == nil {
-		url = certRegistryURL + "/" + fqdn + ".key"
-		err = downloadFile(url, keyfile)
-		if err == nil && checkPEMFile(keyfile) == nil {
+	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
+		return fmt.Errorf("acquire certificate, missing external network in manifest")
+	}
+	if cerr := CheckCredentialsCF(); cerr != nil {
+		return cerr
+	}
+	kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
+	srcfile := fmt.Sprintf("%s@%s:files-repo/certs/%s/fullchain.cer", mexEnv["MEX_REGISTRY_USER"], mexEnv["MEX_REGISTRY"], fqdn)
+	dkey := fmt.Sprintf("%s/%s.key", fqdn, fqdn)
+	certfile := "cert.pem" //XXX better file location
+	keyfile := "key.pem"   //XXX better location
+	out, err := sh.Command("scp", "-o", sshOpts[0], "-o", sshOpts[1], "-i", kf, srcfile, certfile).Output()
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "warning, failed to get cached cert file", "src", srcfile, "cert", certfile, "error", err, "out", out)
+	} else if checkPEMFile(certfile) == nil {
+		srcfile = fmt.Sprintf("%s@%s:files-repo/certs/%s", mexEnv["MEX_REGISTRY_USER"], mexEnv["MEX_REGISTRY"], dkey)
+		out, err = sh.Command("scp", "-o", sshOpts[0], "-o", sshOpts[1], "-i", kf, srcfile, keyfile).Output()
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "warning, failed to get cached key file", "src", srcfile, "cert", certfile, "error", err, "out", out)
+		} else if checkPEMFile(keyfile) == nil {
 			//because Letsencrypt complains if we get certs repeated for the same fqdn
 			log.DebugLog(log.DebugLevelMexos, "got cached certs from registry", "FQDN", fqdn)
 			addr, ierr := GetServerIPAddr(rootLB.PlatConf.Spec.ExternalNetwork, fqdn) //XXX should just use fqdn but paranoid
@@ -1140,27 +1130,18 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 				log.DebugLog(log.DebugLevelMexos, "failed to get server ip addr", "FQDN", fqdn, "error", ierr)
 				return ierr
 			}
-			kf := mexEnv["MEX_DIR"] + "/" + mexEnv["MEX_SSH_KEY"]
-			out, oerr := sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, certfile, "root@"+addr+":").Output()
-			if oerr != nil {
-				return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, oerr)
+			for _, fn := range []string{certfile, keyfile} {
+				out, oerr := sh.Command("scp", "-o", sshOpts[0], "-o", sshOpts[1], "-i", kf, fn, "root@"+addr+":").Output()
+				if oerr != nil {
+					return fmt.Errorf("can't copy %s to %s, %v, %v", fn, addr, oerr, out)
+				}
+				log.DebugLog(log.DebugLevelMexos, "copied", "fn", fn, "addr", addr)
 			}
-			out, err = sh.Command("scp", "-o", "StrictHostKeyChecking=no", "-i", kf, keyfile, "root@"+addr+":").Output()
-			if err != nil {
-				return fmt.Errorf("can't copy %s to %s, %s, %v", kf, addr, out, err)
-			}
-			log.DebugLog(log.DebugLevelMexos, "copied cert and key", "FQDN", fqdn)
+			log.DebugLog(log.DebugLevelMexos, "using cached cert and key", "FQDN", fqdn)
 			return nil
 		}
-		return fmt.Errorf("only cert file exists at %s, %v", certRegistryURL, err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "did not get cached certs")
-	if rootLB.PlatConf.Spec.ExternalNetwork == "" {
-		return fmt.Errorf("acquire certificate, missing external network in manifest")
-	}
-	if cerr := CheckCredentialsCF(); cerr != nil {
-		return cerr
-	}
+	log.DebugLog(log.DebugLevelMexos, "did not get cached cert and key files, will try to acquire new cert")
 	client, err := GetSSHClient(fqdn, rootLB.PlatConf.Spec.ExternalNetwork, "root")
 	if err != nil {
 		return fmt.Errorf("can't get ssh client for acme.sh, %v", err)
@@ -1172,9 +1153,9 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 		return nil
 	}
 	cmd = fmt.Sprintf("docker run --rm -e CF_Key=%s -e CF_Email=%s -v `pwd`:/acme.sh --net=host neilpang/acme.sh --issue -d %s --dns dns_cf", mexEnv["MEX_CF_KEY"], mexEnv["MEX_CF_USER"], fqdn)
-	out, err := client.Output(cmd)
+	res, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error running acme.sh docker, %s, %v", out, err)
+		return fmt.Errorf("error running acme.sh docker, %s, %v", res, err)
 	}
 	cmd = fmt.Sprintf("ls -a %s", fullchain)
 	success := false
@@ -1190,22 +1171,22 @@ func AcquireCertificates(mf *Manifest, rootLB *MEXRootLB, fqdn string) error {
 	if !success {
 		return fmt.Errorf("timeout waiting for ACME")
 	}
-	cmd = fmt.Sprintf("cp %s %s", fullchain, certfile)
-	out, err = client.Output(cmd)
-	if err != nil {
-		return fmt.Errorf("can't copy to %s on %s, %s, %v", certfile, fqdn, out, err)
+	for _, d := range []struct{ src, dest string }{
+		{fullchain, certfile},
+		{dkey, keyfile},
+	} {
+		cmd = fmt.Sprintf("cp %s %s", d.src, d.dest)
+		res, err := client.Output(cmd)
+		if err != nil {
+			return fmt.Errorf("fail to copy %s to %s on %s, %v, %v", d.src, d.dest, fqdn, err, res)
+		}
 	}
-	cmd = fmt.Sprintf("cp %s/%s.key %s", fqdn, fqdn, keyfile)
-	out, err = client.Output(cmd)
+	cmd = fmt.Sprintf("scp -o %s -o %s -i %s -r %s %s@%s:files-repo/certs", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], fqdn, mexEnv["MEX_REGISTRY_USER"], mexEnv["MEX_REGISTRY"]) // XXX
+	res, err = client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("can't copy to %s on %s, %s, %v", keyfile, fqdn, out, err)
+		return fmt.Errorf("failed to upload certs for %s to %s, %v, %v", fqdn, mexEnv["MEX_REGISTRY"], err, res)
 	}
-	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s -r %s bob@registry.mobiledgex.net:files-repo/certs", mexEnv["MEX_SSH_KEY"], fqdn) // XXX
-	out, err = client.Output(cmd)
-	if err != nil {
-		log.InfoLog("error: need fixing manually; can't scp to registry", "fqdn", fqdn, "output", out, "error", err)
-	}
-	log.DebugLog(log.DebugLevelMexos, "acquired cert and key", "FQDN", fqdn)
+	log.DebugLog(log.DebugLevelMexos, "saved acquired cert and key", "FQDN", fqdn)
 	return nil
 }
 
@@ -1293,8 +1274,8 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("can't get ssh client for cluser ready check, %v", err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "checking host for kubernetes nodes", "ipaddr", ipaddr)
-	cmd := fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s bob@%s kubectl get nodes -o json", mexEnv["MEX_SSH_KEY"], ipaddr)
+	log.DebugLog(log.DebugLevelMexos, "checking master k8s node for available nodes", "ipaddr", ipaddr)
+	cmd := fmt.Sprintf("ssh -o %s -o %s -i %s %s@%s kubectl get nodes -o json", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], mexEnv["MEX_K8S_USER"], ipaddr)
 	out, err := client.Output(cmd)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "error checking for kubernetes nodes", "out", out, "err", err)
@@ -1303,7 +1284,7 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 	gitems := &genericItems{}
 	err = json.Unmarshal([]byte(out), gitems)
 	if err != nil {
-		return false, fmt.Errorf("failed to json unmarshal kubectl get nodes output, %v", err)
+		return false, fmt.Errorf("failed to json unmarshal kubectl get nodes output, %v, %v", err, out)
 	}
 	log.DebugLog(log.DebugLevelMexos, "kubectl reports nodes", "numnodes", len(gitems.Items))
 	if len(gitems.Items) < (cf.NumNodes + cf.NumMasterNodes) {
@@ -1381,7 +1362,7 @@ func CopyKubeConfig(rootLB *MEXRootLB, name string) error {
 		return fmt.Errorf("can't get ssh client for copying kubeconfig, %v", err)
 	}
 	kconfname := fmt.Sprintf("%s.kubeconfig", name[strings.LastIndex(name, "-")+1:])
-	cmd := fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s bob@%s:.kube/config %s", mexEnv["MEX_SSH_KEY"], ipaddr, kconfname)
+	cmd := fmt.Sprintf("scp -o %s -o %s -i %s %s@%s:.kube/config %s", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], mexEnv["MEX_K8S_USER"], ipaddr, kconfname)
 	out, err := client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy kubeconfig from %s, %s, %v", name, out, err)
@@ -1413,6 +1394,7 @@ func ProcessKubeconfig(rootLB *MEXRootLB, name string, port int, dat []byte) err
 		return fmt.Errorf("insufficient clusters info in kubeconfig %s", name)
 	}
 	//log.Debugln("kubeconfig", kc)
+	//TODO: the kconfname should include more details, location, tags, to be distinct from other clusters in other regions
 	kconfname := fmt.Sprintf("%s.kubeconfig", name[strings.LastIndex(name, "-")+1:])
 	fullpath := mexEnv["MEX_DIR"] + "/" + kconfname
 	err = ioutil.WriteFile(fullpath, dat, 0666)
@@ -1498,29 +1480,21 @@ func addSecurityRules(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
 	sr := oscli.GetDefaultSecurityRule()
 	allowedClientCIDR := GetAllowedClientCIDR()
 	for _, port := range mf.Spec.Ports {
-		err = oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
-		}
-		err = oscli.AddSecurityRuleCIDR(rootLBIPaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "rootlbIP", rootLBIPaddr, "securityrule", sr, "port", port)
-		}
-		err = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.InternalPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
-		}
-		err = oscli.AddSecurityRuleCIDR(kp.ipaddr+"/32", strings.ToLower(port.Proto), sr, port.PublicPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", kp.ipaddr, "securityrule", sr, "port", port)
-		}
-		err = oscli.AddSecurityRuleCIDR(allowedClientCIDR, strings.ToLower(port.Proto), sr, port.InternalPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", allowedClientCIDR, "securityrule", sr, "internal port", port.InternalPort)
-		}
-		err = oscli.AddSecurityRuleCIDR(allowedClientCIDR, strings.ToLower(port.Proto), sr, port.PublicPort)
-		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "originIP", allowedClientCIDR, "securityrule", sr, "port", port.InternalPort)
+		for _, sec := range []struct {
+			addr string
+			port int
+		}{
+			{rootLBIPaddr + "/32", port.PublicPort},
+			{kp.ipaddr + "/32", port.PublicPort},
+			{allowedClientCIDR, port.PublicPort},
+			{rootLBIPaddr + "/32", port.InternalPort},
+			{kp.ipaddr + "/32", port.InternalPort},
+			{allowedClientCIDR, port.InternalPort},
+		} {
+			err := oscli.AddSecurityRuleCIDR(sec.addr, strings.ToLower(port.Proto), sr, sec.port)
+			if err != nil {
+				log.DebugLog(log.DebugLevelMexos, "warning, error while adding security rule", "cidr", sec.addr, "securityrule", sr, "port", sec.port)
+			}
 		}
 	}
 	if len(mf.Spec.Ports) > 0 {
@@ -1776,13 +1750,13 @@ func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
 		return fmt.Errorf("can't store docker password, %s, %v", out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "stored docker password")
-	cmd = fmt.Sprintf("scp -o StrictHostKeyChecking=no -i %s .docker-pass %s:", mexEnv["MEX_SSH_KEY"], kp.ipaddr)
+	cmd = fmt.Sprintf("scp -o %s -o %s -i %s .docker-pass %s:", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], kp.ipaddr)
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't copy docker password to k8s-master, %s, %v", out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "copied over docker password")
-	cmd = fmt.Sprintf("ssh -o StrictHostKeyChecking=no -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", mexEnv["MEX_SSH_KEY"], kp.ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
+	cmd = fmt.Sprintf("ssh -o %s -o %s -i %s %s 'cat .docker-pass| docker login -u mobiledgex --password-stdin %s'", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], kp.ipaddr, mexEnv["MEX_DOCKER_REGISTRY"])
 	out, err = kp.client.Output(cmd)
 	if err != nil {
 		return fmt.Errorf("can't docker login on k8s-master to %s, %s, %v", mexEnv["MEX_DOCKER_REGISTRY"], out, err)

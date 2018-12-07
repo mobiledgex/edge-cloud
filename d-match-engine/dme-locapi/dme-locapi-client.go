@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -130,21 +129,24 @@ func CallTDGLocationVerifyAPI(locVerUrl string, lat, long float64, token string,
 	}
 
 	log.DebugLog(log.DebugLevelLocapi, "unmarshalled location response", "lrmResp:", lrmResp)
-	if lrmResp.Message != "" && lrmResp.Message != "ok" {
-		log.WarnLog("Error message received in token response", "Message", lrmResp.Message)
-		if strings.Contains(lrmResp.Message, "invalidToken") {
-			return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_UNAUTHORIZED}
-		}
-		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
-	}
-	l, err := strconv.ParseInt(lrmResp.MatchingDegree, 10, 32)
+	md, err := strconv.ParseInt(lrmResp.MatchingDegree, 10, 32)
 	if err != nil {
 		log.WarnLog("Error in LocationResult", "LocationResult", lrmResp.MatchingDegree, "err", err)
 		return dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
 	}
-	rc := dmecommon.GetDistanceAndStatusForLocationResult(uint32(l))
-	fmt.Printf("6666 %v %v", l, rc)
+	if md < 0 {
+		log.DebugLog(log.DebugLevelLocapi, "Invalid Matching degree received", "Message:", lrmResp.Message)
+		if strings.Contains(lrmResp.Message, "invalidToken") {
+			rc := dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_UNAUTHORIZED}
+			log.DebugLog(log.DebugLevelLocapi, "Invalid token", "result", rc)
+			return rc
+		}
+		rc := dmecommon.LocationResult{DistanceRange: -1, MatchEngineLocStatus: dme.VerifyLocationReply_LOC_ERROR_OTHER}
+		log.DebugLog(log.DebugLevelLocapi, "other error", "result", rc)
+		return rc
+	}
 
+	rc := dmecommon.GetDistanceAndStatusForLocationResult(uint32(md))
 	log.DebugLog(log.DebugLevelLocapi, "Returning result", "Location Result", rc)
 
 	return rc
