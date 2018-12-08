@@ -2,9 +2,9 @@
 vars:
 - locverurl: "http://10.159.249.169:8888/verifyLocation"
 - toksrvurl: "http://10.159.249.169:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
-- tmopolctrl: "tdg.ctrl.mobiledgex.net"
-- tmopoldme: "tdg.dme.mobiledgex.net"
-- tmopolcrm: "tdg.crm.mobiledgex.net"
+- tmopolctrl: "tmopol.ctrl.mobiledgex.net"
+- tmopoldme: "tmopol.dme.mobiledgex.net"
+- tmopolcrm: "tmopol.crm.mobiledgex.net"
 - vm1_external_ip: 10.159.249.169
 - vm1_internal_ip: 127.0.0.1
 
