@@ -31,6 +31,7 @@ var mexEnv = map[string]string{
 	"MEX_CF_KEY":          os.Getenv("MEX_CF_KEY"),
 	"MEX_CF_USER":         os.Getenv("MEX_CF_USER"),
 	"MEX_DOCKER_REG_PASS": os.Getenv("MEX_DOCKER_REG_PASS"),
+	"MEX_EXT_NETWORK":     os.Getenv("MEX_EXT_NETWORK"),
 	"MEX_REGISTRY_USER":   "mobiledgex",
 	"MEX_AGENT_PORT":      "18889",
 	"MEX_REGISTRY":        "registry.mobiledgex.net",

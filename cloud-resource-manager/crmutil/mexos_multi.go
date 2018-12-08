@@ -372,6 +372,13 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 		log.DebugLog(log.DebugLevelMexos, "will not fill template with invalid cloudletkeystr", "cloudletkeystr", cloudletKeyStr)
 		return nil, fmt.Errorf("invalid cloudletkeystr %s", cloudletKeyStr)
 	}
+	extNet := mexEnv["MEX_EXT_NETWORK"]
+
+	if extNet == "" {
+		extNet = "external-network-shared"
+	}
+	log.DebugLog(log.DebugLevelMexos, "using external network", "extNet", extNet)
+
 	data := templateFill{
 		Name:            clk.Name,
 		Tags:            clk.Name + "-tag",
@@ -384,7 +391,7 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 		RootLB:          rootLB.Name,
 		Image:           "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
 		Kind:            "mex-platform",
-		ExternalNetwork: "external-network-shared",
+		ExternalNetwork: extNet,
 		NetworkScheme:   "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
 		DNSZone:         "mobiledgex.net",
 		ExternalRouter:  "mex-k8s-router-1",

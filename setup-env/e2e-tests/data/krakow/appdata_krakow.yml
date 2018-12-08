@@ -1,0 +1,112 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterflavors:
+- key:
+    name: x1.medium
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: mexappcluster
+  defaultflavor:
+    name: x1.medium
+
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: mexappcluster
+    cloudletkey:
+      operatorkey:
+        name: TMO
+      name: krakowcloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+
+operators:
+- key:
+    name: TMO
+
+developers:
+- key:
+    name: MobiledgeX SDK Demo
+  username: bruce
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+apps:
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: MobiledgeX SDK Demo
+    version: "1.0"
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: mexappcluster
+  command: "simapp -port 7777"
+  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+  accessports: "tcp:7777"
+  ipaccess: IpAccessDedicatedOrShared
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TMO
+    name: krakowcloudlet
+  accessuri:
+  location:
+    lat: 50.0647
+    long: 19.945
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TMO
+      name: krakowcloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: mexappcluster
+    cloudletkey:
+      operatorkey:
+        name: TMO
+      name: krakowcloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
