@@ -108,7 +108,7 @@ var AvailableClusterFlavors = []*ClusterFlavor{
 	},
 }
 
-var sshOpts = []string{"StrictHostKeyChecking=no", "UserKnownHostsFile=/dev/null"}
+var sshOpts = []string{"StrictHostKeyChecking=no", "UserKnownHostsFile=/dev/null", "LogLevel=ERROR"}
 
 //IsValidMEXOSEnv caches the validity of the env
 var IsValidMEXOSEnv = false
@@ -1276,7 +1276,9 @@ func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
 		return false, fmt.Errorf("can't get ssh client for cluser ready check, %v", err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "checking master k8s node for available nodes", "ipaddr", ipaddr)
-	cmd := fmt.Sprintf("ssh -o %s -o %s -i %s %s@%s kubectl get nodes -o json", sshOpts[0], sshOpts[1], mexEnv["MEX_SSH_KEY"], mexEnv["MEX_K8S_USER"], ipaddr)
+	cmd := fmt.Sprintf("ssh -o %s -o %s -o %s -i %s %s@%s kubectl get nodes -o json", sshOpts[0], sshOpts[1], sshOpts[2], mexEnv["MEX_SSH_KEY"], mexEnv["MEX_K8S_USER"], ipaddr)
+	log.DebugLog(log.DebugLevelMexos, "running kubectl get nodes", "cmd", cmd)
+
 	out, err := client.Output(cmd)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "error checking for kubernetes nodes", "out", out, "err", err)
