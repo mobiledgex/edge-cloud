@@ -1,0 +1,119 @@
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
+clusterflavors:
+- key:
+    name: x1.medium
+  nodeflavor:
+    name: x1.small
+  masterflavor:
+    name: x1.small
+  numnodes: 3
+  maxnodes: 3
+  nummasters: 1
+
+clusters:
+- key:
+    name: testappcluster
+  defaultflavor:
+    name: x1.medium
+
+
+clusterinsts:
+- key:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonntestcloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+operators:
+- key:
+    name: TDG
+
+developers:
+- key:
+    name: MobiledgeX SDK Demo
+  username: bruce
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+- key:
+    name: "jan.wollner"
+  username: jan
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 000 Nowhere Street, Gainesville, FL 32604
+  email: empty@xxxx.com
+
+apps:
+- key:
+    developerkey:
+      name: "jan.wollner"
+    name: serverdemo
+    version: latest
+  imagepath: registry.mobiledgex.net:5000/janwollner/mexserverdemo
+  imagetype: ImageTypeDocker
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: testappcluster
+  apptemplate: "http://35.199.188.102/apps/apptemplate_nocmd.yml"
+  accessports: "tcp:80"
+  ipaccess: IpAccessShared
+
+
+
+cloudlets:
+- key:
+    operatorkey:
+      name: TDG
+    name: bonntestcloudlet
+  accessuri:
+  location:
+    lat: 50.737
+    long: 7.098
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: "jan.wollner"
+      name: serverdemo
+      version: latest
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonntestcloudlet
+    id: 5011
+  clusterinstkey:
+    clusterkey:
+      name: testappcluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: bonntestcloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+

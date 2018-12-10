@@ -1,0 +1,129 @@
+## Replace the IPs below as needed with the values for your system
+vars:
+- locverurl: "http://10.159.249.169:8888/verifyLocation"
+- toksrvurl: "http://10.159.249.169:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc"
+- tmopolctrl: "tmopol.ctrl.mobiledgex.net"
+- tmopoldme: "tmopol.dme.mobiledgex.net"
+- tmopolcrm: "tmopol.crm.mobiledgex.net"
+- vm1_external_ip: 10.159.249.169
+- vm1_internal_ip: 127.0.0.1
+
+cloudflare:
+  zone: mobiledgex.net
+  records:
+  - name: "{{tmopoldme}}"
+    type: A
+    content: "{{vm1_external_ip}}"
+  - name: "{{tmopolcrm}}"
+    type: A
+    content: "{{vm1_external_ip}}"
+  - name: "{{tmopolctrl}}"
+    type: A
+    content: "{{vm1_external_ip}}"
+
+locsims:
+- locapisimlocal:
+    name: locsim1
+    port: 8888
+    locfile: "{{datadir}}/locsim.yml"
+    geofile: "{{datadir}}/geocode.dat"
+    country: GE
+  hostname: "{{vm1_external_ip}}"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1207
+
+toksims:
+- toksrvsimlocal:
+    name: toksim1
+    port: 9999
+  hostname: "{{vm1_external_ip}}"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1207
+
+etcds:
+- etcdlocal:
+    name: etcd1
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+    peeraddrs: "http://{{vm1_internal_ip}}:30011"
+    clientaddrs: "http://{{vm1_internal_ip}}:30001"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+- etcdlocal:
+    name: etcd2
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+    peeraddrs: "http://{{vm1_internal_ip}}:30012"
+    clientaddrs: "http://{{vm1_internal_ip}}:30002"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+- etcdlocal:
+    name: etcd3
+    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+    peeraddrs: "http://{{vm1_internal_ip}}:30013"
+    clientaddrs: "http://{{vm1_internal_ip}}:30003"
+    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+  hostname: "{{vm1_external_ip}}"
+
+controllers:
+- controllerlocal:
+    name: ctrl1
+    etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
+    apiaddr: "0.0.0.0:55001"
+    httpaddr: "0.0.0.0:36001"
+    notifyaddr: "{{vm1_internal_ip}}:37001"
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{tmopoldme}}"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1207
+   
+dmes:
+- dmelocal:
+    name: dme1
+    apiaddr: "0.0.0.0:50051"
+    httpaddr: "0.0.0.0:38001"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    locverurl: "{{locverurl}}"
+    toksrvurl: "{{toksrvurl}}"
+    carrier: TDG
+    cloudletkey: '{"operator_key":{"name":"TMO"},"name":"krakowcloudlet"}'
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{tmopoldme}}"
+  envvars:
+     LOCAPI_USER: mexserver
+     LOCAPI_PASSWD: seC2835!
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1207
+
+crms:
+- crmlocal:
+    name: crm1
+    apiaddr: "0.0.0.0:55091"
+    notifyaddrs: "{{vm1_internal_ip}}:37001"
+    cloudletkey: '{"operator_key":{"name":"TMO"},"name":"krakowcloudlet"}'
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "{{tmopolcrm}}"
+  envvars:   
+    OS_AUTH_URL: "https://10.159.249.160:13000/v3"
+    OS_PROJECT_ID: "fd62d34f532b495796f560958171b84d"
+    OS_PROJECT_NA: "MEX"
+    OS_TENANT_NAME: "dummy"
+    OS_IDENTITY_API_VERSION: 3
+    OS_USER_DOMAIN_NAME: "Default"
+    OS_PROJECT_DOMAIN_ID: "default"
+    OS_USERNAME: "MEX"
+    OS_PASSWORD: "MEX"
+    OS_REGION_NAME: "regionOne"
+    OS_INTERFACE: "public"
+    MEX_EXT_NETWORK: "ext-net"
+    MEX_OS_IMAGE: "mobiledgex-16.04-3"
+    OS_CACERT: "/root/.mobiledgex/overcloud_CA.crt"
+    MEX_CF_USER: "mobiledgex.ops@mobiledgex.com"
+    MEX_CF_KEY: "60632181cb3b7419304ffa820b2d99e292092"
+    MEX_SSH_KEY: "id_rsa_mobiledgex"
+    MEX_DOCKER_REG_PASS: "sandhill"
+    MEX_DIR: "/root/.mobiledgex"
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1207
+

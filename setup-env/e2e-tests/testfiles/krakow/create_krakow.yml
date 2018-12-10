@@ -1,0 +1,10 @@
+##
+##
+
+tests:
+
+- name: create provisioning
+  actions: [ctrlapi-create]
+  apifile: "/root/e2e-tests/data/appdata_krakow.yml"
+
+
