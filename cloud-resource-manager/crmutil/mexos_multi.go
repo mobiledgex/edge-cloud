@@ -742,7 +742,6 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ImageType:              imageType,
 			ProxyPath:              appInst.Key.AppKey.Name,
 			AppURI:                 appInst.Uri,
-			NetworkScheme:          "external-ip," + oscli.GetMEXExternalNetwork(),
 			ConfigDetailDeployment: app.Deployment,
 			ConfigDetailResources:  config.Resources,
 		}
