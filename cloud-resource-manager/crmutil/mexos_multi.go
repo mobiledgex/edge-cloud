@@ -14,6 +14,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure"
 	"github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud"
+	oscli "github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -372,6 +373,9 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 		log.DebugLog(log.DebugLevelMexos, "will not fill template with invalid cloudletkeystr", "cloudletkeystr", cloudletKeyStr)
 		return nil, fmt.Errorf("invalid cloudletkeystr %s", cloudletKeyStr)
 	}
+
+	log.DebugLog(log.DebugLevelMexos, "using external network", "extNet", oscli.GetMEXExternalNetwork())
+
 	data := templateFill{
 		Name:            clk.Name,
 		Tags:            clk.Name + "-tag",
@@ -384,7 +388,7 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 		RootLB:          rootLB.Name,
 		Image:           "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
 		Kind:            "mex-platform",
-		ExternalNetwork: "external-network-shared",
+		ExternalNetwork: oscli.GetMEXExternalNetwork(),
 		NetworkScheme:   "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
 		DNSZone:         "mobiledgex.net",
 		ExternalRouter:  "mex-k8s-router-1",
@@ -715,7 +719,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ImageType:              imageType,
 			ProxyPath:              appInst.Key.AppKey.Name,
 			AppURI:                 appInst.Uri,
-			NetworkScheme:          "external-ip,external-network-shared",
+			NetworkScheme:          "external-ip," + oscli.GetMEXExternalNetwork(),
 			ConfigDetailDeployment: app.Deployment,
 			ConfigDetailResources:  config.Resources,
 		}
@@ -738,7 +742,6 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ImageType:              imageType,
 			ProxyPath:              appInst.Key.AppKey.Name,
 			AppURI:                 appInst.Uri,
-			NetworkScheme:          "external-ip,external-network-shared",
 			ConfigDetailDeployment: app.Deployment,
 			ConfigDetailResources:  config.Resources,
 		}
