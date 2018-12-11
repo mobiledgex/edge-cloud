@@ -48,16 +48,16 @@ spec:
 `
 
 type templateFill struct {
-	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone             string
-	ImageFlavor, Location, RootLB, ResourceGroup                        string
-	StorageSpec, NetworkScheme, MasterFlavor, Topology                  string
-	NodeFlavor, Operator, Key, Image, Options                           string
-	ImageType, AppURI, ProxyPath                                        string
-	ExternalNetwork, Project, AppTemplate                               string
-	ExternalRouter, Flags, IpAccess                                     string
-	NumMasters, NumNodes                                                int
-	ConfigDetailDeployment, ConfigDetailResources, ConfigDetailManifest string
-	Command                                                             []string
+	Name, Kind, Flavor, Tags, Tenant, Region, Zone, DNSZone              string
+	ImageFlavor, Location, RootLB, Resource, ResourceKind, ResourceGroup string
+	StorageSpec, NetworkScheme, MasterFlavor, Topology                   string
+	NodeFlavor, Operator, Key, Image, Options                            string
+	ImageType, AppURI, ProxyPath                                         string
+	ExternalNetwork, Project, AppTemplate                                string
+	ExternalRouter, Flags, IpAccess                                      string
+	NumMasters, NumNodes                                                 int
+	ConfigDetailDeployment, ConfigDetailResources, ConfigDetailManifest  string
+	Command                                                              []string
 }
 
 //MEXClusterCreateClustInst calls MEXClusterCreate with a manifest created from the template
@@ -521,9 +521,9 @@ func MEXPlatformCleanManifest(mf *Manifest) error {
 	return nil
 }
 
-var yamlMEXAppKubernetes = `apiVersion: v1
-kind: application
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+var yamlMEXApp = `apiVersion: v1
+kind: {{.ResourceKind}}
+resource: {{.Resource}}
 metadata:
   kind: {{.Kind}}
   name: {{.Name}}
@@ -554,65 +554,6 @@ spec:
 {{- range .Command}}
   - {{.}}
 {{- end}}
-`
-
-var yamlMEXAppQcow2 = `apiVersion: v1
-kind: mex-kvm-application
-resource: openstack
-metadata:
-  kind: {{.Kind}}
-  name: {{.Name}}
-  tags: {{.Tags}}
-  tenant: {{.Tenant}}
-  operator: {{.Operator}}
-  dnszone: {{.DNSZone}}
-config:
-  kind:
-  source:
-  detail:
-    resources: {{.ConfigDetailResources}}
-    deployment: {{.ConfigDetailDeployment}}
-spec:
-  flags: {{.Flags}}
-  key: {{.Key}}
-  rootlb: {{.RootLB}}
-  image: {{.Image}}
-  imagetype: {{.ImageType}}
-  imageflavor: {{.ImageFlavor}}
-  proxypath: {{.ProxyPath}}
-  flavor: {{.Flavor}}
-  uri: {{.AppURI}}
-  ipaccess: {{.IpAccess}}
-  networkscheme: {{.NetworkScheme}}
-`
-var yamlMEXAppHelm = `apiVersion: v1
-kind: mex-helm-application
-resource: helm
-metadata:
-  kind: {{.Kind}}
-  name: {{.Name}}
-  tags: {{.Tags}}
-  tenant: {{.Tenant}}
-  operator: {{.Operator}}
-  dnszone: {{.DNSZone}}
-config:
-  kind:
-  source:
-  detail:
-    resources: {{.ConfigDetailResources}}
-    deployment: {{.ConfigDetailDeployment}}
-spec:
-  flags: {{.Flags}}
-  key: {{.Key}}
-  rootlb: {{.RootLB}}
-  image: {{.Image}}
-  imagetype: {{.ImageType}}
-  imageflavor: {{.ImageFlavor}}
-  proxypath: {{.ProxyPath}}
-  flavor: {{.Flavor}}
-  uri: {{.AppURI}}
-  ipaccess: {{.IpAccess}}
-  networkscheme: {{.NetworkScheme}}
 `
 
 //MEXAppCreateAppInst creates app inst with templated manifest
@@ -678,6 +619,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	switch appDeploymentType {
 	case cloudcommon.AppDeploymentTypeKubernetes:
 		data = templateFill{
+			ResourceKind:           "application",
+			Resource:               "kubernetes",
 			Kind:                   clusterInst.Flavor.Name,
 			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
 			Tags:                   util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
@@ -696,16 +639,40 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ConfigDetailResources:  config.Resources,
 			Command:                strings.Split(app.Command, " "),
 		}
-		mf, err = templateUnmarshal(&data, yamlMEXAppKubernetes)
+		mf, err = templateUnmarshal(&data, yamlMEXApp)
 		if err != nil {
 			return nil, err
 		}
-	//case "docker":
-	//	if imageType != "ImageTypeDocker" {
-	//		return nil, fmt.Errorf("invalid image type %s for deployment type %s", imageType, appDeploymentType)
-	//	}
+	case cloudcommon.AppDeploymentTypeDocker:
+		data = templateFill{
+			ResourceKind:           "application",
+			Resource:               "docker",
+			Kind:                   clusterInst.Flavor.Name,
+			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
+			Tags:                   util.K8SSanitize(appInst.Key.AppKey.Name) + "-docker-tag",
+			Key:                    clusterInst.Key.ClusterKey.Name,
+			Tenant:                 util.K8SSanitize(appInst.Key.AppKey.Name) + "-tenant",
+			DNSZone:                "mobiledgex.net",
+			Operator:               util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
+			RootLB:                 rootLB.Name,
+			Image:                  app.ImagePath,
+			ImageType:              imageType,
+			ImageFlavor:            appInst.Flavor.Name,
+			ProxyPath:              util.K8SSanitize(appInst.Key.AppKey.Name),
+			AppURI:                 appInst.Uri,
+			IpAccess:               ipAccess,
+			ConfigDetailDeployment: app.Deployment,
+			ConfigDetailResources:  config.Resources,
+			Command:                strings.Split(app.Command, " "),
+		}
+		mf, err = templateUnmarshal(&data, yamlMEXApp)
+		if err != nil {
+			return nil, err
+		}
 	case cloudcommon.AppDeploymentTypeKVM:
 		data = templateFill{
+			ResourceKind:           "application",
+			Resource:               "kvm",
 			Kind:                   clusterInst.Flavor.Name,
 			Name:                   appInst.Key.AppKey.Name,
 			Tags:                   appInst.Key.AppKey.Name + "-qcow-tag",
@@ -723,12 +690,14 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ConfigDetailDeployment: app.Deployment,
 			ConfigDetailResources:  config.Resources,
 		}
-		mf, err = templateUnmarshal(&data, yamlMEXAppQcow2)
+		mf, err = templateUnmarshal(&data, yamlMEXApp)
 		if err != nil {
 			return nil, err
 		}
 	case cloudcommon.AppDeploymentTypeHelm:
 		data = templateFill{
+			ResourceKind:           "application",
+			Resource:               "helm",
 			Kind:                   clusterInst.Flavor.Name,
 			Name:                   appInst.Key.AppKey.Name,
 			Tags:                   appInst.Key.AppKey.Name + "-helm-tag",
@@ -745,7 +714,7 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 			ConfigDetailDeployment: app.Deployment,
 			ConfigDetailResources:  config.Resources,
 		}
-		mf, err = templateUnmarshal(&data, yamlMEXAppHelm)
+		mf, err = templateUnmarshal(&data, yamlMEXApp)
 		if err != nil {
 			return nil, err
 		}
