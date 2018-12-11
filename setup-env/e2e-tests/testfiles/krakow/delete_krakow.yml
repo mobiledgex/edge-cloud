@@ -1,0 +1,10 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  actions: [ctrlapi-delete]
+  apifile: "/root/e2e-tests/data/appdata_krakow.yml"
+
+

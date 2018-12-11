@@ -1,7 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>MobiledgeX.MatchingEngineGrpcLibrary</PackageId>
+    <Version>1.3.0</Version>
+    <Authors>MobiledgeX</Authors>
+    <Company>MobiledgeX, Inc.</Company>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>

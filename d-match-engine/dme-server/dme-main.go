@@ -37,6 +37,7 @@ var tokSrvUrl = flag.String("toksrvurl", "", "token service URL to provide to cl
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
+var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -59,6 +60,15 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return reply, errors.New("No valid session cookie")
+	}
+	if req.CarrierName == "" {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
+
+		return reply, errors.New("missing carrierName")
+	}
+	if req.GpsLocation == nil || (req.GpsLocation.Lat == 0 && req.GpsLocation.Long == 0) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
+		return reply, errors.New("Missing GpsLocation")
 	}
 	err := findCloudlet(ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
@@ -248,6 +258,8 @@ func main() {
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
 	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NodeDME, &myCloudletKey, &myNode.Key)
+
+	dmecommon.InitVault(*vaultAddr)
 
 	setupMatchEngine()
 	grpcOpts := make([]grpc.ServerOption, 0)

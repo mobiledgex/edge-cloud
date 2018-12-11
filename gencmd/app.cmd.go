@@ -227,9 +227,6 @@ func AppHideTags(in *edgeproto.App) {
 		tags[tag] = struct{}{}
 	}
 	if _, found := tags["nocmp"]; found {
-		in.Deployment = ""
-	}
-	if _, found := tags["nocmp"]; found {
 		in.DeploymentManifest = ""
 	}
 	if _, found := tags["nocmp"]; found {

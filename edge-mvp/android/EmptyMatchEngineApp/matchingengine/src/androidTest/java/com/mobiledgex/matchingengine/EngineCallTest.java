@@ -1,5 +1,6 @@
 package com.mobiledgex.matchingengine;
 
+import android.app.UiAutomation;
 import android.content.Context;
 import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
@@ -53,13 +54,13 @@ public class EngineCallTest {
     public void grantPermissions() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.READ_PHONE_STATE");
-            InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(
-                    "pm grant " + InstrumentationRegistry.getTargetContext().getPackageName()
-                            + " android.permission.ACCESS_COARSE_LOCATION");
-
+            UiAutomation uiAutomation = InstrumentationRegistry.getInstrumentation().getUiAutomation();
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.READ_PHONE_STATE");
+            uiAutomation.grantRuntimePermission(
+                    InstrumentationRegistry.getTargetContext().getPackageName(),
+                    "android.permission.ACCESS_COARSE_LOCATION");
         }
     }
 
@@ -287,7 +288,7 @@ public class EngineCallTest {
             try {
                 // Non-Mock.
                 AppClient.RegisterClientRequest registerClientRequest = me.createRegisterClientRequest(
-                        context, developerName, "", "");
+                        context, developerName, null, null, null, null);
                 AppClient.RegisterClientReply registerStatusReply = me.registerClient(registerClientRequest, me.getHost(), me.getPort(), GRPC_TIMEOUT_MS);
             } catch (IllegalArgumentException iae) {
                 Log.i(TAG, "Expected exception for registerClient. Mex Disabled.");
@@ -889,8 +890,8 @@ public class EngineCallTest {
             }
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_UNDEFINED, list.getStatus());
-            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
@@ -938,8 +939,8 @@ public class EngineCallTest {
             AppClient.AppInstListReply list = listFuture.get();
 
             assertEquals(0, list.getVer());
-            assertEquals(AppClient.AppInstListReply.AI_Status.AI_UNDEFINED, list.getStatus());
-            assertEquals(2, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
+            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }

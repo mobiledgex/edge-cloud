@@ -36,12 +36,12 @@ tests:
 
 - includefile: delete_default_appinst.yml
 
-- name: get appinstlist, expect app1 minus default
+- name: get appinstlist, expect app1 
   actions: [dmeapi-getappinstlist]
   apifile: "{{datadir}}/get_appinstlist_app1.yml"
   compareyaml:
      yaml1: "{{outputdir}}/getappinstlist.yml"
-     yaml2: "{{datadir}}/get_appinstlist_result_app1_no_default.yml"
+     yaml2: "{{datadir}}/get_appinstlist_result_app1.yml"
 
  
 - name: delete provisioning, verify it is empty
@@ -53,13 +53,5 @@ tests:
     filetype: appdata
 
 - includefile: create_default_appinst.yml
-
-- name: get appinstlist, expect default only
-  actions: [dmeapi-getappinstlist]
-  apifile: "{{datadir}}/get_appinstlist_app1.yml"
-  compareyaml:
-     yaml1: "{{outputdir}}/getappinstlist.yml"
-     yaml2: "{{datadir}}/get_appinstlist_result_default.yml"
-     filetype: getappinstlist
 
 - includefile: delete_default_appinst_withdeps.yml
