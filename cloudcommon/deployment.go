@@ -13,12 +13,14 @@ import (
 var AppDeploymentTypeKubernetes = "kubernetes"
 var AppDeploymentTypeKVM = "kvm"
 var AppDeploymentTypeHelm = "helm"
+var AppDeploymentTypeDocker = "docker"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
 	AppDeploymentTypeKVM,
 	AppDeploymentTypeHelm,
-} // TODO "docker", ...
+	AppDeploymentTypeDocker,
+}
 
 func IsValidDeploymentType(appDeploymentType string) bool {
 	for _, d := range ValidDeployments {
