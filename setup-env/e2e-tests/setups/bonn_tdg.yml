@@ -21,13 +21,6 @@ cloudflare:
     type: A
     content: "{{vm1_external_ip}}"
 
-vaults:
-- vault:
-    name: vault
-  hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/mex-vault:latest
-  envvars:
-     VAULT_ADDR: "http://127.0.0.1:8200"
 
 locsims:
 - locapisimlocal:
@@ -92,6 +85,7 @@ dmes:
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
+    vaultaddr: "http://127.0.0.1:8200"
     carrier: TDG
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonndemocloudlet"}'
     tls:
@@ -101,6 +95,8 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
+     VAULT_ROLE_ID: 63322010-7a70-4de3-e74b-e1939b4e4f72
+     VAULT_SECRET_ID: 19aa31d0-6d96-7303-e376-7c9c7884d04c
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 crms:

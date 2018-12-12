@@ -5,7 +5,7 @@ metadata:
   labels:
     app: dme
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dme
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: dme
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:latest
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
         imagePullPolicy: Always
         command:
          - "dme-server"
@@ -32,6 +32,8 @@ spec:
          - "locapi,dmedb,dmereq"
          - "--toksrvurl"
          - "http://mextest.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
+         - "--vaultAddr"
+         - "http://vault:8200"
          - "--tls"
          - "/root/tls/mex-server.crt"
          - "--cloudletKey"
@@ -41,7 +43,11 @@ spec:
            value: mexserver
          - name: LOCAPI_PASSWD
            value: seC2835!
-         
+         - name: VAULT_ROLE_ID
+           value: e20e3c1e-4995-790f-6daf-48c9a2e96625
+         - name: VAULT_SECRET_ID
+           value: a11a6713-7430-c1ee-c108-ec6b946758d4
+
       imagePullSecrets:
        - name: mexreg-secret 
 
