@@ -92,4 +92,3 @@ vault write -f auth/approle/role/rotator/secret-id
 
 # generate secret string:
 # openssl rand -base64 128
-
