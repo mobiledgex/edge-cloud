@@ -1,0 +1,27 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngineSDKRestLibrary", "MatchingEngineSDKRestLibrary\MatchingEngineSDKRestLibrary.csproj", "{6708E105-1190-4AE9-8D33-502317893033}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestTest", "RestTest\RestTest.csproj", "{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6708E105-1190-4AE9-8D33-502317893033}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6708E105-1190-4AE9-8D33-502317893033}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6708E105-1190-4AE9-8D33-502317893033}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6708E105-1190-4AE9-8D33-502317893033}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		description = MatchingEngineSDK Library based on REST backend
+		version = 1.3.1
+	EndGlobalSection
+EndGlobal
