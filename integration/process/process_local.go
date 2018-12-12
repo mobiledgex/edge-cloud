@@ -517,25 +517,18 @@ func (p *Vault) getAppRole(name string, roleID, secretID *string, err *error) {
 		return
 	}
 	out := p.run("vault", fmt.Sprintf("read auth/approle/role/%s/role-id", name), err)
-	log.Printf("VAULT getAppRole %s", fmt.Sprintf("vault read auth/approle/role/%s/role-id", name))
-
 	vals := p.mapVals(out)
 	if val, ok := vals["role_id"]; ok {
 		*roleID = val
 	}
 	out = p.run("vault", fmt.Sprintf("write -f auth/approle/role/%s/secret-id", name), err)
-	log.Printf("VAULT writeAppRole:  %s", fmt.Sprintf("vault write -f auth/approle/role/%s/secret-id", name))
-
 	vals = p.mapVals(out)
 	if val, ok := vals["secret_id"]; ok {
 		*secretID = val
-		log.Printf("VAULT writeAppRole found secret:  %s", val)
-
 	}
 }
 
 func (p *Vault) putSecret(name, secret string, err *error) {
-	log.Printf("VAULT putSecret %s", fmt.Sprintf("vault kv put jwtkeys/%s secret=%s", name, secret))
 	p.run("vault", fmt.Sprintf("kv put jwtkeys/%s secret=%s", name, secret), err)
 }
 
