@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: cluster
+resource: {{.Cluster}}
+metadata:
+  name: {{.Cluster}}
+  tags: {{.Cluster}}-tag
+  kind: kubernetes
+  tenant: {{.Cluster}}-tenant
+  region: {{.Region}}
+  zone: {{.Zone}}
+  location: {{.Location}}
+  resourcegroup: {{.ResourceGroup}}
+  operator: {{.Operator}}
+  dnszone: {{.DNSZone}}
+spec:
+  flags: force
+  flavor: {{.ClusterFlavor}}
+  key: {{.Cluster}}
+  dockerregistry: {{.DockerRegistry}}
+  rootlb: {{.RootLB}}
+  networkscheme: {{.NetworkScheme}}
