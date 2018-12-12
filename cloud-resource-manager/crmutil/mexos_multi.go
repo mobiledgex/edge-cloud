@@ -24,8 +24,8 @@ import (
 )
 
 var yamlMEXCluster = `apiVersion: v1
-kind: cluster
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+kind: {{.ResourceKind}}
+resource: {{.Resource}}
 metadata:
   name: {{.Name}}
   tags: {{.Tags}}
@@ -52,7 +52,7 @@ type templateFill struct {
 	ImageFlavor, Location, RootLB, Resource, ResourceKind, ResourceGroup string
 	StorageSpec, NetworkScheme, MasterFlavor, Topology                   string
 	NodeFlavor, Operator, Key, Image, Options                            string
-	ImageType, AppURI, ProxyPath                                         string
+	ImageType, AppURI, ProxyPath, AgentImage                             string
 	ExternalNetwork, Project, AppTemplate                                string
 	ExternalRouter, Flags, IpAccess                                      string
 	NumMasters, NumNodes                                                 int
@@ -80,12 +80,14 @@ func fillClusterTemplateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.Clus
 		return nil, verr
 	}
 	data := templateFill{
+		ResourceKind:  "cluster",
+		Resource:      clusterInst.Flavor.Name,
 		Name:          clusterInst.Key.ClusterKey.Name,
 		Tags:          clusterInst.Key.ClusterKey.Name + "-tag",
 		Tenant:        clusterInst.Key.ClusterKey.Name + "-tenant",
 		Operator:      util.K8SSanitize(clusterInst.Key.CloudletKey.OperatorKey.Name),
 		Key:           clusterInst.Key.ClusterKey.Name,
-		Kind:          clusterInst.Flavor.Name,
+		Kind:          "kubernetes",
 		ResourceGroup: clusterInst.Key.CloudletKey.Name + "_" + clusterInst.Key.ClusterKey.Name,
 		Flavor:        clusterInst.Flavor.Name,
 		DNSZone:       "mobiledgex.net",
@@ -141,7 +143,7 @@ func fillClusterTemplateClustInst(rootLB *MEXRootLB, clusterInst *edgeproto.Clus
 
 //MEXClusterCreateManifest creates a cluster
 func MEXClusterCreateManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "creating cluster via manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "creating cluster via manifest")
 	switch mf.Metadata.Operator {
 	case "gcp":
 		return gcloudCreateGKE(mf)
@@ -154,7 +156,7 @@ func MEXClusterCreateManifest(mf *Manifest) error {
 			return fmt.Errorf("can't create cluster, %v", err)
 		}
 		//log.DebugLog(log.DebugLevelMexos, "new guid", "guid", *guid)
-		log.DebugLog(log.DebugLevelMexos, "created kubernetes cluster", "mf", mf)
+		log.DebugLog(log.DebugLevelMexos, "created kubernetes cluster")
 		return nil
 	}
 }
@@ -177,7 +179,7 @@ func azureCreateAKS(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("cannot get kconf, %v, %v, %v", mf, kconf, err)
 	}
-	if err = copy(defaultKubeconfig(), kconf); err != nil {
+	if err = copyFile(defaultKubeconfig(), kconf); err != nil {
 		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "created aks", "name", mf.Spec.Key)
@@ -188,7 +190,7 @@ func defaultKubeconfig() string {
 	return os.Getenv("HOME") + "/.kube/config"
 }
 
-func copy(src string, dst string) error {
+func copyFile(src string, dst string) error {
 	data, err := ioutil.ReadFile(src)
 	if err != nil {
 		return err
@@ -221,10 +223,11 @@ func gcloudCreateGKE(mf *Manifest) error {
 	if err != nil {
 		return fmt.Errorf("cannot get kconf, %v, %v, %v", mf, kconf, err)
 	}
-	if err = copy(defaultKubeconfig(), kconf); err != nil {
+	if err = copyFile(defaultKubeconfig(), kconf); err != nil {
 		return fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 	}
-	log.DebugLog(log.DebugLevelMexos, "created gke", "name", mf.Spec.Key)
+	log.DebugLog(log.
+		DebugLevelMexos, "created gke", "name", mf.Spec.Key)
 	return nil
 }
 
@@ -245,8 +248,8 @@ func MEXClusterRemoveClustInst(rootLb *MEXRootLB, clusterInst *edgeproto.Cluster
 }
 
 var yamlMEXFlavor = `apiVersion: v1
-kind: flavor
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+kind: {{.ResourceKind}}
+resource: {{.Resource}}
 metadata:
   name: {{.Name}}
   tags: {{.Tags}}
@@ -266,6 +269,23 @@ spec:
 `
 
 //MEXAddFlavorClusterInst uses template to fill in details for flavor add request and calls MEXAddFlavor
+// XXX "adding" flavor is not supported. This is based on wrong understanding. Platform providers
+//  give us a set of platform flavors. For example, kvm and neutron flavors like m4.large, m4.xlarge.
+//  We do not have control over these platform flavors. We do not "create" them; the are given to us.
+//  Similarly, our "cluster" flavor, which is our own invention, tries to map a collection of these
+//  platform flavors (e.g. m4.large, neutron flavors like loadbalancer (not available to us yet)) into
+//  a synthetic flavor -- x1.medium, x1.large, ... for our own abstraction at the "cluster" layer.
+//  Cluster is a collection of things, like compute nodes, networking, etc. which require its own "flavor".
+//  However, these cluster flavors are static, based on platform flavors we do not control. We cannot
+//  create these flavors.  Per cloudlet, a set of possible cluster flavors are abstracted and made
+//  available. They can be retrieved from CRM and examined. But they cannot be "created" as they
+//  are real-world resources that are given, by the providers.  They should not be created dynamically
+//  either.  Even though openstack allows various platform creation, they are at the "operator" level.
+//  A platform provider has ability to customize their offering of real-world resources.  The end user
+//  of a platform (e.g. openstack user, like us) do not have ability to create flavors on platforms.
+//  Similarly, gcp or azure user do not have ability to create flavors. They are used, as is, and users
+//  are supposed to list and examine available flavors.  So the concept here of "creating" flavors is flawed
+//  and cannot be reasonably implemented. The code is here for legacy reasons.
 func MEXAddFlavorClusterInst(flavor *edgeproto.ClusterFlavor) error {
 	log.DebugLog(log.DebugLevelMexos, "adding cluster inst flavor", "flavor", flavor)
 
@@ -274,6 +294,8 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.ClusterFlavor) error {
 		return fmt.Errorf("will not add empty cluster inst %v", flavor)
 	}
 	data := templateFill{
+		ResourceKind:  "flavor",
+		Resource:      flavor.Key.Name,
 		Name:          flavor.Key.Name,
 		Tags:          flavor.Key.Name + "-tag",
 		Kind:          "mex-k8s-cluster",
@@ -295,7 +317,7 @@ func MEXAddFlavorClusterInst(flavor *edgeproto.ClusterFlavor) error {
 
 //MEXAddFlavor adds flavor using manifest
 func MEXAddFlavor(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "add mex flavor", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "add mex flavor")
 	//TODO use full manifest and validate against platform data
 	return AddFlavorManifest(mf)
 }
@@ -306,7 +328,7 @@ func MEXAddFlavor(mf *Manifest) error {
 
 //MEXClusterRemoveManifest removes a cluster
 func MEXClusterRemoveManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "removing cluster", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "removing cluster")
 	switch mf.Metadata.Operator {
 	case "gcp":
 		return gcloud.DeleteGKECluster(mf.Metadata.Name)
@@ -321,8 +343,8 @@ func MEXClusterRemoveManifest(mf *Manifest) error {
 }
 
 var yamlMEXPlatform = `apiVersion: v1
-kind: platform
-resource: fmbncisrs101.tacn.detemobil.de:5000/v2.0
+kind: {{.ResourceKind}}
+resource: {{.Resource}}
 metadata:
   kind: {{.Kind}}
   name: {{.Name}}
@@ -345,7 +367,7 @@ spec:
   externalrouter: {{.ExternalRouter}}
   options: {{.Options}}
   agent: 
-    image: {{.Image}}
+    image: {{.AgentImage}}
     status: active
 `
 
@@ -377,6 +399,8 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 	log.DebugLog(log.DebugLevelMexos, "using external network", "extNet", oscli.GetMEXExternalNetwork())
 
 	data := templateFill{
+		ResourceKind:    "platform",
+		Resource:        util.K8SSanitize(clk.OperatorKey.Name),
 		Name:            clk.Name,
 		Tags:            clk.Name + "-tag",
 		Key:             clk.Name + "-" + util.K8SSanitize(clk.OperatorKey.Name),
@@ -386,7 +410,7 @@ func fillPlatformTemplateCloudletKey(rootLB *MEXRootLB, cloudletKeyStr string) (
 		Region:          "eu-central-1",
 		Zone:            "eu-central-1c",
 		RootLB:          rootLB.Name,
-		Image:           "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
+		AgentImage:      "registry.mobiledgex.net:5000/mobiledgex/mexosagent",
 		Kind:            "mex-platform",
 		ExternalNetwork: oscli.GetMEXExternalNetwork(),
 		NetworkScheme:   "priv-subnet,mex-k8s-net-1,10.101.X.0/24",
@@ -476,7 +500,7 @@ func checkEnvironment() error {
 
 //MEXPlatformInitManifest initializes platform
 func MEXPlatformInitManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "init platform", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "init platform")
 	err := checkEnvironment()
 	if err != nil {
 		return err
@@ -500,7 +524,7 @@ func MEXPlatformInitManifest(mf *Manifest) error {
 
 //MEXPlatformCleanManifest cleans up the platform
 func MEXPlatformCleanManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "clean platform", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "clean platform")
 	err := checkEnvironment()
 	if err != nil {
 		return err
@@ -620,8 +644,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	case cloudcommon.AppDeploymentTypeKubernetes:
 		data = templateFill{
 			ResourceKind:           "application",
-			Resource:               "kubernetes",
-			Kind:                   clusterInst.Flavor.Name,
+			Resource:               util.K8SSanitize(appInst.Key.AppKey.Name),
+			Kind:                   "kubernetes",
 			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
 			Tags:                   util.K8SSanitize(appInst.Key.AppKey.Name) + "-kubernetes-tag",
 			Key:                    clusterInst.Key.ClusterKey.Name,
@@ -646,8 +670,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	case cloudcommon.AppDeploymentTypeDocker:
 		data = templateFill{
 			ResourceKind:           "application",
-			Resource:               "docker",
-			Kind:                   clusterInst.Flavor.Name,
+			Resource:               util.K8SSanitize(appInst.Key.AppKey.Name),
+			Kind:                   "docker",
 			Name:                   util.K8SSanitize(appInst.Key.AppKey.Name),
 			Tags:                   util.K8SSanitize(appInst.Key.AppKey.Name) + "-docker-tag",
 			Key:                    clusterInst.Key.ClusterKey.Name,
@@ -672,8 +696,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	case cloudcommon.AppDeploymentTypeKVM:
 		data = templateFill{
 			ResourceKind:           "application",
-			Resource:               "kvm",
-			Kind:                   clusterInst.Flavor.Name,
+			Resource:               appInst.Key.AppKey.Name,
+			Kind:                   "kvm",
 			Name:                   appInst.Key.AppKey.Name,
 			Tags:                   appInst.Key.AppKey.Name + "-qcow-tag",
 			Key:                    clusterInst.Key.ClusterKey.Name,
@@ -697,8 +721,8 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 	case cloudcommon.AppDeploymentTypeHelm:
 		data = templateFill{
 			ResourceKind:           "application",
-			Resource:               "helm",
-			Kind:                   clusterInst.Flavor.Name,
+			Resource:               appInst.Key.AppKey.Name,
+			Kind:                   "helm",
 			Name:                   appInst.Key.AppKey.Name,
 			Tags:                   appInst.Key.AppKey.Name + "-helm-tag",
 			Key:                    clusterInst.Key.ClusterKey.Name,
@@ -722,18 +746,18 @@ func fillAppTemplate(rootLB *MEXRootLB, appInst *edgeproto.AppInst, app *edgepro
 		return nil, fmt.Errorf("unknown image type %s", imageType)
 	}
 	mf.Config.ConfigDetail.Manifest = app.DeploymentManifest
-	log.DebugLog(log.DebugLevelMexos, "filled app manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "filled app manifest")
 	err = addPorts(mf, appInst)
 	if err != nil {
 		return nil, err
 	}
-	log.DebugLog(log.DebugLevelMexos, "added port to app manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "added port to app manifest")
 	return mf, nil
 }
 
 //MEXAppCreateAppManifest creates app instances on the cluster platform
 func MEXAppCreateAppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "create app from manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create app from manifest")
 	appDeploymentType := mf.Config.ConfigDetail.Deployment
 	log.DebugLog(log.DebugLevelMexos, "app deployment", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
 	kubeManifest, err := cloudcommon.GetDeploymentManifest(mf.Config.ConfigDetail.Manifest)
@@ -766,7 +790,7 @@ func MEXAppCreateAppManifest(mf *Manifest) error {
 
 func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 	name := mexEnv["MEX_DIR"] + "/" + mf.Spec.Key + ".kubeconfig"
-	log.DebugLog(log.DebugLevelMexos, "get kubeconfig name", "mf", mf, "name", name)
+	log.DebugLog(log.DebugLevelMexos, "get kubeconfig name", "name", name)
 
 	if createIfMissing {
 		if _, err := os.Stat(name); os.IsNotExist(err) {
@@ -778,14 +802,14 @@ func getKconf(mf *Manifest, createIfMissing bool) (string, error) {
 				if err = gcloud.GetGKECredentials(mf.Metadata.Name); err != nil {
 					return "", fmt.Errorf("unable to get GKE credentials %v", err)
 				}
-				if err = copy(defaultKubeconfig(), name); err != nil {
+				if err = copyFile(defaultKubeconfig(), name); err != nil {
 					return "", fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 				}
 			case "azure":
 				if err = azure.GetAKSCredentials(mf.Metadata.ResourceGroup, mf.Metadata.Name); err != nil {
 					return "", fmt.Errorf("unable to get AKS credentials %v", err)
 				}
-				if err = copy(defaultKubeconfig(), name); err != nil {
+				if err = copyFile(defaultKubeconfig(), name); err != nil {
 					return "", fmt.Errorf("can't copy %s, %v", defaultKubeconfig(), err)
 				}
 			}
@@ -827,7 +851,7 @@ type svcItems struct {
 }
 
 func runKubectlCreateApp(mf *Manifest, kubeManifest string) error {
-	log.DebugLog(log.DebugLevelMexos, "run kubectl create app", "mf", mf, "kubeManifest", kubeManifest)
+	log.DebugLog(log.DebugLevelMexos, "run kubectl create app", "kubeManifest", kubeManifest)
 	kconf, err := getKconf(mf, false)
 	if err != nil {
 		return fmt.Errorf("error creating app due to kconf %v, %v", mf, err)
@@ -1084,7 +1108,7 @@ func getSvcExternalIP(name string, kconf string) (string, error) {
 
 //MEXAppDeleteManifest kills app
 func MEXAppDeleteAppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "delete app with manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "delete app with manifest")
 	appDeploymentType := mf.Config.ConfigDetail.Deployment
 	log.DebugLog(log.DebugLevelMexos, "app delete", "imageType", mf.Spec.ImageType, "deploymentType", appDeploymentType, "config", mf.Config)
 	kubeManifest, err := cloudcommon.GetDeploymentManifest(mf.Config.ConfigDetail.Manifest)

@@ -91,16 +91,6 @@ type SpecDetail struct {
 	Agent                AgentDetail      `json:"agent"`
 }
 
-//Manifest is general container for the manifest yaml used by `mex`
-type Manifest struct {
-	APIVersion string         `json:"apiVersion"`
-	Kind       string         `json:"kind"`
-	Resource   string         `json:"resource"`
-	Metadata   MetadataDetail `json:"metadata"`
-	Spec       SpecDetail     `json:"spec"`
-	Config     AppInstConfig  `json:"config"`
-}
-
 type AppInstConfigDetail struct {
 	Deployment string `json:"deployment"`
 	Resources  string `json:"resources"`
@@ -112,4 +102,48 @@ type AppInstConfig struct {
 	Kind         string              `json:"kind"`
 	Source       string              `json:"source"`
 	ConfigDetail AppInstConfigDetail `json:"detail"`
+}
+
+type ValueDetail struct {
+	Kind            string `json:"kind"`
+	Base            string `json:"base"`
+	AppName         string `json:"appname"`
+	AppKind         string `json:"appkind"`
+	Operator        string `json:"operator"`
+	OperatorKind    string `json:"operatorkind"`
+	DNSZone         string `json:"dnszone"`
+	AppDeployment   string `json:"appdeployment"`
+	AgentImage      string `json:"agentimage"`
+	AgentStatus     string `json:"agentstatus"`
+	AppManifest     string `json:"appmanifest"`
+	Cluster         string `json:"cluster"`
+	RootLB          string `json:"rootlb"`
+	AppImage        string `json:"appimage"`
+	AppImageType    string `json:"appimagetype"`
+	AppProxyPath    string `json:"appproxypath"`
+	ClusterFlavor   string `json:"clusterflavor"`
+	IpAccess        string `json:"ipaccess"`
+	ExternalNetwork string `json:"externalnetwork"`
+	Router          string `json:"router"`
+	Options         string `json:"options"`
+	NetworkScheme   string `json:"networkscheme"`
+	StorageScheme   string `json:"storagescheme"`
+	DockerRegistry  string `json:"dockerregistry"`
+	ResourceGroup   string `json:"resourcegroup"`
+	Location        string `json:"location"`
+	Region          string `json:"region"`
+	Zone            string `json:"zone"`
+	OpenRC          string `json:"openrc"`
+	MexEnv          string `json:"mexenv"`
+}
+
+//Manifest is general container for the manifest yaml used by `mex`
+type Manifest struct {
+	APIVersion string         `json:"apiVersion"`
+	Kind       string         `json:"kind"`
+	Resource   string         `json:"resource"`
+	Metadata   MetadataDetail `json:"metadata"`
+	Spec       SpecDetail     `json:"spec"`
+	Config     AppInstConfig  `json:"config"`
+	Values     ValueDetail    `json:"values"`
 }

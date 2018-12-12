@@ -32,6 +32,9 @@ var mexEnv = map[string]string{
 	"MEX_CF_USER":         os.Getenv("MEX_CF_USER"),
 	"MEX_DOCKER_REG_PASS": os.Getenv("MEX_DOCKER_REG_PASS"),
 	"MEX_EXT_NETWORK":     os.Getenv("MEX_EXT_NETWORK"),
+	"MEX_NETWORK":         os.Getenv("MEX_NETWORK"),
+	"MEX_EXT_ROUTER":      os.Getenv("MEX_EXT_ROUTER"),
+	"MEX_SECURITY_RULE":   os.Getenv("MEX_SECURITY_RULE"),
 	"MEX_REGISTRY_USER":   "mobiledgex",
 	"MEX_AGENT_PORT":      "18889",
 	"MEX_REGISTRY":        "registry.mobiledgex.net",
@@ -222,7 +225,7 @@ func NewRootLB(rootLBName string) (*MEXRootLB, error) {
 
 //NewRootLBManifest creates rootLB instance and sets Platform Config with manifest
 func NewRootLBManifest(mf *Manifest) (*MEXRootLB, error) {
-	log.DebugLog(log.DebugLevelMexos, "new rootLB with manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "new rootLB with manifest")
 	rootLB, err := NewRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return nil, err
@@ -275,7 +278,7 @@ func GetClusterFlavor(flavor string) (*ClusterFlavor, error) {
 //mexCreateClusterKubernetes creates a cluster of nodes. It can take a while, so call from a goroutine.
 func mexCreateClusterKubernetes(mf *Manifest) error {
 	//func mexCreateClusterKubernetes(mf *Manifest) (*string, error) {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes cluster", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create kubernetes cluster")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -288,7 +291,7 @@ func mexCreateClusterKubernetes(mf *Manifest) error {
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create cluster", "mf", mf)
+		log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create cluster")
 		return err
 	}
 	//TODO more than one networks
@@ -531,7 +534,7 @@ func getRootLB(name string) (*MEXRootLB, error) {
 
 //mexDeleteClusterKubernetes deletes kubernetes cluster
 func mexDeleteClusterKubernetes(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "deleting kubernetes cluster", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "deleting kubernetes cluster")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -541,7 +544,7 @@ func mexDeleteClusterKubernetes(mf *Manifest) error {
 	}
 	name := mf.Metadata.Name
 	if name == "" {
-		log.DebugLog(log.DebugLevelMexos, "error, empty name", "mf", mf)
+		log.DebugLog(log.DebugLevelMexos, "error, empty name")
 		return fmt.Errorf("empty name")
 	}
 	srvs, err := oscli.ListServers()
@@ -679,10 +682,10 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 		}
 		cf, err := GetClusterFlavor(mf.Spec.Flavor)
 		if err != nil {
-			log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create rootLB", "mf", mf, "rootLB", rootLB)
+			log.DebugLog(log.DebugLevelMexos, "invalid platform flavor, can't create rootLB")
 			return fmt.Errorf("cannot create rootLB invalid platform flavor %v", err)
 		}
-		log.DebugLog(log.DebugLevelMexos, "creating agent node kvm", "mf", mf, "netspec", netspec)
+		log.DebugLog(log.DebugLevelMexos, "creating agent node kvm", "netspec", netspec)
 		err = oscli.CreateMEXKVM(rootLB.Name,
 			"mex-agent-node", //important, don't change
 			netspec,
@@ -710,7 +713,7 @@ func EnableRootLB(mf *Manifest, rootLB *MEXRootLB) error {
 			6443,  //kubernetes control
 			8000,  //mex k8s join token server
 		}
-		ruleName := oscli.GetDefaultSecurityRule()
+		ruleName := oscli.GetMEXSecurityRule()
 		privateNetCIDR := strings.Replace(defaultPrivateNetRange, "X", "0", 1)
 		allowedClientCIDR := GetAllowedClientCIDR()
 		for _, p := range ports {
@@ -858,7 +861,7 @@ func setPlatConfManifest(mf *Manifest) error {
 }
 
 func setPlatConf(rootLB *MEXRootLB, mf *Manifest) {
-	log.DebugLog(log.DebugLevelMexos, "rootlb platconf set", "rootlb", rootLB, "platconf", mf)
+	log.DebugLog(log.DebugLevelMexos, "rootlb platconf set")
 	if rootLB == nil {
 		log.DebugLog(log.DebugLevelMexos, "cannot set platconf, rootLB is null")
 	}
@@ -871,7 +874,7 @@ func setPlatConf(rootLB *MEXRootLB, mf *Manifest) {
 //   on the RootLB. It can be told to manually pull image from docker repository.  This allows upgrading with new image.
 //   It uses MEX private docker repository.  If an instance is running already, we don't start another one.
 func RunMEXAgentManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "run mex agent", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "run mex agent")
 	fqdn := mf.Spec.RootLB
 	//fqdn is that of the machine/kvm-instance running the agent
 	if !valid.IsDNSName(fqdn) {
@@ -892,7 +895,7 @@ func RunMEXAgentManifest(mf *Manifest) error {
 			return RunMEXOSAgentService(mf, rootLB)
 		}
 	}
-	log.DebugLog(log.DebugLevelMexos, "proceed to create mex agent", "fqdn", fqdn)
+	log.DebugLog(log.DebugLevelMexos, "about to create mex agent", "fqdn", fqdn)
 	rootLB, err := getRootLB(fqdn)
 	if err != nil {
 		return fmt.Errorf("cannot find rootlb %s", fqdn)
@@ -909,7 +912,7 @@ func RunMEXAgentManifest(mf *Manifest) error {
 	if mf.Metadata.Name == "" {
 		return fmt.Errorf("missing name")
 	}
-	log.DebugLog(log.DebugLevelMexos, "record platform config", "mf", mf, "rootLB", rootLB)
+	log.DebugLog(log.DebugLevelMexos, "record platform config")
 	err = EnableRootLB(mf, rootLB)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "can't enable agent", "name", rootLB.Name)
@@ -1023,7 +1026,7 @@ func RunMEXOSAgentContainer(mf *Manifest, rootLB *MEXRootLB) error {
 
 //UpdateMEXAgentManifest upgrades the mex agent
 func UpdateMEXAgentManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "update mex agent", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "update mex agent")
 	err := RemoveMEXAgentManifest(mf)
 	if err != nil {
 		return err
@@ -1034,7 +1037,7 @@ func UpdateMEXAgentManifest(mf *Manifest) error {
 
 //RemoveMEXAgentManifest deletes mex agent docker instance
 func RemoveMEXAgentManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "deleting mex agent", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "deleting mex agent")
 	//XXX we are deleting server kvm!!!
 	err := oscli.DeleteServer(mf.Spec.RootLB)
 	force := strings.Contains(mf.Spec.Flags, "force")
@@ -1251,13 +1254,13 @@ type genericItems struct {
 
 //IsClusterReady checks to see if cluster is read, i.e. rootLB is running and active
 func IsClusterReady(mf *Manifest, rootLB *MEXRootLB) (bool, error) {
-	log.DebugLog(log.DebugLevelMexos, "checking if cluster is ready", "rootLB", rootLB, "platconf", *rootLB.PlatConf)
+	log.DebugLog(log.DebugLevelMexos, "checking if cluster is ready")
 	if rootLB == nil {
 		return false, fmt.Errorf("cannot check if cluster is ready, rootLB is null")
 	}
 	cf, err := GetClusterFlavor(mf.Spec.Flavor)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "invalid cluster flavor, can't check if cluster is ready", "mf", mf, "rootLB", rootLB)
+		log.DebugLog(log.DebugLevelMexos, "invalid cluster flavor, can't check if cluster is ready")
 		return false, err
 	}
 	name, err := FindClusterWithKey(mf.Spec.Key)
@@ -1480,7 +1483,7 @@ func addSecurityRules(rootLB *MEXRootLB, mf *Manifest, kp *kubeParam) error {
 		log.DebugLog(log.DebugLevelMexos, "cannot get rootlb IP address", "error", err)
 		return fmt.Errorf("cannot deploy kubernetes app, cannot get rootlb IP")
 	}
-	sr := oscli.GetDefaultSecurityRule()
+	sr := oscli.GetMEXSecurityRule()
 	allowedClientCIDR := GetAllowedClientCIDR()
 	for _, port := range mf.Spec.Ports {
 		for _, sec := range []struct {
@@ -1642,7 +1645,7 @@ func validateCommon(mf *Manifest) error {
 }
 
 func DeleteHelmAppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "delete kubernetes helm app")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1676,7 +1679,7 @@ func DeleteHelmAppManifest(mf *Manifest) error {
 }
 
 func CreateHelmAppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create kubernetes helm app")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1722,7 +1725,7 @@ func CreateHelmAppManifest(mf *Manifest) error {
 
 //CreateKubernetesAppManifest instantiates a new kubernetes deployment
 func CreateKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes app", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create kubernetes app")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1809,7 +1812,7 @@ type kubeParam struct {
 
 //ValidateKubernetesParameters checks the kubernetes parameters and kubeconfig settings
 func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (*kubeParam, error) {
-	log.DebugLog(log.DebugLevelMexos, "validate kubernetes parameters rootLB", "rootLB", rootLB, "cluster", clustName)
+	log.DebugLog(log.DebugLevelMexos, "validate kubernetes parameters rootLB", "cluster", clustName)
 	if rootLB == nil {
 		return nil, fmt.Errorf("cannot validate kubernetes parameters, rootLB is null")
 	}
@@ -1837,7 +1840,7 @@ func ValidateKubernetesParameters(rootLB *MEXRootLB, clustName string) (*kubePar
 
 //KubernetesApplyManifest does `apply` on the manifest yaml
 func KubernetesApplyManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "apply kubernetes manifest", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "apply kubernetes manifest")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -1869,7 +1872,7 @@ func KubernetesApplyManifest(mf *Manifest) error {
 
 //CreateKubernetesNamespaceManifest creates a new namespace in kubernetes
 func CreateKubernetesNamespaceManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "create kubernetes namespace", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create kubernetes namespace")
 	err := KubernetesApplyManifest(mf)
 	if err != nil {
 		return fmt.Errorf("error applying kubernetes namespace manifest, %v", err)
@@ -2022,7 +2025,7 @@ func AddPathReverseProxy(rootLBName, path, origin string) []error {
 //StartKubectlProxy starts kubectl proxy on the rootLB to handle kubectl commands remotely.
 //  To be called after copying over the kubeconfig file from cluster to rootLB.
 func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
-	log.DebugLog(log.DebugLevelMexos, "start kubectl proxy", "rootlb", rootLB, "kubeconfig", kubeconfig)
+	log.DebugLog(log.DebugLevelMexos, "start kubectl proxy", "kubeconfig", kubeconfig)
 	if rootLB == nil {
 		return 0, fmt.Errorf("cannot kubectl proxy, rootLB is null")
 	}
@@ -2055,7 +2058,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 	}
 	cl1.Close() //nolint
 	cl2.Close() //nolint
-	err = oscli.AddSecurityRuleCIDR(GetAllowedClientCIDR(), "tcp", oscli.GetDefaultSecurityRule(), maxPort)
+	err = oscli.AddSecurityRuleCIDR(GetAllowedClientCIDR(), "tcp", oscli.GetMEXSecurityRule(), maxPort)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "warning, error while adding external ingress security rule for kubeproxy", "error", err, "port", maxPort)
 	}
@@ -2083,7 +2086,7 @@ func StartKubectlProxy(rootLB *MEXRootLB, kubeconfig string) (int, error) {
 }
 
 func DeleteKubernetesAppManifest(mf *Manifest, kubeManifest string) error {
-	log.DebugLog(log.DebugLevelMexos, "delete kubernetes app", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "delete kubernetes app")
 	rootLB, err := getRootLB(mf.Spec.RootLB)
 	if err != nil {
 		return err
@@ -2146,7 +2149,7 @@ func DeleteNginxProxy(rootLBName, name string) error {
 
 //CreateQCOW2AppManifest creates qcow2 app
 func CreateQCOW2AppManifest(mf *Manifest) error {
-	log.DebugLog(log.DebugLevelMexos, "create qcow2 vm based app", "mf", mf)
+	log.DebugLog(log.DebugLevelMexos, "create qcow2 vm based app")
 	//TODO: support other URI: file://, nfs://, ftp://, git://, or embedded as base64 string
 	if !strings.HasPrefix(mf.Spec.Image, "http://") &&
 		!strings.HasPrefix(mf.Spec.Image, "https://") {
