@@ -277,3 +277,52 @@
     when: item.hostname == inventory_hostname and item.dockerimage != "" and item.command == ""
     with_items:
        -  "{{ sampleapps }}"
+
+
+- name: startup vault
+  gather_facts: no
+  user: root
+  hosts: vaults
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: set the docker creds
+    set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
+
+  - name: docker login to developer repo
+    docker_login:
+      registry: "{{ item.dockerimage }}"
+      username: mobiledgex
+      password: "{{mex_docker_reg_pass}}"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+      - "{{ vaults }}"
+
+  - name: make vault env file
+    copy: content="{{ item.envvars|to_nice_yaml|regex_replace(':\\s', '=') }}" dest="{{remote_log_path}}/{{item.vault.name}}.env"
+    when: item.dockerimage != "" and item.envvars|length >0
+    with_items:
+      - "{{vaults}}"
+
+  - name: start up vault container 
+    docker_container:
+       pull: yes
+       image: "{{ item.dockerimage }}"
+       name: "{{ item.vault.name }}"
+       network_mode: host
+       restart_policy: unless-stopped
+       privileged: yes
+       env_file: "{{remote_log_path}}//{{item.vault.name}}.env"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ vaults }}"
+
+  - name: init vault container
+    command: "docker exec {{ item.vault.name }} /root/init-vault-container.sh"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+       -  "{{ vaults }}"
+    

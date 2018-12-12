@@ -10,7 +10,7 @@ set -e
 # copy-and-pasted to add new config to the production Vault.
 
 # You may need to set the following env vars before running:
-# VAULT_ADDR=http://127.0.0.1:8200
+# export VAULT_ADDR=http://127.0.0.1:8200
 # VAULT_TOKEN=<my auth token>
 
 # enable approle auth
@@ -92,3 +92,4 @@ vault write -f auth/approle/role/rotator/secret-id
 
 # generate secret string:
 # openssl rand -base64 128
+
