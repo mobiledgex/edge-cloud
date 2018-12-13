@@ -5,7 +5,7 @@ metadata:
   labels:
     app: dme
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dme
@@ -33,7 +33,7 @@ spec:
          - "--toksrvurl"
          - "http://mextest.tok.mobiledgex.net:9999/its?followURL=https://dme.mobiledgex.net/verifyLoc" 
          - "--vaultAddr"
-         - "https://vault.mobiledgex.net"
+         - "http://vault:8200"
          - "--tls"
          - "/root/tls/mex-server.crt"
          - "--cloudletKey"
@@ -44,9 +44,10 @@ spec:
          - name: LOCAPI_PASSWD
            value: seC2835!
          - name: VAULT_ROLE_ID
-           value: b95e3309-5964-89a2-5647-e86f745f20c7
+           value: e20e3c1e-4995-790f-6daf-48c9a2e96625
          - name: VAULT_SECRET_ID
-           value: b6c6c629-c99d-25f8-b26d-1afc5bf5d654
+           value: a11a6713-7430-c1ee-c108-ec6b946758d4
+
       imagePullSecrets:
        - name: mexreg-secret 
 
