@@ -469,6 +469,8 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	dmeRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
+	vaults := make(map[string]string)
+
 	sampleApps := make(map[string]string)
 
 	for _, p := range util.Deployment.Vaults {
@@ -574,6 +576,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
+	for _, p := range util.Deployment.Vaults {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			vaults[i] = p.Name
+			foundServer = true
+		}
+	}
 
 	//create ansible inventory
 	fmt.Fprintln(invfile, "[mexservers]")
@@ -641,6 +654,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[sampleapps]")
 		for s := range sampleApps {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(sampleApps) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[vaults]")
+		for s := range vaults {
 			fmt.Fprintln(invfile, s)
 		}
 	}

@@ -21,6 +21,7 @@ cloudflare:
     type: A
     content: "{{vm1_external_ip}}"
 
+
 locsims:
 - locapisimlocal:
     name: locsim1
@@ -29,14 +30,14 @@ locsims:
     geofile: "{{datadir}}/geocode.dat"
     country: GE
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 etcds:
 - etcdlocal:
@@ -74,7 +75,7 @@ controllers:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
    
 dmes:
 - dmelocal:
@@ -84,6 +85,7 @@ dmes:
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
+    vaultaddr: "http://127.0.0.1:8200"
     carrier: TDG
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonndemocloudlet"}'
     tls:
@@ -93,7 +95,9 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+     VAULT_ROLE_ID: 63322010-7a70-4de3-e74b-e1939b4e4f72
+     VAULT_SECRET_ID: 19aa31d0-6d96-7303-e376-7c9c7884d04c
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 crms:
 - crmlocal:
@@ -107,7 +111,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:   
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 - crmlocal:
     name: crm2
@@ -120,7 +124,7 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
 
 - crmlocal:
     name: crm3
@@ -133,4 +137,4 @@ crms:
   hostname: "{{bonncrm}}"
   envvars:
      OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1116
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault
+  labels:
+    app: vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      containers:
+      - name: vault
+        image: registry.mobiledgex.net:5000/mobiledgex/mex-vault:latest
+        imagePullPolicy: Always
+        env:
+          - name: VAULT_ADDR
+            value: "http://0.0.0.0:8200"
+          - name: "DMESECRET"
+            value: "dme-secret-12345"
+          - name: "MCORMSECRET"
+            value: "mcorm-secret-12345"
+      imagePullSecrets:
+       - name: mexreg-secret 
+
