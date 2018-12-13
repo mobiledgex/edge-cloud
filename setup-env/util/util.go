@@ -88,7 +88,9 @@ type K8sDeploymentStep struct {
 
 type VaultProcess struct {
 	process.Vault
-	Hostname string
+	Hostname    string
+	DockerImage string
+	EnvVars     map[string]string
 }
 type EtcdProcess struct {
 	process.EtcdLocal

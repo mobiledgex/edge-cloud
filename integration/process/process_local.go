@@ -159,6 +159,7 @@ type DmeLocal struct {
 	TokSrvUrl   string
 	Carrier     string
 	CloudletKey string
+	VaultAddr   string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -192,6 +193,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
