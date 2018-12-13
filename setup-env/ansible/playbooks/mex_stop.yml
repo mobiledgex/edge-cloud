@@ -156,3 +156,20 @@
     with_items:
       -  "{{ sampleapps }}"
 
+
+- name: stop vault
+  gather_facts: no
+  user: root
+  hosts: vaults
+
+  vars_files:
+  - mex_vars.yml
+  - "{{ setupfile }}"
+
+  tasks:
+  - name: stop sampleapp docker container
+    shell: "docker kill $(docker ps|grep {{item.vault.name}}|cut -d' ' -f 1)||true"
+    when: item.hostname == inventory_hostname and item.dockerimage != ""
+    with_items:
+      -  "{{ vaults }}"
+
