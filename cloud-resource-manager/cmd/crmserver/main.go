@@ -165,11 +165,11 @@ func main() {
 func initializePlatform(rootLBName, loc, operator string) error {
 	log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator)
 	mf := &mexos.Manifest{}
-	uri := fmt.Sprintf("scp://%s/files-repo/stacks/%s", cloudcommon.Registry, rootLBName)
+	uri := fmt.Sprintf("scp://%s/files-repo/mobiledgex/stack/%s", cloudcommon.Registry, rootLBName)
 	if err := mexos.GetVaultEnv(mf, uri); err != nil {
 		return err
 	}
-	base := fmt.Sprintf("scp://%s/files-repo/platform", cloudcommon.Registry)
+	base := fmt.Sprintf("scp://%s/files-repo/mobiledgex", cloudcommon.Registry)
 	if err := mexos.FillManifest(mf, "platform", base); err != nil {
 		return err
 	}

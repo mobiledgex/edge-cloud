@@ -12,7 +12,8 @@ services:
       mex:
         ipv4_address: 192.168.201.101
   controller:
-    image: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+    #image: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+    image: mobiledgex/edge-cloud
     ports:
      - "50001:50001"
      - "8091:8091"
@@ -24,10 +25,11 @@ services:
   crmserver:
     env_file: 
      - mex-docker.env
-    image: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+    #image: "registry.mobiledgex.net:5000/mobiledgex/edge-cloud"
+    image: mobiledgex/edge-cloud
     ports:
      - "55099:55099"
-    command: crmserver -d mexos,api,notify -controller 192.168.201.102:55001 -notifyAddrs 192.168.201.102:50001 -cloudletKey '{"operator_key":{"name":"mex-tdg"},"name":"testcloudlet"}'
+    command: crmserver -d mexos,api,notify -controller 192.168.201.102:55001 -notifyAddrs 192.168.201.102:50001 -cloudletKey '{"operator_key":{"name":"tdg"},"name":"testcloudlet"}'
     volumes:
      - ./edgecloud:/edgecloud
      - ~/.mobiledgex:/root/.mobiledgex
