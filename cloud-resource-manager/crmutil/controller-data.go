@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud-infra/mexos"
-	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -47,10 +46,11 @@ func NewControllerData() *ControllerData {
 
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
-func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
-	limits, err := oscli.GetLimits()
+func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info", "rootlb", rootlb.Name)
+	limits, err := mexos.GetLimits(rootlb.PlatConf)
 	if err != nil {
-		str := fmt.Sprintf("Openstack get limits failed: %s", err)
+		str := fmt.Sprintf("openstack get limits failed: %s", err)
 		info.Errors = append(info.Errors, str)
 		info.State = edgeproto.CloudletState_CloudletStateErrors
 		return
@@ -70,7 +70,7 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
-	log.DebugLog(log.DebugLevelMexos, "update limits", "info", info, "limits", limits)
+	log.DebugLog(log.DebugLevelMexos, "cloudlet state ready, update limits", "info", info, "limits", limits)
 }
 
 // GetInsts queries Openstack/Kubernetes to get all the cluster insts

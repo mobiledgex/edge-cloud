@@ -9,7 +9,6 @@ import (
 	"strings"
 	"syscall"
 
-	//"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
 	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -45,6 +44,10 @@ var notifyClient *notify.Client
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
+
+	sigChan = make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
@@ -66,13 +69,19 @@ func main() {
 
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
+	platChan := make(chan string)
 	go func() {
-		if err := initializePlatform(rootLBName, myCloudlet.Key.Name, myCloudlet.Key.OperatorKey.Name); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
+		if err := initPlatform(rootLBName, myCloudlet.Key.Name, myCloudlet.Key.OperatorKey.Name); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
+			return
 		}
 		if controllerData.CRMRootLB == nil {
-			log.DebugLog(log.DebugLevelMexos, "error, crmRootLB is null")
+			log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
+			return
 		}
+		log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
+		platChan <- "ready"
 	}()
 	// GatherInsts should be called before the notify client is started,
 	// so that the initial send to the controller has the current state.
@@ -139,19 +148,29 @@ func main() {
 		myCloudlet.OsMaxRam = 500
 		myCloudlet.OsMaxVcores = 50
 		myCloudlet.OsMaxVolGb = 5000
+		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
+		// trigger send of info upstream to controller
+		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+		controllerData.NodeCache.Update(&myNode, 0)
+		log.DebugLog(log.DebugLevelMexos, "sent fake cloudletinfocache update")
 	} else {
-		// gather cloudlet info from openstack, etc.
-		crmutil.GatherCloudletInfo(&myCloudlet)
+		go func() {
+			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
+			platStat := <-platChan
+			log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
+			// gather cloudlet info from openstack, etc.
+			if controllerData.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
+				return
+			}
+			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
+			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
+			// trigger send of info upstream to controller
+			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+			controllerData.NodeCache.Update(&myNode, 0)
+			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
+		}()
 	}
-	log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
-	// trigger send of info upstream to controller
-	controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-	controllerData.NodeCache.Update(&myNode, 0)
-
-	log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
-	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)
@@ -162,8 +181,8 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initializePlatform(rootLBName, loc, operator string) error {
-	log.DebugLog(log.DebugLevelMexos, "creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator)
+func initPlatform(rootLBName, loc, operator string) error {
+	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator)
 	mf := &mexos.Manifest{}
 	uri := fmt.Sprintf("scp://%s/files-repo/mobiledgex/stack/%s", cloudcommon.Registry, rootLBName)
 	if err := mexos.GetVaultEnv(mf, uri); err != nil {
