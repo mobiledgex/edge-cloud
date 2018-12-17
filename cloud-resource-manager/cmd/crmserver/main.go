@@ -202,7 +202,8 @@ func initPlatform(rootLBName, loc, operator string) error {
 	if crmRootLB == nil {
 		return fmt.Errorf("rootLB is not initialized")
 	}
-	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
+	//log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
+	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName)
 	controllerData.CRMRootLB = crmRootLB
 	if err := mexos.MEXInit(mf); err != nil {
 		return err
