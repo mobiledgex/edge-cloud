@@ -125,12 +125,16 @@ func (g *kubeBasicGen) kubeApp() {
 	if g.err != nil {
 		return
 	}
+	var cs []string
+	if g.app.Command != "" {
+		cs = strings.Split(g.app.Command, " ")
+	}
 	data := appData{
 		Name:      util.K8SSanitize(g.app.Name + "-deployment"),
 		Run:       util.K8SSanitize(g.app.Name),
 		Ports:     g.ports,
 		ImagePath: g.app.ImagePath,
-		Command:   strings.Split(g.app.Command, " "),
+		Command:   cs,
 	}
 	buf := bytes.Buffer{}
 	g.err = kubeAppT.Execute(&buf, &data)
@@ -156,7 +160,7 @@ spec:
   selector:
     matchLabels:
       run: {{.Run}}
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       labels:
@@ -174,8 +178,10 @@ spec:
         - containerPort: {{.Port}}
           protocol: {{.KubeProto}}
 {{- end}}
+{{- if .Command}}
         command:
 {{- range .Command}}
         - "{{.}}"
+{{- end}}
 {{- end}}
 `
