@@ -171,7 +171,7 @@ apps:
       selector:
         matchLabels:
           run: someapplication1
-      replicas: 2
+      replicas: 1
       template:
         metadata:
           labels:
@@ -191,8 +191,6 @@ apps:
               protocol: TCP
             - containerPort: 10002
               protocol: UDP
-            command:
-            - ""
   deploymentgenerator: kubernetes-basic
 
 appinstances:
