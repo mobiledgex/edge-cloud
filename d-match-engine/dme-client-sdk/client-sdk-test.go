@@ -27,7 +27,7 @@ func FindCloudlets(client dme.Match_Engine_ApiClient) {
 		}
 		fmt.Printf("Found Status %d Loc = %f/%f with FQDN %s, ports %v\n",
 			mreply.Status,
-			mreply.CloudletLocation.Lat, mreply.CloudletLocation.Long,
+			mreply.CloudletLocation.Latitude, mreply.CloudletLocation.Longitude,
 			mreply.FQDN, mreply.Ports)
 	}
 }

@@ -99,8 +99,8 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.AccessUri)
-	s = append(s, strconv.FormatFloat(float64(in.Location.Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Location.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Location.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Location.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Location.Altitude), 'e', -1, 32))
@@ -123,8 +123,8 @@ func CloudletHeaderSlicer() []string {
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "AccessUri")
-	s = append(s, "Location-Lat")
-	s = append(s, "Location-Long")
+	s = append(s, "Location-Latitude")
+	s = append(s, "Location-Longitude")
 	s = append(s, "Location-HorizontalAccuracy")
 	s = append(s, "Location-VerticalAccuracy")
 	s = append(s, "Location-Altitude")
@@ -713,8 +713,8 @@ func init() {
 	CloudletFlagSet.StringVar(&CloudletIn.Key.OperatorKey.Name, "key-operatorkey-name", "", "Key.OperatorKey.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.Key.Name, "key-name", "", "Key.Name")
 	CloudletFlagSet.StringVar(&CloudletIn.AccessUri, "accessuri", "", "AccessUri")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.Lat, "location-lat", 0, "Location.Lat")
-	CloudletFlagSet.Float64Var(&CloudletIn.Location.Long, "location-long", 0, "Location.Long")
+	CloudletFlagSet.Float64Var(&CloudletIn.Location.Latitude, "location-latitude", 0, "Location.Latitude")
+	CloudletFlagSet.Float64Var(&CloudletIn.Location.Longitude, "location-longitude", 0, "Location.Longitude")
 	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.HorizontalAccuracy, "location-horizontalaccuracy", 0, "Location.HorizontalAccuracy")
 	CloudletNoConfigFlagSet.Float64Var(&CloudletIn.Location.VerticalAccuracy, "location-verticalaccuracy", 0, "Location.VerticalAccuracy")
 	CloudletFlagSet.Float64Var(&CloudletIn.Location.Altitude, "location-altitude", 0, "Location.Altitude")
@@ -773,10 +773,10 @@ func CloudletSetFields() {
 	if CloudletFlagSet.Lookup("accessuri").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "4")
 	}
-	if CloudletFlagSet.Lookup("location-lat").Changed {
+	if CloudletFlagSet.Lookup("location-latitude").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.1")
 	}
-	if CloudletFlagSet.Lookup("location-long").Changed {
+	if CloudletFlagSet.Lookup("location-longitude").Changed {
 		CloudletIn.Fields = append(CloudletIn.Fields, "5.2")
 	}
 	if CloudletNoConfigFlagSet.Lookup("location-horizontalaccuracy").Changed {

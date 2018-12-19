@@ -80,10 +80,10 @@ func DistanceBetween(loc1, loc2 dme.Loc) float64 {
 	var a, c, dist float64
 	var lat1, long1, lat2, long2 float64
 
-	lat1 = loc1.Lat
-	long1 = loc1.Long
-	lat2 = loc2.Lat
-	long2 = loc2.Long
+	lat1 = loc1.Latitude
+	long1 = loc1.Longitude
+	lat2 = loc2.Latitude
+	long2 = loc2.Longitude
 
 	diff_lat = torads(lat2 - lat1)
 	diff_long = torads(long2 - long1)
