@@ -136,7 +136,7 @@ clusterinsts:
 operators:
 - key:
     name: TDG
-- key: 
+- key:
     name: azure
 
 developers:
@@ -154,8 +154,8 @@ cloudlets:
     name: bonndemocloudlet
   accessuri:
   location:
-    lat: 50.737
-    long: 7.098
+    latitude: 50.737
+    longitude: 7.098
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -164,8 +164,8 @@ cloudlets:
     name: berlindemocloudlet
   accessuri:
   location:
-    lat: 52.5200
-    long: 13.4050
+    latitude: 52.5200
+    longitude: 13.4050
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 - key:
@@ -174,8 +174,8 @@ cloudlets:
     name: hamburgdemocloudlet
   accessuri:
   location:
-    lat: 53.5511
-    long: 9.9937
+    latitude: 53.5511
+    longitude: 9.9937
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 - key:
@@ -184,8 +184,8 @@ cloudlets:
     name: microsoftnortheuropecloudlet
   accessuri:
   location:
-    lat: 53.1424
-    long: -7.6921
+    latitude: 53.1424
+    longitude: -7.6921
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 - key:
@@ -194,8 +194,8 @@ cloudlets:
     name: microsoftbaskingridgecloudlet
   accessuri:
   location:
-    lat: 40.682
-    long: -74.682
+    latitude: 40.682
+    longitude: -74.682
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -206,8 +206,8 @@ cloudlets:
     name: cmulivingedgecloudlet
   accessuri:
   location:
-    lat: 40.443322
-    long: -79.943583
+    latitude: 40.443322
+    longitude: -79.943583
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -215,10 +215,10 @@ cloudlets:
     operatorkey:
       name: azure
     name: microsoftwestus2cloudlet
-  accessuri: 
+  accessuri:
   location:
-    lat: 37.783
-    long: -122.417
+    latitude: 37.783
+    longitude: -122.417
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -228,8 +228,8 @@ cloudlets:
     name: microsofteastuscloudlet
   accessuri:
   location:
-    lat: 37.3719
-    long: -79.8164
+    latitude: 37.3719
+    longitude: -79.8164
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -239,8 +239,8 @@ cloudlets:
     name: azcentraluscloudlet
   accessuri:
   location:
-    lat: 41.878
-    long: -93.0977
+    latitude: 41.878
+    longitude: -93.0977
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -263,7 +263,7 @@ apps:
 
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo 
+      name: MobiledgeX SDK Demo
     name: Face Detection Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
@@ -681,5 +681,3 @@ appinstances:
         name: azure
       name: azcentraluscloudlet
   liveness: LivenessStatic
-
-

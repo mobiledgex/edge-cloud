@@ -6,8 +6,8 @@ cloudlets:
     name: berlincloudlet
   accessuri:
   location:
-    lat: 52.5200
-    long: 13.405
+    latitude: 52.5200
+    longitude: 13.405
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -46,4 +46,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

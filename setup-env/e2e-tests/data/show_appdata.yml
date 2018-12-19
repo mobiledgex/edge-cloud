@@ -69,7 +69,7 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: tmus.tmus-cloud-1
   location:
-    long: -175
+    longitude: -175
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -100,7 +100,7 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    long: -175
+    longitude: -175
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -115,4 +115,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

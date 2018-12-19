@@ -65,16 +65,16 @@ cloudlets:
     name: tdgcloud1
   accessuri: cloud1.tdg
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
 - key:
     operatorkey:
       name: TDG
     name: tdgcloud2
   accessuri: cloud2.tdg
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
 
 apps:
 - key:
@@ -103,8 +103,8 @@ appinstances:
       name: tdgcloud1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -132,8 +132,8 @@ appinstances:
       name: tdgcloud2
     id: 123
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -148,4 +148,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

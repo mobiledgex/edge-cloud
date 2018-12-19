@@ -9,9 +9,7 @@ cloudlets:
     name: bonndemocloudlet
   accessuri:
   location:
-    lat: 50.7374
-    long: 7.0982
+    latitude: 50.7374
+    longitude: 7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 5
-
-

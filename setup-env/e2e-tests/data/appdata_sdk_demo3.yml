@@ -81,7 +81,7 @@ clusterinsts:
 operators:
 - key:
     name: TDG
-- key: 
+- key:
     name: azure
 
 developers:
@@ -97,10 +97,10 @@ cloudlets:
     operatorkey:
       name: TDG
     name: centraluscloudlet
-  accessuri: 
+  accessuri:
   location:
-    lat: 44.977300
-    long: -93.265469
+    latitude: 44.977300
+    longitude: -93.265469
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -109,8 +109,8 @@ cloudlets:
     name: westuscloudlet
   accessuri:
   location:
-    lat: 37.338
-    long: -121.886
+    latitude: 37.338
+    longitude: -121.886
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -119,8 +119,8 @@ cloudlets:
     name: bonncloudlet
   accessuri:
   location:
-    lat: 50.737
-    long: 7.098
+    latitude: 50.737
+    longitude: 7.098
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -129,8 +129,8 @@ cloudlets:
     name: azcentraluscloudlet
   accessuri:
   location:
-    lat: 42.379
-    long: -87.858
+    latitude: 42.379
+    longitude: -87.858
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -250,4 +250,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-
