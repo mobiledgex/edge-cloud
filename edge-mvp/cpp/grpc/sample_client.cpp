@@ -46,8 +46,8 @@ class MexGrpcClient {
         if (location == NULL) {
             throw "Location allocation failed!";
         }
-        location->set_long_(-122.149349);
-        location->set_lat(37.459609);
+        location->set_longitude(-122.149349);
+        location->set_latitude(37.459609);
         location->set_horizontal_accuracy(5);
         location->set_vertical_accuracy(20);
         location->set_altitude(100);
@@ -410,8 +410,8 @@ int main() {
             cout << "GRPC FindCloudlet Status: " << grpcStatus.error_code()
                  << ", Version: " << findCloudletReply.ver()
                  << ", Location Found Status: " << findCloudletReply.status()
-                 << ", Location of cloudlet. Latitude: " << findCloudletReply.cloudlet_location().lat()
-                 << ", Longitude: " << findCloudletReply.cloudlet_location().long_()
+                 << ", Location of cloudlet. Latitude: " << findCloudletReply.cloudlet_location().latitude()
+                 << ", Longitude: " << findCloudletReply.cloudlet_location().longitude()
                  << ", Cloudlet FQDN: " << findCloudletReply.fqdn() << endl;
 
             for (int i = 0; i < findCloudletReply.ports_size(); i++) {
