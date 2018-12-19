@@ -57,7 +57,7 @@ var MEXPrometheusApp = edgeproto.App{
 		Name:         MEXPrometheusAppName,
 		Version:      MEXPrometheusAppVer,
 	},
-	ImagePath:     "stable/prometheus",
+	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelFlags:      edgeproto.DeleteType_AutoDelete,
