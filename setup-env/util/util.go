@@ -135,6 +135,11 @@ type InfluxProcess struct {
 	process.InfluxLocal
 	Hostname string
 }
+type MexInfraProcess struct {
+	process.MexInfraLocal
+	Hostname    string
+	DockerImage string
+}
 
 type TLSCertInfo struct {
 	CommonName string
@@ -167,6 +172,7 @@ type DeploymentData struct {
 	Crms          []CrmProcess        `yaml:"crms"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
+	MexInfras     []MexInfraProcess   `yaml:"mexinfras"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 

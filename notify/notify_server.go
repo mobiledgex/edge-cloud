@@ -323,6 +323,13 @@ func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey, old *edgeproto.
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
+		if server.requestor == edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+			log.DebugLog(log.DebugLevelNotify,
+				"Updating notify to send the cluster info for MEXINFRA",
+				"cloudlet", key.Name)
+
+			server.updateTrackedCloudlets(key, register)
+		}
 		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
 			continue
 		}
@@ -356,7 +363,8 @@ func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey, old *edge
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
-		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM &&
+			server.requestor != edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
 			continue
 		}
 		server.UpdateClusterInst(key)
@@ -448,7 +456,9 @@ func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error 
 		s.stats.NegotiateErrors++
 		return errors.New("Notify server expected action version")
 	}
-	if req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorDME && req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM {
+
+	if req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorDME && req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM &&
+		req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
 		s.stats.NegotiateErrors++
 		return errors.New("Notify server bad requestor value")
 	}
@@ -556,6 +566,15 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 				// Cloudlet, AppInsts, CloudletInsts sends are
 				// triggered when registering a new CloudletInfo
 				// on receive, so there is no need to send all here.
+			} else if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+				// need to update the interested cloudlets
+				sendCloudlet.GetAllKeys(cloudlets)
+				for k, _ := range cloudlets {
+					s.updateTrackedCloudlets(&k, register)
+				}
+				if sendClusterInst != nil {
+					sendClusterInst.GetClusterInstsForCloudlets(cloudlets, clusterInsts)
+				}
 			} else {
 				if sendApp != nil {
 					sendApp.GetAllKeys(apps)

@@ -37,6 +37,8 @@ enum NoticeRequestor {
   NoticeRequestorDME = 1;
   // Cloudlet Resource Manager
   NoticeRequestorCRM = 2;
+  // MEX Infra Service
+  NoticeRequestorMEXInfra = 3;
 }
 
 // NoticyReply is sent from server to client.

@@ -97,10 +97,16 @@ var AppFlagSet = pflag.NewFlagSet("App", pflag.ExitOnError)
 var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
 var AppInImageType string
 var AppInIpAccess string
+var AppInDelFlags string
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",
 	"ImageTypeQCOW",
+}
+
+var DeleteTypeStrings = []string{
+	"NoAutoDelete",
+	"AutoDelete",
 }
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
@@ -143,7 +149,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 18)
+	s := make([]string, 0, 19)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -167,11 +173,12 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.DeploymentGenerator)
 	s = append(s, in.AndroidPackageName)
 	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
+	s = append(s, edgeproto.DeleteType_name[int32(in.DelFlags)])
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 18)
+	s := make([]string, 0, 19)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -192,6 +199,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "DeploymentGenerator")
 	s = append(s, "AndroidPackageName")
 	s = append(s, "PermitsPlatformApps")
+	s = append(s, "DelFlags")
 	return s
 }
 
@@ -231,6 +239,9 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DeploymentGenerator = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DelFlags = 0
 	}
 }
 
@@ -457,6 +468,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.DeploymentGenerator, "deploymentgenerator", "", "DeploymentGenerator")
 	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
 	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
+	AppFlagSet.StringVar(&AppInDelFlags, "delflags", "", "one of [NoAutoDelete AutoDelete]")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -529,6 +541,9 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("permitsplatformapps").Changed {
 		AppIn.Fields = append(AppIn.Fields, "19")
 	}
+	if AppFlagSet.Lookup("delflags").Changed {
+		AppIn.Fields = append(AppIn.Fields, "20")
+	}
 }
 
 func parseAppEnums() error {
@@ -556,6 +571,16 @@ func parseAppEnums() error {
 			AppIn.IpAccess = edgeproto.IpAccess(3)
 		default:
 			return errors.New("Invalid value for AppInIpAccess")
+		}
+	}
+	if AppInDelFlags != "" {
+		switch AppInDelFlags {
+		case "NoAutoDelete":
+			AppIn.DelFlags = edgeproto.DeleteType(0)
+		case "AutoDelete":
+			AppIn.DelFlags = edgeproto.DeleteType(1)
+		default:
+			return errors.New("Invalid value for AppInDelFlags")
 		}
 	}
 	return nil

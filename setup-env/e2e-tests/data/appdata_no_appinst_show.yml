@@ -179,4 +179,130 @@ apps:
   accessports: "tcp:64000"
   ipaccess: IpAccessDedicatedOrShared
 
+- key:
+    developerkey:
+      name: mexinfradev_
+    name: MEXMetricsWriter
+    version: "1.0"
+  imagepath: mobiledgex_mexinfradev_/MEXMetricsWriter:1.0
+  imagetype: ImageTypeDocker
+  ipaccess: IpAccessShared
+  defaultflavor:
+    name: x1.medium
+  cluster:
+    name: SmallCluster
+  deployment: kubernetes
+- key:
+    developerkey:
+      name: mexinfradev_
+    name: MEXPrometheusAppName
+    version: "1.0"
+  imagepath: stable/prometheus
+  ipaccess: IpAccessShared
+  defaultflavor:
+    name: x1.medium
+  cluster:
+    name: SmallCluster
+  deployment: helm
 
+appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: mexinfradev_
+      name: MEXMetricsWriter
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    id: 1
+  cloudletloc:
+    lat: 31
+    long: -91
+  uri: tmus-cloud-1.tmus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: mexinfradev_
+      name: MEXMetricsWriter
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+    id: 1
+  cloudletloc:
+    lat: 35
+    long: -95
+  uri: tmus-cloud-2.tmus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: mexinfradev_
+      name: MEXPrometheusAppName
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    id: 1
+  cloudletloc:
+    lat: 31
+    long: -91
+  uri: tmus-cloud-1.tmus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: mexinfradev_
+      name: MEXPrometheusAppName
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+    id: 1
+  cloudletloc:
+    lat: 35
+    long: -95
+  uri: tmus-cloud-2.tmus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+  liveness: LivenessStatic
+  flavor:
+    name: x1.medium

@@ -139,6 +139,11 @@ func findProcess(processName string) (string, string, string) {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
 		}
 	}
+	for _, mexinfra := range util.Deployment.MexInfras {
+		if mexinfra.Name == processName {
+			return mexinfra.Hostname, "mex-infra", "-ctrlAddrs " + mexinfra.CtrlAddrs
+		}
+	}
 	for _, tok := range util.Deployment.Toksims {
 		if tok.Name == processName {
 			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
@@ -349,7 +354,7 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "loc-api-sim", "tok-srv-sim", "influx", "vault"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "mex-infra", "loc-api-sim", "tok-srv-sim", "influx", "vault"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
 	}
@@ -467,6 +472,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ctrlRemoteServers := make(map[string]string)
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
+	mexinfraRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
 	vaults := make(map[string]string)
@@ -536,6 +542,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			i := hostNameToAnsible(p.Hostname)
 			allRemoteServers[i] = p.Name
 			dmeRemoteServers[i] = p.Name
+			foundServer = true
+		}
+	}
+	for _, p := range util.Deployment.MexInfras {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			mexinfraRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -633,6 +650,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[dmes]")
 		for s := range dmeRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(mexinfraRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[mex-infras]")
+		for s := range mexinfraRemoteServers {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -738,8 +762,8 @@ func getCloudflareUserAndKey() (string, string) {
 	return user, apikey
 }
 
-func CreateCloudfareRecords() error {
-	log.Printf("createCloudfareRecords\n")
+func CreateCloudflareRecords() error {
+	log.Printf("createCloudflareRecords\n")
 
 	ttl := 300
 	if util.Deployment.Cloudflare.Zone == "" {
@@ -1026,6 +1050,23 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
+	for _, mexinfra := range util.Deployment.MexInfras {
+		if processName != "" && processName != mexinfra.Name {
+			continue
+		}
+
+		if isLocalIP(mexinfra.Hostname) {
+
+			log.Printf("Starting MexInfra %+v\n", mexinfra)
+			logfile := getLogFile(mexinfra.Name, outputDir)
+			err := mexinfra.Start(logfile, process.WithDebug("mexos,notify"))
+			if err != nil {
+				log.Printf("Error on MexInfra startup: %v", err)
+				return false
+			}
+		}
+	}
+
 	for _, loc := range util.Deployment.Locsims {
 		if processName != "" && processName != loc.Name {
 			continue

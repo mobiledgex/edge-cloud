@@ -154,6 +154,10 @@ func NewCRMClient(addrs []string, tlsCertFile string, handler ClientHandler) *Cl
 	return newClient(addrs, tlsCertFile, handler, edgeproto.NoticeRequestor_NoticeRequestorCRM)
 }
 
+func NewMEXInfraClient(addrs []string, tlsCertFile string, handler ClientHandler) *Client {
+	return newClient(addrs, tlsCertFile, handler, edgeproto.NoticeRequestor_NoticeRequestorMEXInfra)
+}
+
 func newClient(addrs []string, tlsCertFile string, handler ClientHandler, requestor edgeproto.NoticeRequestor) *Client {
 	s := Client{}
 	s.addrs = addrs

@@ -35,6 +35,7 @@ var NoticeRequestorStrings = []string{
 	"NoticeRequestorNone",
 	"NoticeRequestorDME",
 	"NoticeRequestorCRM",
+	"NoticeRequestorMEXInfra",
 }
 
 func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
