@@ -25,7 +25,7 @@ var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data i
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 
-// Hard coded username and hash for the developer
+// Hard coded username - TODO to move to user db
 var MEXDeveloper = "mexinfradev_"
 var MEXDevUsername = "_mexinfradev"
 var MEXDevPass = "_mexdeveloperpass"
@@ -110,7 +110,6 @@ func (c *ClusterInstHandler) Delete(in *edgeproto.ClusterInst, rev int64) {
 		edgeproto.TrackedState_name[int32(in.State)])
 	// don't need to do anything really if a cluster instance is getting deleted
 	// - all the pods in the cluster will be stopped anyways
-	// - in the future we might want to remove the cluster instance from polling checks
 }
 
 // Don't need to do anything here - same as Delete
@@ -150,7 +149,6 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 	}
 
 	ctx := context.TODO()
-	// TODO - need to deal correctly with the return stream
 	_, err = apiClient.CreateAppInst(ctx, &appInst)
 	if err != nil {
 		errstr := err.Error()
@@ -242,7 +240,7 @@ func main() {
 	}
 
 	if *standalone {
-		// some standalone stuff - unit tests
+		// TODO - unit tests see mex-infra_test.go
 	}
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)
