@@ -2263,7 +2263,7 @@ cloudlets:
     name: cloudlet-32
   accessuri: OP1.cloudlet-32
   location:
-    long: -144
+    longitude: -144
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2272,7 +2272,7 @@ cloudlets:
     name: cloudlet-60
   accessuri: OP1.cloudlet-60
   location:
-    long: -116
+    longitude: -116
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2281,7 +2281,7 @@ cloudlets:
     name: cloudlet-65
   accessuri: OP1.cloudlet-65
   location:
-    long: -111
+    longitude: -111
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2290,7 +2290,7 @@ cloudlets:
     name: cloudlet-66
   accessuri: OP1.cloudlet-66
   location:
-    long: -110
+    longitude: -110
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2299,7 +2299,7 @@ cloudlets:
     name: cloudlet-73
   accessuri: OP1.cloudlet-73
   location:
-    long: -103
+    longitude: -103
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2308,7 +2308,7 @@ cloudlets:
     name: cloudlet-4
   accessuri: OP1.cloudlet-4
   location:
-    long: -172
+    longitude: -172
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2317,7 +2317,7 @@ cloudlets:
     name: cloudlet-18
   accessuri: OP1.cloudlet-18
   location:
-    long: -158
+    longitude: -158
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2326,7 +2326,7 @@ cloudlets:
     name: cloudlet-29
   accessuri: OP1.cloudlet-29
   location:
-    long: -147
+    longitude: -147
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2335,7 +2335,7 @@ cloudlets:
     name: cloudlet-81
   accessuri: OP1.cloudlet-81
   location:
-    long: -95
+    longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2344,7 +2344,7 @@ cloudlets:
     name: cloudlet-55
   accessuri: OP1.cloudlet-55
   location:
-    long: -121
+    longitude: -121
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2353,7 +2353,7 @@ cloudlets:
     name: cloudlet-58
   accessuri: OP1.cloudlet-58
   location:
-    long: -118
+    longitude: -118
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2362,7 +2362,7 @@ cloudlets:
     name: cloudlet-9
   accessuri: OP1.cloudlet-9
   location:
-    long: -167
+    longitude: -167
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2371,7 +2371,7 @@ cloudlets:
     name: cloudlet-13
   accessuri: OP1.cloudlet-13
   location:
-    long: -163
+    longitude: -163
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2380,7 +2380,7 @@ cloudlets:
     name: cloudlet-37
   accessuri: OP1.cloudlet-37
   location:
-    long: -139
+    longitude: -139
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2389,7 +2389,7 @@ cloudlets:
     name: cloudlet-25
   accessuri: OP1.cloudlet-25
   location:
-    long: -151
+    longitude: -151
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2398,7 +2398,7 @@ cloudlets:
     name: cloudlet-28
   accessuri: OP1.cloudlet-28
   location:
-    long: -148
+    longitude: -148
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2407,7 +2407,7 @@ cloudlets:
     name: cloudlet-72
   accessuri: OP1.cloudlet-72
   location:
-    long: -104
+    longitude: -104
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2416,7 +2416,7 @@ cloudlets:
     name: cloudlet-1
   accessuri: OP1.cloudlet-1
   location:
-    long: -175
+    longitude: -175
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2425,7 +2425,7 @@ cloudlets:
     name: cloudlet-11
   accessuri: OP1.cloudlet-11
   location:
-    long: -165
+    longitude: -165
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2434,7 +2434,7 @@ cloudlets:
     name: cloudlet-20
   accessuri: OP1.cloudlet-20
   location:
-    long: -156
+    longitude: -156
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2443,7 +2443,7 @@ cloudlets:
     name: cloudlet-50
   accessuri: OP1.cloudlet-50
   location:
-    long: -126
+    longitude: -126
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2452,7 +2452,7 @@ cloudlets:
     name: cloudlet-52
   accessuri: OP1.cloudlet-52
   location:
-    long: -124
+    longitude: -124
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2461,7 +2461,7 @@ cloudlets:
     name: cloudlet-71
   accessuri: OP1.cloudlet-71
   location:
-    long: -105
+    longitude: -105
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2470,7 +2470,7 @@ cloudlets:
     name: cloudlet-76
   accessuri: OP1.cloudlet-76
   location:
-    long: -100
+    longitude: -100
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2479,7 +2479,7 @@ cloudlets:
     name: cloudlet-83
   accessuri: OP1.cloudlet-83
   location:
-    long: -93
+    longitude: -93
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2488,7 +2488,7 @@ cloudlets:
     name: cloudlet-26
   accessuri: OP1.cloudlet-26
   location:
-    long: -150
+    longitude: -150
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2497,7 +2497,7 @@ cloudlets:
     name: cloudlet-27
   accessuri: OP1.cloudlet-27
   location:
-    long: -149
+    longitude: -149
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2506,7 +2506,7 @@ cloudlets:
     name: cloudlet-36
   accessuri: OP1.cloudlet-36
   location:
-    long: -140
+    longitude: -140
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2515,7 +2515,7 @@ cloudlets:
     name: cloudlet-90
   accessuri: OP1.cloudlet-90
   location:
-    long: -86
+    longitude: -86
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2524,7 +2524,7 @@ cloudlets:
     name: cloudlet-95
   accessuri: OP1.cloudlet-95
   location:
-    long: -81
+    longitude: -81
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2533,7 +2533,7 @@ cloudlets:
     name: cloudlet-84
   accessuri: OP1.cloudlet-84
   location:
-    long: -92
+    longitude: -92
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2542,7 +2542,7 @@ cloudlets:
     name: cloudlet-85
   accessuri: OP1.cloudlet-85
   location:
-    long: -91
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2551,7 +2551,7 @@ cloudlets:
     name: cloudlet-100
   accessuri: OP1.cloudlet-100
   location:
-    long: -76
+    longitude: -76
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2560,7 +2560,7 @@ cloudlets:
     name: cloudlet-10
   accessuri: OP1.cloudlet-10
   location:
-    long: -166
+    longitude: -166
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2569,7 +2569,7 @@ cloudlets:
     name: cloudlet-34
   accessuri: OP1.cloudlet-34
   location:
-    long: -142
+    longitude: -142
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2578,7 +2578,7 @@ cloudlets:
     name: cloudlet-44
   accessuri: OP1.cloudlet-44
   location:
-    long: -132
+    longitude: -132
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2587,7 +2587,7 @@ cloudlets:
     name: cloudlet-70
   accessuri: OP1.cloudlet-70
   location:
-    long: -106
+    longitude: -106
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2596,7 +2596,7 @@ cloudlets:
     name: cloudlet-80
   accessuri: OP1.cloudlet-80
   location:
-    long: -96
+    longitude: -96
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2605,7 +2605,7 @@ cloudlets:
     name: cloudlet-82
   accessuri: OP1.cloudlet-82
   location:
-    long: -94
+    longitude: -94
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2614,7 +2614,7 @@ cloudlets:
     name: cloudlet-89
   accessuri: OP1.cloudlet-89
   location:
-    long: -87
+    longitude: -87
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2623,7 +2623,7 @@ cloudlets:
     name: cloudlet-6
   accessuri: OP1.cloudlet-6
   location:
-    long: -170
+    longitude: -170
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2632,7 +2632,7 @@ cloudlets:
     name: cloudlet-24
   accessuri: OP1.cloudlet-24
   location:
-    long: -152
+    longitude: -152
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2641,7 +2641,7 @@ cloudlets:
     name: cloudlet-67
   accessuri: OP1.cloudlet-67
   location:
-    long: -109
+    longitude: -109
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2650,7 +2650,7 @@ cloudlets:
     name: cloudlet-38
   accessuri: OP1.cloudlet-38
   location:
-    long: -138
+    longitude: -138
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2659,7 +2659,7 @@ cloudlets:
     name: cloudlet-98
   accessuri: OP1.cloudlet-98
   location:
-    long: -78
+    longitude: -78
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2668,7 +2668,7 @@ cloudlets:
     name: cloudlet-5
   accessuri: OP1.cloudlet-5
   location:
-    long: -171
+    longitude: -171
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2677,7 +2677,7 @@ cloudlets:
     name: cloudlet-22
   accessuri: OP1.cloudlet-22
   location:
-    long: -154
+    longitude: -154
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2686,7 +2686,7 @@ cloudlets:
     name: cloudlet-33
   accessuri: OP1.cloudlet-33
   location:
-    long: -143
+    longitude: -143
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2695,7 +2695,7 @@ cloudlets:
     name: cloudlet-39
   accessuri: OP1.cloudlet-39
   location:
-    long: -137
+    longitude: -137
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2704,7 +2704,7 @@ cloudlets:
     name: cloudlet-40
   accessuri: OP1.cloudlet-40
   location:
-    long: -136
+    longitude: -136
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2713,7 +2713,7 @@ cloudlets:
     name: cloudlet-42
   accessuri: OP1.cloudlet-42
   location:
-    long: -134
+    longitude: -134
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2722,7 +2722,7 @@ cloudlets:
     name: cloudlet-54
   accessuri: OP1.cloudlet-54
   location:
-    long: -122
+    longitude: -122
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2731,7 +2731,7 @@ cloudlets:
     name: cloudlet-59
   accessuri: OP1.cloudlet-59
   location:
-    long: -117
+    longitude: -117
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2740,7 +2740,7 @@ cloudlets:
     name: cloudlet-3
   accessuri: OP1.cloudlet-3
   location:
-    long: -173
+    longitude: -173
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2749,7 +2749,7 @@ cloudlets:
     name: cloudlet-30
   accessuri: OP1.cloudlet-30
   location:
-    long: -146
+    longitude: -146
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2758,7 +2758,7 @@ cloudlets:
     name: cloudlet-35
   accessuri: OP1.cloudlet-35
   location:
-    long: -141
+    longitude: -141
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2767,7 +2767,7 @@ cloudlets:
     name: cloudlet-51
   accessuri: OP1.cloudlet-51
   location:
-    long: -125
+    longitude: -125
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2776,7 +2776,7 @@ cloudlets:
     name: cloudlet-69
   accessuri: OP1.cloudlet-69
   location:
-    long: -107
+    longitude: -107
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2785,7 +2785,7 @@ cloudlets:
     name: cloudlet-99
   accessuri: OP1.cloudlet-99
   location:
-    long: -77
+    longitude: -77
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2794,7 +2794,7 @@ cloudlets:
     name: cloudlet-8
   accessuri: OP1.cloudlet-8
   location:
-    long: -168
+    longitude: -168
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2803,7 +2803,7 @@ cloudlets:
     name: cloudlet-45
   accessuri: OP1.cloudlet-45
   location:
-    long: -131
+    longitude: -131
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2812,7 +2812,7 @@ cloudlets:
     name: cloudlet-46
   accessuri: OP1.cloudlet-46
   location:
-    long: -130
+    longitude: -130
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2821,7 +2821,7 @@ cloudlets:
     name: cloudlet-2
   accessuri: OP1.cloudlet-2
   location:
-    long: -174
+    longitude: -174
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2830,7 +2830,7 @@ cloudlets:
     name: cloudlet-79
   accessuri: OP1.cloudlet-79
   location:
-    long: -97
+    longitude: -97
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2839,7 +2839,7 @@ cloudlets:
     name: cloudlet-92
   accessuri: OP1.cloudlet-92
   location:
-    long: -84
+    longitude: -84
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2848,7 +2848,7 @@ cloudlets:
     name: cloudlet-68
   accessuri: OP1.cloudlet-68
   location:
-    long: -108
+    longitude: -108
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2857,7 +2857,7 @@ cloudlets:
     name: cloudlet-74
   accessuri: OP1.cloudlet-74
   location:
-    long: -102
+    longitude: -102
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2866,7 +2866,7 @@ cloudlets:
     name: cloudlet-77
   accessuri: OP1.cloudlet-77
   location:
-    long: -99
+    longitude: -99
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2875,7 +2875,7 @@ cloudlets:
     name: cloudlet-14
   accessuri: OP1.cloudlet-14
   location:
-    long: -162
+    longitude: -162
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2884,7 +2884,7 @@ cloudlets:
     name: cloudlet-43
   accessuri: OP1.cloudlet-43
   location:
-    long: -133
+    longitude: -133
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2893,7 +2893,7 @@ cloudlets:
     name: cloudlet-56
   accessuri: OP1.cloudlet-56
   location:
-    long: -120
+    longitude: -120
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2902,7 +2902,7 @@ cloudlets:
     name: cloudlet-31
   accessuri: OP1.cloudlet-31
   location:
-    long: -145
+    longitude: -145
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2911,7 +2911,7 @@ cloudlets:
     name: cloudlet-47
   accessuri: OP1.cloudlet-47
   location:
-    long: -129
+    longitude: -129
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2920,7 +2920,7 @@ cloudlets:
     name: cloudlet-48
   accessuri: OP1.cloudlet-48
   location:
-    long: -128
+    longitude: -128
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2929,7 +2929,7 @@ cloudlets:
     name: cloudlet-63
   accessuri: OP1.cloudlet-63
   location:
-    long: -113
+    longitude: -113
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2938,7 +2938,7 @@ cloudlets:
     name: cloudlet-78
   accessuri: OP1.cloudlet-78
   location:
-    long: -98
+    longitude: -98
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2947,7 +2947,7 @@ cloudlets:
     name: cloudlet-7
   accessuri: OP1.cloudlet-7
   location:
-    long: -169
+    longitude: -169
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2956,7 +2956,7 @@ cloudlets:
     name: cloudlet-15
   accessuri: OP1.cloudlet-15
   location:
-    long: -161
+    longitude: -161
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2965,7 +2965,7 @@ cloudlets:
     name: cloudlet-17
   accessuri: OP1.cloudlet-17
   location:
-    long: -159
+    longitude: -159
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2974,7 +2974,7 @@ cloudlets:
     name: cloudlet-93
   accessuri: OP1.cloudlet-93
   location:
-    long: -83
+    longitude: -83
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2983,7 +2983,7 @@ cloudlets:
     name: cloudlet-97
   accessuri: OP1.cloudlet-97
   location:
-    long: -79
+    longitude: -79
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -2992,7 +2992,7 @@ cloudlets:
     name: cloudlet-62
   accessuri: OP1.cloudlet-62
   location:
-    long: -114
+    longitude: -114
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3001,7 +3001,7 @@ cloudlets:
     name: cloudlet-64
   accessuri: OP1.cloudlet-64
   location:
-    long: -112
+    longitude: -112
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3010,7 +3010,7 @@ cloudlets:
     name: cloudlet-16
   accessuri: OP1.cloudlet-16
   location:
-    long: -160
+    longitude: -160
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3019,7 +3019,7 @@ cloudlets:
     name: cloudlet-19
   accessuri: OP1.cloudlet-19
   location:
-    long: -157
+    longitude: -157
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3028,7 +3028,7 @@ cloudlets:
     name: cloudlet-23
   accessuri: OP1.cloudlet-23
   location:
-    long: -153
+    longitude: -153
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3037,7 +3037,7 @@ cloudlets:
     name: cloudlet-87
   accessuri: OP1.cloudlet-87
   location:
-    long: -89
+    longitude: -89
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3046,7 +3046,7 @@ cloudlets:
     name: cloudlet-94
   accessuri: OP1.cloudlet-94
   location:
-    long: -82
+    longitude: -82
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3055,7 +3055,7 @@ cloudlets:
     name: cloudlet-96
   accessuri: OP1.cloudlet-96
   location:
-    long: -80
+    longitude: -80
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3064,7 +3064,7 @@ cloudlets:
     name: cloudlet-12
   accessuri: OP1.cloudlet-12
   location:
-    long: -164
+    longitude: -164
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3073,7 +3073,7 @@ cloudlets:
     name: cloudlet-75
   accessuri: OP1.cloudlet-75
   location:
-    long: -101
+    longitude: -101
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3082,7 +3082,7 @@ cloudlets:
     name: cloudlet-86
   accessuri: OP1.cloudlet-86
   location:
-    long: -90
+    longitude: -90
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3091,7 +3091,7 @@ cloudlets:
     name: cloudlet-88
   accessuri: OP1.cloudlet-88
   location:
-    long: -88
+    longitude: -88
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3100,7 +3100,7 @@ cloudlets:
     name: cloudlet-91
   accessuri: OP1.cloudlet-91
   location:
-    long: -85
+    longitude: -85
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3109,7 +3109,7 @@ cloudlets:
     name: cloudlet-21
   accessuri: OP1.cloudlet-21
   location:
-    long: -155
+    longitude: -155
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3118,7 +3118,7 @@ cloudlets:
     name: cloudlet-41
   accessuri: OP1.cloudlet-41
   location:
-    long: -135
+    longitude: -135
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3127,7 +3127,7 @@ cloudlets:
     name: cloudlet-53
   accessuri: OP1.cloudlet-53
   location:
-    long: -123
+    longitude: -123
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3136,7 +3136,7 @@ cloudlets:
     name: cloudlet-49
   accessuri: OP1.cloudlet-49
   location:
-    long: -127
+    longitude: -127
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3145,7 +3145,7 @@ cloudlets:
     name: cloudlet-57
   accessuri: OP1.cloudlet-57
   location:
-    long: -119
+    longitude: -119
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -3154,7 +3154,7 @@ cloudlets:
     name: cloudlet-61
   accessuri: OP1.cloudlet-61
   location:
-    long: -115
+    longitude: -115
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -3199,7 +3199,7 @@ appinstances:
       name: cloudlet-45
     id: 45
   cloudletloc:
-    long: -131
+    longitude: -131
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3226,7 +3226,7 @@ appinstances:
       name: cloudlet-53
     id: 53
   cloudletloc:
-    long: -123
+    longitude: -123
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3253,7 +3253,7 @@ appinstances:
       name: cloudlet-72
     id: 72
   cloudletloc:
-    long: -104
+    longitude: -104
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3280,7 +3280,7 @@ appinstances:
       name: cloudlet-96
     id: 96
   cloudletloc:
-    long: -80
+    longitude: -80
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3307,7 +3307,7 @@ appinstances:
       name: cloudlet-100
     id: 100
   cloudletloc:
-    long: -76
+    longitude: -76
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3334,7 +3334,7 @@ appinstances:
       name: cloudlet-14
     id: 14
   cloudletloc:
-    long: -162
+    longitude: -162
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3361,7 +3361,7 @@ appinstances:
       name: cloudlet-21
     id: 21
   cloudletloc:
-    long: -155
+    longitude: -155
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3388,7 +3388,7 @@ appinstances:
       name: cloudlet-83
     id: 83
   cloudletloc:
-    long: -93
+    longitude: -93
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3415,7 +3415,7 @@ appinstances:
       name: cloudlet-90
     id: 90
   cloudletloc:
-    long: -86
+    longitude: -86
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3442,7 +3442,7 @@ appinstances:
       name: cloudlet-93
     id: 93
   cloudletloc:
-    long: -83
+    longitude: -83
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3469,7 +3469,7 @@ appinstances:
       name: cloudlet-30
     id: 30
   cloudletloc:
-    long: -146
+    longitude: -146
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3496,7 +3496,7 @@ appinstances:
       name: cloudlet-32
     id: 32
   cloudletloc:
-    long: -144
+    longitude: -144
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3523,7 +3523,7 @@ appinstances:
       name: cloudlet-54
     id: 54
   cloudletloc:
-    long: -122
+    longitude: -122
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3550,7 +3550,7 @@ appinstances:
       name: cloudlet-85
     id: 85
   cloudletloc:
-    long: -91
+    longitude: -91
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3577,7 +3577,7 @@ appinstances:
       name: cloudlet-2
     id: 2
   cloudletloc:
-    long: -174
+    longitude: -174
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3604,7 +3604,7 @@ appinstances:
       name: cloudlet-19
     id: 19
   cloudletloc:
-    long: -157
+    longitude: -157
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3631,7 +3631,7 @@ appinstances:
       name: cloudlet-35
     id: 35
   cloudletloc:
-    long: -141
+    longitude: -141
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3658,7 +3658,7 @@ appinstances:
       name: cloudlet-56
     id: 56
   cloudletloc:
-    long: -120
+    longitude: -120
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3685,7 +3685,7 @@ appinstances:
       name: cloudlet-87
     id: 87
   cloudletloc:
-    long: -89
+    longitude: -89
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3712,7 +3712,7 @@ appinstances:
       name: cloudlet-97
     id: 97
   cloudletloc:
-    long: -79
+    longitude: -79
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3739,7 +3739,7 @@ appinstances:
       name: cloudlet-97
     id: 97
   cloudletloc:
-    long: -79
+    longitude: -79
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3766,7 +3766,7 @@ appinstances:
       name: cloudlet-11
     id: 11
   cloudletloc:
-    long: -165
+    longitude: -165
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3793,7 +3793,7 @@ appinstances:
       name: cloudlet-18
     id: 18
   cloudletloc:
-    long: -158
+    longitude: -158
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3820,7 +3820,7 @@ appinstances:
       name: cloudlet-25
     id: 25
   cloudletloc:
-    long: -151
+    longitude: -151
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3847,7 +3847,7 @@ appinstances:
       name: cloudlet-31
     id: 31
   cloudletloc:
-    long: -145
+    longitude: -145
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3874,7 +3874,7 @@ appinstances:
       name: cloudlet-37
     id: 37
   cloudletloc:
-    long: -139
+    longitude: -139
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3901,7 +3901,7 @@ appinstances:
       name: cloudlet-41
     id: 41
   cloudletloc:
-    long: -135
+    longitude: -135
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -3928,7 +3928,7 @@ appinstances:
       name: cloudlet-82
     id: 82
   cloudletloc:
-    long: -94
+    longitude: -94
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3955,7 +3955,7 @@ appinstances:
       name: cloudlet-5
     id: 5
   cloudletloc:
-    long: -171
+    longitude: -171
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -3982,7 +3982,7 @@ appinstances:
       name: cloudlet-33
     id: 33
   cloudletloc:
-    long: -143
+    longitude: -143
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4009,7 +4009,7 @@ appinstances:
       name: cloudlet-46
     id: 46
   cloudletloc:
-    long: -130
+    longitude: -130
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4036,7 +4036,7 @@ appinstances:
       name: cloudlet-77
     id: 77
   cloudletloc:
-    long: -99
+    longitude: -99
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4063,7 +4063,7 @@ appinstances:
       name: cloudlet-78
     id: 78
   cloudletloc:
-    long: -98
+    longitude: -98
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4090,7 +4090,7 @@ appinstances:
       name: cloudlet-3
     id: 3
   cloudletloc:
-    long: -173
+    longitude: -173
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4117,7 +4117,7 @@ appinstances:
       name: cloudlet-20
     id: 20
   cloudletloc:
-    long: -156
+    longitude: -156
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4144,7 +4144,7 @@ appinstances:
       name: cloudlet-36
     id: 36
   cloudletloc:
-    long: -140
+    longitude: -140
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4171,7 +4171,7 @@ appinstances:
       name: cloudlet-36
     id: 36
   cloudletloc:
-    long: -140
+    longitude: -140
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4198,7 +4198,7 @@ appinstances:
       name: cloudlet-46
     id: 46
   cloudletloc:
-    long: -130
+    longitude: -130
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4225,7 +4225,7 @@ appinstances:
       name: cloudlet-59
     id: 59
   cloudletloc:
-    long: -117
+    longitude: -117
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4252,7 +4252,7 @@ appinstances:
       name: cloudlet-61
     id: 61
   cloudletloc:
-    long: -115
+    longitude: -115
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4279,7 +4279,7 @@ appinstances:
       name: cloudlet-74
     id: 74
   cloudletloc:
-    long: -102
+    longitude: -102
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4306,7 +4306,7 @@ appinstances:
       name: cloudlet-84
     id: 84
   cloudletloc:
-    long: -92
+    longitude: -92
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4333,7 +4333,7 @@ appinstances:
       name: cloudlet-7
     id: 7
   cloudletloc:
-    long: -169
+    longitude: -169
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4360,7 +4360,7 @@ appinstances:
       name: cloudlet-12
     id: 12
   cloudletloc:
-    long: -164
+    longitude: -164
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4387,7 +4387,7 @@ appinstances:
       name: cloudlet-17
     id: 17
   cloudletloc:
-    long: -159
+    longitude: -159
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4414,7 +4414,7 @@ appinstances:
       name: cloudlet-50
     id: 50
   cloudletloc:
-    long: -126
+    longitude: -126
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4441,7 +4441,7 @@ appinstances:
       name: cloudlet-76
     id: 76
   cloudletloc:
-    long: -100
+    longitude: -100
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4468,7 +4468,7 @@ appinstances:
       name: cloudlet-100
     id: 100
   cloudletloc:
-    long: -76
+    longitude: -76
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4495,7 +4495,7 @@ appinstances:
       name: cloudlet-13
     id: 13
   cloudletloc:
-    long: -163
+    longitude: -163
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4522,7 +4522,7 @@ appinstances:
       name: cloudlet-65
     id: 65
   cloudletloc:
-    long: -111
+    longitude: -111
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4549,7 +4549,7 @@ appinstances:
       name: cloudlet-73
     id: 73
   cloudletloc:
-    long: -103
+    longitude: -103
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4576,7 +4576,7 @@ appinstances:
       name: cloudlet-9
     id: 9
   cloudletloc:
-    long: -167
+    longitude: -167
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4603,7 +4603,7 @@ appinstances:
       name: cloudlet-10
     id: 10
   cloudletloc:
-    long: -166
+    longitude: -166
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4630,7 +4630,7 @@ appinstances:
       name: cloudlet-16
     id: 16
   cloudletloc:
-    long: -160
+    longitude: -160
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4657,7 +4657,7 @@ appinstances:
       name: cloudlet-19
     id: 19
   cloudletloc:
-    long: -157
+    longitude: -157
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4684,7 +4684,7 @@ appinstances:
       name: cloudlet-23
     id: 23
   cloudletloc:
-    long: -153
+    longitude: -153
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4711,7 +4711,7 @@ appinstances:
       name: cloudlet-34
     id: 34
   cloudletloc:
-    long: -142
+    longitude: -142
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4738,7 +4738,7 @@ appinstances:
       name: cloudlet-39
     id: 39
   cloudletloc:
-    long: -137
+    longitude: -137
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4765,7 +4765,7 @@ appinstances:
       name: cloudlet-48
     id: 48
   cloudletloc:
-    long: -128
+    longitude: -128
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4792,7 +4792,7 @@ appinstances:
       name: cloudlet-53
     id: 53
   cloudletloc:
-    long: -123
+    longitude: -123
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4819,7 +4819,7 @@ appinstances:
       name: cloudlet-62
     id: 62
   cloudletloc:
-    long: -114
+    longitude: -114
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4846,7 +4846,7 @@ appinstances:
       name: cloudlet-17
     id: 17
   cloudletloc:
-    long: -159
+    longitude: -159
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4873,7 +4873,7 @@ appinstances:
       name: cloudlet-22
     id: 22
   cloudletloc:
-    long: -154
+    longitude: -154
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4900,7 +4900,7 @@ appinstances:
       name: cloudlet-25
     id: 25
   cloudletloc:
-    long: -151
+    longitude: -151
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4927,7 +4927,7 @@ appinstances:
       name: cloudlet-35
     id: 35
   cloudletloc:
-    long: -141
+    longitude: -141
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -4954,7 +4954,7 @@ appinstances:
       name: cloudlet-47
     id: 47
   cloudletloc:
-    long: -129
+    longitude: -129
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -4981,7 +4981,7 @@ appinstances:
       name: cloudlet-88
     id: 88
   cloudletloc:
-    long: -88
+    longitude: -88
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5008,7 +5008,7 @@ appinstances:
       name: cloudlet-3
     id: 3
   cloudletloc:
-    long: -173
+    longitude: -173
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5035,7 +5035,7 @@ appinstances:
       name: cloudlet-9
     id: 9
   cloudletloc:
-    long: -167
+    longitude: -167
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5062,7 +5062,7 @@ appinstances:
       name: cloudlet-43
     id: 43
   cloudletloc:
-    long: -133
+    longitude: -133
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5089,7 +5089,7 @@ appinstances:
       name: cloudlet-71
     id: 71
   cloudletloc:
-    long: -105
+    longitude: -105
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5116,7 +5116,7 @@ appinstances:
       name: cloudlet-86
     id: 86
   cloudletloc:
-    long: -90
+    longitude: -90
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5143,7 +5143,7 @@ appinstances:
       name: cloudlet-98
     id: 98
   cloudletloc:
-    long: -78
+    longitude: -78
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5170,7 +5170,7 @@ appinstances:
       name: cloudlet-13
     id: 13
   cloudletloc:
-    long: -163
+    longitude: -163
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5197,7 +5197,7 @@ appinstances:
       name: cloudlet-20
     id: 20
   cloudletloc:
-    long: -156
+    longitude: -156
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5224,7 +5224,7 @@ appinstances:
       name: cloudlet-28
     id: 28
   cloudletloc:
-    long: -148
+    longitude: -148
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5251,7 +5251,7 @@ appinstances:
       name: cloudlet-30
     id: 30
   cloudletloc:
-    long: -146
+    longitude: -146
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5278,7 +5278,7 @@ appinstances:
       name: cloudlet-31
     id: 31
   cloudletloc:
-    long: -145
+    longitude: -145
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5305,7 +5305,7 @@ appinstances:
       name: cloudlet-87
     id: 87
   cloudletloc:
-    long: -89
+    longitude: -89
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5332,7 +5332,7 @@ appinstances:
       name: cloudlet-37
     id: 37
   cloudletloc:
-    long: -139
+    longitude: -139
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5359,7 +5359,7 @@ appinstances:
       name: cloudlet-79
     id: 79
   cloudletloc:
-    long: -97
+    longitude: -97
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5386,7 +5386,7 @@ appinstances:
       name: cloudlet-91
     id: 91
   cloudletloc:
-    long: -85
+    longitude: -85
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5413,7 +5413,7 @@ appinstances:
       name: cloudlet-99
     id: 99
   cloudletloc:
-    long: -77
+    longitude: -77
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5440,7 +5440,7 @@ appinstances:
       name: cloudlet-1
     id: 1
   cloudletloc:
-    long: -175
+    longitude: -175
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5467,7 +5467,7 @@ appinstances:
       name: cloudlet-33
     id: 33
   cloudletloc:
-    long: -143
+    longitude: -143
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5494,7 +5494,7 @@ appinstances:
       name: cloudlet-47
     id: 47
   cloudletloc:
-    long: -129
+    longitude: -129
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5521,7 +5521,7 @@ appinstances:
       name: cloudlet-51
     id: 51
   cloudletloc:
-    long: -125
+    longitude: -125
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5548,7 +5548,7 @@ appinstances:
       name: cloudlet-61
     id: 61
   cloudletloc:
-    long: -115
+    longitude: -115
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5575,7 +5575,7 @@ appinstances:
       name: cloudlet-68
     id: 68
   cloudletloc:
-    long: -108
+    longitude: -108
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5602,7 +5602,7 @@ appinstances:
       name: cloudlet-7
     id: 7
   cloudletloc:
-    long: -169
+    longitude: -169
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5629,7 +5629,7 @@ appinstances:
       name: cloudlet-8
     id: 8
   cloudletloc:
-    long: -168
+    longitude: -168
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5656,7 +5656,7 @@ appinstances:
       name: cloudlet-18
     id: 18
   cloudletloc:
-    long: -158
+    longitude: -158
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5683,7 +5683,7 @@ appinstances:
       name: cloudlet-40
     id: 40
   cloudletloc:
-    long: -136
+    longitude: -136
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5710,7 +5710,7 @@ appinstances:
       name: cloudlet-55
     id: 55
   cloudletloc:
-    long: -121
+    longitude: -121
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5737,7 +5737,7 @@ appinstances:
       name: cloudlet-56
     id: 56
   cloudletloc:
-    long: -120
+    longitude: -120
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5764,7 +5764,7 @@ appinstances:
       name: cloudlet-80
     id: 80
   cloudletloc:
-    long: -96
+    longitude: -96
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5791,7 +5791,7 @@ appinstances:
       name: cloudlet-98
     id: 98
   cloudletloc:
-    long: -78
+    longitude: -78
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5818,7 +5818,7 @@ appinstances:
       name: cloudlet-48
     id: 48
   cloudletloc:
-    long: -128
+    longitude: -128
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -5845,7 +5845,7 @@ appinstances:
       name: cloudlet-63
     id: 63
   cloudletloc:
-    long: -113
+    longitude: -113
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5872,7 +5872,7 @@ appinstances:
       name: cloudlet-85
     id: 85
   cloudletloc:
-    long: -91
+    longitude: -91
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5899,7 +5899,7 @@ appinstances:
       name: cloudlet-11
     id: 11
   cloudletloc:
-    long: -165
+    longitude: -165
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5926,7 +5926,7 @@ appinstances:
       name: cloudlet-12
     id: 12
   cloudletloc:
-    long: -164
+    longitude: -164
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5953,7 +5953,7 @@ appinstances:
       name: cloudlet-26
     id: 26
   cloudletloc:
-    long: -150
+    longitude: -150
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -5980,7 +5980,7 @@ appinstances:
       name: cloudlet-44
     id: 44
   cloudletloc:
-    long: -132
+    longitude: -132
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6007,7 +6007,7 @@ appinstances:
       name: cloudlet-50
     id: 50
   cloudletloc:
-    long: -126
+    longitude: -126
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6034,7 +6034,7 @@ appinstances:
       name: cloudlet-82
     id: 82
   cloudletloc:
-    long: -94
+    longitude: -94
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6061,7 +6061,7 @@ appinstances:
       name: cloudlet-95
     id: 95
   cloudletloc:
-    long: -81
+    longitude: -81
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6088,7 +6088,7 @@ appinstances:
       name: cloudlet-99
     id: 99
   cloudletloc:
-    long: -77
+    longitude: -77
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6115,7 +6115,7 @@ appinstances:
       name: cloudlet-1
     id: 1
   cloudletloc:
-    long: -175
+    longitude: -175
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6142,7 +6142,7 @@ appinstances:
       name: cloudlet-32
     id: 32
   cloudletloc:
-    long: -144
+    longitude: -144
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6169,7 +6169,7 @@ appinstances:
       name: cloudlet-42
     id: 42
   cloudletloc:
-    long: -134
+    longitude: -134
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6196,7 +6196,7 @@ appinstances:
       name: cloudlet-44
     id: 44
   cloudletloc:
-    long: -132
+    longitude: -132
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6223,7 +6223,7 @@ appinstances:
       name: cloudlet-54
     id: 54
   cloudletloc:
-    long: -122
+    longitude: -122
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6250,7 +6250,7 @@ appinstances:
       name: cloudlet-70
     id: 70
   cloudletloc:
-    long: -106
+    longitude: -106
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6277,7 +6277,7 @@ appinstances:
       name: cloudlet-91
     id: 91
   cloudletloc:
-    long: -85
+    longitude: -85
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6304,7 +6304,7 @@ appinstances:
       name: cloudlet-92
     id: 92
   cloudletloc:
-    long: -84
+    longitude: -84
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6331,7 +6331,7 @@ appinstances:
       name: cloudlet-4
     id: 4
   cloudletloc:
-    long: -172
+    longitude: -172
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6358,7 +6358,7 @@ appinstances:
       name: cloudlet-52
     id: 52
   cloudletloc:
-    long: -124
+    longitude: -124
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6385,7 +6385,7 @@ appinstances:
       name: cloudlet-66
     id: 66
   cloudletloc:
-    long: -110
+    longitude: -110
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6412,7 +6412,7 @@ appinstances:
       name: cloudlet-67
     id: 67
   cloudletloc:
-    long: -109
+    longitude: -109
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6439,7 +6439,7 @@ appinstances:
       name: cloudlet-69
     id: 69
   cloudletloc:
-    long: -107
+    longitude: -107
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6466,7 +6466,7 @@ appinstances:
       name: cloudlet-69
     id: 69
   cloudletloc:
-    long: -107
+    longitude: -107
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6493,7 +6493,7 @@ appinstances:
       name: cloudlet-72
     id: 72
   cloudletloc:
-    long: -104
+    longitude: -104
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6520,7 +6520,7 @@ appinstances:
       name: cloudlet-75
     id: 75
   cloudletloc:
-    long: -101
+    longitude: -101
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6547,7 +6547,7 @@ appinstances:
       name: cloudlet-24
     id: 24
   cloudletloc:
-    long: -152
+    longitude: -152
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6574,7 +6574,7 @@ appinstances:
       name: cloudlet-27
     id: 27
   cloudletloc:
-    long: -149
+    longitude: -149
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6601,7 +6601,7 @@ appinstances:
       name: cloudlet-29
     id: 29
   cloudletloc:
-    long: -147
+    longitude: -147
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6628,7 +6628,7 @@ appinstances:
       name: cloudlet-60
     id: 60
   cloudletloc:
-    long: -116
+    longitude: -116
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6655,7 +6655,7 @@ appinstances:
       name: cloudlet-94
     id: 94
   cloudletloc:
-    long: -82
+    longitude: -82
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6682,7 +6682,7 @@ appinstances:
       name: cloudlet-16
     id: 16
   cloudletloc:
-    long: -160
+    longitude: -160
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6709,7 +6709,7 @@ appinstances:
       name: cloudlet-41
     id: 41
   cloudletloc:
-    long: -135
+    longitude: -135
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6736,7 +6736,7 @@ appinstances:
       name: cloudlet-43
     id: 43
   cloudletloc:
-    long: -133
+    longitude: -133
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6763,7 +6763,7 @@ appinstances:
       name: cloudlet-59
     id: 59
   cloudletloc:
-    long: -117
+    longitude: -117
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6790,7 +6790,7 @@ appinstances:
       name: cloudlet-73
     id: 73
   cloudletloc:
-    long: -103
+    longitude: -103
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6817,7 +6817,7 @@ appinstances:
       name: cloudlet-75
     id: 75
   cloudletloc:
-    long: -101
+    longitude: -101
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6844,7 +6844,7 @@ appinstances:
       name: cloudlet-84
     id: 84
   cloudletloc:
-    long: -92
+    longitude: -92
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6871,7 +6871,7 @@ appinstances:
       name: cloudlet-8
     id: 8
   cloudletloc:
-    long: -168
+    longitude: -168
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6898,7 +6898,7 @@ appinstances:
       name: cloudlet-29
     id: 29
   cloudletloc:
-    long: -147
+    longitude: -147
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6925,7 +6925,7 @@ appinstances:
       name: cloudlet-34
     id: 34
   cloudletloc:
-    long: -142
+    longitude: -142
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -6952,7 +6952,7 @@ appinstances:
       name: cloudlet-49
     id: 49
   cloudletloc:
-    long: -127
+    longitude: -127
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -6979,7 +6979,7 @@ appinstances:
       name: cloudlet-65
     id: 65
   cloudletloc:
-    long: -111
+    longitude: -111
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7006,7 +7006,7 @@ appinstances:
       name: cloudlet-86
     id: 86
   cloudletloc:
-    long: -90
+    longitude: -90
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7033,7 +7033,7 @@ appinstances:
       name: cloudlet-89
     id: 89
   cloudletloc:
-    long: -87
+    longitude: -87
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7060,7 +7060,7 @@ appinstances:
       name: cloudlet-93
     id: 93
   cloudletloc:
-    long: -83
+    longitude: -83
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7087,7 +7087,7 @@ appinstances:
       name: cloudlet-94
     id: 94
   cloudletloc:
-    long: -82
+    longitude: -82
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7114,7 +7114,7 @@ appinstances:
       name: cloudlet-22
     id: 22
   cloudletloc:
-    long: -154
+    longitude: -154
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7141,7 +7141,7 @@ appinstances:
       name: cloudlet-45
     id: 45
   cloudletloc:
-    long: -131
+    longitude: -131
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7168,7 +7168,7 @@ appinstances:
       name: cloudlet-51
     id: 51
   cloudletloc:
-    long: -125
+    longitude: -125
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7195,7 +7195,7 @@ appinstances:
       name: cloudlet-76
     id: 76
   cloudletloc:
-    long: -100
+    longitude: -100
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7222,7 +7222,7 @@ appinstances:
       name: cloudlet-5
     id: 5
   cloudletloc:
-    long: -171
+    longitude: -171
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7249,7 +7249,7 @@ appinstances:
       name: cloudlet-14
     id: 14
   cloudletloc:
-    long: -162
+    longitude: -162
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7276,7 +7276,7 @@ appinstances:
       name: cloudlet-57
     id: 57
   cloudletloc:
-    long: -119
+    longitude: -119
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7303,7 +7303,7 @@ appinstances:
       name: cloudlet-78
     id: 78
   cloudletloc:
-    long: -98
+    longitude: -98
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7330,7 +7330,7 @@ appinstances:
       name: cloudlet-6
     id: 6
   cloudletloc:
-    long: -170
+    longitude: -170
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7357,7 +7357,7 @@ appinstances:
       name: cloudlet-27
     id: 27
   cloudletloc:
-    long: -149
+    longitude: -149
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7384,7 +7384,7 @@ appinstances:
       name: cloudlet-49
     id: 49
   cloudletloc:
-    long: -127
+    longitude: -127
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7411,7 +7411,7 @@ appinstances:
       name: cloudlet-58
     id: 58
   cloudletloc:
-    long: -118
+    longitude: -118
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7438,7 +7438,7 @@ appinstances:
       name: cloudlet-81
     id: 81
   cloudletloc:
-    long: -95
+    longitude: -95
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7465,7 +7465,7 @@ appinstances:
       name: cloudlet-92
     id: 92
   cloudletloc:
-    long: -84
+    longitude: -84
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7492,7 +7492,7 @@ appinstances:
       name: cloudlet-10
     id: 10
   cloudletloc:
-    long: -166
+    longitude: -166
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7519,7 +7519,7 @@ appinstances:
       name: cloudlet-23
     id: 23
   cloudletloc:
-    long: -153
+    longitude: -153
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7546,7 +7546,7 @@ appinstances:
       name: cloudlet-26
     id: 26
   cloudletloc:
-    long: -150
+    longitude: -150
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7573,7 +7573,7 @@ appinstances:
       name: cloudlet-64
     id: 64
   cloudletloc:
-    long: -112
+    longitude: -112
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7600,7 +7600,7 @@ appinstances:
       name: cloudlet-64
     id: 64
   cloudletloc:
-    long: -112
+    longitude: -112
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7627,7 +7627,7 @@ appinstances:
       name: cloudlet-68
     id: 68
   cloudletloc:
-    long: -108
+    longitude: -108
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7654,7 +7654,7 @@ appinstances:
       name: cloudlet-77
     id: 77
   cloudletloc:
-    long: -99
+    longitude: -99
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7681,7 +7681,7 @@ appinstances:
       name: cloudlet-83
     id: 83
   cloudletloc:
-    long: -93
+    longitude: -93
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7708,7 +7708,7 @@ appinstances:
       name: cloudlet-88
     id: 88
   cloudletloc:
-    long: -88
+    longitude: -88
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7735,7 +7735,7 @@ appinstances:
       name: cloudlet-95
     id: 95
   cloudletloc:
-    long: -81
+    longitude: -81
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7762,7 +7762,7 @@ appinstances:
       name: cloudlet-96
     id: 96
   cloudletloc:
-    long: -80
+    longitude: -80
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7789,7 +7789,7 @@ appinstances:
       name: cloudlet-24
     id: 24
   cloudletloc:
-    long: -152
+    longitude: -152
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7816,7 +7816,7 @@ appinstances:
       name: cloudlet-38
     id: 38
   cloudletloc:
-    long: -138
+    longitude: -138
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7843,7 +7843,7 @@ appinstances:
       name: cloudlet-63
     id: 63
   cloudletloc:
-    long: -113
+    longitude: -113
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7870,7 +7870,7 @@ appinstances:
       name: cloudlet-67
     id: 67
   cloudletloc:
-    long: -109
+    longitude: -109
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -7897,7 +7897,7 @@ appinstances:
       name: cloudlet-4
     id: 4
   cloudletloc:
-    long: -172
+    longitude: -172
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7924,7 +7924,7 @@ appinstances:
       name: cloudlet-6
     id: 6
   cloudletloc:
-    long: -170
+    longitude: -170
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7951,7 +7951,7 @@ appinstances:
       name: cloudlet-42
     id: 42
   cloudletloc:
-    long: -134
+    longitude: -134
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -7978,7 +7978,7 @@ appinstances:
       name: cloudlet-58
     id: 58
   cloudletloc:
-    long: -118
+    longitude: -118
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8005,7 +8005,7 @@ appinstances:
       name: cloudlet-74
     id: 74
   cloudletloc:
-    long: -102
+    longitude: -102
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8032,7 +8032,7 @@ appinstances:
       name: cloudlet-52
     id: 52
   cloudletloc:
-    long: -124
+    longitude: -124
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8059,7 +8059,7 @@ appinstances:
       name: cloudlet-62
     id: 62
   cloudletloc:
-    long: -114
+    longitude: -114
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8086,7 +8086,7 @@ appinstances:
       name: cloudlet-80
     id: 80
   cloudletloc:
-    long: -96
+    longitude: -96
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8113,7 +8113,7 @@ appinstances:
       name: cloudlet-90
     id: 90
   cloudletloc:
-    long: -86
+    longitude: -86
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8140,7 +8140,7 @@ appinstances:
       name: cloudlet-2
     id: 2
   cloudletloc:
-    long: -174
+    longitude: -174
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8167,7 +8167,7 @@ appinstances:
       name: cloudlet-15
     id: 15
   cloudletloc:
-    long: -161
+    longitude: -161
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8194,7 +8194,7 @@ appinstances:
       name: cloudlet-15
     id: 15
   cloudletloc:
-    long: -161
+    longitude: -161
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8221,7 +8221,7 @@ appinstances:
       name: cloudlet-21
     id: 21
   cloudletloc:
-    long: -155
+    longitude: -155
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8248,7 +8248,7 @@ appinstances:
       name: cloudlet-28
     id: 28
   cloudletloc:
-    long: -148
+    longitude: -148
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8275,7 +8275,7 @@ appinstances:
       name: cloudlet-40
     id: 40
   cloudletloc:
-    long: -136
+    longitude: -136
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8302,7 +8302,7 @@ appinstances:
       name: cloudlet-55
     id: 55
   cloudletloc:
-    long: -121
+    longitude: -121
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8329,7 +8329,7 @@ appinstances:
       name: cloudlet-57
     id: 57
   cloudletloc:
-    long: -119
+    longitude: -119
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8356,7 +8356,7 @@ appinstances:
       name: cloudlet-60
     id: 60
   cloudletloc:
-    long: -116
+    longitude: -116
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8383,7 +8383,7 @@ appinstances:
       name: cloudlet-66
     id: 66
   cloudletloc:
-    long: -110
+    longitude: -110
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8410,7 +8410,7 @@ appinstances:
       name: cloudlet-70
     id: 70
   cloudletloc:
-    long: -106
+    longitude: -106
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8437,7 +8437,7 @@ appinstances:
       name: cloudlet-71
     id: 71
   cloudletloc:
-    long: -105
+    longitude: -105
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8464,7 +8464,7 @@ appinstances:
       name: cloudlet-79
     id: 79
   cloudletloc:
-    long: -97
+    longitude: -97
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8491,7 +8491,7 @@ appinstances:
       name: cloudlet-81
     id: 81
   cloudletloc:
-    long: -95
+    longitude: -95
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8518,7 +8518,7 @@ appinstances:
       name: cloudlet-38
     id: 38
   cloudletloc:
-    long: -138
+    longitude: -138
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8545,7 +8545,7 @@ appinstances:
       name: cloudlet-39
     id: 39
   cloudletloc:
-    long: -137
+    longitude: -137
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp2
@@ -8572,7 +8572,7 @@ appinstances:
       name: cloudlet-89
     id: 89
   cloudletloc:
-    long: -87
+    longitude: -87
   clusterinstkey:
     clusterkey:
       name: AutoClusterapp1
@@ -8587,4 +8587,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

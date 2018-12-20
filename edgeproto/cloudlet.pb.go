@@ -1026,8 +1026,8 @@ const CloudletFieldKeyOperatorKeyName = "2.1.1"
 const CloudletFieldKeyName = "2.2"
 const CloudletFieldAccessUri = "4"
 const CloudletFieldLocation = "5"
-const CloudletFieldLocationLat = "5.1"
-const CloudletFieldLocationLong = "5.2"
+const CloudletFieldLocationLatitude = "5.1"
+const CloudletFieldLocationLongitude = "5.2"
 const CloudletFieldLocationHorizontalAccuracy = "5.3"
 const CloudletFieldLocationVerticalAccuracy = "5.4"
 const CloudletFieldLocationAltitude = "5.5"
@@ -1044,8 +1044,8 @@ var CloudletAllFields = []string{
 	CloudletFieldKeyOperatorKeyName,
 	CloudletFieldKeyName,
 	CloudletFieldAccessUri,
-	CloudletFieldLocationLat,
-	CloudletFieldLocationLong,
+	CloudletFieldLocationLatitude,
+	CloudletFieldLocationLongitude,
 	CloudletFieldLocationHorizontalAccuracy,
 	CloudletFieldLocationVerticalAccuracy,
 	CloudletFieldLocationAltitude,
@@ -1062,8 +1062,8 @@ var CloudletAllFieldsMap = map[string]struct{}{
 	CloudletFieldKeyOperatorKeyName:         struct{}{},
 	CloudletFieldKeyName:                    struct{}{},
 	CloudletFieldAccessUri:                  struct{}{},
-	CloudletFieldLocationLat:                struct{}{},
-	CloudletFieldLocationLong:               struct{}{},
+	CloudletFieldLocationLatitude:           struct{}{},
+	CloudletFieldLocationLongitude:          struct{}{},
 	CloudletFieldLocationHorizontalAccuracy: struct{}{},
 	CloudletFieldLocationVerticalAccuracy:   struct{}{},
 	CloudletFieldLocationAltitude:           struct{}{},
@@ -1089,12 +1089,12 @@ func (m *Cloudlet) DiffFields(o *Cloudlet, fields map[string]struct{}) {
 	if m.AccessUri != o.AccessUri {
 		fields[CloudletFieldAccessUri] = struct{}{}
 	}
-	if m.Location.Lat != o.Location.Lat {
-		fields[CloudletFieldLocationLat] = struct{}{}
+	if m.Location.Latitude != o.Location.Latitude {
+		fields[CloudletFieldLocationLatitude] = struct{}{}
 		fields[CloudletFieldLocation] = struct{}{}
 	}
-	if m.Location.Long != o.Location.Long {
-		fields[CloudletFieldLocationLong] = struct{}{}
+	if m.Location.Longitude != o.Location.Longitude {
+		fields[CloudletFieldLocationLongitude] = struct{}{}
 		fields[CloudletFieldLocation] = struct{}{}
 	}
 	if m.Location.HorizontalAccuracy != o.Location.HorizontalAccuracy {
@@ -1155,10 +1155,10 @@ func (m *Cloudlet) CopyInFields(src *Cloudlet) {
 	}
 	if _, set := fmap["5"]; set {
 		if _, set := fmap["5.1"]; set {
-			m.Location.Lat = src.Location.Lat
+			m.Location.Latitude = src.Location.Latitude
 		}
 		if _, set := fmap["5.2"]; set {
-			m.Location.Long = src.Location.Long
+			m.Location.Longitude = src.Location.Longitude
 		}
 		if _, set := fmap["5.3"]; set {
 			m.Location.HorizontalAccuracy = src.Location.HorizontalAccuracy

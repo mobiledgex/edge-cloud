@@ -66,7 +66,7 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 		return reply, errors.New("missing carrierName")
 	}
-	if req.GpsLocation == nil || (req.GpsLocation.Lat == 0 && req.GpsLocation.Long == 0) {
+	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
 		return reply, errors.New("Missing GpsLocation")
 	}

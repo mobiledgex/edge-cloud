@@ -251,8 +251,8 @@ var CloudletData = []edgeproto.Cloudlet{
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
-			Lat:  37.338207,
-			Long: -121.886330,
+			Latitude:  37.338207,
+			Longitude: -121.886330,
 		},
 	},
 	edgeproto.Cloudlet{
@@ -264,8 +264,8 @@ var CloudletData = []edgeproto.Cloudlet{
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
-			Lat:  40.712776,
-			Long: -74.005974,
+			Latitude:  40.712776,
+			Longitude: -74.005974,
 		},
 	},
 	edgeproto.Cloudlet{
@@ -277,8 +277,8 @@ var CloudletData = []edgeproto.Cloudlet{
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 100,
 		Location: dme.Loc{
-			Lat:  37.774929,
-			Long: -122.419418,
+			Latitude:  37.774929,
+			Longitude: -122.419418,
 		},
 	},
 	edgeproto.Cloudlet{
@@ -290,8 +290,8 @@ var CloudletData = []edgeproto.Cloudlet{
 		IpSupport:     edgeproto.IpSupport_IpSupportDynamic,
 		NumDynamicIps: 10,
 		Location: dme.Loc{
-			Lat:  21.306944,
-			Long: -157.858337,
+			Latitude:  21.306944,
+			Longitude: -157.858337,
 		},
 	},
 }

@@ -6,8 +6,8 @@ cloudlets:
     name: azcentraluscloudlet
   accessuri:
   location:
-    lat: 42.379
-    long: -87.858
+    latitude: 42.379
+    longitude: -87.858
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -46,4 +46,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-
