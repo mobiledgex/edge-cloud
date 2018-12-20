@@ -182,9 +182,9 @@ func main() {
 
 //initializePlatform *Must be called as a seperate goroutine.*
 func initPlatform(rootLBName, loc, operator string) error {
-	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator)
 	mf := &mexos.Manifest{}
-	uri := fmt.Sprintf("scp://%s/files-repo/mobiledgex/stack/%s", cloudcommon.Registry, rootLBName)
+	uri := fmt.Sprintf("scp://%s/files-repo/mobiledgex/kustomize/stack/output/%s.yaml", cloudcommon.Registry, rootLBName)
+	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator, "uri", uri)
 	if err := mexos.GetVaultEnv(mf, uri); err != nil {
 		return err
 	}
