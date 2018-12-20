@@ -31,8 +31,8 @@ public class MockUtils {
 
     public static LocOuterClass.Loc androidToMessageLoc(Location location) {
         return LocOuterClass.Loc.newBuilder()
-                .setLat(location.getLatitude())
-                .setLong(location.getLongitude())
+                .setLatitude(location.getLatitude())
+                .setLongitude(location.getLongitude())
                 .setTimestamp(LocOuterClass.Timestamp.newBuilder()
                         .setSeconds(System.currentTimeMillis()/1000)
                         .build())

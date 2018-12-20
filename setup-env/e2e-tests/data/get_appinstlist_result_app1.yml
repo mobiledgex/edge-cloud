@@ -3,8 +3,8 @@ cloudlets:
 - carriername: azure
   cloudletname: azure-cloud-9
   gpslocation:
-    lat: 1
-    long: 9
+    latitude: 1
+    longitude: 9
   distance: 11284.535631750952
   appinstances:
   - appname: someapplication1
@@ -26,8 +26,8 @@ cloudlets:
 - carriername: gcp
   cloudletname: gcp-cloud-10
   gpslocation:
-    lat: 1
-    long: 10
+    latitude: 1
+    longitude: 10
   distance: 11373.10678046936
   appinstances:
   - appname: someapplication1
@@ -49,8 +49,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-1
   gpslocation:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   distance: 10570.971178689932
   appinstances:
   - appname: someapplication1
@@ -72,8 +72,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-2
   gpslocation:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   distance: 10660.554090416144
   appinstances:
   - appname: someapplication1
@@ -95,8 +95,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-3
   gpslocation:
-    lat: 1
-    long: 3
+    latitude: 1
+    longitude: 3
   distance: 10750.046797594014
   appinstances:
   - appname: someapplication1
@@ -118,8 +118,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-4
   gpslocation:
-    lat: 1
-    long: 4
+    latitude: 1
+    longitude: 4
   distance: 10839.439254501909
   appinstances:
   - appname: someapplication1
@@ -141,8 +141,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-5
   gpslocation:
-    lat: 1
-    long: 5
+    latitude: 1
+    longitude: 5
   distance: 10928.721277244626
   appinstances:
   - appname: someapplication1
@@ -164,8 +164,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-6
   gpslocation:
-    lat: 1
-    long: 6
+    latitude: 1
+    longitude: 6
   distance: 11017.882528196287
   appinstances:
   - appname: someapplication1
@@ -187,8 +187,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-7
   gpslocation:
-    lat: 1
-    long: 7
+    latitude: 1
+    longitude: 7
   distance: 11106.912500109207
   appinstances:
   - appname: someapplication1
@@ -210,8 +210,8 @@ cloudlets:
 - carriername: tmus
   cloudletname: tmus-cloud-8
   gpslocation:
-    lat: 1
-    long: 8
+    latitude: 1
+    longitude: 8
   distance: 11195.800499853392
   appinstances:
   - appname: someapplication1

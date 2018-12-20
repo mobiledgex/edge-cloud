@@ -16,7 +16,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 
 public class GetAppInstList implements Callable {
-    public static final String TAG = "GetLocation";
+    public static final String TAG = "GetAppInstList";
 
     private MatchingEngine mMatchingEngine;
     private AppInstListRequest mRequest;
@@ -47,7 +47,7 @@ public class GetAppInstList implements Callable {
         mRequest = request;
 
         if (timeoutInMilliseconds <= 0) {
-            throw new IllegalArgumentException("GetCloudletList() timeout must be positive.");
+            throw new IllegalArgumentException("GetAppInstList() timeout must be positive.");
         }
         mTimeoutInMilliseconds = timeoutInMilliseconds;
         return true;
@@ -57,7 +57,7 @@ public class GetAppInstList implements Callable {
     public AppInstListReply call()
             throws MissingRequestException, StatusRuntimeException, InterruptedException, ExecutionException {
         if (mRequest == null) {
-            throw new MissingRequestException("Usage error: GetCloudletList does not have a request object!");
+            throw new MissingRequestException("Usage error: GetAppInstList does not have a request object!");
         }
 
         AppInstListReply reply;
@@ -77,15 +77,15 @@ public class GetAppInstList implements Callable {
 
             // Nothing a sdk user can do below but read the exception cause:
         } catch (MexKeyStoreException mkse) {
-            throw new ExecutionException("Exception calling GetCloudletList: ", mkse);
+            throw new ExecutionException("Exception calling GetAppInstList: ", mkse);
         } catch (MexTrustStoreException mtse) {
-            throw new ExecutionException("Exception calling GetCloudletList: ", mtse);
+            throw new ExecutionException("Exception calling GetAppInstList: ", mtse);
         } catch (KeyManagementException kme) {
-            throw new ExecutionException("Exception calling GetCloudletList: ", kme);
+            throw new ExecutionException("Exception calling GetAppInstList: ", kme);
         } catch (NoSuchAlgorithmException nsa) {
-            throw new ExecutionException("Exception calling GetCloudletList: ", nsa);
+            throw new ExecutionException("Exception calling GetAppInstList: ", nsa);
         } catch (IOException ioe) {
-            throw new ExecutionException("Exception calling GetCloudletList: ", ioe);
+            throw new ExecutionException("Exception calling GetAppInstList: ", ioe);
         } finally {
             if (channel != null) {
                 channel.shutdown();

@@ -108,8 +108,8 @@ public class MexGrpcSample : MonoBehaviour
         strBuilder.Append("FindCloudlet: ")
                   .Append(", Version: " + findCloudletResponse.Ver)
                   .Append(", Location Found Status: " + findCloudletResponse.Status)
-                  .Append(", Location of cloudlet. Latitude: " + findCloudletResponse.CloudletLocation.Lat)
-                  .Append(", Longitude: " + findCloudletResponse.CloudletLocation.Long)
+                  .Append(", Location of cloudlet. Latitude: " + findCloudletResponse.CloudletLocation.Latitude)
+                  .Append(", Longitude: " + findCloudletResponse.CloudletLocation.Longitude)
                   .Append(", Cloudlet FQDN: " + findCloudletResponse.FQDN + "\n");
 
         Google.Protobuf.Collections.RepeatedField<AppPort> ports = findCloudletResponse.Ports;
@@ -266,8 +266,8 @@ public class MexGrpcSample : MonoBehaviour
         // TODO
         return new DistributedMatchEngine.Loc
         {
-            Long = -122.149349,
-            Lat = 37.459609,
+            Longitude = -122.149349,
+            Latitude = 37.459609,
             Altitude = 0,
             Course = 0,
             HorizontalAccuracy = 0,

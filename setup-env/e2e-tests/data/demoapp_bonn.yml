@@ -15,10 +15,10 @@ cloudlets:
     operatorkey:
       name: TDG
     name: bonn3cloudlet
-  accessuri: 
+  accessuri:
   location:
-    lat: 50.737
-    long: 7.0982
+    latitude: 50.737
+    longitude: 7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -61,5 +61,3 @@ appinstances:
   imagetype: ImageTypeDocker
   flavor:
     name: x1.small
-
-
