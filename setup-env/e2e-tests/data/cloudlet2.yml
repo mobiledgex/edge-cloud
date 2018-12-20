@@ -5,6 +5,5 @@ cloudlets:
     name: dmuus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 35 
-    long: -95
-
+    latitude: 35
+    longitude: -95

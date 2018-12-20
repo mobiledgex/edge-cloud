@@ -1167,8 +1167,8 @@ const TestGenFieldIncludeFieldsName = "22.2"
 const TestGenFieldIncludeFieldsNonnull = "23"
 const TestGenFieldIncludeFieldsNonnullName = "23.2"
 const TestGenFieldLoc = "24"
-const TestGenFieldLocLat = "24.1"
-const TestGenFieldLocLong = "24.2"
+const TestGenFieldLocLatitude = "24.1"
+const TestGenFieldLocLongitude = "24.2"
 const TestGenFieldLocHorizontalAccuracy = "24.3"
 const TestGenFieldLocVerticalAccuracy = "24.4"
 const TestGenFieldLocAltitude = "24.5"
@@ -1178,8 +1178,8 @@ const TestGenFieldLocTimestamp = "24.8"
 const TestGenFieldLocTimestampSeconds = "24.8.1"
 const TestGenFieldLocTimestampNanos = "24.8.2"
 const TestGenFieldLocNonnull = "25"
-const TestGenFieldLocNonnullLat = "25.1"
-const TestGenFieldLocNonnullLong = "25.2"
+const TestGenFieldLocNonnullLatitude = "25.1"
+const TestGenFieldLocNonnullLongitude = "25.2"
 const TestGenFieldLocNonnullHorizontalAccuracy = "25.3"
 const TestGenFieldLocNonnullVerticalAccuracy = "25.4"
 const TestGenFieldLocNonnullAltitude = "25.5"
@@ -1212,8 +1212,8 @@ const TestGenFieldRepeatedInnerMsgNonnull = "34"
 const TestGenFieldRepeatedInnerMsgNonnullUrl = "34.1"
 const TestGenFieldRepeatedInnerMsgNonnullId = "34.2"
 const TestGenFieldRepeatedLoc = "35"
-const TestGenFieldRepeatedLocLat = "35.1"
-const TestGenFieldRepeatedLocLong = "35.2"
+const TestGenFieldRepeatedLocLatitude = "35.1"
+const TestGenFieldRepeatedLocLongitude = "35.2"
 const TestGenFieldRepeatedLocHorizontalAccuracy = "35.3"
 const TestGenFieldRepeatedLocVerticalAccuracy = "35.4"
 const TestGenFieldRepeatedLocAltitude = "35.5"
@@ -1223,8 +1223,8 @@ const TestGenFieldRepeatedLocTimestamp = "35.8"
 const TestGenFieldRepeatedLocTimestampSeconds = "35.8.1"
 const TestGenFieldRepeatedLocTimestampNanos = "35.8.2"
 const TestGenFieldRepeatedLocNonnull = "36"
-const TestGenFieldRepeatedLocNonnullLat = "36.1"
-const TestGenFieldRepeatedLocNonnullLong = "36.2"
+const TestGenFieldRepeatedLocNonnullLatitude = "36.1"
+const TestGenFieldRepeatedLocNonnullLongitude = "36.2"
 const TestGenFieldRepeatedLocNonnullHorizontalAccuracy = "36.3"
 const TestGenFieldRepeatedLocNonnullVerticalAccuracy = "36.4"
 const TestGenFieldRepeatedLocNonnullAltitude = "36.5"
@@ -1270,8 +1270,8 @@ var TestGenAllFields = []string{
 	TestGenFieldIncludeMsgNonnullNestedMsgName,
 	TestGenFieldIncludeFieldsName,
 	TestGenFieldIncludeFieldsNonnullName,
-	TestGenFieldLocLat,
-	TestGenFieldLocLong,
+	TestGenFieldLocLatitude,
+	TestGenFieldLocLongitude,
 	TestGenFieldLocHorizontalAccuracy,
 	TestGenFieldLocVerticalAccuracy,
 	TestGenFieldLocAltitude,
@@ -1279,8 +1279,8 @@ var TestGenAllFields = []string{
 	TestGenFieldLocSpeed,
 	TestGenFieldLocTimestampSeconds,
 	TestGenFieldLocTimestampNanos,
-	TestGenFieldLocNonnullLat,
-	TestGenFieldLocNonnullLong,
+	TestGenFieldLocNonnullLatitude,
+	TestGenFieldLocNonnullLongitude,
 	TestGenFieldLocNonnullHorizontalAccuracy,
 	TestGenFieldLocNonnullVerticalAccuracy,
 	TestGenFieldLocNonnullAltitude,
@@ -1303,8 +1303,8 @@ var TestGenAllFields = []string{
 	TestGenFieldRepeatedInnerMsgId,
 	TestGenFieldRepeatedInnerMsgNonnullUrl,
 	TestGenFieldRepeatedInnerMsgNonnullId,
-	TestGenFieldRepeatedLocLat,
-	TestGenFieldRepeatedLocLong,
+	TestGenFieldRepeatedLocLatitude,
+	TestGenFieldRepeatedLocLongitude,
 	TestGenFieldRepeatedLocHorizontalAccuracy,
 	TestGenFieldRepeatedLocVerticalAccuracy,
 	TestGenFieldRepeatedLocAltitude,
@@ -1312,8 +1312,8 @@ var TestGenAllFields = []string{
 	TestGenFieldRepeatedLocSpeed,
 	TestGenFieldRepeatedLocTimestampSeconds,
 	TestGenFieldRepeatedLocTimestampNanos,
-	TestGenFieldRepeatedLocNonnullLat,
-	TestGenFieldRepeatedLocNonnullLong,
+	TestGenFieldRepeatedLocNonnullLatitude,
+	TestGenFieldRepeatedLocNonnullLongitude,
 	TestGenFieldRepeatedLocNonnullHorizontalAccuracy,
 	TestGenFieldRepeatedLocNonnullVerticalAccuracy,
 	TestGenFieldRepeatedLocNonnullAltitude,
@@ -1356,8 +1356,8 @@ var TestGenAllFieldsMap = map[string]struct{}{
 	TestGenFieldIncludeMsgNonnullNestedMsgName:       struct{}{},
 	TestGenFieldIncludeFieldsName:                    struct{}{},
 	TestGenFieldIncludeFieldsNonnullName:             struct{}{},
-	TestGenFieldLocLat:                               struct{}{},
-	TestGenFieldLocLong:                              struct{}{},
+	TestGenFieldLocLatitude:                          struct{}{},
+	TestGenFieldLocLongitude:                         struct{}{},
 	TestGenFieldLocHorizontalAccuracy:                struct{}{},
 	TestGenFieldLocVerticalAccuracy:                  struct{}{},
 	TestGenFieldLocAltitude:                          struct{}{},
@@ -1365,8 +1365,8 @@ var TestGenAllFieldsMap = map[string]struct{}{
 	TestGenFieldLocSpeed:                             struct{}{},
 	TestGenFieldLocTimestampSeconds:                  struct{}{},
 	TestGenFieldLocTimestampNanos:                    struct{}{},
-	TestGenFieldLocNonnullLat:                        struct{}{},
-	TestGenFieldLocNonnullLong:                       struct{}{},
+	TestGenFieldLocNonnullLatitude:                   struct{}{},
+	TestGenFieldLocNonnullLongitude:                  struct{}{},
 	TestGenFieldLocNonnullHorizontalAccuracy:         struct{}{},
 	TestGenFieldLocNonnullVerticalAccuracy:           struct{}{},
 	TestGenFieldLocNonnullAltitude:                   struct{}{},
@@ -1389,8 +1389,8 @@ var TestGenAllFieldsMap = map[string]struct{}{
 	TestGenFieldRepeatedInnerMsgId:                   struct{}{},
 	TestGenFieldRepeatedInnerMsgNonnullUrl:           struct{}{},
 	TestGenFieldRepeatedInnerMsgNonnullId:            struct{}{},
-	TestGenFieldRepeatedLocLat:                       struct{}{},
-	TestGenFieldRepeatedLocLong:                      struct{}{},
+	TestGenFieldRepeatedLocLatitude:                  struct{}{},
+	TestGenFieldRepeatedLocLongitude:                 struct{}{},
 	TestGenFieldRepeatedLocHorizontalAccuracy:        struct{}{},
 	TestGenFieldRepeatedLocVerticalAccuracy:          struct{}{},
 	TestGenFieldRepeatedLocAltitude:                  struct{}{},
@@ -1398,8 +1398,8 @@ var TestGenAllFieldsMap = map[string]struct{}{
 	TestGenFieldRepeatedLocSpeed:                     struct{}{},
 	TestGenFieldRepeatedLocTimestampSeconds:          struct{}{},
 	TestGenFieldRepeatedLocTimestampNanos:            struct{}{},
-	TestGenFieldRepeatedLocNonnullLat:                struct{}{},
-	TestGenFieldRepeatedLocNonnullLong:               struct{}{},
+	TestGenFieldRepeatedLocNonnullLatitude:           struct{}{},
+	TestGenFieldRepeatedLocNonnullLongitude:          struct{}{},
 	TestGenFieldRepeatedLocNonnullHorizontalAccuracy: struct{}{},
 	TestGenFieldRepeatedLocNonnullVerticalAccuracy:   struct{}{},
 	TestGenFieldRepeatedLocNonnullAltitude:           struct{}{},
@@ -1512,12 +1512,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldIncludeFieldsNonnullName] = struct{}{}
 		fields[TestGenFieldIncludeFieldsNonnull] = struct{}{}
 	}
-	if m.Loc.Lat != o.Loc.Lat {
-		fields[TestGenFieldLocLat] = struct{}{}
+	if m.Loc.Latitude != o.Loc.Latitude {
+		fields[TestGenFieldLocLatitude] = struct{}{}
 		fields[TestGenFieldLoc] = struct{}{}
 	}
-	if m.Loc.Long != o.Loc.Long {
-		fields[TestGenFieldLocLong] = struct{}{}
+	if m.Loc.Longitude != o.Loc.Longitude {
+		fields[TestGenFieldLocLongitude] = struct{}{}
 		fields[TestGenFieldLoc] = struct{}{}
 	}
 	if m.Loc.HorizontalAccuracy != o.Loc.HorizontalAccuracy {
@@ -1550,12 +1550,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldLocTimestamp] = struct{}{}
 		fields[TestGenFieldLoc] = struct{}{}
 	}
-	if m.LocNonnull.Lat != o.LocNonnull.Lat {
-		fields[TestGenFieldLocNonnullLat] = struct{}{}
+	if m.LocNonnull.Latitude != o.LocNonnull.Latitude {
+		fields[TestGenFieldLocNonnullLatitude] = struct{}{}
 		fields[TestGenFieldLocNonnull] = struct{}{}
 	}
-	if m.LocNonnull.Long != o.LocNonnull.Long {
-		fields[TestGenFieldLocNonnullLong] = struct{}{}
+	if m.LocNonnull.Longitude != o.LocNonnull.Longitude {
+		fields[TestGenFieldLocNonnullLongitude] = struct{}{}
 		fields[TestGenFieldLocNonnull] = struct{}{}
 	}
 	if m.LocNonnull.HorizontalAccuracy != o.LocNonnull.HorizontalAccuracy {
@@ -1708,12 +1708,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldRepeatedLoc] = struct{}{}
 	} else {
 		for i0 := 0; i0 < len(m.RepeatedLoc); i0++ {
-			if m.RepeatedLoc[i0].Lat != o.RepeatedLoc[i0].Lat {
-				fields[TestGenFieldRepeatedLocLat] = struct{}{}
+			if m.RepeatedLoc[i0].Latitude != o.RepeatedLoc[i0].Latitude {
+				fields[TestGenFieldRepeatedLocLatitude] = struct{}{}
 				fields[TestGenFieldRepeatedLoc] = struct{}{}
 			}
-			if m.RepeatedLoc[i0].Long != o.RepeatedLoc[i0].Long {
-				fields[TestGenFieldRepeatedLocLong] = struct{}{}
+			if m.RepeatedLoc[i0].Longitude != o.RepeatedLoc[i0].Longitude {
+				fields[TestGenFieldRepeatedLocLongitude] = struct{}{}
 				fields[TestGenFieldRepeatedLoc] = struct{}{}
 			}
 			if m.RepeatedLoc[i0].HorizontalAccuracy != o.RepeatedLoc[i0].HorizontalAccuracy {
@@ -1752,12 +1752,12 @@ func (m *TestGen) DiffFields(o *TestGen, fields map[string]struct{}) {
 		fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 	} else {
 		for i0 := 0; i0 < len(m.RepeatedLocNonnull); i0++ {
-			if m.RepeatedLocNonnull[i0].Lat != o.RepeatedLocNonnull[i0].Lat {
-				fields[TestGenFieldRepeatedLocNonnullLat] = struct{}{}
+			if m.RepeatedLocNonnull[i0].Latitude != o.RepeatedLocNonnull[i0].Latitude {
+				fields[TestGenFieldRepeatedLocNonnullLatitude] = struct{}{}
 				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 			}
-			if m.RepeatedLocNonnull[i0].Long != o.RepeatedLocNonnull[i0].Long {
-				fields[TestGenFieldRepeatedLocNonnullLong] = struct{}{}
+			if m.RepeatedLocNonnull[i0].Longitude != o.RepeatedLocNonnull[i0].Longitude {
+				fields[TestGenFieldRepeatedLocNonnullLongitude] = struct{}{}
 				fields[TestGenFieldRepeatedLocNonnull] = struct{}{}
 			}
 			if m.RepeatedLocNonnull[i0].HorizontalAccuracy != o.RepeatedLocNonnull[i0].HorizontalAccuracy {
@@ -1935,10 +1935,10 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 	if _, set := fmap["24"]; set && src.Loc != nil {
 		m.Loc = &distributed_match_engine.Loc{}
 		if _, set := fmap["24.1"]; set {
-			m.Loc.Lat = src.Loc.Lat
+			m.Loc.Latitude = src.Loc.Latitude
 		}
 		if _, set := fmap["24.2"]; set {
-			m.Loc.Long = src.Loc.Long
+			m.Loc.Longitude = src.Loc.Longitude
 		}
 		if _, set := fmap["24.3"]; set {
 			m.Loc.HorizontalAccuracy = src.Loc.HorizontalAccuracy
@@ -1967,10 +1967,10 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 	}
 	if _, set := fmap["25"]; set {
 		if _, set := fmap["25.1"]; set {
-			m.LocNonnull.Lat = src.LocNonnull.Lat
+			m.LocNonnull.Latitude = src.LocNonnull.Latitude
 		}
 		if _, set := fmap["25.2"]; set {
-			m.LocNonnull.Long = src.LocNonnull.Long
+			m.LocNonnull.Longitude = src.LocNonnull.Longitude
 		}
 		if _, set := fmap["25.3"]; set {
 			m.LocNonnull.HorizontalAccuracy = src.LocNonnull.HorizontalAccuracy
@@ -2109,10 +2109,10 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		for i0 := 0; i0 < len(src.RepeatedLoc); i0++ {
 			m.RepeatedLoc[i0] = &distributed_match_engine.Loc{}
 			if _, set := fmap["35.1"]; set {
-				m.RepeatedLoc[i0].Lat = src.RepeatedLoc[i0].Lat
+				m.RepeatedLoc[i0].Latitude = src.RepeatedLoc[i0].Latitude
 			}
 			if _, set := fmap["35.2"]; set {
-				m.RepeatedLoc[i0].Long = src.RepeatedLoc[i0].Long
+				m.RepeatedLoc[i0].Longitude = src.RepeatedLoc[i0].Longitude
 			}
 			if _, set := fmap["35.3"]; set {
 				m.RepeatedLoc[i0].HorizontalAccuracy = src.RepeatedLoc[i0].HorizontalAccuracy
@@ -2146,10 +2146,10 @@ func (m *TestGen) CopyInFields(src *TestGen) {
 		}
 		for i0 := 0; i0 < len(src.RepeatedLocNonnull); i0++ {
 			if _, set := fmap["36.1"]; set {
-				m.RepeatedLocNonnull[i0].Lat = src.RepeatedLocNonnull[i0].Lat
+				m.RepeatedLocNonnull[i0].Latitude = src.RepeatedLocNonnull[i0].Latitude
 			}
 			if _, set := fmap["36.2"]; set {
-				m.RepeatedLocNonnull[i0].Long = src.RepeatedLocNonnull[i0].Long
+				m.RepeatedLocNonnull[i0].Longitude = src.RepeatedLocNonnull[i0].Longitude
 			}
 			if _, set := fmap["36.3"]; set {
 				m.RepeatedLocNonnull[i0].HorizontalAccuracy = src.RepeatedLocNonnull[i0].HorizontalAccuracy

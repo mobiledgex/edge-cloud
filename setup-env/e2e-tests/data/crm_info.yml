@@ -96,8 +96,8 @@ cloudlets:
     name: dmuus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -106,8 +106,8 @@ cloudlets:
     name: dmuus-cloud-2
   accessuri: cloud2.tmo
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -206,8 +206,8 @@ appinstances:
       name: dmuus-cloud-1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -246,8 +246,8 @@ appinstances:
       name: dmuus-cloud-2
     id: 123
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:

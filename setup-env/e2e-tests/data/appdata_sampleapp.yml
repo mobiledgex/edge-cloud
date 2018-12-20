@@ -65,16 +65,16 @@ cloudlets:
     name: gddtcloud1
   accessuri: cloud1.gddt
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
 - key:
     operatorkey:
       name: GDDT
     name: gddtcloud2
   accessuri: cloud2.gddt
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
 
 apps:
 - key:
@@ -103,8 +103,8 @@ appinstances:
       name: gddtcloud1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -132,8 +132,8 @@ appinstances:
       name: gddtcloud2
     id: 123
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -148,4 +148,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

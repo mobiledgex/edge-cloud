@@ -1247,12 +1247,12 @@
     "distributed_match_engineLoc": {
       "type": "object",
       "properties": {
-        "lat": {
+        "latitude": {
           "type": "number",
           "format": "double",
           "title": "latitude in WGS 84 coordinates"
         },
-        "long": {
+        "longitude": {
           "type": "number",
           "format": "double",
           "title": "longitude in WGS 84 coordinates"
