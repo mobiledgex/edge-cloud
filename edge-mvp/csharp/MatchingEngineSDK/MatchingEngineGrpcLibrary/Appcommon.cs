@@ -24,16 +24,17 @@ namespace DistributedMatchEngine {
     static AppcommonReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Cg9hcHBjb21tb24ucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZSJ7",
-            "CgdBcHBQb3J0Ei8KBXByb3RvGAEgASgOMiAuZGlzdHJpYnV0ZWRfbWF0Y2hf",
-            "ZW5naW5lLkxQcm90bxIVCg1pbnRlcm5hbF9wb3J0GAIgASgFEhMKC3B1Ymxp",
-            "Y19wb3J0GAMgASgFEhMKC3B1YmxpY19wYXRoGAQgASgJKkkKBkxQcm90bxIR",
-            "Cg1MUHJvdG9Vbmtub3duEAASDQoJTFByb3RvVENQEAESDQoJTFByb3RvVURQ",
-            "EAISDgoKTFByb3RvSFRUUBADYgZwcm90bzM="));
+            "Cg9hcHBjb21tb24ucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZSKQ",
+            "AQoHQXBwUG9ydBIvCgVwcm90bxgBIAEoDjIgLmRpc3RyaWJ1dGVkX21hdGNo",
+            "X2VuZ2luZS5MUHJvdG8SFQoNaW50ZXJuYWxfcG9ydBgCIAEoBRITCgtwdWJs",
+            "aWNfcG9ydBgDIAEoBRITCgtwdWJsaWNfcGF0aBgEIAEoCRITCgtGUUROX3By",
+            "ZWZpeBgFIAEoCSpJCgZMUHJvdG8SEQoNTFByb3RvVW5rbm93bhAAEg0KCUxQ",
+            "cm90b1RDUBABEg0KCUxQcm90b1VEUBACEg4KCkxQcm90b0hUVFAQA2IGcHJv",
+            "dG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::DistributedMatchEngine.LProto), }, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppPort), global::DistributedMatchEngine.AppPort.Parser, new[]{ "Proto", "InternalPort", "PublicPort", "PublicPath" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppPort), global::DistributedMatchEngine.AppPort.Parser, new[]{ "Proto", "InternalPort", "PublicPort", "PublicPath", "FQDNPrefix" }, null, null, null)
           }));
     }
     #endregion
@@ -97,6 +98,7 @@ namespace DistributedMatchEngine {
       internalPort_ = other.internalPort_;
       publicPort_ = other.publicPort_;
       publicPath_ = other.publicPath_;
+      fQDNPrefix_ = other.fQDNPrefix_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -161,6 +163,20 @@ namespace DistributedMatchEngine {
       }
     }
 
+    /// <summary>Field number for the "FQDN_prefix" field.</summary>
+    public const int FQDNPrefixFieldNumber = 5;
+    private string fQDNPrefix_ = "";
+    /// <summary>
+    /// FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public string FQDNPrefix {
+      get { return fQDNPrefix_; }
+      set {
+        fQDNPrefix_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as AppPort);
@@ -178,6 +194,7 @@ namespace DistributedMatchEngine {
       if (InternalPort != other.InternalPort) return false;
       if (PublicPort != other.PublicPort) return false;
       if (PublicPath != other.PublicPath) return false;
+      if (FQDNPrefix != other.FQDNPrefix) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -188,6 +205,7 @@ namespace DistributedMatchEngine {
       if (InternalPort != 0) hash ^= InternalPort.GetHashCode();
       if (PublicPort != 0) hash ^= PublicPort.GetHashCode();
       if (PublicPath.Length != 0) hash ^= PublicPath.GetHashCode();
+      if (FQDNPrefix.Length != 0) hash ^= FQDNPrefix.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -217,6 +235,10 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(34);
         output.WriteString(PublicPath);
       }
+      if (FQDNPrefix.Length != 0) {
+        output.WriteRawTag(42);
+        output.WriteString(FQDNPrefix);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -236,6 +258,9 @@ namespace DistributedMatchEngine {
       }
       if (PublicPath.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(PublicPath);
+      }
+      if (FQDNPrefix.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(FQDNPrefix);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -259,6 +284,9 @@ namespace DistributedMatchEngine {
       }
       if (other.PublicPath.Length != 0) {
         PublicPath = other.PublicPath;
+      }
+      if (other.FQDNPrefix.Length != 0) {
+        FQDNPrefix = other.FQDNPrefix;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -285,6 +313,10 @@ namespace DistributedMatchEngine {
           }
           case 34: {
             PublicPath = input.ReadString();
+            break;
+          }
+          case 42: {
+            FQDNPrefix = input.ReadString();
             break;
           }
         }
