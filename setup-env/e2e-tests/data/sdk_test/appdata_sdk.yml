@@ -116,8 +116,8 @@ cloudlets:
     name: tmocloud1
   accessuri: cloud1.tmo
   location:
-    lat: 51.7374
-    long: -7.0982
+    latitude: 51.7374
+    longitude: -7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -126,18 +126,18 @@ cloudlets:
     name: gddtcloud1
   accessuri: cloud1.gddt
   location:
-    lat: 50.7374
-    long: -7.0982
+    latitude: 50.7374
+    longitude: -7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
     operatorkey:
       name: GDDT
     name: buckhorn3cloudlet
-  accessuri: 
+  accessuri:
   location:
-    lat: 50.70
-    long: -7.1
+    latitude: 50.70
+    longitude: -7.1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -294,7 +294,7 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-    
+
 - key:
     appkey:
       developerkey:

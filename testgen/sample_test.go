@@ -47,12 +47,12 @@ func TestCopyIn(t *testing.T) {
 		Name: "include fields name nonnull",
 	}
 	src.Loc = &dme.Loc{
-		Lat:  1.1,
-		Long: 1.2,
+		Latitude:  1.1,
+		Longitude: 1.2,
 	}
 	src.LocNonnull = dme.Loc{
-		Lat:  2.1,
-		Long: 2.2,
+		Latitude:  2.1,
+		Longitude: 2.2,
 	}
 	src.RepeatedInt = make([]int64, 10)
 	for ii := 0; ii < 10; ii++ {
@@ -115,15 +115,15 @@ func TestCopyIn(t *testing.T) {
 	src.RepeatedLoc = make([]*dme.Loc, 4)
 	for ii := 0; ii < 4; ii++ {
 		src.RepeatedLoc[ii] = &dme.Loc{
-			Lat:  2.1,
-			Long: 2.2,
+			Latitude:  2.1,
+			Longitude: 2.2,
 		}
 	}
 	src.RepeatedLocNonnull = make([]dme.Loc, 4)
 	for ii := 0; ii < 4; ii++ {
 		src.RepeatedLocNonnull[ii] = dme.Loc{
-			Lat:  2.1,
-			Long: 2.2,
+			Latitude:  2.1,
+			Longitude: 2.2,
 		}
 	}
 

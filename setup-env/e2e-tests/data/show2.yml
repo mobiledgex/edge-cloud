@@ -84,8 +84,8 @@ cloudlets:
     name: dmuus-cloud-1
   accessuri: dmuus-cloud.1
   location:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -94,8 +94,8 @@ cloudlets:
     name: dmuus-cloud-2
   accessuri: dmuus-cloud.2
   location:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -138,8 +138,8 @@ appinstances:
       name: dmuus-cloud-2
     id: 2
   cloudletloc:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   uri: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -178,8 +178,8 @@ appinstances:
       name: dmuus-cloud-1
     id: 1
   cloudletloc:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   uri: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -191,4 +191,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-

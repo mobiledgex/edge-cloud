@@ -5,7 +5,6 @@ findcloudletrequest:
   appname: someapplication1
   appvers: "1.0"
   carriername: dmuus
-  gpslocation: 
-    lat: 36.00
-    long: -96.00
-
+  gpslocation:
+    latitude: 36.00
+    longitude: -96.00

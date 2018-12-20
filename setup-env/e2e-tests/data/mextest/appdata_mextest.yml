@@ -90,10 +90,10 @@ cloudlets:
     operatorkey:
       name: gcp
     name: centraluscloudlet
-  accessuri: 
+  accessuri:
   location:
-    lat: 32.77
-    long: -96.7
+    latitude: 32.77
+    longitude: -96.7
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -102,8 +102,8 @@ cloudlets:
     name: buckhorntestcloudlet
   accessuri:
   location:
-    lat: 50.737
-    long: 7.098
+    latitude: 50.737
+    longitude: 7.098
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -151,5 +151,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
-

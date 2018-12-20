@@ -1,0 +1,9 @@
+registerclientrequest:
+  devname: EmptyMatchEngineApp
+  appname: EmptyMatchEngineApp
+  appvers: "1.0"
+verifylocationrequest:
+  carriername: xmobx
+  gpslocation:
+    latitude: 37.4529598
+    longitude: -122.1817252
