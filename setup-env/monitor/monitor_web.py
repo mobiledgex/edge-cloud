@@ -110,8 +110,6 @@ class show_status:
 
        
        uris = []
-       uripatt = re.compile("uri: (\S+)")
-       fqdnpatt = re.compile("fqdnprefix: (\S+)")
        out,err = p.communicate()
        data = load(out, Loader=Loader)
        print ("YAMLDATA %s" % data)
