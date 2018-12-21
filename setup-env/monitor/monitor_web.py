@@ -20,7 +20,11 @@ import subprocess
 from multiprocessing.dummy import Pool as ThreadPool
 import base64
 import importlib
-
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 Urls = (
      '/login', 'login',
@@ -94,25 +98,35 @@ class show_status:
               ## this is ok, we need a health check url
               return type,name,uri,"OK"
           return type,name,uri,"FAIL - %s %s" % (e.code,e.reason)
+       except urllib2.URLError as ue:
+          return type,name,uri,"FAIL - %s" % (ue.reason)
        except Exception as e2:
-          print("Exception on post to url: %s -- %s" % (uri,e2.reason))
-          return type,name,uri,"FAIL - %s" % e2.reason
+          print("unknown on post to url: %s -- %s" % (uri,e2))
+          return type,name,uri,"FAIL - %s" % e2
 
-   def getUrisForApp(self, appname, port):
+   def getUrisForApp(self, appname):
        ## todo: configurable endpoints
-       p = subprocess.Popen(["/usr/local/bin/edgectl --addr mexdemo.ctrl.mobiledgex.net:55001 --tls /root/tls/mex-client.crt controller ShowAppInst --key-appkey-name \""+appname+"\" |grep uri|egrep sdkdemo"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+       p = subprocess.Popen(["/usr/local/bin/edgectl --addr mexdemo.ctrl.mobiledgex.net:55001 --tls /root/tls/mex-client.crt controller ShowAppInst --key-appkey-name \""+appname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
+       
        uris = []
-       patt = re.compile("uri: (\S+)")
+       uripatt = re.compile("uri: (\S+)")
+       fqdnpatt = re.compile("fqdnprefix: (\S+)")
        out,err = p.communicate()
-       print("command returned output:"+str(out)+" err:"+str(err)+"\n")
-       lines = out.split("\n")
-       for line in lines:
-           linematch = patt.search(line)
-           if linematch:
-              uri = linematch.group(1)
-              uris.append(uri+":"+port)
-
+       data = load(out, Loader=Loader)
+       print ("YAMLDATA %s" % data)
+       if len(data) == 0:
+          print "ERROR: no data\n"
+          return uris
+        
+       for appinst in data: 
+          pubport = appinst['mappedports'][0]['publicport']
+          fqdnprefix = appinst['mappedports'][0]['fqdnprefix']
+          uri  = appinst['uri']
+      
+          fulluri = fqdnprefix+uri+":"+str(pubport)
+          print "fulluri: %s " % fulluri
+          uris.append(fulluri)
        return uris
                   
    def getHealthResults(self, appnames):
@@ -121,12 +135,13 @@ class show_status:
 
         itemsToCheck = []
         
-        for a in appnames:
-           appname, port = a.split(":")
-           uris = self.getUrisForApp(appname, port)
-           for uri in uris:
-               itemsToCheck.append("App Instances|"+appname+"|"+uri)
-
+        for appname in appnames:
+           try:
+             uris = self.getUrisForApp(appname)
+             for uri in uris:
+               itemsToCheck.append("App Instances|"+appname+"|"+uri) 
+           except Exception as e:
+              print "Exception getting app uris for %s - %s " % (appname, e)
         ## todo: remove hardcoded endpoints
         gws = ("Token Simulator|mexdemo.tok.mobiledgex.net:9999", "Location API Simulator|mexdemo.locsim.mobiledgex.net:8888")
         
@@ -207,7 +222,7 @@ class show_status:
 
         html += self.printHtmlTableHeader(hdrcols,"hovertable")
 
-        appnames = ("MobiledgeX SDK Demo:7777", "Face Detection Demo:8000")
+        appnames = ("MobiledgeX SDK Demo", "Face Detection Demo")
         results = self.getHealthResults(appnames)
 
         for res in sorted(results.iterkeys()):
