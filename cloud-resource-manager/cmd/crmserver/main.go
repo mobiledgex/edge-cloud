@@ -16,10 +16,12 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/util"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
+var base = flag.String("base", fmt.Sprintf("scp://%s/files-repo/mobiledgex", cloudcommon.Registry), "base")
 var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
@@ -32,7 +34,7 @@ var hostname = flag.String("hostname", "", "unique hostname within Cloudlet")
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
 // from a file. The rest of the data is extraced from Openstack.
-var myCloudlet edgeproto.CloudletInfo
+var myCloudlet edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
 var myNode edgeproto.Node
 
 var sigChan chan os.Signal
@@ -72,7 +74,7 @@ func main() {
 	platChan := make(chan string)
 	go func() {
 		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(rootLBName, myCloudlet.Key.Name, myCloudlet.Key.OperatorKey.Name); err != nil {
+		if err := initPlatform(&myCloudlet); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
 			return
 		}
@@ -181,15 +183,16 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(rootLBName, loc, operator string) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
+	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
+	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 	mf := &mexos.Manifest{}
-	uri := fmt.Sprintf("scp://%s/files-repo/mobiledgex/kustomize/stack/output/%s.yaml", cloudcommon.Registry, rootLBName)
-	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "rootlb", rootLBName, "loc", loc, "operator", operator, "uri", uri)
+	uri := fmt.Sprintf("%s/kustomize/infrastructure/output/%s.%s.yaml", *base, loc, oper)
+	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "base", *base, "location(cloudlet.key.name)", loc, "operator", oper, "uri", uri)
 	if err := mexos.GetVaultEnv(mf, uri); err != nil {
 		return err
 	}
-	base := fmt.Sprintf("scp://%s/files-repo/mobiledgex", cloudcommon.Registry)
-	if err := mexos.FillManifest(mf, "platform", base); err != nil {
+	if err := mexos.FillManifestValues(mf, "platform", *base); err != nil {
 		return err
 	}
 	if err := mexos.CheckManifest(mf); err != nil {
@@ -202,8 +205,7 @@ func initPlatform(rootLBName, loc, operator string) error {
 	if crmRootLB == nil {
 		return fmt.Errorf("rootLB is not initialized")
 	}
-	//log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName, "crmrootlb", crmRootLB)
-	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", rootLBName)
+	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", crmRootLB.Name)
 	controllerData.CRMRootLB = crmRootLB
 	if err := mexos.MEXInit(mf); err != nil {
 		return err
