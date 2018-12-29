@@ -21,6 +21,20 @@ Dockerfile.build is used to build the edge-cloud binaries. In the second stage, 
 reduce the final artifact size, which will copy in the built binaries from the first stage into runnable custom base
 container which has openstack and kubectl, etc. The entry point of this docker container image will be from `edge-cloud-entrypoint.sh` which takes first
 argument which has to be the name of the binary to run.  All of the binaries such as controller, crmctl, edgectl, crmserver, etc. are available to be run. Subseqent arguments are passed to each program.
+
+Note that this uses
+
+```
+FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl-gcloud-az
+```
+
+The `openstack-kubectl-gcloud-az` may need to be modified *carefully* if customizations need to be done. For example, to add new ssh private key under `/root/.mobiledgex` inside the container or other required files or resources.  To modify this base image, run the image and login to bash. Modify image as needed. While still running the image, commit and push the image.
+
+Alternatively, you can trying `ADD` directives in the Dockerfile.
+Which method to use depends on various things. For example, security sensitive content
+that should not be in this repo can be created inside the image instead. The image is in the
+private docker repo.
+
 Before building this container you may want to add an entry to your `/etc/hosts` file:
 
 ```
@@ -45,6 +59,8 @@ $ docker login registry.mobiledgex.net:5000  #if you have not done so already
 $ docker tag mobiledgex/edge-cloud registry.mobiledgex.net:5000/mobiledgex/edge-cloud
 $ docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud
 ```
+
+You can add your own `:tag` to the name `mobiledgex/edge-cloud` to version the produced container images.  Test via `docker-compose` which will use locally built copy. This avoids having to push to remote repository while developing code.
 
 ## Usage
 

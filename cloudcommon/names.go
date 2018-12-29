@@ -14,6 +14,7 @@ import (
 )
 
 var AppDNSRoot = "mobiledgex.net"
+var Registry = "registry.mobiledgex.net"
 
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
