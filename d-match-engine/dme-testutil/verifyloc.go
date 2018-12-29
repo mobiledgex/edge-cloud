@@ -26,7 +26,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "GDDT",
-			GpsLocation: &dme.Loc{Lat: 50.73, Long: 7.1},
+			GpsLocation: &dme.Loc{Latitude: 50.73, Longitude: 7.1},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
@@ -41,7 +41,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "GDDT",
-			GpsLocation: &dme.Loc{Lat: 52.65, Long: 12.341},
+			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 12.341},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
@@ -56,7 +56,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "ATT",
-			GpsLocation: &dme.Loc{Lat: 52.65, Long: 10.341},
+			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
 		},
 		Reply: dme.VerifyLocationReply{},
 		Error: "carrier not found for app",
@@ -69,7 +69,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "GDDT",
-			GpsLocation: &dme.Loc{Lat: 50.75, Long: 7.9050},
+			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
@@ -84,7 +84,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "GDDT",
-			GpsLocation: &dme.Loc{Lat: 52.75, Long: 12.9050},
+			GpsLocation: &dme.Loc{Latitude: 52.75, Longitude: 12.9050},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
@@ -99,7 +99,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "GDDT",
-			GpsLocation: &dme.Loc{Lat: 50.75, Long: 11.9050},
+			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Mismatch,
@@ -114,7 +114,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "DMUUS",
-			GpsLocation: &dme.Loc{Lat: 47.75, Long: 122.9050},
+			GpsLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,

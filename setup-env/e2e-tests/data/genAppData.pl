@@ -50,7 +50,7 @@ sub debug{
    if ($Debug){
       print STDOUT "DEBUG: $string\n";
    }
-} 
+}
 
 sub checkOptions{
    my $rc = 1;
@@ -84,8 +84,8 @@ sub printCloudlet{
   accessuri: $operator-cloud.$cid
 
   location:
-    lat: $lat
-    long: $long
+    latitude: $lat
+    longitude: $long
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 \n")
@@ -128,8 +128,8 @@ sub printAppinst{
 
     id: $cid
   cloudletloc:
-    lat: $lat
-    long: $long
+    latitude: $lat
+    longitude: $long
 \n");
 
 }
@@ -169,7 +169,7 @@ sub genLatLongs{
   }
 }
 
-  
+
 
 sub genOperator{
   print("

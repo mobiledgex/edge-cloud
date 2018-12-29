@@ -155,9 +155,9 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	updater2 := edgeproto.Cloudlet{}
 	updater2.Key = testutil.CloudletData[0].Key
 	newLat := 152.84583
-	updater2.Location.Lat = newLat
+	updater2.Location.Latitude = newLat
 	updater2.Fields = make([]string, 0)
-	updater2.Fields = append(updater2.Fields, edgeproto.CloudletFieldLocationLat)
+	updater2.Fields = append(updater2.Fields, edgeproto.CloudletFieldLocationLatitude)
 	_, err = cCloudletApi.UpdateCloudlet(ctx, &updater2)
 	assert.Nil(t, err, "Update cloudlet")
 
@@ -167,7 +167,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	assert.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
-		assert.Equal(t, newLat, inst.CloudletLoc.Lat, "check app inst latitude")
+		assert.Equal(t, newLat, inst.CloudletLoc.Latitude, "check app inst latitude")
 	}
 	assert.True(t, len(show.Data) > 0, "number of matching app insts")
 }

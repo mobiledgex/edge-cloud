@@ -3,14 +3,14 @@ package crmutil
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi"
+	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
 //ControllerData contains cache data for controller
 type ControllerData struct {
-	CRMRootLB            *MEXRootLB
+	CRMRootLB            *mexos.MEXRootLB
 	AppCache             edgeproto.AppCache
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
@@ -46,10 +46,11 @@ func NewControllerData() *ControllerData {
 
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
-func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
-	limits, err := oscli.GetLimits()
+func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info", "rootlb", rootlb.Name)
+	limits, err := mexos.GetLimits(rootlb.PlatConf)
 	if err != nil {
-		str := fmt.Sprintf("Openstack get limits failed: %s", err)
+		str := fmt.Sprintf("openstack get limits failed: %s", err)
 		info.Errors = append(info.Errors, str)
 		info.State = edgeproto.CloudletState_CloudletStateErrors
 		return
@@ -69,7 +70,7 @@ func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
-	log.DebugLog(log.DebugLevelMexos, "update limits", "info", info, "limits", limits)
+	log.DebugLog(log.DebugLevelMexos, "cloudlet state ready, update limits", "info", info, "limits", limits)
 }
 
 // GetInsts queries Openstack/Kubernetes to get all the cluster insts
@@ -166,7 +167,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "cluster inst changed")
-			if !IsValidMEXOSEnv {
+			if !mexos.IsValidMEXOSEnv() {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake cluster ready")
 				cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
 				return
@@ -176,7 +177,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				log.DebugLog(log.DebugLevelMexos, "can't create cluster inst, crmRootLB is null")
 				return
 			}
-			err = MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
+			err = mexos.MEXClusterCreateClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Create failed: %s", err))
@@ -184,7 +185,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "adding flavor", "flavor", flavor)
-			err = MEXAddFlavorClusterInst(&flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
+			err = mexos.MEXAddFlavorClusterInst(cd.CRMRootLB, &flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "cannot add flavor", "flavor", flavor)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
@@ -202,7 +203,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "cluster inst changed, deleted")
-			if !IsValidMEXOSEnv {
+			if !mexos.IsValidMEXOSEnv() {
 				log.DebugLog(log.DebugLevelMexos, "invalid mexos env, fake cluster state deleted")
 				info := edgeproto.ClusterInstInfo{Key: *key}
 				cd.ClusterInstInfoCache.Delete(&info, 0)
@@ -213,7 +214,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				log.DebugLog(log.DebugLevelMexos, "can't remove cluster inst, crmRootLB is null")
 				return
 			}
-			err = MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
+			err = mexos.MEXClusterRemoveClustInst(cd.CRMRootLB, &clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
@@ -241,13 +242,13 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 }
 
 // makes sure we have a valid kubeconfig file for the cluster instance
-func updateKubeConfig(clusterInst *edgeproto.ClusterInst, rootlb *MEXRootLB) error {
+func updateKubeConfig(clusterInst *edgeproto.ClusterInst, rootlb *mexos.MEXRootLB) error {
 	// make sure we have a valid kubeconfig file; we need the cluster instance manifest for this
-	clusterMf, err := fillClusterTemplateClustInst(rootlb, clusterInst)
+	clusterMf, err := mexos.FillClusterTemplateClustInst(rootlb, clusterInst)
 	if err != nil {
 		return err
 	}
-	_, err = getKconf(clusterMf, true)
+	_, err = mexos.GetKconf(clusterMf, true)
 	if err != nil {
 		return err
 	}
@@ -298,7 +299,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 
 		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
-			if !IsValidMEXOSEnv {
+			if !mexos.IsValidMEXOSEnv() {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
 				cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
 				return
@@ -315,7 +316,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
 				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
 			}
-			err = MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
+			err = mexos.MEXAppCreateAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
 
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
@@ -340,7 +341,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		// appInst was deleted
 		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)
 		go func() {
-			if !IsValidMEXOSEnv {
+			if !mexos.IsValidMEXOSEnv() {
 				log.DebugLog(log.DebugLevelMexos, "not valid mexos env, fake app state ready")
 				info := edgeproto.AppInstInfo{Key: *key}
 				cd.AppInstInfoCache.Delete(&info, 0)
@@ -358,7 +359,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
 				return
 			}
-			err = MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
+			err = mexos.MEXAppDeleteAppInst(cd.CRMRootLB, &clusterInst, &appInst, &app)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)

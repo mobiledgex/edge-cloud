@@ -66,7 +66,7 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("Must specify at least one dynamic public IP available")
 		}
 	}
-	if in.Location.Lat == 0 && in.Location.Long == 0 {
+	if in.Location.Latitude == 0 && in.Location.Longitude == 0 {
 		// user forgot to specify location
 		return errors.New("location is missing; 0,0 is not a valid location")
 	}
@@ -158,16 +158,16 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 		if first {
 			inst.Fields = make([]string, 0)
 		}
-		if _, found := fmap[edgeproto.CloudletFieldLocationLat]; found {
-			inst.CloudletLoc.Lat = in.Location.Lat
+		if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
+			inst.CloudletLoc.Latitude = in.Location.Latitude
 			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLat)
+				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLatitude)
 			}
 		}
-		if _, found := fmap[edgeproto.CloudletFieldLocationLong]; found {
-			inst.CloudletLoc.Long = in.Location.Long
+		if _, found := fmap[edgeproto.CloudletFieldLocationLongitude]; found {
+			inst.CloudletLoc.Longitude = in.Location.Longitude
 			if first {
-				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLong)
+				inst.Fields = append(inst.Fields, edgeproto.AppInstFieldCloudletLocLongitude)
 			}
 		}
 		if first {
