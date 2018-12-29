@@ -26,7 +26,7 @@ func TestLocations(client dme.Match_Engine_ApiClient) {
 			log.Fatalf("could not greet: %v", err)
 		}
 		fmt.Printf("Verify Loc = %f/%f status %d\n",
-			m.Req.GpsLocation.Lat, m.Req.GpsLocation.Long,
+			m.Req.GpsLocation.Latitude, m.Req.GpsLocation.Longitude,
 			mreply.GpsLocationStatus)
 	}
 }

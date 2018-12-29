@@ -78,8 +78,8 @@ class MexRestClient {
     // A C++ GPS location provider/binding is needed here.
     json retrieveLocation() {
         json location;
-        location["lat"] = -122.149349;
-        location["long"] = 37.459609;
+        location["latitude"] = -122.149349;
+        location["longitude"] = 37.459609;
         location["horizontal_accuracy"] = 5;
         location["vertical_accuracy"] = 20;
         location["altitude"] = 100;
@@ -452,8 +452,8 @@ int main() {
             cout << "REST FindCloudlet Status: "
                  << "Version: " << findCloudletReply["Ver"]
                  << ", Location Found Status: " << findCloudletReply["status"]
-                 << ", Location of Cloudlet, Longitude: " << findCloudletReply["cloudlet_location"]["long"]
-                 << ", Latitude: " << findCloudletReply["cloudlet_location"]["lat"]
+                 << ", Location of Cloudlet, Longitude: " << findCloudletReply["cloudlet_location"]["longitude"]
+                 << ", Latitude: " << findCloudletReply["cloudlet_location"]["latitude"]
                  << ", Cloudlet FQDN: " << findCloudletReply["FQDN"]
                  << endl;
             json ports = findCloudletReply["ports"];

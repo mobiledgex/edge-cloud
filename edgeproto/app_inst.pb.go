@@ -1053,8 +1053,8 @@ const AppInstFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
 const AppInstFieldKeyCloudletKeyName = "2.2.2"
 const AppInstFieldKeyId = "2.3"
 const AppInstFieldCloudletLoc = "3"
-const AppInstFieldCloudletLocLat = "3.1"
-const AppInstFieldCloudletLocLong = "3.2"
+const AppInstFieldCloudletLocLatitude = "3.1"
+const AppInstFieldCloudletLocLongitude = "3.2"
 const AppInstFieldCloudletLocHorizontalAccuracy = "3.3"
 const AppInstFieldCloudletLocVerticalAccuracy = "3.4"
 const AppInstFieldCloudletLocAltitude = "3.5"
@@ -1093,8 +1093,8 @@ var AppInstAllFields = []string{
 	AppInstFieldKeyCloudletKeyOperatorKeyName,
 	AppInstFieldKeyCloudletKeyName,
 	AppInstFieldKeyId,
-	AppInstFieldCloudletLocLat,
-	AppInstFieldCloudletLocLong,
+	AppInstFieldCloudletLocLatitude,
+	AppInstFieldCloudletLocLongitude,
 	AppInstFieldCloudletLocHorizontalAccuracy,
 	AppInstFieldCloudletLocVerticalAccuracy,
 	AppInstFieldCloudletLocAltitude,
@@ -1127,8 +1127,8 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldKeyCloudletKeyOperatorKeyName:            struct{}{},
 	AppInstFieldKeyCloudletKeyName:                       struct{}{},
 	AppInstFieldKeyId:                                    struct{}{},
-	AppInstFieldCloudletLocLat:                           struct{}{},
-	AppInstFieldCloudletLocLong:                          struct{}{},
+	AppInstFieldCloudletLocLatitude:                      struct{}{},
+	AppInstFieldCloudletLocLongitude:                     struct{}{},
 	AppInstFieldCloudletLocHorizontalAccuracy:            struct{}{},
 	AppInstFieldCloudletLocVerticalAccuracy:              struct{}{},
 	AppInstFieldCloudletLocAltitude:                      struct{}{},
@@ -1186,12 +1186,12 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 		fields[AppInstFieldKeyId] = struct{}{}
 		fields[AppInstFieldKey] = struct{}{}
 	}
-	if m.CloudletLoc.Lat != o.CloudletLoc.Lat {
-		fields[AppInstFieldCloudletLocLat] = struct{}{}
+	if m.CloudletLoc.Latitude != o.CloudletLoc.Latitude {
+		fields[AppInstFieldCloudletLocLatitude] = struct{}{}
 		fields[AppInstFieldCloudletLoc] = struct{}{}
 	}
-	if m.CloudletLoc.Long != o.CloudletLoc.Long {
-		fields[AppInstFieldCloudletLocLong] = struct{}{}
+	if m.CloudletLoc.Longitude != o.CloudletLoc.Longitude {
+		fields[AppInstFieldCloudletLocLongitude] = struct{}{}
 		fields[AppInstFieldCloudletLoc] = struct{}{}
 	}
 	if m.CloudletLoc.HorizontalAccuracy != o.CloudletLoc.HorizontalAccuracy {
@@ -1332,10 +1332,10 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 	}
 	if _, set := fmap["3"]; set {
 		if _, set := fmap["3.1"]; set {
-			m.CloudletLoc.Lat = src.CloudletLoc.Lat
+			m.CloudletLoc.Latitude = src.CloudletLoc.Latitude
 		}
 		if _, set := fmap["3.2"]; set {
-			m.CloudletLoc.Long = src.CloudletLoc.Long
+			m.CloudletLoc.Longitude = src.CloudletLoc.Longitude
 		}
 		if _, set := fmap["3.3"]; set {
 			m.CloudletLoc.HorizontalAccuracy = src.CloudletLoc.HorizontalAccuracy

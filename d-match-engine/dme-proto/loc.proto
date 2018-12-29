@@ -17,9 +17,9 @@ message Timestamp {
 
 message Loc {
   // latitude in WGS 84 coordinates
-  double lat = 1;
+  double latitude = 1;
   // longitude in WGS 84 coordinates
-  double long = 2;
+  double longitude = 2;
   // horizontal accuracy (radius in meters)
   double horizontal_accuracy = 3;
   // veritical accuracy (meters)

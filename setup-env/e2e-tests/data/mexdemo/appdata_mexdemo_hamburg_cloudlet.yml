@@ -5,9 +5,7 @@ cloudlets:
     name: hamburgdemocloudlet
   accessuri:
   location:
-    lat: 53.5511
-    long: 9.9937
+    latitude: 53.5511
+    longitude: 9.9937
   ipsupport: IpSupportDynamic
   numdynamicips: 5
-
-

@@ -46,7 +46,7 @@ public class FindCloudlet implements Callable {
         mPort = port;
 
         if (timeoutInMilliseconds <= 0) {
-            throw new IllegalArgumentException("VerifyLocation timeout must be positive.");
+            throw new IllegalArgumentException("FindCloudlet timeout must be positive.");
         }
         mTimeoutInMilliseconds = timeoutInMilliseconds;
         return true;

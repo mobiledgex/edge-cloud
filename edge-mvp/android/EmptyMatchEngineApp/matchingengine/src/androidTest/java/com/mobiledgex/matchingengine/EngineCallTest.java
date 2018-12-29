@@ -700,8 +700,8 @@ public class EngineCallTest {
 
         assertEquals(0, getLocationReply.getTower());
         // FIXME: Server is currently a pure echo of client location.
-        assertEquals((int) loc.getLatitude(), (int) getLocationReply.getNetworkLocation().getLat());
-        assertEquals((int) loc.getLongitude(), (int) getLocationReply.getNetworkLocation().getLong());
+        assertEquals((int) loc.getLatitude(), (int) getLocationReply.getNetworkLocation().getLatitude());
+        assertEquals((int) loc.getLongitude(), (int) getLocationReply.getNetworkLocation().getLongitude());
     }
 
     @Test
@@ -755,8 +755,8 @@ public class EngineCallTest {
 
         assertEquals(getLocationReply.getTower(), 0);
         // FIXME: Server is currently a pure echo of client location.
-        assertEquals((int) loc.getLatitude(), (int) getLocationReply.getNetworkLocation().getLat());
-        assertEquals((int) loc.getLongitude(), (int) getLocationReply.getNetworkLocation().getLong());
+        assertEquals((int) loc.getLatitude(), (int) getLocationReply.getNetworkLocation().getLatitude());
+        assertEquals((int) loc.getLongitude(), (int) getLocationReply.getNetworkLocation().getLongitude());
 
         assertEquals("Carriers must match", carrierName, getLocationReply.getCarrierName());
     }

@@ -5,6 +5,5 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: -60
-    long: -60
-
+    latitude: -60
+    longitude: -60

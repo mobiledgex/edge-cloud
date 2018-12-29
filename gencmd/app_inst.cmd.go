@@ -108,8 +108,8 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Altitude), 'e', -1, 32))
@@ -154,8 +154,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Key-Id")
-	s = append(s, "CloudletLoc-Lat")
-	s = append(s, "CloudletLoc-Long")
+	s = append(s, "CloudletLoc-Latitude")
+	s = append(s, "CloudletLoc-Longitude")
 	s = append(s, "CloudletLoc-HorizontalAccuracy")
 	s = append(s, "CloudletLoc-VerticalAccuracy")
 	s = append(s, "CloudletLoc-Altitude")
@@ -700,8 +700,8 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Lat, "cloudletloc-lat", 0, "CloudletLoc.Lat")
-	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Long, "cloudletloc-long", 0, "CloudletLoc.Long")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Latitude, "cloudletloc-latitude", 0, "CloudletLoc.Latitude")
+	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Longitude, "cloudletloc-longitude", 0, "CloudletLoc.Longitude")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.HorizontalAccuracy, "cloudletloc-horizontalaccuracy", 0, "CloudletLoc.HorizontalAccuracy")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.VerticalAccuracy, "cloudletloc-verticalaccuracy", 0, "CloudletLoc.VerticalAccuracy")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Altitude, "cloudletloc-altitude", 0, "CloudletLoc.Altitude")
@@ -772,10 +772,10 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("key-id").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.3")
 	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-lat").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-latitude").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
 	}
-	if AppInstNoConfigFlagSet.Lookup("cloudletloc-long").Changed {
+	if AppInstNoConfigFlagSet.Lookup("cloudletloc-longitude").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.2")
 	}
 	if AppInstNoConfigFlagSet.Lookup("cloudletloc-horizontalaccuracy").Changed {

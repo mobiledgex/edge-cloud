@@ -390,8 +390,8 @@ public class MatchingEngine {
 
     private Loc androidLocToMexLoc(android.location.Location loc) {
         return Loc.newBuilder()
-                .setLat((loc == null) ? 0.0d : loc.getLatitude())
-                .setLong((loc == null) ? 0.0d : loc.getLongitude())
+                .setLatitude((loc == null) ? 0.0d : loc. getLatitude())
+                .setLongitude((loc == null) ? 0.0d : loc.getLongitude())
                 .setHorizontalAccuracy((loc == null) ? 0.0d :loc.getAccuracy())
                 //.setVerticalAccuracy(loc.getVerticalAccuracyMeters()) // API Level 26 required.
                 .setVerticalAccuracy(0d)
