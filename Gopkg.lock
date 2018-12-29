@@ -1119,6 +1119,7 @@
     "github.com/labstack/echo",
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
+    "github.com/mitchellh/mapstructure",
     "github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure",
     "github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud",
     "github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi",
