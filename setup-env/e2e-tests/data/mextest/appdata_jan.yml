@@ -88,8 +88,8 @@ cloudlets:
     name: buckhorntestcloudlet
   accessuri:
   location:
-    lat: 50.737
-    long: 7.098
+    latitude: 50.737
+    longitude: 7.098
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -115,5 +115,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
-

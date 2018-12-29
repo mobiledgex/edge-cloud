@@ -4,6 +4,6 @@ registerclientrequest:
   appvers: "1.0"
 verifylocationrequest:
   carriername: dmuus
-  gpslocation: 
-    lat: 43.5473
-    long: -96.7283
+  gpslocation:
+    latitude: 43.5473
+    longitude: -96.7283

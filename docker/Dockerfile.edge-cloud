@@ -44,8 +44,8 @@ ADD docker/beredgecloudtelecomde.crt /root/.mobiledgex/beredgecloudtelecomde.crt
 ADD docker/buckhornedgecloudtelecomde.crt /root/.mobiledgex/buckhornedgecloudtelecomde.crt
 ADD docker/telesec_chain.crt /root/.mobiledgex/telesec_chain.crt
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh /usr/local/bin/test-edgectl.sh
-RUN apt-get update
-RUN apt -y install openssh-server
+#RUN apt-get update
+#RUN apt -y install openssh-server
 
 ENTRYPOINT [ "edge-cloud-entrypoint.sh" ]
 CMD []

@@ -5,7 +5,7 @@ cloudlets:
     name: dmuus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 40
-    long: -99
+    latitude: 40
+    longitude: -99
   ipsupport: IpSupportDynamic
   numdynamicips: 100

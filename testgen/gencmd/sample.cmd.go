@@ -237,8 +237,8 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	if in.Loc == nil {
 		in.Loc = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.Loc.Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Loc.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Loc.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Loc.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Loc.HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Loc.VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Loc.Altitude), 'e', -1, 32))
@@ -249,8 +249,8 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	}
 	s = append(s, strconv.FormatUint(uint64(in.Loc.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Loc.Timestamp.Nanos), 10))
-	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.LocNonnull.Altitude), 'e', -1, 32))
@@ -335,8 +335,8 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	if in.RepeatedLoc[0] == nil {
 		in.RepeatedLoc[0] = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLoc[0].Altitude), 'e', -1, 32))
@@ -350,8 +350,8 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	if in.RepeatedLocNonnull == nil {
 		in.RepeatedLocNonnull = make([]distributed_match_engine.Loc, 1)
 	}
-	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.RepeatedLocNonnull[0].Altitude), 'e', -1, 32))
@@ -398,8 +398,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "IncludeFields-Name")
 	s = append(s, "IncludeFieldsNonnull-Fields")
 	s = append(s, "IncludeFieldsNonnull-Name")
-	s = append(s, "Loc-Lat")
-	s = append(s, "Loc-Long")
+	s = append(s, "Loc-Latitude")
+	s = append(s, "Loc-Longitude")
 	s = append(s, "Loc-HorizontalAccuracy")
 	s = append(s, "Loc-VerticalAccuracy")
 	s = append(s, "Loc-Altitude")
@@ -407,8 +407,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "Loc-Speed")
 	s = append(s, "Loc-Timestamp-Seconds")
 	s = append(s, "Loc-Timestamp-Nanos")
-	s = append(s, "LocNonnull-Lat")
-	s = append(s, "LocNonnull-Long")
+	s = append(s, "LocNonnull-Latitude")
+	s = append(s, "LocNonnull-Longitude")
 	s = append(s, "LocNonnull-HorizontalAccuracy")
 	s = append(s, "LocNonnull-VerticalAccuracy")
 	s = append(s, "LocNonnull-Altitude")
@@ -433,8 +433,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "RepeatedInnerMsg-Id")
 	s = append(s, "RepeatedInnerMsgNonnull-Url")
 	s = append(s, "RepeatedInnerMsgNonnull-Id")
-	s = append(s, "RepeatedLoc-Lat")
-	s = append(s, "RepeatedLoc-Long")
+	s = append(s, "RepeatedLoc-Latitude")
+	s = append(s, "RepeatedLoc-Longitude")
 	s = append(s, "RepeatedLoc-HorizontalAccuracy")
 	s = append(s, "RepeatedLoc-VerticalAccuracy")
 	s = append(s, "RepeatedLoc-Altitude")
@@ -442,8 +442,8 @@ func TestGenHeaderSlicer() []string {
 	s = append(s, "RepeatedLoc-Speed")
 	s = append(s, "RepeatedLoc-Timestamp-Seconds")
 	s = append(s, "RepeatedLoc-Timestamp-Nanos")
-	s = append(s, "RepeatedLocNonnull-Lat")
-	s = append(s, "RepeatedLocNonnull-Long")
+	s = append(s, "RepeatedLocNonnull-Latitude")
+	s = append(s, "RepeatedLocNonnull-Longitude")
 	s = append(s, "RepeatedLocNonnull-HorizontalAccuracy")
 	s = append(s, "RepeatedLocNonnull-VerticalAccuracy")
 	s = append(s, "RepeatedLocNonnull-Altitude")
@@ -599,8 +599,8 @@ func init() {
 	TestGenFlagSet.StringVar(&TestGenIn.IncludeFields.Name, "includefields-name", "", "IncludeFields.Name")
 	TestGenFlagSet.StringVar(&TestGenIn.IncludeFieldsNonnull.Name, "includefieldsnonnull-name", "", "IncludeFieldsNonnull.Name")
 	TestGenIn.Loc = &distributed_match_engine.Loc{}
-	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Lat, "loc-lat", 0, "Loc.Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Long, "loc-long", 0, "Loc.Long")
+	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Latitude, "loc-latitude", 0, "Loc.Latitude")
+	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Longitude, "loc-longitude", 0, "Loc.Longitude")
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.HorizontalAccuracy, "loc-horizontalaccuracy", 0, "Loc.HorizontalAccuracy")
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.VerticalAccuracy, "loc-verticalaccuracy", 0, "Loc.VerticalAccuracy")
 	TestGenFlagSet.Float64Var(&TestGenIn.Loc.Altitude, "loc-altitude", 0, "Loc.Altitude")
@@ -609,8 +609,8 @@ func init() {
 	TestGenIn.Loc.Timestamp = &distributed_match_engine.Timestamp{}
 	TestGenFlagSet.Int64Var(&TestGenIn.Loc.Timestamp.Seconds, "loc-timestamp-seconds", 0, "Loc.Timestamp.Seconds")
 	TestGenFlagSet.Int32Var(&TestGenIn.Loc.Timestamp.Nanos, "loc-timestamp-nanos", 0, "Loc.Timestamp.Nanos")
-	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Lat, "locnonnull-lat", 0, "LocNonnull.Lat")
-	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Long, "locnonnull-long", 0, "LocNonnull.Long")
+	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Latitude, "locnonnull-latitude", 0, "LocNonnull.Latitude")
+	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Longitude, "locnonnull-longitude", 0, "LocNonnull.Longitude")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.HorizontalAccuracy, "locnonnull-horizontalaccuracy", 0, "LocNonnull.HorizontalAccuracy")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.VerticalAccuracy, "locnonnull-verticalaccuracy", 0, "LocNonnull.VerticalAccuracy")
 	TestGenFlagSet.Float64Var(&TestGenIn.LocNonnull.Altitude, "locnonnull-altitude", 0, "LocNonnull.Altitude")
@@ -713,10 +713,10 @@ func TestGenSetFields() {
 	if TestGenFlagSet.Lookup("includefieldsnonnull-name").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "23.2")
 	}
-	if TestGenFlagSet.Lookup("loc-lat").Changed {
+	if TestGenFlagSet.Lookup("loc-latitude").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "24.1")
 	}
-	if TestGenFlagSet.Lookup("loc-long").Changed {
+	if TestGenFlagSet.Lookup("loc-longitude").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "24.2")
 	}
 	if TestGenFlagSet.Lookup("loc-horizontalaccuracy").Changed {
@@ -740,10 +740,10 @@ func TestGenSetFields() {
 	if TestGenFlagSet.Lookup("loc-timestamp-nanos").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "24.8.2")
 	}
-	if TestGenFlagSet.Lookup("locnonnull-lat").Changed {
+	if TestGenFlagSet.Lookup("locnonnull-latitude").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "25.1")
 	}
-	if TestGenFlagSet.Lookup("locnonnull-long").Changed {
+	if TestGenFlagSet.Lookup("locnonnull-longitude").Changed {
 		TestGenIn.Fields = append(TestGenIn.Fields, "25.2")
 	}
 	if TestGenFlagSet.Lookup("locnonnull-horizontalaccuracy").Changed {

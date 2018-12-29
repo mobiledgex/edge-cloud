@@ -32,7 +32,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		"VerifyLocToken", mreq.VerifyLocToken,
 		"GpsLocation", mreq.GpsLocation)
 
-	if mreq.GpsLocation == nil || (mreq.GpsLocation.Lat == 0 && mreq.GpsLocation.Long == 0) {
+	if mreq.GpsLocation == nil || (mreq.GpsLocation.Latitude == 0 && mreq.GpsLocation.Longitude == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return fmt.Errorf("Missing GpsLocation")
 	}
@@ -55,7 +55,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		if mreq.VerifyLocToken == "" {
 			return fmt.Errorf("verifyloc token required")
 		}
-		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Lat, mreq.GpsLocation.Long, mreq.VerifyLocToken, tokSrvUrl)
+		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Latitude, mreq.GpsLocation.Longitude, mreq.VerifyLocToken, tokSrvUrl)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
@@ -68,13 +68,13 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		distance = dmecommon.InfiniteDistance
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
 			"appName", key.Name,
-			"lat", mreq.GpsLocation.Lat,
-			"long", mreq.GpsLocation.Long)
+			"lat", mreq.GpsLocation.Latitude,
+			"long", mreq.GpsLocation.Longitude)
 		for _, c := range carr.insts {
 			d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
 			log.DebugLog(log.DebugLevelDmereq, "verify location at",
-				"lat", c.location.Lat,
-				"long", c.location.Long,
+				"lat", c.location.Latitude,
+				"long", c.location.Longitude,
 				"distance", distance,
 				"this-dist", d)
 			if d < distance {
@@ -91,8 +91,8 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		mreply.GPS_Location_Accuracy_KM = locval.DistanceRange
 
 		log.DebugLog(log.DebugLevelDmereq, "verified location at",
-			"lat", found.location.Lat,
-			"long", found.location.Long,
+			"lat", found.location.Latitude,
+			"long", found.location.Longitude,
 			"actual distance", distance,
 			"distance range", mreply.GPS_Location_Accuracy_KM,
 			"status", mreply.GpsLocationStatus,

@@ -80,8 +80,8 @@ cloudlets:
       name: mex
     name: buckhorncloudlet
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -123,4 +123,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

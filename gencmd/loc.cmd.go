@@ -58,8 +58,8 @@ func TimestampWriteOutputOne(obj *distributed_match_engine.Timestamp) {
 }
 func LocSlicer(in *distributed_match_engine.Loc) []string {
 	s := make([]string, 0, 8)
-	s = append(s, strconv.FormatFloat(float64(in.Lat), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Long), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.HorizontalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.VerticalAccuracy), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.Altitude), 'e', -1, 32))
@@ -75,8 +75,8 @@ func LocSlicer(in *distributed_match_engine.Loc) []string {
 
 func LocHeaderSlicer() []string {
 	s := make([]string, 0, 8)
-	s = append(s, "Lat")
-	s = append(s, "Long")
+	s = append(s, "Latitude")
+	s = append(s, "Longitude")
 	s = append(s, "HorizontalAccuracy")
 	s = append(s, "VerticalAccuracy")
 	s = append(s, "Altitude")

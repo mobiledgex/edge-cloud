@@ -87,8 +87,8 @@ cloudlets:
     name: dmuus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -121,8 +121,8 @@ appinstances:
       name: dmuus-cloud-1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   clusterinstkey:
     clusterkey:
       name: SmallCluster
@@ -133,4 +133,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
