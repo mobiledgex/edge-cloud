@@ -87,16 +87,16 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
 - key:
     operatorkey:
       name: tmus
     name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
 
 apps:
 - key:
@@ -125,8 +125,8 @@ appinstances:
       name: tmus-cloud-1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   uri: someapplication1.tmus-cloud-1.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -154,8 +154,8 @@ appinstances:
       name: tmus-cloud-2
     id: 123
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   uri: someapplication1.tmus-cloud-2.mobiledgex.net
   clusterinstkey:
     clusterkey:

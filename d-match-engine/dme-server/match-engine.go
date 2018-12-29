@@ -110,8 +110,8 @@ func addAppInst(appInst *edgeproto.AppInst) {
 		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.appKey.Name,
 			"appVersion", app.appKey.Version,
-			"lat", appInst.CloudletLoc.Lat,
-			"long", appInst.CloudletLoc.Long)
+			"latitude", appInst.CloudletLoc.Latitude,
+			"longitude", appInst.CloudletLoc.Longitude)
 	} else {
 		cNew = new(dmeAppInst)
 		cNew.cloudletKey = appInst.Key.CloudletKey
@@ -125,8 +125,8 @@ func addAppInst(appInst *edgeproto.AppInst) {
 			"appVersion", app.appKey.Version,
 			"cloudletKey", appInst.Key.CloudletKey,
 			"uri", appInst.Uri,
-			"lat", cNew.location.Lat,
-			"long", cNew.location.Long)
+			"latitude", cNew.location.Latitude,
+			"longitude", cNew.location.Longitude)
 	}
 	app.Unlock()
 }
@@ -161,8 +161,8 @@ func removeAppInst(appInst *edgeproto.AppInst) {
 				log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version,
-					"lat", cl.location.Lat,
-					"long", cl.location.Long)
+					"latitude", cl.location.Latitude,
+					"longitude", cl.location.Longitude)
 			}
 			if len(app.carriers[carrierName].insts) == 0 {
 				delete(tbl.apps[appkey].carriers, carrierName)
@@ -246,8 +246,8 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 		for _, i := range c.insts {
 			d = dmecommon.DistanceBetween(*loc, i.location)
 			log.DebugLog(log.DebugLevelDmereq, "found cloudlet at",
-				"lat", i.location.Lat,
-				"long", i.location.Long,
+				"latitude", i.location.Latitude,
+				"longitude", i.location.Longitude,
 				"maxDistance", maxDistance,
 				"this-dist", d)
 			if d < maxDistance {
@@ -268,8 +268,8 @@ func findClosestForCarrier(carrierName string, key edgeproto.AppKey, loc *dme.Lo
 			log.DebugLog(log.DebugLevelDmereq, "best cloudlet",
 				"app", key.Name,
 				"carrier", carrierName,
-				"lat", found.location.Lat,
-				"long", found.location.Long,
+				"latitude", found.location.Latitude,
+				"longitude", found.location.Longitude,
 				"distance", maxDistance,
 				"uri", found.uri,
 				"IP", ipaddr.String())
@@ -482,8 +482,8 @@ func listAppinstTbl() {
 					"Name", app.appKey.Name,
 					"carrier", cname,
 					"Ver", app.appKey.Version,
-					"Lat", inst.location.Lat,
-					"Long", inst.location.Long)
+					"Latitude", inst.location.Latitude,
+					"Longitude", inst.location.Longitude)
 			}
 		}
 	}

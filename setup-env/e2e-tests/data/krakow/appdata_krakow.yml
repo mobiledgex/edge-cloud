@@ -81,8 +81,8 @@ cloudlets:
     name: krakowcloudlet
   accessuri:
   location:
-    lat: 50.0647
-    long: 19.945
+    latitude: 50.0647
+    longitude: 19.945
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -108,5 +108,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
-

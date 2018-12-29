@@ -60,7 +60,7 @@ var Cloudlets = []Cloudlet{
 		Name:        "Bonn",
 		Uri:         "10.1.10.1",
 		Ip:          []byte{10, 1, 10, 1},
-		Location:    dme.Loc{Lat: 50.7374, Long: 7.0982},
+		Location:    dme.Loc{Latitude: 50.7374, Longitude: 7.0982},
 	},
 	Cloudlet{
 		Id:          222,
@@ -69,7 +69,7 @@ var Cloudlets = []Cloudlet{
 		Name:        "Munich",
 		Uri:         "11.1.11.1",
 		Ip:          []byte{11, 1, 11, 1},
-		Location:    dme.Loc{Lat: 52.7374, Long: 13.4050},
+		Location:    dme.Loc{Latitude: 52.7374, Longitude: 13.4050},
 	},
 	Cloudlet{
 		Id:          333,
@@ -78,7 +78,7 @@ var Cloudlets = []Cloudlet{
 		Name:        "Berlin",
 		Uri:         "12.1.12.1",
 		Ip:          []byte{12, 1, 12, 1},
-		Location:    dme.Loc{Lat: 48.1351, Long: 11.5820},
+		Location:    dme.Loc{Latitude: 48.1351, Longitude: 11.5820},
 	},
 	Cloudlet{
 		Id:          444,
@@ -87,7 +87,7 @@ var Cloudlets = []Cloudlet{
 		Name:        "San Francisco",
 		Uri:         "13.1.13.1",
 		Ip:          []byte{13, 1, 13, 1},
-		Location:    dme.Loc{Lat: 47.6062, Long: 122.3321},
+		Location:    dme.Loc{Latitude: 47.6062, Longitude: 122.3321},
 	},
 	Cloudlet{
 		Id:          555,
@@ -96,7 +96,7 @@ var Cloudlets = []Cloudlet{
 		Name:        "default",
 		Uri:         "15.1.15.1",
 		Ip:          []byte{14, 1, 14, 1},
-		Location:    dme.Loc{Lat: 29.66, Long: -82.33},
+		Location:    dme.Loc{Latitude: 29.66, Longitude: -82.33},
 	},
 }
 

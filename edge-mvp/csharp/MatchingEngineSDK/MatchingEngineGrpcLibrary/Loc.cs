@@ -24,22 +24,186 @@ namespace DistributedMatchEngine {
     static LocReflection() {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
-            "Cglsb2MucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZRofZ29vZ2xl",
-            "L3Byb3RvYnVmL3RpbWVzdGFtcC5wcm90byK4AQoDTG9jEgsKA2xhdBgBIAEo",
-            "ARIMCgRsb25nGAIgASgBEhsKE2hvcml6b250YWxfYWNjdXJhY3kYAyABKAES",
-            "GQoRdmVydGljYWxfYWNjdXJhY3kYBCABKAESEAoIYWx0aXR1ZGUYBSABKAES",
-            "DgoGY291cnNlGAYgASgBEg0KBXNwZWVkGAcgASgBEi0KCXRpbWVzdGFtcBgI",
-            "IAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXBiBnByb3RvMw=="));
+            "Cglsb2MucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZSIrCglUaW1l",
+            "c3RhbXASDwoHc2Vjb25kcxgBIAEoAxINCgVuYW5vcxgCIAEoBSLLAQoDTG9j",
+            "EhAKCGxhdGl0dWRlGAEgASgBEhEKCWxvbmdpdHVkZRgCIAEoARIbChNob3Jp",
+            "em9udGFsX2FjY3VyYWN5GAMgASgBEhkKEXZlcnRpY2FsX2FjY3VyYWN5GAQg",
+            "ASgBEhAKCGFsdGl0dWRlGAUgASgBEg4KBmNvdXJzZRgGIAEoARINCgVzcGVl",
+            "ZBgHIAEoARI2Cgl0aW1lc3RhbXAYCCABKAsyIy5kaXN0cmlidXRlZF9tYXRj",
+            "aF9lbmdpbmUuVGltZXN0YW1wYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
-          new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.TimestampReflection.Descriptor, },
+          new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Loc), global::DistributedMatchEngine.Loc.Parser, new[]{ "Lat", "Long", "HorizontalAccuracy", "VerticalAccuracy", "Altitude", "Course", "Speed", "Timestamp" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Timestamp), global::DistributedMatchEngine.Timestamp.Parser, new[]{ "Seconds", "Nanos" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Loc), global::DistributedMatchEngine.Loc.Parser, new[]{ "Latitude", "Longitude", "HorizontalAccuracy", "VerticalAccuracy", "Altitude", "Course", "Speed", "Timestamp" }, null, null, null)
           }));
     }
     #endregion
 
   }
   #region Messages
+  /// <summary>
+  /// This is a simple Timestamp message type
+  /// grpc-gateway converts google.protobuf.Timestamp into an RFC3339-type string
+  /// which is a waste of a conversion, so we define our own
+  /// </summary>
+  public sealed partial class Timestamp : pb::IMessage<Timestamp> {
+    private static readonly pb::MessageParser<Timestamp> _parser = new pb::MessageParser<Timestamp>(() => new Timestamp());
+    private pb::UnknownFieldSet _unknownFields;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pb::MessageParser<Timestamp> Parser { get { return _parser; } }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public static pbr::MessageDescriptor Descriptor {
+      get { return global::DistributedMatchEngine.LocReflection.Descriptor.MessageTypes[0]; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    pbr::MessageDescriptor pb::IMessage.Descriptor {
+      get { return Descriptor; }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Timestamp() {
+      OnConstruction();
+    }
+
+    partial void OnConstruction();
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Timestamp(Timestamp other) : this() {
+      seconds_ = other.seconds_;
+      nanos_ = other.nanos_;
+      _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public Timestamp Clone() {
+      return new Timestamp(this);
+    }
+
+    /// <summary>Field number for the "seconds" field.</summary>
+    public const int SecondsFieldNumber = 1;
+    private long seconds_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public long Seconds {
+      get { return seconds_; }
+      set {
+        seconds_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "nanos" field.</summary>
+    public const int NanosFieldNumber = 2;
+    private int nanos_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int Nanos {
+      get { return nanos_; }
+      set {
+        nanos_ = value;
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override bool Equals(object other) {
+      return Equals(other as Timestamp);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool Equals(Timestamp other) {
+      if (ReferenceEquals(other, null)) {
+        return false;
+      }
+      if (ReferenceEquals(other, this)) {
+        return true;
+      }
+      if (Seconds != other.Seconds) return false;
+      if (Nanos != other.Nanos) return false;
+      return Equals(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override int GetHashCode() {
+      int hash = 1;
+      if (Seconds != 0L) hash ^= Seconds.GetHashCode();
+      if (Nanos != 0) hash ^= Nanos.GetHashCode();
+      if (_unknownFields != null) {
+        hash ^= _unknownFields.GetHashCode();
+      }
+      return hash;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public override string ToString() {
+      return pb::JsonFormatter.ToDiagnosticString(this);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void WriteTo(pb::CodedOutputStream output) {
+      if (Seconds != 0L) {
+        output.WriteRawTag(8);
+        output.WriteInt64(Seconds);
+      }
+      if (Nanos != 0) {
+        output.WriteRawTag(16);
+        output.WriteInt32(Nanos);
+      }
+      if (_unknownFields != null) {
+        _unknownFields.WriteTo(output);
+      }
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int CalculateSize() {
+      int size = 0;
+      if (Seconds != 0L) {
+        size += 1 + pb::CodedOutputStream.ComputeInt64Size(Seconds);
+      }
+      if (Nanos != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(Nanos);
+      }
+      if (_unknownFields != null) {
+        size += _unknownFields.CalculateSize();
+      }
+      return size;
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(Timestamp other) {
+      if (other == null) {
+        return;
+      }
+      if (other.Seconds != 0L) {
+        Seconds = other.Seconds;
+      }
+      if (other.Nanos != 0) {
+        Nanos = other.Nanos;
+      }
+      _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
+    }
+
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public void MergeFrom(pb::CodedInputStream input) {
+      uint tag;
+      while ((tag = input.ReadTag()) != 0) {
+        switch(tag) {
+          default:
+            _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
+            break;
+          case 8: {
+            Seconds = input.ReadInt64();
+            break;
+          }
+          case 16: {
+            Nanos = input.ReadInt32();
+            break;
+          }
+        }
+      }
+    }
+
+  }
+
   public sealed partial class Loc : pb::IMessage<Loc> {
     private static readonly pb::MessageParser<Loc> _parser = new pb::MessageParser<Loc>(() => new Loc());
     private pb::UnknownFieldSet _unknownFields;
@@ -48,7 +212,7 @@ namespace DistributedMatchEngine {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public static pbr::MessageDescriptor Descriptor {
-      get { return global::DistributedMatchEngine.LocReflection.Descriptor.MessageTypes[0]; }
+      get { return global::DistributedMatchEngine.LocReflection.Descriptor.MessageTypes[1]; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -65,8 +229,8 @@ namespace DistributedMatchEngine {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Loc(Loc other) : this() {
-      lat_ = other.lat_;
-      long_ = other.long_;
+      latitude_ = other.latitude_;
+      longitude_ = other.longitude_;
       horizontalAccuracy_ = other.horizontalAccuracy_;
       verticalAccuracy_ = other.verticalAccuracy_;
       altitude_ = other.altitude_;
@@ -81,31 +245,31 @@ namespace DistributedMatchEngine {
       return new Loc(this);
     }
 
-    /// <summary>Field number for the "lat" field.</summary>
-    public const int LatFieldNumber = 1;
-    private double lat_;
+    /// <summary>Field number for the "latitude" field.</summary>
+    public const int LatitudeFieldNumber = 1;
+    private double latitude_;
     /// <summary>
     /// latitude in WGS 84 coordinates
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public double Lat {
-      get { return lat_; }
+    public double Latitude {
+      get { return latitude_; }
       set {
-        lat_ = value;
+        latitude_ = value;
       }
     }
 
-    /// <summary>Field number for the "long" field.</summary>
-    public const int LongFieldNumber = 2;
-    private double long_;
+    /// <summary>Field number for the "longitude" field.</summary>
+    public const int LongitudeFieldNumber = 2;
+    private double longitude_;
     /// <summary>
     /// longitude in WGS 84 coordinates
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public double Long {
-      get { return long_; }
+    public double Longitude {
+      get { return longitude_; }
       set {
-        long_ = value;
+        longitude_ = value;
       }
     }
 
@@ -182,12 +346,12 @@ namespace DistributedMatchEngine {
 
     /// <summary>Field number for the "timestamp" field.</summary>
     public const int TimestampFieldNumber = 8;
-    private global::Google.Protobuf.WellKnownTypes.Timestamp timestamp_;
+    private global::DistributedMatchEngine.Timestamp timestamp_;
     /// <summary>
     /// timestamp
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public global::Google.Protobuf.WellKnownTypes.Timestamp Timestamp {
+    public global::DistributedMatchEngine.Timestamp Timestamp {
       get { return timestamp_; }
       set {
         timestamp_ = value;
@@ -207,8 +371,8 @@ namespace DistributedMatchEngine {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Lat, other.Lat)) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Long, other.Long)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Latitude, other.Latitude)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Longitude, other.Longitude)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(HorizontalAccuracy, other.HorizontalAccuracy)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(VerticalAccuracy, other.VerticalAccuracy)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Altitude, other.Altitude)) return false;
@@ -221,8 +385,8 @@ namespace DistributedMatchEngine {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (Lat != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Lat);
-      if (Long != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Long);
+      if (Latitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Latitude);
+      if (Longitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Longitude);
       if (HorizontalAccuracy != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(HorizontalAccuracy);
       if (VerticalAccuracy != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(VerticalAccuracy);
       if (Altitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Altitude);
@@ -242,13 +406,13 @@ namespace DistributedMatchEngine {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (Lat != 0D) {
+      if (Latitude != 0D) {
         output.WriteRawTag(9);
-        output.WriteDouble(Lat);
+        output.WriteDouble(Latitude);
       }
-      if (Long != 0D) {
+      if (Longitude != 0D) {
         output.WriteRawTag(17);
-        output.WriteDouble(Long);
+        output.WriteDouble(Longitude);
       }
       if (HorizontalAccuracy != 0D) {
         output.WriteRawTag(25);
@@ -282,10 +446,10 @@ namespace DistributedMatchEngine {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (Lat != 0D) {
+      if (Latitude != 0D) {
         size += 1 + 8;
       }
-      if (Long != 0D) {
+      if (Longitude != 0D) {
         size += 1 + 8;
       }
       if (HorizontalAccuracy != 0D) {
@@ -317,11 +481,11 @@ namespace DistributedMatchEngine {
       if (other == null) {
         return;
       }
-      if (other.Lat != 0D) {
-        Lat = other.Lat;
+      if (other.Latitude != 0D) {
+        Latitude = other.Latitude;
       }
-      if (other.Long != 0D) {
-        Long = other.Long;
+      if (other.Longitude != 0D) {
+        Longitude = other.Longitude;
       }
       if (other.HorizontalAccuracy != 0D) {
         HorizontalAccuracy = other.HorizontalAccuracy;
@@ -340,7 +504,7 @@ namespace DistributedMatchEngine {
       }
       if (other.timestamp_ != null) {
         if (timestamp_ == null) {
-          timestamp_ = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+          timestamp_ = new global::DistributedMatchEngine.Timestamp();
         }
         Timestamp.MergeFrom(other.Timestamp);
       }
@@ -356,11 +520,11 @@ namespace DistributedMatchEngine {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 9: {
-            Lat = input.ReadDouble();
+            Latitude = input.ReadDouble();
             break;
           }
           case 17: {
-            Long = input.ReadDouble();
+            Longitude = input.ReadDouble();
             break;
           }
           case 25: {
@@ -385,7 +549,7 @@ namespace DistributedMatchEngine {
           }
           case 66: {
             if (timestamp_ == null) {
-              timestamp_ = new global::Google.Protobuf.WellKnownTypes.Timestamp();
+              timestamp_ = new global::DistributedMatchEngine.Timestamp();
             }
             input.ReadMessage(timestamp_);
             break;

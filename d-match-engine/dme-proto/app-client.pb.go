@@ -1712,8 +1712,8 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
 	m.CarrierName = src.CarrierName
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Lat = src.GpsLocation.Lat
-		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.Latitude = src.GpsLocation.Latitude
+		m.GpsLocation.Longitude = src.GpsLocation.Longitude
 		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
 		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
 		m.GpsLocation.Altitude = src.GpsLocation.Altitude
@@ -1757,8 +1757,8 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 	}
 	if src.CloudletLocation != nil {
 		m.CloudletLocation = &Loc{}
-		m.CloudletLocation.Lat = src.CloudletLocation.Lat
-		m.CloudletLocation.Long = src.CloudletLocation.Long
+		m.CloudletLocation.Latitude = src.CloudletLocation.Latitude
+		m.CloudletLocation.Longitude = src.CloudletLocation.Longitude
 		m.CloudletLocation.HorizontalAccuracy = src.CloudletLocation.HorizontalAccuracy
 		m.CloudletLocation.VerticalAccuracy = src.CloudletLocation.VerticalAccuracy
 		m.CloudletLocation.Altitude = src.CloudletLocation.Altitude
@@ -1794,8 +1794,8 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
 	m.CarrierName = src.CarrierName
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Lat = src.GpsLocation.Lat
-		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.Latitude = src.GpsLocation.Latitude
+		m.GpsLocation.Longitude = src.GpsLocation.Longitude
 		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
 		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
 		m.GpsLocation.Altitude = src.GpsLocation.Altitude
@@ -1854,8 +1854,8 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 	m.Tower = src.Tower
 	if src.NetworkLocation != nil {
 		m.NetworkLocation = &Loc{}
-		m.NetworkLocation.Lat = src.NetworkLocation.Lat
-		m.NetworkLocation.Long = src.NetworkLocation.Long
+		m.NetworkLocation.Latitude = src.NetworkLocation.Latitude
+		m.NetworkLocation.Longitude = src.NetworkLocation.Longitude
 		m.NetworkLocation.HorizontalAccuracy = src.NetworkLocation.HorizontalAccuracy
 		m.NetworkLocation.VerticalAccuracy = src.NetworkLocation.VerticalAccuracy
 		m.NetworkLocation.Altitude = src.NetworkLocation.Altitude
@@ -1886,8 +1886,8 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
 	m.CarrierName = src.CarrierName
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Lat = src.GpsLocation.Lat
-		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.Latitude = src.GpsLocation.Latitude
+		m.GpsLocation.Longitude = src.GpsLocation.Longitude
 		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
 		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
 		m.GpsLocation.Altitude = src.GpsLocation.Altitude
@@ -1943,8 +1943,8 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 	m.CloudletName = src.CloudletName
 	if src.GpsLocation != nil {
 		m.GpsLocation = &Loc{}
-		m.GpsLocation.Lat = src.GpsLocation.Lat
-		m.GpsLocation.Long = src.GpsLocation.Long
+		m.GpsLocation.Latitude = src.GpsLocation.Latitude
+		m.GpsLocation.Longitude = src.GpsLocation.Longitude
 		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
 		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
 		m.GpsLocation.Altitude = src.GpsLocation.Altitude
@@ -2009,8 +2009,8 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 			m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
 			if src.Cloudlets[i0].GpsLocation != nil {
 				m.Cloudlets[i0].GpsLocation = &Loc{}
-				m.Cloudlets[i0].GpsLocation.Lat = src.Cloudlets[i0].GpsLocation.Lat
-				m.Cloudlets[i0].GpsLocation.Long = src.Cloudlets[i0].GpsLocation.Long
+				m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
+				m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
 				m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
 				m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
 				m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude

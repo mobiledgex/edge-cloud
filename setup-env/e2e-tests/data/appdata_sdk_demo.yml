@@ -81,8 +81,8 @@ cloudlets:
     name: Nacogdoches1
   accessuri: nacogdoches1.tdg
   location:
-    lat: 31.6298
-    long: -94.6493
+    latitude: 31.6298
+    longitude: -94.6493
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -91,8 +91,8 @@ cloudlets:
     name: Saginaw1
   accessuri: saginaw1.tdg
   location:
-    lat: 32.8719
-    long: -97.3617
+    latitude: 32.8719
+    longitude: -97.3617
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -101,8 +101,8 @@ cloudlets:
     name: Austin1
   accessuri: austin1.tdg
   location:
-    lat: 30.2849
-    long: -97.7362
+    latitude: 30.2849
+    longitude: -97.7362
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -111,8 +111,8 @@ cloudlets:
     name: Houston1
   accessuri: houston1.tdg
   location:
-    lat: 29.7199
-    long: -95.3444
+    latitude: 29.7199
+    longitude: -95.3444
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -234,4 +234,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

@@ -239,8 +239,8 @@ namespace MexGrpcSampleConsoleApp
     {
       return new DistributedMatchEngine.Loc
       {
-        Long = -122.149349,
-        Lat = 37.459609
+        Longitude = -122.149349,
+        Latitude = 37.459609
       };
     }
 

@@ -4,6 +4,6 @@ registerclientrequest:
   appvers: "1.0"
 verifylocationrequest:
   carriername: tmus
-  gpslocation: 
-    lat: -25.2744
-    long: 133.7751
+  gpslocation:
+    latitude: -25.2744
+    longitude: 133.7751

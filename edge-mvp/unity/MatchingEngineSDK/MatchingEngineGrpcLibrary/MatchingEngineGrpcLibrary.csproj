@@ -12,9 +12,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="System.Interactive.Async">
-      <HintPath>..\..\MexGrpcSample\Assets\Plugins\System.Interactive.Async\lib\net45\System.Interactive.Async.dll</HintPath>
-    </Reference>
     <Reference Include="Google.Protobuf">
       <HintPath>..\..\MexGrpcSample\Assets\Plugins\Google.Protobuf\lib\net45\Google.Protobuf.dll</HintPath>
     </Reference>
@@ -23,21 +20,6 @@
     </Reference>
     <Reference Include="System.Interactive.Async">
       <HintPath>..\..\MexGrpcSample\Assets\Plugins\System.Interactive.Async\lib\net45\System.Interactive.Async.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core">
-      <HintPath>..\..\MexGrpcSample\Assets\Plugins\Grpc.Core\lib\net45\Grpc.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Protobuf">
-      <HintPath>..\..\MexGrpcSample\Assets\Plugins\Google.Protobuf\lib\net45\Google.Protobuf.dll</HintPath>
-    </Reference>
-    <Reference Include="Google.Protobuf">
-      <HintPath>..\..\..\..\..\..\..\..\..\unityProjects\GrpcGeneric\Assets\Plugins\Google.Protobuf\lib\net45\Google.Protobuf.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core">
-      <HintPath>..\..\..\..\..\..\..\..\..\unityProjects\GrpcGeneric\Assets\Plugins\Grpc.Core\lib\net45\Grpc.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Interactive.Async">
-      <HintPath>..\..\..\..\..\..\..\..\..\unityProjects\GrpcGeneric\Assets\Plugins\System.Interactive.Async\lib\net45\System.Interactive.Async.dll</HintPath>
     </Reference>
   </ItemGroup>
 </Project>

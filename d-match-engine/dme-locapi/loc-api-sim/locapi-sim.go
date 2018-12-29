@@ -122,7 +122,7 @@ func updateLocation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("updateLocation addr: %s lat: %f long: %f\n", req.Ipaddress, req.Lat, req.Long)
-	locations[req.Ipaddress] = dme.Loc{Lat: req.Lat, Long: req.Long}
+	locations[req.Ipaddress] = dme.Loc{Latitude: req.Lat, Longitude: req.Long}
 
 	ymlout, err := yaml.Marshal(locations)
 	if err != nil {
@@ -177,14 +177,14 @@ func verifyLocation(w http.ResponseWriter, r *http.Request) {
 			resp.MatchingDegree = fmt.Sprintf("%d", dmecommon.LocationUnknown)
 		} else {
 
-			reqLoc := dme.Loc{Lat: req.Lat, Long: req.Long}
+			reqLoc := dme.Loc{Latitude: req.Lat, Longitude: req.Long}
 			log.Printf("find distance between: %+v and %+v\n", reqLoc, foundLoc)
 			d := dmecommon.DistanceBetween(reqLoc, foundLoc)
 			resp.MatchingDegree = fmt.Sprintf("%d", (dmecommon.GetLocationResultForDistance(d)))
 
 			if *geofile != "" {
 				reqCC := countryReverser.GetCountryCode(req.Long, req.Lat)
-				realCC := countryReverser.GetCountryCode(foundLoc.Long, foundLoc.Lat)
+				realCC := countryReverser.GetCountryCode(foundLoc.Longitude, foundLoc.Latitude)
 				log.Printf("country codes req: [%s] real [%s] home [%s]\n", reqCC, realCC, *homeCountry)
 				ccMismatch := false
 				if reqCC != realCC && reqCC != "" && realCC != "" {

@@ -25,17 +25,17 @@ namespace DistributedMatchEngine {
       byte[] descriptorData = global::System.Convert.FromBase64String(
           string.Concat(
             "Cglsb2MucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZSIrCglUaW1l",
-            "c3RhbXASDwoHc2Vjb25kcxgBIAEoAxINCgVuYW5vcxgCIAEoBSLBAQoDTG9j",
-            "EgsKA2xhdBgBIAEoARIMCgRsb25nGAIgASgBEhsKE2hvcml6b250YWxfYWNj",
-            "dXJhY3kYAyABKAESGQoRdmVydGljYWxfYWNjdXJhY3kYBCABKAESEAoIYWx0",
-            "aXR1ZGUYBSABKAESDgoGY291cnNlGAYgASgBEg0KBXNwZWVkGAcgASgBEjYK",
-            "CXRpbWVzdGFtcBgIIAEoCzIjLmRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZS5U",
-            "aW1lc3RhbXBiBnByb3RvMw=="));
+            "c3RhbXASDwoHc2Vjb25kcxgBIAEoAxINCgVuYW5vcxgCIAEoBSLLAQoDTG9j",
+            "EhAKCGxhdGl0dWRlGAEgASgBEhEKCWxvbmdpdHVkZRgCIAEoARIbChNob3Jp",
+            "em9udGFsX2FjY3VyYWN5GAMgASgBEhkKEXZlcnRpY2FsX2FjY3VyYWN5GAQg",
+            "ASgBEhAKCGFsdGl0dWRlGAUgASgBEg4KBmNvdXJzZRgGIAEoARINCgVzcGVl",
+            "ZBgHIAEoARI2Cgl0aW1lc3RhbXAYCCABKAsyIy5kaXN0cmlidXRlZF9tYXRj",
+            "aF9lbmdpbmUuVGltZXN0YW1wYgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Timestamp), global::DistributedMatchEngine.Timestamp.Parser, new[]{ "Seconds", "Nanos" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Loc), global::DistributedMatchEngine.Loc.Parser, new[]{ "Lat", "Long", "HorizontalAccuracy", "VerticalAccuracy", "Altitude", "Course", "Speed", "Timestamp" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.Loc), global::DistributedMatchEngine.Loc.Parser, new[]{ "Latitude", "Longitude", "HorizontalAccuracy", "VerticalAccuracy", "Altitude", "Course", "Speed", "Timestamp" }, null, null, null)
           }));
     }
     #endregion
@@ -229,8 +229,8 @@ namespace DistributedMatchEngine {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public Loc(Loc other) : this() {
-      lat_ = other.lat_;
-      long_ = other.long_;
+      latitude_ = other.latitude_;
+      longitude_ = other.longitude_;
       horizontalAccuracy_ = other.horizontalAccuracy_;
       verticalAccuracy_ = other.verticalAccuracy_;
       altitude_ = other.altitude_;
@@ -245,31 +245,31 @@ namespace DistributedMatchEngine {
       return new Loc(this);
     }
 
-    /// <summary>Field number for the "lat" field.</summary>
-    public const int LatFieldNumber = 1;
-    private double lat_;
+    /// <summary>Field number for the "latitude" field.</summary>
+    public const int LatitudeFieldNumber = 1;
+    private double latitude_;
     /// <summary>
     /// latitude in WGS 84 coordinates
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public double Lat {
-      get { return lat_; }
+    public double Latitude {
+      get { return latitude_; }
       set {
-        lat_ = value;
+        latitude_ = value;
       }
     }
 
-    /// <summary>Field number for the "long" field.</summary>
-    public const int LongFieldNumber = 2;
-    private double long_;
+    /// <summary>Field number for the "longitude" field.</summary>
+    public const int LongitudeFieldNumber = 2;
+    private double longitude_;
     /// <summary>
     /// longitude in WGS 84 coordinates
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public double Long {
-      get { return long_; }
+    public double Longitude {
+      get { return longitude_; }
       set {
-        long_ = value;
+        longitude_ = value;
       }
     }
 
@@ -371,8 +371,8 @@ namespace DistributedMatchEngine {
       if (ReferenceEquals(other, this)) {
         return true;
       }
-      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Lat, other.Lat)) return false;
-      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Long, other.Long)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Latitude, other.Latitude)) return false;
+      if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Longitude, other.Longitude)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(HorizontalAccuracy, other.HorizontalAccuracy)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(VerticalAccuracy, other.VerticalAccuracy)) return false;
       if (!pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.Equals(Altitude, other.Altitude)) return false;
@@ -385,8 +385,8 @@ namespace DistributedMatchEngine {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override int GetHashCode() {
       int hash = 1;
-      if (Lat != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Lat);
-      if (Long != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Long);
+      if (Latitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Latitude);
+      if (Longitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Longitude);
       if (HorizontalAccuracy != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(HorizontalAccuracy);
       if (VerticalAccuracy != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(VerticalAccuracy);
       if (Altitude != 0D) hash ^= pbc::ProtobufEqualityComparers.BitwiseDoubleEqualityComparer.GetHashCode(Altitude);
@@ -406,13 +406,13 @@ namespace DistributedMatchEngine {
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
-      if (Lat != 0D) {
+      if (Latitude != 0D) {
         output.WriteRawTag(9);
-        output.WriteDouble(Lat);
+        output.WriteDouble(Latitude);
       }
-      if (Long != 0D) {
+      if (Longitude != 0D) {
         output.WriteRawTag(17);
-        output.WriteDouble(Long);
+        output.WriteDouble(Longitude);
       }
       if (HorizontalAccuracy != 0D) {
         output.WriteRawTag(25);
@@ -446,10 +446,10 @@ namespace DistributedMatchEngine {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public int CalculateSize() {
       int size = 0;
-      if (Lat != 0D) {
+      if (Latitude != 0D) {
         size += 1 + 8;
       }
-      if (Long != 0D) {
+      if (Longitude != 0D) {
         size += 1 + 8;
       }
       if (HorizontalAccuracy != 0D) {
@@ -481,11 +481,11 @@ namespace DistributedMatchEngine {
       if (other == null) {
         return;
       }
-      if (other.Lat != 0D) {
-        Lat = other.Lat;
+      if (other.Latitude != 0D) {
+        Latitude = other.Latitude;
       }
-      if (other.Long != 0D) {
-        Long = other.Long;
+      if (other.Longitude != 0D) {
+        Longitude = other.Longitude;
       }
       if (other.HorizontalAccuracy != 0D) {
         HorizontalAccuracy = other.HorizontalAccuracy;
@@ -520,11 +520,11 @@ namespace DistributedMatchEngine {
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
           case 9: {
-            Lat = input.ReadDouble();
+            Latitude = input.ReadDouble();
             break;
           }
           case 17: {
-            Long = input.ReadDouble();
+            Longitude = input.ReadDouble();
             break;
           }
           case 25: {

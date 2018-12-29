@@ -6,8 +6,8 @@ cloudlets:
     name: aznortheuropecloudlet
   accessuri:
   location:
-    lat: 53.1424
-    long: -7.6921
+    latitude: 53.1424
+    longitude: -7.6921
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 
@@ -46,4 +46,3 @@ appinstances:
   flavor:
     name: x1.small
   accesslayer: AccessLayerL7
-

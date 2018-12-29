@@ -1,8 +1,8 @@
 findcloudletrequest:
   carriername: tmus
-  gpslocation: 
-    lat: 31.6
-    long: -91.00
+  gpslocation:
+    latitude: 31.6
+    longitude: -91.00
 registerclientrequest:
   devname: AcmeAppCo
   appname: someapplication1
