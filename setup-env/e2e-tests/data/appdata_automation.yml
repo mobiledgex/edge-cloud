@@ -80,7 +80,7 @@ operators:
 - key:
     name: azure
 - key:
-    name: google
+    name: gcp
 
 developers:
 - key:
