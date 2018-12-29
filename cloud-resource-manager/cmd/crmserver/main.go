@@ -186,7 +186,7 @@ func main() {
 func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
-	mf := &mexos.Manifest{}
+	mf := &mexos.Manifest{Base: *base}
 	uri := fmt.Sprintf("%s/kustomize/infrastructure/output/%s.%s.yaml", *base, loc, oper)
 	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "base", *base, "location(cloudlet.key.name)", loc, "operator", oper, "uri", uri)
 	if err := mexos.GetVaultEnv(mf, uri); err != nil {
