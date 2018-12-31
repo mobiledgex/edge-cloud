@@ -75,6 +75,7 @@ controllers:
   hostname: "{{bonndme}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
    
+
 dmes:
 - dmelocal:
     name: dme1
@@ -83,8 +84,9 @@ dmes:
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
+    vaultaddr: "https://vault.mobiledgex.net"
     carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonndemocloudlet"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonnsdktestcloudlet"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -92,8 +94,9 @@ dmes:
   envvars:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: seC2835!
+     VAULT_ROLE_ID: b95e3309-5964-89a2-5647-e86f745f20c7
+     VAULT_SECRET_ID: b6c6c629-c99d-25f8-b26d-1afc5bf5d654
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
-
 
 crms:
 - crmlocal:
@@ -106,31 +109,32 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:   
-     MEX_CF_KEY: ""
+     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
+## Fake versions of the mexdemo cloudlet to give the same fqdns and allow the apps to be reached
 - crmlocal:
     name: crm2
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:
-     MEX_CF_KEY: ""
+     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 - crmlocal:
     name: crm3
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn3cloudlet"}'
+    cloudletkey: '{"operator_key":{"name":"azure"},"name":"mexdemo-westindia-cloudlet"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:
-     MEX_CF_KEY: ""
+     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
