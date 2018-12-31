@@ -242,12 +242,13 @@ func (p *DmeLocal) GetRestClient(timeout time.Duration) (*http.Client, error) {
 // CrmLocal
 
 type CrmLocal struct {
-	Name        string
-	ApiAddr     string
-	NotifyAddrs string
-	CloudletKey string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
+	Name         string
+	ApiAddr      string
+	NotifyAddrs  string
+	CloudletKey  string
+	FakeCloudlet bool
+	TLS          TLSCerts
+	cmd          *exec.Cmd
 }
 
 func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
@@ -267,6 +268,9 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 	if p.Name != "" {
 		args = append(args, "--hostname")
 		args = append(args, p.Name)
+	}
+	if p.FakeCloudlet {
+		args = append(args, "--fakecloudlet")
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

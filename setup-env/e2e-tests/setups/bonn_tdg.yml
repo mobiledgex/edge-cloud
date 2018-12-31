@@ -105,12 +105,11 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
-  envvars:   
-     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 ## Fake versions of the mexdemo cloudlet to give the same fqdns and allow the apps to be reached
@@ -119,12 +118,11 @@ crms:
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
-  envvars:
-     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 - crmlocal:
@@ -132,10 +130,9 @@ crms:
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"azure"},"name":"mexdemo-westindia-cloudlet"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
-  envvars:
-     OS_AUTH_URL: ""
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
