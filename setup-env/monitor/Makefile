@@ -1,7 +1,7 @@
 PKG = "monitor"
 PROGRAM = monitor
 
-default: build docker-build docker-push
+default: docker-build docker-push
 
 docker-build:
 	./docker-build.sh
