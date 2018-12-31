@@ -169,7 +169,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm2
@@ -181,7 +181,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm3
@@ -193,7 +193,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm4
@@ -205,7 +205,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm5
@@ -217,7 +217,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm6
@@ -229,7 +229,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm7
@@ -241,7 +241,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm8
@@ -253,7 +253,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm9
@@ -265,7 +265,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm10
@@ -277,7 +277,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm11
@@ -289,7 +289,7 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 
 - crmlocal:
     name: crm12
@@ -301,5 +301,5 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     OS_AUTH_URL: ""
+     MEX_CF_KEY: ""
 

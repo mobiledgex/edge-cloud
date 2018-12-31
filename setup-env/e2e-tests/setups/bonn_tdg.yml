@@ -30,14 +30,14 @@ locsims:
     geofile: "{{datadir}}/geocode.dat"
     country: GE
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 etcds:
 - etcdlocal:
@@ -75,7 +75,7 @@ controllers:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
    
 dmes:
 - dmelocal:
@@ -97,7 +97,7 @@ dmes:
      LOCAPI_PASSWD: seC2835!
      VAULT_ROLE_ID: 63322010-7a70-4de3-e74b-e1939b4e4f72
      VAULT_SECRET_ID: 19aa31d0-6d96-7303-e376-7c9c7884d04c
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 crms:
 - crmlocal:
@@ -110,8 +110,8 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:   
-     OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+     MEX_CF_KEY: ""
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 - crmlocal:
     name: crm2
@@ -123,8 +123,8 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:
-     OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+     MEX_CF_KEY: ""
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 - crmlocal:
     name: crm3
@@ -136,5 +136,5 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   envvars:
-     OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1211
+     MEX_CF_KEY: ""
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231

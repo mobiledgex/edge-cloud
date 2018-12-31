@@ -70,21 +70,26 @@ func main() {
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
+	validEnv := mexos.IsValidMEXOSEnv()
 
 	platChan := make(chan string)
-	go func() {
-		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(&myCloudlet); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
-			return
-		}
-		if controllerData.CRMRootLB == nil {
-			log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
-			return
-		}
-		log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
-		platChan <- "ready"
-	}()
+	if mexos.IsValidMEXOSEnv() {
+		go func() {
+			log.DebugLog(log.DebugLevelMexos, "starting to init platform")
+			if err := initPlatform(&myCloudlet); err != nil {
+				log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
+				return
+			}
+			if controllerData.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
+			platChan <- "ready"
+		}()
+	} else {
+		log.DebugLog(log.DebugLevelMexos, "invalid OS environment, running in fake cloudlet mode")
+	}
 	// GatherInsts should be called before the notify client is started,
 	// so that the initial send to the controller has the current state.
 	controllerData.GatherInsts()
@@ -145,11 +150,12 @@ func main() {
 	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
 	// gather cloudlet info
-	if *standalone {
+	if *standalone || !validEnv {
 		// set fake cloudlet info
 		myCloudlet.OsMaxRam = 500
 		myCloudlet.OsMaxVcores = 50
 		myCloudlet.OsMaxVolGb = 5000
+		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
 		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
@@ -165,6 +171,7 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
 				return
 			}
+
 			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
 			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 			// trigger send of info upstream to controller
