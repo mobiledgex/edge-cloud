@@ -169,142 +169,130 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm2
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm3
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-3"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm4
     apiaddr: "0.0.0.0:55094"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-4"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm5
     apiaddr: "0.0.0.0:55095"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-5"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm6
     apiaddr: "0.0.0.0:55096"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-6"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm7
     apiaddr: "0.0.0.0:55097"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-7"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm8
     apiaddr: "0.0.0.0:55098"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-8"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm9
     apiaddr: "0.0.0.0:55099"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-9"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm10
     apiaddr: "0.0.0.0:55100"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-10"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm11
     apiaddr: "0.0.0.0:55101"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"azure"},"name":"tmocloud-2"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crm12
     apiaddr: "0.0.0.0:55102"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"gcp"},"name":"tmocloud-2"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
 

@@ -88,34 +88,31 @@ crms:
     apiaddr: "0.0.0.0:55101"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:   
-     OS_AUTH_URL: ""
 
 - crmlocal:
     name: crmsdk2
     apiaddr: "0.0.0.0:55102"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"tdgcloud1"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1119
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 - crmlocal:
     name: crmsdk3
     apiaddr: "0.0.0.0:55103"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn3cloudlet"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-westindia-cloudlet"}'
+    fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     OS_AUTH_URL: ""

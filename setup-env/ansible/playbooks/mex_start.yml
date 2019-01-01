@@ -135,19 +135,12 @@
        path: "{{ remote_log_path }}"
 
 
-  - name: make crm env file
-    copy: content="{{ item.envvars|to_nice_yaml|regex_replace(':\\s', '=') }}" dest="{{remote_log_path}}/{{item.crmlocal.name}}.env"
-    when: item.dockerimage != "" and item.envvars|length >0
-    with_items:
-      - "{{crms}}"
-
   - name: start up crmserver container
     docker_container:
       pull: yes
       image: "{{ item.dockerimage }}"
       name: "{{ item.crmlocal.name }}"
-      env_file: "{{remote_log_path}}/{{item.crmlocal.name}}.env"
-      command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos"
+      command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --fakecloudlet={{ item.crmlocal.fakecloudlet }} --d api,notify,mexos"
       network_mode: host
       restart_policy: unless-stopped
     when: item.hostname == inventory_hostname and item.dockerimage != ""
