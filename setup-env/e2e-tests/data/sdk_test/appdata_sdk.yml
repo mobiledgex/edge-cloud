@@ -67,7 +67,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: GDDT
-      name: gddtcloud1
+      name: mexdemo-buckhorn-cloudlet
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -79,6 +79,8 @@ operators:
     name: xmobx
 - key:
     name: GDDT
+- key:
+    name: azure
 
 developers:
 - key:
@@ -114,7 +116,6 @@ cloudlets:
     operatorkey:
       name: xmobx
     name: tmocloud1
-  accessuri: cloud1.tmo
   location:
     latitude: 51.7374
     longitude: -7.0982
@@ -123,8 +124,7 @@ cloudlets:
 - key:
     operatorkey:
       name: GDDT
-    name: gddtcloud1
-  accessuri: cloud1.gddt
+    name: mexdemo-buckhorn-cloudlet
   location:
     latitude: 50.7374
     longitude: -7.0982
@@ -132,12 +132,11 @@ cloudlets:
   numdynamicips: 254
 - key:
     operatorkey:
-      name: GDDT
-    name: buckhorn3cloudlet
-  accessuri:
+      name: azure
+    name: mexdemo-westindia-cloudlet
   location:
-    latitude: 50.70
-    longitude: -7.1
+    latitude: 19.076
+    longitude: 82.877
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -160,20 +159,6 @@ apps:
 
 - key:
     developerkey:
-      name: platos
-    name: EmptyMatchEngineApp
-    version: "1.0"
-  imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
-  imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:4444
-  androidpackagename: com.platos.emptymatchengine
-  permitsplatformapps: true
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: SmallCluster
-- key:
-    developerkey:
       name: EmptyMatchEngineApp
     name: EmptyMatchEngineApp
     version: "1.0"
@@ -193,14 +178,27 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
-  androidpackagename: com.mobiledgex.emptymatchengineapp
+  androidpackagename: com.mobiledgex.sdkdemo
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
-  apptemplate: "http://35.199.188.102/apps/simapp.yaml"
   accessports: "tcp:7777"
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: Face Detection Demo
+    version: "1.0"
+  imagepath: mobiledgex_MobiledgeXSDKDemo/FaceDemo:1
+  imagetype: ImageTypeDocker
+  androidpackagename: com.mobiledgex.facedemo
+  permitsplatformapps: true
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:8008"
 
 - key:
     developerkey:
@@ -235,20 +233,6 @@ apps:
   accessports: "tcp:8081"
 
 appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: platos
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: xmobx
-      name: tmocloud1
-    id: 5011
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
 
 - key:
     appkey:
@@ -265,20 +249,6 @@ appinstances:
   flavor:
     name: x1.small
 
-- key:
-    appkey:
-      developerkey:
-        name: platos
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: GDDT
-      name: gddtcloud1
-    id: 5011
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
 
 - key:
     appkey:
@@ -289,11 +259,56 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: GDDT
-      name: gddtcloud1
+      name: mexdemo-buckhorn-cloudlet
     id: 5011
   liveness: LivenessStatic
   flavor:
     name: x1.small
+    
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
 
 - key:
     appkey:
@@ -304,7 +319,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: GDDT
-      name: buckhorn3cloudlet
+      name: mexdemo-buckhorn-cloudlet
     id: 123
   clusterinstkey:
     clusterkey:
@@ -312,10 +327,34 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: GDDT
-      name: buckhorn3cloudlet
+      name: mexdemo-buckhorn-cloudlet
   liveness: LivenessStatic
   flavor:
     name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: GDDT
+      name: mexdemo-buckhorn-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: GDDT
+      name: mexdemo-buckhorn-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
 
 - key:
     appkey:
@@ -333,21 +372,6 @@ appinstances:
   flavor:
     name: x1.small
 
-- key:
-    appkey:
-      developerkey:
-        name: platos
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
-  liveness: LivenessStatic
-  uri: emptyapp.platos.mobiledgex.net
-  flavor:
-    name: x1.small
 - key:
     appkey:
       developerkey:

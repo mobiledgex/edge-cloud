@@ -27,6 +27,7 @@ var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
+var fakecloudlet = flag.Bool("fakecloudlet", false, "Fake cloudlet mode.  A fake cloudlet is reported to the controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var hostname = flag.String("hostname", "", "unique hostname within Cloudlet")
@@ -72,19 +73,23 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	platChan := make(chan string)
-	go func() {
-		log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-		if err := initPlatform(&myCloudlet); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
-			return
-		}
-		if controllerData.CRMRootLB == nil {
-			log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
-			return
-		}
-		log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
-		platChan <- "ready"
-	}()
+	if *fakecloudlet {
+		log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
+	} else {
+		go func() {
+			log.DebugLog(log.DebugLevelMexos, "starting to init platform")
+			if err := initPlatform(&myCloudlet); err != nil {
+				log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
+				return
+			}
+			if controllerData.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
+			platChan <- "ready"
+		}()
+	}
 	// GatherInsts should be called before the notify client is started,
 	// so that the initial send to the controller has the current state.
 	controllerData.GatherInsts()
@@ -145,11 +150,12 @@ func main() {
 	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
 	// gather cloudlet info
-	if *standalone {
+	if *standalone || *fakecloudlet {
 		// set fake cloudlet info
 		myCloudlet.OsMaxRam = 500
 		myCloudlet.OsMaxVcores = 50
 		myCloudlet.OsMaxVolGb = 5000
+		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
 		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
 		// trigger send of info upstream to controller
 		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
@@ -165,6 +171,7 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
 				return
 			}
+
 			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
 			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 			// trigger send of info upstream to controller
