@@ -8,14 +8,6 @@ tlscerts:
     - 127.0.0.1
     - 0.0.0.0
 
-sampleapps:
-- sampleapplocal:
-    name: mexexample1
-    exename: mexexample
-    args: 
-     - "-debug"
-  hostname: "127.0.0.1"
- 
 locsims:
 - locapisimlocal:
     name: locsim1
