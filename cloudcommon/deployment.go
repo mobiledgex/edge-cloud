@@ -111,6 +111,9 @@ func GetRemoteManifest(target string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	}
 	manifestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
