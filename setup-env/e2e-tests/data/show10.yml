@@ -413,7 +413,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
   ipaccess: IpAccessDedicatedOrShared
@@ -439,7 +439,7 @@ apps:
       name: AcmeAppCo
     name: someapplication2
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication2:1.0
+  imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
   ipaccess: IpAccessDedicatedOrShared
