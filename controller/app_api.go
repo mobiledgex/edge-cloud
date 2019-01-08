@@ -103,12 +103,12 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = "http://" + cloudcommon.Registry + "/org/" +
+			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = "http://" + cloudcommon.Registry + "/org/" +
+			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
