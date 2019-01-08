@@ -136,7 +136,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	// update app and check that app insts are updated
 	updater := edgeproto.App{}
 	updater.Key = testutil.AppData[0].Key
-	newPath := "a new config"
+	newPath := "resources: a new config"
 	updater.Config = newPath
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, edgeproto.AppFieldConfig)
@@ -154,7 +154,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 	// update cloudlet and check that app insts are updated
 	updater2 := edgeproto.Cloudlet{}
 	updater2.Key = testutil.CloudletData[0].Key
-	newLat := 152.84583
+	newLat := 52.84583
 	updater2.Location.Latitude = newLat
 	updater2.Fields = make([]string, 0)
 	updater2.Fields = append(updater2.Fields, edgeproto.CloudletFieldLocationLatitude)
