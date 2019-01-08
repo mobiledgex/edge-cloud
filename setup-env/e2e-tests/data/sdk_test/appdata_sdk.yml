@@ -67,7 +67,7 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TDG
-      name: tdgcloud1
+      name: mexdemo-bonn-cloudlet
   flavor:
     name: c1.small
   liveness: LivenessStatic
@@ -79,6 +79,8 @@ operators:
     name: T-Mobile
 - key:
     name: TDG
+- key:
+    name: azure
 
 developers:
 - key:
@@ -114,30 +116,27 @@ cloudlets:
     operatorkey:
       name: T-Mobile
     name: tmocloud1
-  accessuri: cloud1.tmo
   location:
-    lat: 51.7374
-    long: -7.0982
+    latitude: 51.7374
+    longitude: -7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
     operatorkey:
       name: TDG
-    name: tdgcloud1
-  accessuri: cloud1.tdg
+    name: mexdemo-bonn-cloudlet
   location:
-    lat: 50.7374
-    long: -7.0982
+    latitude: 50.7374
+    longitude: -7.0982
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
     operatorkey:
-      name: TDG
-    name: bonn3cloudlet
-  accessuri: 
+      name: azure
+    name: mexdemo-westindia-cloudlet
   location:
-    lat: 50.70
-    long: -7.1
+    latitude: 19.076
+    longitude: 82.877
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -160,20 +159,6 @@ apps:
 
 - key:
     developerkey:
-      name: Samsung
-    name: EmptyMatchEngineApp
-    version: "1.0"
-  imagepath: mobiledgex_EmptyMatchEngineApp/EmptyMatchEngineApp:1
-  imagetype: ImageTypeDocker
-  accessports: tcp:80,http:443,udp:4444
-  androidpackagename: com.samsung.emptymatchengine
-  permitsplatformapps: true
-  defaultflavor:
-    name: x1.small
-  cluster:
-    name: SmallCluster
-- key:
-    developerkey:
       name: EmptyMatchEngineApp
     name: EmptyMatchEngineApp
     version: "1.0"
@@ -193,14 +178,27 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
-  androidpackagename: com.mobiledgex.emptymatchengineapp
+  androidpackagename: com.mobiledgex.sdkdemo
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
-  apptemplate: "http://35.199.188.102/apps/simapp.yaml"
   accessports: "tcp:7777"
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: Face Detection Demo
+    version: "1.0"
+  imagepath: mobiledgex_MobiledgeXSDKDemo/FaceDemo:1
+  imagetype: ImageTypeDocker
+  androidpackagename: com.mobiledgex.facedemo
+  permitsplatformapps: true
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:8008"
 
 - key:
     developerkey:
@@ -235,20 +233,6 @@ apps:
   accessports: "tcp:8081"
 
 appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: T-Mobile
-      name: tmocloud1
-    id: 5011
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
 
 - key:
     appkey:
@@ -265,20 +249,6 @@ appinstances:
   flavor:
     name: x1.small
 
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud1
-    id: 5011
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
 
 - key:
     appkey:
@@ -289,7 +259,7 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TDG
-      name: tdgcloud1
+      name: mexdemo-bonn-cloudlet
     id: 5011
   liveness: LivenessStatic
   flavor:
@@ -303,8 +273,53 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
         name: TDG
-      name: bonn3cloudlet
+      name: mexdemo-bonn-cloudlet
     id: 123
   clusterinstkey:
     clusterkey:
@@ -312,10 +327,34 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: TDG
-      name: bonn3cloudlet
+      name: mexdemo-bonn-cloudlet
   liveness: LivenessStatic
   flavor:
     name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn-cloudlet
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn-cloudlet
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+
 
 - key:
     appkey:
@@ -333,21 +372,6 @@ appinstances:
   flavor:
     name: x1.small
 
-- key:
-    appkey:
-      developerkey:
-        name: Samsung
-      name: EmptyMatchEngineApp
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
-  liveness: LivenessStatic
-  uri: emptyapp.samsung.mobiledgex.net
-  flavor:
-    name: x1.small
 - key:
     appkey:
       developerkey:

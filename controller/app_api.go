@@ -117,6 +117,48 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 	return false
 }
 
+// updates fields that need manipulation on setting, or fetched remotely
+func updateAppFields(in *edgeproto.App) error {
+
+	if in.ImagePath == "" {
+		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
+			in.ImagePath = "mobiledgex_" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name) + ":" +
+				util.DockerSanitize(in.Key.Version)
+		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+			in.ImagePath = "mobiledgex/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+				util.DockerSanitize(in.Key.Name)
+		} else {
+			in.ImagePath = "qcow path not determined yet"
+		}
+	}
+
+	if in.Config != "" {
+		configStr, err := cloudcommon.GetAppConfig(in)
+		if err != nil {
+			return err
+		}
+		in.Config = configStr
+		// do a quick parse just to make sure it's valid
+		_, err = cloudcommon.ParseAppConfig(in.Config)
+		if err != nil {
+			return err
+		}
+	}
+
+	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	if err != nil {
+		return err
+	}
+	// Save manifest to app in case it was a remote target.
+	// Manifest is required on app delete and we'll be in trouble
+	// if remote target is unreachable or changed at that time.
+	in.DeploymentManifest = deploymf
+	return nil
+}
+
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	var err error
 
@@ -140,42 +182,11 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if !cloudcommon.IsValidDeploymentForImage(in.ImageType, in.Deployment) {
 		return &edgeproto.Result{}, fmt.Errorf("deployment is not valid for image type")
 	}
-	if in.ImagePath == "" {
-		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = "mobiledgex_" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
-				util.DockerSanitize(in.Key.Name) + ":" +
-				util.DockerSanitize(in.Key.Version)
-		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = "mobiledgex/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
-				util.DockerSanitize(in.Key.Name)
-		} else {
-			in.ImagePath = "qcow path not determined yet"
-		}
-	}
 
-	if in.Config != "" {
-		configStr, err := cloudcommon.GetAppConfig(in)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
-		in.Config = configStr
-		// do a quick parse just to make sure it's valid
-		_, err = cloudcommon.ParseAppConfig(in.Config)
-		if err != nil {
-			return &edgeproto.Result{}, err
-		}
-	}
-
-	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
+	err = updateAppFields(in)
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
-	// Save manifest to app in case it was a remote target.
-	// Manifest is required on app delete and we'll be in trouble
-	// if remote target is unreachable or changed at that time.
-	in.DeploymentManifest = deploymf
 
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
@@ -246,6 +257,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
+	}
+	err := updateAppFields(in)
+	if err != nil {
+		return &edgeproto.Result{}, err
 	}
 	return s.store.Update(in, s.sync.syncWait)
 }

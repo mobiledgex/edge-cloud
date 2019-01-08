@@ -13,12 +13,14 @@ import (
 var AppDeploymentTypeKubernetes = "kubernetes"
 var AppDeploymentTypeKVM = "kvm"
 var AppDeploymentTypeHelm = "helm"
+var AppDeploymentTypeDockerSwarm = "docker-swarm"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
 	AppDeploymentTypeKVM,
 	AppDeploymentTypeHelm,
-} // TODO "docker", ...
+	AppDeploymentTypeDockerSwarm,
+}
 
 func IsValidDeploymentType(appDeploymentType string) bool {
 	for _, d := range ValidDeployments {
@@ -109,6 +111,9 @@ func GetRemoteManifest(target string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("bad response from remote manifest %d", resp.StatusCode)
+	}
 	manifestBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err

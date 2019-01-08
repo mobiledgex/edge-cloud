@@ -188,7 +188,6 @@ func main() {
 	for _, a := range actionSlice {
 		act, actionParam := getActionParam(a)
 		action, actionSubtype := getActionSubtype(act)
-
 		util.PrintStepBanner("running action: " + a)
 		switch action {
 		case "createcluster":

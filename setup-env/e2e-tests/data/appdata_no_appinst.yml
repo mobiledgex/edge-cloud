@@ -110,8 +110,8 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -120,8 +120,8 @@ cloudlets:
     name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -130,8 +130,8 @@ cloudlets:
     name: azure-cloud-9
   accessuri: cloud9.azure
   location:
-    lat: 32
-    long: -91
+    latitude: 32
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -140,8 +140,8 @@ cloudlets:
     name: gcp-cloud-10
   accessuri: cloud2.gcp
   location:
-    lat: 36
-    long: -95
+    latitude: 36
+    longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -178,5 +178,3 @@ apps:
     name: SmallCluster
   accessports: "tcp:64000"
   ipaccess: IpAccessDedicatedOrShared
-
-

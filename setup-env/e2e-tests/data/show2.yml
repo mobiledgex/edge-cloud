@@ -87,8 +87,8 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: tmus-cloud.1
   location:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -97,8 +97,8 @@ cloudlets:
     name: tmus-cloud-2
   accessuri: tmus-cloud.2
   location:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -141,8 +141,8 @@ appinstances:
       name: tmus-cloud-2
     id: 2
   cloudletloc:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   uri: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -181,8 +181,8 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   uri: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -194,4 +194,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-

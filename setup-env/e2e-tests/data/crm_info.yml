@@ -99,8 +99,8 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: cloud1.tmo
   location:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -109,8 +109,8 @@ cloudlets:
     name: tmus-cloud-2
   accessuri: cloud2.tmo
   location:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -174,7 +174,7 @@ apps:
       selector:
         matchLabels:
           run: someapplication1
-      replicas: 2
+      replicas: 1
       template:
         metadata:
           labels:
@@ -194,8 +194,6 @@ apps:
               protocol: TCP
             - containerPort: 10002
               protocol: UDP
-            command:
-            - ""
   deploymentgenerator: kubernetes-basic
 - key:
     developerkey:
@@ -219,7 +217,7 @@ apps:
       selector:
         matchLabels:
           run: mexmetricswriter
-      replicas: 2
+      replicas: 1
       template:
         metadata:
           labels:
@@ -233,8 +231,6 @@ apps:
             image: mobiledgex_mexinfradev_/MEXMetricsWriter:1.0
             imagePullPolicy: Always
             ports:
-            command:
-            - ""
   deploymentgenerator: kubernetes-basic
   delflags: AutoDelete
 - key:
@@ -242,7 +238,7 @@ apps:
       name: mexinfradev_
     name: MEXPrometheusAppName
     version: "1.0"
-  imagepath: stable/prometheus
+  imagepath: stable/prometheus-operator
   ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
@@ -264,8 +260,8 @@ appinstances:
       name: tmus-cloud-1
     id: 123
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -304,8 +300,8 @@ appinstances:
       name: tmus-cloud-2
     id: 123
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -344,8 +340,8 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -371,8 +367,8 @@ appinstances:
       name: tmus-cloud-2
     id: 1
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -398,8 +394,8 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    lat: 31
-    long: -91
+    latitude: 31
+    longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -425,8 +421,8 @@ appinstances:
       name: tmus-cloud-2
     id: 1
   cloudletloc:
-    lat: 35
-    long: -95
+    latitude: 35
+    longitude: -95
   uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:

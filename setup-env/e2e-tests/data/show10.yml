@@ -301,8 +301,8 @@ cloudlets:
     name: tmus-cloud-4
   accessuri: tmus-cloud.4
   location:
-    lat: 1
-    long: 4
+    latitude: 1
+    longitude: 4
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -311,8 +311,8 @@ cloudlets:
     name: tmus-cloud-5
   accessuri: tmus-cloud.5
   location:
-    lat: 1
-    long: 5
+    latitude: 1
+    longitude: 5
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -321,8 +321,8 @@ cloudlets:
     name: tmus-cloud-6
   accessuri: tmus-cloud.6
   location:
-    lat: 1
-    long: 6
+    latitude: 1
+    longitude: 6
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -331,8 +331,8 @@ cloudlets:
     name: tmus-cloud-1
   accessuri: tmus-cloud.1
   location:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -341,8 +341,8 @@ cloudlets:
     name: tmus-cloud-3
   accessuri: tmus-cloud.3
   location:
-    lat: 1
-    long: 3
+    latitude: 1
+    longitude: 3
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -351,8 +351,8 @@ cloudlets:
     name: tmus-cloud-8
   accessuri: tmus-cloud.8
   location:
-    lat: 1
-    long: 8
+    latitude: 1
+    longitude: 8
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -361,8 +361,8 @@ cloudlets:
     name: azure-cloud-9
   accessuri: azure-cloud.9
   location:
-    lat: 1
-    long: 9
+    latitude: 1
+    longitude: 9
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -371,8 +371,8 @@ cloudlets:
     name: gcp-cloud-10
   accessuri: gcp-cloud.10
   location:
-    lat: 1
-    long: 10
+    latitude: 1
+    longitude: 10
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -381,8 +381,8 @@ cloudlets:
     name: tmus-cloud-2
   accessuri: tmus-cloud.2
   location:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -391,8 +391,8 @@ cloudlets:
     name: tmus-cloud-7
   accessuri: tmus-cloud.7
   location:
-    lat: 1
-    long: 7
+    latitude: 1
+    longitude: 7
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 
@@ -477,8 +477,8 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   uri: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -502,8 +502,8 @@ appinstances:
       name: tmus-cloud-1
     id: 1
   cloudletloc:
-    lat: 1
-    long: 1
+    latitude: 1
+    longitude: 1
   uri: acmeappcosomeapplication210.tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -527,8 +527,8 @@ appinstances:
       name: tmus-cloud-2
     id: 2
   cloudletloc:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   uri: acmeappcosomeapplication110.tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -552,8 +552,8 @@ appinstances:
       name: tmus-cloud-4
     id: 4
   cloudletloc:
-    lat: 1
-    long: 4
+    latitude: 1
+    longitude: 4
   uri: acmeappcosomeapplication210.tmus-cloud-4.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -577,8 +577,8 @@ appinstances:
       name: tmus-cloud-5
     id: 5
   cloudletloc:
-    lat: 1
-    long: 5
+    latitude: 1
+    longitude: 5
   uri: acmeappcosomeapplication210.tmus-cloud-5.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -602,8 +602,8 @@ appinstances:
       name: tmus-cloud-7
     id: 7
   cloudletloc:
-    lat: 1
-    long: 7
+    latitude: 1
+    longitude: 7
   uri: acmeappcosomeapplication110.tmus-cloud-7.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -627,8 +627,8 @@ appinstances:
       name: azure-cloud-9
     id: 9
   cloudletloc:
-    lat: 1
-    long: 9
+    latitude: 1
+    longitude: 9
   uri: acmeappcosomeapplication110.azure-cloud-9.azure.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -652,8 +652,8 @@ appinstances:
       name: azure-cloud-9
     id: 9
   cloudletloc:
-    lat: 1
-    long: 9
+    latitude: 1
+    longitude: 9
   uri: acmeappcosomeapplication210.azure-cloud-9.azure.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -677,8 +677,8 @@ appinstances:
       name: gcp-cloud-10
     id: 10
   cloudletloc:
-    lat: 1
-    long: 10
+    latitude: 1
+    longitude: 10
   uri: acmeappcosomeapplication110.gcp-cloud-10.gcp.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -702,8 +702,8 @@ appinstances:
       name: tmus-cloud-3
     id: 3
   cloudletloc:
-    lat: 1
-    long: 3
+    latitude: 1
+    longitude: 3
   uri: acmeappcosomeapplication210.tmus-cloud-3.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -727,8 +727,8 @@ appinstances:
       name: tmus-cloud-6
     id: 6
   cloudletloc:
-    lat: 1
-    long: 6
+    latitude: 1
+    longitude: 6
   uri: acmeappcosomeapplication110.tmus-cloud-6.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -752,8 +752,8 @@ appinstances:
       name: gcp-cloud-10
     id: 10
   cloudletloc:
-    lat: 1
-    long: 10
+    latitude: 1
+    longitude: 10
   uri: acmeappcosomeapplication210.gcp-cloud-10.gcp.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -777,8 +777,8 @@ appinstances:
       name: tmus-cloud-2
     id: 2
   cloudletloc:
-    lat: 1
-    long: 2
+    latitude: 1
+    longitude: 2
   uri: acmeappcosomeapplication210.tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -802,8 +802,8 @@ appinstances:
       name: tmus-cloud-6
     id: 6
   cloudletloc:
-    lat: 1
-    long: 6
+    latitude: 1
+    longitude: 6
   uri: acmeappcosomeapplication210.tmus-cloud-6.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -827,8 +827,8 @@ appinstances:
       name: tmus-cloud-8
     id: 8
   cloudletloc:
-    lat: 1
-    long: 8
+    latitude: 1
+    longitude: 8
   uri: acmeappcosomeapplication110.tmus-cloud-8.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -852,8 +852,8 @@ appinstances:
       name: tmus-cloud-8
     id: 8
   cloudletloc:
-    lat: 1
-    long: 8
+    latitude: 1
+    longitude: 8
   uri: acmeappcosomeapplication210.tmus-cloud-8.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -892,8 +892,8 @@ appinstances:
       name: tmus-cloud-3
     id: 3
   cloudletloc:
-    lat: 1
-    long: 3
+    latitude: 1
+    longitude: 3
   uri: acmeappcosomeapplication110.tmus-cloud-3.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -917,8 +917,8 @@ appinstances:
       name: tmus-cloud-4
     id: 4
   cloudletloc:
-    lat: 1
-    long: 4
+    latitude: 1
+    longitude: 4
   uri: acmeappcosomeapplication110.tmus-cloud-4.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -942,8 +942,8 @@ appinstances:
       name: tmus-cloud-5
     id: 5
   cloudletloc:
-    lat: 1
-    long: 5
+    latitude: 1
+    longitude: 5
   uri: acmeappcosomeapplication110.tmus-cloud-5.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -967,8 +967,8 @@ appinstances:
       name: tmus-cloud-7
     id: 7
   cloudletloc:
-    lat: 1
-    long: 7
+    latitude: 1
+    longitude: 7
   uri: acmeappcosomeapplication210.tmus-cloud-7.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
@@ -1010,4 +1010,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-
