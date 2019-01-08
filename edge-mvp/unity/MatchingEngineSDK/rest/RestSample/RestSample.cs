@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using DistributedMatchEngine;
 
-namespace RestTest
+namespace RestSample
 {
   class Program
   {
@@ -28,7 +28,7 @@ namespace RestTest
       {
         carrierName = await getCurrentCarrierName();
 
-        Console.WriteLine("RestTest!");
+        Console.WriteLine("RestSample!");
 
         MatchingEngine me = new MatchingEngine();
         port = MatchingEngine.defaultDmeRestPort;

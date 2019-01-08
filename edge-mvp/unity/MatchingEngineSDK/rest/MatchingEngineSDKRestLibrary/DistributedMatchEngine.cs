@@ -7,8 +7,6 @@ using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
 using System.Threading.Tasks;
-
-using Newtonsoft.Json;
 using System.Runtime.Serialization.Json;
 
 
@@ -61,12 +59,14 @@ namespace DistributedMatchEngine
       httpClientHandler.SslProtocols = SslProtocols.Tls12;
 
       // FIXME: This should not be here.
-      // Server Cert: (self signed!), need byte buffer, not file.
-      var x509CertServer = new X509Certificate2("../../../../../tls/out/mex-ca.crt");
-      httpClientHandler.ClientCertificates.Add(x509CertServer); // Add to client... (Need per Client validator callback to bypass security checks on self signed cert).
+      // Server Cert: (self signed!)
+      byte[] caCrtBytes = Encoding.ASCII.GetBytes(Credentials.caCrt);
+      var x509CertServer = new X509Certificate2(caCrtBytes);
+      httpClientHandler.ClientCertificates.Add(x509CertServer);
 
       // ClientCert:
-      var x509ClientCertKeyPair = new X509Certificate2("../../../../../tls/out/mex-client.p12", "foo"); /* 2nd param: FIXME: password for file */
+      byte[] clientCredentials = Convert.FromBase64String(Credentials.clientCrtBase64); // Pkcs12 binary source.
+      var x509ClientCertKeyPair = new X509Certificate2(clientCredentials, "foo"); /* 2nd param: FIXME: password for credentials */
       httpClientHandler.ClientCertificates.Add(x509ClientCertKeyPair);
       Console.WriteLine("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
 
@@ -222,10 +222,6 @@ namespace DistributedMatchEngine
       MemoryStream ms = new MemoryStream();
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
-
-      // FIXME: long is not a valid feild on most languages. Must convert to that for posting.
-      JsonTextReader reader = new JsonTextReader(new StringReader(jsonStr));
-
 
       Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + registerAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
@@ -492,60 +488,7 @@ mbSi8TUL2D7kA5StYElnJ4G2o4Bmymu8XxcZhDfeH0LJ8lqP7TyRnkL2jmNYm6be
 LggXHNeu
 -----END CERTIFICATE-----";
 
-    // Client Crt:
-    public static string clientCrt = @"-----BEGIN CERTIFICATE-----
-MIIEOjCCAiKgAwIBAgIQMCuDiDXhpNOKRvn69uSbCjANBgkqhkiG9w0BAQsFADAR
-MQ8wDQYDVQQDEwZtZXgtY2EwHhcNMTgwODIwMDMxMDI0WhcNMjAwMjIwMDMwNzM5
-WjAVMRMwEQYDVQQDEwptZXgtY2xpZW50MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
-MIIBCgKCAQEAzLaPAPOAUzV49VXgiYsDZTQ/zyCtsr0w3Ge/tvIck2Mm2FtAZ88r
-oRV2UPrviEZPBL+o/JPiShfgqj1cLU1GyRr4uyezYl9AIig9/2xjYnkcXg6e3QG7
-5lOaX2zH9mrYAm/N2hNzJwe9ZWBibXMDwFN4cptyygZuQ86SnK4j+6h1SVmN+F1j
-ma18RzSU2rOjHK0InFgILSOlcjYYD/ds3HiL+vY6CVSNfuul5IMvQ/R8B8GwZpGG
-34vl4AsDYM6FK+qW/ncFEt9rAOfu9AOeDWciKxPjzB4bX5G0dWAk5IU3VoGafEXe
-Yt1xyeK25KHkw4kSh57BRkJKSuyvPWUqewIDAQABo4GJMIGGMA4GA1UdDwEB/wQE
-AwIDuDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwHQYDVR0OBBYEFGoT
-cCzivXGPbeBD14sTusqjamkbMB8GA1UdIwQYMBaAFNCTjwAuxuZsOxu1tHuhrR5+
-60t4MBUGA1UdEQQOMAyCCm1leC1jbGllbnQwDQYJKoZIhvcNAQELBQADggIBABSb
-ZdZE9zh7vgT3cNr0gLVWk4We43VRlSa5JgdzWixi63qYTVIjHUE0BZo9yBMm3cx8
-w327wAMVdlImUl/0Sv1NLi0IyC7EtxHfNhmUsgDa9oXuZwXM/RNmite1emS0ZYLE
-fh7lNYUwnU/DHRPlZbIu08/7jYfyqxYKJSkP9HUBGOreGmMg+xARifr1Wb9uQDnx
-12zK2uSG0Np8SbZV6FykNp7HeXG0jzOW+1Kg/NSxzYtScbSj3PfHIIHCiPhLd630
-jVFsRUSfKMsM2+mDotVMvFlGyKoQUkQpS9RT/WsbKsSgLuW/WP1Zskh692DchMxI
-YIASjJnwgidLwVen5uwj6h9vX9L1jb8CjV8w+SPjTqo6Hw8veQnqZV1nI1PgE17P
-wjBlAmrCzfhbpNoMrktglWhpi/NJtCfQWwNkkGpd547NA1WXTRRqbxGc9Mg4GALb
-6G9Hzp7nUpC3tC78jwZtsiw6oyPreYQc+O1XVD7qrvfcKabDStOIYcyenLmv82CL
-ciCxLZGwVZ+5ABTuOsch7Sg3ZFnCJHvJqn00ZH7YBvTeoCfeelEiFCn7ehEbX8kn
-y9MuVRwaDfGMKBYZ8Urr+RDxoDQwObvYQNIW9wVLoCGRuj3qt0BtTLkOuHvNCox1
-GJJmmOKzRetckg3+ZSu7ET2YDuB3TDxPvDyc4Tq8
------END CERTIFICATE-----";
-
-    // Client Private Key:
-    public static string clientKey = @"-----BEGIN RSA PRIVATE KEY-----
-MIIEowIBAAKCAQEAzLaPAPOAUzV49VXgiYsDZTQ/zyCtsr0w3Ge/tvIck2Mm2FtA
-Z88roRV2UPrviEZPBL+o/JPiShfgqj1cLU1GyRr4uyezYl9AIig9/2xjYnkcXg6e
-3QG75lOaX2zH9mrYAm/N2hNzJwe9ZWBibXMDwFN4cptyygZuQ86SnK4j+6h1SVmN
-+F1jma18RzSU2rOjHK0InFgILSOlcjYYD/ds3HiL+vY6CVSNfuul5IMvQ/R8B8Gw
-ZpGG34vl4AsDYM6FK+qW/ncFEt9rAOfu9AOeDWciKxPjzB4bX5G0dWAk5IU3VoGa
-fEXeYt1xyeK25KHkw4kSh57BRkJKSuyvPWUqewIDAQABAoIBACePjBk59W2fIs3+
-l5LdC33uV/p2LTsidqPRZOo85arR+XrMP6kQDzVlCWVi6RFjzPd09npBNfTtolwj
-2YFjsq9AiBra9D6pe6JeNoT69EXec831c1vwbth3BZk1U3tacH4gDx76rUE4rLA/
-rSXLmUj8mIVFZyyFi5+M9yZSPN/v+J7VfE2b3dRVw+oBa4GEGpR9IcEGyGgjzz/2
-qc4e+iphCW10ZfLl6ZuVIErJgoGEDlilZhNMLlGIu/4/0Pd2DH+pYE4JaVKHIltW
-WChDIWh1Ad+fZvVB/+M27GOaavHKm64z5/46Oj/n6lhwL/GDi1CQeMHBSFn4xsf0
-rloEvNkCgYEA3rChHJlq7xxHnAyCjR+VVWjS409DQHFM2KntbX7mv2lMS8t4jpf9
-sV/tyX5CWrlbk4Ntyxzz8Z8hi6VYhRsLVDbWL5g3fHMK76mj1JtbDLUw/w28twEm
-d1wit0i+5Un6i3i7Wig8g+y31xAqobI4/5mhehEhjjSQP7H8JQ7M2dUCgYEA61WM
-x5QGAzYIi+y59rFITfk6x7DNW7dOk0z3B6caF1HBoUzIh/uZrKaGxHLUcPNUprBG
-vhSCpYdsXPVZgqxibnjPwrbYCPBZoN4DXsvOosbUcK4aDwvAX/i0RH77eBM5M+J4
-5DbNxoS8y0ALjjgj85LQv4fFQeFXy2VtVGvHSw8CgYAyrTtcyMT++Q6KwoYLG37e
-WuZy+Byz05TLUZBIdLKKKKpGLV2YBZqj/NKeIe9zue7PGP+pU0NoXvBBWTVVxRvE
-5F3Fovwtg/ifJZm0zk3gDHPD9xpVAxv/2aXE0/ctMrKjfqwUDkgHNZ14gaNR/L7f
-29RVdQSP2gJhnF1nCYEwqQKBgQDBd+Vytfhzb1p7XjRL4Ncmczylqm5Jdlt8sYts
-mS3T+fyLlMpPMMLXs1eb7SNFcGYpW0XtQoNdfgXSLkpWKU4Kr/ttgk/8mUu1+o8e
-wcKxA3Dm6dq2f9y5iYb5wMMPpg4i346vX3awO7PSDGbzlqfHuO0waHf8fztkFZBa
-FPkUdQKBgGhCavU72BxbSIFBsLuw07+DQ7aU00JFkqEFYrK2Y0KbtRzi5s0f8sTQ
-m67Ck9nZhhvdpunWWeynM8rjJy4MPUJWZeJmo8OAxOAdmdXs8cmykqfNb+0uC35b
-i4CrX+qG6rq9Y4/kVJ4jWdUbpAN7gp+vCMBUGZ0HuYtxlkRH4y6G
------END RSA PRIVATE KEY-----";
+    // Client pkcs12 binary bytes with cert and private key in Base64 format:
+    public static string clientCrtBase64 = "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";
   };
 }

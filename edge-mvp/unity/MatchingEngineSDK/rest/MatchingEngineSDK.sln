@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchingEngineSDKRestLibrary", "MatchingEngineSDKRestLibrary\MatchingEngineSDKRestLibrary.csproj", "{6708E105-1190-4AE9-8D33-502317893033}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestTest", "RestTest\RestTest.csproj", "{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSample", "RestSample\RestSample.csproj", "{B9CA0E3F-F423-4FEE-B909-96D9ECA1F0AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
