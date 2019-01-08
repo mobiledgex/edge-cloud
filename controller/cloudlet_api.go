@@ -75,6 +75,19 @@ func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 }
 
 func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_UpdateCloudletServer) error {
+	fmap := edgeproto.MakeFieldMap(in.Fields)
+	if _, found := fmap[edgeproto.CloudletFieldNumDynamicIps]; found {
+		staticSet := false
+		if _, staticFound := fmap[edgeproto.CloudletFieldIpSupport]; staticFound {
+			if in.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+				staticSet = true
+			}
+		}
+		if in.NumDynamicIps < 1 && !staticSet {
+			return errors.New("Cannot specify less than one dynamic IP unless Ip Support Static is specified")
+		}
+	}
+
 	_, err := s.store.Update(in, s.sync.syncWait)
 
 	// after the cloudlet change is committed, if the location changed,
