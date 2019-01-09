@@ -10,27 +10,35 @@ namespace DistributedMatchEngine
     DlgOpen = 2
   }
 
-  [Serializable]
+  [DataContract]
   public class DynamicLocGroupRequest
   {
+    [DataMember]
     public UInt32 Ver;
     // Session Cookie from RegisterClientRequest
+    [DataMember]
     public string SessionCookie;
+    [DataMember]
     public UInt64 LgId;
+    [DataMember]
     public string CommType = DlgCommType.DlgUndefined.ToString();
+    [DataMember]
     public string UserData;
   }
 
-  [Serializable]
+  [DataContract]
   public class DynamicLocGroupReply
   {
-    
+    [DataMember]
     public UInt32 Ver;
     // Status of the reply
+    [DataMember]
     public string ReplyStatus = DistributedMatchEngine.ReplyStatus.RS_UNDEFINED.ToString();
     // Status of the reply
+    [DataMember]
     public UInt32 ErrorCode;
     // Group Cookie for Secure Group Communication
+    [DataMember]
     public string GroupCookie;
   }
 }

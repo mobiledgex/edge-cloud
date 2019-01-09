@@ -1,18 +1,24 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
 {
-  [Serializable]
+  [DataContract]
   public class VerifyLocationRequest
   {
+    [DataMember]
     public UInt32 Ver = 1;
+    [DataMember]
     public string SessionCookie;
+    [DataMember]
     public string CarrierName;
+    [DataMember]
     public Loc GpsLocation;
+    [DataMember]
     public string VerifyLocToken;
   };
 
-  [Serializable]
+  [DataContract]
   public class VerifyLocationReply
   {
     // Status of the reply
@@ -35,9 +41,13 @@ namespace DistributedMatchEngine
       LOC_ERROR_OTHER = 7
     }
 
+    [DataMember]
     public UInt32 ver;
+    [DataMember]
     public string tower_status = Tower_Status.TOWER_UNKNOWN.ToString();
+    [DataMember]
     public string gps_location_status = GPS_Location_Status.LOC_UNKNOWN.ToString();
+    [DataMember]
     public double GPS_Location_Accuracy_KM;
   }
 }

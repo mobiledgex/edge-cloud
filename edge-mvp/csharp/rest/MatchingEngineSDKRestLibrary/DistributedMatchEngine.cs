@@ -5,10 +5,9 @@ using System.Text;
 
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-
+using System.Security.Authentication;
 using System.Threading.Tasks;
-
-using UnityEngine; // Unity's JSON Serializer (System.Json in normal C# .net core)
+using System.Runtime.Serialization.Json;
 
 
 namespace DistributedMatchEngine
@@ -222,7 +221,7 @@ namespace DistributedMatchEngine
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(RegisterClientRequest));
       MemoryStream ms = new MemoryStream();
       serializer.WriteObject(ms, request);
-      string jsonStr = JsonUtility
+      string jsonStr = Util.StreamToString(ms);
 
       Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + registerAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)

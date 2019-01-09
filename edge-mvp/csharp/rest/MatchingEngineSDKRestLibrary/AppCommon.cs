@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
 {
@@ -14,18 +15,23 @@ namespace DistributedMatchEngine
     LProtoHTTP = 3
   }
 
-  [Serializable]
+  [DataContract]
   public class AppPort
   {
     // TCP (L4), UDP (L4), or HTTP (L7) protocol
+    [DataMember]
     public string proto = LProto.LProtoUnknown.ToString();
     // Container port
+    [DataMember]
     public Int32 internal_port;
     // Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)
+    [DataMember]
     public Int32 public_port;
     // Public facing path for HTTP L7 access.
+    [DataMember]
     public string public_path;
     // FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
+    [DataMember]
     public string FQDN_prefix;
   }
 
