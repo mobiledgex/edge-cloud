@@ -4,12 +4,10 @@ using System.Net;
 using System.Text;
 
 using System.Net.Http;
+using System.Runtime.Serialization.Json;
 using System.Security.Cryptography.X509Certificates;
 
 using System.Threading.Tasks;
-
-using UnityEngine; // Unity's JSON Serializer (System.Json in normal C# .net core)
-
 
 namespace DistributedMatchEngine
 {
@@ -28,7 +26,6 @@ namespace DistributedMatchEngine
 
   public class MatchingEngine
   {
-    private static HttpClient httpClient;
     public const UInt32 defaultDmeRestPort = 38001;
     public const string carrierNameDefault = "tdg";
 
@@ -55,23 +52,25 @@ namespace DistributedMatchEngine
 
     public MatchingEngine()
     {
-      var httpClientHandler = new HttpClientHandler();
-      httpClientHandler.ClientCertificateOptions = ClientCertificateOption.Manual;
-      //httpClientHandler.SslProtocols = SslProtocols.Tls12;
+    }
 
+    private HttpWebRequest createWebRequest(string uri)
+    {
+      HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(uri);
       // FIXME: This should not be here.
       // Server Cert: (self signed!)
       byte[] caCrtBytes = Encoding.ASCII.GetBytes(Credentials.caCrt);
       var x509CertServer = new X509Certificate2(caCrtBytes);
-      httpClientHandler.ClientCertificates.Add(x509CertServer);
+      httpWebRequest.ClientCertificates.Add(x509CertServer);
 
       // ClientCert:
       byte[] clientCredentials = Convert.FromBase64String(Credentials.clientCrtBase64); // Pkcs12 binary source.
       var x509ClientCertKeyPair = new X509Certificate2(clientCredentials, "foo"); /* 2nd param: FIXME: password for credentials */
-      httpClientHandler.ClientCertificates.Add(x509ClientCertKeyPair);
+      httpWebRequest.ClientCertificates.Add(x509ClientCertKeyPair);
       Console.WriteLine("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
 
-      httpClientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
+      // FIXME: Real certs required.
+      httpWebRequest.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
       {
         Console.WriteLine("==== Sender: " + sender);
         Console.WriteLine("==== Cert: " + cert);
@@ -80,8 +79,7 @@ namespace DistributedMatchEngine
         return true;
       };
 
-
-      httpClient = new HttpClient(httpClientHandler);
+      return httpWebRequest;
     }
 
     public string getCarrierName()
@@ -113,17 +111,27 @@ namespace DistributedMatchEngine
 
     private async Task<Stream> PostRequest(string uri, string jsonStr)
     {
-      // Choose network TBD
+      return await Task.Run(() =>
+      {
+        var webRequest = createWebRequest(uri);
+        // Choose network TBD (async)
 
-      // static HTTPClient singleton, with instanced HttpContent is recommended for performance.
-      var stringContent = new StringContent(jsonStr, Encoding.UTF8, "application/json");
-      Console.WriteLine("Post Body: " + jsonStr);
-      var response = await httpClient.PostAsync(uri, stringContent);
+        webRequest.Method = "POST";
+        webRequest.ContentType = "application/json";
+        webRequest.ContentLength = jsonStr.Length;
 
-      response.EnsureSuccessStatusCode();
+        // Write the data:
+        using (var outstream = webRequest.GetRequestStream())
+        {
+          using (StreamWriter streamWriter = new StreamWriter(outstream))
+          {
+            streamWriter.Write(jsonStr);
+          }
+        }
 
-      Stream replyStream = await response.Content.ReadAsStreamAsync();
-      return replyStream;
+        Stream replyStream = webRequest.GetResponse().GetResponseStream();
+        return replyStream;
+      });
     }
 
     private static String parseToken(String uri)
@@ -222,7 +230,7 @@ namespace DistributedMatchEngine
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(RegisterClientRequest));
       MemoryStream ms = new MemoryStream();
       serializer.WriteObject(ms, request);
-      string jsonStr = JsonUtility
+      string jsonStr = Util.StreamToString(ms);
 
       Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + registerAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
@@ -304,9 +312,6 @@ namespace DistributedMatchEngine
       {
         return null;
       }
-
-      jsonStr = Util.StreamToString(responseStream);
-      responseStream.Position = 0;
 
       DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(VerifyLocationReply));
       VerifyLocationReply reply = (VerifyLocationReply)deserializer.ReadObject(responseStream);

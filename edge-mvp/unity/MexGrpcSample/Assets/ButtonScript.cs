@@ -3,17 +3,17 @@
 using UnityEngine.UI;
 
 public class ButtonScript : MonoBehaviour {
-    public Button startGprcButton;
-    public MexGrpcSample mexGrpcSample;
+    public Button startMexSampleButton;
+    public MexSample mexSample;
 
     void Start () {
-        Button btn = startGprcButton.GetComponent<Button>();
+        Button btn = startMexSampleButton.GetComponent<Button>();
         btn.onClick.AddListener(TaskOnClick);
     }
 
     void TaskOnClick(){
         Debug.Log ("You have clicked the button!");
-        mexGrpcSample.RunSampleFlow();
+        mexSample.RunSampleFlow();
     }
 
 }

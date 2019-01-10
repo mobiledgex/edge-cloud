@@ -10,7 +10,7 @@
     <Owners>MobiledgeX, Inc.</Owners>
     <PackageProjectUrl>https://github.com/mobiledgex/edge-cloud</PackageProjectUrl>
     <Title>MobiledgeX MatchingEngineSDK Rest Library</Title>
-    <PackageId>MobiledgeX.MatchingEngineRestSDKLibrary</PackageId>
+    <PackageId>MobiledgeX.MatchingEngineUnityRestSDKLibrary</PackageId>
     <PackageTags>MobiledgeX MatchingEngine</PackageTags>
   </PropertyGroup>
 

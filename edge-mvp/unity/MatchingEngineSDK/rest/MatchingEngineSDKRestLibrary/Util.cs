@@ -12,6 +12,9 @@ namespace DistributedMatchEngine
 
     }
 
+    /*
+     * Stream is consumed after use, not always repositionable.
+     */
     public static string StreamToString(Stream ms)
     {
       ms.Position = 0;

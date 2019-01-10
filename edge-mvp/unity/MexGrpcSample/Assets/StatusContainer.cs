@@ -10,7 +10,7 @@ public class StatusContainer : MonoBehaviour {
     public Text scrollViewText;
     long count = 0;
 
-    List<string> posts = new List<string>(10);
+    List<string> posts = new List<string>(26);
 
 	// Use this for initialization
 	void Start () {

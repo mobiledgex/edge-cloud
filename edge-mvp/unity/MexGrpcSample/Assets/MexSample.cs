@@ -1,78 +1,139 @@
 ﻿using UnityEngine;
 
-using Grpc.Core;
 using System;
-using System.Net;
-using System.Text;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+using System.Runtime.Serialization.Json;
 
 using DistributedMatchEngine;
 
-public class TokenException : Exception
+public class MexSample : MonoBehaviour
 {
-    public TokenException(string message)
-        : base(message)
+  static string carrierName = "TDG";
+  static string appName = "EmptyMatchEngineApp";
+  static string devName = "EmptyMatchEngineApp";
+  static string appVers = "1.0";
+  static string developerAuthToken = "";
+
+  static string host = "TDG.dme.mobiledgex.net";
+  static UInt32 port = 38001;
+
+  string authToken = ""; // MEX Developer supplied and updated authToken
+
+
+  string dmeHost = "tdg2.dme.mobiledgex.net"; // DME server hostname or ip.
+  int dmePort = 50051; // DME port.
+
+  string developerName = "EmptyMatchEngineApp";
+  string applicationName = "EmptyMatchEngineApp";
+  string appVer = "1.0";
+
+  DistributedMatchEngine.MatchingEngine me;
+
+  StatusContainer statusContainer;
+
+  // Use this for initialization
+  void Start()
+  {
+    statusContainer = GameObject.Find("/UICanvas/SampleOutput").GetComponent<StatusContainer>();
+    RunSampleFlow();
+  }
+
+  // Update is called once per frame
+  void Update()
+  {
+
+  }
+
+  // Get the ephemerial carriername from device specific properties.
+  public async Task<string> getCurrentCarrierName()
+  {
+    var dummy = await Task.FromResult(0);
+    return carrierName = "TDG";
+  }
+
+  public async void RunSampleFlow()
+  {
+    try
     {
+
+      carrierName = await getCurrentCarrierName();
+
+      Console.WriteLine("RestSample!");
+      statusContainer.Post("RestSample!");
+
+      me = new MatchingEngine();
+      port = 38001;  // MatchingEngine.defaultDmeRestPort;
+      statusContainer.Post("RestSample Port:" + port);
+
+      // Start location task:
+      var locTask = Util.GetLocationFromDevice();
+      statusContainer.Post("RestSample Location Task started.");
+
+      var registerClientRequest = me.CreateRegisterClientRequest(carrierName, appName, devName, appVers, developerAuthToken);
+
+      // Await synchronously.
+
+      statusContainer.Post("RegisterClient.");
+      DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(RegisterClientRequest));
+      MemoryStream ms = new MemoryStream();
+      serializer.WriteObject(ms, registerClientRequest);
+      string jsonStr = Util.StreamToString(ms);
+      statusContainer.Post(" --> RegisterClient as string: " + jsonStr);
+
+      statusContainer.Post(" RegisterClient to host: " + host + ", port: " + port);
+
+      var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
+      Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie);
+
+      statusContainer.Post("RegisterClient TokenServerURI: " + registerClientReply);
+
+      // Do Verify and FindCloudlet in parallel tasks:
+      var loc = await locTask;
+
+      var verifyLocationRequest = me.CreateVerifyLocationRequest(carrierName, loc);
+      var findCloudletRequest = me.CreateFindCloudletRequest(carrierName, devName, appName, appVers, loc);
+      var getLocationRequest = me.CreateGetLocationRequest(carrierName);
+
+
+      // Async:
+      var findCloudletTask = me.FindCloudlet(host, port, findCloudletRequest);
+      var verfiyLocationTask = me.VerifyLocation(host, port, verifyLocationRequest);
+
+
+      var getLocationTask = me.GetLocation(host, port, getLocationRequest);
+
+      // Awaits:
+      var findCloudletReply = await findCloudletTask;
+      Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
+      statusContainer.Post("FindCloudlet Status: " + findCloudletReply.status);
+
+      var verifyLocationReply = await verfiyLocationTask;
+      Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
+      statusContainer.Post("VerifyLocation Status: " + verifyLocationReply.gps_location_status);
+
+      var getLocationReply = await getLocationTask;
+      var location = getLocationReply.NetworkLocation;
+      Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
+      statusContainer.Post("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
     }
-
-    public TokenException(string message, Exception innerException)
-        : base(message, innerException)
+    catch (InvalidTokenServerTokenException itste)
     {
+      Console.WriteLine(itste.StackTrace);
+      statusContainer.Post("Token Exception: " + itste.ToString());
+      statusContainer.Post(itste.StackTrace);
     }
-}
-
-public class MexGrpcSample : MonoBehaviour
-{
-    string sessionCookie;
-    string token;
-    string authToken = ""; // MEX Developer supplied and updated authToken.
-
-    string dmeHost = "tdg2.dme.mobiledgex.net"; // DME server hostname or ip.
-    int dmePort = 50051; // DME port.
-
-    string developerName = "EmptyMatchEngineApp";
-    string applicationName = "EmptyMatchEngineApp";
-    string appVer = "1.0";
-
-    Match_Engine_Api.Match_Engine_ApiClient client;
-
-    StatusContainer statusContainer;
-
-    // Use this for initialization
-    void Start()
+    catch (Exception e)
     {
-        Environment.SetEnvironmentVariable("GRPC_TRACE", "api");
-        Environment.SetEnvironmentVariable("GRPC_VERBOSITY", "debug");
-        Grpc.Core.GrpcEnvironment.SetLogger(new Grpc.Core.Logging.ConsoleLogger());
-        statusContainer = GameObject.Find("/UICanvas/SampleOutput").GetComponent<StatusContainer>();
-        RunSampleFlow();
+      Console.WriteLine(e.StackTrace);
+      statusContainer.Post("Exception: " + e.ToString());
+      statusContainer.Post(e.StackTrace);
     }
+  }
 
-    // Update is called once per frame
-    void Update()
-    {
+  /*
 
-    }
-
-
-    public void RunSampleFlow()
-    {
-        string uri = dmeHost + ":" + dmePort;
-
-        // Channel:
-        // TODO: Load from file or iostream, securely generate keys, etc.
-        var clientKeyPair = new KeyCertificatePair(Credentials.clientCrt, Credentials.clientKey);
-        var sslCredentials = new SslCredentials(Credentials.caCrt, clientKeyPair);
-        Channel channel = new Channel(uri, sslCredentials);
-
-        client = new Match_Engine_Api.Match_Engine_ApiClient(channel);
-
-        var registerClientRequest = CreateRegisterClientRequest(developerName, applicationName, appVer, getCarrierName(), "");
-        var regReply = client.RegisterClient(registerClientRequest);
-        this.authToken = registerClientRequest.AuthToken; // Developer supplied.
-
-        Console.WriteLine("RegisterClient Reply: " + regReply);
-
-        Console.WriteLine("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
         statusContainer.Post("RegisterClient TokenServerURI: " + regReply);
         this.authToken = registerClientRequest.AuthToken;
 
@@ -120,172 +181,17 @@ public class MexGrpcSample : MonoBehaviour
                       .Append(", AppPort: Public Port: " + appPort.PublicPort)
                       .Append(", AppPort: Public Path: " + appPort.PublicPath);
         }
-        statusContainer.Post(strBuilder.ToString());
+        statusContainer.Post(strBuilder.ToString());*/
 
-    }
-
-    RegisterClientRequest CreateRegisterClientRequest(string devName, string appName, string appVers, string carrierName, string anAuthToken)
-    {
-        var request = new RegisterClientRequest
-        {
-            Ver = 1,
-            DevName = devName,
-            AppName = appName,
-            AppVers = appVers,
-            CarrierName = carrierName,
-            AuthToken = anAuthToken == "" ? authToken : anAuthToken
-        };
-        return request;
-    }
-
-    VerifyLocationRequest CreateVerifyLocationRequest(string carrierName, Loc gpsLocation)
-    {
-        if (this.token == null) {
-            Console.WriteLine("Missing TOKEN!!!!!!");
-        }
-        var request = new VerifyLocationRequest
-        {
-            Ver = 1,
-            SessionCookie = sessionCookie,
-            CarrierName = carrierName,
-            GpsLocation = gpsLocation,
-            VerifyLocToken = this.token
-        };
-        return request;
-    }
-
-    FindCloudletRequest CreateFindCloudletRequest(string carrierName, Loc gpsLocation)
-    {
-        var request = new FindCloudletRequest
-        {
-            SessionCookie = sessionCookie,
-            CarrierName = carrierName,
-            GpsLocation = gpsLocation
-        };
-        return request;
-    }
-
-    static String parseToken(String uri)
-    {
-        string[] uriandparams = uri.Split('?');
-        if (uriandparams.Length < 1)
-        {
-            return null;
-        }
-        string parameterStr = uriandparams[1];
-        if (parameterStr.Equals(""))
-        {
-            return null;
-        }
-
-        string[] parameters = parameterStr.Split('&');
-        if (parameters.Length < 1)
-        {
-            return null;
-        }
-
-        foreach (string keyValueStr in parameters)
-        {
-            string[] keyValue = keyValueStr.Split('=');
-            if (keyValue[0].Equals("dt-id"))
-            {
-                return keyValue[1];
-            }
-        }
-
-        return null;
-    }
-
-    string RetrieveToken(string tokenServerURI)
-    {
-        HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(tokenServerURI);
-        httpWebRequest.AllowAutoRedirect = false;
-
-        HttpWebResponse response = null;
-        string atoken = null;
-        string uriLocation = null;
-        // 303 See Other is behavior is different between standard C#
-        // and what's potentially in Unity.
-        try
-        {
-            response = (HttpWebResponse)httpWebRequest.GetResponse();
-            if (response != null)
-            {
-                if (response.StatusCode != HttpStatusCode.SeeOther)
-                {
-                    throw new TokenException("Expected an HTTP 303 SeeOther.");
-                }
-                uriLocation = response.Headers["Location"];
-            }
-        }
-        catch (System.Net.WebException we)
-        {
-            response = (HttpWebResponse)we.Response;
-            if (response != null)
-            {
-                if (response.StatusCode != HttpStatusCode.SeeOther)
-                {
-                    throw new TokenException("Expected an HTTP 303 SeeOther.", we);
-                }
-                uriLocation = response.Headers["Location"];
-            }
-        }
-
-        if (uriLocation != null)
-        {
-            atoken = parseToken(uriLocation);
-        }
-        return atoken;
-    }
-
-
-    VerifyLocationReply VerifyLocation()
-    {
-        // Use verifyLocation, Async call:
-        var verifyLocationRequest = CreateVerifyLocationRequest(getCarrierName(), getLocation());
-        var verifyResult = client.VerifyLocation(verifyLocationRequest);
-        return verifyResult;
-    }
-
-    FindCloudletReply FindCloudlet()
-    {
-        // Create a synchronous request for FindCloudlet using RegisterClient reply's Session Cookie (TokenServerURI is now invalid):
-        var findCloudletRequest = CreateFindCloudletRequest(getCarrierName(), getLocation());
-        var findCloudletReply = client.FindCloudlet(findCloudletRequest);
-
-        return findCloudletReply;
-    }
-
-    // This could change on every tower change.
-    string getCarrierName() {
-        return "TDG";
-    }
-
-    Loc getLocation()
-    {
-        // TODO
-        return new DistributedMatchEngine.Loc
-        {
-            Longitude = -122.149349,
-            Latitude = 37.459609,
-            Altitude = 0,
-            Course = 0,
-            HorizontalAccuracy = 0,
-            VerticalAccuracy = 0,
-            Speed = 5,
-            Timestamp = new DistributedMatchEngine.Timestamp {
-                Nanos = 10000,
-                Seconds = 1000
-            }
-        };
-    }
 }
+
+
 
 // Test Certs ONLY.
 class Credentials
 {
-    // Root CA:
-    public static string caCrt = @"-----BEGIN CERTIFICATE-----
+  // Root CA:
+  public static string caCrt = @"-----BEGIN CERTIFICATE-----
 MIIE4jCCAsqgAwIBAgIBATANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDEwZtZXgt
 Y2EwHhcNMTgwODIwMDMwNzQwWhcNMjAwMjIwMDMwNzQwWjARMQ8wDQYDVQQDEwZt
 ZXgtY2EwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQCk45wuENmZk/ok
@@ -315,8 +221,8 @@ mbSi8TUL2D7kA5StYElnJ4G2o4Bmymu8XxcZhDfeH0LJ8lqP7TyRnkL2jmNYm6be
 LggXHNeu
 -----END CERTIFICATE-----";
 
-    // Client Crt:
-    public static string clientCrt = @"-----BEGIN CERTIFICATE-----
+  // Client Crt:
+  public static string clientCrt = @"-----BEGIN CERTIFICATE-----
 MIIEOjCCAiKgAwIBAgIQMCuDiDXhpNOKRvn69uSbCjANBgkqhkiG9w0BAQsFADAR
 MQ8wDQYDVQQDEwZtZXgtY2EwHhcNMTgwODIwMDMxMDI0WhcNMjAwMjIwMDMwNzM5
 WjAVMRMwEQYDVQQDEwptZXgtY2xpZW50MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
@@ -342,8 +248,8 @@ y9MuVRwaDfGMKBYZ8Urr+RDxoDQwObvYQNIW9wVLoCGRuj3qt0BtTLkOuHvNCox1
 GJJmmOKzRetckg3+ZSu7ET2YDuB3TDxPvDyc4Tq8
 -----END CERTIFICATE-----";
 
-    // Client Private Key:
-    public static string clientKey = @"-----BEGIN RSA PRIVATE KEY-----
+  // Client Private Key:
+  public static string clientKey = @"-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAzLaPAPOAUzV49VXgiYsDZTQ/zyCtsr0w3Ge/tvIck2Mm2FtA
 Z88roRV2UPrviEZPBL+o/JPiShfgqj1cLU1GyRr4uyezYl9AIig9/2xjYnkcXg6e
 3QG75lOaX2zH9mrYAm/N2hNzJwe9ZWBibXMDwFN4cptyygZuQ86SnK4j+6h1SVmN
