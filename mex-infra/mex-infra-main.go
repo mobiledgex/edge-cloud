@@ -75,8 +75,8 @@ type ClusterInstHandler struct {
 // TODO - Once App is decoupled from Cluster, we should create Apps on a startup
 func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 	var err error
-	log.DebugLog(log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name, "state",
-		edgeproto.TrackedState_name[int32(in.State)])
+	log.DebugLog(log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name,
+		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
 	// Need to create a connection to server, as passed to us by commands
 	if in.State == edgeproto.TrackedState_Ready {
 		// Create Applications
@@ -132,7 +132,7 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 
 // create an appInst as a mexinfradev
 func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, appKey edgeproto.AppKey) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
@@ -174,7 +174,7 @@ func createMEXMetricsWriterInst(dialOpts grpc.DialOption, instKey edgeproto.Clus
 func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
 	var err error
 
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
@@ -196,7 +196,7 @@ func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
 }
 
 func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgeproto.ClusterKey) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock())
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
