@@ -45,7 +45,7 @@ var MEXMetricsWriterApp = edgeproto.App{
 	},
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
-	DelFlags:      edgeproto.DeleteType_AutoDelete,
+	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
 var MEXPrometheusAppName = "MEXPrometheusAppName"
@@ -60,7 +60,7 @@ var MEXPrometheusApp = edgeproto.App{
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
-	DelFlags:      edgeproto.DeleteType_AutoDelete,
+	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
 var dialOpts grpc.DialOption
@@ -80,7 +80,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 	// Need to create a connection to server, as passed to us by commands
 	if in.State == edgeproto.TrackedState_Ready {
 		// Create Applications
-		// TODO - this should really be done on a strartup of mex-infra
+		// TODO - this should really be done on a strartup of cluster service
 		if err = createMEXPrometheus(dialOpts, in.Key.ClusterKey); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
@@ -103,7 +103,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 }
 
 // Callback for clusterInst deletion - we don't need to do anything here
-// Applications created by mex-infra are created as auto-delete and will be removed
+// Applications created by cluster service are created as auto-delete and will be removed
 // when clusterInstance goes away
 func (c *ClusterInstHandler) Delete(in *edgeproto.ClusterInst, rev int64) {
 	log.DebugLog(log.DebugLevelNotify, "clusterInst delete", "cluster", in.Key.ClusterKey.Name, "state",
@@ -125,12 +125,12 @@ func NewNotifyHandler() *notify.DefaultHandler {
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	handler := NewNotifyHandler()
-	notifyClient := notify.NewMEXInfraClient(strings.Split(addrs, ","), tlsCertFile, handler)
+	notifyClient := notify.NewMEXClusterSvcClient(strings.Split(addrs, ","), tlsCertFile, handler)
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }
 
-// create an appInst as a mexinfradev
+// create an appInst as a clustersvcdev
 func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, appKey edgeproto.AppKey) error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
@@ -240,7 +240,7 @@ func main() {
 	}
 
 	if *standalone {
-		// TODO - unit tests see mex-infra_test.go
+		// TODO - unit tests see cluster-svc_test.go
 	}
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt)

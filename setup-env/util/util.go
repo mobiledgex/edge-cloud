@@ -135,8 +135,8 @@ type InfluxProcess struct {
 	process.InfluxLocal
 	Hostname string
 }
-type MexInfraProcess struct {
-	process.MexInfraLocal
+type ClusterSvcProcess struct {
+	process.ClusterSvcLocal
 	Hostname    string
 	DockerImage string
 }
@@ -172,7 +172,7 @@ type DeploymentData struct {
 	Crms          []CrmProcess        `yaml:"crms"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
-	MexInfras     []MexInfraProcess   `yaml:"mexinfras"`
+	ClusterSvcs   []ClusterSvcProcess `yaml:"clustersvcs"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 

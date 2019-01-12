@@ -139,9 +139,9 @@ func findProcess(processName string) (string, string, string) {
 			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
 		}
 	}
-	for _, mexinfra := range util.Deployment.MexInfras {
-		if mexinfra.Name == processName {
-			return mexinfra.Hostname, "mex-infra", "-ctrlAddrs " + mexinfra.CtrlAddrs
+	for _, clustersvc := range util.Deployment.ClusterSvcs {
+		if clustersvc.Name == processName {
+			return clustersvc.Hostname, "cluster-svc", "-ctrlAddrs " + clustersvc.CtrlAddrs
 		}
 	}
 	for _, tok := range util.Deployment.Toksims {
@@ -354,7 +354,7 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "mex-infra", "loc-api-sim", "tok-srv-sim", "influx", "vault"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "cluster-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
 	}
@@ -472,7 +472,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ctrlRemoteServers := make(map[string]string)
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
-	mexinfraRemoteServers := make(map[string]string)
+	clustersvcRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
 	vaults := make(map[string]string)
@@ -545,14 +545,14 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
-	for _, p := range util.Deployment.MexInfras {
+	for _, p := range util.Deployment.ClusterSvcs {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
 		}
 		if p.Hostname != "" && !isLocalIP(p.Hostname) {
 			i := hostNameToAnsible(p.Hostname)
 			allRemoteServers[i] = p.Name
-			mexinfraRemoteServers[i] = p.Name
+			clustersvcRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -653,10 +653,10 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			fmt.Fprintln(invfile, s)
 		}
 	}
-	if len(mexinfraRemoteServers) > 0 {
+	if len(clustersvcRemoteServers) > 0 {
 		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[mex-infras]")
-		for s := range mexinfraRemoteServers {
+		fmt.Fprintln(invfile, "[cluster-svcs]")
+		for s := range clustersvcRemoteServers {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -1050,18 +1050,18 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-	for _, mexinfra := range util.Deployment.MexInfras {
-		if processName != "" && processName != mexinfra.Name {
+	for _, clustersvc := range util.Deployment.ClusterSvcs {
+		if processName != "" && processName != clustersvc.Name {
 			continue
 		}
 
-		if isLocalIP(mexinfra.Hostname) {
+		if isLocalIP(clustersvc.Hostname) {
 
-			log.Printf("Starting MexInfra %+v\n", mexinfra)
-			logfile := getLogFile(mexinfra.Name, outputDir)
-			err := mexinfra.Start(logfile, process.WithDebug("mexos,notify"))
+			log.Printf("Starting ClusterSvc %+v\n", clustersvc)
+			logfile := getLogFile(clustersvc.Name, outputDir)
+			err := clustersvc.Start(logfile, process.WithDebug("mexos,notify"))
 			if err != nil {
-				log.Printf("Error on MexInfra startup: %v", err)
+				log.Printf("Error on ClusterSvc startup: %v", err)
 				return false
 			}
 		}

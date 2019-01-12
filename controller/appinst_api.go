@@ -114,8 +114,8 @@ func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
 	for _, val := range s.cache.Objs {
 		if val.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
 			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name,
-				"autodelete", app.DelFlags.String())
-			if app.DelFlags == edgeproto.DeleteType_NoAutoDelete {
+				"autodelete", app.DelOpt.String())
+			if app.DelOpt == edgeproto.DeleteType_NoAutoDelete {
 				return true
 			}
 		}
@@ -130,7 +130,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	s.cache.Mux.Lock()
 	for k, val := range s.cache.Objs {
 		if val.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
-			if app.DelFlags == edgeproto.DeleteType_AutoDelete {
+			if app.DelOpt == edgeproto.DeleteType_AutoDelete {
 				apps[k] = val
 			}
 		}

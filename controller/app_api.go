@@ -72,7 +72,7 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Cluster.Matches(key) && app.DelFlags == edgeproto.DeleteType_NoAutoDelete {
+		if app.Cluster.Matches(key) && app.DelOpt == edgeproto.DeleteType_NoAutoDelete {
 			return true
 		}
 	}
@@ -84,7 +84,7 @@ func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.ClusterKey) 
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.Name)
 	s.cache.Mux.Lock()
 	for k, app := range s.cache.Objs {
-		if app.Cluster.Matches(key) && app.DelFlags == edgeproto.DeleteType_AutoDelete {
+		if app.Cluster.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
 			apps[k] = app
 		}
 	}

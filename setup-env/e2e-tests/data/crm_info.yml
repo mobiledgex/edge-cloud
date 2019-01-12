@@ -232,7 +232,7 @@ apps:
             imagePullPolicy: Always
             ports:
   deploymentgenerator: kubernetes-basic
-  delflags: AutoDelete
+  delopt: AutoDelete
 - key:
     developerkey:
       name: mexinfradev_
@@ -245,7 +245,7 @@ apps:
   cluster:
     name: autoclustersomeapplication1
   deployment: helm
-  delflags: AutoDelete
+  delopt: AutoDelete
 
 appinstances:
 - key:

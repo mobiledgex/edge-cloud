@@ -321,8 +321,8 @@ func (p *InfluxLocal) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
-// MexInfra process
-type MexInfraLocal struct {
+// ClusterSvc process
+type ClusterSvcLocal struct {
 	Name        string
 	NotifyAddrs string
 	CtrlAddrs   string
@@ -330,7 +330,7 @@ type MexInfraLocal struct {
 	cmd         *exec.Cmd
 }
 
-func (p *MexInfraLocal) Start(logfile string, opts ...StartOp) error {
+func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.CtrlAddrs != "" {
 		args = append(args, "--ctrlAddrs")
@@ -348,11 +348,11 @@ func (p *MexInfraLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "mex-infra", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, "cluster-svc", args, nil, logfile)
 	return err
 }
 
-func (p *MexInfraLocal) Stop() {
+func (p *ClusterSvcLocal) Stop() {
 	StopLocal(p.cmd)
 }
 

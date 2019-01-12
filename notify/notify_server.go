@@ -323,9 +323,9 @@ func (mgr *ServerMgr) UpdateCloudlet(key *edgeproto.CloudletKey, old *edgeproto.
 	mgr.mux.Lock()
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
-		if server.requestor == edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+		if server.requestor == edgeproto.NoticeRequestor_NoticeRequestorClusterSvc {
 			log.DebugLog(log.DebugLevelNotify,
-				"Updating notify to send the cluster info for MEXINFRA",
+				"Updating notify to send the cluster info for cluster-svc",
 				"cloudlet", key.Name)
 
 			server.updateTrackedCloudlets(key, register)
@@ -364,7 +364,7 @@ func (mgr *ServerMgr) UpdateClusterInst(key *edgeproto.ClusterInstKey, old *edge
 	defer mgr.mux.Unlock()
 	for _, server := range mgr.table {
 		if server.requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM &&
-			server.requestor != edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+			server.requestor != edgeproto.NoticeRequestor_NoticeRequestorClusterSvc {
 			continue
 		}
 		server.UpdateClusterInst(key)
@@ -458,7 +458,7 @@ func (s *Server) negotiate(stream edgeproto.NotifyApi_StreamNoticeServer) error 
 	}
 
 	if req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorDME && req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorCRM &&
-		req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+		req.Requestor != edgeproto.NoticeRequestor_NoticeRequestorClusterSvc {
 		s.stats.NegotiateErrors++
 		return errors.New("Notify server bad requestor value")
 	}
@@ -566,7 +566,7 @@ func (s *Server) send(stream edgeproto.NotifyApi_StreamNoticeServer) {
 				// Cloudlet, AppInsts, CloudletInsts sends are
 				// triggered when registering a new CloudletInfo
 				// on receive, so there is no need to send all here.
-			} else if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorMEXInfra {
+			} else if s.requestor == edgeproto.NoticeRequestor_NoticeRequestorClusterSvc {
 				// need to update the interested cloudlets
 				sendCloudlet.GetAllKeys(cloudlets)
 				for k, _ := range cloudlets {

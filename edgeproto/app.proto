@@ -99,7 +99,7 @@ message App {
 	// on behalf of this app, such as FindCloudlet
   bool permits_platform_apps = 19;
   // Override actions to Controller
-  DeleteType del_flags = 20 [(protocmd.hidetag) = "nocmp"];
+  DeleteType del_opt = 20 [(protocmd.hidetag) = "nocmp"];
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
