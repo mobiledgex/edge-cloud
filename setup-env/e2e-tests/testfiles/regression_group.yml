@@ -21,6 +21,10 @@ tests:
   - includefile: verify_loc.yml
   - includefile: verify_loc.yml
     api: rest
+  - includefile: ctrl_restart.yml
+    loops: 2
+  - includefile: restarts_2ctrls.yml
+    loops: 2
   - includefile: verify_loc.yml
     loops: 1
   - includefile: verify_loc.yml
