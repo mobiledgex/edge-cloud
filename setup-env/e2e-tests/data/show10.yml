@@ -290,6 +290,9 @@ developers:
   passhash: "123456789012345670"
   address: 1234 platos street
   email: platos@gmail.com
+- key:
+    name: mexinfradev_
+  username: _mexinfradev
 
 cloudlets:
 - key:
