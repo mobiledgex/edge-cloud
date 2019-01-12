@@ -40,6 +40,9 @@ func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 		Command:     app.Command,
 		Annotations: app.Annotations,
 	}
+	if app.AccessPorts == "" {
+		return out, nil
+	}
 	err := setPorts(out, app)
 	if err != nil {
 		return nil, err

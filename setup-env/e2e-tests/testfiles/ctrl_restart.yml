@@ -11,7 +11,7 @@ tests:
 - name: compare results of show provisioning
   compareyaml: 
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: show provisioning from second controller
@@ -21,7 +21,7 @@ tests:
 - name: compare results of ctrl2 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: stop ctrl1
@@ -36,7 +36,7 @@ tests:
 - name: compare results of ctrl1 show provisioning
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
   
 - name: delete and show provisioning, verify it is empty

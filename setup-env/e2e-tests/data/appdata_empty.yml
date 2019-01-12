@@ -3,6 +3,9 @@ flavors:
 operators:
 
 developers:
+- key:
+    name: mexinfradev_
+  username: _mexinfradev
 
 cloudlets:
 
