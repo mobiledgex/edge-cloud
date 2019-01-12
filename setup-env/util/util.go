@@ -135,6 +135,11 @@ type InfluxProcess struct {
 	process.InfluxLocal
 	Hostname string
 }
+type ClusterSvcProcess struct {
+	process.ClusterSvcLocal
+	Hostname    string
+	DockerImage string
+}
 
 type TLSCertInfo struct {
 	CommonName string
@@ -167,6 +172,7 @@ type DeploymentData struct {
 	Crms          []CrmProcess        `yaml:"crms"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
+	ClusterSvcs   []ClusterSvcProcess `yaml:"clustersvcs"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 

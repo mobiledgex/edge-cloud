@@ -10,7 +10,7 @@ tests:
   apifile: "{{datadir}}/appdata_no_appinst.yml"
   actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
-    yaml1: "{{datadir}}/appdata_no_appinst.yml"
+    yaml1: "{{datadir}}/appdata_no_appinst_show.yml"
     yaml2: "{{outputdir}}/show-commands.yml"
     filetype: appdata
 

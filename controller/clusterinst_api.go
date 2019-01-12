@@ -245,6 +245,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
 		return err
 	}
+	// Delete appInsts that are set for autodelete
+	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
+		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s - %s",
+			in.Key.ClusterKey.Name, err.Error())
+	}
+
 	cctx.SetOverride(&in.CrmOverride)
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
