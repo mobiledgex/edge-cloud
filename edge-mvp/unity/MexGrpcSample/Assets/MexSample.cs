@@ -78,7 +78,15 @@ public class MexSample : MonoBehaviour
       statusContainer.Post("RegisterClient.");
       DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(RegisterClientRequest));
       MemoryStream ms = new MemoryStream();
+      // have object?
+      if (registerClientRequest == null)
+      {
+        statusContainer.Post("Weird, RegisterClient create is null");
+      }
+      statusContainer.Post("RegisterClient: AppName" + registerClientRequest.AppName);
+
       serializer.WriteObject(ms, registerClientRequest);
+
       string jsonStr = Util.StreamToString(ms);
       statusContainer.Post(" --> RegisterClient as string: " + jsonStr);
 
