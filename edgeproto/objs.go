@@ -198,11 +198,10 @@ func (s *App) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	if _, found := fields[AppFieldAccessPorts]; found {
-		if s.AccessPorts == "" {
-			return errors.New("Please specify access ports")
-		}
-		if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
-			return err
+		if s.AccessPorts != "" {
+			if _, err = ParseAppPorts(s.AccessPorts); found && err != nil {
+				return err
+			}
 		}
 	}
 	if s.AuthPublicKey != "" {

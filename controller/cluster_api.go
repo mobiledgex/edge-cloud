@@ -72,6 +72,9 @@ func (s *ClusterApi) DeleteCluster(ctx context.Context, in *edgeproto.Cluster) (
 	if clusterInstApi.UsesCluster(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Cluster in use by ClusterInst")
 	}
+	if err := appApi.AutoDeleteApps(ctx, &in.Key); err != nil {
+		return &edgeproto.Result{}, errors.New("Could not auto-delete apps")
+	}
 	return s.store.Delete(in, s.sync.syncWait)
 }
 

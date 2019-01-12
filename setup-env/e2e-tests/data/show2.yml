@@ -76,6 +76,9 @@ developers:
   passhash: "123456789012345670"
   address: 1234 AcmeAppCo street
   email: AcmeAppCo@gmail.com
+- key:
+    name: mexinfradev_
+  username: _mexinfradev
 
 cloudlets:
 - key:

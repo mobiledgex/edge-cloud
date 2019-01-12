@@ -560,17 +560,17 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:97cca7fda664cc9c573f3a90a3fdb54901c1ca3a649baa74a2bb48419c04a73e"
+  digest = "1:884cd74908393d64275f801c446003d3ad2e7718f679ef80b30ec89bcf077a90"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "k8s-prov/azure",
     "k8s-prov/gcloud",
-    "openstack-prov/oscliapi",
+    "mexos",
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "91679b7506b2f060f39d4032754f0b39980f7fb5"
-  version = "v0.0.4"
+  revision = "7350a2cfca1e7f3699d0bb77bdedd805b9d467b6"
+  version = "v0.0.7"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -1076,19 +1076,16 @@
   analyzer-version = 1
   input-imports = [
     "github.com/AsGz/geo/georeverse",
-    "github.com/asaskevich/govalidator",
     "github.com/casbin/casbin",
     "github.com/casbin/gorm-adapter",
     "github.com/cespare/xxhash",
     "github.com/cloudflare/cloudflare-go",
-    "github.com/codeskyblue/go-sh",
     "github.com/coreos/etcd/clientv3",
     "github.com/coreos/etcd/clientv3/concurrency",
     "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",
     "github.com/coreos/etcd/mvcc/mvccpb",
     "github.com/daviddengcn/go-colortext",
     "github.com/dgrijalva/jwt-go",
-    "github.com/ghodss/yaml",
     "github.com/gogo/gateway",
     "github.com/gogo/googleapis/google/api",
     "github.com/gogo/protobuf/gogoproto",
@@ -1120,13 +1117,7 @@
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
     "github.com/mitchellh/mapstructure",
-    "github.com/mobiledgex/edge-cloud-infra/k8s-prov/azure",
-    "github.com/mobiledgex/edge-cloud-infra/k8s-prov/gcloud",
-    "github.com/mobiledgex/edge-cloud-infra/openstack-prov/oscliapi",
-    "github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/cloudflare",
-    "github.com/nanobox-io/golang-ssh",
-    "github.com/parnurzeal/gorequest",
-    "github.com/sirupsen/logrus",
+    "github.com/mobiledgex/edge-cloud-infra/mexos",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/stretchr/testify/assert",
@@ -1134,7 +1125,6 @@
     "go.uber.org/zap",
     "golang.org/x/crypto/pbkdf2",
     "golang.org/x/net/context",
-    "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
     "google.golang.org/grpc/credentials",

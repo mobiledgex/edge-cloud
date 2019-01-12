@@ -12,14 +12,14 @@ tests:
 - name: compare results of show provisioning
   compareyaml: 
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: show provisioning from ctrl2 and compare
   actions: [ctrlapi-show=ctrl2]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: stop both controllers
@@ -44,7 +44,7 @@ tests:
   actions: [ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: stop ctrl2 
