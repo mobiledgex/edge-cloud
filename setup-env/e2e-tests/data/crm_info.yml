@@ -200,7 +200,7 @@ apps:
       name: mexinfradev_
     name: MEXMetricsWriter
     version: "1.0"
-  imagepath: mobiledgex_mexinfradev_/MEXMetricsWriter:1.0
+  imagepath: registry.mobiledgex.net:5000/mexinfradev_/MEXMetricsWriter:1.0
   imagetype: ImageTypeDocker
   ipaccess: IpAccessShared
   defaultflavor:
@@ -228,7 +228,7 @@ apps:
           - name: mexregistrysecret
           containers:
           - name: mexmetricswriter
-            image: mobiledgex_mexinfradev_/MEXMetricsWriter:1.0
+            image: registry.mobiledgex.net:5000/mexinfradev_/MEXMetricsWriter:1.0
             imagePullPolicy: Always
             ports:
   deploymentgenerator: kubernetes-basic
