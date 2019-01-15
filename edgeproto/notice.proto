@@ -5,14 +5,7 @@ package edgeproto;
 
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
-import "app.proto";
-import "app_inst.proto";
-import "cloudlet.proto";
-import "flavor.proto";
-import "clusterflavor.proto";
-import "clusterinst.proto";
-import "metric.proto";
-import "node.proto";
+import "google/protobuf/any.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 // NoticeAction denotes what kind of action this notification is for.
@@ -29,56 +22,20 @@ enum NoticeAction {
   SENDALL_END = 4;
 }
 
-// NoticeRequestor indicates which type of service the client is.
-enum NoticeRequestor {
-  // Invalid
-  NoticeRequestorNone = 0;
-  // Distributed Matching Engine
-  NoticeRequestorDME = 1;
-  // Cloudlet Resource Manager
-  NoticeRequestorCRM = 2;
-  // Cluster Service
-  NoticeRequestorClusterSvc = 3;
-}
-
-// NoticyReply is sent from server to client.
-message NoticeReply {
+message Notice {
   // Action to perform
   NoticeAction action = 1;
   // Protocol version supported by sender
-  uint32 version = 3;
-  // Data included (for UPDATE and DELETE)
-  oneof data {
-    App app = 9;
-    AppInst appInst = 4;
-    Cloudlet cloudlet = 5;
-    Flavor flavor = 6;
-    ClusterFlavor clusterFlavor = 8;
-    ClusterInst clusterInst = 7;
-  }
-}
-
-// NoticeRequest is sent from client to server.
-message NoticeRequest {
-  // Action to perform
-  NoticeAction action = 1;
-  // Protocol version supported by receiver
   uint32 version = 2;
-  // Client requestor type
-  NoticeRequestor requestor = 3;
-  // Revision of database
-  uint64 revision = 4;
-  // Data included (UPDATE)
-  oneof data {
-    CloudletInfo cloudletInfo = 5;
-    AppInstInfo appInstInfo = 6;
-    ClusterInstInfo clusterInstInfo = 7;
-    Metric metric = 8;
-    Node node = 9;
-  }
+  // Data
+  google.protobuf.Any any = 3 [(gogoproto.nullable) = false];
+  // Wanted Objects
+  repeated string want_objs = 4;
+  // Filter by cloudlet key
+  bool filter_cloudlet_key = 5;
 }
 
 service NotifyApi {
   // Bidrectional stream for exchanging data between controller and DME/CRM
-  rpc StreamNotice(stream NoticeRequest) returns (stream NoticeReply) {}
+  rpc StreamNotice(stream Notice) returns (stream Notice) {}
 }

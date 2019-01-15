@@ -11,7 +11,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,7 +49,6 @@ func InitAppInstApi(sync *Sync) {
 	appInstApi.sync = sync
 	appInstApi.store = edgeproto.NewAppInstStore(sync.store)
 	edgeproto.InitAppInstCache(&appInstApi.cache)
-	appInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateAppInst)
 	sync.RegisterCache(&appInstApi.cache)
 	if *shortTimeouts {
 		CreateAppInstTimeout = 3 * time.Second
@@ -69,10 +67,6 @@ func (s *AppInstApi) Get(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool
 
 func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
 	return s.cache.HasKey(key)
-}
-
-func (s *AppInstApi) GetAppInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}, appInsts map[edgeproto.AppInstKey]struct{}) {
-	s.cache.GetAppInstsForCloudlets(cloudlets, appInsts)
 }
 
 func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
