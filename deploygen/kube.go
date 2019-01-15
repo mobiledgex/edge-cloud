@@ -131,6 +131,7 @@ func (g *kubeBasicGen) kubeApp() {
 	}
 	data := appData{
 		Name:      util.K8SSanitize(g.app.Name + "-deployment"),
+		Developer: util.K8SSanitize(g.app.DevName),
 		Run:       util.K8SSanitize(g.app.Name),
 		Ports:     g.ports,
 		ImagePath: g.app.ImagePath,
@@ -146,6 +147,7 @@ func (g *kubeBasicGen) kubeApp() {
 
 type appData struct {
 	Name      string
+	Developer string
 	Run       string
 	ImagePath string
 	Ports     []kubePort
@@ -156,6 +158,8 @@ var appTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Name}}
+  labels:
+    developer: {{.Developer}}
 spec:
   selector:
     matchLabels:

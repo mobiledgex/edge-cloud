@@ -170,6 +170,8 @@ apps:
     kind: Deployment
     metadata:
       name: someapplication1-deployment
+      labels:
+        developer: acmeappco
     spec:
       selector:
         matchLabels:
@@ -213,6 +215,8 @@ apps:
     kind: Deployment
     metadata:
       name: mexmetricswriter-deployment
+      labels:
+        developer: mexinfradev-
     spec:
       selector:
         matchLabels:
