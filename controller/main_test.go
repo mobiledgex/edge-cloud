@@ -55,8 +55,8 @@ func TestController(t *testing.T) {
 	// test notify clients
 	notifyAddrs := []string{*notifyAddr}
 	crmNotify := notify.NewDummyHandler()
-	crmClient := notify.NewCRMClient(notifyAddrs, "", crmNotify)
-	crmNotify.SetClientCb(crmClient)
+	crmClient := notify.NewClient(notifyAddrs, "")
+	crmNotify.RegisterCRMClient(crmClient)
 	NewDummyInfoResponder(&crmNotify.AppInstCache, &crmNotify.ClusterInstCache,
 		&crmNotify.AppInstInfoCache, &crmNotify.ClusterInstInfoCache)
 	for ii, _ := range testutil.CloudletInfoData {
@@ -65,8 +65,8 @@ func TestController(t *testing.T) {
 	go crmClient.Start()
 	defer crmClient.Stop()
 	dmeNotify := notify.NewDummyHandler()
-	dmeClient := notify.NewDMEClient(notifyAddrs, "", dmeNotify)
-	dmeNotify.SetClientCb(dmeClient)
+	dmeClient := notify.NewClient(notifyAddrs, "")
+	dmeNotify.RegisterDMEClient(dmeClient)
 	go dmeClient.Start()
 	defer dmeClient.Stop()
 

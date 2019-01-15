@@ -27,3 +27,7 @@ func (s *ClusterInstInfoApi) Delete(in *edgeproto.ClusterInstInfo, rev int64) {
 func (s *ClusterInstInfoApi) Flush(notifyId int64) {
 	// no-op
 }
+
+func (s *ClusterInstInfoApi) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
+	// no-op
+}

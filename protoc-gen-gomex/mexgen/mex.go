@@ -751,6 +751,7 @@ type cacheTemplateArgs struct {
 	KeyType      string
 	CudCache     bool
 	NotifyCache  bool
+	NotifyFlush  bool
 	WaitForState string
 }
 
@@ -878,8 +879,8 @@ func (c *{{.Name}}Cache) GetCount() int {
 	return len(c.Objs)
 }
 
-{{- if .NotifyCache}}
 func (c *{{.Name}}Cache) Flush(notifyId int64) {
+{{- if .NotifyFlush}}
 	flushed := make(map[{{.KeyType}}]*{{.Name}})
 	c.Mux.Lock()
 	for key, val := range c.Objs {
@@ -898,8 +899,8 @@ func (c *{{.Name}}Cache) Flush(notifyId int64) {
 			c.TriggerKeyWatchers(&key)
 		}
 	}
-}
 {{- end}}
+}
 
 func (c *{{.Name}}Cache) Show(filter *{{.Name}}, cb func(ret *{{.Name}}) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show {{.Name}}", "count", len(c.Objs))
@@ -1176,6 +1177,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 			KeyType:      m.support.GoType(m.gen, keyField),
 			CudCache:     GetGenerateCud(message),
 			NotifyCache:  GetNotifyCache(message),
+			NotifyFlush:  GetNotifyFlush(message),
 			WaitForState: GetGenerateWaitForState(message),
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
@@ -1306,6 +1308,10 @@ func GetGenerateWaitForState(message *descriptor.DescriptorProto) string {
 
 func GetNotifyCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_NotifyCache, false)
+}
+
+func GetNotifyFlush(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_NotifyFlush, false)
 }
 
 func GetObjKey(message *descriptor.DescriptorProto) bool {

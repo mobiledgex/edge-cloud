@@ -106,8 +106,8 @@ func main() {
 	}
 	defer influxQ.Stop()
 
-	notifyHandler := NewNotifyHandler(influxQ)
-	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile, notifyHandler)
+	InitNotify(influxQ)
+	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
 	defer notify.ServerMgrOne.Stop()
 
 	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
@@ -220,4 +220,20 @@ func InitApis(sync *Sync) {
 		hostname = "nohostname"
 	}
 	ControllerId = hostname + "@" + *externalApiAddr
+}
+
+func InitNotify(influxQ *InfluxQ) {
+	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
+	notify.ServerMgrOne.RegisterSendClusterFlavorCache(&clusterFlavorApi.cache)
+	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
+	notify.ServerMgrOne.RegisterSendClusterCache(&clusterApi.cache)
+	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
+	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
+	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+
+	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
+	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
 }

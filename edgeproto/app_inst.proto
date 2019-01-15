@@ -67,6 +67,9 @@ message AppInst {
   option (protogen.generate_cud_streamout) = true;
   option (protogen.generate_cache) = true;
   option (protogen.generate_wait_for_state) = "TrackedState";
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
+  option (protogen.notify_filter_cloudlet_key) = true;
   option (protocmd.noconfig) = "CloudletLoc,MappedPorts,Uri,Liveness,ClusterInstKey,";
 }
 
@@ -121,6 +124,7 @@ message AppInstInfo {
   option (protogen.generate_cache) = true;
   option (protogen.generate_show_test) = true;
   option (protogen.notify_cache) = true;
+  option (protogen.notify_flush) = true;
 }
 
 service AppInstInfoApi {

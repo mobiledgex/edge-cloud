@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 type FlavorApi struct {
@@ -20,7 +19,6 @@ func InitFlavorApi(sync *Sync) {
 	flavorApi.sync = sync
 	flavorApi.store = edgeproto.NewFlavorStore(sync.store)
 	edgeproto.InitFlavorCache(&flavorApi.cache)
-	flavorApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateFlavor)
 	sync.RegisterCache(&flavorApi.cache)
 }
 

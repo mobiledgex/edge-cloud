@@ -1380,6 +1380,10 @@
           "type": "boolean",
           "format": "boolean",
           "title": "Indicates whether or not platform apps are allowed to perform actions\non behalf of this app, such as FindCloudlet"
+        },
+        "del_opt": {
+          "$ref": "#/definitions/edgeprotoDeleteType",
+          "title": "Override actions to Controller"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
@@ -2003,6 +2007,15 @@
       },
       "title": "ControllerKey uniquely defines a Controller"
     },
+    "edgeprotoDeleteType": {
+      "type": "string",
+      "enum": [
+        "NoAutoDelete",
+        "AutoDelete"
+      ],
+      "default": "NoAutoDelete",
+      "title": "- NoAutoDelete: No autodelete\n - AutoDelete: Autodelete"
+    },
     "edgeprotoDeveloper": {
       "type": "object",
       "properties": {
@@ -2177,67 +2190,6 @@
       "default": "LivenessUnknown",
       "description": "Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.\n\n - LivenessUnknown: Unknown liveness\n - LivenessStatic: Object managed by external entity\n - LivenessDynamic: Object managed internally"
     },
-    "edgeprotoMetric": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "title": "Metric name"
-        },
-        "timestamp": {
-          "type": "string",
-          "format": "date-time",
-          "title": "Timestamp when the metric was captured"
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/edgeprotoMetricTag"
-          },
-          "title": "Tags associated with the metric for searching/filtering"
-        },
-        "vals": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/edgeprotoMetricVal"
-          },
-          "title": "Values associated with the metric"
-        }
-      },
-      "description": "Metric is an entry/point in a time series of values for Analytics/Billing."
-    },
-    "edgeprotoMetricTag": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "title": "Metric tag name"
-        },
-        "val": {
-          "type": "string",
-          "title": "Metric tag value"
-        }
-      },
-      "description": "MetricTag is used as a tag or label to look up the metric, beyond just the name of the metric."
-    },
-    "edgeprotoMetricVal": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string",
-          "title": "Name of the value"
-        },
-        "dval": {
-          "type": "number",
-          "format": "double"
-        },
-        "ival": {
-          "type": "string",
-          "format": "uint64"
-        }
-      },
-      "description": "MetricVal is a value associated with the metric."
-    },
     "edgeprotoNode": {
       "type": "object",
       "properties": {
@@ -2289,19 +2241,7 @@
       "description": "- NodeUnknown: Unknown\n - NodeDME: Distributed Matching Engine\n - NodeCRM: Cloudlet Resource Manager",
       "title": "NodeType defines the type of Node"
     },
-    "edgeprotoNoticeAction": {
-      "type": "string",
-      "enum": [
-        "NONE",
-        "UPDATE",
-        "DELETE",
-        "VERSION",
-        "SENDALL_END"
-      ],
-      "default": "NONE",
-      "description": "NoticeAction denotes what kind of action this notification is for.\n\n - NONE: No action\n - UPDATE: Update the object\n - DELETE: Delete the object\n - VERSION: Version exchange negotitation message\n - SENDALL_END: Initial send all finished message"
-    },
-    "edgeprotoNoticeReply": {
+    "edgeprotoNotice": {
       "type": "object",
       "properties": {
         "action": {
@@ -2313,36 +2253,35 @@
           "format": "int64",
           "title": "Protocol version supported by sender"
         },
-        "app": {
-          "$ref": "#/definitions/edgeprotoApp"
+        "any": {
+          "$ref": "#/definitions/protobufAny",
+          "title": "Data"
         },
-        "appInst": {
-          "$ref": "#/definitions/edgeprotoAppInst"
+        "want_objs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "Wanted Objects"
         },
-        "cloudlet": {
-          "$ref": "#/definitions/edgeprotoCloudlet"
-        },
-        "flavor": {
-          "$ref": "#/definitions/edgeprotoFlavor"
-        },
-        "clusterFlavor": {
-          "$ref": "#/definitions/edgeprotoClusterFlavor"
-        },
-        "clusterInst": {
-          "$ref": "#/definitions/edgeprotoClusterInst"
+        "filter_cloudlet_key": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Filter by cloudlet key"
         }
-      },
-      "description": "NoticyReply is sent from server to client."
+      }
     },
-    "edgeprotoNoticeRequestor": {
+    "edgeprotoNoticeAction": {
       "type": "string",
       "enum": [
-        "NoticeRequestorNone",
-        "NoticeRequestorDME",
-        "NoticeRequestorCRM"
+        "NONE",
+        "UPDATE",
+        "DELETE",
+        "VERSION",
+        "SENDALL_END"
       ],
-      "default": "NoticeRequestorNone",
-      "description": "NoticeRequestor indicates which type of service the client is.\n\n - NoticeRequestorNone: Invalid\n - NoticeRequestorDME: Distributed Matching Engine\n - NoticeRequestorCRM: Cloudlet Resource Manager"
+      "default": "NONE",
+      "description": "NoticeAction denotes what kind of action this notification is for.\n\n - NONE: No action\n - UPDATE: Update the object\n - DELETE: Delete the object\n - VERSION: Version exchange negotitation message\n - SENDALL_END: Initial send all finished message"
     },
     "edgeprotoOperator": {
       "type": "object",
@@ -2404,6 +2343,21 @@
       ],
       "default": "TrackedStateUnknown",
       "description": "TrackedState is used to track the state of an object on a remote node,\ni.e. track the state of a ClusterInst object on the CRM (Cloudlet).\n\n - TrackedStateUnknown: Unknown state\n - NotPresent: Not present (does not exist)\n - CreateRequested: Create requested\n - Creating: Creating\n - CreateError: Create error\n - Ready: Ready\n - UpdateRequested: Update requested\n - Updating: Updating\n - UpdateError: Update error\n - DeleteRequested: Delete requested\n - Deleting: Deleting\n - DeleteError: Delete error"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
     }
   }
 }

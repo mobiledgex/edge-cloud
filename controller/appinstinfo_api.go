@@ -27,3 +27,7 @@ func (s *AppInstInfoApi) Delete(in *edgeproto.AppInstInfo, rev int64) {
 func (s *AppInstInfoApi) Flush(notifyId int64) {
 	// no-op
 }
+
+func (s *AppInstInfoApi) Prune(keys map[edgeproto.AppInstKey]struct{}) {
+	// no-op
+}

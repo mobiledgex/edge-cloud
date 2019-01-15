@@ -811,6 +811,9 @@ func (c *DeveloperCache) GetCount() int {
 	return len(c.Objs)
 }
 
+func (c *DeveloperCache) Flush(notifyId int64) {
+}
+
 func (c *DeveloperCache) Show(filter *Developer, cb func(ret *Developer) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Developer", "count", len(c.Objs))
 	c.Mux.Lock()

@@ -93,6 +93,8 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 	}
 }
 
+func (s *CloudletInfoApi) Prune(keys map[edgeproto.CloudletKey]struct{}) {}
+
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
 	if *key == cloudcommon.DefaultCloudletKey {
 		return edgeproto.CloudletState_CloudletStateReady

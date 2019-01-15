@@ -5,7 +5,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 type CloudletApi struct {
@@ -20,7 +19,6 @@ func InitCloudletApi(sync *Sync) {
 	cloudletApi.sync = sync
 	cloudletApi.store = edgeproto.NewCloudletStore(sync.store)
 	edgeproto.InitCloudletCache(&cloudletApi.cache)
-	cloudletApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateCloudlet)
 	sync.RegisterCache(&cloudletApi.cache)
 }
 
