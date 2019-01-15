@@ -37,6 +37,7 @@ var hostname = flag.String("hostname", "", "unique hostname within Cloudlet")
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudlet edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
 var myNode edgeproto.Node
+var isDIND bool
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -150,6 +151,8 @@ func main() {
 	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
 	// gather cloudlet info
+	log.DebugLog(log.DebugLevelMexos, "check isdind", "isDIND", isDIND)
+
 	if *standalone || *fakecloudlet {
 		// set fake cloudlet info
 		myCloudlet.OsMaxRam = 500
@@ -165,14 +168,18 @@ func main() {
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
 			platStat := <-platChan
-			log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
-			// gather cloudlet info from openstack, etc.
-			if controllerData.CRMRootLB == nil {
-				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
-				return
-			}
+			if isDIND {
+				myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
 
-			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
+			} else {
+				log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
+				// gather cloudlet info from openstack, etc.
+				if controllerData.CRMRootLB == nil {
+					log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
+					return
+				}
+				crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
+			}
 			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 			// trigger send of info upstream to controller
 			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
@@ -221,6 +228,9 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	if err := mexos.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr); err != nil {
 		return err
 	}
+	isDIND = mexos.IsLocalDIND(mf)
+	log.DebugLog(log.DebugLevelMexos, "IS DIND SET", "isDIND", isDIND)
+
 	log.DebugLog(log.DebugLevelMexos, "ok, init platform with cloudlet key")
 	return nil
 }
