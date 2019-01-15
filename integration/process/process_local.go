@@ -238,7 +238,7 @@ type MexAgentLocal struct {
 
 func (p *MexAgentLocal) Start(logfile string, opts ...StartOp) error {
 	var err error
-	args := []string{"--debug"}
+	args := []string{"--debug", "--proxy", ""}
 	var envs []string
 
 	p.cmd, err = StartLocal(p.Name, "mexosagent", args, envs, logfile)
