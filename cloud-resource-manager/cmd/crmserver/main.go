@@ -150,9 +150,6 @@ func main() {
 	}()
 	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
-	// gather cloudlet info
-	log.DebugLog(log.DebugLevelMexos, "check isdind", "isDIND", isDIND)
-
 	if *standalone || *fakecloudlet {
 		// set fake cloudlet info
 		myCloudlet.OsMaxRam = 500
@@ -169,6 +166,7 @@ func main() {
 			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
 			platStat := <-platChan
 			if isDIND {
+				log.DebugLog(log.DebugLevelMexos, "running as local DIND")
 				myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
 
 			} else {
@@ -229,8 +227,6 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 		return err
 	}
 	isDIND = mexos.IsLocalDIND(mf)
-	log.DebugLog(log.DebugLevelMexos, "IS DIND SET", "isDIND", isDIND)
-
 	log.DebugLog(log.DebugLevelMexos, "ok, init platform with cloudlet key")
 	return nil
 }
