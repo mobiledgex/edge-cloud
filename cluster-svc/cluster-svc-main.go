@@ -117,15 +117,11 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 	log.DebugLog(log.DebugLevelNotify, "clusterInst prune")
 }
 
-func NewNotifyHandler() *notify.DefaultHandler {
-	handler := notify.DefaultHandler{}
-	handler.RecvClusterInst = &ClusterInstHandler{}
-	return &handler
-}
+func (c *ClusterInstHandler) Flush(notifyId int64) {}
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
-	handler := NewNotifyHandler()
-	notifyClient := notify.NewMEXClusterSvcClient(strings.Split(addrs, ","), tlsCertFile, handler)
+	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
+	notifyClient.RegisterRecv(notify.NewClusterInstRecv(&ClusterInstHandler{}))
 	log.InfoLog("notify client to", "addrs", addrs)
 	return notifyClient
 }

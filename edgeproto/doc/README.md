@@ -7,6 +7,7 @@
     - [App](#edgeproto.App)
     - [AppKey](#edgeproto.AppKey)
   
+    - [DeleteType](#edgeproto.DeleteType)
     - [ImageType](#edgeproto.ImageType)
   
   
@@ -138,11 +139,9 @@
   
 
 - [notice.proto](#notice.proto)
-    - [NoticeReply](#edgeproto.NoticeReply)
-    - [NoticeRequest](#edgeproto.NoticeRequest)
+    - [Notice](#edgeproto.Notice)
   
     - [NoticeAction](#edgeproto.NoticeAction)
-    - [NoticeRequestor](#edgeproto.NoticeRequestor)
   
   
     - [NotifyApi](#edgeproto.NotifyApi)
@@ -213,6 +212,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | deployment_generator | [string](#string) |  | Deployment generator target |
 | android_package_name | [string](#string) |  | Android package name, optional |
 | permits_platform_apps | [bool](#bool) |  | Indicates whether or not platform apps are allowed to perform actions on behalf of this app, such as FindCloudlet |
+| del_opt | [DeleteType](#edgeproto.DeleteType) |  | Override actions to Controller |
 
 
 
@@ -236,6 +236,18 @@ AppKey uniquely identifies an Application.
 
 
  
+
+
+<a name="edgeproto.DeleteType"/>
+
+### DeleteType
+
+
+| Name | Number | Description |
+| ---- | ------ | ----------- |
+| NoAutoDelete | 0 | No autodelete |
+| AutoDelete | 1 | Autodelete |
+
 
 
 <a name="edgeproto.ImageType"/>
@@ -1322,45 +1334,19 @@ Notice is the message used by the notify protocol to communicate and coordinate 
 In general, the protocol is used to synchronize state from one service to another. The protocol is fairly symmetric, with different state being synchronized both from server to client and client to server.
 
 
-<a name="edgeproto.NoticeReply"/>
+<a name="edgeproto.Notice"/>
 
-### NoticeReply
-NoticyReply is sent from server to client.
+### Notice
+
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | action | [NoticeAction](#edgeproto.NoticeAction) |  | Action to perform |
 | version | [uint32](#uint32) |  | Protocol version supported by sender |
-| app | [App](#edgeproto.App) |  |  |
-| appInst | [AppInst](#edgeproto.AppInst) |  |  |
-| cloudlet | [Cloudlet](#edgeproto.Cloudlet) |  |  |
-| flavor | [Flavor](#edgeproto.Flavor) |  |  |
-| clusterFlavor | [ClusterFlavor](#edgeproto.ClusterFlavor) |  |  |
-| clusterInst | [ClusterInst](#edgeproto.ClusterInst) |  |  |
-
-
-
-
-
-
-<a name="edgeproto.NoticeRequest"/>
-
-### NoticeRequest
-NoticeRequest is sent from client to server.
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| action | [NoticeAction](#edgeproto.NoticeAction) |  | Action to perform |
-| version | [uint32](#uint32) |  | Protocol version supported by receiver |
-| requestor | [NoticeRequestor](#edgeproto.NoticeRequestor) |  | Client requestor type |
-| revision | [uint64](#uint64) |  | Revision of database |
-| cloudletInfo | [CloudletInfo](#edgeproto.CloudletInfo) |  |  |
-| appInstInfo | [AppInstInfo](#edgeproto.AppInstInfo) |  |  |
-| clusterInstInfo | [ClusterInstInfo](#edgeproto.ClusterInstInfo) |  |  |
-| metric | [Metric](#edgeproto.Metric) |  |  |
-| node | [Node](#edgeproto.Node) |  |  |
+| any | [google.protobuf.Any](#google.protobuf.Any) |  | Data |
+| want_objs | [string](#string) | repeated | Wanted Objects |
+| filter_cloudlet_key | [bool](#bool) |  | Filter by cloudlet key |
 
 
 
@@ -1383,19 +1369,6 @@ NoticeAction denotes what kind of action this notification is for.
 | SENDALL_END | 4 | Initial send all finished message |
 
 
-
-<a name="edgeproto.NoticeRequestor"/>
-
-### NoticeRequestor
-NoticeRequestor indicates which type of service the client is.
-
-| Name | Number | Description |
-| ---- | ------ | ----------- |
-| NoticeRequestorNone | 0 | Invalid |
-| NoticeRequestorDME | 1 | Distributed Matching Engine |
-| NoticeRequestorCRM | 2 | Cloudlet Resource Manager |
-
-
  
 
  
@@ -1408,7 +1381,7 @@ NoticeRequestor indicates which type of service the client is.
 
 | Method Name | Request Type | Response Type | Description |
 | ----------- | ------------ | ------------- | ------------|
-| StreamNotice | [NoticeRequest](#edgeproto.NoticeRequest) | [NoticeReply](#edgeproto.NoticeRequest) | Bidrectional stream for exchanging data between controller and DME/CRM |
+| StreamNotice | [Notice](#edgeproto.Notice) | [Notice](#edgeproto.Notice) | Bidrectional stream for exchanging data between controller and DME/CRM |
 
  
 

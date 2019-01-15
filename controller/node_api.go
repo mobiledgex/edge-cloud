@@ -38,6 +38,8 @@ func (s *NodeApi) Flush(notifyId int64) {
 	s.cache.Flush(notifyId)
 }
 
+func (s *NodeApi) Prune(keys map[edgeproto.NodeKey]struct{}) {}
+
 func (s *NodeApi) ShowNodeLocal(in *edgeproto.Node, cb edgeproto.NodeApi_ShowNodeLocalServer) error {
 	err := s.cache.Show(in, func(obj *edgeproto.Node) error {
 		err := cb.Send(obj)

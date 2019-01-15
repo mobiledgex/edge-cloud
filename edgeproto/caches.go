@@ -3,11 +3,11 @@ package edgeproto
 // Common extra support code for caches
 
 // GetAppInstsForCloudlets finds all AppInsts associated with the given cloudlets
-func (s *AppInstCache) GetAppInstsForCloudlets(cloudlets map[CloudletKey]struct{}, appInsts map[AppInstKey]struct{}) {
+func (s *AppInstCache) GetForCloudlet(key *CloudletKey, appInsts map[AppInstKey]struct{}) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for k, v := range s.Objs {
-		if _, found := cloudlets[v.Key.CloudletKey]; found {
+		if v.Key.CloudletKey == *key {
 			appInsts[k] = struct{}{}
 		}
 	}
@@ -15,11 +15,11 @@ func (s *AppInstCache) GetAppInstsForCloudlets(cloudlets map[CloudletKey]struct{
 
 // GetClusterInstsForCloudlets finds all ClusterInsts associated with the
 // given cloudlets
-func (s *ClusterInstCache) GetClusterInstsForCloudlets(cloudlets map[CloudletKey]struct{}, clusterInsts map[ClusterInstKey]struct{}) {
+func (s *ClusterInstCache) GetForCloudlet(key *CloudletKey, clusterInsts map[ClusterInstKey]struct{}) {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for k, v := range s.Objs {
-		if _, found := cloudlets[v.Key.CloudletKey]; found {
+		if v.Key.CloudletKey == *key {
 			clusterInsts[k] = struct{}{}
 		}
 	}

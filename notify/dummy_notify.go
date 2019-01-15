@@ -11,7 +11,6 @@ import (
 )
 
 type DummyHandler struct {
-	DefaultHandler
 	AppCache             edgeproto.AppCache
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
@@ -34,40 +33,39 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
-	h.DefaultHandler.SendApp = &h.AppCache
-	h.DefaultHandler.RecvApp = &h.AppCache
-	h.DefaultHandler.SendAppInst = &h.AppInstCache
-	h.DefaultHandler.RecvAppInst = &h.AppInstCache
-	h.DefaultHandler.SendCloudlet = &h.CloudletCache
-	h.DefaultHandler.RecvCloudlet = &h.CloudletCache
-	h.DefaultHandler.SendAppInstInfo = &h.AppInstInfoCache
-	h.DefaultHandler.RecvAppInstInfo = &h.AppInstInfoCache
-	h.DefaultHandler.SendClusterInstInfo = &h.ClusterInstInfoCache
-	h.DefaultHandler.RecvClusterInstInfo = &h.ClusterInstInfoCache
-	h.DefaultHandler.SendCloudletInfo = &h.CloudletInfoCache
-	h.DefaultHandler.RecvCloudletInfo = &h.CloudletInfoCache
-	h.DefaultHandler.SendFlavor = &h.FlavorCache
-	h.DefaultHandler.RecvFlavor = &h.FlavorCache
-	h.DefaultHandler.SendClusterFlavor = &h.ClusterFlavorCache
-	h.DefaultHandler.RecvClusterFlavor = &h.ClusterFlavorCache
-	h.DefaultHandler.SendClusterInst = &h.ClusterInstCache
-	h.DefaultHandler.RecvClusterInst = &h.ClusterInstCache
 	return h
 }
 
-func (s *DummyHandler) SetServerCb(mgr *ServerMgr) {
-	s.AppCache.SetNotifyCb(mgr.UpdateApp)
-	s.AppInstCache.SetNotifyCb(mgr.UpdateAppInst)
-	s.CloudletCache.SetNotifyCb(mgr.UpdateCloudlet)
-	s.FlavorCache.SetNotifyCb(mgr.UpdateFlavor)
-	s.ClusterFlavorCache.SetNotifyCb(mgr.UpdateClusterFlavor)
-	s.ClusterInstCache.SetNotifyCb(mgr.UpdateClusterInst)
+func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
+	mgr.RegisterSendAppCache(&s.AppCache)
+	mgr.RegisterSendAppInstCache(&s.AppInstCache)
+	mgr.RegisterSendCloudletCache(&s.CloudletCache)
+	mgr.RegisterSendFlavorCache(&s.FlavorCache)
+	mgr.RegisterSendClusterFlavorCache(&s.ClusterFlavorCache)
+	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
+
+	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
+	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
+	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
 }
 
-func (s *DummyHandler) SetClientCb(cl *Client) {
-	s.AppInstInfoCache.SetNotifyCb(cl.UpdateAppInstInfo)
-	s.ClusterInstInfoCache.SetNotifyCb(cl.UpdateClusterInstInfo)
-	s.CloudletInfoCache.SetNotifyCb(cl.UpdateCloudletInfo)
+func (s *DummyHandler) RegisterCRMClient(cl *Client) {
+	cl.SetFilterByCloudletKey()
+	cl.RegisterSendAppInstInfoCache(&s.AppInstInfoCache)
+	cl.RegisterSendClusterInstInfoCache(&s.ClusterInstInfoCache)
+	cl.RegisterSendCloudletInfoCache(&s.CloudletInfoCache)
+
+	cl.RegisterRecvAppCache(&s.AppCache)
+	cl.RegisterRecvAppInstCache(&s.AppInstCache)
+	cl.RegisterRecvCloudletCache(&s.CloudletCache)
+	cl.RegisterRecvFlavorCache(&s.FlavorCache)
+	cl.RegisterRecvClusterFlavorCache(&s.ClusterFlavorCache)
+	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
+}
+
+func (s *DummyHandler) RegisterDMEClient(cl *Client) {
+	cl.RegisterRecvAppCache(&s.AppCache)
+	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 }
 
 type CacheType int
@@ -163,7 +161,7 @@ func (s *DummyHandler) WaitForClusterInsts(count int) {
 
 func (s *Client) WaitForConnect(connect uint64) {
 	for i := 0; i < 10; i++ {
-		if s.stats.Connects == connect {
+		if s.sendrecv.stats.Connects == connect {
 			break
 		}
 		time.Sleep(10 * time.Millisecond)

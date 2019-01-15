@@ -188,6 +188,10 @@
               
               
                 <li>
+                  <a href="#edgeproto.DeleteType"><span class="badge">E</span>DeleteType</a>
+                </li>
+              
+                <li>
                   <a href="#edgeproto.ImageType"><span class="badge">E</span>ImageType</a>
                 </li>
               
@@ -546,20 +550,12 @@
             <ul>
               
                 <li>
-                  <a href="#edgeproto.NoticeReply"><span class="badge">M</span>NoticeReply</a>
-                </li>
-              
-                <li>
-                  <a href="#edgeproto.NoticeRequest"><span class="badge">M</span>NoticeRequest</a>
+                  <a href="#edgeproto.Notice"><span class="badge">M</span>Notice</a>
                 </li>
               
               
                 <li>
                   <a href="#edgeproto.NoticeAction"><span class="badge">E</span>NoticeAction</a>
-                </li>
-              
-                <li>
-                  <a href="#edgeproto.NoticeRequestor"><span class="badge">E</span>NoticeRequestor</a>
                 </li>
               
               
@@ -800,6 +796,13 @@ for example: key1=val1,key2=val2,key3=&#34;val 3&#34; </p></td>
 on behalf of this app, such as FindCloudlet </p></td>
                 </tr>
               
+                <tr>
+                  <td>del_opt</td>
+                  <td><a href="#edgeproto.DeleteType">DeleteType</a></td>
+                  <td></td>
+                  <td><p>Override actions to Controller </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -844,6 +847,29 @@ on behalf of this app, such as FindCloudlet </p></td>
         
       
 
+      
+        <h3 id="edgeproto.DeleteType">DeleteType</h3>
+        <p></p>
+        <table class="enum-table">
+          <thead>
+            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
+          </thead>
+          <tbody>
+            
+              <tr>
+                <td>NoAutoDelete</td>
+                <td>0</td>
+                <td><p>No autodelete</p></td>
+              </tr>
+            
+              <tr>
+                <td>AutoDelete</td>
+                <td>1</td>
+                <td><p>Autodelete</p></td>
+              </tr>
+            
+          </tbody>
+        </table>
       
         <h3 id="edgeproto.ImageType">ImageType</h3>
         <p>ImageType specifies the image type of the application.</p>
@@ -3274,8 +3300,8 @@ Certs for accessing cloudlet site </p></td>
       <p>Notice is the message used by the notify protocol to communicate and coordinate internally between different Mobiledgex services. For details on the notify protocol, see the "MEX Cloud Service Interactions" confluence article.</p><p>In general, the protocol is used to synchronize state from one service to another. The protocol is fairly symmetric, with different state being synchronized both from server to client and client to server.</p>
 
       
-        <h3 id="edgeproto.NoticeReply">NoticeReply</h3>
-        <p>NoticyReply is sent from server to client.</p>
+        <h3 id="edgeproto.Notice">Notice</h3>
+        <p></p>
 
         
           <table class="field-table">
@@ -3299,124 +3325,24 @@ Certs for accessing cloudlet site </p></td>
                 </tr>
               
                 <tr>
-                  <td>app</td>
-                  <td><a href="#edgeproto.App">App</a></td>
+                  <td>any</td>
+                  <td><a href="#google.protobuf.Any">google.protobuf.Any</a></td>
                   <td></td>
-                  <td><p> </p></td>
+                  <td><p>Data </p></td>
                 </tr>
               
                 <tr>
-                  <td>appInst</td>
-                  <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                  <td></td>
-                  <td><p> </p></td>
+                  <td>want_objs</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Wanted Objects </p></td>
                 </tr>
               
                 <tr>
-                  <td>cloudlet</td>
-                  <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                  <td>filter_cloudlet_key</td>
+                  <td><a href="#bool">bool</a></td>
                   <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>flavor</td>
-                  <td><a href="#edgeproto.Flavor">Flavor</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>clusterFlavor</td>
-                  <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>clusterInst</td>
-                  <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-            </tbody>
-          </table>
-        
-
-        
-      
-        <h3 id="edgeproto.NoticeRequest">NoticeRequest</h3>
-        <p>NoticeRequest is sent from client to server.</p>
-
-        
-          <table class="field-table">
-            <thead>
-              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
-            </thead>
-            <tbody>
-              
-                <tr>
-                  <td>action</td>
-                  <td><a href="#edgeproto.NoticeAction">NoticeAction</a></td>
-                  <td></td>
-                  <td><p>Action to perform </p></td>
-                </tr>
-              
-                <tr>
-                  <td>version</td>
-                  <td><a href="#uint32">uint32</a></td>
-                  <td></td>
-                  <td><p>Protocol version supported by receiver </p></td>
-                </tr>
-              
-                <tr>
-                  <td>requestor</td>
-                  <td><a href="#edgeproto.NoticeRequestor">NoticeRequestor</a></td>
-                  <td></td>
-                  <td><p>Client requestor type </p></td>
-                </tr>
-              
-                <tr>
-                  <td>revision</td>
-                  <td><a href="#uint64">uint64</a></td>
-                  <td></td>
-                  <td><p>Revision of database </p></td>
-                </tr>
-              
-                <tr>
-                  <td>cloudletInfo</td>
-                  <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>appInstInfo</td>
-                  <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>clusterInstInfo</td>
-                  <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>metric</td>
-                  <td><a href="#edgeproto.Metric">Metric</a></td>
-                  <td></td>
-                  <td><p> </p></td>
-                </tr>
-              
-                <tr>
-                  <td>node</td>
-                  <td><a href="#edgeproto.Node">Node</a></td>
-                  <td></td>
-                  <td><p> </p></td>
+                  <td><p>Filter by cloudlet key </p></td>
                 </tr>
               
             </tbody>
@@ -3468,35 +3394,6 @@ Certs for accessing cloudlet site </p></td>
           </tbody>
         </table>
       
-        <h3 id="edgeproto.NoticeRequestor">NoticeRequestor</h3>
-        <p>NoticeRequestor indicates which type of service the client is.</p>
-        <table class="enum-table">
-          <thead>
-            <tr><td>Name</td><td>Number</td><td>Description</td></tr>
-          </thead>
-          <tbody>
-            
-              <tr>
-                <td>NoticeRequestorNone</td>
-                <td>0</td>
-                <td><p>Invalid</p></td>
-              </tr>
-            
-              <tr>
-                <td>NoticeRequestorDME</td>
-                <td>1</td>
-                <td><p>Distributed Matching Engine</p></td>
-              </tr>
-            
-              <tr>
-                <td>NoticeRequestorCRM</td>
-                <td>2</td>
-                <td><p>Cloudlet Resource Manager</p></td>
-              </tr>
-            
-          </tbody>
-        </table>
-      
 
       
 
@@ -3511,8 +3408,8 @@ Certs for accessing cloudlet site </p></td>
             
               <tr>
                 <td>StreamNotice</td>
-                <td><a href="#edgeproto.NoticeRequest">NoticeRequest</a></td>
-                <td><a href="#edgeproto.NoticeReply">NoticeReply</a></td>
+                <td><a href="#edgeproto.Notice">Notice</a></td>
+                <td><a href="#edgeproto.Notice">Notice</a></td>
                 <td><p>Bidrectional stream for exchanging data between controller and DME/CRM</p></td>
               </tr>
             

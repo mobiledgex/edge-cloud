@@ -8,7 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type nodeType int32
@@ -98,20 +98,21 @@ func TestNotifyTree(t *testing.T) {
 	low12.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[1], 0)
 	low21.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[2], 0)
 	low22.handler.AppInstInfoCache.Update(&testutil.AppInstInfoData[3], 0)
-	// check that each mid go two
-	mid1.handler.WaitForAppInstInfo(2)
-	mid1.handler.WaitForCloudletInfo(2)
-	assert.Equal(t, 2, len(mid1.handler.AppInstInfoCache.Objs), "AppInstInfos")
-	assert.Equal(t, 0, len(mid1.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	// dme mid should get 0 because it doesn't want infos
+	// crm mid should get 2, 1 from each crm low
+	mid1.handler.WaitForAppInstInfo(0)
+	mid1.handler.WaitForCloudletInfo(0)
+	require.Equal(t, 0, len(mid1.handler.AppInstInfoCache.Objs), "AppInstInfos")
+	require.Equal(t, 0, len(mid1.handler.CloudletInfoCache.Objs), "CloudletInfos")
 	mid2.handler.WaitForAppInstInfo(2)
 	mid2.handler.WaitForCloudletInfo(2)
-	assert.Equal(t, 2, len(mid2.handler.AppInstInfoCache.Objs), "AppInstInfos")
-	assert.Equal(t, 2, len(mid2.handler.CloudletInfoCache.Objs), "CloudletInfos")
-	// check that top go all four
-	top.handler.WaitForAppInstInfo(4)
-	top.handler.WaitForCloudletInfo(4)
-	assert.Equal(t, 4, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
-	assert.Equal(t, 2, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	require.Equal(t, 2, len(mid2.handler.AppInstInfoCache.Objs), "AppInstInfos")
+	require.Equal(t, 2, len(mid2.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	// check that top got 2 propagated from crm mid
+	top.handler.WaitForAppInstInfo(2)
+	top.handler.WaitForCloudletInfo(2)
+	require.Equal(t, 2, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
+	require.Equal(t, 2, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
 
 	// Check flush functionality
 	// Disconnecting one of the low nodes should flush both mid and top
@@ -119,22 +120,22 @@ func TestNotifyTree(t *testing.T) {
 	fmt.Println("========== stopping client")
 	low21.stopClient()
 	mid2.handler.WaitForAppInstInfo(1)
-	mid1.handler.WaitForCloudletInfo(1)
-	assert.Equal(t, 1, len(mid2.handler.AppInstInfoCache.Objs), "AppInstInfos")
-	assert.Equal(t, 1, len(mid2.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	mid1.handler.WaitForCloudletInfo(0)
+	require.Equal(t, 1, len(mid2.handler.AppInstInfoCache.Objs), "AppInstInfos")
+	require.Equal(t, 1, len(mid2.handler.CloudletInfoCache.Objs), "CloudletInfos")
 	_, found = mid2.handler.AppInstInfoCache.Objs[testutil.AppInstInfoData[2].Key]
-	assert.False(t, found, "disconnected AppInstInfo")
+	require.False(t, found, "disconnected AppInstInfo")
 	_, found = mid2.handler.CloudletInfoCache.Objs[testutil.CloudletInfoData[0].Key]
-	assert.False(t, found, "disconnected CloudletInfo")
+	require.False(t, found, "disconnected CloudletInfo")
 
-	top.handler.WaitForAppInstInfo(3)
+	top.handler.WaitForAppInstInfo(1)
 	top.handler.WaitForCloudletInfo(1)
-	assert.Equal(t, 3, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
-	assert.Equal(t, 1, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	require.Equal(t, 1, len(top.handler.AppInstInfoCache.Objs), "AppInstInfos")
+	require.Equal(t, 1, len(top.handler.CloudletInfoCache.Objs), "CloudletInfos")
 	_, found = top.handler.AppInstInfoCache.Objs[testutil.AppInstInfoData[2].Key]
-	assert.False(t, found, "disconnected AppInstInfo")
+	require.False(t, found, "disconnected AppInstInfo")
 	_, found = top.handler.CloudletInfoCache.Objs[testutil.CloudletInfoData[0].Key]
-	assert.False(t, found, "disconnected CloudletInfo")
+	require.False(t, found, "disconnected CloudletInfo")
 	fmt.Println("========== done")
 
 	for _, n := range clients {
@@ -150,10 +151,18 @@ func checkClientCache(t *testing.T, n *node, flavors int, clusterInsts int, appI
 	n.handler.WaitForClusterInsts(clusterInsts)
 	n.handler.WaitForAppInsts(appInsts)
 	n.handler.WaitForCloudlets(cloudlets)
-	assert.Equal(t, flavors, len(n.handler.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, clusterInsts, len(n.handler.ClusterInstCache.Objs), "num clusterinsts")
-	assert.Equal(t, appInsts, len(n.handler.AppInstCache.Objs), "num appinsts")
-	assert.Equal(t, cloudlets, len(n.handler.CloudletCache.Objs), "num cloudlets")
+	fmt.Printf("%v counts: %d, %d, %d, %d\n", n,
+		len(n.handler.FlavorCache.Objs),
+		len(n.handler.ClusterInstCache.Objs),
+		len(n.handler.AppInstCache.Objs),
+		len(n.handler.CloudletCache.Objs))
+	if n.client != nil {
+		fmt.Printf("client %+v\n", n.client)
+	}
+	require.Equal(t, flavors, len(n.handler.FlavorCache.Objs), "num flavors")
+	require.Equal(t, clusterInsts, len(n.handler.ClusterInstCache.Objs), "num clusterinsts")
+	require.Equal(t, appInsts, len(n.handler.AppInstCache.Objs), "num appinsts")
+	require.Equal(t, cloudlets, len(n.handler.CloudletCache.Objs), "num cloudlets")
 }
 
 type node struct {
@@ -169,21 +178,21 @@ func newNode(listenAddr string, connectAddrs []string, typ nodeType) *node {
 	n.listenAddr = listenAddr
 	if listenAddr != "" {
 		n.serverMgr = &ServerMgr{}
-		n.handler.SetServerCb(n.serverMgr)
+		n.handler.RegisterServer(n.serverMgr)
 	}
 	if connectAddrs != nil {
+		n.client = NewClient(connectAddrs, "")
 		if typ == crm {
-			n.client = NewCRMClient(connectAddrs, "", n.handler)
+			n.handler.RegisterCRMClient(n.client)
 		} else {
-			n.client = NewDMEClient(connectAddrs, "", n.handler)
+			n.handler.RegisterDMEClient(n.client)
 		}
-		n.handler.SetClientCb(n.client)
 	}
 	return n
 }
 
 func (n *node) startServer() {
-	n.serverMgr.Start(n.listenAddr, "", n.handler)
+	n.serverMgr.Start(n.listenAddr, "")
 }
 
 func (n *node) startClient() {
