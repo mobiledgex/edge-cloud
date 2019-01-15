@@ -478,18 +478,21 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
+		State:       edgeproto.CloudletState_CloudletStateReady,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
+		State:       edgeproto.CloudletState_CloudletStateReady,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
+		State:       edgeproto.CloudletState_CloudletStateReady,
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,

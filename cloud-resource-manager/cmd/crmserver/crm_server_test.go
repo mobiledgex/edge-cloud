@@ -157,11 +157,11 @@ func TestCRM(t *testing.T) {
 	// CRM is driven by controller
 	ctrlHandler := notify.NewDummyHandler()
 	ctrlMgr := notify.ServerMgr{}
-	ctrlHandler.SetServerCb(&ctrlMgr)
-	ctrlMgr.Start(notifyAddr, "", ctrlHandler)
+	ctrlHandler.RegisterServer(&ctrlMgr)
+	ctrlMgr.Start(notifyAddr, "")
 
 	notifyClient.WaitForConnect(1)
-	stats := notify.ClientStats{}
+	stats := notify.Stats{}
 	notifyClient.GetStats(&stats)
 	assert.Equal(t, uint64(1), stats.Connects)
 

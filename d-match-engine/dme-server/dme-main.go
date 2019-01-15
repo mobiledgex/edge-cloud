@@ -19,6 +19,7 @@ import (
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -275,10 +276,13 @@ func main() {
 		listAppinstTbl()
 	} else {
 		notifyClient := initNotifyClient(*notifyAddrs, *tlsCertFile)
+		sendMetric := notify.NewMetricSend()
+		notifyClient.RegisterSend(sendMetric)
+
 		notifyClient.Start()
 		defer notifyClient.Stop()
 
-		stats := NewDmeStats(time.Second, 10, notifyClient.SendMetric)
+		stats := NewDmeStats(time.Second, 10, sendMetric.Update)
 		stats.Start()
 		defer stats.Stop()
 		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)))

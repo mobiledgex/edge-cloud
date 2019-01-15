@@ -616,6 +616,9 @@ func (c *ControllerCache) GetCount() int {
 	return len(c.Objs)
 }
 
+func (c *ControllerCache) Flush(notifyId int64) {
+}
+
 func (c *ControllerCache) Show(filter *Controller, cb func(ret *Controller) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Controller", "count", len(c.Objs))
 	c.Mux.Lock()
