@@ -40,7 +40,6 @@ var myNode edgeproto.Node
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
-var notifyHandler *notify.DefaultHandler
 var controllerData *crmutil.ControllerData
 var notifyClient *notify.Client
 
@@ -107,14 +106,10 @@ func main() {
 		edgeproto.RegisterClusterInstInfoApiServer(grpcServer, &saServer)
 		edgeproto.RegisterCloudletInfoApiServer(grpcServer, &saServer)
 	} else {
-		notifyHandler = NewNotifyHandler(controllerData)
 		addrs := strings.Split(*notifyAddrs, ",")
-		notifyClient = notify.NewCRMClient(addrs, *tlsCertFile, notifyHandler)
-		// set callbacks to trigger send of infos
-		controllerData.AppInstInfoCache.SetNotifyCb(notifyClient.UpdateAppInstInfo)
-		controllerData.ClusterInstInfoCache.SetNotifyCb(notifyClient.UpdateClusterInstInfo)
-		controllerData.CloudletInfoCache.SetNotifyCb(notifyClient.UpdateCloudletInfo)
-		controllerData.NodeCache.SetNotifyCb(notifyClient.UpdateNode)
+		notifyClient = notify.NewClient(addrs, *tlsCertFile)
+		notifyClient.SetFilterByCloudletKey()
+		InitNotify(notifyClient, controllerData)
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}

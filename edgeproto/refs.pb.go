@@ -767,6 +767,9 @@ func (c *CloudletRefsCache) GetCount() int {
 	return len(c.Objs)
 }
 
+func (c *CloudletRefsCache) Flush(notifyId int64) {
+}
+
 func (c *CloudletRefsCache) Show(filter *CloudletRefs, cb func(ret *CloudletRefs) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show CloudletRefs", "count", len(c.Objs))
 	c.Mux.Lock()
@@ -1224,6 +1227,9 @@ func (c *ClusterRefsCache) GetCount() int {
 	c.Mux.Lock()
 	defer c.Mux.Unlock()
 	return len(c.Objs)
+}
+
+func (c *ClusterRefsCache) Flush(notifyId int64) {
 }
 
 func (c *ClusterRefsCache) Show(filter *ClusterRefs, cb func(ret *ClusterRefs) error) error {

@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -30,7 +29,6 @@ func InitAppApi(sync *Sync) {
 	appApi.sync = sync
 	appApi.store = edgeproto.NewAppStore(sync.store)
 	edgeproto.InitAppCache(&appApi.cache)
-	appApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateApp)
 	sync.RegisterCache(&appApi.cache)
 }
 

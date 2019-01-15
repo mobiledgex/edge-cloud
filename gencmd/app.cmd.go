@@ -55,8 +55,7 @@ It has these top-level messages:
 	Metric
 	NodeKey
 	Node
-	NoticeReply
-	NoticeRequest
+	Notice
 	OperatorKey
 	Operator
 	CloudletRefs
