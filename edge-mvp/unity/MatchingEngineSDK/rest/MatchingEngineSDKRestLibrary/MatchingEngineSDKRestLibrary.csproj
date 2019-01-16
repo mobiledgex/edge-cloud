@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ReleaseVersion>1.3.1</ReleaseVersion>
+    <PackOnBuild>true</PackOnBuild>
+    <PackageVersion>1.3.5.3</PackageVersion>
+    <Authors>MobiledgeX, Inc.</Authors>
+    <Description>MobiledgeX MatchingEngineSDK Library for Unity</Description>
+    <Owners>MobiledgeX, Inc.</Owners>
+    <PackageProjectUrl>https://github.com/mobiledgex/edge-cloud</PackageProjectUrl>
+    <Title>MobiledgeX MatchingEngineSDK Rest Library</Title>
+    <PackageId>MobiledgeX.MatchingEngineUnityRestSDKLibrary</PackageId>
+    <PackageTags>MobiledgeX MatchingEngine</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <OutputPath>lib\Debug</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <OutputPath>lib\Release</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Json" Version="4.5.0" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="AppPort.cs" />
+    <Compile Remove=":Users:garnerlee:go:src:github.com:mobiledgex:edge-cloud:edge-mvp:unity:MatchingEngineSDK:MatchingEngineSDKLibrary:AppPort.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="MobiledgeX.MatchingEngineSDKRest.1.3.1.nupkg" />
+    <None Remove="MobiledgeX.MatchingEngineSDKRestLibrary.1.3.1.nupkg" />
+  </ItemGroup>
+</Project>
