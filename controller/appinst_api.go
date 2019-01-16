@@ -11,7 +11,6 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -50,7 +49,6 @@ func InitAppInstApi(sync *Sync) {
 	appInstApi.sync = sync
 	appInstApi.store = edgeproto.NewAppInstStore(sync.store)
 	edgeproto.InitAppInstCache(&appInstApi.cache)
-	appInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateAppInst)
 	sync.RegisterCache(&appInstApi.cache)
 	if *shortTimeouts {
 		CreateAppInstTimeout = 3 * time.Second
@@ -69,10 +67,6 @@ func (s *AppInstApi) Get(key *edgeproto.AppInstKey, val *edgeproto.AppInst) bool
 
 func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
 	return s.cache.HasKey(key)
-}
-
-func (s *AppInstApi) GetAppInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}, appInsts map[edgeproto.AppInstKey]struct{}) {
-	s.cache.GetAppInstsForCloudlets(cloudlets, appInsts)
 }
 
 func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
@@ -108,14 +102,42 @@ func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppIns
 }
 
 func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
+	var app edgeproto.App
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, val := range s.cache.Objs {
-		if val.ClusterInstKey.Matches(key) {
-			return true
+		if val.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
+			log.DebugLog(log.DebugLevelApi, "AppInst found for clusterInst", "app", app.Key.Name,
+				"autodelete", app.DelOpt.String())
+			if app.DelOpt == edgeproto.DeleteType_NoAutoDelete {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+	var app edgeproto.App
+	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.ClusterKey.Name)
+	s.cache.Mux.Lock()
+	for k, val := range s.cache.Objs {
+		if val.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
+			if app.DelOpt == edgeproto.DeleteType_AutoDelete {
+				apps[k] = val
+			}
+		}
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range apps {
+		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
+		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
+		if err := s.deleteAppInstInternal(DefCallContext(), val, cb); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (s *AppInstApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
@@ -434,7 +456,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 	var defaultCloudlet bool
 
-	log.DebugLog(log.DebugLevelApi, "createAppInstInternal", "appinst", in)
+	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "appinst", in)
 
 	if in.Key.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)

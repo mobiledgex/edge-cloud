@@ -14,6 +14,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/googleapis/google/api"
 import _ "github.com/mobiledgex/edge-cloud/protogen"
+import _ "github.com/gogo/protobuf/types"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -31,32 +32,40 @@ var NoticeActionStrings = []string{
 	"SENDALL_END",
 }
 
-var NoticeRequestorStrings = []string{
-	"NoticeRequestorNone",
-	"NoticeRequestorDME",
-	"NoticeRequestorCRM",
-}
-
-func NoticeReplySlicer(in *edgeproto.NoticeReply) []string {
-	s := make([]string, 0, 8)
+func NoticeSlicer(in *edgeproto.Notice) []string {
+	s := make([]string, 0, 5)
 	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
+	s = append(s, in.Any.TypeUrl)
+	s = append(s, "")
+	for _, b := range in.Any.Value {
+		s[len(s)-1] += fmt.Sprintf("%v", b)
+	}
+	if in.WantObjs == nil {
+		in.WantObjs = make([]string, 1)
+	}
+	s = append(s, in.WantObjs[0])
+	s = append(s, strconv.FormatBool(in.FilterCloudletKey))
 	return s
 }
 
-func NoticeReplyHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+func NoticeHeaderSlicer() []string {
+	s := make([]string, 0, 5)
 	s = append(s, "Action")
 	s = append(s, "Version")
+	s = append(s, "Any-TypeUrl")
+	s = append(s, "Any-Value")
+	s = append(s, "WantObjs")
+	s = append(s, "FilterCloudletKey")
 	return s
 }
 
-func NoticeReplyWriteOutputArray(objs []*edgeproto.NoticeReply) {
+func NoticeWriteOutputArray(objs []*edgeproto.Notice) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeReplyHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NoticeHeaderSlicer(), "\t"))
 		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(NoticeReplySlicer(obj), "\t"))
+			fmt.Fprintln(output, strings.Join(NoticeSlicer(obj), "\t"))
 		}
 		output.Flush()
 	} else {
@@ -64,77 +73,16 @@ func NoticeReplyWriteOutputArray(objs []*edgeproto.NoticeReply) {
 	}
 }
 
-func NoticeReplyWriteOutputOne(obj *edgeproto.NoticeReply) {
+func NoticeWriteOutputOne(obj *edgeproto.Notice) {
 	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
 		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeReplyHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(NoticeReplySlicer(obj), "\t"))
+		fmt.Fprintln(output, strings.Join(NoticeHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(NoticeSlicer(obj), "\t"))
 		output.Flush()
 	} else {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
-func NoticeRequestSlicer(in *edgeproto.NoticeRequest) []string {
-	s := make([]string, 0, 9)
-	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
-	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
-	s = append(s, edgeproto.NoticeRequestor_name[int32(in.Requestor)])
-	s = append(s, strconv.FormatUint(uint64(in.Revision), 10))
-	return s
-}
-
-func NoticeRequestHeaderSlicer() []string {
-	s := make([]string, 0, 9)
-	s = append(s, "Action")
-	s = append(s, "Version")
-	s = append(s, "Requestor")
-	s = append(s, "Revision")
-	return s
-}
-
-func NoticeRequestWriteOutputArray(objs []*edgeproto.NoticeRequest) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeRequestHeaderSlicer(), "\t"))
-		for _, obj := range objs {
-			fmt.Fprintln(output, strings.Join(NoticeRequestSlicer(obj), "\t"))
-		}
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(objs)
-	}
-}
-
-func NoticeRequestWriteOutputOne(obj *edgeproto.NoticeRequest) {
-	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
-		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
-		fmt.Fprintln(output, strings.Join(NoticeRequestHeaderSlicer(), "\t"))
-		fmt.Fprintln(output, strings.Join(NoticeRequestSlicer(obj), "\t"))
-		output.Flush()
-	} else {
-		cmdsup.WriteOutputGeneric(obj)
-	}
-}
-func NoticeReplyHideTags(in *edgeproto.NoticeReply) {
-	if cmdsup.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-}
-
-func NoticeRequestHideTags(in *edgeproto.NoticeRequest) {
-	if cmdsup.HideTags == "" {
-		return
-	}
-	tags := make(map[string]struct{})
-	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
-		tags[tag] = struct{}{}
-	}
-}
-
 func init() {
 }
 

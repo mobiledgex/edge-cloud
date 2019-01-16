@@ -8,7 +8,6 @@ import (
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
@@ -43,7 +42,6 @@ func InitClusterInstApi(sync *Sync) {
 	clusterInstApi.sync = sync
 	clusterInstApi.store = edgeproto.NewClusterInstStore(sync.store)
 	edgeproto.InitClusterInstCache(&clusterInstApi.cache)
-	clusterInstApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateClusterInst)
 	sync.RegisterCache(&clusterInstApi.cache)
 	if *shortTimeouts {
 		CreateClusterInstTimeout = 3 * time.Second
@@ -98,10 +96,6 @@ func (s *ClusterInstApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	return false
 }
 
-func (s *ClusterInstApi) GetClusterInstsForCloudlets(cloudlets map[edgeproto.CloudletKey]struct{}, clusterInsts map[edgeproto.ClusterInstKey]struct{}) {
-	s.cache.GetClusterInstsForCloudlets(cloudlets, clusterInsts)
-}
-
 func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	in.Liveness = edgeproto.Liveness_LivenessStatic
 	in.Auto = false
@@ -140,7 +134,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		}
 		info := edgeproto.CloudletInfo{}
 		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
-			return errors.New("No resource information found for Cloudlet")
+			return fmt.Errorf("No resource information found for Cloudlet %s", in.Key.CloudletKey)
 		}
 		refs := edgeproto.CloudletRefs{}
 		if !cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &refs) {
@@ -245,6 +239,12 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
 		return err
 	}
+	// Delete appInsts that are set for autodelete
+	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
+		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s - %s",
+			in.Key.ClusterKey.Name, err.Error())
+	}
+
 	cctx.SetOverride(&in.CrmOverride)
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {

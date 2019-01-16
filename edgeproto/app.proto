@@ -40,6 +40,13 @@ enum ImageType {
   ImageTypeQCOW = 2;
 }
 
+enum DeleteType {
+  // No autodelete
+  NoAutoDelete = 0;
+  // Autodelete
+  AutoDelete = 1;
+}
+
 // Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.
 // An application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet.
 message App {
@@ -91,11 +98,15 @@ message App {
   // Indicates whether or not platform apps are allowed to perform actions
 	// on behalf of this app, such as FindCloudlet
   bool permits_platform_apps = 19;
+  // Override actions to Controller
+  DeleteType del_opt = 20 [(protocmd.hidetag) = "nocmp"];
   // manifest - which cloudlets can this run on?
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
+  option (protogen.notify_cache) = true;
+  option (protogen.notify_custom_update) = true;
 }
 
 service AppApi {

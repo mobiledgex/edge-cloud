@@ -6,24 +6,16 @@ import (
 )
 
 //NewNotifyHandler instantiates new notify handler
-func NewNotifyHandler(cd *crmutil.ControllerData) *notify.DefaultHandler {
-	h := notify.DefaultHandler{}
-	h.SendApp = &cd.AppCache
-	h.RecvApp = &cd.AppCache
-	h.SendAppInst = &cd.AppInstCache
-	h.RecvAppInst = &cd.AppInstCache
-	h.SendCloudlet = &cd.CloudletCache
-	h.RecvCloudlet = &cd.CloudletCache
-	h.SendAppInstInfo = &cd.AppInstInfoCache
-	h.RecvAppInstInfo = &cd.AppInstInfoCache
-	h.SendClusterInstInfo = &cd.ClusterInstInfoCache
-	h.RecvClusterInstInfo = &cd.ClusterInstInfoCache
-	h.SendCloudletInfo = &cd.CloudletInfoCache
-	h.RecvCloudletInfo = &cd.CloudletInfoCache
-	h.RecvFlavor = &cd.FlavorCache
-	h.RecvClusterFlavor = &cd.ClusterFlavorCache // todo: auto-gen this
-	// or make it easier to add new caches/objects
-	h.RecvClusterInst = &cd.ClusterInstCache
-	h.SendNode = &cd.NodeCache
-	return &h
+func InitNotify(client *notify.Client, cd *crmutil.ControllerData) {
+	client.RegisterRecvFlavorCache(&cd.FlavorCache)
+	client.RegisterRecvClusterFlavorCache(&cd.ClusterFlavorCache)
+	client.RegisterRecvAppCache(&cd.AppCache)
+	client.RegisterRecvAppInstCache(&cd.AppInstCache)
+	client.RegisterRecvCloudletCache(&cd.CloudletCache)
+	client.RegisterRecvClusterInstCache(&cd.ClusterInstCache)
+
+	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
+	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
+	client.RegisterSendClusterInstInfoCache(&cd.ClusterInstInfoCache)
+	client.RegisterSendNodeCache(&cd.NodeCache)
 }

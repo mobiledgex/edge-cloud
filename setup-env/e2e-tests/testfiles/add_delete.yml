@@ -16,7 +16,7 @@ tests:
   actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 
@@ -33,7 +33,7 @@ tests:
   actions: [ctrlapi-create,ctrlapi-show]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: delete one appinst
@@ -45,7 +45,7 @@ tests:
   actions: [ctrlapi-create]
   compareyaml:
     yaml1: "{{outputdir}}/show-commands.yml"
-    yaml2: "{{datadir}}/appdata.yml"
+    yaml2: "{{datadir}}/appdata_show.yml"
     filetype: appdata
 
 - name: delete provisioning, verify it is empty

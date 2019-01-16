@@ -721,6 +721,9 @@ func (c *OperatorCache) GetCount() int {
 	return len(c.Objs)
 }
 
+func (c *OperatorCache) Flush(notifyId int64) {
+}
+
 func (c *OperatorCache) Show(filter *Operator, cb func(ret *Operator) error) error {
 	log.DebugLog(log.DebugLevelApi, "Show Operator", "count", len(c.Objs))
 	c.Mux.Lock()

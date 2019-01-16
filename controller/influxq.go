@@ -160,6 +160,8 @@ func (q *InfluxQ) Recv(metric *edgeproto.Metric) {
 	q.AddMetric(metric)
 }
 
+func (q *InfluxQ) Flush(notifyId int64) {}
+
 func (q *InfluxQ) AddMetric(metric *edgeproto.Metric) {
 	q.mux.Lock()
 	defer q.mux.Unlock()

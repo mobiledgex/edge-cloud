@@ -24,6 +24,11 @@ extend google.protobuf.MessageOptions {
   bool generate_show_test = 51012;
   bool generate_cud_streamout = 51014;
   string generate_wait_for_state = 51015;
+  bool notify_message = 51016;
+  bool notify_custom_update = 51017;
+  bool notify_recv_hook = 51018;
+  bool notify_filter_cloudlet_key = 51019;
+  bool notify_flush = 51020;
 }
 
 extend google.protobuf.FieldOptions {

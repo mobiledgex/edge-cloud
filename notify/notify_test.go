@@ -8,10 +8,10 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestNotify(t *testing.T) {
+func TestNotifyBasic(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelNotify)
 
 	// override retry time
@@ -25,30 +25,31 @@ func TestNotify(t *testing.T) {
 	// Set up server
 	serverHandler := NewDummyHandler()
 	serverMgr := ServerMgr{}
-	serverHandler.SetServerCb(&serverMgr)
-	serverMgr.Start(addr, "", serverHandler)
+	serverHandler.RegisterServer(&serverMgr)
+	serverMgr.Start(addr, "")
 
 	// Set up client DME
 	dmeHandler := NewDummyHandler()
-	clientDME := NewDMEClient(serverAddrs, "", dmeHandler)
+	clientDME := NewClient(serverAddrs, "")
+	dmeHandler.RegisterDMEClient(clientDME)
 	clientDME.Start()
 
 	// Set up client CRM
 	crmHandler := NewDummyHandler()
-	clientCRM := NewCRMClient(serverAddrs, "", crmHandler)
-	crmHandler.SetClientCb(clientCRM)
+	clientCRM := NewClient(serverAddrs, "")
+	crmHandler.RegisterCRMClient(clientCRM)
 	clientCRM.Start()
 
 	// It takes a little while for the Run thread to start up
 	// Wait until it's connected
 	clientDME.WaitForConnect(1)
 	clientCRM.WaitForConnect(1)
-	assert.Equal(t, 0, len(dmeHandler.AppCache.Objs), "num Apps")
-	assert.Equal(t, 0, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(0), clientDME.stats.Recv, "num updates")
-	assert.Equal(t, NotifyVersion, clientDME.version, "version")
-	assert.Equal(t, uint64(1), clientDME.stats.Connects, "connects")
-	assert.Equal(t, uint64(1), clientCRM.stats.Connects, "connects")
+	require.Equal(t, 0, len(dmeHandler.AppCache.Objs), "num Apps")
+	require.Equal(t, 0, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, uint64(0), clientDME.sendrecv.stats.Recv, "num updates")
+	require.Equal(t, NotifyVersion, clientDME.version, "version")
+	require.Equal(t, uint64(1), clientDME.sendrecv.stats.Connects, "connects")
+	require.Equal(t, uint64(1), clientCRM.sendrecv.stats.Connects, "connects")
 	checkServerConnections(t, &serverMgr, 2)
 
 	// Create some app insts which will trigger updates
@@ -58,48 +59,50 @@ func TestNotify(t *testing.T) {
 	serverHandler.AppCache.Update(&testutil.AppData[3], 0)
 	serverHandler.AppCache.Update(&testutil.AppData[4], 0)
 	dmeHandler.WaitForAppInsts(5)
-	assert.Equal(t, 5, len(dmeHandler.AppCache.Objs), "num Apps")
+	require.Equal(t, 5, len(dmeHandler.AppCache.Objs), "num Apps")
 	stats := serverMgr.GetStats(clientDME.GetLocalAddr())
-	assert.Equal(t, uint64(5), stats.AppsSent)
+	require.Equal(t, uint64(5), stats.ObjSend["App"])
 
 	// Create some app insts which will trigger updates
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[0], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[1], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[2], 0)
 	dmeHandler.WaitForAppInsts(3)
-	assert.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(3), clientDME.stats.AppInstRecv, "app inst updates")
-	assert.Equal(t, uint64(8), clientDME.stats.Recv, "num updates")
+	require.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	clientDME.GetStats(stats)
+	require.Equal(t, uint64(3), stats.ObjRecv["AppInst"], "app inst updates")
+	require.Equal(t, uint64(8), stats.Recv, "num updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
-	assert.Equal(t, uint64(3), stats.AppInstsSent)
+	require.Equal(t, uint64(3), stats.ObjSend["AppInst"])
 
 	// Kill connection out from under the code, forcing reconnect
 	fmt.Println("DME cancel")
 	clientDME.cancel()
 	// wait for it to reconnect
 	clientDME.WaitForConnect(2)
-	assert.Equal(t, uint64(2), clientDME.stats.Connects, "connects")
+	require.Equal(t, uint64(2), clientDME.sendrecv.stats.Connects, "connects")
 	checkServerConnections(t, &serverMgr, 2)
 
 	// All cloudlets and all app insts will be sent again
 	// Note on server side, this is a new connection so stats are reset
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[3], 0)
 	dmeHandler.WaitForAppInsts(4)
-	assert.Equal(t, 4, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(17), clientDME.stats.Recv, "num updates")
+	require.Equal(t, 4, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, uint64(17), clientDME.sendrecv.stats.Recv, "num updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
-	assert.Equal(t, uint64(4), stats.AppInstsSent)
-	assert.Equal(t, uint64(5), stats.AppsSent)
+	require.Equal(t, uint64(4), stats.ObjSend["AppInst"])
+	require.Equal(t, uint64(5), stats.ObjSend["App"])
 
 	// Delete an inst
 	serverHandler.AppInstCache.Delete(&testutil.AppInstData[0], 0)
 	dmeHandler.WaitForAppInsts(3)
-	assert.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(18), clientDME.stats.Recv, "num updates")
-	assert.Equal(t, uint64(8), clientDME.stats.AppInstRecv, "app inst updates")
+	require.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, uint64(18), clientDME.sendrecv.stats.Recv, "num updates")
+	clientDME.GetStats(stats)
+	require.Equal(t, uint64(8), stats.ObjRecv["AppInst"], "app inst updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
-	assert.Equal(t, uint64(5), stats.AppInstsSent)
-	assert.Equal(t, uint64(5), stats.AppsSent)
+	require.Equal(t, uint64(5), stats.ObjSend["AppInst"])
+	require.Equal(t, uint64(5), stats.ObjSend["App"])
 
 	// Stop DME, check that server closes connection as well
 	fmt.Println("DME stop")
@@ -110,9 +113,9 @@ func TestNotify(t *testing.T) {
 	edgeproto.InitAppInstCache(&dmeHandler.AppInstCache)
 	clientDME.Start()
 	clientDME.WaitForConnect(3)
-	assert.Equal(t, uint64(3), clientDME.stats.Connects, "connects")
+	require.Equal(t, uint64(3), clientDME.sendrecv.stats.Connects, "connects")
 	dmeHandler.WaitForAppInsts(3)
-	assert.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, 3, len(dmeHandler.AppInstCache.Objs), "num appInsts")
 
 	// This time stop server, delete an inst, then start the
 	// receiver again. The dmeHandler remains the same so none of
@@ -122,14 +125,15 @@ func TestNotify(t *testing.T) {
 	fmt.Println("ServerMgr done")
 	serverMgr.Stop()
 	serverHandler.AppInstCache.Delete(&testutil.AppInstData[1], 0)
-	serverMgr.Start(addr, "", serverHandler)
+	serverMgr.Start(addr, "")
 	clientDME.WaitForConnect(4)
 	dmeHandler.WaitForAppInsts(2)
-	assert.Equal(t, uint64(4), clientDME.stats.Connects, "connects")
-	assert.Equal(t, 2, len(dmeHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(13), clientDME.stats.AppInstRecv, "app inst updates")
+	require.Equal(t, uint64(4), clientDME.sendrecv.stats.Connects, "connects")
+	require.Equal(t, 2, len(dmeHandler.AppInstCache.Objs), "num appInsts")
+	clientDME.GetStats(stats)
+	require.Equal(t, uint64(13), stats.ObjRecv["AppInst"], "app inst updates")
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
-	assert.Equal(t, uint64(2), stats.AppInstsSent)
+	require.Equal(t, uint64(2), stats.ObjSend["AppInst"])
 
 	// set ClusterInst and AppInst state to CreateRequested so they get
 	// sent to the CRM.
@@ -144,7 +148,7 @@ func TestNotify(t *testing.T) {
 	// as a cloudlet mananger. CRM should have 2 connects since
 	// server was restarted.
 	clientCRM.WaitForConnect(1)
-	assert.Equal(t, uint64(2), clientCRM.stats.Connects, "connects")
+	require.Equal(t, uint64(2), clientCRM.sendrecv.stats.Connects, "connects")
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
 	crmHandler.CloudletInfoCache.Update(&testutil.CloudletInfoData[0], 0)
 	serverHandler.CloudletCache.Update(&testutil.CloudletData[0], 0)
@@ -171,12 +175,12 @@ func TestNotify(t *testing.T) {
 	crmHandler.WaitForClusterInsts(2)
 	crmHandler.WaitForApps(1)
 	crmHandler.WaitForAppInsts(2)
-	assert.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
-	assert.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, 3, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
-	assert.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
-	assert.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
-	assert.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
+	require.Equal(t, 1, len(crmHandler.CloudletCache.Objs), "num cloudlets")
+	require.Equal(t, 3, len(crmHandler.FlavorCache.Objs), "num flavors")
+	require.Equal(t, 3, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
+	require.Equal(t, 2, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
+	require.Equal(t, 1, len(crmHandler.AppCache.Objs), "num apps")
+	require.Equal(t, 2, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	serverHandler.FlavorCache.Delete(&testutil.FlavorData[1], 0)
 	serverHandler.ClusterFlavorCache.Delete(&testutil.ClusterFlavorData[1], 0)
 	serverHandler.ClusterInstCache.Delete(&testutil.ClusterInstData[0], 0)
@@ -185,21 +189,22 @@ func TestNotify(t *testing.T) {
 	crmHandler.WaitForClusterFlavors(2)
 	crmHandler.WaitForClusterInsts(1)
 	crmHandler.WaitForAppInsts(1)
-	assert.Equal(t, 2, len(crmHandler.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, 2, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
-	assert.Equal(t, 1, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
-	assert.Equal(t, 1, len(crmHandler.AppInstCache.Objs), "num appInsts")
-	assert.Equal(t, uint64(1), clientCRM.stats.CloudletRecv, "cloudlet updates")
-	assert.Equal(t, uint64(4), clientCRM.stats.FlavorRecv, "flavor updates")
-	assert.Equal(t, uint64(4), clientCRM.stats.ClusterFlavorRecv, "cluster flavor updates")
-	assert.Equal(t, uint64(3), clientCRM.stats.ClusterInstRecv, "clusterInst updates")
-	assert.Equal(t, uint64(3), clientCRM.stats.AppInstRecv, "appInst updates")
+	require.Equal(t, 2, len(crmHandler.FlavorCache.Objs), "num flavors")
+	require.Equal(t, 2, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
+	require.Equal(t, 1, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
+	require.Equal(t, 1, len(crmHandler.AppInstCache.Objs), "num appInsts")
+	clientCRM.GetStats(stats)
+	require.Equal(t, uint64(1), stats.ObjRecv["Cloudlet"], "cloudlet updates")
+	require.Equal(t, uint64(4), stats.ObjRecv["Flavor"], "flavor updates")
+	require.Equal(t, uint64(4), stats.ObjRecv["ClusterFlavor"], "cluster flavor updates")
+	require.Equal(t, uint64(3), stats.ObjRecv["ClusterInst"], "clusterInst updates")
+	require.Equal(t, uint64(3), stats.ObjRecv["AppInst"], "appInst updates")
 	stats = serverMgr.GetStats(clientCRM.GetLocalAddr())
-	assert.Equal(t, uint64(1), stats.CloudletsSent, "sent cloudlets")
-	assert.Equal(t, uint64(4), stats.FlavorsSent, "sent flavors")
-	assert.Equal(t, uint64(4), stats.ClusterFlavorsSent, "sent cluster flavors")
-	assert.Equal(t, uint64(3), stats.ClusterInstsSent, "sent clusterInsts")
-	assert.Equal(t, uint64(3), stats.AppInstsSent, "sent appInsts")
+	require.Equal(t, uint64(1), stats.ObjSend["Cloudlet"], "sent cloudlets")
+	require.Equal(t, uint64(4), stats.ObjSend["Flavor"], "sent flavors")
+	require.Equal(t, uint64(4), stats.ObjSend["ClusterFlavor"], "sent cluster flavors")
+	require.Equal(t, uint64(3), stats.ObjSend["ClusterInst"], "sent clusterInsts")
+	require.Equal(t, uint64(3), stats.ObjSend["AppInst"], "sent appInsts")
 	checkServerConnections(t, &serverMgr, 2)
 
 	// Send data from CRM to server
@@ -210,7 +215,7 @@ func TestNotify(t *testing.T) {
 		crmHandler.AppInstInfoCache.Update(&info, 0)
 	}
 	serverHandler.WaitForAppInstInfo(len(testutil.AppInstData))
-	assert.Equal(t, len(testutil.AppInstData),
+	require.Equal(t, len(testutil.AppInstData),
 		len(serverHandler.AppInstInfoCache.Objs),
 		"sent appInstInfo")
 
@@ -220,7 +225,7 @@ func TestNotify(t *testing.T) {
 		crmHandler.ClusterInstInfoCache.Update(&info, 0)
 	}
 	serverHandler.WaitForClusterInstInfo(len(testutil.ClusterInstData))
-	assert.Equal(t, len(testutil.ClusterInstData),
+	require.Equal(t, len(testutil.ClusterInstData),
 		len(serverHandler.ClusterInstInfoCache.Objs),
 		"sent clusterInstInfo")
 
@@ -230,7 +235,7 @@ func TestNotify(t *testing.T) {
 		crmHandler.CloudletInfoCache.Update(&info, 0)
 	}
 	serverHandler.WaitForCloudletInfo(len(testutil.CloudletData))
-	assert.Equal(t, len(testutil.CloudletData),
+	require.Equal(t, len(testutil.CloudletData),
 		len(serverHandler.CloudletInfoCache.Objs),
 		"sent cloudletInfo")
 
@@ -241,8 +246,8 @@ func TestNotify(t *testing.T) {
 func checkServerConnections(t *testing.T, serverMgr *ServerMgr, expected int) {
 	serverMgr.mux.Lock()
 	for addr, server := range serverMgr.table {
-		log.DebugLog(log.DebugLevelNotify, "server connections", "client", addr, "stats", server.stats)
+		log.DebugLog(log.DebugLevelNotify, "server connections", "client", addr, "stats", server.sendrecv.stats)
 	}
-	assert.Equal(t, expected, len(serverMgr.table), "num server connections")
+	require.Equal(t, expected, len(serverMgr.table), "num server connections")
 	serverMgr.mux.Unlock()
 }

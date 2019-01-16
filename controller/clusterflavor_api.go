@@ -7,7 +7,6 @@ import (
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 )
 
@@ -23,7 +22,6 @@ func InitClusterFlavorApi(sync *Sync) {
 	clusterFlavorApi.sync = sync
 	clusterFlavorApi.store = edgeproto.NewClusterFlavorStore(sync.store)
 	edgeproto.InitClusterFlavorCache(&clusterFlavorApi.cache)
-	clusterFlavorApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateClusterFlavor)
 	sync.RegisterCache(&clusterFlavorApi.cache)
 }
 

@@ -46,40 +46,39 @@ clusterflavors:
 
 clusters:
 - key:
-    name: autoclustersomeapplication1
+    name: SmallCluster
   defaultflavor:
     name: c1.small
-  auto: true
 
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
   flavor:
     name: c1.small
-  liveness: LivenessDynamic
-  auto: true
-  state: Ready
+  liveness: LivenessStatic
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
   flavor:
     name: c1.small
-  liveness: LivenessDynamic
-  auto: true
-  state: Ready
+  liveness: LivenessStatic
 
 operators:
 - key:
     name: tmus
+- key:
+    name: azure
+- key:
+    name: gcp
 
 developers:
 - key:
@@ -88,6 +87,18 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
+- key:
+    name: AcmeAppCo1
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
+- key:
+    name: Samsung
+  username: sammy
+  passhash: aaaabbbccdfdfad444449941
+  address: 1 Samstreet, Samsung Town, South Korea
+  email: samsung@xxxx.com
 - key:
     name: mexinfradev_
   username: _mexinfradev
@@ -113,6 +124,26 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: azure
+    name: azure-cloud-9
+  accessuri: cloud9.azure
+  location:
+    latitude: 32
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: gcp
+    name: gcp-cloud-10
+  accessuri: cloud2.gcp
+  location:
+    latitude: 36
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
 - key:
@@ -122,79 +153,48 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  ipaccess: IpAccessDedicatedOrShared
-  accessports: tcp:80,http:443,udp:10002
+  deployment: "kubernetes"
   defaultflavor:
     name: x1.small
   cluster:
-    name: autoclustersomeapplication1
-  deployment: kubernetes
-  deploymentmanifest: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: someapplication1-tcp
-      labels:
-        run: someapplication1
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: tcp80
-        protocol: TCP
-        port: 80
-        targetPort: 80
-      - name: http443
-        protocol: TCP
-        port: 443
-        targetPort: 443
-      selector:
-        run: someapplication1
-    ---
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: someapplication1-udp
-      labels:
-        run: someapplication1
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: udp10002
-        protocol: UDP
-        port: 10002
-        targetPort: 10002
-      selector:
-        run: someapplication1
-    ---
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: someapplication1-deployment
-    spec:
-      selector:
-        matchLabels:
-          run: someapplication1
-      replicas: 1
-      template:
-        metadata:
-          labels:
-            run: someapplication1
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: mexregistrysecret
-          containers:
-          - name: someapplication1
-            image: mobiledgex_AcmeAppCo/someapplication1:1.0
-            imagePullPolicy: Always
-            ports:
-            - containerPort: 80
-              protocol: TCP
-            - containerPort: 443
-              protocol: TCP
-            - containerPort: 10002
-              protocol: UDP
-  deploymentgenerator: kubernetes-basic
+    name: SmallCluster
+  accessports: "tcp:80,http:443,udp:10002"
+  ipaccess: IpAccessDedicatedOrShared
+  androidpackagename: com.acme.someapplication1
+  permitsplatformapps: true
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+- key:
+    developerkey:
+      name: AcmeAppCo
+    name: helmApplication
+    version: "1.0"
+  imagepath: mobiledgex/AcmeAppCo/helmApplication
+  deployment: helm
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "udp:20002"
+  ipaccess: IpAccessDedicated
+  androidpackagename: com.acme.helmApplication
+  permitsplatformapps: true
+  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+
+- key:
+    developerkey:
+      name: Samsung
+    name: SamsungEnablingLayer
+    version: "1.0"
+  imagepath: dummyvalue
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SmallCluster
+  accessports: "tcp:64000"
+  ipaccess: IpAccessDedicatedOrShared
+
 - key:
     developerkey:
       name: mexinfradev_
@@ -206,33 +206,8 @@ apps:
   defaultflavor:
     name: x1.medium
   cluster:
-    name: autoclustersomeapplication1
+    name: SmallCluster
   deployment: kubernetes
-  deploymentmanifest: |
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: mexmetricswriter-deployment
-    spec:
-      selector:
-        matchLabels:
-          run: mexmetricswriter
-      replicas: 1
-      template:
-        metadata:
-          labels:
-            run: mexmetricswriter
-        spec:
-          volumes:
-          imagePullSecrets:
-          - name: mexregistrysecret
-          containers:
-          - name: mexmetricswriter
-            image: registry.mobiledgex.net:5000/mexinfradev_/MEXMetricsWriter:1.0
-            imagePullPolicy: Always
-            ports:
-  deploymentgenerator: kubernetes-basic
-  delopt: AutoDelete
 - key:
     developerkey:
       name: mexinfradev_
@@ -243,9 +218,8 @@ apps:
   defaultflavor:
     name: x1.medium
   cluster:
-    name: autoclustersomeapplication1
+    name: SmallCluster
   deployment: helm
-  delopt: AutoDelete
 
 appinstances:
 - key:
@@ -262,32 +236,16 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
   liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTCP
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHTTP
-    internalport: 443
-    publicport: 10000
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoUDP
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
-  state: Ready
 - key:
     appkey:
       developerkey:
@@ -302,32 +260,68 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
   liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTCP
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHTTP
-    internalport: 443
-    publicport: 10000
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoUDP
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
-  state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: someapp1.acmeappco.com
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: helmApplication
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 1
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+  liveness: LivenessStatic
+  uri: helmAppication.acmeappco.com
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: Samsung
+      name: SamsungEnablingLayer
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  liveness: LivenessStatic
+  uri: default.samsungenablement.samsung.com
+  flavor:
+    name: x1.small
 - key:
     appkey:
       developerkey:
@@ -345,7 +339,7 @@ appinstances:
   uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
@@ -353,8 +347,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
-  state: Ready
 - key:
     appkey:
       developerkey:
@@ -372,7 +364,7 @@ appinstances:
   uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
@@ -380,8 +372,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
-  state: Ready
 - key:
     appkey:
       developerkey:
@@ -399,7 +389,7 @@ appinstances:
   uri: tmus-cloud-1.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
@@ -407,8 +397,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
-  state: Ready
 - key:
     appkey:
       developerkey:
@@ -426,7 +414,7 @@ appinstances:
   uri: tmus-cloud-2.tmus.mobiledgex.net
   clusterinstkey:
     clusterkey:
-      name: autoclustersomeapplication1
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: tmus
@@ -434,5 +422,3 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
-  state: Ready

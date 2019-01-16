@@ -335,6 +335,41 @@ func (p *InfluxLocal) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
+// ClusterSvc process
+type ClusterSvcLocal struct {
+	Name        string
+	NotifyAddrs string
+	CtrlAddrs   string
+	TLS         TLSCerts
+	cmd         *exec.Cmd
+}
+
+func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
+	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.CtrlAddrs != "" {
+		args = append(args, "--ctrlAddrs")
+		args = append(args, p.CtrlAddrs)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+
+	var err error
+	p.cmd, err = StartLocal(p.Name, "cluster-svc", args, nil, logfile)
+	return err
+}
+
+func (p *ClusterSvcLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
 // Postgres Sql
 type SqlLocal struct {
 	Name     string

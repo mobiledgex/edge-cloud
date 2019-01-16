@@ -9,6 +9,7 @@ build:
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
+	go install ./protoc-gen-notify
 	make -C ./protoc-gen-cmd
 	make -C ./log
 	make -C edgeproto

@@ -76,6 +76,9 @@ developers:
   passhash: "123456789012345670"
   address: 1234 AcmeAppCo street
   email: AcmeAppCo@gmail.com
+- key:
+    name: mexinfradev_
+  username: _mexinfradev
 
 cloudlets:
 - key:
@@ -105,7 +108,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+  imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   ipaccess: IpAccessDedicatedOrShared

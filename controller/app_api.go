@@ -12,7 +12,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -30,7 +29,6 @@ func InitAppApi(sync *Sync) {
 	appApi.sync = sync
 	appApi.store = edgeproto.NewAppStore(sync.store)
 	edgeproto.InitAppCache(&appApi.cache)
-	appApi.cache.SetNotifyCb(notify.ServerMgrOne.UpdateApp)
 	sync.RegisterCache(&appApi.cache)
 }
 
@@ -72,11 +70,30 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.Cluster.Matches(key) {
+		if app.Cluster.Matches(key) && app.DelOpt == edgeproto.DeleteType_NoAutoDelete {
 			return true
 		}
 	}
 	return false
+}
+
+func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.ClusterKey) error {
+	apps := make(map[edgeproto.AppKey]*edgeproto.App)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.Name)
+	s.cache.Mux.Lock()
+	for k, app := range s.cache.Objs {
+		if app.Cluster.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
+			apps[k] = app
+		}
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range apps {
+		log.DebugLog(log.DebugLevelApi, "Auto-deleting app ", "app", val.Key.Name)
+		if _, err := s.DeleteApp(ctx, val); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // AndroidPackageConflicts returns true if an app with a different developer+name
@@ -103,12 +120,12 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = "mobiledgex_" +
+			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = "mobiledgex/" +
+			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
@@ -211,7 +228,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		}
 		defer func() {
 			if err != nil {
-				s.deleteClusterAuto(&in.Cluster)
+				s.deleteClusterAuto(ctx, &in.Cluster)
 			}
 		}()
 	}
@@ -270,7 +287,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	})
 	if err == nil {
 		// delete cluster afterwards if it was auto-created
-		s.deleteClusterAuto(&clusterKey)
+		s.deleteClusterAuto(ctx, &clusterKey)
 	}
 	if err == nil && len(dynInsts) > 0 {
 		// delete dynamic instances
@@ -287,10 +304,13 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	return &edgeproto.Result{}, err
 }
 
-func (s *AppApi) deleteClusterAuto(key *edgeproto.ClusterKey) {
+func (s *AppApi) deleteClusterAuto(ctx context.Context, key *edgeproto.ClusterKey) {
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		cluster := edgeproto.Cluster{}
 		if clusterApi.store.STMGet(stm, key, &cluster) && cluster.Auto {
+			if err := s.AutoDeleteApps(ctx, key); err != nil {
+				return err
+			}
 			clusterApi.store.STMDel(stm, key)
 		}
 		return nil

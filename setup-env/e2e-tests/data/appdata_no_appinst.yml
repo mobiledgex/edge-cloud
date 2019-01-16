@@ -99,6 +99,9 @@ developers:
   passhash: aaaabbbccdfdfad444449941
   address: 1 Samstreet, Samsung Town, South Korea
   email: samsung@xxxx.com
+- key:
+    name: mexinfradev_
+  username: _mexinfradev
 
 cloudlets:
 - key:

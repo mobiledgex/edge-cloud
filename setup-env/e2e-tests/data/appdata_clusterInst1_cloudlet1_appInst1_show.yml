@@ -110,7 +110,6 @@ apps:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
   ipaccess: IpAccessDedicatedOrShared
-
 - key:
     developerkey:
       name: mexinfradev_
@@ -138,6 +137,30 @@ apps:
   deployment: helm
 
 appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+    id: 123
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
 - key:
     appkey:
       developerkey:
@@ -188,3 +211,4 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+  
