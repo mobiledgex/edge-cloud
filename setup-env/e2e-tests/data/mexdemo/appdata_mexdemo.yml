@@ -28,107 +28,80 @@ clusterflavors:
 
 clusters:
 - key:
-    name: jlmappcluster
+    name: mexdemo-app-cluster
   defaultflavor:
     name: x1.medium
 
 clusterinsts:
 - key:
     clusterkey:
-      name: jlmappcluster
+      name: mexdemo-app-cluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: bonndemocloudlet
+      name: bonn-mexdemo
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
+  state: Ready
 - key:
     clusterkey:
-      name: jlmappcluster
+      name: mexdemo-app-cluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: mexdemo-westindia-cloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessStatic
+  state: Ready
+- key:
+    clusterkey:
+      name: mexdemo-app-cluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: berlindemocloudlet
+      name: berlin-mexdemo
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
 - key:
     clusterkey:
-      name: jlmappcluster
+      name: mexdemo-app-cluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: hamburgdemocloudlet
+      name: munich-mexdemo
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
-
 - key:
     clusterkey:
-      name: jlmappcluster
+      name: mexdemo-app-cluster
+    cloudletkey:
+      operatorkey:
+        name: TMO
+      name: krakowcloudlet
+  flavor:
+    name: x1.medium
+  liveness: LivenessDynamic
+- key:
+    clusterkey:
+      name: mexdemo-app-cluster
     cloudletkey:
       operatorkey:
         name: azure
-      name: microsoftnortheuropecloudlet
+      name: mexdemo-centralus-cloudlet
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
 - key:
     clusterkey:
-      name: jlmappcluster
+      name: thousandrealitiescluster
     cloudletkey:
       operatorkey:
-        name: azure
-      name: microsoftbaskingridgecloudlet
-  flavor:
-    name: x1.medium
-  liveness: LivenessStatic
-
-- key:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftwestus2cloudlet
-  flavor:
-    name: x1.medium
-  liveness: LivenessStatic
-
-- key:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsofteastuscloudlet
-  flavor:
-    name: x1.medium
-  liveness: LivenessStatic
-
-- key:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-  flavor:
-    name: x1.medium
-  liveness: LivenessStatic
-
-- key:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: cmulivingedgecloudlet
+        name: TMO
+      name: krakowthousandrealities
   flavor:
     name: x1.medium
   liveness: LivenessStatic
@@ -136,6 +109,8 @@ clusterinsts:
 operators:
 - key:
     name: TDG
+- key:
+    name: TMO
 - key:
     name: azure
 
@@ -148,11 +123,11 @@ developers:
   email: empty@xxxx.com
 
 cloudlets:
+
 - key:
     operatorkey:
       name: TDG
-    name: bonndemocloudlet
-  accessuri:
+    name: mexdemo-bonn-macrometacloudlet
   location:
     latitude: 50.737
     longitude: 7.098
@@ -161,88 +136,97 @@ cloudlets:
 - key:
     operatorkey:
       name: TDG
-    name: berlindemocloudlet
-  accessuri:
+    name: mexdemo-munich-cloudlet
   location:
-    latitude: 52.5200
-    longitude: 13.4050
+    latitude: 48.1351
+    longitude: 11.582
   ipsupport: IpSupportDynamic
   numdynamicips: 5
 - key:
     operatorkey:
       name: TDG
-    name: hamburgdemocloudlet
-  accessuri:
+    name: munich-mexdemo
   location:
-    latitude: 53.5511
-    longitude: 9.9937
+    latitude: 52.52
+    longitude: 13.405
   ipsupport: IpSupportDynamic
-  numdynamicips: 5
-- key:
-    operatorkey:
-      name: azure
-    name: microsoftnortheuropecloudlet
-  accessuri:
-  location:
-    latitude: 53.1424
-    longitude: -7.6921
-  ipsupport: IpSupportDynamic
-  numdynamicips: 5
-- key:
-    operatorkey:
-      name: azure
-    name: microsoftbaskingridgecloudlet
-  accessuri:
-  location:
-    latitude: 40.682
-    longitude: -74.682
-  ipsupport: IpSupportDynamic
-  numdynamicips: 5
-
-
+  numdynamicips: 10
 - key:
     operatorkey:
       name: TDG
-    name: cmulivingedgecloudlet
-  accessuri:
+    name: bonn-mexdemo
   location:
-    latitude: 40.443322
-    longitude: -79.943583
+    latitude: 50.737
+    longitude: 7.098
   ipsupport: IpSupportDynamic
-  numdynamicips: 5
-
+  numdynamicips: 10
 - key:
     operatorkey:
       name: azure
-    name: microsoftwestus2cloudlet
-  accessuri:
-  location:
-    latitude: 37.783
-    longitude: -122.417
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
-- key:
-    operatorkey:
-      name: azure
-    name: microsofteastuscloudlet
-  accessuri:
-  location:
-    latitude: 37.3719
-    longitude: -79.8164
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
-- key:
-    operatorkey:
-      name: azure
-    name: azcentraluscloudlet
-  accessuri:
+    name: mexdemo-centralus-cloudlet
   location:
     latitude: 41.878
     longitude: -93.0977
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: azure
+    name: mexdemo-eastus-cloudlet
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: azure
+    name: mexdemo-westus2-cloudlet
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG
+    name: berlin-mexdemo
+  location:
+    latitude: 52.52
+    longitude: 13.405
+    timestamp: {}
+  ipsupport: IpSupportDynamic
+  numdynamicips: 10
+- key:
+    operatorkey:
+      name: azure
+    name: mexdemo-westindia-cloudlet
+  location:
+    latitude: 19.076
+    longitude: 72.8777
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG
+    name: mexdemo-krakow-cloudlet
+  location:
+    latitude: 50.0647
+    longitude: 19.945
+  ipsupport: IpSupportDynamic
+  numdynamicips: 5
+- key:
+    operatorkey:
+      name: TMO
+    name: krakowcloudlet
+  location:
+    latitude: 60.0647
+    longitude: 19.945
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: TMO
+    name: krakowthousandrealities
+  location:
+    latitude: 60.0647
+    longitude: 19.945
+  ipsupport: IpSupportDynamic
+  numdynamicips: 10
 
 apps:
 - key:
@@ -250,16 +234,17 @@ apps:
       name: MobiledgeX SDK Demo
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
   imagetype: ImageTypeDocker
-  accessports: tcp:7777
   ipaccess: IpAccessDedicatedOrShared
+  accessports: tcp:7777
   defaultflavor:
     name: x1.small
   cluster:
-    name: jlmappcluster
-  apptemplate: "http://35.199.188.102/apps/mobiledgexsdkdemo.yaml"
-  command: "simapp -port 7777"
+    name: mexdemo-app-cluster
+  command: simapp -port 7777
+  deployment: kubernetes
+  deploymentmanifest: http://35.199.188.102/apps/mexdemoapp.yml
 
 - key:
     developerkey:
@@ -273,411 +258,6 @@ apps:
   defaultflavor:
     name: x1.small
   cluster:
-    name: jlmappcluster
-  apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
+    name: mexdemo-app-cluster
+  deploymentmanifest: "http://35.199.188.102/apps/mexfaceapp.yml"
 
-appinstances:
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonndemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonndemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: berlindemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: berlindemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: hamburgdemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: hamburgdemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftnortheuropecloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftnortheuropecloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftbaskingridgecloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftbaskingridgecloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftwestus2cloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftwestus2cloudlet
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicatedOrShared
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsofteastuscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsofteastuscloudlet
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicatedOrShared
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: cmulivingedgecloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: cmulivingedgecloudlet
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicatedOrShared
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: cmulivingedgecloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: cmulivingedgecloudlet
-  liveness: LivenessStatic
-  ipaccess: IpAccessDedicatedOrShared
-  flavor:
-    name: x1.small
-
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftwestus2cloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftwestus2cloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsofteastuscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsofteastuscloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftbaskingridgecloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftbaskingridgecloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftnortheuropecloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: microsoftnortheuropecloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: hamburgdemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: hamburgdemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonndemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonndemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: berlindemocloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: berlindemocloudlet
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: Face Detection Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-  liveness: LivenessStatic
-
-
-- key:
-    appkey:
-      developerkey:
-        name: MobiledgeX SDK Demo
-      name: MobiledgeX SDK Demo
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-  liveness: LivenessStatic

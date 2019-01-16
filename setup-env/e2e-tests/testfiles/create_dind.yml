@@ -1,0 +1,9 @@
+##
+##
+description: Adds provisioning 
+
+tests:
+
+- name: create provisioning
+  apifile: "{{datadir}}/appdata_dind.yml"
+  actions: [ctrlapi-create]

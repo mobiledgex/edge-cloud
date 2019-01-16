@@ -1,0 +1,11 @@
+##
+##
+
+tests:
+
+- name: deploy and start 
+  actions: [deploy,start]
+
+- name: create provisioning
+  apifile: "{{datadir}}/appdata_dind.yml"
+  actions: [ctrlapi-create]
