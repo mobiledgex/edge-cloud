@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crm-hamburg
+  name: crm-frankfurt
   labels:
-    app: crm-hamburg
+    app: crm-frankfurt
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crm-hamburg
+      app: crm-frankfurt
   template:
     metadata:
       labels:
-        app: crm-hamburg
+        app: crm-frankfurt
     spec:
       containers:
-      - name: crm-hamburg
+      - name: crm-frankfurt
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0104
         imagePullPolicy: Always
         command:
@@ -24,7 +24,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburg-mexdemo\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"frankfurt-mexdemo\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
