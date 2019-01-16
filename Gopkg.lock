@@ -458,10 +458,11 @@
   packages = [
     "k8s-prov/azure",
     "k8s-prov/gcloud",
+    "k8s-prov/dind",
     "mexos",
     "openstack-tenant/agent/cloudflare"
   ]
-  revision = "9d201d7ff3b3a4bfcc9a7cddb99ddb916abb4aa1"
+  revision = "554d005c7f6c2a9c4c6dba1e4d29a5bbfbcbc6b7"
   version = "v0.0.7"
 
 [[projects]]
