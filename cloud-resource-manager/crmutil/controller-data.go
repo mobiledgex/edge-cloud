@@ -46,31 +46,40 @@ func NewControllerData() *ControllerData {
 
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
-func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
-	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info", "rootlb", rootlb.Name)
-	limits, err := mexos.GetLimits(rootlb.PlatConf)
-	if err != nil {
-		str := fmt.Sprintf("openstack get limits failed: %s", err)
-		info.Errors = append(info.Errors, str)
-		info.State = edgeproto.CloudletState_CloudletStateErrors
-		return
-	}
-	//TODO: we currently only return a subset and only max vals. When telemetry available on openstack return more
-	//  possibly return quota information as well. The 'info' structure is too rigid. We need a way to return
-	//  platform specific generic variable content information.
-	for _, l := range limits {
-		if l.Name == "MaxTotalCores" {
-			info.OsMaxVcores = uint64(l.Value)
-		} else if l.Name == "MaxTotalRamSize" {
-			info.OsMaxRam = uint64(l.Value)
-		} else if l.Name == "MaxTotalVolumeGigabytes" {
-			info.OsMaxVolGb = uint64(l.Value)
+func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo, dind bool) {
+	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info", "rootlb", rootlb.Name, "DIND", dind)
+
+	if dind {
+		// todo: we could try to get this from the local machine
+		info.OsMaxRam = 16
+		info.OsMaxVcores = 8
+		info.OsMaxVolGb = 500
+	} else {
+		limits, err := mexos.GetLimits(rootlb.PlatConf)
+		if err != nil {
+			str := fmt.Sprintf("openstack get limits failed: %s", err)
+			info.Errors = append(info.Errors, str)
+			info.State = edgeproto.CloudletState_CloudletStateErrors
+			return
 		}
+		//TODO: we currently only return a subset and only max vals. When telemetry available on openstack return more
+		//  possibly return quota information as well. The 'info' structure is too rigid. We need a way to return
+		//  platform specific generic variable content information.
+		for _, l := range limits {
+			if l.Name == "MaxTotalCores" {
+				info.OsMaxVcores = uint64(l.Value)
+			} else if l.Name == "MaxTotalRamSize" {
+				info.OsMaxRam = uint64(l.Value)
+			} else if l.Name == "MaxTotalVolumeGigabytes" {
+				info.OsMaxVolGb = uint64(l.Value)
+			}
+		}
+		log.DebugLog(log.DebugLevelMexos, "got OpenStack limits", "limits", limits)
 	}
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
-	log.DebugLog(log.DebugLevelMexos, "cloudlet state ready, update limits", "info", info, "limits", limits)
+	log.DebugLog(log.DebugLevelMexos, "cloudlet state ready, update limits", "info", info)
 }
 
 // GetInsts queries Openstack/Kubernetes to get all the cluster insts

@@ -165,19 +165,13 @@ func main() {
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
 			platStat := <-platChan
-			if isDIND {
-				log.DebugLog(log.DebugLevelMexos, "running as local DIND")
-				myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
-
-			} else {
-				log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
-				// gather cloudlet info from openstack, etc.
-				if controllerData.CRMRootLB == nil {
-					log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
-					return
-				}
-				crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
+			log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
+			// gather cloudlet info from openstack, etc.
+			if controllerData.CRMRootLB == nil {
+				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
+				return
 			}
+			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet, isDIND)
 			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 			// trigger send of info upstream to controller
 			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
