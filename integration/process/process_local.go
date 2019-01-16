@@ -231,6 +231,20 @@ func (p *DmeLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
+type MexAgentLocal struct {
+	Name string
+	cmd  *exec.Cmd
+}
+
+func (p *MexAgentLocal) Start(logfile string, opts ...StartOp) error {
+	var err error
+	args := []string{"--debug", "--proxy", ""}
+	var envs []string
+
+	p.cmd, err = StartLocal(p.Name, "mexosagent", args, envs, logfile)
+	return err
+}
+
 func (p *DmeLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
