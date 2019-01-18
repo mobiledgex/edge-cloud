@@ -710,7 +710,7 @@ func init() {
 	AppInstIn.CloudletLoc.Timestamp = &distributed_match_engine.Timestamp{}
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
+	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
@@ -799,7 +799,7 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("cloudletloc-timestamp-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.8.2")
 	}
-	if AppInstNoConfigFlagSet.Lookup("uri").Changed {
+	if AppInstFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
 	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
