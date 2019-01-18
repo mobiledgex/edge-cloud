@@ -334,11 +334,14 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
 
+		if in.Uri == "" && defaultCloudlet {
+			return errors.New("URI (Public FQDN) is required for default cloudlet")
+		} else if in.Uri != "" && !defaultCloudlet {
+			return errors.New("Cannot specify URI for non-default cloudlet")
+		}
+
 		if defaultCloudlet {
 			in.IpAccess = edgeproto.IpAccess_IpAccessDedicated
-			if in.Uri == "" {
-				return errors.New("URI (Public FQDN) is required for default cloudlet")
-			}
 		} else if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
 			if cloudletRefs.RootLbPorts == nil {
