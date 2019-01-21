@@ -219,7 +219,8 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 }
 
 func createMEXMetricsWriter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
+	return nil
+	//	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
 }
 
 func main() {

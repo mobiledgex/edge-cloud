@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_clinet"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
@@ -19,8 +20,8 @@ func TestInfluxQ(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelMetrics)
 	addr := "127.0.0.1:8086"
 	// lower the interval so we don't have to wait so long
-	InfluxQPushInterval = 10 * time.Millisecond
-	InfluxQReconnectDelay = 10 * time.Millisecond
+	influxq.InfluxQPushInterval = 10 * time.Millisecond
+	influxq.InfluxQReconnectDelay = 10 * time.Millisecond
 
 	// start influxd if not already running
 	_, err := exec.Command("sh", "-c", "pgrep -x influxd").Output()
@@ -31,7 +32,7 @@ func TestInfluxQ(t *testing.T) {
 		defer db.Stop()
 	}
 
-	q := NewInfluxQ()
+	q := influxq.NewInfluxQ("metrics")
 	err = q.Start(addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
@@ -81,10 +82,10 @@ func TestInfluxQ(t *testing.T) {
 	}
 
 	// wait for metrics to get pushed to db
-	time.Sleep(2 * InfluxQPushInterval)
-	assert.Equal(t, uint64(0), q.errBatch, "batch errors")
-	assert.Equal(t, uint64(0), q.errPoint, "point errors")
-	assert.Equal(t, uint64(0), q.qfull, "qfulls")
+	time.Sleep(2 * influxq.InfluxQPushInterval)
+	assert.Equal(t, uint64(0), q.ErrBatch, "batch errors")
+	assert.Equal(t, uint64(0), q.ErrPoint, "point errors")
+	assert.Equal(t, uint64(0), q.Qfull, "Qfulls")
 
 	// wait for records to get updated in database and become queryable.
 	num := 0
