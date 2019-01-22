@@ -316,8 +316,6 @@ func createAppInstData(t *testing.T, api *AppInstCommonApi, testData []edgeproto
 	}
 }
 
-// Auto-generated code: DO NOT EDIT
-
 type ShowAppInstInfo struct {
 	Data map[string]edgeproto.AppInstInfo
 	grpc.ServerStream
@@ -475,4 +473,39 @@ func GetAppInstInfo(t *testing.T, api *AppInstInfoCommonApi, key *edgeproto.AppI
 		*out = obj
 	}
 	return found
+}
+
+func (s *DummyServer) CreateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_CreateAppInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) DeleteAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_DeleteAppInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) UpdateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_UpdateAppInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) ShowAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_ShowAppInstServer) error {
+	server.Send(&edgeproto.AppInst{})
+	server.Send(&edgeproto.AppInst{})
+	server.Send(&edgeproto.AppInst{})
+	return nil
+}
+
+func (s *DummyServer) ShowAppInstInfo(in *edgeproto.AppInstInfo, server edgeproto.AppInstInfoApi_ShowAppInstInfoServer) error {
+	server.Send(&edgeproto.AppInstInfo{})
+	server.Send(&edgeproto.AppInstInfo{})
+	server.Send(&edgeproto.AppInstInfo{})
+	return nil
 }

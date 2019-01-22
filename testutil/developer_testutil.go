@@ -291,3 +291,44 @@ func createDeveloperData(t *testing.T, api *DeveloperCommonApi, testData []edgep
 		assert.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.DeveloperApi_ShowDeveloperServer) error {
+	server.Send(&edgeproto.Developer{})
+	server.Send(&edgeproto.Developer{})
+	server.Send(&edgeproto.Developer{})
+	return nil
+}
+
+type DummyServer struct{}
+
+func RegisterDummyServer(server *grpc.Server) {
+	d := &DummyServer{}
+	edgeproto.RegisterDeveloperApiServer(server, d)
+	edgeproto.RegisterFlavorApiServer(server, d)
+	edgeproto.RegisterClusterFlavorApiServer(server, d)
+	edgeproto.RegisterClusterApiServer(server, d)
+	edgeproto.RegisterAppApiServer(server, d)
+	edgeproto.RegisterOperatorApiServer(server, d)
+	edgeproto.RegisterCloudletApiServer(server, d)
+	edgeproto.RegisterCloudletInfoApiServer(server, d)
+	edgeproto.RegisterClusterInstApiServer(server, d)
+	edgeproto.RegisterClusterInstInfoApiServer(server, d)
+	edgeproto.RegisterAppInstApiServer(server, d)
+	edgeproto.RegisterAppInstInfoApiServer(server, d)
+	edgeproto.RegisterControllerApiServer(server, d)
+	edgeproto.RegisterNodeApiServer(server, d)
+	edgeproto.RegisterCloudletRefsApiServer(server, d)
+	edgeproto.RegisterClusterRefsApiServer(server, d)
+}

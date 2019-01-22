@@ -1,7 +1,9 @@
 package orm
 
 import (
+	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -12,6 +14,7 @@ import (
 const ActionView = "view"
 const ActionManage = "manage"
 
+const ResourceControllers = "controllers"
 const ResourceUsers = "users"
 const ResourceApps = "apps"
 const ResourceAppInsts = "appinsts"
@@ -48,6 +51,9 @@ var AdminRoleID int64
 
 func InitRolePerms() error {
 	log.DebugLog(log.DebugLevelApi, "init roleperms")
+
+	enforcer.AddPolicy(RoleAdminManager, ResourceControllers, ActionManage)
+	enforcer.AddPolicy(RoleAdminManager, ResourceControllers, ActionView)
 
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionManage)
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionView)
@@ -110,9 +116,9 @@ func ShowRolePerms(c echo.Context) error {
 }
 
 type Role struct {
-	OrgID  int64
-	UserID int64
-	Role   string
+	Org    string `form:"org" json:"org"`
+	UserID int64  `form:"userid" json:"userid"`
+	Role   string `form:"role" json:"role"`
 }
 
 // Show roles assigned to the current user
@@ -150,7 +156,7 @@ func parseRole(grp []string) *Role {
 	role := Role{Role: grp[1]}
 	domuser := strings.Split(grp[0], "::")
 	if len(domuser) > 1 {
-		role.OrgID, _ = strconv.ParseInt(domuser[0], 10, 64)
+		role.Org = domuser[0]
 		role.UserID, _ = strconv.ParseInt(domuser[1], 10, 64)
 	} else {
 		role.UserID, _ = strconv.ParseInt(grp[0], 10, 64)
@@ -158,10 +164,125 @@ func parseRole(grp []string) *Role {
 	return &role
 }
 
-func getCasbinGroup(orgID, userID int64) string {
-	return id2str(orgID) + "::" + id2str(userID)
+func getCasbinGroup(org string, userID int64) string {
+	return org + "::" + id2str(userID)
 }
 
 func id2str(id int64) string {
 	return strconv.FormatInt(id, 10)
+}
+
+func ShowRole(c echo.Context) error {
+	rolemap := make(map[string]struct{})
+	policies := enforcer.GetPolicy()
+	for _, policy := range policies {
+		if len(policy) < 1 {
+			continue
+		}
+		rolemap[policy[0]] = struct{}{}
+	}
+	roles := make([]string, len(rolemap))
+	for role, _ := range rolemap {
+		roles = append(roles, role)
+	}
+	sort.Strings(roles)
+	return c.JSON(http.StatusOK, roles)
+}
+
+func AddUserRole(c echo.Context) error {
+	claims, err := getClaims(c)
+	if err != nil {
+		return err
+	}
+	role := Role{}
+	if err := c.Bind(&role); err != nil {
+		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
+	}
+	if role.UserID == 0 {
+		return c.JSON(http.StatusBadRequest, Msg("UserID not specified"))
+	}
+	if role.Org == "" {
+		return c.JSON(http.StatusBadRequest, Msg("Organziation not specified"))
+	}
+	if role.Role == "" {
+		return c.JSON(http.StatusBadRequest, Msg("Role not specified"))
+	}
+	// check that user/org/role exists
+	res := db.Where(&User{ID: role.UserID}).First(&User{})
+	if res.RecordNotFound() {
+		return c.JSON(http.StatusBadRequest, Msg("UserID not found"))
+	}
+	if res.Error != nil {
+		return res.Error
+	}
+	res = db.Where(&Organization{Name: role.Org}).First(&Organization{})
+	if res.RecordNotFound() {
+		return c.JSON(http.StatusBadRequest, Msg("Organization not found"))
+	}
+	if res.Error != nil {
+		return res.Error
+	}
+	policies := enforcer.GetPolicy()
+	roleFound := false
+	for _, policy := range policies {
+		if len(policy) < 1 {
+			continue
+		}
+		if policy[0] == role.Role {
+			roleFound = true
+			break
+		}
+	}
+	if !roleFound {
+		return c.JSON(http.StatusBadRequest, Msg("Role not found"))
+	}
+
+	// make sure caller has perms to modify users of target org
+	if !enforcer.Enforce(id2str(claims.UserID), role.Org, ResourceUsers, ActionManage) {
+		return echo.ErrForbidden
+	}
+	psub := getCasbinGroup(role.Org, role.UserID)
+	enforcer.AddGroupingPolicy(psub, role.Role)
+	return c.JSON(http.StatusOK, Msg("Role added to user"))
+}
+
+func RemoveUserRole(c echo.Context) error {
+	claims, err := getClaims(c)
+	if err != nil {
+		return err
+	}
+	role := Role{}
+	if err := c.Bind(&role); err != nil {
+		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
+	}
+	if role.UserID == 0 {
+		return c.JSON(http.StatusBadRequest, Msg("UserID not specified"))
+	}
+	if role.Org == "" {
+		return c.JSON(http.StatusBadRequest, Msg("Organziation not specified"))
+	}
+	if role.Role == "" {
+		return c.JSON(http.StatusBadRequest, Msg("Role not specified"))
+	}
+
+	// make sure caller has perms to modify users of target org
+	if !enforcer.Enforce(id2str(claims.UserID), role.Org, ResourceUsers, ActionManage) {
+		return echo.ErrForbidden
+	}
+
+	psub := getCasbinGroup(role.Org, role.UserID)
+	enforcer.RemoveGroupingPolicy(psub, role.Role)
+	return c.JSON(http.StatusOK, Msg("Role removed from user"))
+}
+
+// for debugging
+func dumpRbac() {
+	policies := enforcer.GetPolicy()
+	for _, p := range policies {
+		fmt.Printf("policy: %+v\n", p)
+	}
+	groups := enforcer.GetGroupingPolicy()
+	for _, grp := range groups {
+		fmt.Printf("group: %+v\n", grp)
+	}
 }

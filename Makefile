@@ -10,6 +10,7 @@ build:
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	go install ./protoc-gen-notify
+	go install ./protoc-gen-mc2
 	make -C ./protoc-gen-cmd
 	make -C ./log
 	make -C edgeproto

@@ -184,8 +184,6 @@ func GetCloudletRefs(t *testing.T, api *CloudletRefsCommonApi, key *edgeproto.Cl
 	return found
 }
 
-// Auto-generated code: DO NOT EDIT
-
 type ShowClusterRefs struct {
 	Data map[string]edgeproto.ClusterRefs
 	grpc.ServerStream
@@ -343,4 +341,18 @@ func GetClusterRefs(t *testing.T, api *ClusterRefsCommonApi, key *edgeproto.Clus
 		*out = obj
 	}
 	return found
+}
+
+func (s *DummyServer) ShowCloudletRefs(in *edgeproto.CloudletRefs, server edgeproto.CloudletRefsApi_ShowCloudletRefsServer) error {
+	server.Send(&edgeproto.CloudletRefs{})
+	server.Send(&edgeproto.CloudletRefs{})
+	server.Send(&edgeproto.CloudletRefs{})
+	return nil
+}
+
+func (s *DummyServer) ShowClusterRefs(in *edgeproto.ClusterRefs, server edgeproto.ClusterRefsApi_ShowClusterRefsServer) error {
+	server.Send(&edgeproto.ClusterRefs{})
+	server.Send(&edgeproto.ClusterRefs{})
+	server.Send(&edgeproto.ClusterRefs{})
+	return nil
 }

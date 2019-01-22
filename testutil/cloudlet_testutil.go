@@ -335,8 +335,6 @@ func createCloudletData(t *testing.T, api *CloudletCommonApi, testData []edgepro
 	}
 }
 
-// Auto-generated code: DO NOT EDIT
-
 type ShowCloudletInfo struct {
 	Data map[string]edgeproto.CloudletInfo
 	grpc.ServerStream
@@ -494,4 +492,47 @@ func GetCloudletInfo(t *testing.T, api *CloudletInfoCommonApi, key *edgeproto.Cl
 		*out = obj
 	}
 	return found
+}
+
+func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) DeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_DeleteCloudletServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) UpdateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_UpdateCloudletServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_ShowCloudletServer) error {
+	server.Send(&edgeproto.Cloudlet{})
+	server.Send(&edgeproto.Cloudlet{})
+	server.Send(&edgeproto.Cloudlet{})
+	return nil
+}
+
+func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
+	server.Send(&edgeproto.CloudletInfo{})
+	server.Send(&edgeproto.CloudletInfo{})
+	server.Send(&edgeproto.CloudletInfo{})
+	return nil
+}
+
+func (s *DummyServer) InjectCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) EvictCloudletInfo(ctx context.Context, in *edgeproto.CloudletInfo) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
 }

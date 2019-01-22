@@ -35,7 +35,7 @@ enum ImageType {
   // Unknown image type
   ImageTypeUnknown = 0;
   // Docker container image type compatible with Kubernetes
-  ImageTypeDocker= 1;
+  ImageTypeDocker = 1;
   // QCOW2 virtual machine image type
   ImageTypeQCOW = 2;
 }
@@ -116,6 +116,7 @@ service AppApi {
       post: "/create/app"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
   }
   // Delete an application
   rpc DeleteApp(App) returns (Result) {
@@ -123,6 +124,7 @@ service AppApi {
       post: "/delete/app"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
   }
   // Update an application
   rpc UpdateApp(App) returns (Result) {
@@ -130,6 +132,7 @@ service AppApi {
       post: "/update/app"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceApps,ActionManage,Key.DeveloperKey.Name";
   }
   // Show applications. Any fields specified will be used to filter results.
   rpc ShowApp(App) returns (stream App) {
@@ -137,5 +140,6 @@ service AppApi {
       post: "/show/app"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceApps,ActionView,Key.DeveloperKey.Name";
   }
 }

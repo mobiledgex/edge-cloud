@@ -314,8 +314,6 @@ func createClusterInstData(t *testing.T, api *ClusterInstCommonApi, testData []e
 	}
 }
 
-// Auto-generated code: DO NOT EDIT
-
 type ShowClusterInstInfo struct {
 	Data map[string]edgeproto.ClusterInstInfo
 	grpc.ServerStream
@@ -473,4 +471,39 @@ func GetClusterInstInfo(t *testing.T, api *ClusterInstInfoCommonApi, key *edgepr
 		*out = obj
 	}
 	return found
+}
+
+func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) DeleteClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) UpdateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	server.Send(&edgeproto.Result{})
+	return nil
+}
+
+func (s *DummyServer) ShowClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_ShowClusterInstServer) error {
+	server.Send(&edgeproto.ClusterInst{})
+	server.Send(&edgeproto.ClusterInst{})
+	server.Send(&edgeproto.ClusterInst{})
+	return nil
+}
+
+func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server edgeproto.ClusterInstInfoApi_ShowClusterInstInfoServer) error {
+	server.Send(&edgeproto.ClusterInstInfo{})
+	server.Send(&edgeproto.ClusterInstInfo{})
+	server.Send(&edgeproto.ClusterInstInfo{})
+	return nil
 }

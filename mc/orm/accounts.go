@@ -21,9 +21,8 @@ type User struct {
 }
 
 type Organization struct {
-	ID          int64  `gorm:"primary_key"`
+	Name        string `gorm:"primary_key"`
 	Type        string `gorm:"not null"`
-	Name        string `gorm:"unique;not null"`
 	Address     string
 	Phone       string
 	AdminUserID int64 `gorm:"type:bigint REFERENCES users(id)"`
@@ -31,7 +30,9 @@ type Organization struct {
 	UpdatedAt   time.Time
 }
 
-type UserOrg struct {
-	UserID int64 `gorm:"type:bigint REFERENCES users(id)"`
-	OrgID  int64 `gorm:"type:bigint REFERENCES organizations(id)"`
+type Controller struct {
+	Region    string `gorm:"primary_key"`
+	Address   string `gorm:"unique;not null"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

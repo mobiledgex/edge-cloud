@@ -361,7 +361,7 @@ func (g *GenCmd) generateServiceVars(file *descriptor.FileDescriptorProto, servi
 		g.support.RegisterUsedPkg(*file.Package, file)
 		for _, method := range service.Method {
 			in := g.GetDesc(method.GetInputType())
-			if in == nil || clientStreaming(method) || hasOneof(in) {
+			if in == nil || gensupport.ClientStreaming(method) || hasOneof(in) {
 				continue
 			}
 			g.inMessages[g.flatTypeName(*method.InputType)] = in
@@ -991,7 +991,7 @@ func (g *GenCmd) generateWriteOutput(desc *generator.Descriptor) {
 func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service *descriptor.ServiceDescriptorProto, method *descriptor.MethodDescriptorProto) bool {
 	in := g.GetDesc(method.GetInputType())
 	out := g.GetDesc(method.GetOutputType())
-	if in == nil || clientStreaming(method) || hasOneof(in) {
+	if in == nil || gensupport.ClientStreaming(method) || hasOneof(in) {
 		// not supported yet
 		return false
 	}
@@ -1008,7 +1008,7 @@ func (g *GenCmd) generateMethodCmd(file *descriptor.FileDescriptorProto, service
 		OutType:              g.flatTypeName(*method.OutputType),
 		FQInType:             g.FQTypeName(in),
 		FQOutType:            g.FQTypeName(out),
-		ServerStream:         serverStreaming(method),
+		ServerStream:         gensupport.ServerStreaming(method),
 		HasEnums:             hasEnums,
 		StreamOutIncremental: GetStreamOutIncremental(method),
 	}
@@ -1036,7 +1036,7 @@ func (g *GenCmd) addCmdFlags(service *descriptor.ServiceDescriptorProto, initNoC
 	for _, method := range service.Method {
 		flatType := g.flatTypeName(*method.InputType)
 		in := g.inMessages[flatType]
-		if in == nil || clientStreaming(method) || hasOneof(in) {
+		if in == nil || gensupport.ClientStreaming(method) || hasOneof(in) {
 			// not supported yet
 			continue
 		}
@@ -1082,20 +1082,6 @@ func (g *GenCmd) GetDesc(typeName string) *generator.Descriptor {
 // Shortcut function
 func (g *GenCmd) GetEnumDesc(typeName string) *generator.EnumDescriptor {
 	return gensupport.GetEnumDesc(g.Generator, typeName)
-}
-
-func clientStreaming(method *descriptor.MethodDescriptorProto) bool {
-	if method.ClientStreaming == nil {
-		return false
-	}
-	return *method.ClientStreaming
-}
-
-func serverStreaming(method *descriptor.MethodDescriptorProto) bool {
-	if method.ServerStreaming == nil {
-		return false
-	}
-	return *method.ServerStreaming
 }
 
 func hasOneof(desc *generator.Descriptor) bool {

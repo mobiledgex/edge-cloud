@@ -59,6 +59,7 @@ service CloudletApi {
       post: "/create/cloudlet"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Delete a Cloudlet
   rpc DeleteCloudlet(Cloudlet) returns (stream Result) {
@@ -67,6 +68,7 @@ service CloudletApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Update a Cloudlet
   rpc UpdateCloudlet(Cloudlet) returns (stream Result) {
@@ -74,6 +76,7 @@ service CloudletApi {
       post: "/update/cloudlet"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionManage,Key.OperatorKey.Name";
   }
   // Show Cloudlets
   rpc ShowCloudlet(Cloudlet) returns (stream Cloudlet) {
@@ -81,6 +84,7 @@ service CloudletApi {
       post: "/show/cloudlet"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
   }
 }
 
@@ -134,6 +138,7 @@ service CloudletInfoApi {
       post: "/show/cloudletinfo"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
   }
   // Inject (create) a CloudletInfo for regression testing
   rpc InjectCloudletInfo(CloudletInfo) returns (Result) {}

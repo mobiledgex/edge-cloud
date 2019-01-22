@@ -52,7 +52,7 @@ func InitData(superuser, superpass string, stop *bool, done chan struct{}) {
 		first = false
 
 		// create or update tables
-		err := db.AutoMigrate(&User{}, &Organization{}, &UserOrg{}).Error
+		err := db.AutoMigrate(&User{}, &Organization{}, &Controller{}).Error
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "automigrate", "err", err)
 			continue

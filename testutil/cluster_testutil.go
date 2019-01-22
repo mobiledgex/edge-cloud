@@ -272,3 +272,22 @@ func createClusterData(t *testing.T, api *ClusterCommonApi, testData []edgeproto
 		assert.Nil(t, err, "Create Cluster %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowCluster(in *edgeproto.Cluster, server edgeproto.ClusterApi_ShowClusterServer) error {
+	server.Send(&edgeproto.Cluster{})
+	server.Send(&edgeproto.Cluster{})
+	server.Send(&edgeproto.Cluster{})
+	return nil
+}

@@ -13,6 +13,8 @@ build:
 	protoc ${INCLUDE} --grpc-gateway_out=${BUILTIN}:. *.proto
 	protoc ${INCLUDE} --cmd_out=${BUILTIN}:../gencmd *.proto
 	protoc ${INCLUDE} --notify_out=${BUILTIN}:../notify *.proto
+	protoc ${INCLUDE} --mc2_out=${BUILTIN}:../mc/orm *.proto
+	protoc ${INCLUDE} --mc2_out=${BUILTIN},gentest,suffix=_mc2_test.go:../mc/orm *.proto
 
 	# to use protodoc, make sure you run:
 	# go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc

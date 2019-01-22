@@ -70,10 +70,14 @@ message ClusterRefs {
 // This API should be admin-only
 service CloudletRefsApi {
   // Show CloudletRefs (debug only)
-  rpc ShowCloudletRefs(CloudletRefs) returns (stream CloudletRefs) {}
+  rpc ShowCloudletRefs(CloudletRefs) returns (stream CloudletRefs) {
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+  }
 }
 
 service ClusterRefsApi {
   // Show ClusterRefs (debug only)
-  rpc ShowClusterRefs(ClusterRefs) returns (stream ClusterRefs) {}
+  rpc ShowClusterRefs(ClusterRefs) returns (stream ClusterRefs) {
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,";
+  }
 }
