@@ -43,6 +43,7 @@ var MEXMetricsWriterApp = edgeproto.App{
 		Name:         MEXMetricsWriterAppName,
 		Version:      MEXMetricsWriterAppVer,
 	},
+	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
@@ -219,8 +220,7 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 }
 
 func createMEXMetricsWriter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	return nil
-	//	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
+	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
 }
 
 func main() {

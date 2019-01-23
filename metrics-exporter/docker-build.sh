@@ -4,3 +4,4 @@ cd ..
 pwd
 TAG=latest
 docker build -t mobiledgex/metrics-exporter:${TAG} -f metrics-exporter/Dockerfile .
+

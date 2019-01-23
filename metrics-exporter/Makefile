@@ -3,12 +3,10 @@ TAG ?= latest
 build:
 	go build ./...
 
-docker-build:
+build-docker:
 	./docker-build.sh
-
-docker-push:
-	docker TAG mobiledgex/metrics-exporter:${TAG} registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:${TAG}
-	docker push registry.mobiledgex.net:5000/mobiledgex/metrics-writer:${TAG}
+	docker tag mobiledgex/metrics-exporter:${TAG} registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:${TAG}
+	docker push registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:${TAG}
 
 install:
 	go install ./...

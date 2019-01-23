@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/signal"
+	"regexp"
 	"time"
 
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_clinet"
@@ -35,12 +37,29 @@ var influxQ *influxq.InfluxQ
 
 var sigChan chan os.Signal
 
+func getIPfromEnv() (string, error) {
+	re := regexp.MustCompile(".*PROMETHEUS_PORT_9090_TCP_ADDR=(.*)")
+	for _, e := range os.Environ() {
+		match := re.FindStringSubmatch(e)
+		if len(match) > 1 {
+			return match[1], nil
+		}
+	}
+	return "", errors.New("No Prometheus is running")
+}
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	fmt.Printf("Starting metrics exporter with Prometheus addr %s\n", *promAddress)
+	clustIP, err := getIPfromEnv()
+	if err == nil {
+		*promAddress = clustIP + ":9090"
+	}
+	fmt.Printf("Found Prometheus running on: %s\n", *promAddress)
+
 	influxQ = influxq.NewInfluxQ(InfluxDBName)
-	err := influxQ.Start(*influxdb)
+	err = influxQ.Start(*influxdb)
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",
 			"address", *influxdb, "err", err)
