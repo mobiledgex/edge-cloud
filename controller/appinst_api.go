@@ -191,6 +191,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return objstore.ErrKVStoreKeyExists
 				}
 				in.Errors = nil
+				if !defaultCloudlet {
+					// must reset Uri
+					in.Uri = ""
+				}
 			} else {
 				err := in.Validate(edgeproto.AppInstAllFieldsMap)
 				if err != nil {
@@ -337,7 +341,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if in.Uri == "" && defaultCloudlet {
 			return errors.New("URI (Public FQDN) is required for default cloudlet")
 		} else if in.Uri != "" && !defaultCloudlet {
-			return errors.New("Cannot specify URI for non-default cloudlet")
+			return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 		}
 
 		if defaultCloudlet {

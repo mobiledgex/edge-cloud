@@ -150,33 +150,39 @@ type CloudletCommonApi struct {
 }
 
 func (x *CloudletCommonApi) CreateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cloudlet{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateCloudlet(in, &CudStreamoutCloudlet{})
+		err := x.internal_api.CreateCloudlet(copy, &CudStreamoutCloudlet{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.CreateCloudlet(ctx, in)
+		stream, err := x.client_api.CreateCloudlet(ctx, copy)
 		err = CloudletReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *CloudletCommonApi) UpdateCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cloudlet{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateCloudlet(in, &CudStreamoutCloudlet{})
+		err := x.internal_api.UpdateCloudlet(copy, &CudStreamoutCloudlet{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.UpdateCloudlet(ctx, in)
+		stream, err := x.client_api.UpdateCloudlet(ctx, copy)
 		err = CloudletReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *CloudletCommonApi) DeleteCloudlet(ctx context.Context, in *edgeproto.Cloudlet) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cloudlet{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteCloudlet(in, &CudStreamoutCloudlet{})
+		err := x.internal_api.DeleteCloudlet(copy, &CudStreamoutCloudlet{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.DeleteCloudlet(ctx, in)
+		stream, err := x.client_api.DeleteCloudlet(ctx, copy)
 		err = CloudletReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
