@@ -261,6 +261,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}()
 	}
 
+	// these checks cannot be in ApplySTMWait funcs since
+	// that func may run several times if the database changes while
+	// it is running, and the stm func modifies in.Uri.
+	if in.Uri == "" && defaultCloudlet {
+		return errors.New("URI (Public FQDN) is required for default cloudlet")
+	} else if in.Uri != "" && !defaultCloudlet {
+		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
+	}
+
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
@@ -337,12 +346,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
-
-		if in.Uri == "" && defaultCloudlet {
-			return errors.New("URI (Public FQDN) is required for default cloudlet")
-		} else if in.Uri != "" && !defaultCloudlet {
-			return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
-		}
 
 		if defaultCloudlet {
 			in.IpAccess = edgeproto.IpAccess_IpAccessDedicated

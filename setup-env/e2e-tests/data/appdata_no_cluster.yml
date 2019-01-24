@@ -106,7 +106,6 @@ appinstances:
   cloudletloc:
     latitude: 31
     longitude: -91
-  uri: someapplication1.dmuus-cloud-1.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -124,7 +123,6 @@ appinstances:
   cloudletloc:
     latitude: 35
     longitude: -95
-  uri: someapplication1.dmuus-cloud-2.mobiledgex.net
   liveness: LivenessStatic
   flavor:
     name: x1.small
