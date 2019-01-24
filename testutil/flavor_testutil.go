@@ -117,26 +117,32 @@ type FlavorCommonApi struct {
 }
 
 func (x *FlavorCommonApi) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.Flavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateFlavor(ctx, in)
+		return x.internal_api.CreateFlavor(ctx, copy)
 	} else {
-		return x.client_api.CreateFlavor(ctx, in)
+		return x.client_api.CreateFlavor(ctx, copy)
 	}
 }
 
 func (x *FlavorCommonApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.Flavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateFlavor(ctx, in)
+		return x.internal_api.UpdateFlavor(ctx, copy)
 	} else {
-		return x.client_api.UpdateFlavor(ctx, in)
+		return x.client_api.UpdateFlavor(ctx, copy)
 	}
 }
 
 func (x *FlavorCommonApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.Flavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteFlavor(ctx, in)
+		return x.internal_api.DeleteFlavor(ctx, copy)
 	} else {
-		return x.client_api.DeleteFlavor(ctx, in)
+		return x.client_api.DeleteFlavor(ctx, copy)
 	}
 }
 

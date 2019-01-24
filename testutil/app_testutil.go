@@ -178,26 +178,32 @@ type AppCommonApi struct {
 }
 
 func (x *AppCommonApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	copy := &edgeproto.App{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateApp(ctx, in)
+		return x.internal_api.CreateApp(ctx, copy)
 	} else {
-		return x.client_api.CreateApp(ctx, in)
+		return x.client_api.CreateApp(ctx, copy)
 	}
 }
 
 func (x *AppCommonApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	copy := &edgeproto.App{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateApp(ctx, in)
+		return x.internal_api.UpdateApp(ctx, copy)
 	} else {
-		return x.client_api.UpdateApp(ctx, in)
+		return x.client_api.UpdateApp(ctx, copy)
 	}
 }
 
 func (x *AppCommonApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	copy := &edgeproto.App{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteApp(ctx, in)
+		return x.internal_api.DeleteApp(ctx, copy)
 	} else {
-		return x.client_api.DeleteApp(ctx, in)
+		return x.client_api.DeleteApp(ctx, copy)
 	}
 }
 

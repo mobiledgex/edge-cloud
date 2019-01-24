@@ -86,6 +86,7 @@ func TestAppInstApi(t *testing.T) {
 	responder.SetSimulateDeleteFailure(false)
 	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
 
+	obj = testutil.AppInstData[0]
 	// check override of error DeleteError
 	err = forceAppInstState(&obj, edgeproto.TrackedState_DeleteError)
 	assert.Nil(t, err, "force state")
@@ -212,16 +213,17 @@ func TestAutoClusterInst(t *testing.T) {
 	testutil.InternalAppCreate(t, &appApi, testutil.AppData)
 
 	// since cluster inst does not exist, it will be auto-created
-	err := appInstApi.CreateAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
+	copy := testutil.AppInstData[0]
+	err := appInstApi.CreateAppInst(&copy, &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
-	found := clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
+	found := clusterInstApi.Get(&copy.ClusterInstKey, &clusterInst)
 	assert.True(t, found, "get auto-clusterinst")
 	assert.True(t, clusterInst.Auto, "clusterinst is auto")
 	// delete appinst should also delete clusterinst
-	err = appInstApi.DeleteAppInst(&testutil.AppInstData[0], &testutil.CudStreamoutAppInst{})
+	err = appInstApi.DeleteAppInst(&copy, &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "delete app inst")
-	found = clusterInstApi.Get(&testutil.AppInstData[0].ClusterInstKey, &clusterInst)
+	found = clusterInstApi.Get(&copy.ClusterInstKey, &clusterInst)
 	assert.False(t, found, "get auto-clusterinst")
 
 	dummy.Stop()
