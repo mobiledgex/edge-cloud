@@ -8,6 +8,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	baselog "log"
 	"net"
 	"net/http"
 	"os"
@@ -178,10 +180,17 @@ func main() {
 		},
 	}
 
+	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
+	//to get rid of some of these logs, but as of now this a the way around it.   We could miss other logs here but
+	// the excessive error logs are drowning out everthing else.
+	var nullLogger baselog.Logger
+	nullLogger.SetOutput(ioutil.Discard)
+
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
 		Handler:   mux,
 		TLSConfig: tlscfg,
+		ErrorLog:  &nullLogger,
 	}
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
 	defer httpServer.Shutdown(context.Background())
