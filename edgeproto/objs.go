@@ -232,12 +232,12 @@ func (s *Cloudlet) Validate(fields map[string]struct{}) error {
 		return err
 	}
 	if _, found := fields[CloudletFieldLocationLatitude]; found {
-		if s.Location.Latitude > 90 || s.Location.Latitude < -90 {
+		if !util.IsLatitudeValid(s.Location.Latitude) {
 			return errors.New("Invalid latitude value")
 		}
 	}
 	if _, found := fields[CloudletFieldLocationLongitude]; found {
-		if s.Location.Longitude > 180 || s.Location.Longitude < -180 {
+		if !util.IsLongitudeValid(s.Location.Longitude) {
 			return errors.New("Invalid longitude value")
 		}
 	}

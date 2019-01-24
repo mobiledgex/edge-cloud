@@ -68,3 +68,13 @@ func K8SSanitize(name string) string {
 		"!", "")
 	return strings.ToLower(r.Replace(name))
 }
+
+// IsLatitudeValid checks that the latitude is within accepted ranges
+func IsLatitudeValid(latitude float64) bool {
+	return (latitude >= -90) && (latitude <= 90)
+}
+
+// IsLongitudeValid checks that the longitude is within accepted ranges
+func IsLongitudeValid(longitude float64) bool {
+	return (longitude >= -180) && (longitude <= 180)
+}

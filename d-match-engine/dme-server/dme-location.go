@@ -8,6 +8,7 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string, tokSrvUrl string) error {
@@ -35,6 +36,11 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	if mreq.GpsLocation == nil || (mreq.GpsLocation.Latitude == 0 && mreq.GpsLocation.Longitude == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
 		return fmt.Errorf("Missing GpsLocation")
+	}
+
+	if !util.IsLatitudeValid(mreq.GpsLocation.Latitude) || !util.IsLongitudeValid(mreq.GpsLocation.Longitude) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", mreq.GpsLocation.Latitude, "long", mreq.GpsLocation.Longitude)
+		return fmt.Errorf("Invalid GpsLocation")
 	}
 
 	tbl.RLock()
