@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
+	baselog "log"
 	"net"
 	"net/http"
 	"os"
@@ -18,9 +20,10 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	dmetest "github.com/mobiledgex/edge-cloud/d-match-engine/dme-testutil"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	"github.com/mobiledgex/edge-cloud/log"
+	log "github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/tls"
+	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -71,6 +74,12 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
 		return reply, errors.New("Missing GpsLocation")
 	}
+
+	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
+		return reply, errors.New("Invalid GpsLocation")
+	}
+
 	err := findCloudlet(ckey, req, reply)
 	log.DebugLog(log.DebugLevelDmereq, "FindCloudlet returns", "reply", reply, "error", err)
 	return reply, err
@@ -345,10 +354,17 @@ func main() {
 		},
 	}
 
+	// Suppress contant stream of TLS error logs due to LB health check. There is discussion in the community
+	//to get rid of some of these logs, but as of now this a the way around it.   We could miss other logs here but
+	// the excessive error logs are drowning out everthing else.
+	var nullLogger baselog.Logger
+	nullLogger.SetOutput(ioutil.Discard)
+
 	httpServer := &http.Server{
 		Addr:      *httpAddr,
 		Handler:   mux,
 		TLSConfig: tlscfg,
+		ErrorLog:  &nullLogger,
 	}
 
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
