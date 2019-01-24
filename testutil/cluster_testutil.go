@@ -117,26 +117,32 @@ type ClusterCommonApi struct {
 }
 
 func (x *ClusterCommonApi) CreateCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cluster{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateCluster(ctx, in)
+		return x.internal_api.CreateCluster(ctx, copy)
 	} else {
-		return x.client_api.CreateCluster(ctx, in)
+		return x.client_api.CreateCluster(ctx, copy)
 	}
 }
 
 func (x *ClusterCommonApi) UpdateCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cluster{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateCluster(ctx, in)
+		return x.internal_api.UpdateCluster(ctx, copy)
 	} else {
-		return x.client_api.UpdateCluster(ctx, in)
+		return x.client_api.UpdateCluster(ctx, copy)
 	}
 }
 
 func (x *ClusterCommonApi) DeleteCluster(ctx context.Context, in *edgeproto.Cluster) (*edgeproto.Result, error) {
+	copy := &edgeproto.Cluster{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteCluster(ctx, in)
+		return x.internal_api.DeleteCluster(ctx, copy)
 	} else {
-		return x.client_api.DeleteCluster(ctx, in)
+		return x.client_api.DeleteCluster(ctx, copy)
 	}
 }
 

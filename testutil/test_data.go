@@ -395,7 +395,6 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[0].Location,
-		Uri:         "10.100.10.1",
 		// Cluster is ClusterData[0]
 	},
 	edgeproto.AppInst{
@@ -405,7 +404,6 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          2,
 		},
 		CloudletLoc: CloudletData[0].Location,
-		Uri:         "10.100.10.2",
 		// Cluster is ClusterData[0]
 	},
 	edgeproto.AppInst{
@@ -415,7 +413,6 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		Uri:         "pokemon.ny.mex.io",
 		// Cluster is ClusterData[0]
 	},
 	edgeproto.AppInst{
@@ -425,7 +422,6 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		Uri:         "pokemon.ny.mex.io",
 		// Cluster is ClusterAutoData[0]
 	},
 	edgeproto.AppInst{
@@ -435,7 +431,6 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[2].Location,
-		Uri:         "harrypotter.sf.mex.io",
 		// Cluster is ClusterAutoData[1]
 	},
 	edgeproto.AppInst{

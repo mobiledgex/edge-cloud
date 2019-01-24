@@ -151,33 +151,39 @@ type AppInstCommonApi struct {
 }
 
 func (x *AppInstCommonApi) CreateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.AppInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateAppInst(in, &CudStreamoutAppInst{})
+		err := x.internal_api.CreateAppInst(copy, &CudStreamoutAppInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.CreateAppInst(ctx, in)
+		stream, err := x.client_api.CreateAppInst(ctx, copy)
 		err = AppInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *AppInstCommonApi) UpdateAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.AppInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateAppInst(in, &CudStreamoutAppInst{})
+		err := x.internal_api.UpdateAppInst(copy, &CudStreamoutAppInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.UpdateAppInst(ctx, in)
+		stream, err := x.client_api.UpdateAppInst(ctx, copy)
 		err = AppInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *AppInstCommonApi) DeleteAppInst(ctx context.Context, in *edgeproto.AppInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.AppInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteAppInst(in, &CudStreamoutAppInst{})
+		err := x.internal_api.DeleteAppInst(copy, &CudStreamoutAppInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.DeleteAppInst(ctx, in)
+		stream, err := x.client_api.DeleteAppInst(ctx, copy)
 		err = AppInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
