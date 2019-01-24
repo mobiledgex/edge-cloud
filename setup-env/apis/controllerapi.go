@@ -72,7 +72,23 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) b
 		"apps: ShowApp",
 		"appinstances: ShowAppInst",
 	}
-	return runShow(ctrl, showCmds, outputDir, cmp)
+	// Some objects are generated asynchronously in response to
+	// other objects being created. For example, Prometheus metric
+	// AppInst is created after a cluster create. Because its run
+	// asynchronously, it may or may not be there before the show
+	// command. So if show fails, we retry a few times to see
+	// these objects show up a little later.
+	tries := 10
+	for ii := 0; ii < tries; ii++ {
+		if ii != 0 {
+			time.Sleep(100 * time.Millisecond)
+		}
+		ret := runShow(ctrl, showCmds, outputDir, cmp)
+		if ret {
+			return true
+		}
+	}
+	return false
 }
 
 func runNodeShow(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
