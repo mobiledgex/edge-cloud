@@ -116,26 +116,32 @@ type OperatorCommonApi struct {
 }
 
 func (x *OperatorCommonApi) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	copy := &edgeproto.Operator{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateOperator(ctx, in)
+		return x.internal_api.CreateOperator(ctx, copy)
 	} else {
-		return x.client_api.CreateOperator(ctx, in)
+		return x.client_api.CreateOperator(ctx, copy)
 	}
 }
 
 func (x *OperatorCommonApi) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	copy := &edgeproto.Operator{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateOperator(ctx, in)
+		return x.internal_api.UpdateOperator(ctx, copy)
 	} else {
-		return x.client_api.UpdateOperator(ctx, in)
+		return x.client_api.UpdateOperator(ctx, copy)
 	}
 }
 
 func (x *OperatorCommonApi) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	copy := &edgeproto.Operator{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteOperator(ctx, in)
+		return x.internal_api.DeleteOperator(ctx, copy)
 	} else {
-		return x.client_api.DeleteOperator(ctx, in)
+		return x.client_api.DeleteOperator(ctx, copy)
 	}
 }
 
