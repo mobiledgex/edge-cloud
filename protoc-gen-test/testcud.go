@@ -179,20 +179,22 @@ type {{.Name}}CommonApi struct {
 {{- if not .ShowOnly}}
 {{range .CudFuncs}}
 func (x *{{.Name}}CommonApi) {{.Func}}{{.Name}}(ctx context.Context, in *{{.Pkg}}.{{.Name}}) (*{{.Pkg}}.Result, error) {
+	copy := &{{.Pkg}}.{{.Name}}{}
+	*copy = *in
 {{- if .Streamout}}
 	if x.internal_api != nil {
-		err := x.internal_api.{{.Func}}{{.Name}}(in, &CudStreamout{{.Name}}{})
+		err := x.internal_api.{{.Func}}{{.Name}}(copy, &CudStreamout{{.Name}}{})
 		return &{{.Pkg}}.Result{}, err
 	} else {
-		stream, err := x.client_api.{{.Func}}{{.Name}}(ctx, in)
+		stream, err := x.client_api.{{.Func}}{{.Name}}(ctx, copy)
 		err = {{.Name}}ReadResultStream(stream, err)
 		return &{{.Pkg}}.Result{}, err
 	}
 {{- else}}
 	if x.internal_api != nil {
-		return x.internal_api.{{.Func}}{{.Name}}(ctx, in)
+		return x.internal_api.{{.Func}}{{.Name}}(ctx, copy)
 	} else {
-		return x.client_api.{{.Func}}{{.Name}}(ctx, in)
+		return x.client_api.{{.Func}}{{.Name}}(ctx, copy)
 	}
 {{- end}}
 }

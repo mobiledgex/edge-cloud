@@ -149,33 +149,39 @@ type ClusterInstCommonApi struct {
 }
 
 func (x *ClusterInstCommonApi) CreateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.CreateClusterInst(in, &CudStreamoutClusterInst{})
+		err := x.internal_api.CreateClusterInst(copy, &CudStreamoutClusterInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.CreateClusterInst(ctx, in)
+		stream, err := x.client_api.CreateClusterInst(ctx, copy)
 		err = ClusterInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *ClusterInstCommonApi) UpdateClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.UpdateClusterInst(in, &CudStreamoutClusterInst{})
+		err := x.internal_api.UpdateClusterInst(copy, &CudStreamoutClusterInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.UpdateClusterInst(ctx, in)
+		stream, err := x.client_api.UpdateClusterInst(ctx, copy)
 		err = ClusterInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}
 }
 
 func (x *ClusterInstCommonApi) DeleteClusterInst(ctx context.Context, in *edgeproto.ClusterInst) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterInst{}
+	*copy = *in
 	if x.internal_api != nil {
-		err := x.internal_api.DeleteClusterInst(in, &CudStreamoutClusterInst{})
+		err := x.internal_api.DeleteClusterInst(copy, &CudStreamoutClusterInst{})
 		return &edgeproto.Result{}, err
 	} else {
-		stream, err := x.client_api.DeleteClusterInst(ctx, in)
+		stream, err := x.client_api.DeleteClusterInst(ctx, copy)
 		err = ClusterInstReadResultStream(stream, err)
 		return &edgeproto.Result{}, err
 	}

@@ -116,26 +116,32 @@ type DeveloperCommonApi struct {
 }
 
 func (x *DeveloperCommonApi) CreateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	copy := &edgeproto.Developer{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateDeveloper(ctx, in)
+		return x.internal_api.CreateDeveloper(ctx, copy)
 	} else {
-		return x.client_api.CreateDeveloper(ctx, in)
+		return x.client_api.CreateDeveloper(ctx, copy)
 	}
 }
 
 func (x *DeveloperCommonApi) UpdateDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	copy := &edgeproto.Developer{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateDeveloper(ctx, in)
+		return x.internal_api.UpdateDeveloper(ctx, copy)
 	} else {
-		return x.client_api.UpdateDeveloper(ctx, in)
+		return x.client_api.UpdateDeveloper(ctx, copy)
 	}
 }
 
 func (x *DeveloperCommonApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Developer) (*edgeproto.Result, error) {
+	copy := &edgeproto.Developer{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteDeveloper(ctx, in)
+		return x.internal_api.DeleteDeveloper(ctx, copy)
 	} else {
-		return x.client_api.DeleteDeveloper(ctx, in)
+		return x.client_api.DeleteDeveloper(ctx, copy)
 	}
 }
 

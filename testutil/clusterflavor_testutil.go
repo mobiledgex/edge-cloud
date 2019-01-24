@@ -117,26 +117,32 @@ type ClusterFlavorCommonApi struct {
 }
 
 func (x *ClusterFlavorCommonApi) CreateClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterFlavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.CreateClusterFlavor(ctx, in)
+		return x.internal_api.CreateClusterFlavor(ctx, copy)
 	} else {
-		return x.client_api.CreateClusterFlavor(ctx, in)
+		return x.client_api.CreateClusterFlavor(ctx, copy)
 	}
 }
 
 func (x *ClusterFlavorCommonApi) UpdateClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterFlavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.UpdateClusterFlavor(ctx, in)
+		return x.internal_api.UpdateClusterFlavor(ctx, copy)
 	} else {
-		return x.client_api.UpdateClusterFlavor(ctx, in)
+		return x.client_api.UpdateClusterFlavor(ctx, copy)
 	}
 }
 
 func (x *ClusterFlavorCommonApi) DeleteClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	copy := &edgeproto.ClusterFlavor{}
+	*copy = *in
 	if x.internal_api != nil {
-		return x.internal_api.DeleteClusterFlavor(ctx, in)
+		return x.internal_api.DeleteClusterFlavor(ctx, copy)
 	} else {
-		return x.client_api.DeleteClusterFlavor(ctx, in)
+		return x.client_api.DeleteClusterFlavor(ctx, copy)
 	}
 }
 
