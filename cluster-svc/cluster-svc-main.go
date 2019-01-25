@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
+	"html/template"
 	"os"
 	"os/signal"
 	"strings"
@@ -24,6 +26,9 @@ var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect t
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var influxDBAddr = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
+var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
+var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
 
 // Hard coded username - TODO to move to user db
 var MEXDeveloper = "mexinfradev_"
@@ -36,6 +41,57 @@ var MEXdev = edgeproto.Developer{
 
 var MEXMetricsWriterAppName = "MEXMetricsWriter"
 var MEXMetricsWriterAppVer = "1.0"
+
+var exporterT *template.Template
+
+var MEXMetricsWriterTemplate = `apiVersion: v1
+kind: Service
+metadata:
+  name: usermetricsexporter-udp
+  labels:
+    run: usermetricsexporter
+spec:
+  type: LoadBalancer
+  ports:
+  - name: udp12345
+    protocol: UDP
+    port: 12345
+    targetPort: 12345
+  selector:
+    run: usermetricsexporter
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usermetricsexporter-deployment
+spec:
+  selector:
+    matchLabels:
+      run: usermetricsexporter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: usermetricsexporter
+    spec:
+      volumes:
+      imagePullSecrets:
+      - name: mexregistrysecret
+      containers:
+      - name: usermetricsexporter
+        image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+        imagePullPolicy: Always
+        env:
+        - name: MEX_CLUSTER_NAME
+		  value: {{.Cluster}}
+        - name: MEX_INFLUXDB_ADDR
+          value: {{.InfluxDBAddr}}
+        - name: MEX_INFLUXDB_USER
+          value: {{.InfluxDBUser}}
+        - name: MEX_INFLUXDB_PASS
+          value: {{.InfluxDBPass}}
+        ports:
+`
 
 var MEXMetricsWriterApp = edgeproto.App{
 	Key: edgeproto.AppKey{
@@ -86,6 +142,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
+		//TODO - need to wait a bit before running this command
 		if err = createMEXMetricsWriter(dialOpts, in.Key.ClusterKey); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "metrics writer app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
@@ -119,6 +176,10 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 }
 
 func (c *ClusterInstHandler) Flush(notifyId int64) {}
+
+func init() {
+	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsWriterTemplate))
+}
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
@@ -219,8 +280,29 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
 }
 
+type exporterData struct {
+	Cluster      string
+	InfluxDBAddr string
+	InfluxDBUser string
+	InfluxDBPass string
+}
+
 func createMEXMetricsWriter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
+	app := MEXMetricsWriterApp
+
+	ex := exporterData{
+		Cluster:      cluster.Name,
+		InfluxDBAddr: *influxDBAddr,
+		InfluxDBUser: *influxDBUser,
+		InfluxDBPass: *influxDBPass,
+	}
+	buf := bytes.Buffer{}
+	err := exporterT.Execute(&buf, &ex)
+	if err != nil {
+		return err
+	}
+	app.DeploymentManifest = buf.String()
+	return createAppCommon(dialOpts, &app, cluster)
 }
 
 func main() {

@@ -17,6 +17,7 @@ import (
 var promAddress = flag.String("apiAddr", "0.0.0.0:9090", "Prometheus address to bind to")
 var influxdb = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
+var clusterName = flag.String("cluster", "myclust", "Cluster Name")
 
 var promQCpuClust = "sum%20(rate%20(container_cpu_usage_seconds_total%7Bid%3D%22%2F%22%7D%5B1m%5D))%20%2F%20sum%20(machine_cpu_cores)%20*%20100"
 var promQMemClust = "sum%20(container_memory_working_set_bytes%7Bid%3D%22%2F%22%7D)%20%2F%20sum%20(machine_memory_bytes)%20*%20100"
@@ -24,8 +25,8 @@ var promQDiskClust = "sum%20(container_fs_usage_bytes%7Bdevice%3D~%22%5E%2Fdev%2
 
 var promQCpuPod = "sum%20(rate%20(container_cpu_usage_seconds_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
 var promQMemPod = "sum%20(container_memory_working_set_bytes%7Bimage!%3D%22%22%7D)%20by%20(pod_name)"
-var promQNetRecv = "sum%20(rate%20(container_network_receive_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
-var promQNetSend = "sum%20(rate%20(container_network_transmit_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
+var promQNetRecvRate = "sum%20(rate%20(container_network_receive_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
+var promQNetSendRate = "sum%20(rate%20(container_network_transmit_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
 
 var Env = map[string]string{
 	"INFLUXDB_USER": "root",
@@ -48,6 +49,25 @@ func getIPfromEnv() (string, error) {
 	return "", errors.New("No Prometheus is running")
 }
 
+func initEnv() {
+	val := os.Getenv("MEX_CLUSTER_NAME")
+	if val != "" {
+		*clusterName = val
+	}
+	val = os.Getenv("MEX_INFLUXDB_ADDR")
+	if val != "" {
+		*influxdb = val
+	}
+	val = os.Getenv("MEX_INFLUXDB_USER")
+	if val != "" {
+		Env["INFLUXDB_USER"] = val
+	}
+	val = os.Getenv("MEX_INFLUXDB_PASS")
+	if val != "" {
+		Env["INFLUXDB_PASS"] = val
+	}
+}
+
 func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
@@ -57,7 +77,7 @@ func main() {
 		*promAddress = clustIP + ":9090"
 	}
 	fmt.Printf("Found Prometheus running on: %s\n", *promAddress)
-
+	initEnv()
 	influxQ = influxq.NewInfluxQ(InfluxDBName)
 	err = influxQ.Start(*influxdb)
 	if err != nil {
@@ -85,7 +105,5 @@ func DebugPrint(format string, a ...interface{}) {
 }
 
 func sendMetric(metric *edgeproto.Metric) {
-	DebugPrint("Sending metric %s with timestamp %s\n",
-		metric.Name, metric.Timestamp.String())
 	influxQ.AddMetric(metric)
 }

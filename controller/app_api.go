@@ -138,12 +138,14 @@ func updateAppFields(in *edgeproto.App) error {
 		if err != nil {
 			return err
 		}
+		log.DebugLog(log.DebugLevelApi, "Found config ", "Config", configStr)
 		in.Config = configStr
 		// do a quick parse just to make sure it's valid
-		_, err = cloudcommon.ParseAppConfig(in.Config)
+		str, err := cloudcommon.ParseAppConfig(in.Config)
 		if err != nil {
 			return err
 		}
+		log.DebugLog(log.DebugLevelApi, "Parsed config", "Config", str)
 	}
 
 	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
@@ -154,6 +156,7 @@ func updateAppFields(in *edgeproto.App) error {
 	// Manifest is required on app delete and we'll be in trouble
 	// if remote target is unreachable or changed at that time.
 	in.DeploymentManifest = deploymf
+	log.DebugLog(log.DebugLevelApi, "Got Manifest", "Manifest", in.DeploymentManifest)
 	return nil
 }
 

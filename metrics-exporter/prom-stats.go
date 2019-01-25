@@ -17,20 +17,30 @@ type MetricAppInstKey struct {
 	developer string
 }
 
-type PromStat struct {
+type PodPromStat struct {
 	cpu     float64
 	mem     uint64
+	disk    float64
+	netSend uint64
+	netRecv uint64
+}
+
+type ClustPromStat struct {
+	cpu     float64
+	mem     float64
+	disk    float64
 	netSend uint64
 	netRecv uint64
 }
 
 type PromStats struct {
-	promAddr string
-	interval time.Duration
-	statsMap map[MetricAppInstKey]*PromStat
-	send     func(metric *edgeproto.Metric)
-	waitGrp  sync.WaitGroup
-	stop     chan struct{}
+	promAddr    string
+	interval    time.Duration
+	appStatsMap map[MetricAppInstKey]*PodPromStat
+	clusterStat *ClustPromStat
+	send        func(metric *edgeproto.Metric)
+	waitGrp     sync.WaitGroup
+	stop        chan struct{}
 }
 
 type PromResp struct {
@@ -47,13 +57,13 @@ type PromMetric struct {
 }
 type PromLables struct {
 	PodName string `json:"pod_name,omitempty"`
-	///Others
 }
 
 func NewPromStats(promAddr string, interval time.Duration, send func(metric *edgeproto.Metric)) *PromStats {
 	p := PromStats{}
 	p.promAddr = promAddr
-	p.statsMap = make(map[MetricAppInstKey]*PromStat)
+	p.appStatsMap = make(map[MetricAppInstKey]*PodPromStat)
+	p.clusterStat = &ClustPromStat{}
 	p.interval = interval
 	p.send = send
 	return &p
@@ -78,7 +88,7 @@ func getPromMetrics(addr string, query string) (*PromResp, error) {
 
 func (p *PromStats) CollectPromStats() error {
 	appKey := MetricAppInstKey{
-		cluster:   "myclust",
+		cluster:   *clusterName,
 		developer: "",
 	}
 	// Get Pod CPU usage percentage
@@ -86,10 +96,10 @@ func (p *PromStats) CollectPromStats() error {
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
-			stat, found := p.statsMap[appKey]
+			stat, found := p.appStatsMap[appKey]
 			if !found {
-				stat = &PromStat{}
-				p.statsMap[appKey] = stat
+				stat = &PodPromStat{}
+				p.appStatsMap[appKey] = stat
 			}
 			//copy only if we can parse the value
 			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
@@ -97,19 +107,88 @@ func (p *PromStats) CollectPromStats() error {
 			}
 		}
 	}
-	// Get Pod Mem usage percentage
+	// Get Pod Mem usage
 	resp, err = getPromMetrics(p.promAddr, promQMemPod)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
-			stat, found := p.statsMap[appKey]
+			stat, found := p.appStatsMap[appKey]
 			if !found {
-				stat = &PromStat{}
-				p.statsMap[appKey] = stat
+				stat = &PodPromStat{}
+				p.appStatsMap[appKey] = stat
 			}
 			//copy only if we can parse the value
 			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
 				stat.mem = val
+			}
+		}
+	}
+	// Get Pod NetRecv bytes rate averaged over 1m
+	resp, err = getPromMetrics(p.promAddr, promQNetRecvRate)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			appKey.pod = metric.Labels.PodName
+			stat, found := p.appStatsMap[appKey]
+			if !found {
+				stat = &PodPromStat{}
+				p.appStatsMap[appKey] = stat
+			}
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				stat.netRecv = uint64(val)
+			}
+		}
+	}
+	// Get Pod NetRecv bytes rate averaged over 1m
+	resp, err = getPromMetrics(p.promAddr, promQNetSendRate)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			appKey.pod = metric.Labels.PodName
+			stat, found := p.appStatsMap[appKey]
+			if !found {
+				stat = &PodPromStat{}
+				p.appStatsMap[appKey] = stat
+			}
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				stat.netSend = uint64(val)
+			}
+		}
+	}
+
+	// Get Cluster CPU usage
+	resp, err = getPromMetrics(p.promAddr, promQCpuClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				p.clusterStat.cpu = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster Mem usage
+	resp, err = getPromMetrics(p.promAddr, promQMemClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				p.clusterStat.mem = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster Disk usage percentage
+	resp, err = getPromMetrics(p.promAddr, promQDiskClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				p.clusterStat.disk = val
+				// We should have only one value here
+				break
 			}
 		}
 	}
@@ -138,9 +217,11 @@ func (p *PromStats) RunNotify() {
 			if p.CollectPromStats() != nil {
 				continue
 			}
-			for key, stat := range p.statsMap {
-				p.send(StatToMetric(ts, &key, stat))
+			DebugPrint("Sending metrics for %s with timestamp %s\n", *clusterName, ts.String())
+			for key, stat := range p.appStatsMap {
+				p.send(PodStatToMetric(ts, &key, stat))
 			}
+			p.send(ClusterStatToMetric(ts, p.clusterStat))
 		case <-p.stop:
 			done = true
 		}
@@ -148,7 +229,20 @@ func (p *PromStats) RunNotify() {
 	p.waitGrp.Done()
 }
 
-func StatToMetric(ts *types.Timestamp, key *MetricAppInstKey, stat *PromStat) *edgeproto.Metric {
+func ClusterStatToMetric(ts *types.Timestamp, stat *ClustPromStat) *edgeproto.Metric {
+	metric := edgeproto.Metric{}
+	metric.Timestamp = *ts
+	metric.Name = "crm-cluster"
+	metric.AddTag("cluster", *clusterName)
+	metric.AddDoubleVal("cpu", stat.cpu)
+	metric.AddDoubleVal("mem", stat.mem)
+	metric.AddDoubleVal("disk", stat.disk)
+	metric.AddIntVal("sendBytes", stat.netSend)
+	metric.AddIntVal("recvBytes", stat.netRecv)
+	return &metric
+}
+
+func PodStatToMetric(ts *types.Timestamp, key *MetricAppInstKey, stat *PodPromStat) *edgeproto.Metric {
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "crm-appinst"
@@ -157,6 +251,7 @@ func StatToMetric(ts *types.Timestamp, key *MetricAppInstKey, stat *PromStat) *e
 	metric.AddTag("app", key.pod)
 	metric.AddDoubleVal("cpu", stat.cpu)
 	metric.AddIntVal("mem", stat.mem)
+	metric.AddDoubleVal("disk", stat.disk)
 	metric.AddIntVal("sendBytes", stat.netSend)
 	metric.AddIntVal("recvBytes", stat.netRecv)
 	return &metric
