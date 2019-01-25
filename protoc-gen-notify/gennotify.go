@@ -216,6 +216,7 @@ func (s *{{.Name}}Send) Update(msg *{{.NameType}}) {
 	s.Mux.Lock()
 	s.Data = append(s.Data, msg)
 	s.Mux.Unlock()
+	s.sendrecv.wakeup()
 }
 {{- end}}
 
