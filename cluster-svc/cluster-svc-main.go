@@ -83,7 +83,7 @@ spec:
         imagePullPolicy: Always
         env:
         - name: MEX_CLUSTER_NAME
-		  value: {{.Cluster}}
+          value: {{.Cluster}}
         - name: MEX_INFLUXDB_ADDR
           value: {{.InfluxDBAddr}}
         - name: MEX_INFLUXDB_USER
