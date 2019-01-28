@@ -198,7 +198,7 @@ apps:
 - key:
     developerkey:
       name: mexinfradev_
-    name: MEXMetricsWriter
+    name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
   imagetype: ImageTypeDocker
@@ -209,29 +209,53 @@ apps:
     name: autoclustersomeapplication1
   deployment: kubernetes
   deploymentmanifest: |
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: mexmetricsexporter-udp
+      labels:
+        run: mexmetricsexporter
+    spec:
+      type: LoadBalancer
+      ports:
+      - name: udp12345
+        protocol: UDP
+        port: 12345
+        targetPort: 12345
+      selector:
+        run: mexmetricsexporter
+    ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
-      name: mexmetricswriter-deployment
+      name: mexmetricsexporter-deployment
     spec:
       selector:
         matchLabels:
-          run: mexmetricswriter
+          run: mexmetricsexporter
       replicas: 1
       template:
         metadata:
           labels:
-            run: mexmetricswriter
+            run: mexmetricsexporter
         spec:
           volumes:
           imagePullSecrets:
           - name: mexregistrysecret
           containers:
-          - name: mexmetricswriter
+          - name: mexmetricsexporter
             image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
             imagePullPolicy: Always
+            env:
+            - name: MEX_CLUSTER_NAME
+              value: autoclustersomeapplication1
+            - name: MEX_INFLUXDB_ADDR
+              value: 0.0.0.0:8086
+            - name: MEX_INFLUXDB_USER
+              value: root
+            - name: MEX_INFLUXDB_PASS
+              value: root
             ports:
-  deploymentgenerator: kubernetes-basic
   delopt: AutoDelete
 - key:
     developerkey:
@@ -332,7 +356,7 @@ appinstances:
     appkey:
       developerkey:
         name: mexinfradev_
-      name: MEXMetricsWriter
+      name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -359,7 +383,7 @@ appinstances:
     appkey:
       developerkey:
         name: mexinfradev_
-      name: MEXMetricsWriter
+      name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
       operatorkey:
