@@ -339,3 +339,22 @@ func createAppData(t *testing.T, api *AppCommonApi, testData []edgeproto.App) {
 		assert.Nil(t, err, "Create App %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowApp(in *edgeproto.App, server edgeproto.AppApi_ShowAppServer) error {
+	server.Send(&edgeproto.App{})
+	server.Send(&edgeproto.App{})
+	server.Send(&edgeproto.App{})
+	return nil
+}

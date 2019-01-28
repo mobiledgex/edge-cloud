@@ -21,3 +21,15 @@ func MsgID(msg string, id int64) *ResultID {
 		ID:      id,
 	}
 }
+
+type ResultName struct {
+	Message string `json:"message"`
+	Name    string `json:"name"`
+}
+
+func MsgName(msg, name string) *ResultName {
+	return &ResultName{
+		Message: msg,
+		Name:    name,
+	}
+}

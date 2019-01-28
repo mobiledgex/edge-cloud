@@ -3,6 +3,7 @@ package orm
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo"
@@ -26,6 +27,10 @@ func CreateOrg(c echo.Context) error {
 	if org.Name == "" {
 		return c.JSON(http.StatusBadRequest, Msg("Name not specified"))
 	}
+	if strings.Contains(org.Name, "::") {
+		return c.JSON(http.StatusBadRequest, Msg("Name cannot contain ::"))
+	}
+
 	role := ""
 	if org.Type == OrgTypeDeveloper {
 		role = RoleDeveloperManager
@@ -45,29 +50,10 @@ func CreateOrg(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err != nil {
-			db.Delete(&org)
-		}
-	}()
 	// set user to admin role of organization
-	psub := getCasbinGroup(org.ID, claims.UserID)
+	psub := getCasbinGroup(org.Name, claims.UserID)
 	enforcer.AddGroupingPolicy(psub, role)
-	defer func() {
-		if err != nil {
-			enforcer.RemoveGroupingPolicy(psub, role)
-		}
-	}()
-	// add user as org member
-	userOrg := UserOrg{
-		UserID: claims.UserID,
-		OrgID:  org.ID,
-	}
-	err = db.Create(&userOrg).Error
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, MsgID("Organization created", org.ID))
+	return c.JSON(http.StatusOK, MsgName("Organization created", org.Name))
 }
 
 func DeleteOrg(c echo.Context) error {
@@ -79,17 +65,11 @@ func DeleteOrg(c echo.Context) error {
 	if err := c.Bind(&org); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-	if org.ID == 0 {
-		return c.JSON(http.StatusBadRequest, Msg("Organization ID not specified"))
+	if org.Name == "" {
+		return c.JSON(http.StatusBadRequest, Msg("Organization name not specified"))
 	}
-	if !enforcer.Enforce(id2str(claims.UserID), org.ID, ResourceUsers, ActionManage) {
+	if !enforcer.Enforce(id2str(claims.UserID), org.Name, ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
-	}
-	userOrg := UserOrg{OrgID: org.ID}
-	// delete member associations
-	err = db.Where(&userOrg).Delete(UserOrg{}).Error
-	if err != nil {
-		return err
 	}
 	// delete org
 	err = db.Delete(&org).Error
@@ -103,7 +83,7 @@ func DeleteOrg(c echo.Context) error {
 			continue
 		}
 		strs := strings.Split(grp[0], "::")
-		if len(strs) == 2 && strs[0] == id2str(org.ID) {
+		if len(strs) == 2 && strs[0] == org.Name {
 			enforcer.RemoveGroupingPolicy(grp[0], grp[1])
 		}
 	}
@@ -122,8 +102,24 @@ func ShowOrg(c echo.Context) error {
 		// super user, show all orgs
 		err = db.Find(&orgs).Error
 	} else {
-		err = db.Joins("JOIN user_orgs on user_orgs.org_id=organizations.id").
-			Where("user_orgs.user_id=?", claims.UserID).Find(&orgs).Error
+		// show orgs for current user
+		userIDStr := strconv.FormatInt(claims.UserID, 10)
+		groupings := enforcer.GetGroupingPolicy()
+		for _, grp := range groupings {
+			if len(grp) < 2 {
+				continue
+			}
+			orguser := strings.Split(grp[0], "::")
+			if len(orguser) > 1 && orguser[1] == userIDStr {
+				org := Organization{}
+				org.Name = orguser[0]
+				err = db.Where(&org).First(&org).Error
+				if err != nil {
+					return err
+				}
+				orgs = append(orgs, org)
+			}
+		}
 	}
 	if err != nil {
 		return err

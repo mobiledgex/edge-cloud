@@ -278,3 +278,22 @@ func createClusterFlavorData(t *testing.T, api *ClusterFlavorCommonApi, testData
 		assert.Nil(t, err, "Create ClusterFlavor %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateClusterFlavor(ctx context.Context, in *edgeproto.ClusterFlavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowClusterFlavor(in *edgeproto.ClusterFlavor, server edgeproto.ClusterFlavorApi_ShowClusterFlavorServer) error {
+	server.Send(&edgeproto.ClusterFlavor{})
+	server.Send(&edgeproto.ClusterFlavor{})
+	server.Send(&edgeproto.ClusterFlavor{})
+	return nil
+}

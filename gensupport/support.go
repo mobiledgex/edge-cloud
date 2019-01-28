@@ -375,6 +375,17 @@ func RunMain(pkg, fileSuffix string, p generator.Plugin, support *PluginSupport)
 		support.Init(req)
 	}
 
+	args := strings.Split(req.GetParameter(), ",")
+	for _, arg := range args {
+		kv := strings.Split(arg, "=")
+		if len(kv) == 2 {
+			switch kv[0] {
+			case "suffix":
+				fileSuffix = kv[1]
+			}
+		}
+	}
+
 	// override package name
 	for _, protofile := range req.ProtoFile {
 		if protofile.Options == nil {
@@ -400,4 +411,32 @@ func RunMain(pkg, fileSuffix string, p generator.Plugin, support *PluginSupport)
 		resp.File = resp.File[:ii]
 	}
 	command.Write(resp)
+}
+
+func ClientStreaming(method *descriptor.MethodDescriptorProto) bool {
+	if method.ClientStreaming == nil {
+		return false
+	}
+	return *method.ClientStreaming
+}
+
+func ServerStreaming(method *descriptor.MethodDescriptorProto) bool {
+	if method.ServerStreaming == nil {
+		return false
+	}
+	return *method.ServerStreaming
+}
+
+func GetFirstFile(gen *generator.Generator) string {
+	// Generator passes us all files (some of which are builtin
+	// like google/api/http). To determine the first file to generate
+	// one-off code, sort by request files which are the subset of
+	// files we will generate code for.
+	files := make([]string, len(gen.Request.FileToGenerate))
+	copy(files, gen.Request.FileToGenerate)
+	sort.Strings(files)
+	if len(files) > 0 {
+		return files[0]
+	}
+	return ""
 }

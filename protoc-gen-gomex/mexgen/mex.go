@@ -2,7 +2,6 @@ package mexgen
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"text/template"
 
@@ -49,16 +48,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
 	m.support.Init(gen.Request)
-	// Generator passes us all files (some of which are builtin
-	// like google/api/http). To determine the first file to generate
-	// one-off code, sort by request files which are the subset of
-	// files we will generate code for.
-	files := make([]string, len(gen.Request.FileToGenerate))
-	copy(files, gen.Request.FileToGenerate)
-	sort.Strings(files)
-	if len(files) > 0 {
-		m.firstFile = files[0]
-	}
+	m.firstFile = gensupport.GetFirstFile(gen)
 }
 
 // P forwards to g.gen.P
