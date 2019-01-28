@@ -14,7 +14,7 @@ var (
 	LocationVerifiedNear           uint32 = 1
 	LocationVerifiedMedium         uint32 = 2
 	LocationVerifiedFar            uint32 = 3
-	LocationMismatchSameCounty     uint32 = 4
+	LocationMismatchSameCountry    uint32 = 4
 	LocationMismatchOtherCountry   uint32 = 5
 	LocationRoamingCountryMatch    uint32 = 6
 	LocationRoamingCountryMismatch uint32 = 7
@@ -36,7 +36,7 @@ var DefaultTDGLocationRangeMap = map[uint32]LocationResult{
 	LocationVerifiedNear:           {2, dme.VerifyLocationReply_LOC_VERIFIED},                  // within 2km
 	LocationVerifiedMedium:         {10, dme.VerifyLocationReply_LOC_VERIFIED},                 // within 10km
 	LocationVerifiedFar:            {100, dme.VerifyLocationReply_LOC_VERIFIED},                // within 100km
-	LocationMismatchSameCounty:     {-1, dme.VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY},    // mismatch = negative distance (unverified)
+	LocationMismatchSameCountry:    {-1, dme.VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY},    // mismatch = negative distance (unverified)
 	LocationMismatchOtherCountry:   {-1, dme.VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY},   // mismatch, wrong country = negative distance (unverified)
 	LocationRoamingCountryMatch:    {-1, dme.VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH},    // roamer in correct country = negative distance (unverified)
 	LocationRoamingCountryMismatch: {-1, dme.VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH}, // roamer in wrong country = negative distance (unverified)
@@ -58,7 +58,7 @@ func GetDistanceAndStatusForLocationResult(locationResult uint32) LocationResult
 // the real Location Verification API Gateway.
 func GetLocationResultForDistance(distance float64) uint32 {
 	closestDistance := float64(999999)
-	rc := LocationMismatchSameCounty
+	rc := LocationMismatchSameCountry
 
 	for l, m := range DefaultTDGLocationRangeMap {
 		if m.DistanceRange >= 0 && m.DistanceRange < closestDistance && m.DistanceRange > distance {

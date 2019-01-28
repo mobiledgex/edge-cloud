@@ -1,53 +1,30 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crmhamburg
+  name: crm-hamburg
   labels:
-    app: crmhamburg
+    app: crm-hamburg
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crmhamburg
+      app: crm-hamburg
   template:
     metadata:
       labels:
-        app: crmhamburg
+        app: crm-hamburg
     spec:
       containers:
-      - name: crmhamburg
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1105
+      - name: crm-hamburg
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0104
         imagePullPolicy: Always
-        env:
-         - name: MEX_CF_USER
-           value: mobiledgex.ops@mobiledgex.com
-         - name: MEX_CF_KEY
-           value: 60632181cb3b7419304ffa820b2d99e292092
-         - name: MEX_SSH_KEY
-           value: id_rsa_mobiledgex
-         - name: MEX_DOCKER_REG_PASS
-           value: sandhill
-         - name: MEX_DIR
-           value: /root/.mobiledgex
-#         - name: OS_AUTH_URL
-#           value: https://hamedgecloud.telekom.de:5000/v2.0
-         - name: OS_CACERT
-           value: /root/.mobiledgex/telesec_chain.crt
-         - name: OS_USERNAME
-           value: mexadmin
-         - name: OS_PASSWORD
-           value: ED2%jdB7-Ef]b8^x
-         - name: OS_REGION_NAME
-           value: RegionOne
-         - name: OS_TENANT_NAME
-           value: mex
         command:
          - crmserver
         args:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburgdemocloudlet\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburg-mexdemo\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"

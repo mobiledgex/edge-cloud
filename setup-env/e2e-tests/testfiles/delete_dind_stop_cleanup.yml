@@ -1,0 +1,11 @@
+##
+##
+
+tests:
+
+- name: delete provisioning
+  apifile: "{{datadir}}/appdata_dind.yml"
+  actions: [ctrlapi-delete]
+
+- name: stop and cleanup
+  actions: [stop,cleanup]

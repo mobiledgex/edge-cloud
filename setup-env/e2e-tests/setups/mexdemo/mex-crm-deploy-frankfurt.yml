@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-frankfurt
+  labels:
+    app: crm-frankfurt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crm-frankfurt
+  template:
+    metadata:
+      labels:
+        app: crm-frankfurt
+    spec:
+      containers:
+      - name: crm-frankfurt
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0104
+        imagePullPolicy: Always
+        command:
+         - crmserver
+        args:
+         - "--apiAddr"
+         - "0.0.0.0:55091"
+         - "--cloudletKey"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"frankfurt-mexdemo\"}"
+         - "--notifyAddrs"
+         - "controller:37001"
+         - "--tls"
+         - "/root/tls/mex-server.crt"
+         - "--d"
+         - "mexos"
+
+      imagePullSecrets:
+       - name: mexreg-secret
+

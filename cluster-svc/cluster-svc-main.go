@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"io"
 	"os"
 	"os/signal"
 	"strings"
@@ -207,7 +208,20 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 	}
 
 	ctx := context.TODO()
-	_, err = apiClient.CreateAppInst(ctx, &appInst)
+	stream, err := apiClient.CreateAppInst(ctx, &appInst)
+	var res *edgeproto.Result
+	if err == nil {
+		for {
+			res, err = stream.Recv()
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			if err != nil {
+				break
+			}
+		}
+	}
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -216,7 +230,7 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 		}
 		return fmt.Errorf("CreateAppInst failed: %s", errstr)
 	}
-	log.DebugLog(log.DebugLevelMexos, "create appinst", "appinst", appInst.String())
+	log.DebugLog(log.DebugLevelMexos, "create appinst", "appinst", appInst.String(), "result", res.String())
 	return nil
 
 }
