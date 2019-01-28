@@ -129,9 +129,16 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/user/delete", DeleteUser)
 	auth.POST("/role/assignment/show", ShowRoleAssignment)
 	auth.POST("/role/perms/show", ShowRolePerms)
+	auth.POST("/role/show", ShowRole)
+	auth.POST("/role/adduser", AddUserRole)
+	auth.POST("/role/removeuser", RemoveUserRole)
 	auth.POST("/org/create", CreateOrg)
 	auth.POST("/org/show", ShowOrg)
 	auth.POST("/org/delete", DeleteOrg)
+	auth.POST("/controller/create", CreateController)
+	auth.POST("/controller/delete", DeleteController)
+	auth.POST("/controller/show", ShowController)
+	addControllerApis(auth)
 	go func() {
 		err := e.Start(config.ServAddr)
 		if err != nil && err != http.ErrServerClosed {

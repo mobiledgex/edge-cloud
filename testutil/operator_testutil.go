@@ -277,3 +277,22 @@ func createOperatorData(t *testing.T, api *OperatorCommonApi, testData []edgepro
 		assert.Nil(t, err, "Create Operator %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateOperator(ctx context.Context, in *edgeproto.Operator) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.OperatorApi_ShowOperatorServer) error {
+	server.Send(&edgeproto.Operator{})
+	server.Send(&edgeproto.Operator{})
+	server.Send(&edgeproto.Operator{})
+	return nil
+}

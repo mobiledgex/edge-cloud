@@ -63,6 +63,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
   }
   // Delete a Cluster instance
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
@@ -71,6 +72,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
   }
   // Update a Cluster instance
   rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
@@ -79,6 +81,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
   }
   // Show Cluster instances
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
@@ -86,6 +89,7 @@ service ClusterInstApi {
       post: "/show/clusterinst"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,skipenforce";
   }
 }
 
