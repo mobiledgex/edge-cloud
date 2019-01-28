@@ -37,3 +37,7 @@ extend google.protobuf.FieldOptions {
   // not by the user.
   bool backend = 51013;
 }
+
+extend google.protobuf.MethodOptions {
+  string mc2_api = 51021;
+}

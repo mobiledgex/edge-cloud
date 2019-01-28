@@ -16,8 +16,17 @@ const edgeproto = "edgeproto"
 
 type TestCud struct {
 	*generator.Generator
-	support gensupport.PluginSupport
-	cudTmpl *template.Template
+	support         gensupport.PluginSupport
+	cudTmpl         *template.Template
+	methodTmpl      *template.Template
+	firstFile       bool
+	importEdgeproto bool
+	importIO        bool
+	importTesting   bool
+	importContext   bool
+	importTime      bool
+	importAssert    bool
+	importGrpc      bool
 }
 
 func (t *TestCud) Name() string {
@@ -28,6 +37,8 @@ func (t *TestCud) Init(g *generator.Generator) {
 	t.Generator = g
 	t.support.Init(g.Request)
 	t.cudTmpl = template.Must(template.New("cud").Parse(tmpl))
+	t.methodTmpl = template.Must(template.New("method").Parse(methodTmpl))
+	t.firstFile = true
 }
 
 type cudFunc struct {
@@ -364,29 +375,55 @@ func create{{.Name}}Data(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pk
 `
 
 func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
-	hasGenerateCudTest := false
-	for _, msg := range file.Messages() {
-		if GetGenerateCudTest(msg.DescriptorProto) ||
-			GetGenerateShowTest(msg.DescriptorProto) {
-			hasGenerateCudTest = true
-		}
+	if t.importGrpc {
+		t.PrintImport("", "google.golang.org/grpc")
 	}
-	if !hasGenerateCudTest {
-		return
+	if t.importEdgeproto {
+		t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgeproto")
 	}
-	t.PrintImport("", "google.golang.org/grpc")
-	t.PrintImport("", "github.com/mobiledgex/edge-cloud/edgeproto")
-	t.PrintImport("", "io")
-	t.PrintImport("", "testing")
-	t.PrintImport("", "context")
-	t.PrintImport("", "time")
-	t.PrintImport("", "github.com/stretchr/testify/assert")
+	if t.importIO {
+		t.PrintImport("", "io")
+	}
+	if t.importTesting {
+		t.PrintImport("", "testing")
+	}
+	if t.importContext {
+		t.PrintImport("", "context")
+	}
+	if t.importTime {
+		t.PrintImport("", "time")
+	}
+	if t.importAssert {
+		t.PrintImport("", "github.com/stretchr/testify/assert")
+	}
 }
 
 func (t *TestCud) Generate(file *generator.FileDescriptor) {
+	t.importGrpc = false
+	t.importEdgeproto = false
+	t.importIO = false
+	t.importTesting = false
+	t.importContext = false
+	t.importTime = false
+	t.importAssert = false
 	t.support.InitFile()
 	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
 		return
+	}
+	hasCudMethod := false
+	if len(file.FileDescriptorProto.Service) != 0 {
+		for _, service := range file.FileDescriptorProto.Service {
+			if len(service.Method) > 0 {
+				for _, method := range service.Method {
+					in := gensupport.GetDesc(t.Generator,
+						method.GetInputType())
+					if GetGenerateCud(in.DescriptorProto) {
+						hasCudMethod = true
+						break
+					}
+				}
+			}
+		}
 	}
 	hasGenerateCudTest := false
 	for _, msg := range file.Messages() {
@@ -396,14 +433,29 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 			break
 		}
 	}
-	if !hasGenerateCudTest {
+	if !hasGenerateCudTest && !hasCudMethod {
 		return
 	}
+	t.P(gensupport.AutoGenComment)
 	for _, msg := range file.Messages() {
 		if GetGenerateCudTest(msg.DescriptorProto) ||
 			GetGenerateShowTest(msg.DescriptorProto) {
 			t.generateCudTest(msg.DescriptorProto)
 		}
+	}
+	if len(file.FileDescriptorProto.Service) != 0 {
+		for _, service := range file.FileDescriptorProto.Service {
+			if len(service.Method) == 0 {
+				continue
+			}
+			for _, method := range service.Method {
+				t.genDummyMethod(*service.Name, method)
+			}
+		}
+	}
+	if t.firstFile {
+		t.genDummyServer()
+		t.firstFile = false
 	}
 }
 
@@ -445,8 +497,99 @@ func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 			}
 		}
 	}
-	t.P(gensupport.AutoGenComment)
 	t.cudTmpl.Execute(t, args)
+	t.importGrpc = true
+	t.importEdgeproto = true
+	t.importIO = true
+	t.importTesting = true
+	t.importContext = true
+	t.importTime = true
+	t.importAssert = true
+}
+
+type methodArgs struct {
+	Service   string
+	Method    string
+	InName    string
+	OutName   string
+	Outstream bool
+}
+
+var methodTmpl = `
+{{- if .Outstream}}
+func (s *DummyServer) {{.Method}}(in *edgeproto.{{.InName}}, server edgeproto.{{.Service}}_{{.Method}}Server) error {
+	server.Send(&edgeproto.{{.OutName}}{})
+	server.Send(&edgeproto.{{.OutName}}{})
+	server.Send(&edgeproto.{{.OutName}}{})
+	return nil
+}
+{{- else}}
+func (s *DummyServer) {{.Method}}(ctx context.Context, in *edgeproto.{{.InName}}) (*edgeproto.{{.OutName}}, error) {
+	return &edgeproto.{{.OutName}}{}, nil
+}
+{{- end}}
+
+`
+
+func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescriptorProto) {
+	in := gensupport.GetDesc(t.Generator, method.GetInputType())
+	out := gensupport.GetDesc(t.Generator, method.GetOutputType())
+	if !GetGenerateCud(in.DescriptorProto) {
+		return
+	}
+	args := methodArgs{
+		Service:   service,
+		Method:    *method.Name,
+		InName:    *in.DescriptorProto.Name,
+		OutName:   *out.DescriptorProto.Name,
+		Outstream: gensupport.ServerStreaming(method),
+	}
+	err := t.methodTmpl.Execute(t, &args)
+	if err != nil {
+		t.Fail("Failed to execute method template: ", err.Error())
+	}
+	t.importEdgeproto = true
+	if !args.Outstream {
+		t.importContext = true
+	}
+}
+
+func (t *TestCud) genDummyServer() {
+	t.P("type DummyServer struct {}")
+	t.P()
+	t.P("func RegisterDummyServer(server *grpc.Server) {")
+	t.P("d := &DummyServer{}")
+
+	for _, file := range t.Generator.Request.ProtoFile {
+		if len(file.Service) == 0 {
+			continue
+		}
+		for _, service := range file.Service {
+			if len(service.Method) == 0 {
+				continue
+			}
+			hasCudMethod := false
+			for _, method := range service.Method {
+				in := gensupport.GetDesc(t.Generator,
+					method.GetInputType())
+				if GetGenerateCud(in.DescriptorProto) {
+					hasCudMethod = true
+					break
+				}
+			}
+			if hasCudMethod {
+				t.P("edgeproto.Register", service.Name,
+					"Server(server, d)")
+			}
+		}
+	}
+	t.P("}")
+	t.P()
+	t.importGrpc = true
+}
+
+func GetGenerateCud(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateCud, false)
 }
 
 func GetGenerateCudTest(message *descriptor.DescriptorProto) bool {

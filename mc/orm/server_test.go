@@ -52,15 +52,15 @@ func TestServer(t *testing.T) {
 	require.Equal(t, "", super.Salt, "empty salt")
 	require.Equal(t, 0, super.Iter, "empty iter")
 
-	roles, status, err := showRoleAssignment(uri, token)
+	roleAssignments, status, err := showRoleAssignment(uri, token)
 	require.Nil(t, err, "show roles")
 	require.Equal(t, http.StatusOK, status, "show role status")
-	require.Equal(t, 1, len(roles), "num roles")
-	require.Equal(t, RoleAdminManager, roles[0].Role)
-	require.Equal(t, super.ID, roles[0].UserID)
+	require.Equal(t, 1, len(roleAssignments), "num role assignments")
+	require.Equal(t, RoleAdminManager, roleAssignments[0].Role)
+	require.Equal(t, super.ID, roleAssignments[0].UserID)
 
 	// show users - only super user at this point
-	users, status, err := showUsers(uri, token, 0)
+	users, status, err := showUsers(uri, token, "")
 	require.Equal(t, http.StatusOK, status, "show user status")
 	require.Equal(t, 1, len(users))
 	require.Equal(t, DefaultSuperuser, users[0].Name, "super user name")
@@ -71,7 +71,11 @@ func TestServer(t *testing.T) {
 	policies, status, err := showRolePerms(uri, token)
 	require.Nil(t, err, "show role perms err")
 	require.Equal(t, http.StatusOK, status, "show role perms status")
-	require.Equal(t, 76, len(policies), "number of role perms")
+	require.Equal(t, 78, len(policies), "number of role perms")
+	roles, status, err := showRoles(uri, token)
+	require.Nil(t, err, "show roles err")
+	require.Equal(t, http.StatusOK, status, "show roles status")
+	require.Equal(t, 18, len(roles), "number of roles")
 
 	// create new user1
 	user1 := User{
@@ -140,49 +144,49 @@ func TestServer(t *testing.T) {
 	require.Equal(t, 2, len(orgs))
 
 	// check role assignments as mister x
-	roles, status, err = showRoleAssignment(uri, tokenMisterX)
+	roleAssignments, status, err = showRoleAssignment(uri, tokenMisterX)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	require.Equal(t, 1, len(roles))
-	require.Equal(t, user1.ID, roles[0].UserID)
+	require.Equal(t, 1, len(roleAssignments))
+	require.Equal(t, user1.ID, roleAssignments[0].UserID)
 	// check role assignments as mister y
-	roles, status, err = showRoleAssignment(uri, tokenMisterY)
+	roleAssignments, status, err = showRoleAssignment(uri, tokenMisterY)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	require.Equal(t, 1, len(roles))
-	require.Equal(t, user2.ID, roles[0].UserID)
+	require.Equal(t, 1, len(roleAssignments))
+	require.Equal(t, user2.ID, roleAssignments[0].UserID)
 	// super user should be able to see all role assignments
-	roles, status, err = showRoleAssignment(uri, token)
+	roleAssignments, status, err = showRoleAssignment(uri, token)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	require.Equal(t, 3, len(roles))
+	require.Equal(t, 3, len(roleAssignments))
 
 	// show org users as mister x
-	users, status, err = showUsers(uri, tokenMisterX, org1.ID)
+	users, status, err = showUsers(uri, tokenMisterX, org1.Name)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 1, len(users))
 	require.Equal(t, user1.Name, users[0].Name)
 	// show org users as mister y
-	users, status, err = showUsers(uri, tokenMisterY, org2.ID)
+	users, status, err = showUsers(uri, tokenMisterY, org2.Name)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 1, len(users))
 	require.Equal(t, user2.Name, users[0].Name)
 	// super user can see all users with org ID = 0
-	users, status, err = showUsers(uri, token, 0)
+	users, status, err = showUsers(uri, token, "")
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 3, len(users))
 
 	// check that x and y cannot see each other's org users
-	users, status, err = showUsers(uri, tokenMisterX, org2.ID)
+	users, status, err = showUsers(uri, tokenMisterX, org2.Name)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
-	users, status, err = showUsers(uri, tokenMisterY, org1.ID)
+	users, status, err = showUsers(uri, tokenMisterY, org1.Name)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
-	users, status, err = showUsers(uri, tokenMisterX, int64(12345))
+	users, status, err = showUsers(uri, tokenMisterX, "foobar")
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
 
@@ -215,7 +219,7 @@ func TestServer(t *testing.T) {
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 0, len(orgs))
 	// check users are gone
-	users, status, err = showUsers(uri, token, 0)
+	users, status, err = showUsers(uri, token, "")
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 1, len(users))
@@ -251,9 +255,9 @@ func showCurrentUser(uri, token string) (*User, int, error) {
 	return &user, status, err
 }
 
-func showUsers(uri, token string, orgID int64) ([]User, int, error) {
+func showUsers(uri, token, org string) ([]User, int, error) {
 	users := []User{}
-	in := Organization{ID: orgID}
+	in := Organization{Name: org}
 	status, err := postJson(uri+"/auth/user/show", token, &in, &users)
 	return users, status, err
 }
@@ -268,6 +272,12 @@ func showRolePerms(uri, token string) ([]RolePerm, int, error) {
 	perms := []RolePerm{}
 	status, err := postJson(uri+"/auth/role/perms/show", token, nil, &perms)
 	return perms, status, err
+}
+
+func showRoles(uri, token string) ([]string, int, error) {
+	roles := []string{}
+	status, err := postJson(uri+"/auth/role/show", token, nil, &roles)
+	return roles, status, err
 }
 
 func showRoleAssignment(uri, token string) ([]Role, int, error) {
@@ -286,11 +296,8 @@ func createUser(uri string, user *User) (int, error) {
 }
 
 func createOrg(uri, token string, org *Organization) (int, error) {
-	result := ResultID{}
+	result := ResultName{}
 	status, err := postJson(uri+"/auth/org/create", token, org, &result)
-	if err == nil && status == http.StatusOK {
-		org.ID = result.ID
-	}
 	return status, err
 }
 
@@ -302,12 +309,24 @@ func deleteUser(uri, token string, user *User) (int, error) {
 	return postJson(uri+"/auth/user/delete", token, user, nil)
 }
 
-func postJson(uri, token string, reqData interface{}, replyData interface{}) (int, error) {
+func addUserRole(uri, token string, role *Role) (int, error) {
+	result := Result{}
+	status, err := postJson(uri+"/auth/role/adduser", token, role, &result)
+	return status, err
+}
+
+func removeUserRole(uri, token string, role *Role) (int, error) {
+	result := Result{}
+	status, err := postJson(uri+"/auth/role/removeuser", token, role, &result)
+	return status, err
+}
+
+func postJsonSend(uri, token string, reqData interface{}) (*http.Response, error) {
 	var body io.Reader
 	if reqData != nil {
 		out, err := json.Marshal(reqData)
 		if err != nil {
-			return 0, fmt.Errorf("post %s marshal req failed, %s", uri, err.Error())
+			return nil, fmt.Errorf("post %s marshal req failed, %s", uri, err.Error())
 		}
 		body = bytes.NewBuffer(out)
 	} else {
@@ -315,14 +334,18 @@ func postJson(uri, token string, reqData interface{}, replyData interface{}) (in
 	}
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
-		return 0, fmt.Errorf("post %s http req failed, %s", uri, err.Error())
+		return nil, fmt.Errorf("post %s http req failed, %s", uri, err.Error())
 	}
 	req.Header.Set("Content-Type", "application/json")
 	if token != "" {
 		req.Header.Add("Authorization", "Bearer "+token)
 	}
 	client := &http.Client{}
-	resp, err := client.Do(req)
+	return client.Do(req)
+}
+
+func postJson(uri, token string, reqData interface{}, replyData interface{}) (int, error) {
+	resp, err := postJsonSend(uri, token, reqData)
 	if err != nil {
 		return 0, fmt.Errorf("post %s client do failed, %s", uri, err.Error())
 	}
@@ -336,6 +359,27 @@ func postJson(uri, token string, reqData interface{}, replyData interface{}) (in
 	return resp.StatusCode, nil
 }
 
+func postJsonStreamOut(uri, token string, reqData interface{}, replyData interface{}) (int, error) {
+	resp, err := postJsonSend(uri, token, reqData)
+	if err != nil {
+		return 0, fmt.Errorf("post %s client do failed, %s", uri, err.Error())
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusOK && replyData != nil {
+		dec := json.NewDecoder(resp.Body)
+		for {
+			err := dec.Decode(replyData)
+			if err != nil {
+				if err == io.EOF {
+					break
+				}
+				return 0, fmt.Errorf("post %s decode resp failed, %s", uri, err.Error())
+			}
+		}
+	}
+	return resp.StatusCode, nil
+}
+
 func waitServerOnline(addr string) error {
 	return fmt.Errorf("wait server online failed")
 }
@@ -344,17 +388,12 @@ func waitServerOnline(addr string) error {
 func dumpTables() {
 	users := []User{}
 	orgs := []Organization{}
-	userOrgs := []UserOrg{}
 	db.Find(&users)
-	db.Find(&userOrgs)
 	db.Find(&orgs)
 	for _, user := range users {
 		fmt.Printf("%v\n", user)
 	}
 	for _, org := range orgs {
 		fmt.Printf("%v\n", org)
-	}
-	for _, userOrg := range userOrgs {
-		fmt.Printf("%v\n", userOrg)
 	}
 }
