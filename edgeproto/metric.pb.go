@@ -14,6 +14,8 @@ import google_protobuf1 "github.com/gogo/protobuf/types"
 
 import binary "encoding/binary"
 
+import "github.com/mobiledgex/edge-cloud/util"
+
 import io "io"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -357,6 +359,34 @@ func (m *Metric) CopyInFields(src *Metric) {
 			m.Vals[i0].Name = src.Vals[i0].Name
 		}
 	}
+}
+
+// this is primarily for unit testing
+type MetricMsgQueue struct {
+	Objs []*Metric
+	Mux  util.Mutex
+}
+
+func NewMetricMsgQueue() *MetricMsgQueue {
+	q := MetricMsgQueue{}
+	q.Init()
+	return &q
+}
+
+func (s *MetricMsgQueue) Init() {
+	s.Objs = make([]*Metric, 0)
+}
+
+func (s *MetricMsgQueue) Recv(msg *Metric) {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+	s.Objs = append(s.Objs, msg)
+}
+
+func (c *MetricMsgQueue) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
 }
 
 // Helper method to check that enums have valid values

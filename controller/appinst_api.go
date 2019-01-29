@@ -85,15 +85,15 @@ func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgepr
 	return static
 }
 
-func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
+func (s *AppInstApi) UsesApp(in *edgeproto.AppKey, delOpt edgeproto.DeleteType, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
 	for key, val := range s.cache.Objs {
 		if key.AppKey.Matches(in) {
-			if val.Liveness == edgeproto.Liveness_LivenessStatic {
+			if val.Liveness == edgeproto.Liveness_LivenessStatic && delOpt == edgeproto.DeleteType_NoAutoDelete {
 				static = true
-			} else if val.Liveness == edgeproto.Liveness_LivenessDynamic {
+			} else if val.Liveness == edgeproto.Liveness_LivenessDynamic || delOpt == edgeproto.DeleteType_AutoDelete {
 				dynInsts[key] = struct{}{}
 			}
 		}
@@ -119,13 +119,13 @@ func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
 
 func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var app edgeproto.App
-	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
+	apps := make(map[edgeproto.AppInstKey]edgeproto.AppInst)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
 	for k, val := range s.cache.Objs {
 		if val.ClusterInstKey.Matches(key) && appApi.Get(&val.Key.AppKey, &app) {
 			if app.DelOpt == edgeproto.DeleteType_AutoDelete {
-				apps[k] = val
+				apps[k] = *val
 			}
 		}
 	}
@@ -133,7 +133,7 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	for _, val := range apps {
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
-		if err := s.deleteAppInstInternal(DefCallContext(), val, cb); err != nil {
+		if err := s.deleteAppInstInternal(DefCallContext(), &val, cb); err != nil {
 			return err
 		}
 	}
@@ -179,7 +179,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		defaultCloudlet = true
 	}
 
-	if !defaultCloudlet {
+	if !defaultCloudlet && !in.PreventAutoClusterInst {
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 			autocluster = false
 			if s.store.STMGet(stm, &in.Key, in) {
@@ -725,4 +725,19 @@ func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) error {
 		}
 	}
 	return fmt.Errorf("no service for app port %d found in manifest", port.InternalPort)
+}
+
+type AppInstStatus struct{}
+
+func (s *AppInstStatus) Recv(msg *edgeproto.AppInstStatus) {
+	appInstApi.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		inst := edgeproto.AppInst{}
+		if !appInstApi.store.STMGet(stm, &msg.Key, &inst) {
+			// got deleted
+			return nil
+		}
+		inst.Status = msg.Status
+		appInstApi.store.STMPut(stm, &inst)
+		return nil
+	})
 }

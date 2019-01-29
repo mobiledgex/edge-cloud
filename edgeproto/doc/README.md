@@ -19,6 +19,7 @@
     - [AppInstInfo](#edgeproto.AppInstInfo)
     - [AppInstKey](#edgeproto.AppInstKey)
     - [AppInstMetrics](#edgeproto.AppInstMetrics)
+    - [AppInstStatus](#edgeproto.AppInstStatus)
   
   
   
@@ -313,6 +314,8 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
 | allocated_ip | [string](#string) |  | allocated IP for dedicated access |
+| status | [string](#string) |  | Health status |
+| prevent_auto_cluster_inst | [bool](#bool) |  | Prevent automatic creation of ClusterInst |
 
 
 
@@ -364,6 +367,23 @@ AppInstKey uniquely identifies an Application Instance (AppInst) or Application 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | something | [uint64](#uint64) |  | what goes here? Note that metrics for grpc calls can be done by a prometheus interceptor in grpc, so adding call metrics here may be redundant unless they&#39;re needed for billing. |
+
+
+
+
+
+
+<a name="edgeproto.AppInstStatus"/>
+
+### AppInstStatus
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| fields | [string](#string) | repeated | Fields are used for the Update API to specify which fields to apply |
+| key | [AppInstKey](#edgeproto.AppInstKey) |  | Unique identifier key |
+| status | [string](#string) |  | Health status |
 
 
 

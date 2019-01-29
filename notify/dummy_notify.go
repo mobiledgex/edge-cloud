@@ -11,15 +11,16 @@ import (
 )
 
 type DummyHandler struct {
-	AppCache             edgeproto.AppCache
-	AppInstCache         edgeproto.AppInstCache
-	CloudletCache        edgeproto.CloudletCache
-	FlavorCache          edgeproto.FlavorCache
-	ClusterFlavorCache   edgeproto.ClusterFlavorCache
-	ClusterInstCache     edgeproto.ClusterInstCache
-	AppInstInfoCache     edgeproto.AppInstInfoCache
-	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
-	CloudletInfoCache    edgeproto.CloudletInfoCache
+	AppCache              edgeproto.AppCache
+	AppInstCache          edgeproto.AppInstCache
+	CloudletCache         edgeproto.CloudletCache
+	FlavorCache           edgeproto.FlavorCache
+	ClusterFlavorCache    edgeproto.ClusterFlavorCache
+	ClusterInstCache      edgeproto.ClusterInstCache
+	AppInstInfoCache      edgeproto.AppInstInfoCache
+	ClusterInstInfoCache  edgeproto.ClusterInstInfoCache
+	CloudletInfoCache     edgeproto.CloudletInfoCache
+	AppInstStatusMsgQueue edgeproto.AppInstStatusMsgQueue
 }
 
 func NewDummyHandler() *DummyHandler {
@@ -33,6 +34,8 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitFlavorCache(&h.FlavorCache)
 	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
+
+	h.AppInstStatusMsgQueue.Init()
 	return h
 }
 
@@ -47,6 +50,7 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
 	mgr.RegisterRecvClusterInstInfoCache(&s.ClusterInstInfoCache)
 	mgr.RegisterRecvCloudletInfoCache(&s.CloudletInfoCache)
+	mgr.RegisterRecv(NewAppInstStatusRecvMany(&s.AppInstStatusMsgQueue))
 }
 
 func (s *DummyHandler) RegisterCRMClient(cl *Client) {
@@ -80,6 +84,7 @@ const (
 	AppInstInfoType
 	ClusterInstInfoType
 	CloudletInfoType
+	AppInstStatusType
 )
 
 type WaitForCache interface {
@@ -107,6 +112,8 @@ func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 		cache = &s.ClusterInstInfoCache
 	case CloudletInfoType:
 		cache = &s.CloudletInfoCache
+	case AppInstStatusType:
+		cache = &s.AppInstStatusMsgQueue
 	}
 	WaitFor(cache, count)
 }
@@ -157,6 +164,10 @@ func (s *DummyHandler) WaitForClusterFlavors(count int) {
 
 func (s *DummyHandler) WaitForClusterInsts(count int) {
 	WaitFor(&s.ClusterInstCache, count)
+}
+
+func (s *DummyHandler) WaitForAppInstStatuses(count int) {
+	WaitFor(&s.AppInstStatusMsgQueue, count)
 }
 
 func (s *Client) WaitForConnect(connect uint64) {

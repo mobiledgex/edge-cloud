@@ -370,6 +370,36 @@ func (p *ClusterSvcLocal) Stop() {
 	StopLocal(p.cmd)
 }
 
+// HealthSvc process
+type HealthSvcLocal struct {
+	Name        string
+	NotifyAddrs string
+	TLS         TLSCerts
+	cmd         *exec.Cmd
+}
+
+func (p *HealthSvcLocal) Start(logfile string, opts ...StartOp) error {
+	args := []string{"--notifyAddrs", p.NotifyAddrs}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+
+	var err error
+	p.cmd, err = StartLocal(p.Name, "health-svc", args, nil, logfile)
+	return err
+}
+
+func (p *HealthSvcLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
 // Postgres Sql
 type SqlLocal struct {
 	Name     string

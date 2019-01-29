@@ -1451,6 +1451,15 @@
         "allocated_ip": {
           "type": "string",
           "title": "allocated IP for dedicated access"
+        },
+        "status": {
+          "type": "string",
+          "title": "Health status"
+        },
+        "prevent_auto_cluster_inst": {
+          "type": "boolean",
+          "format": "boolean",
+          "title": "Prevent automatic creation of ClusterInst"
         }
       },
       "description": "AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.\nWhen an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.\nMany of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer."

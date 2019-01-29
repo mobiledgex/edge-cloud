@@ -61,6 +61,10 @@ message AppInst {
   CRMOverride crm_override = 16 [(protocmd.hidetag) = "nocmp"];
   // allocated IP for dedicated access
   string allocated_ip = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Health status
+  string status = 18 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  // Prevent automatic creation of ClusterInst
+  bool prevent_auto_cluster_inst = 19;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -158,4 +162,15 @@ service AppInstMetricsApi {
       body: "*"
     };
   }
+}
+
+message AppInstStatus {
+  // Fields are used for the Update API to specify which fields to apply
+  repeated string fields = 1;
+  // Unique identifier key
+  AppInstKey key = 2 [(gogoproto.nullable) = false];
+  // Health status
+  string status = 3;
+  //option (protogen.generate_cache) = true;
+  option (protogen.notify_message) = true;
 }

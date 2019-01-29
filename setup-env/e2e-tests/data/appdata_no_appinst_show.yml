@@ -231,6 +231,7 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -256,6 +257,7 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -281,6 +283,7 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -306,3 +309,4 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+  preventautoclusterinst: true

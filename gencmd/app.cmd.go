@@ -30,6 +30,7 @@ It has these top-level messages:
 	AppInst
 	AppInstInfo
 	AppInstMetrics
+	AppInstStatus
 	CloudResource
 	EdgeCloudApp
 	EdgeCloudApplication

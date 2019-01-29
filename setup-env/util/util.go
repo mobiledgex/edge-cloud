@@ -140,6 +140,10 @@ type ClusterSvcProcess struct {
 	Hostname    string
 	DockerImage string
 }
+type HealthSvcProcess struct {
+	process.HealthSvcLocal
+	Hostname string
+}
 
 type TLSCertInfo struct {
 	CommonName string
@@ -173,6 +177,7 @@ type DeploymentData struct {
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
 	ClusterSvcs   []ClusterSvcProcess `yaml:"clustersvcs"`
+	HealthSvcs    []HealthSvcProcess  `yaml:"healthsvcs"`
 	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
 }
 

@@ -225,6 +225,10 @@
                   <a href="#edgeproto.AppInstMetrics"><span class="badge">M</span>AppInstMetrics</a>
                 </li>
               
+                <li>
+                  <a href="#edgeproto.AppInstStatus"><span class="badge">M</span>AppInstStatus</a>
+                </li>
+              
               
               
               
@@ -1054,6 +1058,20 @@ External ports should be appended to the Uri for L4 access. </p></td>
                   <td><p>allocated IP for dedicated access </p></td>
                 </tr>
               
+                <tr>
+                  <td>status</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Health status </p></td>
+                </tr>
+              
+                <tr>
+                  <td>prevent_auto_cluster_inst</td>
+                  <td><a href="#bool">bool</a></td>
+                  <td></td>
+                  <td><p>Prevent automatic creation of ClusterInst </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -1166,6 +1184,43 @@ External ports should be appended to the Uri for L4 access. </p></td>
 Note that metrics for grpc calls can be done by a prometheus
 interceptor in grpc, so adding call metrics here may be
 redundant unless they&#39;re needed for billing. </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.AppInstStatus">AppInstStatus</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>fields</td>
+                  <td><a href="#string">string</a></td>
+                  <td>repeated</td>
+                  <td><p>Fields are used for the Update API to specify which fields to apply </p></td>
+                </tr>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#edgeproto.AppInstKey">AppInstKey</a></td>
+                  <td></td>
+                  <td><p>Unique identifier key </p></td>
+                </tr>
+              
+                <tr>
+                  <td>status</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Health status </p></td>
                 </tr>
               
             </tbody>

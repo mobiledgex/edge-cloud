@@ -326,6 +326,9 @@ func HasField(fmap map[string]struct{}, field string) bool {
 	return ok
 }
 
+func (s *AppInstStatus) Validate(fields map[string]struct{}) error { return nil }
+func (s *AppInstStatus) HasFields() bool                           { return false }
+
 func (m *Metric) AddTag(name string, val string) {
 	tag := MetricTag{Name: name, Val: val}
 	m.Tags = append(m.Tags, &tag)

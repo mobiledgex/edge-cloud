@@ -27,12 +27,14 @@ type mex struct {
 	cudTemplate   *template.Template
 	enumTemplate  *template.Template
 	cacheTemplate *template.Template
+	queueTemplate *template.Template
 	importUtil    bool
 	importStrings bool
 	importErrors  bool
 	importStrconv bool
 	importSort    bool
 	importTime    bool
+	importLog     bool
 	firstFile     string
 	support       gensupport.PluginSupport
 }
@@ -47,6 +49,7 @@ func (m *mex) Init(gen *generator.Generator) {
 	m.cudTemplate = template.Must(template.New("cud").Parse(cudTemplateIn))
 	m.enumTemplate = template.Must(template.New("enum").Parse(enumTemplateIn))
 	m.cacheTemplate = template.Must(template.New("cache").Parse(cacheTemplateIn))
+	m.queueTemplate = template.Must(template.New("mq").Parse(queueTemplateIn))
 	m.support.Init(gen.Request)
 	m.firstFile = gensupport.GetFirstFile(gen)
 }
@@ -65,6 +68,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importStrconv = false
 	m.importSort = false
 	m.importTime = false
+	m.importLog = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -97,6 +101,8 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importUtil {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
+	}
+	if m.importLog {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
 	if m.importStrings {
@@ -1095,6 +1101,41 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 
 `
 
+type queueTemplateArgs struct {
+	Name string
+}
+
+var queueTemplateIn = `
+// this is primarily for unit testing
+type {{.Name}}MsgQueue struct {
+	Objs []*{{.Name}}
+	Mux util.Mutex
+}
+
+func New{{.Name}}MsgQueue() *{{.Name}}MsgQueue {
+	q := {{.Name}}MsgQueue{}
+	q.Init()
+	return &q
+}
+
+func (s *{{.Name}}MsgQueue) Init() {
+	s.Objs = make([]*{{.Name}}, 0)
+}
+
+func (s *{{.Name}}MsgQueue) Recv(msg *{{.Name}}) {
+	s.Mux.Lock()
+	defer s.Mux.Unlock()
+	s.Objs = append(s.Objs, msg)
+}
+
+func (c *{{.Name}}MsgQueue) GetCount() int {
+	c.Mux.Lock()
+	defer c.Mux.Unlock()
+	return len(c.Objs)
+}
+	
+`
+
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
@@ -1172,10 +1213,18 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
+		m.importLog = true
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
 		}
+	}
+	if GetNotifyMessage(message) {
+		args := queueTemplateArgs{
+			Name: *message.Name,
+		}
+		m.queueTemplate.Execute(m.gen.Buffer, args)
+		m.importUtil = true
 	}
 	if GetObjKey(message) {
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
@@ -1194,7 +1243,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("}")
 		m.P("")
-		m.importUtil = true
+		m.importLog = true
 	}
 	if field := gensupport.GetMessageKey(message); field != nil {
 		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
@@ -1298,6 +1347,10 @@ func GetGenerateWaitForState(message *descriptor.DescriptorProto) string {
 
 func GetNotifyCache(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_NotifyCache, false)
+}
+
+func GetNotifyMessage(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_NotifyMessage, false)
 }
 
 func GetNotifyFlush(message *descriptor.DescriptorProto) bool {

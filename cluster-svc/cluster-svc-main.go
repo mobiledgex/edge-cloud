@@ -142,7 +142,8 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 			CloudletKey: instKey.CloudletKey,
 			Id:          1,
 		},
-		ClusterInstKey: instKey,
+		ClusterInstKey:         instKey,
+		PreventAutoClusterInst: true,
 	}
 
 	ctx := context.TODO()

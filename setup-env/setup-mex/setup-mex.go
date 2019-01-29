@@ -144,6 +144,11 @@ func findProcess(processName string) (string, string, string) {
 			return clustersvc.Hostname, "cluster-svc", "-ctrlAddrs " + clustersvc.CtrlAddrs
 		}
 	}
+	for _, healthsvc := range util.Deployment.HealthSvcs {
+		if healthsvc.Name == processName {
+			return healthsvc.Hostname, "health-svc", "-notifyAddrs " + healthsvc.NotifyAddrs
+		}
+	}
 	for _, tok := range util.Deployment.Toksims {
 		if tok.Name == processName {
 			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
@@ -354,7 +359,7 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "cluster-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault", "mexosagent"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "cluster-svc", "health-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault", "mexosagent"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
 	}
@@ -473,6 +478,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
 	clustersvcRemoteServers := make(map[string]string)
+	healthsvcRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
 	vaults := make(map[string]string)
@@ -553,6 +559,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			i := hostNameToAnsible(p.Hostname)
 			allRemoteServers[i] = p.Name
 			clustersvcRemoteServers[i] = p.Name
+			foundServer = true
+		}
+	}
+	for _, p := range util.Deployment.HealthSvcs {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			healthsvcRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -657,6 +674,13 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[cluster-svcs]")
 		for s := range clustersvcRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(healthsvcRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[health-svcs]")
+		for s := range healthsvcRemoteServers {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -1066,7 +1090,20 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-
+	for _, healthsvc := range util.Deployment.HealthSvcs {
+		if processName != "" && processName != healthsvc.Name {
+			continue
+		}
+		if isLocalIP(healthsvc.Hostname) {
+			log.Printf("Starting HealthSvc %+v\n", healthsvc)
+			logfile := getLogFile(healthsvc.Name, outputDir)
+			err := healthsvc.Start(logfile, process.WithDebug("notify,api"))
+			if err != nil {
+				log.Printf("Error on HealthSvc startup: %v", err)
+				return false
+			}
+		}
+	}
 	for _, loc := range util.Deployment.Locsims {
 		if processName != "" && processName != loc.Name {
 			continue

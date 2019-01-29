@@ -78,18 +78,18 @@ func (s *AppApi) UsesCluster(key *edgeproto.ClusterKey) bool {
 }
 
 func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.ClusterKey) error {
-	apps := make(map[edgeproto.AppKey]*edgeproto.App)
-	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.Name)
+	apps := make(map[edgeproto.AppKey]edgeproto.App)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting apps ", "cluster", key.Name)
 	s.cache.Mux.Lock()
 	for k, app := range s.cache.Objs {
 		if app.Cluster.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
-			apps[k] = app
+			apps[k] = *app
 		}
 	}
 	s.cache.Mux.Unlock()
 	for _, val := range apps {
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting app ", "app", val.Key.Name)
-		if _, err := s.DeleteApp(ctx, val); err != nil {
+		if _, err := s.DeleteApp(ctx, &val); err != nil {
 			return err
 		}
 	}
@@ -269,7 +269,7 @@ func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, objstore.ErrKVStoreKeyNotFound
 	}
 	dynInsts := make(map[edgeproto.AppInstKey]struct{})
-	if appInstApi.UsesApp(&in.Key, dynInsts) {
+	if appInstApi.UsesApp(&in.Key, in.DelOpt, dynInsts) {
 		// disallow delete if static instances are present
 		return &edgeproto.Result{}, errors.New("Application in use by static Application Instance")
 	}

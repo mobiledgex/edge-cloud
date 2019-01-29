@@ -97,7 +97,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 15)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -142,11 +142,13 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
+	s = append(s, in.Status)
+	s = append(s, strconv.FormatBool(in.PreventAutoClusterInst))
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 15)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -179,6 +181,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
+	s = append(s, "Status")
+	s = append(s, "PreventAutoClusterInst")
 	return s
 }
 
@@ -299,6 +303,58 @@ func AppInstMetricsWriteOutputOne(obj *edgeproto.AppInstMetrics) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func AppInstStatusSlicer(in *edgeproto.AppInstStatus) []string {
+	s := make([]string, 0, 3)
+	if in.Fields == nil {
+		in.Fields = make([]string, 1)
+	}
+	s = append(s, in.Fields[0])
+	s = append(s, in.Key.AppKey.DeveloperKey.Name)
+	s = append(s, in.Key.AppKey.Name)
+	s = append(s, in.Key.AppKey.Version)
+	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
+	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
+	s = append(s, in.Status)
+	return s
+}
+
+func AppInstStatusHeaderSlicer() []string {
+	s := make([]string, 0, 3)
+	s = append(s, "Fields")
+	s = append(s, "Key-AppKey-DeveloperKey-Name")
+	s = append(s, "Key-AppKey-Name")
+	s = append(s, "Key-AppKey-Version")
+	s = append(s, "Key-CloudletKey-OperatorKey-Name")
+	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "Key-Id")
+	s = append(s, "Status")
+	return s
+}
+
+func AppInstStatusWriteOutputArray(objs []*edgeproto.AppInstStatus) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstStatusHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstStatusSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstStatusWriteOutputOne(obj *edgeproto.AppInstStatus) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstStatusHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstStatusSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstHideTags(in *edgeproto.AppInst) {
 	if cmdsup.HideTags == "" {
 		return
@@ -324,6 +380,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Status = ""
 	}
 }
 
@@ -720,6 +779,8 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	AppInstFlagSet.StringVar(&AppInstIn.Status, "status", "", "Status")
+	AppInstFlagSet.BoolVar(&AppInstIn.PreventAutoClusterInst, "preventautoclusterinst", false, "PreventAutoClusterInst")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -828,6 +889,12 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("allocatedip").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "17")
+	}
+	if AppInstFlagSet.Lookup("status").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "18")
+	}
+	if AppInstFlagSet.Lookup("preventautoclusterinst").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "19")
 	}
 }
 

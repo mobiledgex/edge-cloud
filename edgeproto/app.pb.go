@@ -30,6 +30,7 @@
 		AppInst
 		AppInstInfo
 		AppInstMetrics
+		AppInstStatus
 		CloudResource
 		EdgeCloudApp
 		EdgeCloudApplication

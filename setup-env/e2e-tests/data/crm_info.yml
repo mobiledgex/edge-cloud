@@ -288,6 +288,8 @@ appinstances:
     name: x1.small
   ipaccess: IpAccessShared
   state: Ready
+  status: 'dial tcp: lookup someapplication1-tcp.tmus-cloud-1.tmus.mobiledgex.net:
+    no such host'
 - key:
     appkey:
       developerkey:
@@ -328,6 +330,8 @@ appinstances:
     name: x1.small
   ipaccess: IpAccessShared
   state: Ready
+  status: 'dial tcp: lookup someapplication1-tcp.tmus-cloud-2.tmus.mobiledgex.net:
+    no such host'
 - key:
     appkey:
       developerkey:
@@ -355,6 +359,8 @@ appinstances:
     name: x1.medium
   ipaccess: IpAccessShared
   state: Ready
+  status: ok
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -382,6 +388,8 @@ appinstances:
     name: x1.medium
   ipaccess: IpAccessShared
   state: Ready
+  status: ok
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -409,6 +417,8 @@ appinstances:
     name: x1.medium
   ipaccess: IpAccessShared
   state: Ready
+  status: ok
+  preventautoclusterinst: true
 - key:
     appkey:
       developerkey:
@@ -436,3 +446,5 @@ appinstances:
     name: x1.medium
   ipaccess: IpAccessShared
   state: Ready
+  status: ok
+  preventautoclusterinst: true

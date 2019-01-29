@@ -245,4 +245,5 @@ func InitNotify(influxQ *InfluxQ) {
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstStatusRecvMany(&AppInstStatus{}))
 }
