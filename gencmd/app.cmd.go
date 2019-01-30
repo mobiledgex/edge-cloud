@@ -97,6 +97,7 @@ var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
 var AppInImageType string
 var AppInIpAccess string
 var AppInDelOpt string
+var AppInDnsEntryType string
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",
@@ -106,6 +107,12 @@ var ImageTypeStrings = []string{
 var DeleteTypeStrings = []string{
 	"NoAutoDelete",
 	"AutoDelete",
+}
+
+var DnsEntryTypeStrings = []string{
+	"DnsEntryTypeUnknown",
+	"DnsEntryTypeARec",
+	"DnsEntryTypeNone",
 }
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
@@ -148,7 +155,7 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 19)
+	s := make([]string, 0, 20)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -173,11 +180,12 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.AndroidPackageName)
 	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
 	s = append(s, edgeproto.DeleteType_name[int32(in.DelOpt)])
+	s = append(s, edgeproto.DnsEntryType_name[int32(in.DnsEntryType)])
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 19)
+	s := make([]string, 0, 20)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -199,6 +207,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "AndroidPackageName")
 	s = append(s, "PermitsPlatformApps")
 	s = append(s, "DelOpt")
+	s = append(s, "DnsEntryType")
 	return s
 }
 
@@ -241,6 +250,9 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DelOpt = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.DnsEntryType = 0
 	}
 }
 
@@ -468,6 +480,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.AndroidPackageName, "androidpackagename", "", "AndroidPackageName")
 	AppFlagSet.BoolVar(&AppIn.PermitsPlatformApps, "permitsplatformapps", false, "PermitsPlatformApps")
 	AppFlagSet.StringVar(&AppInDelOpt, "delopt", "", "one of [NoAutoDelete AutoDelete]")
+	AppFlagSet.StringVar(&AppInDnsEntryType, "dnsentrytype", "", "one of [DnsEntryTypeUnknown DnsEntryTypeARec DnsEntryTypeNone]")
 	CreateAppCmd.Flags().AddFlagSet(AppFlagSet)
 	DeleteAppCmd.Flags().AddFlagSet(AppFlagSet)
 	UpdateAppCmd.Flags().AddFlagSet(AppFlagSet)
@@ -543,6 +556,9 @@ func AppSetFields() {
 	if AppFlagSet.Lookup("delopt").Changed {
 		AppIn.Fields = append(AppIn.Fields, "20")
 	}
+	if AppFlagSet.Lookup("dnsentrytype").Changed {
+		AppIn.Fields = append(AppIn.Fields, "21")
+	}
 }
 
 func parseAppEnums() error {
@@ -580,6 +596,18 @@ func parseAppEnums() error {
 			AppIn.DelOpt = edgeproto.DeleteType(1)
 		default:
 			return errors.New("Invalid value for AppInDelOpt")
+		}
+	}
+	if AppInDnsEntryType != "" {
+		switch AppInDnsEntryType {
+		case "DnsEntryTypeUnknown":
+			AppIn.DnsEntryType = edgeproto.DnsEntryType(0)
+		case "DnsEntryTypeARec":
+			AppIn.DnsEntryType = edgeproto.DnsEntryType(1)
+		case "DnsEntryTypeNone":
+			AppIn.DnsEntryType = edgeproto.DnsEntryType(2)
+		default:
+			return errors.New("Invalid value for AppInDnsEntryType")
 		}
 	}
 	return nil

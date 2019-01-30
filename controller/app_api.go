@@ -164,6 +164,10 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
 	}
+	if in.DnsEntryType == edgeproto.DnsEntryType_DnsEntryTypeUnknown {
+		// default to A Record type
+		in.DnsEntryType = edgeproto.DnsEntryType_DnsEntryTypeARec
+	}
 
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
