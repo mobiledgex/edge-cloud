@@ -45,23 +45,7 @@ var MEXMetricsExporterAppVer = "1.0"
 
 var exporterT *template.Template
 
-var MEXMetricsExporterTemplate = `apiVersion: v1
-kind: Service
-metadata:
-  name: mexmetricsexporter-udp
-  labels:
-    run: mexmetricsexporter
-spec:
-  type: LoadBalancer
-  ports:
-  - name: udp12345
-    protocol: UDP
-    port: 12345
-    targetPort: 12345
-  selector:
-    run: mexmetricsexporter
----
-apiVersion: apps/v1
+var MEXMetricsExporterTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mexmetricsexporter-deployment
