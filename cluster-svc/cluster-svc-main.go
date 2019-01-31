@@ -62,6 +62,7 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
+	AccessPorts:   "tcp:9090",
 }
 
 var dialOpts grpc.DialOption
