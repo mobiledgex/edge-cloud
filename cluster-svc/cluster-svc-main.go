@@ -25,6 +25,9 @@ var ctrlAddr = flag.String("ctrlAddrs", "127.0.0.1:55001", "address to connect t
 var standalone = flag.Bool("standalone", false, "Standalone mode. AppInst data is pre-populated. Dme does not interact with controller. AppInsts can be created directly on Dme using controller AppInst API")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var influxDBAddr = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
+var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
+var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
 
 // Hard coded username - TODO to move to user db
 var MEXDeveloper = "mexinfradev_"
