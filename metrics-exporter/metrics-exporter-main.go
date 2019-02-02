@@ -22,13 +22,13 @@ var clusterName = flag.String("cluster", "myclust", "Cluster Name")
 var promQCpuClust = "sum%20(rate%20(container_cpu_usage_seconds_total%7Bid%3D%22%2F%22%7D%5B1m%5D))%20%2F%20sum%20(machine_cpu_cores)%20*%20100"
 var promQMemClust = "sum%20(container_memory_working_set_bytes%7Bid%3D%22%2F%22%7D)%20%2F%20sum%20(machine_memory_bytes)%20*%20100"
 var promQDiskClust = "sum%20(container_fs_usage_bytes%7Bdevice%3D~%22%5E%2Fdev%2F%5Bsv%5Dd%5Ba-z%5D%5B1-9%5D%24%22%2Cid%3D%22%2F%22%7D)%20%2F%20sum%20(container_fs_limit_bytes%7Bdevice%3D~%22%5E%2Fdev%2F%5Bsv%5Dd%5Ba-z%5D%5B1-9%5D%24%22%2Cid%3D%22%2F%22%7D)%20*%20100"
-var promQSendBytesRateClust = "sum(rate%20(container_network_transmit_bytes_total%5B1m%5D))"
-var promQRecvBytesRateClust = "sum(rate%20(container_network_receive_bytes_total%5B1m%5D))"
+var promQSendBytesRateClust = "sum(irate%20(container_network_transmit_bytes_total%5B1m%5D))"
+var promQRecvBytesRateClust = "sum(irate%20(container_network_receive_bytes_total%5B1m%5D))"
 
 var promQCpuPod = "sum%20(rate%20(container_cpu_usage_seconds_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
 var promQMemPod = "sum%20(container_memory_working_set_bytes%7Bimage!%3D%22%22%7D)%20by%20(pod_name)"
-var promQNetRecvRate = "sum%20(rate%20(container_network_receive_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
-var promQNetSendRate = "sum%20(rate%20(container_network_transmit_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
+var promQNetRecvRate = "sum%20(irate%20(container_network_receive_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
+var promQNetSendRate = "sum%20(irate%20(container_network_transmit_bytes_total%7Bimage!%3D%22%22%7D%5B1m%5D))%20by%20(pod_name)"
 
 var Env = map[string]string{
 	"INFLUXDB_USER": "root",
