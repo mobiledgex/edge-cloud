@@ -192,6 +192,30 @@ func (p *PromStats) CollectPromStats() error {
 			}
 		}
 	}
+	// Get Cluster NetRecv bytes rate averaged over 1m
+	resp, err = getPromMetrics(p.promAddr, promQRecvBytesRateClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				p.clusterStat.netRecv = uint64(val)
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster NetSend bytes rate averaged over 1m
+	resp, err = getPromMetrics(p.promAddr, promQSendBytesRateClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseFloat(metric.Values[1].(string), 64); err == nil {
+				p.clusterStat.netSend = uint64(val)
+				// We should have only one value here
+				break
+			}
+		}
+	}
 	return nil
 }
 
