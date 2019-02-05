@@ -340,6 +340,7 @@ type ClusterSvcLocal struct {
 	Name        string
 	NotifyAddrs string
 	CtrlAddrs   string
+	AccessPorts string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -353,6 +354,10 @@ func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.AccessPorts != "" {
+		args = append(args, "--accessports")
+		args = append(args, p.AccessPorts)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
