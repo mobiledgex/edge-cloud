@@ -132,5 +132,5 @@ clustersvcs:
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
-    accessports: "tcp:9090"
+    promports: "tcp:9090"
   hostname: "127.0.0.1"
