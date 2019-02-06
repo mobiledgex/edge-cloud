@@ -16,13 +16,24 @@ import (
 var AppDNSRoot = "mobiledgex.net"
 var Registry = "registry.mobiledgex.net"
 
+// special operator types
 var OperatorGCP = "gcp"
 var OperatorAzure = "azure"
+
+//reserved developer types
 var OperatorDeveloper = "developer"
 
 var DeveloperSamsung = "Samsung"
 
+// platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
+
+// cloudlet types
+var CloudletKindOpenStack = "openstack"
+var CloudletKindAzure = "azure"
+var CloudletKindGCP = "gcp"
+var CloudletKindDIND = "localdind"
+var CloudletKindFake = "fake"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
