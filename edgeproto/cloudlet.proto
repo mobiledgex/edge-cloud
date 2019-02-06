@@ -23,7 +23,22 @@ message CloudletKey {
   option (gogoproto.gostring) = true;
 }
 
-
+// properites common to all cloudlets
+message CloudletInfraCommon{
+    // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
+    string DockerRegistry = 1;
+     // DNS Zone
+    string DNSZone = 2;
+    // registry file server contains files which get pulled on instantiation such as certs and images
+    string RegistryFileServer = 3;
+    // Cloudflare key
+    string CFKey = 4; //MEX_CF_KEY
+    // Cloudflare key
+    string CFUser = 5; //MEX_CF_KEY
+    // Docker registry password
+    string DockerRegPass = 6; //MEX_DOCKER_REG_PASS
+    // openstack specific
+}
 
 message AzureProperties{
   // azure region e.g. uswest2
@@ -39,8 +54,6 @@ message GcpProperties{
   string zone = 2;
 }
 
-
-
 message OpenStackProperties{
   // name of the external network, e.g. external-network-shared
   string OSExternalNetworkName = 1; 
@@ -52,35 +65,21 @@ message OpenStackProperties{
   string OSMexNetwork = 4;
   // openstack network scheme
   string OSNetworkScheme = 5;
-  // openrc env vars should these be listed separately?  it may get tricky as the set can 
-  // possibly change in diff OS environmentsand versions and our code never looks at them
+  // openrc env vars 
   map<string, string> OpenRcVars = 6;
 }
-
 
 message CloudletInfraProperties{
     // what kind of infrastructure: Azure, GCP, Openstack
     string CloudletKind = 1;
-    //name of the docker image container image that mexos runs in
+    //name and version of the docker image container image that mexos runs in
     string MexosContainerImageName = 2;
-    // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
-    string DockerRegistry = 3;
-     // DNS Zone
-    string DNSZone = 4;
-    // regsitry file server contains files which get pulled on instantiation such as certs and images
-    string RegistryFileServer = 5;
-    // Cloudflare key
-    string CFKey = 6; //MEX_CF_KEY
-    // Cloudflare key
-    string CFUser = 7; //MEX_CF_KEY
-    // Docker registry password
-    string DockerRegPass = 8; //MEX_DOCKER_REG_PASS
-    // openstack specific
-    OpenStackProperties OpenstackProperties = 9;
+    // openstack
+    OpenStackProperties OpenstackProperties = 3;
     // azure
-    AzureProperties AzureProperties = 10;
+    AzureProperties AzureProperties = 4;
     // gcp
-    GcpProperties GcpProperties = 11;
+    GcpProperties GcpProperties = 5;
 }
 
 // A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.

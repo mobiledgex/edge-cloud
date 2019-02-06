@@ -42,6 +42,7 @@
     - [AzureProperties](#edgeproto.AzureProperties)
     - [Cloudlet](#edgeproto.Cloudlet)
     - [CloudletInfo](#edgeproto.CloudletInfo)
+    - [CloudletInfraCommon](#edgeproto.CloudletInfraCommon)
     - [CloudletInfraProperties](#edgeproto.CloudletInfraProperties)
     - [CloudletKey](#edgeproto.CloudletKey)
     - [CloudletMetrics](#edgeproto.CloudletMetrics)
@@ -606,19 +607,17 @@ CloudletInfo provides information from the Cloudlet Resource Manager about the s
 
 
 
-<a name="edgeproto.CloudletInfraProperties"></a>
+<a name="edgeproto.CloudletInfraCommon"></a>
 
-### CloudletInfraProperties
-
+### CloudletInfraCommon
+properites common to all cloudlets
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| CloudletKind | [string](#string) |  | what kind of infrastructure: Azure, GCP, Openstack |
-| MexosContainerImageName | [string](#string) |  | name of the docker image container image that mexos runs in |
 | DockerRegistry | [string](#string) |  | the mex docker registry, e.g. registry.mobiledgex.net:5000. |
 | DNSZone | [string](#string) |  | DNS Zone |
-| RegistryFileServer | [string](#string) |  | regsitry file server contains files which get pulled on instantiation such as certs and images |
+| RegistryFileServer | [string](#string) |  | registry file server contains files which get pulled on instantiation such as certs and images |
 | CFKey | [string](#string) |  | Cloudflare key
 
 MEX_CF_KEY |
@@ -628,7 +627,23 @@ MEX_CF_KEY |
 | DockerRegPass | [string](#string) |  | Docker registry password
 
 MEX_DOCKER_REG_PASS |
-| OpenstackProperties | [OpenStackProperties](#edgeproto.OpenStackProperties) |  | openstack specific |
+
+
+
+
+
+
+<a name="edgeproto.CloudletInfraProperties"></a>
+
+### CloudletInfraProperties
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| CloudletKind | [string](#string) |  | what kind of infrastructure: Azure, GCP, Openstack |
+| MexosContainerImageName | [string](#string) |  | name and version of the docker image container image that mexos runs in |
+| OpenstackProperties | [OpenStackProperties](#edgeproto.OpenStackProperties) |  | openstack |
 | AzureProperties | [AzureProperties](#edgeproto.AzureProperties) |  | azure |
 | GcpProperties | [GcpProperties](#edgeproto.GcpProperties) |  | gcp |
 
@@ -697,7 +712,7 @@ CloudletKey uniquely identifies a Cloudlet.
 | OSExternalRouterName | [string](#string) |  | openstack router |
 | OSMexNetwork | [string](#string) |  | openstack internal network |
 | OSNetworkScheme | [string](#string) |  | openstack network scheme |
-| OpenRcVars | [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry) | repeated | openrc env vars should these be listed separately? it may get tricky as the set can possibly change in diff OS environmentsand versions and our code never looks at them |
+| OpenRcVars | [OpenStackProperties.OpenRcVarsEntry](#edgeproto.OpenStackProperties.OpenRcVarsEntry) | repeated | openrc env vars |
 
 
 

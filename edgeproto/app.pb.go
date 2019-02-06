@@ -34,6 +34,7 @@
 		EdgeCloudApp
 		EdgeCloudApplication
 		CloudletKey
+		CloudletInfraCommon
 		AzureProperties
 		GcpProperties
 		OpenStackProperties

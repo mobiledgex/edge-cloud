@@ -292,6 +292,10 @@
                 </li>
               
                 <li>
+                  <a href="#edgeproto.CloudletInfraCommon"><span class="badge">M</span>CloudletInfraCommon</a>
+                </li>
+              
+                <li>
                   <a href="#edgeproto.CloudletInfraProperties"><span class="badge">M</span>CloudletInfraProperties</a>
                 </li>
               
@@ -1824,8 +1828,8 @@ Certs for accessing cloudlet site </p></td>
 
         
       
-        <h3 id="edgeproto.CloudletInfraProperties">CloudletInfraProperties</h3>
-        <p></p>
+        <h3 id="edgeproto.CloudletInfraCommon">CloudletInfraCommon</h3>
+        <p>properites common to all cloudlets</p>
 
         
           <table class="field-table">
@@ -1833,20 +1837,6 @@ Certs for accessing cloudlet site </p></td>
               <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
             </thead>
             <tbody>
-              
-                <tr>
-                  <td>CloudletKind</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>what kind of infrastructure: Azure, GCP, Openstack </p></td>
-                </tr>
-              
-                <tr>
-                  <td>MexosContainerImageName</td>
-                  <td><a href="#string">string</a></td>
-                  <td></td>
-                  <td><p>name of the docker image container image that mexos runs in </p></td>
-                </tr>
               
                 <tr>
                   <td>DockerRegistry</td>
@@ -1866,7 +1856,7 @@ Certs for accessing cloudlet site </p></td>
                   <td>RegistryFileServer</td>
                   <td><a href="#string">string</a></td>
                   <td></td>
-                  <td><p>regsitry file server contains files which get pulled on instantiation such as certs and images </p></td>
+                  <td><p>registry file server contains files which get pulled on instantiation such as certs and images </p></td>
                 </tr>
               
                 <tr>
@@ -1896,11 +1886,41 @@ MEX_CF_KEY </p></td>
 MEX_DOCKER_REG_PASS </p></td>
                 </tr>
               
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.CloudletInfraProperties">CloudletInfraProperties</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>CloudletKind</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>what kind of infrastructure: Azure, GCP, Openstack </p></td>
+                </tr>
+              
+                <tr>
+                  <td>MexosContainerImageName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>name and version of the docker image container image that mexos runs in </p></td>
+                </tr>
+              
                 <tr>
                   <td>OpenstackProperties</td>
                   <td><a href="#edgeproto.OpenStackProperties">OpenStackProperties</a></td>
                   <td></td>
-                  <td><p>openstack specific </p></td>
+                  <td><p>openstack </p></td>
                 </tr>
               
                 <tr>
@@ -2055,8 +2075,7 @@ MEX_DOCKER_REG_PASS </p></td>
                   <td>OpenRcVars</td>
                   <td><a href="#edgeproto.OpenStackProperties.OpenRcVarsEntry">OpenStackProperties.OpenRcVarsEntry</a></td>
                   <td>repeated</td>
-                  <td><p>openrc env vars should these be listed separately?  it may get tricky as the set can 
-possibly change in diff OS environmentsand versions and our code never looks at them </p></td>
+                  <td><p>openrc env vars </p></td>
                 </tr>
               
             </tbody>

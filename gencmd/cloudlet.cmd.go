@@ -90,6 +90,51 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
+	s := make([]string, 0, 6)
+	s = append(s, in.DockerRegistry)
+	s = append(s, in.DNSZone)
+	s = append(s, in.RegistryFileServer)
+	s = append(s, in.CFKey)
+	s = append(s, in.CFUser)
+	s = append(s, in.DockerRegPass)
+	return s
+}
+
+func CloudletInfraCommonHeaderSlicer() []string {
+	s := make([]string, 0, 6)
+	s = append(s, "DockerRegistry")
+	s = append(s, "DNSZone")
+	s = append(s, "RegistryFileServer")
+	s = append(s, "CFKey")
+	s = append(s, "CFUser")
+	s = append(s, "DockerRegPass")
+	return s
+}
+
+func CloudletInfraCommonWriteOutputArray(objs []*edgeproto.CloudletInfraCommon) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletInfraCommonSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletInfraCommonWriteOutputOne(obj *edgeproto.CloudletInfraCommon) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AzurePropertiesSlicer(in *edgeproto.AzureProperties) []string {
 	s := make([]string, 0, 2)
 	s = append(s, in.Location)
@@ -208,15 +253,9 @@ func OpenStackPropertiesWriteOutputOne(obj *edgeproto.OpenStackProperties) {
 	}
 }
 func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 5)
 	s = append(s, in.CloudletKind)
 	s = append(s, in.MexosContainerImageName)
-	s = append(s, in.DockerRegistry)
-	s = append(s, in.DNSZone)
-	s = append(s, in.RegistryFileServer)
-	s = append(s, in.CFKey)
-	s = append(s, in.CFUser)
-	s = append(s, in.DockerRegPass)
 	if in.OpenstackProperties == nil {
 		in.OpenstackProperties = &edgeproto.OpenStackProperties{}
 	}
@@ -239,15 +278,9 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 }
 
 func CloudletInfraPropertiesHeaderSlicer() []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 5)
 	s = append(s, "CloudletKind")
 	s = append(s, "MexosContainerImageName")
-	s = append(s, "DockerRegistry")
-	s = append(s, "DNSZone")
-	s = append(s, "RegistryFileServer")
-	s = append(s, "CFKey")
-	s = append(s, "CFUser")
-	s = append(s, "DockerRegPass")
 	s = append(s, "OpenstackProperties-OSExternalNetworkName")
 	s = append(s, "OpenstackProperties-OSImageName")
 	s = append(s, "OpenstackProperties-OSExternalRouterName")
