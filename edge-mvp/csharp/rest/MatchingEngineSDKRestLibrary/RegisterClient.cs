@@ -26,7 +26,7 @@ namespace DistributedMatchEngine
     [DataMember]
     public UInt32 Ver;
     [DataMember]
-    public string ReplyStatus = DistributedMatchEngine.ReplyStatus.RS_UNDEFINED.ToString();
+    public string Status = DistributedMatchEngine.ReplyStatus.RS_UNDEFINED.ToString();
     [DataMember]
     public string SessionCookie;
     [DataMember]
