@@ -4,7 +4,7 @@
   <head>
     <title>Protocol Documentation</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Ubuntu:400,700,400italic"/>
     <style>
       body {
         width: 60em;
@@ -280,6 +280,10 @@
             <ul>
               
                 <li>
+                  <a href="#edgeproto.AzureProperties"><span class="badge">M</span>AzureProperties</a>
+                </li>
+              
+                <li>
                   <a href="#edgeproto.Cloudlet"><span class="badge">M</span>Cloudlet</a>
                 </li>
               
@@ -288,11 +292,27 @@
                 </li>
               
                 <li>
+                  <a href="#edgeproto.CloudletInfraProperties"><span class="badge">M</span>CloudletInfraProperties</a>
+                </li>
+              
+                <li>
                   <a href="#edgeproto.CloudletKey"><span class="badge">M</span>CloudletKey</a>
                 </li>
               
                 <li>
                   <a href="#edgeproto.CloudletMetrics"><span class="badge">M</span>CloudletMetrics</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.GcpProperties"><span class="badge">M</span>GcpProperties</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.OpenStackProperties"><span class="badge">M</span>OpenStackProperties</a>
+                </li>
+              
+                <li>
+                  <a href="#edgeproto.OpenStackProperties.OpenRcVarsEntry"><span class="badge">M</span>OpenStackProperties.OpenRcVarsEntry</a>
                 </li>
               
               
@@ -936,7 +956,7 @@ on behalf of this app, such as FindCloudlet </p></td>
               <tr>
                 <td>ShowApp</td>
                 <td><a href="#edgeproto.App">App</a></td>
-                <td><a href="#edgeproto.App">App</a></td>
+                <td><a href="#edgeproto.App">App</a> stream</td>
                 <td><p>Show applications. Any fields specified will be used to filter results.</p></td>
               </tr>
             
@@ -1191,28 +1211,28 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>CreateAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Create an application instance</p></td>
               </tr>
             
               <tr>
                 <td>DeleteAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Delete an application instance</p></td>
               </tr>
             
               <tr>
                 <td>UpdateAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Update an application instance</p></td>
               </tr>
             
               <tr>
                 <td>ShowAppInst</td>
                 <td><a href="#edgeproto.AppInst">AppInst</a></td>
-                <td><a href="#edgeproto.AppInst">AppInst</a></td>
+                <td><a href="#edgeproto.AppInst">AppInst</a> stream</td>
                 <td><p>Show application instances. Any fields specified will be used to filter results.</p></td>
               </tr>
             
@@ -1230,7 +1250,7 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>ShowAppInstInfo</td>
                 <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
-                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a></td>
+                <td><a href="#edgeproto.AppInstInfo">AppInstInfo</a> stream</td>
                 <td><p>Show application instances state.</p></td>
               </tr>
             
@@ -1248,7 +1268,7 @@ redundant unless they&#39;re needed for billing. </p></td>
               <tr>
                 <td>ShowAppInstMetrics</td>
                 <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
-                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a></td>
+                <td><a href="#edgeproto.AppInstMetrics">AppInstMetrics</a> stream</td>
                 <td><p>Show application instance metrics.</p></td>
               </tr>
             
@@ -1585,7 +1605,7 @@ is configurable here. This will need to be removed later. </p></td>
               <tr>
                 <td>ListCloudResource</td>
                 <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
-                <td><a href="#edgeproto.CloudResource">CloudResource</a></td>
+                <td><a href="#edgeproto.CloudResource">CloudResource</a> stream</td>
                 <td><p></p></td>
               </tr>
             
@@ -1627,6 +1647,36 @@ is configurable here. This will need to be removed later. </p></td>
       </div>
       <p></p>
 
+      
+        <h3 id="edgeproto.AzureProperties">AzureProperties</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>location</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>azure region e.g. uswest2 </p></td>
+                </tr>
+              
+                <tr>
+                  <td>resourceGroup</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>azure resource group </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
       
         <h3 id="edgeproto.Cloudlet">Cloudlet</h3>
         <p>A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.</p><p>A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.</p>
@@ -1774,6 +1824,105 @@ Certs for accessing cloudlet site </p></td>
 
         
       
+        <h3 id="edgeproto.CloudletInfraProperties">CloudletInfraProperties</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>CloudletKind</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>what kind of infrastructure: Azure, GCP, Openstack </p></td>
+                </tr>
+              
+                <tr>
+                  <td>MexosContainerImageName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>name of the docker image container image that mexos runs in </p></td>
+                </tr>
+              
+                <tr>
+                  <td>DockerRegistry</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>the mex docker registry, e.g.  registry.mobiledgex.net:5000. </p></td>
+                </tr>
+              
+                <tr>
+                  <td>DNSZone</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>DNS Zone </p></td>
+                </tr>
+              
+                <tr>
+                  <td>RegistryFileServer</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>regsitry file server contains files which get pulled on instantiation such as certs and images </p></td>
+                </tr>
+              
+                <tr>
+                  <td>CFKey</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Cloudflare key
+
+MEX_CF_KEY </p></td>
+                </tr>
+              
+                <tr>
+                  <td>CFUser</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Cloudflare key
+
+MEX_CF_KEY </p></td>
+                </tr>
+              
+                <tr>
+                  <td>DockerRegPass</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>Docker registry password
+
+MEX_DOCKER_REG_PASS </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OpenstackProperties</td>
+                  <td><a href="#edgeproto.OpenStackProperties">OpenStackProperties</a></td>
+                  <td></td>
+                  <td><p>openstack specific </p></td>
+                </tr>
+              
+                <tr>
+                  <td>AzureProperties</td>
+                  <td><a href="#edgeproto.AzureProperties">AzureProperties</a></td>
+                  <td></td>
+                  <td><p>azure </p></td>
+                </tr>
+              
+                <tr>
+                  <td>GcpProperties</td>
+                  <td><a href="#edgeproto.GcpProperties">GcpProperties</a></td>
+                  <td></td>
+                  <td><p>gcp </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
         <h3 id="edgeproto.CloudletKey">CloudletKey</h3>
         <p>CloudletKey uniquely identifies a Cloudlet.</p>
 
@@ -1819,6 +1968,126 @@ Certs for accessing cloudlet site </p></td>
                   <td><a href="#uint64">uint64</a></td>
                   <td></td>
                   <td><p>what goes here? </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.GcpProperties">GcpProperties</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>project</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>gcp project for billing </p></td>
+                </tr>
+              
+                <tr>
+                  <td>zone</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>availability zone </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.OpenStackProperties">OpenStackProperties</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>OSExternalNetworkName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>todo: need openrc vars here
+name of the external network, e.g. external-network-shared </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OSImageName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>openstack image , e.g. mobiledgex </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OSExternalRouterName</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>openstack router </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OSMexNetwork</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>openstack internal network </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OSNetworkScheme</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>openstack network scheme </p></td>
+                </tr>
+              
+                <tr>
+                  <td>OpenRcVars</td>
+                  <td><a href="#edgeproto.OpenStackProperties.OpenRcVarsEntry">OpenStackProperties.OpenRcVarsEntry</a></td>
+                  <td>repeated</td>
+                  <td><p>openrc env vars should these be listed separately?  it may get tricky as the set can 
+possibly change in diff OS environmentsand versions and our code never looks at them </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.OpenStackProperties.OpenRcVarsEntry">OpenStackProperties.OpenRcVarsEntry</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>key</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
+                </tr>
+              
+                <tr>
+                  <td>value</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p> </p></td>
                 </tr>
               
             </tbody>
@@ -1885,28 +2154,28 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>CreateCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Create a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>DeleteCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Delete a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>UpdateCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Update a Cloudlet</p></td>
               </tr>
             
               <tr>
                 <td>ShowCloudlet</td>
                 <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
-                <td><a href="#edgeproto.Cloudlet">Cloudlet</a></td>
+                <td><a href="#edgeproto.Cloudlet">Cloudlet</a> stream</td>
                 <td><p>Show Cloudlets</p></td>
               </tr>
             
@@ -1924,7 +2193,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowCloudletInfo</td>
                 <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
-                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a></td>
+                <td><a href="#edgeproto.CloudletInfo">CloudletInfo</a> stream</td>
                 <td><p>Show CloudletInfos</p></td>
               </tr>
             
@@ -1956,7 +2225,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowCloudletMetrics</td>
                 <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
-                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a></td>
+                <td><a href="#edgeproto.CloudletMetrics">CloudletMetrics</a> stream</td>
                 <td><p>Show Cloudlet metrics</p></td>
               </tr>
             
@@ -2076,7 +2345,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowCluster</td>
                 <td><a href="#edgeproto.Cluster">Cluster</a></td>
-                <td><a href="#edgeproto.Cluster">Cluster</a></td>
+                <td><a href="#edgeproto.Cluster">Cluster</a> stream</td>
                 <td><p>Show Clusters</p></td>
               </tr>
             
@@ -2217,7 +2486,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowClusterFlavor</td>
                 <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
-                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a></td>
+                <td><a href="#edgeproto.ClusterFlavor">ClusterFlavor</a> stream</td>
                 <td><p>Show ClusterFlavors</p></td>
               </tr>
             
@@ -2402,28 +2671,28 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>CreateClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Create a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>DeleteClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Delete a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>UpdateClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.Result">Result</a></td>
+                <td><a href="#edgeproto.Result">Result</a> stream</td>
                 <td><p>Update a Cluster instance</p></td>
               </tr>
             
               <tr>
                 <td>ShowClusterInst</td>
                 <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
-                <td><a href="#edgeproto.ClusterInst">ClusterInst</a></td>
+                <td><a href="#edgeproto.ClusterInst">ClusterInst</a> stream</td>
                 <td><p>Show Cluster instances</p></td>
               </tr>
             
@@ -2441,7 +2710,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowClusterInstInfo</td>
                 <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
-                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a></td>
+                <td><a href="#edgeproto.ClusterInstInfo">ClusterInstInfo</a> stream</td>
                 <td><p>Show Cluster instances state.</p></td>
               </tr>
             
@@ -2757,7 +3026,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowController</td>
                 <td><a href="#edgeproto.Controller">Controller</a></td>
-                <td><a href="#edgeproto.Controller">Controller</a></td>
+                <td><a href="#edgeproto.Controller">Controller</a> stream</td>
                 <td><p>Show Controllers</p></td>
               </tr>
             
@@ -2891,7 +3160,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowDeveloper</td>
                 <td><a href="#edgeproto.Developer">Developer</a></td>
-                <td><a href="#edgeproto.Developer">Developer</a></td>
+                <td><a href="#edgeproto.Developer">Developer</a> stream</td>
                 <td><p>Show Developers</p></td>
               </tr>
             
@@ -3018,7 +3287,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowFlavor</td>
                 <td><a href="#edgeproto.Flavor">Flavor</a></td>
-                <td><a href="#edgeproto.Flavor">Flavor</a></td>
+                <td><a href="#edgeproto.Flavor">Flavor</a> stream</td>
                 <td><p>Show Flavors</p></td>
               </tr>
             
@@ -3278,14 +3547,14 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowNodeLocal</td>
                 <td><a href="#edgeproto.Node">Node</a></td>
-                <td><a href="#edgeproto.Node">Node</a></td>
+                <td><a href="#edgeproto.Node">Node</a> stream</td>
                 <td><p>Show Nodes connected locally only</p></td>
               </tr>
             
               <tr>
                 <td>ShowNode</td>
                 <td><a href="#edgeproto.Node">Node</a></td>
-                <td><a href="#edgeproto.Node">Node</a></td>
+                <td><a href="#edgeproto.Node">Node</a> stream</td>
                 <td><p>Show all Nodes connected to all Controllers</p></td>
               </tr>
             
@@ -3408,8 +3677,8 @@ Certs for accessing cloudlet site </p></td>
             
               <tr>
                 <td>StreamNotice</td>
-                <td><a href="#edgeproto.Notice">Notice</a></td>
-                <td><a href="#edgeproto.Notice">Notice</a></td>
+                <td><a href="#edgeproto.Notice">Notice</a> stream</td>
+                <td><a href="#edgeproto.Notice">Notice</a> stream</td>
                 <td><p>Bidrectional stream for exchanging data between controller and DME/CRM</p></td>
               </tr>
             
@@ -3515,7 +3784,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowOperator</td>
                 <td><a href="#edgeproto.Operator">Operator</a></td>
-                <td><a href="#edgeproto.Operator">Operator</a></td>
+                <td><a href="#edgeproto.Operator">Operator</a> stream</td>
                 <td><p>Show Operators</p></td>
               </tr>
             
@@ -3700,7 +3969,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowCloudletRefs</td>
                 <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
-                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a></td>
+                <td><a href="#edgeproto.CloudletRefs">CloudletRefs</a> stream</td>
                 <td><p>Show CloudletRefs (debug only)</p></td>
               </tr>
             
@@ -3718,7 +3987,7 @@ Certs for accessing cloudlet site </p></td>
               <tr>
                 <td>ShowClusterRefs</td>
                 <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
-                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a></td>
+                <td><a href="#edgeproto.ClusterRefs">ClusterRefs</a> stream</td>
                 <td><p>Show ClusterRefs (debug only)</p></td>
               </tr>
             
