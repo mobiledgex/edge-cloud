@@ -6,7 +6,7 @@ namespace RestSample
 {
   class Program
   {
-    static string carrierName = "TDG";
+    static string carrierName = "tdg";
     static string appName = "EmptyMatchEngineApp";
     static string devName = "EmptyMatchEngineApp";
     static string appVers = "1.0";
@@ -19,7 +19,7 @@ namespace RestSample
     async static Task<string> getCurrentCarrierName()
     {
       var dummy = await Task.FromResult(0);
-      return carrierName = "TDG";
+      return carrierName;
     }
 
     async static Task Main(string[] args)
