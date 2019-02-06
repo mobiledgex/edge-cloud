@@ -34,6 +34,11 @@ It has these top-level messages:
 	EdgeCloudApp
 	EdgeCloudApplication
 	CloudletKey
+	CloudletInfraCommon
+	AzureProperties
+	GcpProperties
+	OpenStackProperties
+	CloudletInfraProperties
 	Cloudlet
 	CloudletInfo
 	CloudletMetrics
