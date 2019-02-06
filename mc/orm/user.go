@@ -2,6 +2,7 @@ package orm
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -118,12 +119,6 @@ func DeleteUser(c echo.Context) error {
 	if user.ID != claims.UserID && !enforcer.Enforce(id2str(claims.UserID), "", ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
 	}
-	// delete org associations
-	userOrg := UserOrg{UserID: user.ID}
-	err = db.Where(&userOrg).Delete(UserOrg{}).Error
-	if err != nil {
-		return err
-	}
 	// delete role mappings
 	groups := enforcer.GetGroupingPolicy()
 	for _, grp := range groups {
@@ -171,18 +166,32 @@ func ShowUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
 	users := []User{}
-	if !enforcer.Enforce(id2str(claims.UserID), filter.ID, ResourceUsers, ActionView) {
+	if !enforcer.Enforce(id2str(claims.UserID), filter.Name, ResourceUsers, ActionView) {
 		return echo.ErrForbidden
 	}
 	// if filter ID is 0, show all users (super user only)
-	if filter.ID == 0 {
+	if filter.Name == "" {
 		err = db.Find(&users).Error
+		if err != nil {
+			return err
+		}
 	} else {
-		err = db.Joins("JOIN user_orgs on user_orgs.user_id=users.id").
-			Where("user_orgs.org_id=?", filter.ID).Find(&users).Error
-	}
-	if err != nil {
-		return err
+		groupings := enforcer.GetGroupingPolicy()
+		for _, grp := range groupings {
+			if len(grp) < 2 {
+				continue
+			}
+			orguser := strings.Split(grp[0], "::")
+			if len(orguser) > 1 && orguser[0] == filter.Name {
+				user := User{}
+				user.ID, _ = strconv.ParseInt(orguser[1], 10, 64)
+				err = db.Where(&user).First(&user).Error
+				if err != nil {
+					return err
+				}
+				users = append(users, user)
+			}
+		}
 	}
 	for ii, _ := range users {
 		// don't show auth/private info

@@ -340,6 +340,7 @@ type ClusterSvcLocal struct {
 	Name        string
 	NotifyAddrs string
 	CtrlAddrs   string
+	PromPorts   string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -353,6 +354,10 @@ func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.PromPorts != "" {
+		args = append(args, "--prometheus-ports")
+		args = append(args, p.PromPorts)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

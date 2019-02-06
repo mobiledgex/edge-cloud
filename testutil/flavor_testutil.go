@@ -278,3 +278,22 @@ func createFlavorData(t *testing.T, api *FlavorCommonApi, testData []edgeproto.F
 		assert.Nil(t, err, "Create Flavor %s", obj.Key.GetKeyString())
 	}
 }
+
+func (s *DummyServer) CreateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
+	return &edgeproto.Result{}, nil
+}
+
+func (s *DummyServer) ShowFlavor(in *edgeproto.Flavor, server edgeproto.FlavorApi_ShowFlavorServer) error {
+	server.Send(&edgeproto.Flavor{})
+	server.Send(&edgeproto.Flavor{})
+	server.Send(&edgeproto.Flavor{})
+	return nil
+}

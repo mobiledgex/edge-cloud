@@ -209,22 +209,6 @@ apps:
     name: autoclustersomeapplication1
   deployment: kubernetes
   deploymentmanifest: |
-    apiVersion: v1
-    kind: Service
-    metadata:
-      name: mexmetricsexporter-udp
-      labels:
-        run: mexmetricsexporter
-    spec:
-      type: LoadBalancer
-      ports:
-      - name: udp12345
-        protocol: UDP
-        port: 12345
-        targetPort: 12345
-      selector:
-        run: mexmetricsexporter
-    ---
     apiVersion: apps/v1
     kind: Deployment
     metadata:
