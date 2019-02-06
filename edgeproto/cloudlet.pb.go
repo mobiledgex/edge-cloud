@@ -82,6 +82,89 @@ func (m *CloudletKey) String() string            { return proto.CompactTextStrin
 func (*CloudletKey) ProtoMessage()               {}
 func (*CloudletKey) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{0} }
 
+// properites common to all cloudlets
+type CloudletInfraCommon struct {
+	// the mex docker registry, e.g.  registry.mobiledgex.net:5000.
+	DockerRegistry string `protobuf:"bytes,1,opt,name=DockerRegistry,proto3" json:"DockerRegistry,omitempty"`
+	// DNS Zone
+	DNSZone string `protobuf:"bytes,2,opt,name=DNSZone,proto3" json:"DNSZone,omitempty"`
+	// registry file server contains files which get pulled on instantiation such as certs and images
+	RegistryFileServer string `protobuf:"bytes,3,opt,name=RegistryFileServer,proto3" json:"RegistryFileServer,omitempty"`
+	// Cloudflare key
+	CFKey string `protobuf:"bytes,4,opt,name=CFKey,proto3" json:"CFKey,omitempty"`
+	// Cloudflare key
+	CFUser string `protobuf:"bytes,5,opt,name=CFUser,proto3" json:"CFUser,omitempty"`
+	// Docker registry password
+	DockerRegPass string `protobuf:"bytes,6,opt,name=DockerRegPass,proto3" json:"DockerRegPass,omitempty"`
+}
+
+func (m *CloudletInfraCommon) Reset()                    { *m = CloudletInfraCommon{} }
+func (m *CloudletInfraCommon) String() string            { return proto.CompactTextString(m) }
+func (*CloudletInfraCommon) ProtoMessage()               {}
+func (*CloudletInfraCommon) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
+
+type AzureProperties struct {
+	// azure region e.g. uswest2
+	Location string `protobuf:"bytes,1,opt,name=location,proto3" json:"location,omitempty"`
+	// azure resource group
+	ResourceGroup string `protobuf:"bytes,2,opt,name=resourceGroup,proto3" json:"resourceGroup,omitempty"`
+}
+
+func (m *AzureProperties) Reset()                    { *m = AzureProperties{} }
+func (m *AzureProperties) String() string            { return proto.CompactTextString(m) }
+func (*AzureProperties) ProtoMessage()               {}
+func (*AzureProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
+
+type GcpProperties struct {
+	// gcp project for billing
+	Project string `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	// availability zone
+	Zone string `protobuf:"bytes,2,opt,name=zone,proto3" json:"zone,omitempty"`
+}
+
+func (m *GcpProperties) Reset()                    { *m = GcpProperties{} }
+func (m *GcpProperties) String() string            { return proto.CompactTextString(m) }
+func (*GcpProperties) ProtoMessage()               {}
+func (*GcpProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{3} }
+
+type OpenStackProperties struct {
+	// name of the external network, e.g. external-network-shared
+	OSExternalNetworkName string `protobuf:"bytes,1,opt,name=OSExternalNetworkName,proto3" json:"OSExternalNetworkName,omitempty"`
+	// openstack image , e.g. mobiledgex
+	OSImageName string `protobuf:"bytes,2,opt,name=OSImageName,proto3" json:"OSImageName,omitempty"`
+	// openstack router
+	OSExternalRouterName string `protobuf:"bytes,3,opt,name=OSExternalRouterName,proto3" json:"OSExternalRouterName,omitempty"`
+	// openstack internal network
+	OSMexNetwork string `protobuf:"bytes,4,opt,name=OSMexNetwork,proto3" json:"OSMexNetwork,omitempty"`
+	// openstack network scheme
+	OSNetworkScheme string `protobuf:"bytes,5,opt,name=OSNetworkScheme,proto3" json:"OSNetworkScheme,omitempty"`
+	// openrc env vars
+	OpenRcVars map[string]string `protobuf:"bytes,6,rep,name=OpenRcVars" json:"OpenRcVars,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *OpenStackProperties) Reset()                    { *m = OpenStackProperties{} }
+func (m *OpenStackProperties) String() string            { return proto.CompactTextString(m) }
+func (*OpenStackProperties) ProtoMessage()               {}
+func (*OpenStackProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{4} }
+
+type CloudletInfraProperties struct {
+	// what kind of infrastructure: Azure, GCP, Openstack
+	CloudletKind string `protobuf:"bytes,1,opt,name=CloudletKind,proto3" json:"CloudletKind,omitempty"`
+	// name and version of the docker image container image that mexos runs in
+	MexosContainerImageName string `protobuf:"bytes,2,opt,name=MexosContainerImageName,proto3" json:"MexosContainerImageName,omitempty"`
+	// openstack
+	OpenstackProperties *OpenStackProperties `protobuf:"bytes,3,opt,name=OpenstackProperties" json:"OpenstackProperties,omitempty"`
+	// azure
+	AzureProperties *AzureProperties `protobuf:"bytes,4,opt,name=AzureProperties" json:"AzureProperties,omitempty"`
+	// gcp
+	GcpProperties *GcpProperties `protobuf:"bytes,5,opt,name=GcpProperties" json:"GcpProperties,omitempty"`
+}
+
+func (m *CloudletInfraProperties) Reset()                    { *m = CloudletInfraProperties{} }
+func (m *CloudletInfraProperties) String() string            { return proto.CompactTextString(m) }
+func (*CloudletInfraProperties) ProtoMessage()               {}
+func (*CloudletInfraProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{5} }
+
 // A Cloudlet is a set of compute resources at a particular location, typically an Operator's regional data center, or a cell tower. The Cloudlet is managed by a Cloudlet Resource Manager, which communicates with the Mobiledgex Controller and allows AppInsts (application instances) to be instantiated on the Cloudlet.
 // A Cloudlet will be created by either a Mobiledgex admin or an Operator that provides the Cloudlet.
 type Cloudlet struct {
@@ -104,7 +187,7 @@ type Cloudlet struct {
 func (m *Cloudlet) Reset()                    { *m = Cloudlet{} }
 func (m *Cloudlet) String() string            { return proto.CompactTextString(m) }
 func (*Cloudlet) ProtoMessage()               {}
-func (*Cloudlet) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{1} }
+func (*Cloudlet) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{6} }
 
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
 type CloudletInfo struct {
@@ -131,7 +214,7 @@ type CloudletInfo struct {
 func (m *CloudletInfo) Reset()                    { *m = CloudletInfo{} }
 func (m *CloudletInfo) String() string            { return proto.CompactTextString(m) }
 func (*CloudletInfo) ProtoMessage()               {}
-func (*CloudletInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
+func (*CloudletInfo) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{7} }
 
 // (TODO) CloudletMetrics provide metrics collected about the Cloudlet. They are sent to a metrics collector for analytics. They are not stored in the persistent distributed database, but are stored as a time series in some other database or files.
 type CloudletMetrics struct {
@@ -142,10 +225,15 @@ type CloudletMetrics struct {
 func (m *CloudletMetrics) Reset()                    { *m = CloudletMetrics{} }
 func (m *CloudletMetrics) String() string            { return proto.CompactTextString(m) }
 func (*CloudletMetrics) ProtoMessage()               {}
-func (*CloudletMetrics) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{3} }
+func (*CloudletMetrics) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{8} }
 
 func init() {
 	proto.RegisterType((*CloudletKey)(nil), "edgeproto.CloudletKey")
+	proto.RegisterType((*CloudletInfraCommon)(nil), "edgeproto.CloudletInfraCommon")
+	proto.RegisterType((*AzureProperties)(nil), "edgeproto.AzureProperties")
+	proto.RegisterType((*GcpProperties)(nil), "edgeproto.GcpProperties")
+	proto.RegisterType((*OpenStackProperties)(nil), "edgeproto.OpenStackProperties")
+	proto.RegisterType((*CloudletInfraProperties)(nil), "edgeproto.CloudletInfraProperties")
 	proto.RegisterType((*Cloudlet)(nil), "edgeproto.Cloudlet")
 	proto.RegisterType((*CloudletInfo)(nil), "edgeproto.CloudletInfo")
 	proto.RegisterType((*CloudletMetrics)(nil), "edgeproto.CloudletMetrics")
@@ -747,6 +835,245 @@ func (m *CloudletKey) MarshalTo(dAtA []byte) (int, error) {
 	return i, nil
 }
 
+func (m *CloudletInfraCommon) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CloudletInfraCommon) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.DockerRegistry) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DockerRegistry)))
+		i += copy(dAtA[i:], m.DockerRegistry)
+	}
+	if len(m.DNSZone) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DNSZone)))
+		i += copy(dAtA[i:], m.DNSZone)
+	}
+	if len(m.RegistryFileServer) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.RegistryFileServer)))
+		i += copy(dAtA[i:], m.RegistryFileServer)
+	}
+	if len(m.CFKey) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CFKey)))
+		i += copy(dAtA[i:], m.CFKey)
+	}
+	if len(m.CFUser) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CFUser)))
+		i += copy(dAtA[i:], m.CFUser)
+	}
+	if len(m.DockerRegPass) > 0 {
+		dAtA[i] = 0x32
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.DockerRegPass)))
+		i += copy(dAtA[i:], m.DockerRegPass)
+	}
+	return i, nil
+}
+
+func (m *AzureProperties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *AzureProperties) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Location) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Location)))
+		i += copy(dAtA[i:], m.Location)
+	}
+	if len(m.ResourceGroup) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.ResourceGroup)))
+		i += copy(dAtA[i:], m.ResourceGroup)
+	}
+	return i, nil
+}
+
+func (m *GcpProperties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GcpProperties) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.Project) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Project)))
+		i += copy(dAtA[i:], m.Project)
+	}
+	if len(m.Zone) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.Zone)))
+		i += copy(dAtA[i:], m.Zone)
+	}
+	return i, nil
+}
+
+func (m *OpenStackProperties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OpenStackProperties) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.OSExternalNetworkName) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.OSExternalNetworkName)))
+		i += copy(dAtA[i:], m.OSExternalNetworkName)
+	}
+	if len(m.OSImageName) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.OSImageName)))
+		i += copy(dAtA[i:], m.OSImageName)
+	}
+	if len(m.OSExternalRouterName) > 0 {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.OSExternalRouterName)))
+		i += copy(dAtA[i:], m.OSExternalRouterName)
+	}
+	if len(m.OSMexNetwork) > 0 {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.OSMexNetwork)))
+		i += copy(dAtA[i:], m.OSMexNetwork)
+	}
+	if len(m.OSNetworkScheme) > 0 {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.OSNetworkScheme)))
+		i += copy(dAtA[i:], m.OSNetworkScheme)
+	}
+	if len(m.OpenRcVars) > 0 {
+		for k, _ := range m.OpenRcVars {
+			dAtA[i] = 0x32
+			i++
+			v := m.OpenRcVars[k]
+			mapSize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			i = encodeVarintCloudlet(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintCloudlet(dAtA, i, uint64(len(v)))
+			i += copy(dAtA[i:], v)
+		}
+	}
+	return i, nil
+}
+
+func (m *CloudletInfraProperties) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalTo(dAtA)
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *CloudletInfraProperties) MarshalTo(dAtA []byte) (int, error) {
+	var i int
+	_ = i
+	var l int
+	_ = l
+	if len(m.CloudletKind) > 0 {
+		dAtA[i] = 0xa
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.CloudletKind)))
+		i += copy(dAtA[i:], m.CloudletKind)
+	}
+	if len(m.MexosContainerImageName) > 0 {
+		dAtA[i] = 0x12
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(len(m.MexosContainerImageName)))
+		i += copy(dAtA[i:], m.MexosContainerImageName)
+	}
+	if m.OpenstackProperties != nil {
+		dAtA[i] = 0x1a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.OpenstackProperties.Size()))
+		n2, err := m.OpenstackProperties.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n2
+	}
+	if m.AzureProperties != nil {
+		dAtA[i] = 0x22
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.AzureProperties.Size()))
+		n3, err := m.AzureProperties.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n3
+	}
+	if m.GcpProperties != nil {
+		dAtA[i] = 0x2a
+		i++
+		i = encodeVarintCloudlet(dAtA, i, uint64(m.GcpProperties.Size()))
+		n4, err := m.GcpProperties.MarshalTo(dAtA[i:])
+		if err != nil {
+			return 0, err
+		}
+		i += n4
+	}
+	return i, nil
+}
+
 func (m *Cloudlet) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -780,11 +1107,11 @@ func (m *Cloudlet) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n2, err := m.Key.MarshalTo(dAtA[i:])
+	n5, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n2
+	i += n5
 	if len(m.AccessUri) > 0 {
 		dAtA[i] = 0x22
 		i++
@@ -794,11 +1121,11 @@ func (m *Cloudlet) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x2a
 	i++
 	i = encodeVarintCloudlet(dAtA, i, uint64(m.Location.Size()))
-	n3, err := m.Location.MarshalTo(dAtA[i:])
+	n6, err := m.Location.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n3
+	i += n6
 	if m.IpSupport != 0 {
 		dAtA[i] = 0x30
 		i++
@@ -851,11 +1178,11 @@ func (m *CloudletInfo) MarshalTo(dAtA []byte) (int, error) {
 	dAtA[i] = 0x12
 	i++
 	i = encodeVarintCloudlet(dAtA, i, uint64(m.Key.Size()))
-	n4, err := m.Key.MarshalTo(dAtA[i:])
+	n7, err := m.Key.MarshalTo(dAtA[i:])
 	if err != nil {
 		return 0, err
 	}
-	i += n4
+	i += n7
 	if m.State != 0 {
 		dAtA[i] = 0x18
 		i++
@@ -980,6 +1307,102 @@ func CloudletKeyStringParse(str string, key *CloudletKey) {
 // Helper method to check that enums have valid values
 func (m *CloudletKey) ValidateEnums() error {
 	if err := m.OperatorKey.ValidateEnums(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *CloudletInfraCommon) CopyInFields(src *CloudletInfraCommon) {
+	m.DockerRegistry = src.DockerRegistry
+	m.DNSZone = src.DNSZone
+	m.RegistryFileServer = src.RegistryFileServer
+	m.CFKey = src.CFKey
+	m.CFUser = src.CFUser
+	m.DockerRegPass = src.DockerRegPass
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletInfraCommon) ValidateEnums() error {
+	return nil
+}
+
+func (m *AzureProperties) CopyInFields(src *AzureProperties) {
+	m.Location = src.Location
+	m.ResourceGroup = src.ResourceGroup
+}
+
+// Helper method to check that enums have valid values
+func (m *AzureProperties) ValidateEnums() error {
+	return nil
+}
+
+func (m *GcpProperties) CopyInFields(src *GcpProperties) {
+	m.Project = src.Project
+	m.Zone = src.Zone
+}
+
+// Helper method to check that enums have valid values
+func (m *GcpProperties) ValidateEnums() error {
+	return nil
+}
+
+func (m *OpenStackProperties) CopyInFields(src *OpenStackProperties) {
+	m.OSExternalNetworkName = src.OSExternalNetworkName
+	m.OSImageName = src.OSImageName
+	m.OSExternalRouterName = src.OSExternalRouterName
+	m.OSMexNetwork = src.OSMexNetwork
+	m.OSNetworkScheme = src.OSNetworkScheme
+	if src.OpenRcVars != nil {
+		m.OpenRcVars = make(map[string]string)
+		for k0, _ := range src.OpenRcVars {
+			m.OpenRcVars[k0] = src.OpenRcVars[k0]
+		}
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *OpenStackProperties) ValidateEnums() error {
+	return nil
+}
+
+func (m *CloudletInfraProperties) CopyInFields(src *CloudletInfraProperties) {
+	m.CloudletKind = src.CloudletKind
+	m.MexosContainerImageName = src.MexosContainerImageName
+	if src.OpenstackProperties != nil {
+		m.OpenstackProperties = &OpenStackProperties{}
+		m.OpenstackProperties.OSExternalNetworkName = src.OpenstackProperties.OSExternalNetworkName
+		m.OpenstackProperties.OSImageName = src.OpenstackProperties.OSImageName
+		m.OpenstackProperties.OSExternalRouterName = src.OpenstackProperties.OSExternalRouterName
+		m.OpenstackProperties.OSMexNetwork = src.OpenstackProperties.OSMexNetwork
+		m.OpenstackProperties.OSNetworkScheme = src.OpenstackProperties.OSNetworkScheme
+		if src.OpenstackProperties.OpenRcVars != nil {
+			m.OpenstackProperties.OpenRcVars = make(map[string]string)
+			for k1, _ := range src.OpenstackProperties.OpenRcVars {
+				m.OpenstackProperties.OpenRcVars[k1] = src.OpenstackProperties.OpenRcVars[k1]
+			}
+		}
+	}
+	if src.AzureProperties != nil {
+		m.AzureProperties = &AzureProperties{}
+		m.AzureProperties.Location = src.AzureProperties.Location
+		m.AzureProperties.ResourceGroup = src.AzureProperties.ResourceGroup
+	}
+	if src.GcpProperties != nil {
+		m.GcpProperties = &GcpProperties{}
+		m.GcpProperties.Project = src.GcpProperties.Project
+		m.GcpProperties.Zone = src.GcpProperties.Zone
+	}
+}
+
+// Helper method to check that enums have valid values
+func (m *CloudletInfraProperties) ValidateEnums() error {
+	if err := m.OpenstackProperties.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.AzureProperties.ValidateEnums(); err != nil {
+		return err
+	}
+	if err := m.GcpProperties.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -2290,6 +2713,124 @@ func (m *CloudletKey) Size() (n int) {
 	return n
 }
 
+func (m *CloudletInfraCommon) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.DockerRegistry)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.DNSZone)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.RegistryFileServer)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.CFKey)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.CFUser)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.DockerRegPass)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *AzureProperties) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Location)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.ResourceGroup)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *GcpProperties) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.Project)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.Zone)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
+func (m *OpenStackProperties) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.OSExternalNetworkName)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.OSImageName)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.OSExternalRouterName)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.OSMexNetwork)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.OSNetworkScheme)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if len(m.OpenRcVars) > 0 {
+		for k, v := range m.OpenRcVars {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovCloudlet(uint64(len(k))) + 1 + len(v) + sovCloudlet(uint64(len(v)))
+			n += mapEntrySize + 1 + sovCloudlet(uint64(mapEntrySize))
+		}
+	}
+	return n
+}
+
+func (m *CloudletInfraProperties) Size() (n int) {
+	var l int
+	_ = l
+	l = len(m.CloudletKind)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	l = len(m.MexosContainerImageName)
+	if l > 0 {
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.OpenstackProperties != nil {
+		l = m.OpenstackProperties.Size()
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.AzureProperties != nil {
+		l = m.AzureProperties.Size()
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	if m.GcpProperties != nil {
+		l = m.GcpProperties.Size()
+		n += 1 + l + sovCloudlet(uint64(l))
+	}
+	return n
+}
+
 func (m *Cloudlet) Size() (n int) {
 	var l int
 	_ = l
@@ -2468,6 +3009,966 @@ func (m *CloudletKey) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Name = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CloudletInfraCommon) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CloudletInfraCommon: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CloudletInfraCommon: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DockerRegistry", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DockerRegistry = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DNSZone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DNSZone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RegistryFileServer", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RegistryFileServer = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CFKey", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CFKey = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CFUser", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CFUser = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DockerRegPass", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DockerRegPass = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *AzureProperties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AzureProperties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AzureProperties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Location", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Location = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ResourceGroup", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ResourceGroup = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GcpProperties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GcpProperties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GcpProperties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Project", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Project = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Zone", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Zone = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OpenStackProperties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OpenStackProperties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OpenStackProperties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OSExternalNetworkName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OSExternalNetworkName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OSImageName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OSImageName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OSExternalRouterName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OSExternalRouterName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OSMexNetwork", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OSMexNetwork = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OSNetworkScheme", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OSNetworkScheme = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenRcVars", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.OpenRcVars == nil {
+				m.OpenRcVars = make(map[string]string)
+			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowCloudlet
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowCloudlet
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipCloudlet(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthCloudlet
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.OpenRcVars[mapkey] = mapvalue
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipCloudlet(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *CloudletInfraProperties) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowCloudlet
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: CloudletInfraProperties: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: CloudletInfraProperties: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CloudletKind", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CloudletKind = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MexosContainerImageName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= (uint64(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MexosContainerImageName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OpenstackProperties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.OpenstackProperties == nil {
+				m.OpenstackProperties = &OpenStackProperties{}
+			}
+			if err := m.OpenstackProperties.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AzureProperties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.AzureProperties == nil {
+				m.AzureProperties = &AzureProperties{}
+			}
+			if err := m.AzureProperties.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field GcpProperties", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowCloudlet
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthCloudlet
+			}
+			postIndex := iNdEx + msglen
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.GcpProperties == nil {
+				m.GcpProperties = &GcpProperties{}
+			}
+			if err := m.GcpProperties.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3164,72 +4665,98 @@ var (
 func init() { proto.RegisterFile("cloudlet.proto", fileDescriptorCloudlet) }
 
 var fileDescriptorCloudlet = []byte{
-	// 1071 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xcf, 0x4f, 0x1b, 0x47,
-	0x14, 0x66, 0x6c, 0x43, 0xf1, 0x00, 0xc6, 0x19, 0x08, 0x4c, 0x1c, 0x42, 0xdc, 0x8d, 0x54, 0xa1,
-	0x08, 0xdb, 0x2d, 0x5c, 0x2a, 0x2e, 0x11, 0x90, 0x28, 0xb5, 0x08, 0xa4, 0x5a, 0x0a, 0xd7, 0xd5,
-	0x7a, 0x76, 0xbc, 0x4c, 0xb3, 0x3b, 0xb3, 0x9d, 0xdd, 0x0d, 0xb8, 0xa7, 0xaa, 0x97, 0x54, 0x39,
-	0x54, 0x8d, 0x7a, 0x89, 0x7a, 0xca, 0x9f, 0x10, 0x45, 0xea, 0xb5, 0x67, 0x8e, 0x48, 0xbd, 0x47,
-	0x29, 0xea, 0xa1, 0xca, 0xa9, 0x12, 0x7b, 0xe8, 0xb1, 0xda, 0xd9, 0x5d, 0xff, 0x48, 0x4c, 0x1a,
-	0xd1, 0x4a, 0xbd, 0xa0, 0xf7, 0xde, 0xf7, 0x7e, 0x7c, 0xfe, 0xde, 0xec, 0x03, 0x96, 0x88, 0x23,
-	0x42, 0xcb, 0xa1, 0x41, 0xdd, 0x93, 0x22, 0x10, 0xa8, 0x48, 0x2d, 0x9b, 0x2a, 0xb3, 0xb2, 0x60,
-	0x0b, 0x61, 0x3b, 0xb4, 0x61, 0x7a, 0xac, 0x61, 0x72, 0x2e, 0x02, 0x33, 0x60, 0x82, 0xfb, 0x49,
-	0x62, 0xe5, 0x53, 0x9b, 0x05, 0x07, 0x61, 0xab, 0x4e, 0x84, 0xdb, 0x70, 0x45, 0x8b, 0x39, 0x71,
-	0xe1, 0x51, 0x23, 0xfe, 0x5b, 0x53, 0x3d, 0x1b, 0x2a, 0xcf, 0xa6, 0xbc, 0x6b, 0xa4, 0x95, 0x77,
-	0xdf, 0xaf, 0x92, 0xd4, 0x6c, 0xca, 0x6b, 0xc4, 0xcd, 0xdc, 0x3e, 0x23, 0x6d, 0x54, 0x12, 0x1e,
-	0x95, 0x66, 0x20, 0x64, 0xea, 0x4f, 0x4a, 0xea, 0x87, 0x4e, 0x90, 0x79, 0x44, 0xb8, 0xae, 0xc8,
-	0x86, 0x6e, 0xfe, 0xe3, 0x50, 0xab, 0xe6, 0x9a, 0x01, 0x39, 0xa8, 0x51, 0x6e, 0x33, 0x4e, 0x1b,
-	0x96, 0x4b, 0x6b, 0xaa, 0xb4, 0xe1, 0x08, 0x92, 0x36, 0xa9, 0xf5, 0x35, 0xb1, 0x85, 0x2d, 0x12,
-	0x42, 0xad, 0xb0, 0xad, 0xbc, 0x24, 0x3b, 0xb6, 0x92, 0x74, 0xcd, 0x83, 0x13, 0x9b, 0xa9, 0xba,
-	0x5b, 0xb4, 0x83, 0x6e, 0xc1, 0xc9, 0x8c, 0xb0, 0xf1, 0x80, 0x76, 0x30, 0xa8, 0x82, 0xa5, 0x89,
-	0x95, 0xb9, 0x7a, 0x57, 0xf1, 0xfa, 0xfd, 0x14, 0xde, 0xa2, 0x9d, 0x8d, 0xc2, 0xf1, 0xcb, 0xeb,
-	0x23, 0xfa, 0x84, 0xe8, 0x85, 0x10, 0x82, 0x05, 0x6e, 0xba, 0x14, 0xe7, 0xaa, 0x60, 0xa9, 0xa8,
-	0x2b, 0x7b, 0x6d, 0xf2, 0x8f, 0x33, 0x0c, 0xfe, 0x3a, 0xc3, 0xe0, 0xf9, 0xb3, 0xeb, 0x40, 0xfb,
-	0x25, 0x0f, 0xc7, 0xb3, 0x91, 0x68, 0x0e, 0x8e, 0xb5, 0x19, 0x75, 0x2c, 0x1f, 0x83, 0x6a, 0x7e,
-	0xa9, 0xa8, 0xa7, 0x1e, 0xaa, 0xc3, 0x7c, 0x3c, 0x3e, 0xf7, 0xd6, 0xf8, 0x3e, 0xb2, 0xe9, 0xf8,
-	0x38, 0x11, 0xdd, 0x80, 0xd0, 0x24, 0x84, 0xfa, 0xbe, 0x11, 0x4a, 0x86, 0x0b, 0xf1, 0xf0, 0x8d,
-	0xc2, 0x77, 0x11, 0x06, 0x7a, 0x31, 0x89, 0xef, 0x49, 0x86, 0x6e, 0xc1, 0x71, 0x47, 0x10, 0xf5,
-	0x42, 0xf0, 0xa8, 0xea, 0x7c, 0xad, 0x6e, 0x31, 0x3f, 0x90, 0xac, 0x15, 0x06, 0xd4, 0x32, 0x94,
-	0xb6, 0x46, 0xa2, 0x6d, 0xfd, 0x9e, 0x20, 0xe9, 0x80, 0x6e, 0x11, 0x5a, 0x85, 0x90, 0x79, 0x86,
-	0x1f, 0x7a, 0x9e, 0x90, 0x01, 0x1e, 0xab, 0x82, 0xa5, 0xd2, 0xca, 0x6c, 0x1f, 0xb9, 0xa6, 0xb7,
-	0x9b, 0x60, 0x7a, 0x91, 0x65, 0x26, 0xba, 0x06, 0xa1, 0x1f, 0x3f, 0x4b, 0x62, 0x30, 0xcf, 0xc7,
-	0x1f, 0x28, 0x5d, 0x8a, 0x49, 0xa4, 0xe9, 0xf9, 0xe8, 0x23, 0x38, 0xcd, 0x43, 0xd7, 0xb0, 0x3a,
-	0xdc, 0x74, 0xd3, 0x9c, 0xf1, 0x2a, 0x58, 0x1a, 0xd5, 0xa7, 0x78, 0xe8, 0xde, 0x4e, 0xa2, 0x4d,
-	0xcf, 0x5f, 0x7b, 0x04, 0x62, 0x15, 0xff, 0x3c, 0xc3, 0xe0, 0x9b, 0x08, 0x83, 0x1f, 0x22, 0x0c,
-	0x9e, 0x46, 0x18, 0x3c, 0x8f, 0x30, 0x38, 0x8e, 0x30, 0x78, 0xfc, 0xe2, 0x8a, 0x7d, 0x2f, 0xa5,
-	0x59, 0xff, 0x4c, 0x48, 0xf6, 0xb5, 0xe0, 0x81, 0xe9, 0xac, 0x13, 0x12, 0x4a, 0x93, 0x74, 0x96,
-	0xbb, 0xd8, 0x3e, 0x95, 0x01, 0x23, 0xc3, 0x90, 0x4d, 0x11, 0x4a, 0x9f, 0xf6, 0xfc, 0x5d, 0x8f,
-	0x52, 0xab, 0xe7, 0x7e, 0xc1, 0x5c, 0xea, 0x07, 0xa6, 0xeb, 0x69, 0x2f, 0x73, 0x70, 0x32, 0x5b,
-	0x43, 0x93, 0xb7, 0xc5, 0x7f, 0xb6, 0xc4, 0x3a, 0x1c, 0x8d, 0x75, 0xa1, 0x38, 0xaf, 0x94, 0xc5,
-	0x43, 0x2a, 0x76, 0x63, 0x5c, 0x4f, 0xd2, 0xd0, 0x55, 0x58, 0xe4, 0x22, 0x60, 0xed, 0x8e, 0xc1,
-	0x2c, 0xb5, 0xf3, 0xbc, 0x3e, 0x9e, 0x04, 0x9a, 0x16, 0x5a, 0x84, 0x90, 0x08, 0x1e, 0x48, 0xe1,
-	0x38, 0x54, 0xaa, 0x75, 0x17, 0xf5, 0xbe, 0x08, 0x5a, 0x80, 0x50, 0xf8, 0x86, 0x6b, 0x1e, 0x19,
-	0xd2, 0x74, 0xd5, 0x2e, 0x0b, 0xfa, 0xb8, 0xf0, 0xb7, 0xcd, 0x23, 0xdd, 0x74, 0x91, 0x06, 0xa7,
-	0x52, 0xf4, 0x21, 0x11, 0x92, 0x26, 0x7b, 0x2b, 0xe8, 0x13, 0x2a, 0x61, 0x5f, 0x85, 0xd0, 0x87,
-	0xbd, 0x1c, 0xe1, 0x18, 0x76, 0x4b, 0xed, 0xad, 0xa0, 0xc3, 0x24, 0x47, 0x38, 0x77, 0x5b, 0xb1,
-	0x32, 0x54, 0x4a, 0x21, 0x7d, 0x5c, 0x4c, 0x94, 0x49, 0xbc, 0xb5, 0x85, 0x37, 0x77, 0xf9, 0x2c,
-	0xc2, 0xe0, 0x24, 0xc2, 0xe0, 0x55, 0x84, 0x81, 0x76, 0x03, 0x4e, 0x67, 0xbf, 0x77, 0x9b, 0x06,
-	0x92, 0x11, 0x1f, 0x95, 0x61, 0xbe, 0x2d, 0x84, 0xfa, 0x19, 0x05, 0x3d, 0x36, 0x6f, 0x3e, 0x01,
-	0x70, 0x6a, 0x40, 0x15, 0x84, 0xe1, 0xec, 0x40, 0x60, 0x8f, 0x3f, 0xe0, 0xe2, 0x90, 0x97, 0x47,
-	0xd0, 0x3c, 0x9c, 0x19, 0x40, 0xee, 0x28, 0x16, 0x65, 0x80, 0xe6, 0x20, 0x1a, 0x54, 0x96, 0x9a,
-	0x56, 0xa7, 0x9c, 0x7b, 0xab, 0xd5, 0xfd, 0x76, 0xdb, 0x61, 0x9c, 0x96, 0xf3, 0xe8, 0x2a, 0x9c,
-	0x1f, 0x40, 0x76, 0x44, 0xf0, 0xb9, 0xa4, 0x3e, 0xe5, 0x41, 0xb9, 0xb0, 0x72, 0x52, 0xe8, 0x5d,
-	0x93, 0x75, 0x8f, 0xa1, 0xef, 0x01, 0x2c, 0x6d, 0x4a, 0x6a, 0x06, 0xb4, 0xfb, 0xc1, 0xcf, 0x0c,
-	0x59, 0x6a, 0xe5, 0x52, 0x5f, 0x50, 0x57, 0xf7, 0x51, 0xd3, 0x5f, 0x47, 0x78, 0x55, 0xa7, 0xbe,
-	0x08, 0x25, 0xe9, 0x56, 0xfb, 0xcb, 0xeb, 0x24, 0x7e, 0x8c, 0xdb, 0x26, 0x37, 0x6d, 0xba, 0xbc,
-	0x45, 0x3b, 0xfd, 0xe7, 0xa8, 0xbe, 0x63, 0xba, 0xf4, 0xdb, 0x5f, 0x7f, 0xff, 0x31, 0x77, 0x59,
-	0x2b, 0x37, 0x88, 0x9a, 0xdb, 0xc8, 0xfe, 0x75, 0xac, 0x81, 0x9b, 0x1f, 0x03, 0xf4, 0x04, 0xc0,
-	0xd2, 0x6d, 0xea, 0xd0, 0x0b, 0x10, 0xda, 0xbb, 0x20, 0xa1, 0xa7, 0x2f, 0xae, 0x00, 0x45, 0x6a,
-	0x56, 0x9b, 0x6e, 0x58, 0x6a, 0x76, 0x42, 0x2a, 0xe3, 0x14, 0x8b, 0xb4, 0xe7, 0x59, 0xff, 0x8b,
-	0x48, 0xa1, 0x9a, 0xfb, 0x86, 0x48, 0x8f, 0x01, 0x9c, 0xdc, 0x3d, 0x10, 0x87, 0xef, 0xa6, 0x33,
-	0x2c, 0xa8, 0xed, 0xbc, 0x8e, 0xf0, 0x27, 0xe7, 0x11, 0xda, 0x67, 0xf4, 0xf0, 0x7c, 0x3a, 0x33,
-	0x5a, 0xa9, 0xe1, 0x1f, 0x88, 0xc3, 0x41, 0x32, 0x2b, 0x3f, 0xe7, 0x7a, 0x1f, 0x43, 0x7c, 0x6c,
-	0xe2, 0x67, 0xf5, 0x13, 0x80, 0xe5, 0x7e, 0x82, 0xea, 0x08, 0xcd, 0x0f, 0xe1, 0x13, 0x03, 0x95,
-	0xf3, 0x00, 0xa5, 0xde, 0x05, 0xc9, 0xce, 0x6b, 0x68, 0x90, 0x2c, 0xe3, 0x6d, 0x91, 0xa8, 0xb7,
-	0x01, 0x51, 0x93, 0x7f, 0x49, 0x49, 0xf0, 0x7e, 0xec, 0x86, 0x6c, 0x75, 0x04, 0xad, 0xc3, 0x4b,
-	0x77, 0x1e, 0xb2, 0x7f, 0xd3, 0x62, 0xe5, 0x11, 0xe8, 0x7d, 0xda, 0xe9, 0x11, 0x89, 0xa5, 0xfb,
-	0x0a, 0xce, 0xf4, 0x2b, 0x97, 0x9d, 0x97, 0xca, 0x90, 0xde, 0x29, 0x56, 0x79, 0x07, 0xa6, 0x55,
-	0x95, 0x1a, 0x15, 0xed, 0xf2, 0xa0, 0x1a, 0x6e, 0x02, 0x2b, 0x41, 0x36, 0xca, 0xc7, 0xbf, 0x2d,
-	0x8e, 0x1c, 0x9f, 0x2e, 0x82, 0x93, 0xd3, 0x45, 0xf0, 0xea, 0x74, 0x11, 0xb4, 0xc6, 0x54, 0xb3,
-	0xd5, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x70, 0x7f, 0xed, 0x7d, 0xd8, 0x09, 0x00, 0x00,
+	// 1473 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x6f, 0xdb, 0x46,
+	0x16, 0xf6, 0xc8, 0x72, 0x62, 0x8d, 0x6c, 0x59, 0x19, 0x3b, 0x31, 0xa3, 0x24, 0x8e, 0x97, 0x59,
+	0x04, 0x46, 0x10, 0x4b, 0xbb, 0xca, 0x1e, 0x02, 0x03, 0xd9, 0xc0, 0x96, 0x1d, 0xaf, 0xe0, 0xf8,
+	0x07, 0xa8, 0xb5, 0x0f, 0xbd, 0x08, 0x34, 0x39, 0x92, 0x59, 0x93, 0x33, 0xec, 0x90, 0xb4, 0xad,
+	0x9c, 0x8a, 0x5e, 0x52, 0xe4, 0x50, 0x34, 0xe8, 0x25, 0xe8, 0x29, 0x7f, 0x42, 0x10, 0xa0, 0xd7,
+	0x9e, 0x7d, 0x6b, 0x80, 0x1e, 0x0b, 0x04, 0x69, 0xd0, 0x43, 0x91, 0x53, 0x81, 0xe8, 0xd0, 0x53,
+	0x51, 0xcc, 0x0c, 0x29, 0x92, 0xb2, 0x9c, 0x06, 0x69, 0x81, 0x5e, 0x84, 0x79, 0x3f, 0xe6, 0xcd,
+	0x37, 0xdf, 0xf7, 0xe6, 0x89, 0xb0, 0x60, 0xd8, 0x34, 0x30, 0x6d, 0xec, 0x97, 0x5d, 0x46, 0x7d,
+	0x8a, 0x72, 0xd8, 0x6c, 0x63, 0xb1, 0x2c, 0x5d, 0x6e, 0x53, 0xda, 0xb6, 0x71, 0x45, 0x77, 0xad,
+	0x8a, 0x4e, 0x08, 0xf5, 0x75, 0xdf, 0xa2, 0xc4, 0x93, 0x89, 0xa5, 0xdb, 0x6d, 0xcb, 0xdf, 0x0b,
+	0x76, 0xcb, 0x06, 0x75, 0x2a, 0x0e, 0xdd, 0xb5, 0x6c, 0xbe, 0xf1, 0xa8, 0xc2, 0x7f, 0xe7, 0x45,
+	0xcd, 0x8a, 0xc8, 0x6b, 0x63, 0xd2, 0x5b, 0x84, 0x3b, 0x57, 0xdf, 0x6f, 0xa7, 0x31, 0xdf, 0xc6,
+	0x64, 0xde, 0x70, 0x22, 0x33, 0xb1, 0x08, 0x0b, 0x15, 0xa8, 0x8b, 0x99, 0xee, 0x53, 0x16, 0xda,
+	0x63, 0x0c, 0x7b, 0x81, 0xed, 0x47, 0x96, 0x41, 0x1d, 0x87, 0x46, 0x87, 0xd6, 0xfe, 0xf0, 0x50,
+	0x73, 0xde, 0xd1, 0x7d, 0x63, 0x6f, 0x1e, 0x93, 0xb6, 0x45, 0x70, 0xc5, 0x74, 0xf0, 0xbc, 0xd8,
+	0x5a, 0xb1, 0xa9, 0x11, 0x16, 0x99, 0x4f, 0x14, 0x69, 0xd3, 0x36, 0x95, 0x80, 0x76, 0x83, 0x96,
+	0xb0, 0x64, 0x36, 0x5f, 0xc9, 0x74, 0xd5, 0x85, 0xf9, 0x5a, 0xc8, 0xee, 0x1a, 0xee, 0xa0, 0xbb,
+	0x70, 0x2c, 0x02, 0xdc, 0xdc, 0xc7, 0x1d, 0x05, 0xcc, 0x82, 0xb9, 0x7c, 0xf5, 0x42, 0xb9, 0xc7,
+	0x78, 0x79, 0x33, 0x0c, 0xaf, 0xe1, 0xce, 0x52, 0xf6, 0xf8, 0xe5, 0xd5, 0x21, 0x2d, 0x4f, 0x63,
+	0x17, 0x42, 0x30, 0x4b, 0x74, 0x07, 0x2b, 0x99, 0x59, 0x30, 0x97, 0xd3, 0xc4, 0x7a, 0x61, 0xec,
+	0xe7, 0xb7, 0x0a, 0xf8, 0xf5, 0xad, 0x02, 0x9e, 0x3d, 0xbd, 0x0a, 0xd4, 0x1f, 0x00, 0x9c, 0x8c,
+	0x8e, 0xac, 0x93, 0x16, 0xd3, 0x6b, 0x82, 0x03, 0x74, 0x1d, 0x16, 0x96, 0xa9, 0xb1, 0x8f, 0x99,
+	0x86, 0xdb, 0x96, 0xe7, 0x33, 0x79, 0x78, 0x4e, 0xeb, 0xf3, 0x22, 0x05, 0x9e, 0x5d, 0xde, 0x68,
+	0x7c, 0x44, 0x49, 0x74, 0x48, 0x64, 0xa2, 0x32, 0x44, 0x51, 0xd6, 0x3d, 0xcb, 0xc6, 0x0d, 0xcc,
+	0x0e, 0x30, 0x53, 0x86, 0x45, 0xd2, 0x80, 0x08, 0x9a, 0x82, 0x23, 0xb5, 0x7b, 0x6b, 0xb8, 0xa3,
+	0x64, 0x45, 0x8a, 0x34, 0xd0, 0x05, 0x78, 0xa6, 0x76, 0x6f, 0xdb, 0xc3, 0x4c, 0x19, 0x11, 0xee,
+	0xd0, 0x42, 0xff, 0x84, 0xe3, 0x3d, 0x24, 0x5b, 0xba, 0xe7, 0x29, 0x67, 0x44, 0x38, 0xed, 0x54,
+	0x1b, 0x70, 0x62, 0xf1, 0x41, 0xc0, 0xf0, 0x16, 0xe3, 0xac, 0xf8, 0x16, 0xf6, 0x50, 0x09, 0x8e,
+	0xda, 0xd4, 0x10, 0x8d, 0x19, 0x5e, 0xa9, 0x67, 0xf3, 0xa2, 0x0c, 0x7b, 0x34, 0x60, 0x06, 0x5e,
+	0x65, 0x34, 0x70, 0xc3, 0x2b, 0xa5, 0x9d, 0xea, 0x1d, 0x38, 0xbe, 0x6a, 0xb8, 0x89, 0x92, 0x0a,
+	0x3c, 0xeb, 0x32, 0xfa, 0x31, 0x36, 0xfc, 0xb0, 0x62, 0x64, 0x72, 0xfe, 0x1f, 0xc4, 0xd4, 0x88,
+	0xb5, 0xfa, 0x5b, 0x06, 0x4e, 0x6e, 0xba, 0x98, 0x34, 0x7c, 0xdd, 0xd8, 0x4f, 0x54, 0xf9, 0x0f,
+	0x3c, 0xbf, 0xd9, 0x58, 0x39, 0xf2, 0x31, 0x23, 0xba, 0xbd, 0x81, 0xfd, 0x43, 0xca, 0xf6, 0x37,
+	0xb8, 0x78, 0xb2, 0xe6, 0xe0, 0x20, 0x9a, 0x85, 0xf9, 0xcd, 0x46, 0xdd, 0xd1, 0xdb, 0x78, 0x23,
+	0x16, 0x3a, 0xe9, 0x42, 0x55, 0x38, 0x15, 0x6f, 0xd5, 0x68, 0xe0, 0x63, 0x26, 0x52, 0xa5, 0x12,
+	0x03, 0x63, 0x48, 0x85, 0x63, 0x9b, 0x8d, 0x75, 0x7c, 0x14, 0x9e, 0x14, 0x4a, 0x92, 0xf2, 0xa1,
+	0x39, 0x38, 0xb1, 0xd9, 0x08, 0x8d, 0x86, 0xb1, 0x87, 0x1d, 0x1c, 0x4a, 0xd4, 0xef, 0x46, 0x1b,
+	0x10, 0xf2, 0x0b, 0x6b, 0xc6, 0x8e, 0xce, 0xb8, 0x50, 0xc3, 0x73, 0xf9, 0x6a, 0x39, 0xdd, 0xc4,
+	0xfd, 0x6c, 0x94, 0xe3, 0x0d, 0x2b, 0xc4, 0x67, 0x1d, 0x2d, 0x51, 0xa1, 0x74, 0x07, 0x4e, 0xf4,
+	0x85, 0x51, 0x11, 0x0e, 0x47, 0x0f, 0x24, 0xa7, 0xf1, 0x25, 0x6f, 0xa7, 0x03, 0xdd, 0x0e, 0x22,
+	0x4a, 0xa4, 0xb1, 0x90, 0xb9, 0x0d, 0xd4, 0xef, 0x32, 0x70, 0x3a, 0xd5, 0xf2, 0x09, 0x11, 0x54,
+	0x38, 0xd6, 0x7b, 0x80, 0x16, 0x31, 0xc3, 0x82, 0x29, 0x1f, 0xba, 0x0d, 0xa7, 0xd7, 0xf1, 0x11,
+	0xf5, 0x6a, 0x94, 0xf8, 0xba, 0x45, 0x30, 0xeb, 0xa7, 0xff, 0xb4, 0x30, 0xda, 0x92, 0xca, 0x7b,
+	0xe9, 0xbb, 0x0a, 0x25, 0xf2, 0xd5, 0x99, 0x77, 0x33, 0xa2, 0x0d, 0xda, 0x8a, 0x96, 0x4f, 0x34,
+	0xb8, 0xd0, 0x2a, 0x5f, 0x2d, 0x25, 0xaa, 0xf5, 0x65, 0x68, 0x27, 0xde, 0xc4, 0x7f, 0xfb, 0x3a,
+	0x5a, 0x08, 0x99, 0xaf, 0x2a, 0x89, 0x1a, 0xa9, 0xb8, 0x96, 0x4e, 0x57, 0xbf, 0x1d, 0x86, 0xa3,
+	0x11, 0x45, 0xfc, 0xc5, 0xb6, 0x2c, 0x6c, 0x9b, 0x9e, 0x02, 0x66, 0x87, 0xf9, 0x8b, 0x95, 0x16,
+	0x2a, 0x4b, 0x89, 0x32, 0x27, 0x66, 0x58, 0x62, 0xe2, 0x85, 0x33, 0x4c, 0x08, 0x78, 0x0d, 0x42,
+	0xdd, 0x30, 0xb0, 0xe7, 0x35, 0x03, 0x66, 0xc9, 0x0e, 0x5c, 0xca, 0x7e, 0xde, 0x55, 0x80, 0x96,
+	0x93, 0xfe, 0x6d, 0x66, 0xa1, 0xbb, 0x89, 0xd7, 0x2c, 0x41, 0x5f, 0x29, 0x9b, 0x7c, 0xb2, 0x58,
+	0xbb, 0x81, 0x8f, 0xcd, 0xa6, 0x18, 0xd0, 0x4d, 0x39, 0xa0, 0xcb, 0xf7, 0xa9, 0x11, 0x1e, 0x10,
+	0x3f, 0xf9, 0x5b, 0x10, 0x5a, 0x6e, 0xd3, 0x0b, 0x5c, 0x97, 0x32, 0x5f, 0x0c, 0x91, 0x42, 0x75,
+	0x2a, 0x01, 0xae, 0xee, 0x36, 0x64, 0x4c, 0xcb, 0x59, 0xd1, 0x12, 0x5d, 0x81, 0xd0, 0xe3, 0xff,
+	0x6d, 0x46, 0xd3, 0x72, 0x3d, 0xe5, 0xac, 0x10, 0x3d, 0x27, 0x3d, 0x75, 0xd7, 0x43, 0xd7, 0xe1,
+	0x04, 0x09, 0x9c, 0xa6, 0xd9, 0x21, 0xba, 0x13, 0xe6, 0x8c, 0xce, 0x82, 0xb9, 0x11, 0x6d, 0x9c,
+	0x04, 0xce, 0xb2, 0xf4, 0xd6, 0x5d, 0x6f, 0xe1, 0x21, 0xe0, 0xa3, 0xf8, 0x97, 0xb7, 0x0a, 0xf8,
+	0xb4, 0xab, 0x80, 0x2f, 0xbb, 0x0a, 0x78, 0xd2, 0x55, 0xc0, 0xb3, 0xae, 0x02, 0x8e, 0xbb, 0x0a,
+	0x78, 0xf4, 0xfc, 0x62, 0xfb, 0x7e, 0x08, 0xb3, 0xfc, 0x3f, 0xca, 0xac, 0x07, 0xbc, 0xa1, 0xec,
+	0x45, 0xc3, 0x08, 0x98, 0x6e, 0x74, 0x6e, 0xf6, 0x62, 0x3b, 0x5c, 0x05, 0x63, 0x50, 0xa4, 0x46,
+	0x03, 0xe6, 0xe1, 0xd8, 0x6e, 0xb8, 0x18, 0x9b, 0xb1, 0xf9, 0x7f, 0xcb, 0xc1, 0x9e, 0xaf, 0x3b,
+	0xae, 0xfa, 0x32, 0x13, 0xf7, 0x7d, 0x9d, 0xb4, 0xe8, 0x5f, 0x26, 0x62, 0x19, 0x8e, 0x70, 0x5e,
+	0xe4, 0xb4, 0x29, 0xa4, 0x3a, 0x2a, 0xda, 0xd1, 0xe0, 0x71, 0x4d, 0xa6, 0xa1, 0x4b, 0x30, 0x47,
+	0xa8, 0x6f, 0xb5, 0x3a, 0x4d, 0xcb, 0x14, 0x9a, 0x0f, 0x6b, 0xa3, 0xd2, 0x51, 0x37, 0xd1, 0x0c,
+	0x84, 0x06, 0x25, 0x3e, 0xa3, 0xb6, 0xdd, 0xfb, 0x3f, 0x48, 0x78, 0xd0, 0x65, 0x08, 0xa9, 0xd7,
+	0x74, 0xf4, 0xa3, 0x26, 0xd3, 0x1d, 0xa1, 0x65, 0x56, 0x1b, 0xa5, 0xde, 0xba, 0x7e, 0xa4, 0xe9,
+	0x0e, 0x52, 0xe1, 0x78, 0x18, 0x3d, 0x30, 0x28, 0xc3, 0x52, 0xb7, 0xac, 0x96, 0x17, 0x09, 0x3b,
+	0xc2, 0x85, 0xfe, 0x11, 0xe7, 0x50, 0xbb, 0xd9, 0xde, 0x15, 0xba, 0x65, 0x35, 0x28, 0x73, 0xa8,
+	0xbd, 0xba, 0xcb, 0x99, 0xc1, 0x8c, 0x51, 0xe6, 0x29, 0x39, 0xc9, 0x8c, 0xb4, 0x16, 0x2e, 0xf7,
+	0x6b, 0xf9, 0xb4, 0xab, 0x80, 0x17, 0x5d, 0x05, 0xbc, 0xea, 0x2a, 0x40, 0xbd, 0x06, 0x27, 0xa2,
+	0xfb, 0xae, 0x63, 0x9f, 0x59, 0x86, 0xc7, 0x47, 0x56, 0x8b, 0x52, 0x71, 0x8d, 0xac, 0xc6, 0x97,
+	0x37, 0x1e, 0x03, 0x38, 0x9e, 0x62, 0x05, 0x29, 0x70, 0x2a, 0xe5, 0xd8, 0x26, 0xfb, 0x84, 0x1e,
+	0x92, 0xe2, 0x10, 0x9a, 0x8e, 0xff, 0xb6, 0x45, 0x64, 0x45, 0xa0, 0x28, 0x02, 0x74, 0x01, 0xa2,
+	0x34, 0xb3, 0x58, 0x37, 0x3b, 0xc5, 0xcc, 0x89, 0x52, 0x9b, 0xad, 0x96, 0x6d, 0x11, 0x5c, 0x1c,
+	0x46, 0x97, 0xe2, 0x71, 0x28, 0x22, 0x1b, 0xd4, 0xdf, 0x62, 0xd8, 0xc3, 0xc4, 0x2f, 0x66, 0xab,
+	0x2f, 0xb2, 0xf1, 0x27, 0xc9, 0xa2, 0x6b, 0xa1, 0x2f, 0x00, 0x2c, 0xd4, 0x18, 0xd6, 0x7d, 0xdc,
+	0x7b, 0xf0, 0x93, 0x03, 0x44, 0x2d, 0x9d, 0x4b, 0x38, 0x35, 0xf1, 0x91, 0xa5, 0x6a, 0x6f, 0xba,
+	0xca, 0x2d, 0x2d, 0xfc, 0x2b, 0x8d, 0x12, 0xbd, 0x9b, 0x8b, 0x06, 0x6f, 0xc6, 0x75, 0x9d, 0xe8,
+	0x6d, 0x7c, 0x73, 0x0d, 0x77, 0x92, 0xdf, 0x34, 0x65, 0x3e, 0x36, 0x3f, 0xfb, 0xfe, 0xa7, 0xaf,
+	0x32, 0xe7, 0xd5, 0x62, 0xc5, 0x10, 0xe7, 0x56, 0xa2, 0xef, 0xcf, 0x05, 0x70, 0xe3, 0x5f, 0x00,
+	0x3d, 0x06, 0xb0, 0xb0, 0x8c, 0x6d, 0xfc, 0x01, 0x80, 0xb6, 0x3f, 0x10, 0xd0, 0x93, 0xe7, 0x17,
+	0x81, 0x00, 0x35, 0xa5, 0x4e, 0x54, 0x4c, 0x71, 0xb6, 0x04, 0x15, 0x61, 0xe2, 0x24, 0x6d, 0xbb,
+	0xe6, 0xdf, 0x42, 0x52, 0x20, 0xce, 0xed, 0x23, 0xe9, 0x11, 0x80, 0x63, 0x8d, 0x3d, 0x7a, 0xf8,
+	0x6e, 0x38, 0x83, 0x9c, 0xea, 0xc6, 0x9b, 0xae, 0xf2, 0xef, 0xd3, 0x00, 0xed, 0x58, 0xf8, 0xf0,
+	0x74, 0x38, 0x93, 0x6a, 0xa1, 0xe2, 0xed, 0xd1, 0xc3, 0x34, 0x98, 0xea, 0x37, 0x99, 0xf8, 0x31,
+	0xf0, 0x61, 0xc3, 0xdb, 0xea, 0x6b, 0x00, 0x8b, 0x49, 0x80, 0x62, 0x08, 0x4d, 0x0f, 0xc0, 0xc3,
+	0x03, 0xa5, 0xd3, 0x02, 0x82, 0xbd, 0x0f, 0x04, 0x3b, 0xad, 0xa2, 0x34, 0x58, 0x8b, 0xb4, 0xa8,
+	0x64, 0x6f, 0x09, 0xa2, 0x3a, 0xe1, 0xdf, 0x73, 0xef, 0x87, 0x6e, 0x80, 0xaa, 0x43, 0x68, 0x11,
+	0x9e, 0x5b, 0x39, 0xb0, 0xfe, 0x4c, 0x89, 0xea, 0x43, 0x10, 0x3f, 0xed, 0x70, 0x88, 0x70, 0xea,
+	0x3e, 0x81, 0x93, 0x49, 0xe6, 0xa2, 0xf1, 0x52, 0x1a, 0x50, 0x3b, 0x8c, 0x95, 0xde, 0x11, 0x53,
+	0x67, 0x05, 0x1b, 0x25, 0xf5, 0x7c, 0x9a, 0x0d, 0x47, 0x86, 0x05, 0x21, 0x4b, 0xc5, 0xe3, 0x1f,
+	0x67, 0x86, 0x8e, 0x5f, 0xcf, 0x80, 0x17, 0xaf, 0x67, 0xc0, 0xab, 0xd7, 0x33, 0x60, 0xf7, 0x8c,
+	0x28, 0x76, 0xeb, 0xf7, 0x00, 0x00, 0x00, 0xff, 0xff, 0x34, 0x32, 0x20, 0x3e, 0x1d, 0x0e, 0x00,
+	0x00,
 }
