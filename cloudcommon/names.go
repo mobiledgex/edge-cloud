@@ -29,11 +29,11 @@ var DeveloperSamsung = "Samsung"
 var SamsungEnablingLayer = "SamsungEnablingLayer"
 
 // cloudlet types
-var CloudletTypeOpenStack = "openstack"
-var CloudletTypeAzure = "azure"
-var CloudletTypeGCP = "gcp"
-var CloudletTypeLocalDIND = "localdind"
-var CloudletTypeFake = "fake"
+var CloudletKindOpenStack = "openstack"
+var CloudletKindAzure = "azure"
+var CloudletKindGCP = "gcp"
+var CloudletKindDIND = "localdind"
+var CloudletKindFake = "fake"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
