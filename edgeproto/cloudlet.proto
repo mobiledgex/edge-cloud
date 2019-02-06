@@ -37,7 +37,6 @@ message CloudletInfraCommon{
     string CFUser = 5; //MEX_CF_KEY
     // Docker registry password
     string DockerRegPass = 6; //MEX_DOCKER_REG_PASS
-    // openstack specific
 }
 
 message AzureProperties{
