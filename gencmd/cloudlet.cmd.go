@@ -90,6 +90,232 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
+	s := make([]string, 0, 6)
+	s = append(s, in.DockerRegistry)
+	s = append(s, in.DNSZone)
+	s = append(s, in.RegistryFileServer)
+	s = append(s, in.CFKey)
+	s = append(s, in.CFUser)
+	s = append(s, in.DockerRegPass)
+	return s
+}
+
+func CloudletInfraCommonHeaderSlicer() []string {
+	s := make([]string, 0, 6)
+	s = append(s, "DockerRegistry")
+	s = append(s, "DNSZone")
+	s = append(s, "RegistryFileServer")
+	s = append(s, "CFKey")
+	s = append(s, "CFUser")
+	s = append(s, "DockerRegPass")
+	return s
+}
+
+func CloudletInfraCommonWriteOutputArray(objs []*edgeproto.CloudletInfraCommon) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletInfraCommonSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletInfraCommonWriteOutputOne(obj *edgeproto.CloudletInfraCommon) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletInfraCommonSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func AzurePropertiesSlicer(in *edgeproto.AzureProperties) []string {
+	s := make([]string, 0, 2)
+	s = append(s, in.Location)
+	s = append(s, in.ResourceGroup)
+	return s
+}
+
+func AzurePropertiesHeaderSlicer() []string {
+	s := make([]string, 0, 2)
+	s = append(s, "Location")
+	s = append(s, "ResourceGroup")
+	return s
+}
+
+func AzurePropertiesWriteOutputArray(objs []*edgeproto.AzureProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AzurePropertiesHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AzurePropertiesSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AzurePropertiesWriteOutputOne(obj *edgeproto.AzureProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AzurePropertiesHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AzurePropertiesSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func GcpPropertiesSlicer(in *edgeproto.GcpProperties) []string {
+	s := make([]string, 0, 2)
+	s = append(s, in.Project)
+	s = append(s, in.Zone)
+	return s
+}
+
+func GcpPropertiesHeaderSlicer() []string {
+	s := make([]string, 0, 2)
+	s = append(s, "Project")
+	s = append(s, "Zone")
+	return s
+}
+
+func GcpPropertiesWriteOutputArray(objs []*edgeproto.GcpProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(GcpPropertiesHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(GcpPropertiesSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func GcpPropertiesWriteOutputOne(obj *edgeproto.GcpProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(GcpPropertiesHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(GcpPropertiesSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func OpenStackPropertiesSlicer(in *edgeproto.OpenStackProperties) []string {
+	s := make([]string, 0, 6)
+	s = append(s, in.OSExternalNetworkName)
+	s = append(s, in.OSImageName)
+	s = append(s, in.OSExternalRouterName)
+	s = append(s, in.OSMexNetwork)
+	s = append(s, in.OSNetworkScheme)
+	return s
+}
+
+func OpenStackPropertiesHeaderSlicer() []string {
+	s := make([]string, 0, 6)
+	s = append(s, "OSExternalNetworkName")
+	s = append(s, "OSImageName")
+	s = append(s, "OSExternalRouterName")
+	s = append(s, "OSMexNetwork")
+	s = append(s, "OSNetworkScheme")
+	return s
+}
+
+func OpenStackPropertiesWriteOutputArray(objs []*edgeproto.OpenStackProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OpenStackPropertiesHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(OpenStackPropertiesSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func OpenStackPropertiesWriteOutputOne(obj *edgeproto.OpenStackProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(OpenStackPropertiesHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(OpenStackPropertiesSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
+func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []string {
+	s := make([]string, 0, 5)
+	s = append(s, in.CloudletKind)
+	s = append(s, in.MexosContainerImageName)
+	if in.OpenstackProperties == nil {
+		in.OpenstackProperties = &edgeproto.OpenStackProperties{}
+	}
+	s = append(s, in.OpenstackProperties.OSExternalNetworkName)
+	s = append(s, in.OpenstackProperties.OSImageName)
+	s = append(s, in.OpenstackProperties.OSExternalRouterName)
+	s = append(s, in.OpenstackProperties.OSMexNetwork)
+	s = append(s, in.OpenstackProperties.OSNetworkScheme)
+	if in.AzureProperties == nil {
+		in.AzureProperties = &edgeproto.AzureProperties{}
+	}
+	s = append(s, in.AzureProperties.Location)
+	s = append(s, in.AzureProperties.ResourceGroup)
+	if in.GcpProperties == nil {
+		in.GcpProperties = &edgeproto.GcpProperties{}
+	}
+	s = append(s, in.GcpProperties.Project)
+	s = append(s, in.GcpProperties.Zone)
+	return s
+}
+
+func CloudletInfraPropertiesHeaderSlicer() []string {
+	s := make([]string, 0, 5)
+	s = append(s, "CloudletKind")
+	s = append(s, "MexosContainerImageName")
+	s = append(s, "OpenstackProperties-OSExternalNetworkName")
+	s = append(s, "OpenstackProperties-OSImageName")
+	s = append(s, "OpenstackProperties-OSExternalRouterName")
+	s = append(s, "OpenstackProperties-OSMexNetwork")
+	s = append(s, "OpenstackProperties-OSNetworkScheme")
+	s = append(s, "AzureProperties-Location")
+	s = append(s, "AzureProperties-ResourceGroup")
+	s = append(s, "GcpProperties-Project")
+	s = append(s, "GcpProperties-Zone")
+	return s
+}
+
+func CloudletInfraPropertiesWriteOutputArray(objs []*edgeproto.CloudletInfraProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraPropertiesHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(CloudletInfraPropertiesSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func CloudletInfraPropertiesWriteOutputOne(obj *edgeproto.CloudletInfraProperties) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(CloudletInfraPropertiesHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(CloudletInfraPropertiesSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	s := make([]string, 0, 7)
 	if in.Fields == nil {
