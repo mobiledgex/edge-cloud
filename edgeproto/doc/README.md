@@ -692,7 +692,7 @@ CloudletKey uniquely identifies a Cloudlet.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| OSExternalNetworkName | [string](#string) |  | todo: need openrc vars here name of the external network, e.g. external-network-shared |
+| OSExternalNetworkName | [string](#string) |  | name of the external network, e.g. external-network-shared |
 | OSImageName | [string](#string) |  | openstack image , e.g. mobiledgex |
 | OSExternalRouterName | [string](#string) |  | openstack router |
 | OSMexNetwork | [string](#string) |  | openstack internal network |

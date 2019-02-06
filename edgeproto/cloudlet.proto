@@ -42,7 +42,6 @@ message GcpProperties{
 
 
 message OpenStackProperties{
-  //todo: need openrc vars here
   // name of the external network, e.g. external-network-shared
   string OSExternalNetworkName = 1; 
   //openstack image , e.g. mobiledgex

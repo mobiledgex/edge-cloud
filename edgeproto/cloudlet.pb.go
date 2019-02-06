@@ -107,7 +107,6 @@ func (*GcpProperties) ProtoMessage()               {}
 func (*GcpProperties) Descriptor() ([]byte, []int) { return fileDescriptorCloudlet, []int{2} }
 
 type OpenStackProperties struct {
-	// todo: need openrc vars here
 	// name of the external network, e.g. external-network-shared
 	OSExternalNetworkName string `protobuf:"bytes,1,opt,name=OSExternalNetworkName,proto3" json:"OSExternalNetworkName,omitempty"`
 	// openstack image , e.g. mobiledgex
