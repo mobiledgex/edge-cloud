@@ -101,6 +101,15 @@ namespace DistributedMatchEngine
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
+    string createUri(string host, UInt32 port)
+    {
+      if (host != null && host != "")
+      {
+        return "http://" + host + ":" + port;
+      }
+      return generateDmeBaseUri(null, port);
+    }
+
     /*
      * This is temporary, and must be updated later.   
      */
@@ -232,7 +241,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + registerAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + registerAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -307,7 +316,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + verifylocationAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + verifylocationAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -342,7 +351,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + getlocationAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + getlocationAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -381,7 +390,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + appinstlistAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + appinstlistAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -413,7 +422,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + getfqdnlistAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + getfqdnlistAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -448,7 +457,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + dynamiclocgroupAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + dynamiclocgroupAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;

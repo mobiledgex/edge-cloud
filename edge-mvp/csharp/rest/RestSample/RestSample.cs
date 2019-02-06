@@ -6,20 +6,20 @@ namespace RestSample
 {
   class Program
   {
-    static string carrierName = "TDG";
+    static string carrierName = "tdg";
     static string appName = "EmptyMatchEngineApp";
     static string devName = "EmptyMatchEngineApp";
     static string appVers = "1.0";
     static string developerAuthToken = "";
 
-    static string host = "TDG.dme.mobiledgex.net";
+    static string host = "tdg.dme.mobiledgex.net";
     static UInt32 port = 38001;
 
     // Get the ephemerial carriername from device specific properties.
     async static Task<string> getCurrentCarrierName()
     {
       var dummy = await Task.FromResult(0);
-      return carrierName = "TDG";
+      return carrierName;
     }
 
     async static Task Main(string[] args)
