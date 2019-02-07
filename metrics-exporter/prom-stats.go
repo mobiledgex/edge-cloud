@@ -86,13 +86,13 @@ func getPromMetrics(addr string, query string) (*PromResp, error) {
 	return promResp, nil
 }
 
-func (p *PromStats) CollectPromStats() error {
+func (p *PromStats) CollectPromStats(getMetrics func(addr string, query string) (*PromResp, error)) error {
 	appKey := MetricAppInstKey{
 		cluster:   *clusterName,
 		developer: "",
 	}
 	// Get Pod CPU usage percentage
-	resp, err := getPromMetrics(p.promAddr, promQCpuPod)
+	resp, err := getMetrics(p.promAddr, promQCpuPod)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
@@ -108,7 +108,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Pod Mem usage
-	resp, err = getPromMetrics(p.promAddr, promQMemPod)
+	resp, err = getMetrics(p.promAddr, promQMemPod)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
@@ -124,7 +124,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Pod NetRecv bytes rate averaged over 1m
-	resp, err = getPromMetrics(p.promAddr, promQNetRecvRate)
+	resp, err = getMetrics(p.promAddr, promQNetRecvRate)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
@@ -140,7 +140,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Pod NetRecv bytes rate averaged over 1m
-	resp, err = getPromMetrics(p.promAddr, promQNetSendRate)
+	resp, err = getMetrics(p.promAddr, promQNetSendRate)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			appKey.pod = metric.Labels.PodName
@@ -157,7 +157,7 @@ func (p *PromStats) CollectPromStats() error {
 	}
 
 	// Get Cluster CPU usage
-	resp, err = getPromMetrics(p.promAddr, promQCpuClust)
+	resp, err = getMetrics(p.promAddr, promQCpuClust)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			//copy only if we can parse the value
@@ -169,7 +169,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Cluster Mem usage
-	resp, err = getPromMetrics(p.promAddr, promQMemClust)
+	resp, err = getMetrics(p.promAddr, promQMemClust)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			//copy only if we can parse the value
@@ -181,7 +181,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Cluster Disk usage percentage
-	resp, err = getPromMetrics(p.promAddr, promQDiskClust)
+	resp, err = getMetrics(p.promAddr, promQDiskClust)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			//copy only if we can parse the value
@@ -193,7 +193,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Cluster NetRecv bytes rate averaged over 1m
-	resp, err = getPromMetrics(p.promAddr, promQRecvBytesRateClust)
+	resp, err = getMetrics(p.promAddr, promQRecvBytesRateClust)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			//copy only if we can parse the value
@@ -205,7 +205,7 @@ func (p *PromStats) CollectPromStats() error {
 		}
 	}
 	// Get Cluster NetSend bytes rate averaged over 1m
-	resp, err = getPromMetrics(p.promAddr, promQSendBytesRateClust)
+	resp, err = getMetrics(p.promAddr, promQSendBytesRateClust)
 	if err == nil && resp.Status == "success" {
 		for _, metric := range resp.Data.Result {
 			//copy only if we can parse the value
@@ -238,7 +238,7 @@ func (p *PromStats) RunNotify() {
 		select {
 		case <-time.After(p.interval):
 			ts, _ := types.TimestampProto(time.Now())
-			if p.CollectPromStats() != nil {
+			if p.CollectPromStats(getPromMetrics) != nil {
 				continue
 			}
 			DebugPrint("Sending metrics for %s with timestamp %s\n", *clusterName, ts.String())

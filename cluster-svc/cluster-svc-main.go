@@ -129,7 +129,6 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
-		//TODO - need to wait a bit before running this command
 		if err = createMEXMetricsExporter(dialOpts, in.Key.ClusterKey); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "metrics Exporter app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
