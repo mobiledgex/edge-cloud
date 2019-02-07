@@ -73,7 +73,7 @@ func (g *kubeBasicGen) kubeLb(protos []string) {
 		return
 	}
 	lb := lbData{
-		Name:  util.K8SSanitize(g.app.Name + "-" + protos[0]),
+		Name:  util.DNSSanitize(g.app.Name + "-" + protos[0]),
 		Run:   util.K8SSanitize(g.app.Name),
 		Ports: []kubePort{},
 	}
@@ -130,7 +130,8 @@ func (g *kubeBasicGen) kubeApp() {
 		cs = strings.Split(g.app.Command, " ")
 	}
 	data := appData{
-		Name:      util.K8SSanitize(g.app.Name + "-deployment"),
+		Name:      util.DNSSanitize(g.app.Name + "-deployment"),
+		DNSName:   util.DNSSanitize(g.app.Name),
 		Run:       util.K8SSanitize(g.app.Name),
 		Ports:     g.ports,
 		ImagePath: g.app.ImagePath,
@@ -146,6 +147,7 @@ func (g *kubeBasicGen) kubeApp() {
 
 type appData struct {
 	Name      string
+	DNSName   string
 	Run       string
 	ImagePath string
 	Ports     []kubePort
@@ -170,7 +172,7 @@ spec:
       imagePullSecrets:
       - name: mexregistrysecret
       containers:
-      - name: {{.Run}}
+      - name: {{.DNSName}}
         image: {{.ImagePath}}
         imagePullPolicy: Always
         ports:
