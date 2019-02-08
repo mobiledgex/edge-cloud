@@ -13,4 +13,4 @@ RUN go install -v ./...
 FROM alpine:latest
 COPY --from=build /go/bin/metrics-exporter /usr/local/bin
 
-CMD [ "metrics-exporter", "--influxdb", "40.122.54.157:8086" ]
+CMD [ "metrics-exporter", "--influxdb", "mexdemo.influxdb.mobiledgex.net:8086" ]

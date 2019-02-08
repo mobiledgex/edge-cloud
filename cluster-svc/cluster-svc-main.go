@@ -104,7 +104,6 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
-	AccessPorts:   *externalPorts,
 }
 
 var dialOpts grpc.DialOption
@@ -140,7 +139,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 				"error", err.Error())
 		}
 		if err = createMEXMetricsExporterInst(dialOpts, in.Key); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
+			log.DebugLog(log.DebugLevelMexos, "Metrics-exporter inst create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
 	}
@@ -276,6 +275,7 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgep
 	return nil
 }
 func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
+	MEXPrometheusApp.AccessPorts = *externalPorts
 	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
 }
 

@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"time"
 
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_clinet"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -80,6 +80,7 @@ func main() {
 	}
 	fmt.Printf("Found Prometheus running on: %s\n", *promAddress)
 	initEnv()
+	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
 	influxQ = influxq.NewInfluxQ(InfluxDBName)
 	err = influxQ.Start(*influxdb)
 	if err != nil {

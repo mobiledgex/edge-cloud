@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -178,8 +180,16 @@ func TestPromStats(t *testing.T) {
 		cluster:   *clusterName,
 		developer: "",
 	}
-	testPromStats := NewPromStats("0.0.0.0:9090", time.Second*1, testMetricSend)
-	err := testPromStats.CollectPromStats(getTestMetrics)
+	// Skip this much of the URL
+	skiplen := len("/api/v1/query?query=")
+	// start up http server to serve Prometheus metrics data
+	tsProm := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(testPayloadData[r.URL.String()[skiplen:]]))
+	}))
+	defer tsProm.Close()
+	// Remove the leading "http://"
+	testPromStats := NewPromStats(tsProm.URL[7:], time.Second*1, testMetricSend)
+	err := testPromStats.CollectPromStats()
 	assert.Nil(t, err, "Fill stats from json")
 	testAppKey.pod = "testPod1"
 	stat, found := testPromStats.appStatsMap[testAppKey]

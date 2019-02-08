@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/gogo/protobuf/types"
-	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_clinet"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +32,7 @@ func TestInfluxQ(t *testing.T) {
 		defer db.Stop()
 	}
 
-	q := influxq.NewInfluxQ("metrics")
+	q := influxq.NewInfluxQ(InfluxDBName)
 	err = q.Start(addr)
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
