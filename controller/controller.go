@@ -17,8 +17,8 @@ import (
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -44,6 +44,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
 var ControllerId = ""
+var InfluxDBName = "metrics"
 
 func GetRootDir() string {
 	return *rootDir
@@ -100,7 +101,7 @@ func main() {
 		log.FatalLog("Failed to register controller", "err", err)
 	}
 
-	influxQ := NewInfluxQ()
+	influxQ := influxq.NewInfluxQ(InfluxDBName)
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
 		log.FatalLog("Failed to start influx queue",
@@ -231,7 +232,7 @@ func InitApis(sync *Sync) {
 	ControllerId = hostname + "@" + *externalApiAddr
 }
 
-func InitNotify(influxQ *InfluxQ) {
+func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterFlavorCache(&clusterFlavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)

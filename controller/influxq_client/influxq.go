@@ -1,4 +1,4 @@
-package main
+package influxq
 
 import (
 	"fmt"
@@ -23,11 +23,11 @@ import (
 var InfluxQPushInterval time.Duration = time.Second
 var InfluxQPushCountTrigger = 50
 var InfluxQPushCountMax = 5000
-var InfluxQDBName = "metrics"
 var InfluxQPrecision = "us"
 var InfluxQReconnectDelay time.Duration = time.Second
 
 type InfluxQ struct {
+	dbName    string
 	client    client.Client
 	data      []*edgeproto.Metric
 	done      bool
@@ -35,13 +35,14 @@ type InfluxQ struct {
 	doPush    chan bool
 	mux       sync.Mutex
 	wg        sync.WaitGroup
-	errBatch  uint64
-	errPoint  uint64
-	qfull     uint64
+	ErrBatch  uint64
+	ErrPoint  uint64
+	Qfull     uint64
 }
 
-func NewInfluxQ() *InfluxQ {
+func NewInfluxQ(DBName string) *InfluxQ {
 	q := InfluxQ{}
+	q.dbName = DBName
 	q.data = make([]*edgeproto.Metric, 0)
 	q.doPush = make(chan bool, 1)
 	return &q
@@ -76,7 +77,7 @@ func (q *InfluxQ) RunPush() {
 		if !q.dbcreated {
 			// make sure main db is created otherwise
 			// batch point writes will fail
-			_, err := q.QueryDB(fmt.Sprintf("create database %s", InfluxQDBName))
+			_, err := q.QueryDB(fmt.Sprintf("create database %s", q.dbName))
 			if err != nil {
 				if _, ok := err.(net.Error); !ok {
 					// only log for non-network errors
@@ -106,13 +107,13 @@ func (q *InfluxQ) RunPush() {
 		q.mux.Unlock()
 
 		bp, err := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  InfluxQDBName,
+			Database:  q.dbName,
 			Precision: InfluxQPrecision,
 		})
 		if err != nil {
 			log.DebugLog(log.DebugLevelMetrics, "create batch points",
 				"err", err)
-			atomic.AddUint64(&q.errBatch, 1)
+			atomic.AddUint64(&q.ErrBatch, 1)
 			continue
 		}
 
@@ -134,14 +135,14 @@ func (q *InfluxQ) RunPush() {
 			if err != nil {
 				log.DebugLog(log.DebugLevelMetrics, "set timestamp",
 					"timestamp", &metric.Timestamp, "err", err)
-				atomic.AddUint64(&q.errPoint, 1)
+				atomic.AddUint64(&q.ErrPoint, 1)
 				continue
 			}
 			pt, err := client.NewPoint(metric.Name, tags, fields, ts)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMetrics,
 					"metric new point", "err", err)
-				atomic.AddUint64(&q.errPoint, 1)
+				atomic.AddUint64(&q.ErrPoint, 1)
 				continue
 			}
 			bp.AddPoint(pt)
@@ -150,7 +151,7 @@ func (q *InfluxQ) RunPush() {
 		if err != nil {
 			log.DebugLog(log.DebugLevelMetrics, "write batch points",
 				"err", err)
-			atomic.AddUint64(&q.errBatch, 1)
+			atomic.AddUint64(&q.ErrBatch, 1)
 		}
 	}
 	q.wg.Done()
@@ -160,15 +161,13 @@ func (q *InfluxQ) Recv(metric *edgeproto.Metric) {
 	q.AddMetric(metric)
 }
 
-func (q *InfluxQ) Flush(notifyId int64) {}
-
 func (q *InfluxQ) AddMetric(metric *edgeproto.Metric) {
 	q.mux.Lock()
 	defer q.mux.Unlock()
 	if len(q.data) > InfluxQPushCountMax {
 		// limit len to prevent out of memory if
 		// q is not reachable
-		q.qfull++
+		q.Qfull++
 		return
 	}
 	q.data = append(q.data, metric)
@@ -188,7 +187,7 @@ func (q *InfluxQ) DoPush() {
 func (q *InfluxQ) QueryDB(cmd string) ([]client.Result, error) {
 	query := client.Query{
 		Command:  cmd,
-		Database: InfluxQDBName,
+		Database: q.dbName,
 	}
 	resp, err := q.client.Query(query)
 	if err != nil {
