@@ -113,9 +113,9 @@ apps:
 - key:
     developerkey:
       name: mexinfradev_
-    name: MEXMetricsWriter
+    name: MEXMetricsExporter
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mexinfradev_/MEXMetricsWriter:1.0
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
   imagetype: ImageTypeDocker
   ipaccess: IpAccessShared
   defaultflavor:
@@ -165,7 +165,7 @@ appinstances:
     appkey:
       developerkey:
         name: mexinfradev_
-      name: MEXMetricsWriter
+      name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
       operatorkey:
