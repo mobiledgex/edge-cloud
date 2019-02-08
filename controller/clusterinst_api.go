@@ -241,7 +241,7 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 	// Delete appInsts that are set for autodelete
 	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
-		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s - %s",
+		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s, %s",
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
