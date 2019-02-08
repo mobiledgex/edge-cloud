@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/signal"
@@ -39,15 +41,51 @@ var MEXdev = edgeproto.Developer{
 	Username: MEXDevUsername,
 }
 
-var MEXMetricsWriterAppName = "MEXMetricsWriter"
-var MEXMetricsWriterAppVer = "1.0"
+var MEXMetricsExporterAppName = "MEXMetricsExporter"
+var MEXMetricsExporterAppVer = "1.0"
 
-var MEXMetricsWriterApp = edgeproto.App{
+var exporterT *template.Template
+
+var MEXMetricsExporterTemplate = `apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mexmetricsexporter-deployment
+spec:
+  selector:
+    matchLabels:
+      run: mexmetricsexporter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: mexmetricsexporter
+    spec:
+      volumes:
+      imagePullSecrets:
+      - name: mexregistrysecret
+      containers:
+      - name: mexmetricsexporter
+        image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+        imagePullPolicy: Always
+        env:
+        - name: MEX_CLUSTER_NAME
+          value: {{.Cluster}}
+        - name: MEX_INFLUXDB_ADDR
+          value: {{.InfluxDBAddr}}
+        - name: MEX_INFLUXDB_USER
+          value: {{.InfluxDBUser}}
+        - name: MEX_INFLUXDB_PASS
+          value: {{.InfluxDBPass}}
+        ports:
+`
+
+var MEXMetricsExporterApp = edgeproto.App{
 	Key: edgeproto.AppKey{
 		DeveloperKey: MEXdev.Key,
-		Name:         MEXMetricsWriterAppName,
-		Version:      MEXMetricsWriterAppVer,
+		Name:         MEXMetricsExporterAppName,
+		Version:      MEXMetricsExporterAppVer,
 	},
+	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
@@ -66,7 +104,6 @@ var MEXPrometheusApp = edgeproto.App{
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
-	AccessPorts:   *externalPorts,
 }
 
 var dialOpts grpc.DialOption
@@ -91,18 +128,18 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
-		if err = createMEXMetricsWriter(dialOpts, in.Key.ClusterKey); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "metrics writer app create failed", "cluster", in.Key.ClusterKey.Name,
+		if err = createMEXMetricsExporter(dialOpts, in.Key.ClusterKey); err != nil {
+			log.DebugLog(log.DebugLevelMexos, "metrics Exporter app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
 		// Create Two applications on the cluster after creation
-		//   - Prometheus and MetricsWriter
+		//   - Prometheus and MetricsExporter
 		if err = createMEXPromInst(dialOpts, in.Key); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
-		if err = createMEXMetricsWriterInst(dialOpts, in.Key); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
+		if err = createMEXMetricsExporterInst(dialOpts, in.Key); err != nil {
+			log.DebugLog(log.DebugLevelMexos, "Metrics-exporter inst create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
 	}
@@ -124,6 +161,10 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 }
 
 func (c *ClusterInstHandler) Flush(notifyId int64) {}
+
+func init() {
+	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterTemplate))
+}
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	notifyClient := notify.NewClient(strings.Split(addrs, ","), tlsCertFile)
@@ -182,8 +223,8 @@ func createMEXPromInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKe
 	return createAppInstCommon(dialOpts, instKey, MEXPrometheusApp.Key)
 }
 
-func createMEXMetricsWriterInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(dialOpts, instKey, MEXMetricsWriterApp.Key)
+func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
+	return createAppInstCommon(dialOpts, instKey, MEXMetricsExporterApp.Key)
 }
 
 func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
@@ -234,11 +275,33 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgep
 	return nil
 }
 func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
+	MEXPrometheusApp.AccessPorts = *externalPorts
 	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
 }
 
-func createMEXMetricsWriter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	return createAppCommon(dialOpts, &MEXMetricsWriterApp, cluster)
+type exporterData struct {
+	Cluster      string
+	InfluxDBAddr string
+	InfluxDBUser string
+	InfluxDBPass string
+}
+
+func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
+	app := MEXMetricsExporterApp
+
+	ex := exporterData{
+		Cluster:      cluster.Name,
+		InfluxDBAddr: *influxDBAddr,
+		InfluxDBUser: *influxDBUser,
+		InfluxDBPass: *influxDBPass,
+	}
+	buf := bytes.Buffer{}
+	err := exporterT.Execute(&buf, &ex)
+	if err != nil {
+		return err
+	}
+	app.DeploymentManifest = buf.String()
+	return createAppCommon(dialOpts, &app, cluster)
 }
 
 func main() {
