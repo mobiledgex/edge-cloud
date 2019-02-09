@@ -12,6 +12,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
+	"github.com/mobiledgex/edge-cloud/util"
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -206,27 +207,36 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Specified cloudlet not found")
 			}
 
-			// find cluster from app
-			var app edgeproto.App
-			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-				return errors.New("Specified app not found")
-			}
-
-			// ClusterInstKey is derived from App's Cluster and
-			// AppInst's Cloudlet. It is not specifiable by the user.
-			// It is kept here is a shortcut to make looking up the
-			// clusterinst object easier.
-			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
-			in.ClusterInstKey.ClusterKey = app.Cluster
-
-			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
-				// cluster inst does not exist, see if we can create it.
-				// because app cannot exist without cluster, cluster
-				// should exist. But check anyway.
-				if !clusterApi.store.STMGet(stm, &app.Cluster, nil) {
-					return errors.New("Cluster does not exist for app")
+			cikey := &in.ClusterInstKey
+			if cikey.CloudletKey.Name != "" || cikey.CloudletKey.OperatorKey.Name != "" {
+				// Make sure ClusterInst cloudlet key matches
+				// AppInst's cloudlet key to prevent confusion
+				// if user specifies both.
+				if !in.Key.CloudletKey.Matches(&cikey.CloudletKey) {
+					return errors.New("Specified ClusterInst cloudlet key does not match specified AppInst cloudlet key")
 				}
-				autocluster = true
+			}
+			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
+			// Check if specified ClusterInst exists
+			if cikey.ClusterKey.Name != "" {
+				if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
+					return errors.New("Specified ClusterInst not found")
+				}
+				// cluster inst exists so we're good.
+				return nil
+			}
+			// No ClusterInst specified, auto-create one
+			cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
+			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
+			autocluster = true
+
+			if in.Flavor.Name == "" {
+				// find flavor from app
+				var app edgeproto.App
+				if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+					return errors.New("Specified app not found")
+				}
+				in.Flavor = app.DefaultFlavor
 			}
 			return nil
 		})
@@ -243,7 +253,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			"Create auto-clusterinst",
 			"key", clusterInst.Key,
 			"appinst", in)
-		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
+		clusterflavorKey, err := GetClusterFlavorForFlavor(&in.Flavor)
+		if err != nil {
+			return fmt.Errorf("error getting flavor for auto ClusterInst, %s", err.Error())
+		}
+		clusterInst.Flavor = *clusterflavorKey
+		err = clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
 		}

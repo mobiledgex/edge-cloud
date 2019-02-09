@@ -141,12 +141,13 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			initCloudletRefs(&refs, &in.Key.CloudletKey)
 		}
 
+		// cluster does not need to exist.
+		// cluster will eventually be deprecated and removed.
 		var cluster edgeproto.Cluster
-		if !clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
-			return errors.New("Specified Cluster not found")
-		}
-		if in.Flavor.Name == "" {
-			in.Flavor = cluster.DefaultFlavor
+		if clusterApi.store.STMGet(stm, &in.Key.ClusterKey, &cluster) {
+			if in.Flavor.Name == "" {
+				in.Flavor = cluster.DefaultFlavor
+			}
 		}
 		if in.Flavor.Name == "" {
 			return errors.New("No ClusterFlavor specified and no default ClusterFlavor for Cluster")
@@ -239,23 +240,45 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
 		return err
 	}
-	// Delete appInsts that are set for autodelete
-	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
-		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s, %s",
-			in.Key.ClusterKey.Name, err.Error())
-	}
 
-	cctx.SetOverride(&in.CrmOverride)
+	var prevState edgeproto.TrackedState
+	// Set state to prevent other apps from being created on ClusterInst
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeletePrepare && !ignoreTransient(cctx, in.State) {
 			if in.State == edgeproto.TrackedState_DeleteError {
 				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
 				cb.Send(&edgeproto.Result{Message: "Use CreateClusterInst to rebuild, and try again"})
 			}
 			return errors.New("ClusterInst busy, cannot delete")
+		}
+		prevState = in.State
+		in.State = edgeproto.TrackedState_DeletePrepare
+		s.store.STMPut(stm, in)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete appInsts that are set for autodelete
+	if err := appInstApi.AutoDeleteAppInsts(&in.Key, cb); err != nil {
+		// restore previous state since we failed pre-delete actions
+		in.State = prevState
+		s.store.Update(in, s.sync.syncWait)
+		return fmt.Errorf("Failed to auto-delete applications from clusterInst %s, %s",
+			in.Key.ClusterKey.Name, err.Error())
+	}
+
+	cctx.SetOverride(&in.CrmOverride)
+	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		if !s.store.STMGet(stm, &in.Key, in) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		if in.State != edgeproto.TrackedState_DeletePrepare {
+			return errors.New("ClusterInst expected state DeletePrepare")
 		}
 
 		clusterFlavor := edgeproto.ClusterFlavor{}
@@ -380,7 +403,8 @@ func ignoreTransient(cctx *CallContext, state edgeproto.TrackedState) bool {
 			state == edgeproto.TrackedState_UpdateRequested ||
 			state == edgeproto.TrackedState_DeleteRequested ||
 			state == edgeproto.TrackedState_Updating ||
-			state == edgeproto.TrackedState_Deleting {
+			state == edgeproto.TrackedState_Deleting ||
+			state == edgeproto.TrackedState_DeletePrepare {
 			return true
 		}
 	}

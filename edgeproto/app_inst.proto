@@ -41,7 +41,7 @@ message AppInst {
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
   string uri = 4 [(protogen.backend) = true];
-  // Cluster instance on which this is instatiated (not specifiable by user)
+  // Cluster instance on which this is instantiated
   ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 6 [(protogen.backend) = true];

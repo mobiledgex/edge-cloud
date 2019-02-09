@@ -54,7 +54,10 @@ func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 	if appInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by App Instance")
 	}
-	return s.store.Delete(in, s.sync.syncWait)
+	res, err := s.store.Delete(in, s.sync.syncWait)
+	// clean up auto-apps using flavor
+	appApi.AutoDeleteApps(ctx, &in.Key)
+	return res, err
 }
 
 func (s *FlavorApi) ShowFlavor(in *edgeproto.Flavor, cb edgeproto.FlavorApi_ShowFlavorServer) error {

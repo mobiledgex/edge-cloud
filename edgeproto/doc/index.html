@@ -746,9 +746,7 @@ to be L4, and http is assumed to be L7 access. </p></td>
                   <td>cluster</td>
                   <td><a href="#edgeproto.ClusterKey">ClusterKey</a></td>
                   <td></td>
-                  <td><p>Cluster on which the App can be instantiated.
-If not specified during create, a cluster will be automatically created.
-If specified, it must exist. </p></td>
+                  <td><p>Cluster field is deprecated. Apps no longer have dependencies on Clusters. </p></td>
                 </tr>
               
                 <tr>
@@ -1017,7 +1015,7 @@ on behalf of this app, such as FindCloudlet </p></td>
                   <td>cluster_inst_key</td>
                   <td><a href="#edgeproto.ClusterInstKey">ClusterInstKey</a></td>
                   <td></td>
-                  <td><p>Cluster instance on which this is instatiated (not specifiable by user) </p></td>
+                  <td><p>Cluster instance on which this is instantiated </p></td>
                 </tr>
               
                 <tr>
@@ -2957,6 +2955,12 @@ MEX_DOCKER_REG_PASS </p></td>
                 <td>DeleteError</td>
                 <td>11</td>
                 <td><p>Delete error</p></td>
+              </tr>
+            
+              <tr>
+                <td>DeletePrepare</td>
+                <td>12</td>
+                <td><p>Delete prepare (extra state used by controller to block other changes)</p></td>
               </tr>
             
           </tbody>

@@ -208,7 +208,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | access_ports | [string](#string) |  | For Layer4 access, the ports the app listens on. This is a comma separated list of protocol:port pairs, i.e. tcp:80,http:443,udp:10002. Only tcp, udp, and http protocols are supported; tcp and udp are assumed to be L4, and http is assumed to be L7 access. |
 | config | [string](#string) |  | URI of resource to be used to establish config for App. |
 | default_flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Default flavor for the App, may be overridden by the AppInst |
-| cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster on which the App can be instantiated. If not specified during create, a cluster will be automatically created. If specified, it must exist. |
+| cluster | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster field is deprecated. Apps no longer have dependencies on Clusters. |
 | app_template | [string](#string) |  | Template of kubernetes deployment yaml. Who/What sets this is TDB, but it should not be directly exposed to the user, because we do not want to expose kubernetes to the user. However, because we currently don&#39;t have any other way to set it, for flexibility, for now it is exposed to the user. |
 | auth_public_key | [string](#string) |  | public key used for authentication |
 | command | [string](#string) |  | Command to start service |
@@ -310,7 +310,7 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | key | [AppInstKey](#edgeproto.AppInstKey) |  | Unique identifier key |
 | cloudlet_loc | [distributed_match_engine.Loc](#distributed_match_engine.Loc) |  | Cached location of the cloudlet |
 | uri | [string](#string) |  | Base FQDN (not really URI) for the App. See Service FQDN for endpoint access. |
-| cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instatiated (not specifiable by user) |
+| cluster_inst_key | [ClusterInstKey](#edgeproto.ClusterInstKey) |  | Cluster instance on which this is instantiated |
 | liveness | [Liveness](#edgeproto.Liveness) |  | Liveness of instance (see Liveness) |
 | mapped_ports | [distributed_match_engine.AppPort](#distributed_match_engine.AppPort) | repeated | For instances accessible via a shared load balancer, defines the external ports on the shared load balancer that map to the internal ports External ports should be appended to the Uri for L4 access. |
 | flavor | [FlavorKey](#edgeproto.FlavorKey) |  | Flavor defining resource requirements |
@@ -1108,6 +1108,7 @@ i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 | DeleteRequested | 9 | Delete requested |
 | Deleting | 10 | Deleting |
 | DeleteError | 11 | Delete error |
+| DeletePrepare | 12 | Delete prepare (extra state used by controller to block other changes) |
 
 
  

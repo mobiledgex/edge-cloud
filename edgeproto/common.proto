@@ -63,6 +63,8 @@ enum TrackedState {
   Deleting = 10;
   // Delete error
   DeleteError = 11;
+  // Delete prepare (extra state used by controller to block other changes)
+  DeletePrepare = 12;
 }
 
 // CRMOverride can be applied to commands that issue requests to the CRM.
