@@ -2,7 +2,7 @@
 
 There are a bunch of services involved with the master controller. The master controller requires a SQL database and Vault for JWT secrets. If you want to test APIs to the controller, then you need etcd and the controller process running (and optionally a CRM).
 
-MC uses REST APIs and JWT auth. For easy command line testing, install httpie and it's jwt support. On mac osx:
+MC uses REST APIs and JWT auth. For easy command line testing, install httpie and its jwt support. On mac osx:
 
 ```
 brew install httpie
@@ -353,6 +353,7 @@ Date: Thu, 07 Feb 2019 23:36:23 GMT
         "UpdatedAt": "2019-02-07T15:35:14.81412-08:00"
     }
 ]
+```
 
 ## Controller APIs
 

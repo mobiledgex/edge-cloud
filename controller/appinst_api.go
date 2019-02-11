@@ -222,7 +222,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if cikey.ClusterKey.Name != "" {
 				if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
 					// developer may or may not be specified
-					// clusterinst
+					// in clusterinst.
 					in.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 					if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
 						return errors.New("Specified ClusterInst not found")
