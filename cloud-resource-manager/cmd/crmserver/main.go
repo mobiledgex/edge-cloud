@@ -21,7 +21,6 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var base = flag.String("base", fmt.Sprintf("scp://%s/files-repo/mobiledgex", cloudcommon.Registry), "base")
 var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
@@ -54,8 +53,6 @@ func main() {
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
-	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
-	log.DebugLog(log.DebugLevelMexos, "rootlb name", "rootLBName", rootLBName)
 
 	listener, err := net.Listen("tcp", *bindAddress)
 	if err != nil {
@@ -73,6 +70,13 @@ func main() {
 	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	platChan := make(chan string)
+
+	// this is to be done even for fake cloudlet
+	if err := mexos.InitializeCloudletInfra(*fakecloudlet); err != nil {
+		log.DebugLog(log.DebugLevelMexos, "error, cannot initialize cloudlet infra", "error", err)
+		return
+	}
+
 	if *fakecloudlet {
 		log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	} else {
@@ -187,19 +191,15 @@ func main() {
 func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
-	mf := &mexos.Manifest{Base: *base}
-	uri := fmt.Sprintf("kustomize/infrastructure/output/%s.%s.yaml", loc, oper)
-	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "base", *base, "location(cloudlet.key.name)", loc, "operator", oper, "uri", uri)
-	if err := mexos.GetVaultEnv(mf, uri); err != nil {
-		return err
-	}
-	if err := mexos.FillManifestValues(mf, "platform", *base); err != nil {
-		return err
-	}
-	if err := mexos.CheckManifest(mf); err != nil {
-		return err
-	}
-	crmRootLB, cerr := mexos.NewRootLBManifest(mf)
+	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
+	//	return err
+	//}
+
+	rootLBName := cloudcommon.GetRootLBFQDN(&myCloudlet.Key)
+
+	log.DebugLog(log.DebugLevelMexos, "init platform, creating new rootLB", "location(cloudlet.key.name)", loc, "operator", oper, "rootLBName", rootLBName)
+
+	crmRootLB, cerr := mexos.NewRootLB(rootLBName)
 	if cerr != nil {
 		return cerr
 	}
@@ -208,14 +208,12 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	}
 	log.DebugLog(log.DebugLevelMexos, "created rootLB", "rootlb", crmRootLB.Name)
 	controllerData.CRMRootLB = crmRootLB
-	if err := mexos.MEXInit(mf); err != nil {
+
+	log.DebugLog(log.DebugLevelMexos, "calling RunMEXAgentCloudletKey", "cloudletkeystr", *cloudletKeyStr)
+	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr); err != nil {
 		return err
 	}
-	log.DebugLog(log.DebugLevelMexos, "calling init platform with key", "cloudletkeystr", *cloudletKeyStr)
-	if err := mexos.MEXPlatformInitCloudletKey(controllerData.CRMRootLB, *cloudletKeyStr); err != nil {
-		return err
-	}
-	isDIND = mexos.IsLocalDIND(mf)
-	log.DebugLog(log.DebugLevelMexos, "ok, init platform with cloudlet key")
+	isDIND = mexos.CloudletIsLocalDIND()
+	log.DebugLog(log.DebugLevelMexos, "ok, RunMEXAgentCloudletKey with cloudlet key")
 	return nil
 }

@@ -123,6 +123,9 @@ crms:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
+  envvars:
+     CLOUDLET_KIND: localdind
+     MEXENV_URL: "https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json"
 
 clustersvcs:
 - clustersvclocal:
