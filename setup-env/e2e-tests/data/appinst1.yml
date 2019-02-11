@@ -10,3 +10,16 @@ appinstances:
         name: dmuus
       name: dmuus-cloud-1
     id: 123
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
