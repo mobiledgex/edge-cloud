@@ -46,6 +46,7 @@ var TrackedStateStrings = []string{
 	"DeleteRequested",
 	"Deleting",
 	"DeleteError",
+	"DeletePrepare",
 }
 
 var CRMOverrideStrings = []string{

@@ -193,9 +193,7 @@ type App struct {
 	Config string `protobuf:"bytes,8,opt,name=config,proto3" json:"config,omitempty"`
 	// Default flavor for the App, may be overridden by the AppInst
 	DefaultFlavor FlavorKey `protobuf:"bytes,9,opt,name=default_flavor,json=defaultFlavor" json:"default_flavor"`
-	// Cluster on which the App can be instantiated.
-	// If not specified during create, a cluster will be automatically created.
-	// If specified, it must exist.
+	// Cluster field is deprecated. Apps no longer have dependencies on Clusters.
 	Cluster ClusterKey `protobuf:"bytes,10,opt,name=cluster" json:"cluster"`
 	// Template of kubernetes deployment yaml.
 	// Who/What sets this is TDB, but it should not be directly

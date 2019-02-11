@@ -63,7 +63,7 @@ type AppInst struct {
 	CloudletLoc distributed_match_engine.Loc `protobuf:"bytes,3,opt,name=cloudlet_loc,json=cloudletLoc" json:"cloudlet_loc"`
 	// Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
 	Uri string `protobuf:"bytes,4,opt,name=uri,proto3" json:"uri,omitempty"`
-	// Cluster instance on which this is instatiated (not specifiable by user)
+	// Cluster instance on which this is instantiated
 	ClusterInstKey ClusterInstKey `protobuf:"bytes,5,opt,name=cluster_inst_key,json=clusterInstKey" json:"cluster_inst_key"`
 	// Liveness of instance (see Liveness)
 	Liveness Liveness `protobuf:"varint,6,opt,name=liveness,proto3,enum=edgeproto.Liveness" json:"liveness,omitempty"`

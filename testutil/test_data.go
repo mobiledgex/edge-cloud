@@ -121,33 +121,6 @@ var ClusterData = []edgeproto.Cluster{
 	},
 }
 
-// these are the auto clusters created by apps that don't specify a cluster
-var ClusterAutoData = []edgeproto.Cluster{
-	// AppData[1]:
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: util.K8SSanitize("AutoCluster" + AppData[1].Key.Name),
-		},
-		DefaultFlavor: ClusterFlavorData[0].Key,
-		Auto:          true,
-	},
-	// AppData[2]:
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: util.K8SSanitize("AutoCluster" + AppData[2].Key.Name),
-		},
-		DefaultFlavor: ClusterFlavorData[1].Key,
-		Auto:          true,
-	},
-	// AppData[3]:
-	edgeproto.Cluster{
-		Key: edgeproto.ClusterKey{
-			Name: util.K8SSanitize("AutoCluster" + AppData[3].Key.Name),
-		},
-		DefaultFlavor: ClusterFlavorData[1].Key,
-		Auto:          true,
-	},
-}
 var AppData = []edgeproto.App{
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -350,37 +323,23 @@ var ClusterInstData = []edgeproto.ClusterInst{
 // These are the cluster insts that will be created automatically
 // from appinsts that have not specified a cluster.
 var ClusterInstAutoData = []edgeproto.ClusterInst{
-	// from AppInstData[1]:
-	// There is no auto-cluster created for AppInstData[1],
-	// because the AppData[0] is corresponds to does have a \
-	// cluster specified, and an instance for that cluster is
-	// created by ClusterData[0] -> ClusterInstData[0].
-	// XXX I'm not sure if this makes sense, as both AppInsts
-	// now share the same clusterInst. But we haven't really
-	// decided what happens if a user creates two of the same
-	// AppInsts for the same App on the same Cloudlet (which is
-	// what AppInstData[0] and AppInstData[1] do).
-	// AppInstData[2] does not specify a cluster, but it
-	// ends up computing key below, which corresponds to an
-	// already created ClusterInst.
-	// AppInstData[2]: (ClusterInstData[1])
-	// Key: edgeproto.ClusterInstKey{
-	//    ClusterKey:  ClusterData[0].Key,
-	//    CloudletKey: CloudletData[1].Key,
-	// },
-	// from AppInstData[3] -> AppData[1] -> ClusterAutoData[0]:
+	// from AppInstData[3] -> AppData[1]
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterAutoData[0].Key,
+			ClusterKey: edgeproto.ClusterKey{
+				Name: util.K8SSanitize("AutoCluster" + AppData[1].Key.Name),
+			},
 			CloudletKey: CloudletData[1].Key,
 		},
 		Flavor: ClusterData[0].DefaultFlavor,
 		Auto:   true,
 	},
-	// from AppInstData[4] -> AppData[2] -> ClusterAutoData[1]:
+	// from AppInstData[4] -> AppData[2]
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
-			ClusterKey:  ClusterAutoData[1].Key,
+			ClusterKey: edgeproto.ClusterKey{
+				Name: util.K8SSanitize("AutoCluster" + AppData[2].Key.Name),
+			},
 			CloudletKey: CloudletData[2].Key,
 		},
 		Flavor: ClusterData[1].DefaultFlavor,
@@ -394,8 +353,8 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          1,
 		},
-		CloudletLoc: CloudletData[0].Location,
-		// Cluster is ClusterData[0]
+		CloudletLoc:    CloudletData[0].Location,
+		ClusterInstKey: ClusterInstData[0].Key,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -403,8 +362,8 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[0].Key,
 			Id:          2,
 		},
-		CloudletLoc: CloudletData[0].Location,
-		// Cluster is ClusterData[0]
+		CloudletLoc:    CloudletData[0].Location,
+		ClusterInstKey: ClusterInstData[0].Key,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -412,8 +371,8 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[1].Key,
 			Id:          1,
 		},
-		CloudletLoc: CloudletData[1].Location,
-		// Cluster is ClusterData[0]
+		CloudletLoc:    CloudletData[1].Location,
+		ClusterInstKey: ClusterInstData[1].Key,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -422,7 +381,7 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		// Cluster is ClusterAutoData[0]
+		// ClusterInst is ClusterInstAutoData[0]
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -431,7 +390,7 @@ var AppInstData = []edgeproto.AppInst{
 			Id:          1,
 		},
 		CloudletLoc: CloudletData[2].Location,
-		// Cluster is ClusterAutoData[1]
+		// ClusterInst is ClusterInstAutoData[1]
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
@@ -439,8 +398,8 @@ var AppInstData = []edgeproto.AppInst{
 			CloudletKey: CloudletData[2].Key,
 			Id:          1,
 		},
-		CloudletLoc: CloudletData[2].Location,
-		// Cluster is ClusterData[2]
+		CloudletLoc:    CloudletData[2].Location,
+		ClusterInstKey: ClusterInstData[2].Key,
 	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{
@@ -564,7 +523,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		Clusters: []edgeproto.ClusterKey{
 			ClusterData[0].Key,
 			ClusterData[1].Key,
-			ClusterAutoData[0].Key,
+			ClusterInstAutoData[0].Key.ClusterKey,
 		},
 		UsedRam:        GetCloudletUsedRam(0, 1, 0),
 		UsedVcores:     GetCloudletUsedVcores(0, 1, 0),
@@ -578,7 +537,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		Clusters: []edgeproto.ClusterKey{
 			ClusterData[0].Key,
 			ClusterData[2].Key,
-			ClusterAutoData[1].Key,
+			ClusterInstAutoData[1].Key.ClusterKey,
 		},
 		UsedRam:        GetCloudletUsedRam(0, 2, 1),
 		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),

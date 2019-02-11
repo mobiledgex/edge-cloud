@@ -43,7 +43,8 @@ UpdateError        Controller       Ready (undo, commits previous state)
 Delete:
 Current State      Actor            Next State
 =============      =====            ========== 
-Ready              User delete      DeleteRequested
+Ready              User delete      DeletePrepare
+DeletePrepare      Controller       DeleteRequested
 DeleteRequested    CRM response     Deleting
                    CRM response     Deleted (if Deleting message was missed)
                    CRM error        DeleteError

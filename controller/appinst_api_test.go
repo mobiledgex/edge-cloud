@@ -214,6 +214,7 @@ func TestAutoClusterInst(t *testing.T) {
 
 	// since cluster inst does not exist, it will be auto-created
 	copy := testutil.AppInstData[0]
+	copy.ClusterInstKey.ClusterKey.Name = ""
 	err := appInstApi.CreateAppInst(&copy, &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
