@@ -71,11 +71,11 @@ func TestServer(t *testing.T) {
 	policies, status, err := showRolePerms(uri, token)
 	require.Nil(t, err, "show role perms err")
 	require.Equal(t, http.StatusOK, status, "show role perms status")
-	require.Equal(t, 78, len(policies), "number of role perms")
+	require.Equal(t, 82, len(policies), "number of role perms")
 	roles, status, err := showRoles(uri, token)
 	require.Nil(t, err, "show roles err")
 	require.Equal(t, http.StatusOK, status, "show roles status")
-	require.Equal(t, 18, len(roles), "number of roles")
+	require.Equal(t, 9, len(roles), "number of roles")
 
 	// create new user1
 	user1 := User{

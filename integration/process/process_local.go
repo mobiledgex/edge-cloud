@@ -616,6 +616,32 @@ func (p *Vault) mapVals(resp string) map[string]string {
 	return vals
 }
 
+func (p *Vault) StartLocal() (*VaultRoles, error) {
+	dir, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+	rolesfile := dir + "/roles.yaml"
+	err = p.Start(dir+"/vault.log", WithRolesFile(rolesfile))
+	if err != nil {
+		return nil, err
+	}
+
+	// rolesfile contains the roleIDs/secretIDs needed to access vault
+	dat, err := ioutil.ReadFile(rolesfile)
+	if err != nil {
+		p.Stop()
+		return nil, err
+	}
+	roles := VaultRoles{}
+	err = yaml.Unmarshal(dat, &roles)
+	if err != nil {
+		p.Stop()
+		return nil, err
+	}
+	return &roles, nil
+}
+
 // Support funcs
 
 func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cmd, error) {

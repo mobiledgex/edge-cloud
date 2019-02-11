@@ -1,40 +1,23 @@
 package vault
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/stretchr/testify/require"
-	yaml "gopkg.in/yaml.v2"
 )
 
 func TestJwk(t *testing.T) {
-	dir, err := os.Getwd()
-	require.Nil(t, err, "getwd")
-	rolesfile := dir + "/roles.yaml"
-	fmt.Printf("roles file is %s\n", rolesfile)
-
 	vault := process.Vault{
 		Name:        "vault",
 		DmeSecret:   "123456",
 		McormSecret: "987664",
 	}
-	err = vault.Start("", process.WithRolesFile(rolesfile))
-	require.Nil(t, err, "start vault")
+	roles, err := vault.StartLocal()
+	require.Nil(t, err, "start local vault")
 	defer vault.Stop()
-	defer os.Remove(rolesfile)
-
-	// rolesfile contains the roleIDs/secretIDs needed to access vault
-	dat, err := ioutil.ReadFile(rolesfile)
-	require.Nil(t, err, "read rolesfile")
-	roles := process.VaultRoles{}
-	err = yaml.Unmarshal(dat, &roles)
-	require.Nil(t, err, "unmarshal roles")
 
 	// this represents a dme process accessing vault
 	jwks := JWKS{}

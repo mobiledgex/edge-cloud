@@ -43,18 +43,20 @@ var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig",
 var ClusterInstInfoInState string
 
 func ClusterInstKeySlicer(in *edgeproto.ClusterInstKey) []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 3)
 	s = append(s, in.ClusterKey.Name)
 	s = append(s, in.CloudletKey.OperatorKey.Name)
 	s = append(s, in.CloudletKey.Name)
+	s = append(s, in.Developer)
 	return s
 }
 
 func ClusterInstKeyHeaderSlicer() []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 3)
 	s = append(s, "ClusterKey-Name")
 	s = append(s, "CloudletKey-OperatorKey-Name")
 	s = append(s, "CloudletKey-Name")
+	s = append(s, "Developer")
 	return s
 }
 
@@ -90,6 +92,7 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Key.ClusterKey.Name)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, in.Key.Developer)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	s = append(s, strconv.FormatBool(in.Auto))
@@ -108,6 +111,7 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "Key-Developer")
 	s = append(s, "Flavor-Name")
 	s = append(s, "Liveness")
 	s = append(s, "Auto")
@@ -149,6 +153,7 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.ClusterKey.Name)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, in.Key.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
@@ -164,6 +169,7 @@ func ClusterInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "Key-Developer")
 	s = append(s, "NotifyId")
 	s = append(s, "State")
 	s = append(s, "Errors")
@@ -523,6 +529,7 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
+	ClusterInstFlagSet.StringVar(&ClusterInstIn.Key.Developer, "key-developer", "", "Key.Developer")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
@@ -531,6 +538,7 @@ func init() {
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.Developer, "key-developer", "", "Key.Developer")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -562,6 +570,9 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("key-cloudletkey-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.2.2")
 	}
+	if ClusterInstFlagSet.Lookup("key-developer").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "2.3")
+	}
 	if ClusterInstFlagSet.Lookup("flavor-name").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "3.1")
 	}
@@ -589,6 +600,9 @@ func ClusterInstInfoSetFields() {
 	}
 	if ClusterInstInfoFlagSet.Lookup("key-cloudletkey-name").Changed {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.2.2")
+	}
+	if ClusterInstInfoFlagSet.Lookup("key-developer").Changed {
+		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "2.3")
 	}
 	if ClusterInstInfoFlagSet.Lookup("notifyid").Changed {
 		ClusterInstInfoIn.Fields = append(ClusterInstInfoIn.Fields, "3")
