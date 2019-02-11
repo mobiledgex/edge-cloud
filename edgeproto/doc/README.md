@@ -982,6 +982,7 @@ ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster I
 | ----- | ---- | ----- | ----------- |
 | cluster_key | [ClusterKey](#edgeproto.ClusterKey) |  | Cluster key |
 | cloudlet_key | [CloudletKey](#edgeproto.CloudletKey) |  | Cloudlet on which the Cluster is instantiated |
+| developer | [string](#string) |  | Developer organization this cluster belongs to |
 
 
 

@@ -94,6 +94,7 @@ func ClusterRefsSlicer(in *edgeproto.ClusterRefs) []string {
 	s = append(s, in.Key.ClusterKey.Name)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
+	s = append(s, in.Key.Developer)
 	if in.Apps == nil {
 		in.Apps = make([]edgeproto.AppKey, 1)
 	}
@@ -111,6 +112,7 @@ func ClusterRefsHeaderSlicer() []string {
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
+	s = append(s, "Key-Developer")
 	s = append(s, "Apps-DeveloperKey-Name")
 	s = append(s, "Apps-Name")
 	s = append(s, "Apps-Version")
@@ -273,6 +275,7 @@ func init() {
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
+	ClusterRefsFlagSet.StringVar(&ClusterRefsIn.Key.Developer, "key-developer", "", "Key.Developer")
 	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedRam, "usedram", 0, "UsedRam")
 	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedVcores, "usedvcores", 0, "UsedVcores")
 	ClusterRefsFlagSet.Uint64Var(&ClusterRefsIn.UsedDisk, "useddisk", 0, "UsedDisk")
