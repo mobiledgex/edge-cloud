@@ -50,6 +50,7 @@ service ClusterFlavorApi {
       post: "/create/clusterflavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionManage,";
   }
   // Delete a ClusterFlavor
   rpc DeleteClusterFlavor(ClusterFlavor) returns (Result) {
@@ -57,6 +58,7 @@ service ClusterFlavorApi {
       post: "/delete/clusterflavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionManage,";
   }
   // Update a ClusterFlavor
   rpc UpdateClusterFlavor(ClusterFlavor) returns (Result) {
@@ -64,6 +66,7 @@ service ClusterFlavorApi {
       post: "/update/clusterflavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionManage,";
   }
   // Show ClusterFlavors
   rpc ShowClusterFlavor(ClusterFlavor) returns (stream ClusterFlavor) {
@@ -71,5 +74,6 @@ service ClusterFlavorApi {
       post: "/show/clusterflavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionView,";
   }
 }

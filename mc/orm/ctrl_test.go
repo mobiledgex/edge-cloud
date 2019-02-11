@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/vault"
@@ -128,15 +129,16 @@ func TestController(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, status)
 	require.Equal(t, 0, len(ctrls))
 
+	// tie cluster insts to dev
+	setClusterInstDev(orgDev.Name, testutil.ClusterInstData)
+
 	// make sure operator cannot create apps, appinsts, clusters, etc
 	badPermTestApp(t, uri, tokenOper, ctrl.Region, &testutil.AppData[0])
 	badPermTestAppInst(t, uri, tokenOper, ctrl.Region, &testutil.AppInstData[0])
-	//badPermTestCluster(t, uri, tokenOper, ctrl.Region, &testutil.ClusterData[0])
-	//badPermTestClusterInst(t, uri, tokenOper, ctrl.Region, &testutil.ClusterInstData[0])
+	badPermTestClusterInst(t, uri, tokenOper, ctrl.Region, &testutil.ClusterInstData[0])
 	badPermTestApp(t, uri, tokenOper2, ctrl.Region, &testutil.AppData[0])
 	badPermTestAppInst(t, uri, tokenOper2, ctrl.Region, &testutil.AppInstData[0])
-	//badPermTestCluster(t, uri, tokenOper2, ctrl.Region, &testutil.ClusterData[0])
-	//badPermTestClusterInst(t, uri, tokenOper2, ctrl.Region, &testutil.ClusterInstData[0])
+	badPermTestClusterInst(t, uri, tokenOper2, ctrl.Region, &testutil.ClusterInstData[0])
 	// make sure developer cannot create cloudlet
 	badPermTestCloudlet(t, uri, tokenDev, ctrl.Region, &testutil.CloudletData[0])
 	badPermTestCloudlet(t, uri, tokenDev2, ctrl.Region, &testutil.CloudletData[0])
@@ -154,13 +156,8 @@ func TestController(t *testing.T) {
 	goodPermTestAppInst(t, uri, tokenDev3, ctrl.Region, &testutil.AppInstData[0])
 	// test users with different roles
 	goodPermTestCloudlet(t, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
-
-	// developers should be able to create any cluster/clusterinsts,
-	// since they are not tied to a developer organization
-	goodPermTestCluster(t, uri, tokenDev, ctrl.Region, &testutil.ClusterData[0])
-	goodPermTestCluster(t, uri, tokenDev2, ctrl.Region, &testutil.ClusterData[0])
 	goodPermTestClusterInst(t, uri, tokenDev, ctrl.Region, &testutil.ClusterInstData[0])
-	goodPermTestClusterInst(t, uri, tokenDev2, ctrl.Region, &testutil.ClusterInstData[0])
+	badPermTestClusterInst(t, uri, tokenDev2, ctrl.Region, &testutil.ClusterInstData[0])
 
 	// remove users from roles, test that they can't modify anything anymore
 	testRemoveUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.ID, Success)
@@ -259,5 +256,11 @@ func testRemoveUserRole(t *testing.T, uri, token, org, role string, userID int64
 	if success {
 	} else {
 		require.Equal(t, http.StatusForbidden, status)
+	}
+}
+
+func setClusterInstDev(dev string, insts []edgeproto.ClusterInst) {
+	for ii, _ := range insts {
+		insts[ii].Key.Developer = dev
 	}
 }

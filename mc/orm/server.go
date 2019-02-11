@@ -31,6 +31,8 @@ type ServerConfig struct {
 	InitLocal     bool
 	IgnoreEnv     bool
 	RbacModelPath string
+	TlsCertFile   string
+	LocalVault    bool
 }
 
 var DefaultDBUser = "mcuser"
@@ -41,6 +43,7 @@ var DefaultSuperpass = "mexadmin123"
 
 var db *gorm.DB
 var enforcer *casbin.Enforcer
+var serverConfig ServerConfig
 
 func RunServer(config *ServerConfig) (*Server, error) {
 	dbuser := os.Getenv("db_username")
@@ -71,8 +74,28 @@ func RunServer(config *ServerConfig) (*Server, error) {
 		}
 	}
 
-	InitVault(config.VaultAddr)
+	// roleID and secretID could also come from RAM disk.
+	// assume env vars for now.
+	roleID := os.Getenv("VAULT_ROLE_ID")
+	secretID := os.Getenv("VAULT_SECRET_ID")
+	if config.LocalVault {
+		vault := process.Vault{
+			Name:        "vault",
+			DmeSecret:   "123456",
+			McormSecret: "987664",
+		}
+		roles, err := vault.StartLocal()
+		if err != nil {
+			return nil, err
+		}
+		defer vault.Stop()
+		roleID = roles.MCORMRoleID
+		secretID = roles.MCORMSecretID
+		config.VaultAddr = process.VaultAddress
+	}
+	InitVault(config.VaultAddr, roleID, secretID)
 
+	serverConfig = *config
 	server := Server{config: *config}
 	if config.RunLocal {
 		sql := process.SqlLocal{

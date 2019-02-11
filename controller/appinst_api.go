@@ -215,12 +215,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if !in.Key.CloudletKey.Matches(&cikey.CloudletKey) {
 					return errors.New("Specified ClusterInst cloudlet key does not match specified AppInst cloudlet key")
 				}
+
 			}
 			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
 			// Check if specified ClusterInst exists
 			if cikey.ClusterKey.Name != "" {
 				if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
-					return errors.New("Specified ClusterInst not found")
+					// developer may or may not be specified
+					// clusterinst
+					in.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+					if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
+						return errors.New("Specified ClusterInst not found")
+					}
 				}
 				// cluster inst exists so we're good.
 				return nil
