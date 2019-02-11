@@ -205,6 +205,7 @@ func (s *{{.Name}}Send) Update(key *{{.KeyType}}, old *{{.NameType}}) {
 
 func (s *{{.Name}}Send) updateInternal(key *{{.KeyType}}) {
 	s.Mux.Lock()
+	log.DebugLog(log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key)
 	s.Keys[*key] = struct{}{}
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()

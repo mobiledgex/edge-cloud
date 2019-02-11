@@ -526,13 +526,13 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
-	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
+	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	ClusterInstInfoFlagSet.Int64Var(&ClusterInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
+	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	CreateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	DeleteClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
 	UpdateClusterInstCmd.Flags().AddFlagSet(ClusterInstFlagSet)
@@ -637,6 +637,8 @@ func parseClusterInstEnums() error {
 			ClusterInstIn.State = edgeproto.TrackedState(10)
 		case "DeleteError":
 			ClusterInstIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			ClusterInstIn.State = edgeproto.TrackedState(12)
 		default:
 			return errors.New("Invalid value for ClusterInstInState")
 		}
@@ -687,6 +689,8 @@ func parseClusterInstInfoEnums() error {
 			ClusterInstInfoIn.State = edgeproto.TrackedState(10)
 		case "DeleteError":
 			ClusterInstInfoIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			ClusterInstInfoIn.State = edgeproto.TrackedState(12)
 		default:
 			return errors.New("Invalid value for ClusterInstInfoInState")
 		}

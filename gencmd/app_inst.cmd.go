@@ -717,7 +717,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
-	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
+	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
@@ -727,7 +727,7 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError]")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
 	CreateAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
 	DeleteAppInstCmd.Flags().AddFlagSet(AppInstFlagSet)
@@ -926,6 +926,8 @@ func parseAppInstEnums() error {
 			AppInstIn.State = edgeproto.TrackedState(10)
 		case "DeleteError":
 			AppInstIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			AppInstIn.State = edgeproto.TrackedState(12)
 		default:
 			return errors.New("Invalid value for AppInstInState")
 		}
@@ -976,6 +978,8 @@ func parseAppInstInfoEnums() error {
 			AppInstInfoIn.State = edgeproto.TrackedState(10)
 		case "DeleteError":
 			AppInstInfoIn.State = edgeproto.TrackedState(11)
+		case "DeletePrepare":
+			AppInstInfoIn.State = edgeproto.TrackedState(12)
 		default:
 			return errors.New("Invalid value for AppInstInfoInState")
 		}
