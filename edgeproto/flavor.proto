@@ -45,6 +45,7 @@ service FlavorApi {
       post: "/create/flavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
   // Delete a Flavor
   rpc DeleteFlavor(Flavor) returns (Result) {
@@ -52,6 +53,7 @@ service FlavorApi {
       post: "/delete/flavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
   // Update a Flavor
   rpc UpdateFlavor(Flavor) returns (Result) {
@@ -59,6 +61,7 @@ service FlavorApi {
       post: "/update/flavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionManage,";
   }
   // Show Flavors
   rpc ShowFlavor(Flavor) returns (stream Flavor) {
@@ -66,5 +69,6 @@ service FlavorApi {
       post: "/show/flavor"
       body: "*"
     };
+    option (protogen.mc2_api) = "ResourceFlavors,ActionView,";
   }
 }

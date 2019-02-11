@@ -963,6 +963,7 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) {
 	m.Key.ClusterKey.Name = src.Key.ClusterKey.Name
 	m.Key.CloudletKey.OperatorKey.Name = src.Key.CloudletKey.OperatorKey.Name
 	m.Key.CloudletKey.Name = src.Key.CloudletKey.Name
+	m.Key.Developer = src.Key.Developer
 	if m.Apps == nil || len(m.Apps) != len(src.Apps) {
 		m.Apps = make([]AppKey, len(src.Apps))
 	}
