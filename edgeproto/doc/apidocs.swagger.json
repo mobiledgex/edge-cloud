@@ -1342,7 +1342,7 @@
         },
         "cluster": {
           "$ref": "#/definitions/edgeprotoClusterKey",
-          "description": "Cluster on which the App can be instantiated.\nIf not specified during create, a cluster will be automatically created.\nIf specified, it must exist."
+          "description": "Cluster field is deprecated. Apps no longer have dependencies on Clusters."
         },
         "app_template": {
           "type": "string",
@@ -1412,7 +1412,7 @@
         },
         "cluster_inst_key": {
           "$ref": "#/definitions/edgeprotoClusterInstKey",
-          "title": "Cluster instance on which this is instatiated (not specifiable by user)"
+          "title": "Cluster instance on which this is instantiated"
         },
         "liveness": {
           "$ref": "#/definitions/edgeprotoLiveness",
@@ -2339,10 +2339,11 @@
         "UpdateError",
         "DeleteRequested",
         "Deleting",
-        "DeleteError"
+        "DeleteError",
+        "DeletePrepare"
       ],
       "default": "TrackedStateUnknown",
-      "description": "TrackedState is used to track the state of an object on a remote node,\ni.e. track the state of a ClusterInst object on the CRM (Cloudlet).\n\n - TrackedStateUnknown: Unknown state\n - NotPresent: Not present (does not exist)\n - CreateRequested: Create requested\n - Creating: Creating\n - CreateError: Create error\n - Ready: Ready\n - UpdateRequested: Update requested\n - Updating: Updating\n - UpdateError: Update error\n - DeleteRequested: Delete requested\n - Deleting: Deleting\n - DeleteError: Delete error"
+      "description": "TrackedState is used to track the state of an object on a remote node,\ni.e. track the state of a ClusterInst object on the CRM (Cloudlet).\n\n - TrackedStateUnknown: Unknown state\n - NotPresent: Not present (does not exist)\n - CreateRequested: Create requested\n - Creating: Creating\n - CreateError: Create error\n - Ready: Ready\n - UpdateRequested: Update requested\n - Updating: Updating\n - UpdateError: Update error\n - DeleteRequested: Delete requested\n - Deleting: Deleting\n - DeleteError: Delete error\n - DeletePrepare: Delete prepare (extra state used by controller to block other changes)"
     },
     "protobufAny": {
       "type": "object",

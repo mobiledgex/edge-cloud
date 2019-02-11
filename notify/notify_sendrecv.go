@@ -206,6 +206,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 		// may have dependencies on other objects. It's up to the
 		// caller to make sure CacheSend objects are registered
 		// in the desired send order.
+		log.DebugLog(log.DebugLevelNotify, "running")
 		for _, send := range s.sendlist {
 			if sendAll {
 				send.UpdateAll()

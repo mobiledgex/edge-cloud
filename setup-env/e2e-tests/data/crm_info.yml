@@ -45,11 +45,6 @@ clusterflavors:
   nummasters: 1
 
 clusters:
-- key:
-    name: autoclustersomeapplication1
-  defaultflavor:
-    name: c1.small
-  auto: true
 
 clusterinsts:
 - key:
@@ -126,8 +121,6 @@ apps:
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
-  cluster:
-    name: autoclustersomeapplication1
   deployment: kubernetes
   deploymentmanifest: |
     apiVersion: v1
