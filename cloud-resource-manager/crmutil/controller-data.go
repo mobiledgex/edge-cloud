@@ -257,7 +257,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 // makes sure we have a valid kubeconfig file for the cluster instance
 func updateKubeConfig(clusterInst *edgeproto.ClusterInst, rootlb *mexos.MEXRootLB) error {
 	// make sure we have a valid kubeconfig file; we need the cluster instance manifest for this
-	_, err := mexos.GetKconf(clusterInst, true)
+	_, err := mexos.GetKconf(clusterInst)
 	if err != nil {
 		return err
 	}
