@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"flag"
 	"fmt"
 	"net/http"
 
@@ -10,14 +9,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-var tlsCertFile = flag.String("tls", "", "server tls cert file")
-
 func connectController(region string) (*grpc.ClientConn, error) {
 	addr, err := getControllerAddrForRegion(region)
 	if err != nil {
 		return nil, err
 	}
-	dialOption, err := tls.GetTLSClientDialOption(addr, *tlsCertFile)
+	dialOption, err := tls.GetTLSClientDialOption(addr, serverConfig.TlsCertFile)
 	if err != nil {
 		return nil, err
 	}
@@ -96,4 +93,8 @@ func ShowController(c echo.Context) error {
 		return err
 	}
 	return c.JSON(http.StatusOK, ctrls)
+}
+
+func ctrlErr(c echo.Context, err error) error {
+	return c.JSON(http.StatusBadRequest, Msg(err.Error()))
 }

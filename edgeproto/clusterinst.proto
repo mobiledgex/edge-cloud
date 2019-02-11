@@ -19,6 +19,8 @@ message ClusterInstKey {
   ClusterKey cluster_key = 1 [(gogoproto.nullable) = false];
   // Cloudlet on which the Cluster is instantiated
   CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
+  // Developer organization this cluster belongs to
+  string developer = 3;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
@@ -63,7 +65,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Delete a Cluster instance
   rpc DeleteClusterInst(ClusterInst) returns (stream Result) {
@@ -72,7 +74,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Update a Cluster instance
   rpc UpdateClusterInst(ClusterInst) returns (stream Result) {
@@ -81,7 +83,7 @@ service ClusterInstApi {
       body: "*"
     };
     option (protocmd.stream_out_incremental) = true;
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,skipenforce";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionManage,Key.Developer";
   }
   // Show Cluster instances
   rpc ShowClusterInst(ClusterInst) returns (stream ClusterInst) {
@@ -89,7 +91,7 @@ service ClusterInstApi {
       post: "/show/clusterinst"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,skipenforce";
+    option (protogen.mc2_api) = "ResourceClusterInsts,ActionView,Key.Developer";
   }
 }
 

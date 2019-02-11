@@ -1934,6 +1934,10 @@
         "cloudlet_key": {
           "$ref": "#/definitions/edgeprotoCloudletKey",
           "title": "Cloudlet on which the Cluster is instantiated"
+        },
+        "developer": {
+          "type": "string",
+          "title": "Developer organization this cluster belongs to"
         }
       },
       "description": "ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo)."

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"testing"
 
@@ -122,19 +123,23 @@ appinstances:
 func startMain(t *testing.T) (chan struct{}, error) {
 	mainStarted = make(chan struct{})
 	mainDone := make(chan struct{})
+	*fakecloudlet = true
 	go func() {
 		main()
 		close(mainDone)
 	}()
 	// wait until main is ready
-	<-mainStarted
-
+	select {
+	case <-mainStarted:
+	case <-mainDone:
+		return nil, fmt.Errorf("main unexpectedly quit")
+	}
 	return mainDone, nil
 }
 
 func TestCRM(t *testing.T) {
 	var err error
-	log.SetDebugLevel(log.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelMexos)
 
 	notifyAddr := "127.0.0.1:61245"
 
@@ -151,6 +156,7 @@ func TestCRM(t *testing.T) {
 	mainDone, err := startMain(t)
 	if err != nil {
 		close(sigChan)
+		require.Nil(t, err, "start main")
 		return
 	}
 

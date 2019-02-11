@@ -1071,6 +1071,7 @@ const AppInstFieldClusterInstKeyCloudletKey = "5.2"
 const AppInstFieldClusterInstKeyCloudletKeyOperatorKey = "5.2.1"
 const AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName = "5.2.1.1"
 const AppInstFieldClusterInstKeyCloudletKeyName = "5.2.2"
+const AppInstFieldClusterInstKeyDeveloper = "5.3"
 const AppInstFieldLiveness = "6"
 const AppInstFieldMappedPorts = "9"
 const AppInstFieldMappedPortsProto = "9.1"
@@ -1106,6 +1107,7 @@ var AppInstAllFields = []string{
 	AppInstFieldClusterInstKeyClusterKeyName,
 	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName,
 	AppInstFieldClusterInstKeyCloudletKeyName,
+	AppInstFieldClusterInstKeyDeveloper,
 	AppInstFieldLiveness,
 	AppInstFieldMappedPortsProto,
 	AppInstFieldMappedPortsInternalPort,
@@ -1140,6 +1142,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldClusterInstKeyClusterKeyName:             struct{}{},
 	AppInstFieldClusterInstKeyCloudletKeyOperatorKeyName: struct{}{},
 	AppInstFieldClusterInstKeyCloudletKeyName:            struct{}{},
+	AppInstFieldClusterInstKeyDeveloper:                  struct{}{},
 	AppInstFieldLiveness:                                 struct{}{},
 	AppInstFieldMappedPortsProto:                         struct{}{},
 	AppInstFieldMappedPortsInternalPort:                  struct{}{},
@@ -1241,6 +1244,10 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	if m.ClusterInstKey.CloudletKey.Name != o.ClusterInstKey.CloudletKey.Name {
 		fields[AppInstFieldClusterInstKeyCloudletKeyName] = struct{}{}
 		fields[AppInstFieldClusterInstKeyCloudletKey] = struct{}{}
+		fields[AppInstFieldClusterInstKey] = struct{}{}
+	}
+	if m.ClusterInstKey.Developer != o.ClusterInstKey.Developer {
+		fields[AppInstFieldClusterInstKeyDeveloper] = struct{}{}
 		fields[AppInstFieldClusterInstKey] = struct{}{}
 	}
 	if m.Liveness != o.Liveness {
@@ -1380,6 +1387,9 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			if _, set := fmap["5.2.2"]; set {
 				m.ClusterInstKey.CloudletKey.Name = src.ClusterInstKey.CloudletKey.Name
 			}
+		}
+		if _, set := fmap["5.3"]; set {
+			m.ClusterInstKey.Developer = src.ClusterInstKey.Developer
 		}
 	}
 	if _, set := fmap["6"]; set {

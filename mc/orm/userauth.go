@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -29,12 +28,7 @@ var PasshashSaltBytes = 8
 
 var Jwks vault.JWKS
 
-func InitVault(addr string) {
-	// roleID and secretID could also come from RAM disk.
-	// assume env vars for now.
-	roleID := os.Getenv("VAULT_ROLE_ID")
-	secretID := os.Getenv("VAULT_SECRET_ID")
-
+func InitVault(addr, roleID, secretID string) {
 	Jwks.Init(addr, "mcorm", roleID, secretID)
 	Jwks.GoUpdate()
 }
