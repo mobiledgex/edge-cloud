@@ -713,10 +713,10 @@ func init() {
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
 	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
+	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.Developer, "clusterinstkey-developer", "", "ClusterInstKey.Developer")
+	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.Developer, "clusterinstkey-developer", "", "ClusterInstKey.Developer")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
@@ -805,7 +805,7 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
-	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
+	if AppInstFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.1.1")
 	}
 	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-operatorkey-name").Changed {
@@ -814,7 +814,7 @@ func AppInstSetFields() {
 	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.2")
 	}
-	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-developer").Changed {
+	if AppInstFlagSet.Lookup("clusterinstkey-developer").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.3")
 	}
 	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
