@@ -42,6 +42,8 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"DMUUS\"},\"name\":\"tmocloud1\"}'")
 var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the same cloudlet. Defaults to hostname if unspecified.")
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
+var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
+var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -291,7 +293,8 @@ func main() {
 		notifyClient.Start()
 		defer notifyClient.Stop()
 
-		stats := NewDmeStats(time.Second, 10, sendMetric.Update)
+		interval := time.Duration(*statsInterval) * time.Second
+		stats := NewDmeStats(interval, *statsShards, sendMetric.Update)
 		stats.Start()
 		defer stats.Stop()
 		grpcOpts = append(grpcOpts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(dmecommon.UnaryAuthInterceptor, stats.UnaryStatsInterceptor)))

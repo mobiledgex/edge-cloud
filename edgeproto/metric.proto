@@ -41,4 +41,5 @@ message Metric {
   // Values associated with the metric
   repeated MetricVal vals = 4;
   option (protogen.notify_message) = true;
+  option (protogen.notify_print_send_recv) = false;
 }
