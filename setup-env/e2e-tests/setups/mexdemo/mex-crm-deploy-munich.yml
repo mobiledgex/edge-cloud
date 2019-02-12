@@ -14,9 +14,10 @@ spec:
       labels:
         app: crm-munich
     spec:
+      hostAliases:
       containers:
       - name: crm-munich
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0104
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0211
         imagePullPolicy: Always
         command:
          - crmserver
@@ -31,6 +32,18 @@ spec:
          - "/root/tls/mex-server.crt"
          - "--d"
          - "mexos"
+        env:
+         - name: OPENRC_URL
+           value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/munich/openrc.json
+         - name: MEXENV_URL
+           value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
+         - name: CLOUDLET_KIND
+           value: openstack
+         - name: MEX_OS_IMAGE
+           value: mobiledgex
+         - name: MEX_EXT_NETWORK
+           value: external-network-shared
+
 
       imagePullSecrets:
        - name: mexreg-secret

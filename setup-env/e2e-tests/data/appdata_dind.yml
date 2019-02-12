@@ -85,7 +85,25 @@ apps:
     name: AppCluster
   accessports: "tcp:7777"
   ipaccess: IpAccessDedicatedOrShared
-  androidpackagename: com.acme.someapplication1
+  androidpackagename: com.mobiledgex.sdkdemo
+  permitsplatformapps: true
+
+- key:
+    developerkey:
+      name: MobiledgeX SDK Demo
+    name: Face Detection Demo
+    version: "1.0"
+  imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
+  deploymentmanifest: http://35.199.188.102/apps/mexfaceapp.yml
+  imagetype: ImageTypeDocker
+  deployment: "kubernetes"
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: AppCluster
+  accessports: "tcp:8008"
+  ipaccess: IpAccessDedicatedOrShared
+  androidpackagename: com.mobiledgex.facedemo
   permitsplatformapps: true
 
 appinstances:
@@ -94,6 +112,25 @@ appinstances:
       developerkey:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: localtest
+    id: 123
+  clusterinstkey:
+    clusterkey:
+      name: AppCluster
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: localtest
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX SDK Demo
+      name: Face Detection Demo
       version: "1.0"
     cloudletkey:
       operatorkey:

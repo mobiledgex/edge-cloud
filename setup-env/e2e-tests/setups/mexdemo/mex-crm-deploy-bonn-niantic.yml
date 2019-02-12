@@ -1,22 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crm-hamburg
+  name: crm-bonn-niantic
   labels:
-    app: crm-hamburg
+    app: crm-bonn-niantic
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crm-hamburg
+      app: crm-bonn-niantic
   template:
     metadata:
       labels:
-        app: crm-hamburg
+        app: crm-bonn-niantic
     spec:
       hostAliases:
+       - ip: "37.50.143.121"
+         hostnames:
+         - "bonnedgecloud.telekom.de"
       containers:
-      - name: crm-hamburg
+      - name: crm-bonn
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0211
         imagePullPolicy: Always
         command:
@@ -25,7 +28,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburg-mexdemo\"}"
+         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"bonn-niantic\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
@@ -34,7 +37,7 @@ spec:
          - "mexos"
         env:
          - name: OPENRC_URL
-           value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/hamburg/openrc.json
+           value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/bonn/openrc.json
          - name: MEXENV_URL
            value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
          - name: CLOUDLET_KIND

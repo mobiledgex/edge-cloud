@@ -1,6 +1,7 @@
 - name: reset and stop etcds
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: etcds
 
   vars_files:
@@ -24,7 +25,8 @@
 
 - name: stop controllers
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: controllers
 
   vars_files:
@@ -47,7 +49,8 @@
 
 - name: stop dmes
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: dmes
 
   vars_files:
@@ -70,7 +73,8 @@
        
 - name: stop crms
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: crms
 
   vars_files:
@@ -92,7 +96,8 @@
 
 - name: stop locsims
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: locsims
 
   vars_files:
@@ -114,7 +119,8 @@
 
 - name: stop toksims
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: toksims
 
   vars_files:
@@ -136,7 +142,8 @@
 
 - name: stop sample apps
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: sampleapps
 
   vars_files:
@@ -159,7 +166,8 @@
 
 - name: stop vault
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: vaults
 
   vars_files:
