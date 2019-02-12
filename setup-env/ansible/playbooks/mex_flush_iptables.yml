@@ -1,7 +1,8 @@
 - name: flush iptables
   hosts: mexservers
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
 
   tasks:
     - name: flush all rules

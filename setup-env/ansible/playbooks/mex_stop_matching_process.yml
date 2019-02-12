@@ -1,6 +1,7 @@
 - name: stop matching processes
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: mexservers
 
   vars_files:

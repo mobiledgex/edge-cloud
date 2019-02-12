@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: crm-hamburg
+  name: crm-uscentral
   labels:
-    app: crm-hamburg
+    app: crm-uscentral
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: crm-hamburg
+      app: crm-uscentral
   template:
     metadata:
       labels:
-        app: crm-hamburg
+        app: crm-uscentral
     spec:
       hostAliases:
       containers:
-      - name: crm-hamburg
+      - name: crm-uscentral
         image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0211
         imagePullPolicy: Always
         command:
@@ -25,7 +25,7 @@ spec:
          - "--apiAddr"
          - "0.0.0.0:55091"
          - "--cloudletKey"
-         - "{\"operator_key\":{\"name\":\"TDG\"},\"name\":\"hamburg-mexdemo\"}"
+         - "{\"operator_key\":{\"name\":\"azure\"},\"name\":\"uscentral-mexdemo\"}"
          - "--notifyAddrs"
          - "controller:37001"
          - "--tls"
@@ -33,16 +33,14 @@ spec:
          - "--d"
          - "mexos"
         env:
-         - name: OPENRC_URL
-           value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/hamburg/openrc.json
+         - name: PATH
+           value: /tmp/google-cloud-sdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin 
          - name: MEXENV_URL
            value: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
          - name: CLOUDLET_KIND
-           value: openstack
-         - name: MEX_OS_IMAGE
-           value: mobiledgex
-         - name: MEX_EXT_NETWORK
-           value: external-network-shared
+           value: azure
+         - name: MEX_AZURE_LOCATION
+           value: centralus
 
 
       imagePullSecrets:
