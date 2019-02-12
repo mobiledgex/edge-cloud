@@ -26,11 +26,16 @@ type PodPromStat struct {
 }
 
 type ClustPromStat struct {
-	cpu     float64
-	mem     float64
-	disk    float64
-	netSend uint64
-	netRecv uint64
+	cpu        float64
+	mem        float64
+	disk       float64
+	netSend    uint64
+	netRecv    uint64
+	tcpConns   uint64
+	tcpRetrans uint64
+	udpSend    uint64
+	udpRecv    uint64
+	udpRecvErr uint64
 }
 
 type PromStats struct {
@@ -216,6 +221,68 @@ func (p *PromStats) CollectPromStats() error {
 			}
 		}
 	}
+
+	// Get Cluster Established TCP connections
+	resp, err = getPromMetrics(p.promAddr, promQTcpConnClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
+				p.clusterStat.tcpConns = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster TCP retransmissions
+	resp, err = getPromMetrics(p.promAddr, promQTcpRetransClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
+				p.clusterStat.tcpRetrans = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster UDP Send Datagrams
+	resp, err = getPromMetrics(p.promAddr, promQUdpSendPktsClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
+				p.clusterStat.udpSend = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster UDP Recv Datagrams
+	resp, err = getPromMetrics(p.promAddr, promQUdpRecvPktsClust)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
+				p.clusterStat.udpRecv = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+	// Get Cluster UDP Recv Errors
+	resp, err = getPromMetrics(p.promAddr, promQUdpRecvErr)
+	if err == nil && resp.Status == "success" {
+		for _, metric := range resp.Data.Result {
+			//copy only if we can parse the value
+			if val, err := strconv.ParseUint(metric.Values[1].(string), 10, 64); err == nil {
+				p.clusterStat.udpRecvErr = val
+				// We should have only one value here
+				break
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -263,6 +330,11 @@ func ClusterStatToMetric(ts *types.Timestamp, stat *ClustPromStat) *edgeproto.Me
 	metric.AddDoubleVal("disk", stat.disk)
 	metric.AddIntVal("sendBytes", stat.netSend)
 	metric.AddIntVal("recvBytes", stat.netRecv)
+	metric.AddIntVal("tcpConns", stat.tcpConns)
+	metric.AddIntVal("tcpRetrans", stat.tcpRetrans)
+	metric.AddIntVal("udpSend", stat.udpSend)
+	metric.AddIntVal("udpRecv", stat.udpRecv)
+	metric.AddIntVal("udpRecvErr", stat.udpRecvErr)
 	return &metric
 }
 
