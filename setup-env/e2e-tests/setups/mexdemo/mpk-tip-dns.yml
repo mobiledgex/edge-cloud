@@ -1,0 +1,17 @@
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: mpk-tip.tdg.mobiledgex.net
+    type: A
+    content: 209.249.227.19
+
+  - name: facedetectiondemo-tcp.mpk-tip.tdg.mobiledgex.net
+    type: A
+    content: 209.249.227.19
+
+  - name: mobiledgexsdkdemo-tcp.mpk-tip.tdg.mobiledgex.net
+    type: A
+    content: 209.249.227.19
+
+
+

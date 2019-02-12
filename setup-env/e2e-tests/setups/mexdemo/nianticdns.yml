@@ -1,0 +1,27 @@
+cloudflare:
+  zone: mobiledgex.net
+  records: 
+  - name: neon.niantic.mobiledgex.net
+    type: A
+    content: 172.30.0.32
+
+  - name: niantic-bonn-cloudlet.tdg.mobiledgex.net 
+    type: A
+    content: 37.50.143.110
+
+  - name: neon2-tcp.niantic-bonn-cloudlet.tdg.mobiledgex.net 
+    type: A
+    content: 37.50.143.110
+
+  - name: barcelona-mexdemo.tdg.mobiledgex.net
+    type: A
+    content: 172.30.0.32
+
+  - name: mexdemo-barcelona-cloudlet.tdg.mobiledgex.net
+    type: A
+    content: 172.30.0.32
+
+  - name: neon2-tcp.barcelona-mexdemo.tdg.mobiledgex.net
+    type: A
+    content: 172.30.0.32
+
