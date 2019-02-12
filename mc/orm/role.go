@@ -23,6 +23,8 @@ const ResourceClusterInsts = "clusterinsts"
 const ResourceAppAnalytics = "appanalytics"
 const ResourceCloudlets = "cloudlets"
 const ResourceCloudletAnalytics = "cloudletanalytics"
+const ResourceClusterFlavors = "clusterflavors"
+const ResourceFlavors = "flavors"
 
 var DeveloperResources = []string{
 	ResourceApps,
@@ -54,6 +56,10 @@ func InitRolePerms() error {
 
 	enforcer.AddPolicy(RoleAdminManager, ResourceControllers, ActionManage)
 	enforcer.AddPolicy(RoleAdminManager, ResourceControllers, ActionView)
+	enforcer.AddPolicy(RoleAdminManager, ResourceClusterFlavors, ActionManage)
+	enforcer.AddPolicy(RoleAdminManager, ResourceClusterFlavors, ActionView)
+	enforcer.AddPolicy(RoleAdminManager, ResourceFlavors, ActionManage)
+	enforcer.AddPolicy(RoleAdminManager, ResourceFlavors, ActionView)
 
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionManage)
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionView)
@@ -181,7 +187,7 @@ func ShowRole(c echo.Context) error {
 		}
 		rolemap[policy[0]] = struct{}{}
 	}
-	roles := make([]string, len(rolemap))
+	roles := make([]string, 0)
 	for role, _ := range rolemap {
 		roles = append(roles, role)
 	}

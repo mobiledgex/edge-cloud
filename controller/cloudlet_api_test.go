@@ -22,12 +22,6 @@ func TestCloudletApi(t *testing.T) {
 	sync.Start()
 	defer sync.Done()
 
-	// cannot create cloudlets without apps
-	for _, obj := range testutil.CloudletData {
-		err := cloudletApi.CreateCloudlet(&obj, &testutil.CudStreamoutCloudlet{})
-		assert.NotNil(t, err, "Create cloudlet without operator")
-	}
-
 	// create operators
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 

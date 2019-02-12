@@ -257,14 +257,14 @@ func {{.MethodName}}(c echo.Context) error {
 {{- end}}
 	conn, err := connectController(in.Region)
 	if err != nil {
-		return err
+		return ctrlErr(c, err)
 	}
 	api := edgeproto.New{{.Service}}Client(conn)
 	ctx := context.Background()
 {{- if .Outstream}}
 	stream, err := api.{{.MethodName}}(ctx, &in.{{.InName}})
 	if err != nil {
-		return err
+		return ctrlErr(c, err)
 	}
 	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	c.Response().WriteHeader(http.StatusOK)
@@ -275,19 +275,19 @@ func {{.MethodName}}(c echo.Context) error {
 			break
 		}
 		if err != nil {
-			return err
+			return ctrlErr(c, err)
 		}
 		err = json.NewEncoder(c.Response()).Encode(res)
 		if err != nil {
-			return err
+			return ctrlErr(c, err)
 		}
 		c.Response().Flush()
 	}
-	return nil		
+	return nil
 {{- else}}
 	res, err := api.{{.MethodName}}(ctx, &in.{{.InName}})
 	if err != nil {
-		return err
+		return ctrlErr(c, err)
 	}
 	return c.JSON(http.StatusOK, res)
 {{- end}}
@@ -367,16 +367,16 @@ func goodPermTest{{.Message}}(t *testing.T, uri, token, region string, obj *edge
 	// make sure region check works
 	status, err = testCreate{{.Message}}(uri, token, "bad region", obj)
 	require.Nil(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
+	require.Equal(t, http.StatusBadRequest, status)
 	status, err = testUpdate{{.Message}}(uri, token, "bad region", obj)
 	require.Nil(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
+	require.Equal(t, http.StatusBadRequest, status)
 	status, err = testDelete{{.Message}}(uri, token, "bad region", obj)
 	require.Nil(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
+	require.Equal(t, http.StatusBadRequest, status)
 	status, err = testShow{{.Message}}(uri, token, "bad region", obj)
 	require.Nil(t, err)
-	require.Equal(t, http.StatusInternalServerError, status)
+	require.Equal(t, http.StatusBadRequest, status)
 }
 
 // Test permissions for user with token1 who should have permissions for

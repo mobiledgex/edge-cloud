@@ -124,6 +124,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.ClusterInstKey.ClusterKey.Name)
 	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
 	s = append(s, in.ClusterInstKey.CloudletKey.Name)
+	s = append(s, in.ClusterInstKey.Developer)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	if in.MappedPorts == nil {
 		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
@@ -167,6 +168,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "ClusterInstKey-ClusterKey-Name")
 	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
 	s = append(s, "ClusterInstKey-CloudletKey-Name")
+	s = append(s, "ClusterInstKey-Developer")
 	s = append(s, "Liveness")
 	s = append(s, "MappedPorts-Proto")
 	s = append(s, "MappedPorts-InternalPort")
@@ -714,6 +716,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
 	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
+	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.Developer, "clusterinstkey-developer", "", "ClusterInstKey.Developer")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
@@ -810,6 +813,9 @@ func AppInstSetFields() {
 	}
 	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.2")
+	}
+	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-developer").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "5.3")
 	}
 	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
