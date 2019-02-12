@@ -378,5 +378,5 @@ edgectl controller CreateFlavor --key-name x1.medium --vcpus 2 --ram 2048 --disk
 edgectl controller CreateClusterFlavor --key-name x1.medium --masterflavor-name x1.medium --maxnodes 2 --nodeflavor-name x1.medium --nummasters 1 --numnodes 2
 edgectl controller CreateClusterInst --key-cloudletkey-name oceanview --key-cloudletkey-operatorkey-name bigwaves --key-clusterkey-name bigclust --flavor-name x1.medium
 edgectl controller CreateApp --key-developerkey-name bigorg --key-name myapp --key-version 1.0.0 --cluster-name bigclust --defaultflavor-name x1.medium --imagetype ImageTypeDocker --accessports "udp:12001,tcp:80,http:7777" --imagepath "registry.mobiledgex.net:5000/mobiledgex/simapp" --command "simapp -port 7777"
-edgectl controller CreateAppInst --key-appkey-developerkey-name bigorg --key-appkey-name myapp --key-appkey-version 1.0.0 --key-cloudletkey-name oceanview --key-cloudletkey-operatorkey-name bigwaves
+edgectl controller CreateAppInst --key-appkey-developerkey-name bigorg --key-appkey-name myapp --key-appkey-version 1.0.0 --key-cloudletkey-name oceanview --key-cloudletkey-operatorkey-name bigwaves --clusterinstkey-clusterkey-name bigclust
 ```
