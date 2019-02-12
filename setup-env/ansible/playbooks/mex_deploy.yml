@@ -1,6 +1,7 @@
 - name: setup remote dir
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: mexservers
   vars_files:
     - mex_vars.yml
@@ -13,7 +14,8 @@
 
 - name: install etcd to remote etcd nodes
   gather_facts: yes
-  user: root
+  user: ubuntu
+  become: yes
   hosts: etcds
 
   vars_files:

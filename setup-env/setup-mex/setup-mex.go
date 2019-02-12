@@ -463,7 +463,7 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 
 	//use the mobiledgex ssh key
 	fmt.Fprintln(invfile, "[all:vars]")
-	fmt.Fprintln(invfile, "ansible_ssh_private_key_file=~/.mobiledgex/id_rsa_mobiledgex")
+	fmt.Fprintln(invfile, "ansible_ssh_private_key_file=~/.mobiledgex/id_rsa_mex")
 
 	allRemoteServers := make(map[string]string)
 	vaultRemoteServers := make(map[string]string)

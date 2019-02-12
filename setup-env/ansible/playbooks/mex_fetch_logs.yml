@@ -1,6 +1,7 @@
 - name: get etcd logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: etcds
 
   vars_files:
@@ -21,7 +22,8 @@
 
 - name: get controller logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: controllers
 
   vars_files:
@@ -41,7 +43,8 @@
 
 - name: get crm logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: crms
 
   vars_files:
@@ -61,7 +64,8 @@
 
 - name: get dme logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: dmes
 
   vars_files:
@@ -82,7 +86,8 @@
 
 - name: get locsim logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: locsims
 
   vars_files:
@@ -102,7 +107,8 @@
 
 - name: get toksim logs
   gather_facts: no
-  user: root
+  user: ubuntu
+  become: yes
   hosts: toksims
 
   vars_files:

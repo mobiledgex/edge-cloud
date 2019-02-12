@@ -82,10 +82,23 @@ class login:
 
 class show_status:
 
+   def checkDmeHealth(self, endpoint, appname, devname):
+       type,name,uri = endpoint.split("|")
+       p = subprocess.Popen(["/usr/local/bin/edgectl --addr "+uri+" --tls /root/tls/mex-client.crt dme RegisterClient --appname \""+appname+"\" --appvers \"1.0\" --devname \""+devname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+       out,err = p.communicate()
+       print ("DME OUT %s" % out)
+       if "RS_SUCCESS" in out:
+           return type,name,uri,"OK"
+       else:
+           return type,name,uri,"FAIL"
+
+
    def checkHealth(self,endpoint):
        print ("checkhealth for endpoint: %s\n" % endpoint)
        type,name,uri = endpoint.split("|")
-       
+       if "DME" in name:
+           # see if we can register with the sample app
+           return self.checkDmeHealth(endpoint, "MobiledgeX SDK Demo", "MobiledgeX SDK Demo")
        try:
          headers = {}
          msg = ""
@@ -107,13 +120,12 @@ class show_status:
    def getUrisForApp(self, appname):
        ## todo: configurable endpoints
        p = subprocess.Popen(["/usr/local/bin/edgectl --addr mexdemo.ctrl.mobiledgex.net:55001 --tls /root/tls/mex-client.crt controller ShowAppInst --key-appkey-name \""+appname+"\""], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-
        
        uris = []
        out,err = p.communicate()
        data = load(out, Loader=Loader)
        print ("YAMLDATA %s" % data)
-       if len(data) == 0:
+       if not data or len(data) == 0:
           print "ERROR: no data\n"
           return uris
         
@@ -141,13 +153,17 @@ class show_status:
            except Exception as e:
               print "Exception getting app uris for %s - %s " % (appname, e)
         ## todo: remove hardcoded endpoints
-        gws = ("Token Simulator|mexdemo.tok.mobiledgex.net:9999", "Location API Simulator|mexdemo.locsim.mobiledgex.net:8888")
+        gws = ("Token Simulator|mexdemo.tok.mobiledgex.net:9999", 
+               "Location API Simulator|mexdemo.locsim.mobiledgex.net:8888",
+               "DME - MWC|gddt.dme.mobiledgex.net:50051", 
+               "DME - Demo|mexdemo.dme.mobiledgex.net:50051")
         
         for gw in gws:
            gwname,uri = gw.split("|")
            itemsToCheck.append("API Gateways|"+gwname+"|"+uri)
 
         checkresults = pool.map(self.checkHealth,itemsToCheck)
+        print ("checkresults out %s" % checkresults)
         for item in checkresults:
                results[item[0]+"|"+item[1]+"|"+item[2]] = item[3]
 
