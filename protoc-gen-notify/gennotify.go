@@ -15,6 +15,7 @@ type GenNotify struct {
 	support    gensupport.PluginSupport
 	tmpl       *template.Template
 	importSync bool
+	importLog  bool
 }
 
 func (g *GenNotify) Name() string {
@@ -32,11 +33,14 @@ func (g *GenNotify) GenerateImports(file *generator.FileDescriptor) {
 		g.PrintImport("", "sync")
 	}
 	g.PrintImport("", "github.com/gogo/protobuf/types")
-	g.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+	if g.importLog {
+		g.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
+	}
 }
 
 func (g *GenNotify) Generate(file *generator.FileDescriptor) {
 	g.importSync = false
+	g.importLog = false
 
 	g.support.InitFile()
 	if !g.support.GenFile(*file.FileDescriptorProto.Name) {
@@ -90,9 +94,13 @@ func (g *GenNotify) generateMessage(file *generator.FileDescriptor, desc *genera
 	args.RecvHook = GetNotifyRecvHook(message)
 	args.Flush = GetNotifyFlush(message)
 	args.FilterCloudletKey = GetNotifyFilterCloudletKey(message)
+	args.PrintSendRecv = GetNotifyPrintSendRecv(message)
 	g.tmpl.Execute(g.Generator.Buffer, args)
 
 	g.importSync = true
+	if args.PrintSendRecv {
+		g.importLog = true
+	}
 }
 
 type tmplArgs struct {
@@ -104,6 +112,7 @@ type tmplArgs struct {
 	CustomUpdate      bool
 	RecvHook          bool
 	FilterCloudletKey bool
+	PrintSendRecv     bool
 }
 
 var tmpl = `
@@ -205,7 +214,9 @@ func (s *{{.Name}}Send) Update(key *{{.KeyType}}, old *{{.NameType}}) {
 
 func (s *{{.Name}}Send) updateInternal(key *{{.KeyType}}) {
 	s.Mux.Lock()
+{{- if .PrintSendRecv}}
 	log.DebugLog(log.DebugLevelNotify, "updateInternal {{.Name}}", "key", key)
+{{- end}}
 	s.Keys[*key] = struct{}{}
 	s.Mux.Unlock()
 	s.sendrecv.wakeup()
@@ -252,6 +263,7 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			continue
 		}
 		notice.Any = *any
+{{- if .PrintSendRecv}}
 		log.DebugLog(log.DebugLevelNotify,
 			fmt.Sprintf("%s send {{.Name}}", s.sendrecv.cliserv),
 			"peer", peer,
@@ -260,6 +272,7 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 			"key", key)
 {{- else}}
 			"msg", msg)
+{{- end}}
 {{- end}}
 		err = stream.Send(notice)
 		if err != nil {
@@ -392,21 +405,29 @@ func (s *{{.Name}}Recv) Recv(notice *edgeproto.Notice, notifyId int64, peer stri
 	err := types.UnmarshalAny(&notice.Any, buf)
 	if err != nil {
 		s.sendrecv.stats.UnmarshalErrors++
+{{- if .PrintSendRecv}}
 		log.DebugLog(log.DebugLevelNotify,
 			fmt.Sprintf("%s recv {{.Name}}", s.sendrecv.cliserv),
 			"peer", peer,
 			"action", notice.Action)
+{{- end}}
 		return
 	}
 {{- if .Flush}}
 	buf.NotifyId = notifyId
 {{- end}}
+{{- if .PrintSendRecv}}
 	log.DebugLog(log.DebugLevelNotify,
 		fmt.Sprintf("%s recv {{.Name}}", s.sendrecv.cliserv),
 		"peer", peer,
 		"action", notice.Action,
 {{- if .Cache}}
 		"key", buf.Key)
+{{- else}}
+		"msg", buf)
+{{- end}}
+{{- end}}
+{{- if .Cache}}
 	if notice.Action == edgeproto.NoticeAction_UPDATE {
 		s.handler.Update(buf, 0)
 		s.Mux.Lock()
@@ -418,7 +439,6 @@ func (s *{{.Name}}Recv) Recv(notice *edgeproto.Notice, notifyId int64, peer stri
 		s.handler.Delete(buf, 0)
 	}
 {{- else}}
-		"msg", buf)
 	s.handler.Recv(buf)
 {{- end}}
 	s.sendrecv.stats.Recv++
@@ -522,4 +542,8 @@ func GetNotifyRecvHook(message *descriptor.DescriptorProto) bool {
 
 func GetNotifyFilterCloudletKey(message *descriptor.DescriptorProto) bool {
 	return proto.GetBoolExtension(message.Options, protogen.E_NotifyFilterCloudletKey, false)
+}
+
+func GetNotifyPrintSendRecv(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_NotifyPrintSendRecv, true)
 }
