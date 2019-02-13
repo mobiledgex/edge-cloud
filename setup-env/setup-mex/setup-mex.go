@@ -379,7 +379,7 @@ func CleanupDIND() error {
 					return fmt.Errorf("error in docker kill %v", err)
 				}
 			}
-			// now delete the network
+			// now cleanup DIND cluster
 			if clusterName != "" {
 				os.Setenv("DIND_LABEL", clusterName)
 				os.Setenv("CLUSTER_ID", clusterID)
@@ -395,7 +395,6 @@ func CleanupDIND() error {
 				return fmt.Errorf("ERROR in cleanup Dind Cluster: %s", clusterName)
 			}
 			log.Printf("done dind-cluster-v1.13.sh clean for: %s out: %s\n", clusterName, out)
-
 		}
 	}
 	log.Println("done CleanupDIND")
