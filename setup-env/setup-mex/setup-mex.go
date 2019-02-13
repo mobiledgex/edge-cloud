@@ -9,10 +9,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	cloudflare "github.com/cloudflare/cloudflare-go"
+	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	yaml "gopkg.in/yaml.v2"
@@ -326,6 +328,78 @@ func ReadSetupFile(setupfile string, dataDir string) bool {
 		util.Deployment.Dmes[i].TokSrvUrl = strings.Replace(util.Deployment.Dmes[i].TokSrvUrl, "%3D", "=", -1)
 	}
 	return true
+}
+
+// CleanupDIND kills all containers on the kubeadm-dind-net-xxx network and then cleans up DIND
+func CleanupDIND() error {
+	// find docker networks
+	log.Printf("Running CleanupDIND, getting docker networks\n")
+	r, _ := regexp.Compile("kubeadm-dind-net(-(\\S+)-(\\d+))?")
+
+	lscmd := exec.Command("docker", "network", "ls", "--format='{{.Name}}'")
+	output, err := lscmd.Output()
+	if err != nil {
+		log.Printf("Error running docker network ls: %v", err)
+		return err
+	}
+	netnames := strings.Split(string(output), "\n")
+	for _, n := range netnames {
+		n := strings.Trim(n, "'") //remove quotes
+		if r.MatchString(n) {
+			matches := r.FindStringSubmatch(n)
+			clusterName := matches[2]
+			clusterID := matches[3]
+
+			log.Printf("found DIND net: %s clusterName: %s clusterID: %s\n", n, clusterName, clusterID)
+			inscmd := exec.Command("docker", "network", "inspect", n, "--format={{range .Containers}}{{.Name}},{{end}}")
+			output, err = inscmd.CombinedOutput()
+			if err != nil {
+				log.Printf("Error running docker network inspect: %s - %v - %v\n", n, string(output), err)
+				return fmt.Errorf("error in docker inspect %v", err)
+			}
+			ostr := strings.TrimRight(string(output), ",") //trailing comma
+			ostr = strings.TrimSpace(ostr)
+			containers := strings.Split(ostr, ",")
+			// first we need to kill all containers using the network as the dind script will
+			// not clean these up, and cannot delete the network if they are present
+			for _, c := range containers {
+				if c == "" {
+					continue
+				}
+				if strings.HasPrefix(c, "kube-node") || strings.HasPrefix(c, "kube-master") {
+					// dind clean should handle this
+					log.Printf("skipping kill of kube container: %s\n", c)
+					continue
+				}
+				log.Printf("killing container: [%s]\n", c)
+				killcmd := exec.Command("docker", "kill", c)
+				output, err = killcmd.CombinedOutput()
+				if err != nil {
+					log.Printf("Error killing docker container: %s - %v - %v\n", c, string(output), err)
+					return fmt.Errorf("error in docker kill %v", err)
+				}
+			}
+			// now cleanup DIND cluster
+			if clusterName != "" {
+				os.Setenv("DIND_LABEL", clusterName)
+				os.Setenv("CLUSTER_ID", clusterID)
+			} else {
+				log.Printf("no clustername, doing clean for default cluster")
+				os.Unsetenv("DIND_LABEL")
+				os.Unsetenv("CLUSTER_ID")
+			}
+			log.Printf("running dind-cluster-v1.13.sh clean clusterName: %s clusterID: %s\n", clusterName, clusterID)
+			out, err := sh.Command("dind-cluster-v1.13.sh", "clean").CombinedOutput()
+			if err != nil {
+				log.Printf("Error in dind-cluster-v1.13.sh clean: %v - %v\n", out, err)
+				return fmt.Errorf("ERROR in cleanup Dind Cluster: %s", clusterName)
+			}
+			log.Printf("done dind-cluster-v1.13.sh clean for: %s out: %s\n", clusterName, out)
+		}
+	}
+	log.Println("done CleanupDIND")
+	return nil
+
 }
 
 func StopProcesses(processName string) bool {

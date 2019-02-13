@@ -282,7 +282,6 @@ func main() {
 			if !setupmex.StopRemoteProcesses(actionParam) {
 				errorsFound++
 				errors = append(errors, "stop failed")
-
 			}
 		case "ctrlapi":
 			if !setupmex.UpdateAPIAddrs() {
@@ -333,6 +332,11 @@ func main() {
 					errorsFound++
 					errors = append(errors, "cleanup failed")
 				}
+			}
+			err = setupmex.CleanupDIND()
+			if err != nil {
+				errorsFound++
+				errors = append(errors, err.Error())
 			}
 
 		case "fetchlogs":
