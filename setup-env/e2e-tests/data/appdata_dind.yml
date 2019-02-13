@@ -35,7 +35,7 @@ clusters:
 cloudlets:
 - key:
     operatorkey:
-      name: dmuus
+      name: mexdev
     name: localtest
   accessuri: localtest.tmo
   location:
@@ -50,7 +50,7 @@ clusterinsts:
       name: AppCluster
     cloudletkey:
       operatorkey:
-        name: dmuus
+        name: mexdev
       name: localtest
   flavor:
     name: x1.medium
@@ -59,7 +59,7 @@ clusterinsts:
 
 operators:
 - key:
-    name: dmuus
+    name: mexdev
 
 developers:
 - key:
@@ -115,7 +115,7 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: dmuus
+        name: mexdev
       name: localtest
     id: 123
   clusterinstkey:
@@ -123,7 +123,7 @@ appinstances:
       name: AppCluster
     cloudletkey:
       operatorkey:
-        name: dmuus
+        name: mexdev
       name: localtest
 
 - key:
@@ -134,7 +134,7 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: dmuus
+        name: mexdev
       name: localtest
     id: 123
   clusterinstkey:
@@ -142,5 +142,5 @@ appinstances:
       name: AppCluster
     cloudletkey:
       operatorkey:
-        name: dmuus
+        name: mexdev
       name: localtest
