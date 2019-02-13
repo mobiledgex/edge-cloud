@@ -1,7 +1,5 @@
 ##
 ##
-description: Adds provisioning 
-
 tests:
 
 - name: delete provisioning

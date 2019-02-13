@@ -66,18 +66,6 @@ controllers:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- controllerlocal:
-    name: ctrl2
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55002"
-    httpaddr: "0.0.0.0:36002"
-    notifyaddr: "127.0.0.1:37002"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-
-
 dmes:
 - dmelocal:
     name: dme1
@@ -87,38 +75,18 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: GDDT
-    cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"dmuus-cloud-1"}'
+    cloudletkey: '{"operator_key":{"name":"mexdev"},"name":"mexdev-cloud-1"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
-  envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
 
-- dmelocal:
-    name: dme2
-    apiaddr: "0.0.0.0:50052"
-    httpaddr: "0.0.0.0:38002"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: GDDT
-    cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"dmuus-cloud-2"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-  envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
-  
 crms:
 - crmlocal:
     name: crm1
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"localtest"}'
+    cloudletkey: '{"operator_key":{"name":"mexdev"},"name":"localtest"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
