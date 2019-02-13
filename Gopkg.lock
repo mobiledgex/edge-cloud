@@ -560,7 +560,8 @@
   version = "v1.1.2"
 
 [[projects]]
-  digest = "1:58b553c4e68c037225c82bccf4fbadb0f9df09fc9e41292808af0503a27413ca"
+  branch = "master"
+  digest = "1:e8caa65e27b58a567e81a62d8805a7ac7c14ca3ba2e97732229ee7abdca50673"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "k8s-prov/azure",
@@ -570,8 +571,7 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "0b20aa99ff2c1f979f07b913f39dd0dac1f6e6e6"
-  version = "v0.0.10"
+  revision = "95693d779a7d0ca9307f8b9acac49a307eb6ae9a"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"

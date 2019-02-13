@@ -24,6 +24,11 @@ var promQMemClust = "sum(container_memory_working_set_bytes%7Bid%3D%22%2F%22%7D)
 var promQDiskClust = "sum(container_fs_usage_bytes%7Bdevice%3D~%22%5E%2Fdev%2F%5Bsv%5Dd%5Ba-z%5D%5B1-9%5D%24%22%2Cid%3D%22%2F%22%7D)%2Fsum(container_fs_limit_bytes%7Bdevice%3D~%22%5E%2Fdev%2F%5Bsv%5Dd%5Ba-z%5D%5B1-9%5D%24%22%2Cid%3D%22%2F%22%7D)*100"
 var promQSendBytesRateClust = "sum(irate(container_network_transmit_bytes_total%5B1m%5D))"
 var promQRecvBytesRateClust = "sum(irate(container_network_receive_bytes_total%5B1m%5D))"
+var promQTcpConnClust = "node_netstat_Tcp_CurrEstab"
+var promQTcpRetransClust = "node_netstat_Tcp_RetransSegs"
+var promQUdpSendPktsClust = "node_netstat_Udp_OutDatagrams"
+var promQUdpRecvPktsClust = "node_netstat_Udp_InDatagrams"
+var promQUdpRecvErr = "node_netstat_Udp_InErrors"
 
 var promQCpuPod = "sum(rate(container_cpu_usage_seconds_total%7Bimage!%3D%22%22%7D%5B1m%5D))by(pod_name)"
 var promQMemPod = "sum(container_memory_working_set_bytes%7Bimage!%3D%22%22%7D)by(pod_name)"
