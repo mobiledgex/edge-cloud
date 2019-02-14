@@ -99,6 +99,7 @@ func addAppInst(appInst *edgeproto.AppInst) {
 	if _, foundCarrier := app.carriers[carrierName]; foundCarrier {
 		log.DebugLog(log.DebugLevelDmedb, "carrier already exists", "carrierName", carrierName)
 	} else {
+		log.DebugLog(log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
 		app.carriers[carrierName] = new(dmeAppInsts)
 		app.carriers[carrierName].insts = make(map[edgeproto.CloudletKey]*dmeAppInst)
 	}
@@ -168,12 +169,6 @@ func removeAppInst(appInst *edgeproto.AppInst) {
 				delete(tbl.apps[appkey].carriers, carrierName)
 				log.DebugLog(log.DebugLevelDmedb, "Removing carrier for app",
 					"carrier", carrierName,
-					"appName", appkey.Name,
-					"appVersion", appkey.Version)
-			}
-			if len(app.carriers) == 0 {
-				delete(tbl.apps, appkey)
-				log.DebugLog(log.DebugLevelDmedb, "Removing app",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version)
 			}
