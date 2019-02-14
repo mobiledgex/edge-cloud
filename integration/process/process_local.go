@@ -341,6 +341,7 @@ type ClusterSvcLocal struct {
 	NotifyAddrs string
 	CtrlAddrs   string
 	PromPorts   string
+	InfluxDB    string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -358,6 +359,10 @@ func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	if p.PromPorts != "" {
 		args = append(args, "--prometheus-ports")
 		args = append(args, p.PromPorts)
+	}
+	if p.InfluxDB != "" {
+		args = append(args, "--influxdb")
+		args = append(args, p.InfluxDB)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
