@@ -39,7 +39,8 @@ func TestJwk(t *testing.T) {
 	}
 	cookie, err := jwks.GenerateCookie(claims)
 	require.Nil(t, err, "generate cookie")
-	require.Equal(t, 2, claims.GetKid())
+	kid, _ := claims.GetKid()
+	require.Equal(t, 2, kid)
 	_, err = jwks.VerifyCookie(cookie, claims)
 	require.Nil(t, err, "verify cookie")
 
@@ -65,7 +66,8 @@ func TestJwk(t *testing.T) {
 	jwks.lastUpdateAttempt = time.Now().Add(-time.Minute)
 	cookie, err = jwks2.GenerateCookie(claims)
 	require.Nil(t, err, "generate cookie")
-	require.Equal(t, 3, claims.GetKid())
+	kid, _ = claims.GetKid()
+	require.Equal(t, 3, kid)
 	_, err = jwks.VerifyCookie(cookie, claims)
 	require.Nil(t, err, "verify cookie")
 	require.Equal(t, 3, jwks.Meta.CurrentVersion)
@@ -76,5 +78,5 @@ type TestClaims struct {
 	Kid int
 }
 
-func (s *TestClaims) GetKid() int    { return s.Kid }
-func (s *TestClaims) SetKid(kid int) { s.Kid = kid }
+func (s *TestClaims) GetKid() (int, error) { return s.Kid, nil }
+func (s *TestClaims) SetKid(kid int)       { s.Kid = kid }
