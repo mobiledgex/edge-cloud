@@ -75,8 +75,8 @@ type UserClaims struct {
 	Kid      int    `json:"kid"`
 }
 
-func (u *UserClaims) GetKid() int {
-	return u.Kid
+func (u *UserClaims) GetKid() (int, error) {
+	return u.Kid, nil
 }
 
 func (u *UserClaims) SetKid(kid int) {
