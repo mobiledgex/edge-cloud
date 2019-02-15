@@ -3,6 +3,7 @@ package dmecommon
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -43,8 +44,11 @@ type dmeClaims struct {
 
 type ctxCookieKey struct{}
 
-func (d *dmeClaims) GetKid() int {
-	return d.Key.Kid
+func (d *dmeClaims) GetKid() (int, error) {
+	if d.Key == nil {
+		return 0, fmt.Errorf("Invalid cookie, no key")
+	}
+	return d.Key.Kid, nil
 }
 
 func (d *dmeClaims) SetKid(kid int) {

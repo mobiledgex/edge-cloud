@@ -203,7 +203,7 @@ func PutSecret(addr, roleID, secretID, name, secret, refresh string) error {
 type Claims interface {
 	jwt.Claims
 	// Get the Key ID with the claims (for VerifyCookie)
-	GetKid() int
+	GetKid() (int, error)
 	// Set the Key ID with the claims (for GenerateCookie)
 	SetKid(int)
 }
@@ -221,12 +221,16 @@ func (s *JWKS) GenerateCookie(claims Claims) (string, error) {
 
 func (s *JWKS) VerifyCookie(cookie string, claims Claims) (*jwt.Token, error) {
 	if cookie == "" {
-		return nil, errors.New("missing cookie")
+		return nil, errors.New("VerifyCookie failed: missing cookie")
 	}
 	return jwt.ParseWithClaims(cookie, claims, func(token *jwt.Token) (verifykey interface{}, err error) {
-		secret, ok := s.GetKey(claims.GetKid())
+		kid, err := claims.GetKid()
+		if err != nil {
+			return nil, fmt.Errorf("VerifyCookie failed: %v", err)
+		}
+		secret, ok := s.GetKey(kid)
 		if !ok {
-			return nil, fmt.Errorf("no secret for kid %d in cookie %s", claims.GetKid(), cookie)
+			return nil, fmt.Errorf("VerifyCookie failed: no secret for kid %d in cookie %s", kid, cookie)
 		}
 		return []byte(secret), nil
 	})
