@@ -13,6 +13,9 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
+//TODO - need to move out Errors into a separate package
+var ErrEdgeApiFlavorNotFound = errors.New("Specified flavor not found")
+
 // contains sets of each applications for yaml marshalling
 type ApplicationData struct {
 	Operators        []Operator        `yaml:"operators"`
