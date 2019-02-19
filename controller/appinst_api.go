@@ -426,6 +426,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if cloudletRefsChanged {
 			cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
 		}
+		in.CreatedAt = cloudcommon.TimeToTimestamp(time.Now())
 
 		if ignoreCRM(cctx) || defaultCloudlet {
 			in.State = edgeproto.TrackedState_Ready

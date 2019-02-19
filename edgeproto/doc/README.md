@@ -319,6 +319,7 @@ Many of the fields here are inherited from the App definition. Some are derived,
 | errors | [string](#string) | repeated | Any errors trying to create, update, or delete the AppInst on the Cloudlet |
 | crm_override | [CRMOverride](#edgeproto.CRMOverride) |  | Override actions to CRM |
 | allocated_ip | [string](#string) |  | allocated IP for dedicated access |
+| created_at | [distributed_match_engine.Timestamp](#distributed_match_engine.Timestamp) |  | Created at time |
 
 
 

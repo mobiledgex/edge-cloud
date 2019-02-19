@@ -4,9 +4,11 @@ import (
 	"context"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gogo/gateway"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
+	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
@@ -73,4 +75,15 @@ func GrpcGatewayServe(cfg *GrpcGWConfig, server *http.Server) {
 			log.FatalLog("Failed to serve HTTP", "error", err)
 		}
 	}
+}
+
+func TimeToTimestamp(t time.Time) dme.Timestamp {
+	ts := dme.Timestamp{}
+	ts.Seconds = t.Unix()
+	ts.Nanos = int32(t.Nanosecond())
+	return ts
+}
+
+func TimestampToTime(ts dme.Timestamp) time.Time {
+	return time.Unix(ts.Seconds, int64(ts.Nanos))
 }
