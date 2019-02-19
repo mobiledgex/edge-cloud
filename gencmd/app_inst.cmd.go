@@ -97,7 +97,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -143,11 +143,13 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, in.AllocatedIp)
+	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 13)
+	s := make([]string, 0, 14)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -181,6 +183,8 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
 	s = append(s, "AllocatedIp")
+	s = append(s, "CreatedAt-Seconds")
+	s = append(s, "CreatedAt-Nanos")
 	return s
 }
 
@@ -326,6 +330,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.AllocatedIp = ""
+	}
+	if _, found := tags["timestamp"]; found {
+		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
 }
 
@@ -723,6 +730,8 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
+	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -834,6 +843,12 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("allocatedip").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "17")
+	}
+	if AppInstFlagSet.Lookup("createdat-seconds").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "21.1")
+	}
+	if AppInstFlagSet.Lookup("createdat-nanos").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
 	}
 }
 
