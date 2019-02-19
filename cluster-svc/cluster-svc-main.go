@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -31,6 +32,9 @@ var externalPorts = flag.String("prometheus-ports", "", "ports to expose in form
 var influxDBAddr = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
 var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
 var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
+
+// TODO - scrapeInterval should be passed along to Prometheus app at creation time
+var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 
 // Hard coded username - TODO to move to user db
 var MEXDeveloper = "mexinfradev_"
@@ -76,6 +80,8 @@ spec:
           value: {{.InfluxDBUser}}
         - name: MEX_INFLUXDB_PASS
           value: {{.InfluxDBPass}}
+        - name: MEX_SCRAPE_INTERVAL
+          value: {{.Interval}}
         ports:
 `
 
@@ -284,6 +290,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
+	Interval     time.Duration
 }
 
 func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
@@ -294,6 +301,7 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 		InfluxDBAddr: *influxDBAddr,
 		InfluxDBUser: *influxDBUser,
 		InfluxDBPass: *influxDBPass,
+		Interval:     *scrapeInterval,
 	}
 	buf := bytes.Buffer{}
 	err := exporterT.Execute(&buf, &ex)
