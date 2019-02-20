@@ -232,6 +232,8 @@ apps:
               value: root
             - name: MEX_INFLUXDB_PASS
               value: root
+            - name: MEX_SCRAPE_INTERVAL
+              value: 15s
             ports:
   delopt: AutoDelete
 - key:

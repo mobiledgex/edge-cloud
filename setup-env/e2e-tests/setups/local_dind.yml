@@ -105,4 +105,5 @@ clustersvcs:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
     promports: "tcp:9090"
     influxdb: "host.docker.internal:8086"
+    interval: "5s"
   hostname: "127.0.0.1"
