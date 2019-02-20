@@ -10,11 +10,13 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
+	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
@@ -32,6 +34,9 @@ var influxDBAddr = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to 
 var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
 var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
 
+// TODO - scrapeInterval should be passed along to Prometheus app at creation time
+var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
+
 // Hard coded username - TODO to move to user db
 var MEXDeveloper = "mexinfradev_"
 var MEXDevUsername = "_mexinfradev"
@@ -41,6 +46,13 @@ var MEXdev = edgeproto.Developer{
 	Username: MEXDevUsername,
 }
 
+var MEXInfraFlavorName = "x1.medium" // TODO - once we de-couple Apps from clusters change to "infra.small"
+var MEXInfraFlavor = edgeproto.Flavor{
+	Key:   edgeproto.FlavorKey{Name: MEXInfraFlavorName},
+	Vcpus: 1,
+	Ram:   1024,
+	Disk:  1,
+}
 var MEXMetricsExporterAppName = "MEXMetricsExporter"
 var MEXMetricsExporterAppVer = "1.0"
 
@@ -76,6 +88,8 @@ spec:
           value: {{.InfluxDBUser}}
         - name: MEX_INFLUXDB_PASS
           value: {{.InfluxDBPass}}
+        - name: MEX_SCRAPE_INTERVAL
+          value: {{.Interval}}
         ports:
 `
 
@@ -87,7 +101,7 @@ var MEXMetricsExporterApp = edgeproto.App{
 	},
 	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
-	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
+	DefaultFlavor: edgeproto.FlavorKey{Name: MEXInfraFlavorName},
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
@@ -102,7 +116,7 @@ var MEXPrometheusApp = edgeproto.App{
 	},
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
-	DefaultFlavor: edgeproto.FlavorKey{Name: "x1.medium"}, // TODO flavor
+	DefaultFlavor: edgeproto.FlavorKey{Name: MEXInfraFlavorName},
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
@@ -124,6 +138,8 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 	if in.State == edgeproto.TrackedState_Ready {
 		// Create Applications
 		// TODO - this should really be done on a strartup of cluster service
+		//      - however since the Metrics-exporter manifest requires us to eval the template
+		//        at CreateApp time, we cannot move this out - need to implement EDGECLOUD-386 first
 		if err = createMEXPrometheus(dialOpts, in.Key.ClusterKey); err != nil {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
@@ -227,6 +243,32 @@ func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.Cl
 	return createAppInstCommon(dialOpts, instKey, MEXMetricsExporterApp.Key)
 }
 
+func createMEXInfraFlavor(dialOpts grpc.DialOption) error {
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
+	if err != nil {
+		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
+	}
+	defer conn.Close()
+	apiClient := edgeproto.NewFlavorApiClient(conn)
+
+	ctx := context.TODO()
+	res, err := apiClient.CreateFlavor(ctx, &MEXInfraFlavor)
+	if err != nil {
+		if err == objstore.ErrKVStoreKeyExists {
+			log.DebugLog(log.DebugLevelMexos, "flavor already exists", "dev", MEXdev.String())
+			return nil
+		}
+		errstr := err.Error()
+		st, ok := status.FromError(err)
+		if ok {
+			errstr = st.Message()
+		}
+		return fmt.Errorf("CreateFlavor failed: %s", errstr)
+	}
+	log.DebugLog(log.DebugLevelMexos, "create flavor", "flavor", MEXInfraFlavor.String(), "result", res.String())
+	return nil
+
+}
 func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
 	var err error
 
@@ -240,6 +282,10 @@ func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
 	ctx := context.TODO()
 	res, err := apiClient.CreateDeveloper(ctx, &MEXdev)
 	if err != nil {
+		if err == objstore.ErrKVStoreKeyExists {
+			log.DebugLog(log.DebugLevelMexos, "developer already exists", "dev", MEXdev.String())
+			return nil
+		}
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
@@ -264,6 +310,16 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgep
 	ctx := context.TODO()
 	res, err := apiClient.CreateApp(ctx, app)
 	if err != nil {
+		// Handle non-fatal errors
+		switch err {
+		case objstore.ErrKVStoreKeyExists:
+			log.DebugLog(log.DebugLevelMexos, "app already exists", "app", app.String())
+			return nil
+		case edgeproto.ErrEdgeApiFlavorNotFound:
+			if err2 := createMEXInfraFlavor(dialOpts); err2 == nil {
+				return createAppCommon(dialOpts, app, cluster)
+			}
+		}
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
@@ -284,6 +340,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
+	Interval     time.Duration
 }
 
 func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
@@ -294,6 +351,7 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 		InfluxDBAddr: *influxDBAddr,
 		InfluxDBUser: *influxDBUser,
 		InfluxDBPass: *influxDBPass,
+		Interval:     *scrapeInterval,
 	}
 	buf := bytes.Buffer{}
 	err := exporterT.Execute(&buf, &ex)
@@ -328,11 +386,15 @@ func main() {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 
-	log.InfoLog("Ready")
 	if err = createMEXInfraDeveloper(dialOpts); err != nil {
-		fmt.Printf("Failed to create a developer\n")
-	}
+		log.DebugLog(log.DebugLevelMexos, "Failed to create developer", "error", err)
 
+	}
+	// TODO - Uncomment this once we de-couple App from cluster for infra services
+	//      if err = createMEXInfraFlavor(dialOpts); err != nil {
+	//              log.DebugLog(log.DebugLevelMexos, "Failed to create flavor", "error", err)
+	//      }
+	log.InfoLog("Ready")
 	// wait until process in killed/interrupted
 	sig := <-sigChan
 	fmt.Println(sig)

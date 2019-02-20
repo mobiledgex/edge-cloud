@@ -18,6 +18,7 @@ var promAddress = flag.String("apiAddr", "0.0.0.0:9090", "Prometheus address to 
 var influxdb = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var clusterName = flag.String("cluster", "myclust", "Cluster Name")
+var collectInterval = flag.Duration("interval", time.Second*15, "Metrics collection interval")
 
 var promQCpuClust = "sum(rate(container_cpu_usage_seconds_total%7Bid%3D%22%2F%22%7D%5B1m%5D))%2Fsum(machine_cpu_cores)*100"
 var promQMemClust = "sum(container_memory_working_set_bytes%7Bid%3D%22%2F%22%7D)%2Fsum(machine_memory_bytes)*100"
@@ -73,6 +74,13 @@ func initEnv() {
 	if val != "" {
 		Env["INFLUXDB_PASS"] = val
 	}
+	val = os.Getenv("MEX_SCRAPE_INTERVAL")
+	if val != "" {
+		tmp, err := time.ParseDuration(val)
+		if err == nil {
+			*collectInterval = tmp
+		}
+	}
 }
 
 func main() {
@@ -86,6 +94,7 @@ func main() {
 	fmt.Printf("Found Prometheus running on: %s\n", *promAddress)
 	initEnv()
 	fmt.Printf("InfluxDB is at: %s\n", *influxdb)
+	fmt.Printf("Metrics collection interval is %s\n", *collectInterval)
 	influxQ = influxq.NewInfluxQ(InfluxDBName)
 	err = influxQ.Start(*influxdb)
 	if err != nil {
@@ -94,7 +103,7 @@ func main() {
 	}
 	defer influxQ.Stop()
 
-	stats := NewPromStats(*promAddress, time.Second*15, sendMetric)
+	stats := NewPromStats(*promAddress, *collectInterval, sendMetric)
 	stats.Start()
 	defer stats.Stop()
 

@@ -342,6 +342,7 @@ type ClusterSvcLocal struct {
 	CtrlAddrs   string
 	PromPorts   string
 	InfluxDB    string
+	Interval    string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -363,6 +364,10 @@ func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	if p.InfluxDB != "" {
 		args = append(args, "--influxdb")
 		args = append(args, p.InfluxDB)
+	}
+	if p.Interval != "" {
+		args = append(args, "--scrapeInterval")
+		args = append(args, p.Interval)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
