@@ -61,7 +61,7 @@ func runClient(ctx context.Context, loops int, size int) error {
 			nRead, addr, err := conn.ReadFrom(buffer)
 			if err != nil {
 				//doneChan <- err
-				log.Printf("Failure on loop: %d --  %v\n", i, err)
+				log.Printf("Failure on loop: %d -- %v\n", i, err)
 				totalPktsFail++
 
 			} else {
@@ -90,17 +90,10 @@ func runServer(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	// `Close`ing the packet "connection" means cleaning the data structures
-	// allocated for holding information about the listening socket.
 	defer conn.Close()
 
 	ch := make(chan error, 1)
 	buffer := make([]byte, maxBufferSize)
-
-	// Given that waiting for packets to arrive is blocking by nature and we want
-	// to be able of canceling such action if desired, we do that in a separate
-	// go routine.
 	totalPkts := 0
 	go func() {
 		for {

@@ -9,15 +9,30 @@ will count the number of responses received round trip.
 Server mode is the default and can be run with no arguments, or in Kubernetes.  Port 4444 must be open.
 
 Client mode example
-docker run --network=host registry.mobiledgex.net:5000/mobiledgex/iptest   --mode client --address 37.50.143.119:4444  --size 2000 --loops 100
-client packet-written: bytes=2000
-2019/02/20 14:55:27 client packet-received: bytes=2000 from=37.50.143.119:4444 sent=1 rcvd=1
-client packet-written: bytes=2000
-2019/02/20 14:55:27 client packet-received: bytes=2000 from=37.50.143.119:4444 sent=2 rcvd=2
-client packet-written: bytes=2000
-...
-...
-2019/02/20 20:58:02 Done: size=2000 sent=100 received=100 fail=0
+RRIS-MAC:~ jimmorris$ docker run --network=host registry.mobiledgex.net:5000/mobiledgex/iptest --mode client --address 80.187.128.28:4444 --size 200 --loops 10
+2019/02/20 22:43:06 client mode
+2019/02/20 22:43:06 client sent -- bytes: 200
+2019/02/20 22:43:07 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 1 rcvd: 1
+2019/02/20 22:43:07 client sent -- bytes: 200
+2019/02/20 22:43:07 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 2 rcvd: 2
+2019/02/20 22:43:07 client sent -- bytes: 200
+2019/02/20 22:43:07 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 3 rcvd: 3
+2019/02/20 22:43:07 client sent -- bytes: 200
+2019/02/20 22:43:07 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 4 rcvd: 4
+2019/02/20 22:43:07 client sent -- bytes: 200
+2019/02/20 22:43:07 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 5 rcvd: 5
+2019/02/20 22:43:07 client sent -- bytes: 200
+2019/02/20 22:43:08 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 6 rcvd: 6
+2019/02/20 22:43:08 client sent -- bytes: 200
+2019/02/20 22:43:08 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 7 rcvd: 7
+2019/02/20 22:43:08 client sent -- bytes: 200
+2019/02/20 22:43:08 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 8 rcvd: 8
+2019/02/20 22:43:08 client sent -- bytes: 200
+2019/02/20 22:43:08 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 9 rcvd: 9
+2019/02/20 22:43:08 client sent -- bytes: 200
+2019/02/20 22:43:08 client received -- bytes: 200 from: 80.187.128.28:4444 sent: 10 rcvd: 10
+2019/02/20 22:43:08 
+Done -- size: 200 sent: 10 received: 10 fail: 0
 
 Usage of ./iptest:
   -address string
