@@ -180,7 +180,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !flavorApi.store.STMGet(stm, &in.DefaultFlavor, nil) {
-			return errors.New("Specified default flavor not found")
+			return edgeproto.ErrEdgeApiFlavorNotFound
 		}
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists

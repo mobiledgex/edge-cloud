@@ -41,7 +41,10 @@ func runShow(ctrl *util.ControllerProcess, showCmds []string, outputDir string, 
 		var cmdargs = []string{cmdstr}
 		if cmp == HideCmp {
 			cmdargs = append(cmdargs, "--hidetags")
-			cmdargs = append(cmdargs, "nocmp")
+			cmdargs = append(cmdargs, "nocmp,timestamp")
+		} else {
+			cmdargs = append(cmdargs, "--hidetags")
+			cmdargs = append(cmdargs, "timestamp")
 		}
 		log.Printf("generating output for %s\n", label)
 		out, _ := util.ControllerCLI(ctrl, cmdargs...)
