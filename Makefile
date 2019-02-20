@@ -28,8 +28,8 @@ build-docker:
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	for ADDLTAG in ${ADDLTAGS}; do \
-		docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:$$ADDLTAG; \
-		docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:$$ADDLTAG; \
+		docker tag mobiledgex/edge-cloud:${TAG} $$ADDLTAG; \
+		docker push $$ADDLTAG; \
 	done
 
 install:
