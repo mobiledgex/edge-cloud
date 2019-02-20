@@ -46,11 +46,11 @@ Usage of metrics-exporter:
 
 The following environment variable will take precedence over command-line argumanets:
 
-MEX_CLUSTER_NAME - equivalent to `-cluster`
-MEX_INFLUXDB_ADDR - equivalnt to `-influxdb`
-MEX_INFLUXDB_USER - username that is used to connect to Influxdb, defaults to `root`
-MEX_INFLUXDB_PASS - password that is used to connect to Influxdb, defaults to `root`
-MEX_SCRAPE_INTERVAL - equivalnt to `-interval`
+   - MEX_CLUSTER_NAME - equivalent to `-cluster`
+   - MEX_INFLUXDB_ADDR - equivalnt to `-influxdb`
+   - MEX_INFLUXDB_USER - username that is used to connect to Influxdb, defaults to `root`
+   - MEX_INFLUXDB_PASS - password that is used to connect to Influxdb, defaults to `root`
+   - MEX_SCRAPE_INTERVAL - equivalnt to `-interval`
 
 ## Docker Image
 
