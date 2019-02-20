@@ -3,7 +3,7 @@
 `metrics-exporter` service collects prometheus metrics on a cluster and writes them into an influxDB.
 
 The service collects cluster-wide as well as per-pod metrics. Service will create database `clusterstats` in the influxDB if one doesn't exist.
-Cluster metrics are collected and stored in `crm-cluster` mesasurement in `clusterstats` database. It includes the following metrics:
+Cluster metrics are collected and stored in `crm-cluster` measurement in `clusterstats` database. It includes the following metrics:
    - `cpu` - cluster CPU utilization percentage
    - `mem` - cluster memory utilization percentage
    - `disk` - cluster filesystem utilization percentage
@@ -17,7 +17,7 @@ Cluster metrics are collected and stored in `crm-cluster` mesasurement in `clust
 In addition to the above values `cluster` tag is added to each measurement with the name of a cluster.
 Per-pod metrics are collected and stored in `crm-appinst` measurement in `clusterstats` database. The following metrics are collected:
    - `cpu` - CPU utilization of this pod as a percentage of total available CPU
-   - `mem` - current memeory footprint of a given pod in bytes
+   - `mem` - current memory footprint of a given pod in bytes
    - `disk` - filesystem usage for a given pod
    - `sendBytes` - tx traffic rate averaged over 1 minute for a given pod
    - `recvBytes` - rx traffic rate averaged over 1 minute for a given pod
@@ -44,13 +44,13 @@ Usage of metrics-exporter:
     	Metrics collection interval (default 15s)
 ```
 
-The following environment variable will take precedence over command-line argumanets:
+The following environment variable will take precedence over command-line arguments:
 
    - MEX_CLUSTER_NAME - equivalent to `-cluster`
-   - MEX_INFLUXDB_ADDR - equivalnt to `-influxdb`
+   - MEX_INFLUXDB_ADDR - equivalent to `-influxdb`
    - MEX_INFLUXDB_USER - username that is used to connect to Influxdb, defaults to `root`
    - MEX_INFLUXDB_PASS - password that is used to connect to Influxdb, defaults to `root`
-   - MEX_SCRAPE_INTERVAL - equivalnt to `-interval`
+   - MEX_SCRAPE_INTERVAL - equivalent to `-interval`
 
 ## Docker Image
 
@@ -62,6 +62,6 @@ This is the intended deployment packaging of this service
 ## TODO
 
 1. Need to add different tag to image in the docker registry - currently only have `latest`
-2. Long term we need to retire `metrics-exporter` as it's a too ridgid to provide configurable metrics
+2. Long term we need to retire `metrics-exporter` as it's a too rigid to provide configurable metrics
    - ideally a federated prometheus system with a global prometheus scraping cluster prometheuses
 

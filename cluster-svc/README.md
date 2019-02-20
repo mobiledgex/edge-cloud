@@ -1,9 +1,9 @@
 # Cluster-svc service
 
-`cluster-svc` runs as a notifie of MEX controller and listens to cluster instance notifications. When a cluster instance is created this service will add MEX-specific applications to this service.
+`cluster-svc` runs as a notifyee of MEX controller and listens to cluster instance notifications. When a cluster instance is created this service will add MEX-specific applications to this service.
 Currently it creates `prometheus-operator`, and `metrics-exporter` services whenever a cluster service is created.
    - `prometheus-operator` - is a metrics collection framework and periodically scrapes the details from k8s. It is deployed as a helm chart
-   - `metrics-exporter` - is a MEX service which converts and pushes metrics prometheus collects locally to influxDB. `metrics-exporter` is deployed with a custom deployments yaml where we set enviroment variabled based on the command line arguments passed to `cluster-svc`
+   - `metrics-exporter` - is a MEX service which converts and pushes metrics prometheus collects locally to influxDB. `metrics-exporter` is deployed with a custom deployments yaml where we set environment variables based on the command line arguments passed to `cluster-svc`
 
 `cluster-svc` uses controller apis to create `edgeproto.App` and `edgeproto.AppInst` for the able two services using a pre-created flavor and developer
 
