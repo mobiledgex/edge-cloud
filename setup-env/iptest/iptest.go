@@ -11,12 +11,43 @@ import (
 )
 
 var (
-	mode    = flag.String("mode", "server", "mode server or client")
-	loops   = flag.Int("loops", 0, "client loops")
-	size    = flag.Int("size", -1, "client packet size")
-	address = flag.String("address", "", "dest address of server for client")
-	timeout = time.Second * 1
+	mode                = flag.String("mode", "server", "mode server or client")
+	loops               = flag.Int("loops", 0, "client loops")
+	size                = flag.Int("size", -1, "client packet size")
+	address             = flag.String("address", "", "dest address of server for client")
+	timeout             = time.Second * 5
+	rate                = flag.Int("rate", 100, "rate in mseconds between requests")
+	clientPktsReceived  = 0
+	clientReceiveFailed = false
 )
+
+func clientSendPackets(conn *net.UDPConn, count int, size int, rate time.Duration) {
+
+	// send a message of the requested size at the rate
+	b := []byte("Z")
+	data := string(bytes.Repeat(b, size))
+
+	numSent := 0
+	throttle := time.Tick(rate)
+	for {
+		<-throttle
+		go fmt.Fprintf(conn, data)
+		numSent++
+		if numSent > (clientPktsReceived + 10) {
+			// we are too far ahead of the receive, let's skip this interval
+			log.Printf("** Waiting ** numSent: %d clientPktsReceived: %d\n", numSent, clientPktsReceived)
+		} else {
+			log.Printf("client sent -- bytes: %d sent: %d rcvd: %d\n", size, numSent, clientPktsReceived)
+			if numSent >= count {
+				break
+			}
+			if clientReceiveFailed {
+				log.Printf("sending stopped due to receive failure")
+				break
+			}
+		}
+	}
+}
 
 func runClient(ctx context.Context, loops int, size int) error {
 	raddr, err := net.ResolveUDPAddr("udp", *address)
@@ -29,12 +60,10 @@ func runClient(ctx context.Context, loops int, size int) error {
 		return err
 	}
 
+	go clientSendPackets(conn, loops, size, time.Millisecond*time.Duration(*rate))
+
 	defer conn.Close()
 	ch := make(chan error, 1)
-
-	totalPktsSent := 0
-	totalPktsReceived := 0
-	totalPktsFail := 0
 
 	go func() {
 		buffer := make([]byte, 100*1024)
@@ -42,16 +71,7 @@ func runClient(ctx context.Context, loops int, size int) error {
 			log.Printf("Error on open file %v", err)
 			return
 		}
-
-		// send a message of the requested size
-		b := []byte("Z")
-		data := string(bytes.Repeat(b, size))
-
 		for i := 0; i < loops; i++ {
-			totalPktsSent++
-			fmt.Fprintf(conn, data)
-			log.Printf("client sent -- bytes: %d\n", size)
-
 			deadline := time.Now().Add(timeout)
 			err = conn.SetReadDeadline(deadline)
 			if err != nil {
@@ -60,17 +80,15 @@ func runClient(ctx context.Context, loops int, size int) error {
 			}
 			nRead, addr, err := conn.ReadFrom(buffer)
 			if err != nil {
-				//doneChan <- err
-				log.Printf("Failure on loop: %d -- %v\n", i, err)
-				totalPktsFail++
-
+				log.Printf("Failure on receive loop: %d -- %v\n", i, err)
+				clientReceiveFailed = true
+				ch <- err
 			} else {
-				totalPktsReceived++
+				clientPktsReceived++
 				log.Printf("client received -- bytes: %d from: %s sent: %d rcvd: %d\n",
-					nRead, addr.String(), totalPktsSent, totalPktsReceived)
+					nRead, addr.String(), loops, clientPktsReceived)
 			}
 		}
-
 		ch <- nil
 
 	}()
@@ -80,7 +98,7 @@ func runClient(ctx context.Context, loops int, size int) error {
 		err = ctx.Err()
 	case err = <-ch:
 	}
-	log.Printf("\nDone -- size: %d sent: %d received: %d fail: %d", size, totalPktsSent, totalPktsReceived, totalPktsFail)
+	log.Printf("Done -- size: %d sent: %d received: %d", size, loops, clientPktsReceived)
 	return err
 }
 
