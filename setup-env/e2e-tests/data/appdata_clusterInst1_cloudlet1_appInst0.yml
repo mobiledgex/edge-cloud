@@ -79,9 +79,6 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
-- key:
-    name: mexinfradev_
-  username: _mexinfradev
 
 cloudlets:
 - key:
@@ -112,8 +109,6 @@ apps:
   ipaccess: IpAccessDedicatedOrShared
 
 - key:
-    developerkey:
-      name: mexinfradev_
     name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
@@ -125,8 +120,6 @@ apps:
     name: SmallCluster
   deployment: kubernetes
 - key:
-    developerkey:
-      name: mexinfradev_
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -140,8 +133,6 @@ apps:
 appinstances:
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
@@ -165,8 +156,6 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXPrometheusAppName
       version: "1.0"
     cloudletkey:
