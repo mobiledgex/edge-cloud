@@ -560,7 +560,6 @@
   version = "v1.1.2"
 
 [[projects]]
-  branch = "master"
   digest = "1:e8caa65e27b58a567e81a62d8805a7ac7c14ca3ba2e97732229ee7abdca50673"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
@@ -571,7 +570,8 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "95693d779a7d0ca9307f8b9acac49a307eb6ae9a"
+  revision = "622abae6de837e7978552d6918052d27efc47329"
+  version = "v0.0.12"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -1081,6 +1081,7 @@
     "github.com/casbin/gorm-adapter",
     "github.com/cespare/xxhash",
     "github.com/cloudflare/cloudflare-go",
+    "github.com/codeskyblue/go-sh",
     "github.com/coreos/etcd/clientv3",
     "github.com/coreos/etcd/clientv3/concurrency",
     "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",
