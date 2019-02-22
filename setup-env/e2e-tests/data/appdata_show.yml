@@ -99,9 +99,6 @@ developers:
   passhash: aaaabbbccdfdfad444449941
   address: 1 Samstreet, Samsung Town, South Korea
   email: samsung@xxxx.com
-- key:
-    name: mexinfradev_
-  username: _mexinfradev
 
 cloudlets:
 - key:
@@ -196,8 +193,6 @@ apps:
   ipaccess: IpAccessDedicatedOrShared
 
 - key:
-    developerkey:
-      name: mexinfradev_
     name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
@@ -209,8 +204,6 @@ apps:
     name: SmallCluster
   deployment: kubernetes
 - key:
-    developerkey:
-      name: mexinfradev_
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -324,8 +317,6 @@ appinstances:
     name: x1.small
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
@@ -349,8 +340,6 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
@@ -374,8 +363,6 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXPrometheusAppName
       version: "1.0"
     cloudletkey:
@@ -399,8 +386,6 @@ appinstances:
     name: x1.medium
 - key:
     appkey:
-      developerkey:
-        name: mexinfradev_
       name: MEXPrometheusAppName
       version: "1.0"
     cloudletkey:

@@ -180,9 +180,6 @@ func (s *ClusterFlavor) Validate(fields map[string]struct{}) error {
 }
 
 func (key *AppKey) Validate() error {
-	if err := key.DeveloperKey.Validate(); err != nil {
-		return err
-	}
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid app name")
 	}
