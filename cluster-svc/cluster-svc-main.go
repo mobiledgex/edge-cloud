@@ -37,15 +37,6 @@ var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
 // TODO - scrapeInterval should be passed along to Prometheus app at creation time
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
 
-// Hard coded username - TODO to move to user db
-var MEXDeveloper = "mexinfradev_"
-var MEXDevUsername = "_mexinfradev"
-var MEXDevPass = "_mexdeveloperpass"
-var MEXdev = edgeproto.Developer{
-	Key:      edgeproto.DeveloperKey{Name: MEXDeveloper},
-	Username: MEXDevUsername,
-}
-
 var MEXInfraFlavorName = "x1.medium" // TODO - once we de-couple Apps from clusters change to "infra.small"
 var MEXInfraFlavor = edgeproto.Flavor{
 	Key:   edgeproto.FlavorKey{Name: MEXInfraFlavorName},
@@ -95,9 +86,8 @@ spec:
 
 var MEXMetricsExporterApp = edgeproto.App{
 	Key: edgeproto.AppKey{
-		DeveloperKey: MEXdev.Key,
-		Name:         MEXMetricsExporterAppName,
-		Version:      MEXMetricsExporterAppVer,
+		Name:    MEXMetricsExporterAppName,
+		Version: MEXMetricsExporterAppVer,
 	},
 	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
@@ -110,9 +100,8 @@ var MEXPrometheusAppVer = "1.0"
 
 var MEXPrometheusApp = edgeproto.App{
 	Key: edgeproto.AppKey{
-		DeveloperKey: MEXdev.Key,
-		Name:         MEXPrometheusAppName,
-		Version:      MEXPrometheusAppVer,
+		Name:    MEXPrometheusAppName,
+		Version: MEXPrometheusAppVer,
 	},
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
@@ -189,7 +178,7 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	return notifyClient
 }
 
-// create an appInst as a clustersvcdev
+// create an appInst as a clustersvc
 func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, appKey edgeproto.AppKey) error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
@@ -255,7 +244,7 @@ func createMEXInfraFlavor(dialOpts grpc.DialOption) error {
 	res, err := apiClient.CreateFlavor(ctx, &MEXInfraFlavor)
 	if err != nil {
 		if err == objstore.ErrKVStoreKeyExists {
-			log.DebugLog(log.DebugLevelMexos, "flavor already exists", "dev", MEXdev.String())
+			log.DebugLog(log.DebugLevelMexos, "flavor already exists", "flavor", MEXInfraFlavor.String())
 			return nil
 		}
 		errstr := err.Error()
@@ -268,33 +257,6 @@ func createMEXInfraFlavor(dialOpts grpc.DialOption) error {
 	log.DebugLog(log.DebugLevelMexos, "create flavor", "flavor", MEXInfraFlavor.String(), "result", res.String())
 	return nil
 
-}
-func createMEXInfraDeveloper(dialOpts grpc.DialOption) error {
-	var err error
-
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
-	if err != nil {
-		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
-	}
-	defer conn.Close()
-	apiClient := edgeproto.NewDeveloperApiClient(conn)
-
-	ctx := context.TODO()
-	res, err := apiClient.CreateDeveloper(ctx, &MEXdev)
-	if err != nil {
-		if err == objstore.ErrKVStoreKeyExists {
-			log.DebugLog(log.DebugLevelMexos, "developer already exists", "dev", MEXdev.String())
-			return nil
-		}
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
-		}
-		return fmt.Errorf("CreateDeveloper failed: %s", errstr)
-	}
-	log.DebugLog(log.DebugLevelMexos, "create dev", "developer", MEXdev.String(), "result", res.String())
-	return nil
 }
 
 func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgeproto.ClusterKey) error {
@@ -386,10 +348,6 @@ func main() {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 
-	if err = createMEXInfraDeveloper(dialOpts); err != nil {
-		log.DebugLog(log.DebugLevelMexos, "Failed to create developer", "error", err)
-
-	}
 	// TODO - Uncomment this once we de-couple App from cluster for infra services
 	//      if err = createMEXInfraFlavor(dialOpts); err != nil {
 	//              log.DebugLog(log.DebugLevelMexos, "Failed to create flavor", "error", err)
