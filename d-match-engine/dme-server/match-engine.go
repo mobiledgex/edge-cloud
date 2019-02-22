@@ -195,6 +195,8 @@ func pruneApps(apps map[edgeproto.AppKey]struct{}) {
 func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 	var key edgeproto.AppInstKey
 
+	log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts called")
+
 	tbl := dmeAppTbl
 	tbl.Lock()
 	defer tbl.Unlock()
@@ -211,11 +213,9 @@ func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 				}
 			}
 			if len(carr.insts) == 0 {
+				log.DebugLog(log.DebugLevelDmereq, "pruneAppInsts delete carriers")
 				delete(app.carriers, c)
 			}
-		}
-		if len(app.carriers) == 0 {
-			delete(tbl.apps, key.AppKey)
 		}
 		app.Unlock()
 	}
