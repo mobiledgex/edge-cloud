@@ -9,6 +9,12 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+var AppConfigHemYaml = "hemlCustomizationYaml"
+
+var ValidAppConfigs = []string{
+	AppConfigHemYaml,
+}
+
 type AppConfig struct {
 	Resources string `json:"resources"`
 }
