@@ -33,55 +33,55 @@ required = [
 
 [[constraint]]
   name = "github.com/coreos/etcd"
-  version = "3.3.9"
+  version = "=3.3.9"
 
 [[constraint]]
   name = "github.com/gogo/gateway"
-  version = "1.0.0"
+  version = "=1.0.0"
 
 [[constraint]]
   name = "github.com/gogo/googleapis"
-  version = "1.0.0"
+  version = "=1.0.0"
 
 [[constraint]]
   name = "github.com/gogo/protobuf"
-  version = "1.0.0"
+  version = "=1.0.0"
 
 [[constraint]]
   name = "github.com/golang/protobuf"
-  version = "1.1.0"
+  version = "=1.1.0"
 
 [[constraint]]
-  branch = "master"
   name = "github.com/grpc-ecosystem/grpc-gateway"
+  revision = "a53af079f669b6375dd96cdf5e98e67f886a8b4d"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
-  version = "1.2.1"
+  version = "=1.2.1"
 
 [[constraint]]
   name = "go.uber.org/zap"
-  version = "1.8.0"
+  version = "=1.8.0"
 
 [[constraint]]
-  branch = "master"
   name = "golang.org/x/net"
+  revision = "2491c5de3490fced2f6cff376127c667efeed857"
 
 [[constraint]]
   name = "google.golang.org/grpc"
-  version = "1.12.0"
+  version = "=1.12.0"
 
 [[constraint]]
-  branch = "master"
   name = "k8s.io/api"
+  revision = "184e700b32b7f1b532b9fce8dd8c1f412d297c4b"
 
 [[constraint]]
-  branch = "master"
   name = "k8s.io/apimachinery"
+  revision = "3492ef8dace114d765f20d9c1a03f306449e5252"
 
 [[constraint]]
-  branch = "master"
   name = "k8s.io/client-go"
+  revision = "4bb327ea2f8ec2e1dd6438da60fea65cf68594bf"
 
 [prune]
   go-tests = true
@@ -101,40 +101,40 @@ required = [
 
 [[constraint]]
   name = "github.com/cespare/xxhash"
-  version = "1.0.0"
+  version = "=1.0.0"
 
 [[constraint]]
   name = "github.com/influxdata/influxdb"
-  version = "1.6.2"
+  version = "=1.6.2"
 
 [[constraint]]
   name = "github.com/grpc-ecosystem/go-grpc-middleware"
-  version = "1.0.0"
+  version = "=1.0.0"
 
 [[constraint]]
   name = "github.com/mobiledgex/edge-cloud-infra"
-  branch = "master"
+  version = "=0.0.12"
 
 [[constraint]]
   name = "github.com/jinzhu/gorm"
-  version = "1.9.1"
+  version = "=1.9.1"
 
 [[constraint]]
   name = "github.com/labstack/echo"
-  version = "3.3.6"
+  version = "=3.3.6"
 
 [[constraint]]
   name = "github.com/casbin/casbin"
-  version = "1.6.0"
+  version = "=1.6.0"
 
 [[constraint]]
-  name = "github.com/labstack/echo-contrib"
-  version = "0.5.2"
-
-[[constraint]]
-  branch = "master"
   name = "github.com/casbin/gorm-adapter"
+  revision = "e56c6daebd5e8c657caf3bdf3a647803cf7b242d"
 
 [[constraint]]
   name = "github.com/hashicorp/vault"
-  version = "0.11.5"
+  version = "=0.11.5"
+
+[[constraint]]
+  name = "github.com/codeskyblue/go-sh"
+  version = "=0.2"
