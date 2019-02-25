@@ -25,6 +25,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	AppKey
+	ConfigFile
 	App
 	AppInstKey
 	AppInst
