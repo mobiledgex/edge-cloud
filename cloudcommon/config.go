@@ -11,10 +11,6 @@ import (
 
 var AppConfigHemYaml = "hemlCustomizationYaml"
 
-var ValidAppConfigs = []string{
-	AppConfigHemYaml,
-}
-
 type AppConfig struct {
 	Resources string `json:"resources"`
 }
