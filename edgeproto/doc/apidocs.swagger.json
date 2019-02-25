@@ -1384,6 +1384,13 @@
         "del_opt": {
           "$ref": "#/definitions/edgeprotoDeleteType",
           "title": "Override actions to Controller"
+        },
+        "configs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/edgeprotoConfigFile"
+          },
+          "title": "Customization files"
         }
       },
       "description": "Apps are applications that may be instantiated on Cloudlets, providing a back-end service to an application client (using the mobiledgex SDK) running on a user device such as a cell phone, wearable, drone, etc. Applications belong to Developers, and must specify their image and accessibility. Applications are analagous to Pods in Kubernetes, and similarly are tied to a Cluster.\nAn application in itself is not tied to a Cloudlet, but provides a definition that can be used to instantiate it on a Cloudlet. AppInsts are applications instantiated on a particular Cloudlet."
@@ -1987,6 +1994,19 @@
         }
       },
       "description": "ClusterRefs track used resources within a ClusterInst. Each AppInst specifies a set of required resources (Flavor), so tracking resources used by Apps within a Cluster is necessary to determine if enough resources are available for another AppInst to be instantiated on a ClusterInst."
+    },
+    "edgeprotoConfigFile": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "title": "kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config"
+        },
+        "config": {
+          "type": "string",
+          "title": "config file contents or URI reference"
+        }
+      }
     },
     "edgeprotoController": {
       "type": "object",

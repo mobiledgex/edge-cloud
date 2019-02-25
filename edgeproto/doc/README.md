@@ -6,6 +6,7 @@
 - [app.proto](#app.proto)
     - [App](#edgeproto.App)
     - [AppKey](#edgeproto.AppKey)
+    - [ConfigFile](#edgeproto.ConfigFile)
   
     - [DeleteType](#edgeproto.DeleteType)
     - [ImageType](#edgeproto.ImageType)
@@ -219,6 +220,7 @@ An application in itself is not tied to a Cloudlet, but provides a definition th
 | android_package_name | [string](#string) |  | Android package name, optional |
 | permits_platform_apps | [bool](#bool) |  | Indicates whether or not platform apps are allowed to perform actions on behalf of this app, such as FindCloudlet |
 | del_opt | [DeleteType](#edgeproto.DeleteType) |  | Override actions to Controller |
+| configs | [ConfigFile](#edgeproto.ConfigFile) | repeated | Customization files |
 
 
 
@@ -236,6 +238,22 @@ AppKey uniquely identifies an Application.
 | developer_key | [DeveloperKey](#edgeproto.DeveloperKey) |  | Developer key |
 | name | [string](#string) |  | Application name |
 | version | [string](#string) |  | Version of the app |
+
+
+
+
+
+
+<a name="edgeproto.ConfigFile"></a>
+
+### ConfigFile
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| kind | [string](#string) |  | kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config |
+| config | [string](#string) |  | config file contents or URI reference |
 
 
 
