@@ -186,6 +186,10 @@
                   <a href="#edgeproto.AppKey"><span class="badge">M</span>AppKey</a>
                 </li>
               
+                <li>
+                  <a href="#edgeproto.ConfigFile"><span class="badge">M</span>ConfigFile</a>
+                </li>
+              
               
                 <li>
                   <a href="#edgeproto.DeleteType"><span class="badge">E</span>DeleteType</a>
@@ -825,6 +829,13 @@ on behalf of this app, such as FindCloudlet </p></td>
                   <td><p>Override actions to Controller </p></td>
                 </tr>
               
+                <tr>
+                  <td>configs</td>
+                  <td><a href="#edgeproto.ConfigFile">ConfigFile</a></td>
+                  <td>repeated</td>
+                  <td><p>Customization files </p></td>
+                </tr>
+              
             </tbody>
           </table>
         
@@ -860,6 +871,36 @@ on behalf of this app, such as FindCloudlet </p></td>
                   <td><a href="#string">string</a></td>
                   <td></td>
                   <td><p>Version of the app </p></td>
+                </tr>
+              
+            </tbody>
+          </table>
+        
+
+        
+      
+        <h3 id="edgeproto.ConfigFile">ConfigFile</h3>
+        <p></p>
+
+        
+          <table class="field-table">
+            <thead>
+              <tr><td>Field</td><td>Type</td><td>Label</td><td>Description</td></tr>
+            </thead>
+            <tbody>
+              
+                <tr>
+                  <td>kind</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>kind (type) of config, i.e. k8s-manifest, helm-values, deploygen-config </p></td>
+                </tr>
+              
+                <tr>
+                  <td>config</td>
+                  <td><a href="#string">string</a></td>
+                  <td></td>
+                  <td><p>config file contents or URI reference </p></td>
                 </tr>
               
             </tbody>

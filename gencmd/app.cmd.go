@@ -25,6 +25,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	AppKey
+	ConfigFile
 	App
 	AppInstKey
 	AppInst
@@ -152,8 +153,45 @@ func AppKeyWriteOutputOne(obj *edgeproto.AppKey) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func ConfigFileSlicer(in *edgeproto.ConfigFile) []string {
+	s := make([]string, 0, 2)
+	s = append(s, in.Kind)
+	s = append(s, in.Config)
+	return s
+}
+
+func ConfigFileHeaderSlicer() []string {
+	s := make([]string, 0, 2)
+	s = append(s, "Kind")
+	s = append(s, "Config")
+	return s
+}
+
+func ConfigFileWriteOutputArray(objs []*edgeproto.ConfigFile) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ConfigFileHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(ConfigFileSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(ConfigFileHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(ConfigFileSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 19)
+	s := make([]string, 0, 20)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -178,11 +216,19 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.AndroidPackageName)
 	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
 	s = append(s, edgeproto.DeleteType_name[int32(in.DelOpt)])
+	if in.Configs == nil {
+		in.Configs = make([]*edgeproto.ConfigFile, 1)
+	}
+	if in.Configs[0] == nil {
+		in.Configs[0] = &edgeproto.ConfigFile{}
+	}
+	s = append(s, in.Configs[0].Kind)
+	s = append(s, in.Configs[0].Config)
 	return s
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 19)
+	s := make([]string, 0, 20)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
@@ -204,6 +250,8 @@ func AppHeaderSlicer() []string {
 	s = append(s, "AndroidPackageName")
 	s = append(s, "PermitsPlatformApps")
 	s = append(s, "DelOpt")
+	s = append(s, "Configs-Kind")
+	s = append(s, "Configs-Config")
 	return s
 }
 
@@ -246,6 +294,8 @@ func AppHideTags(in *edgeproto.App) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.DelOpt = 0
+	}
+	for i0 := 0; i0 < len(in.Configs); i0++ {
 	}
 }
 
