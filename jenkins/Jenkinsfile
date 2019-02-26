@@ -61,7 +61,9 @@ make test
                 beforeAgent true
             }
             steps {
-                slackSend color: 'good', message: "Pull Request ready for review - PR ${env.CHANGE_ID}, ${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\" (<${env.CHANGE_URL}|Open>)"
+                slackSend channel: '#ci-cd',
+                          color: 'good',
+                          message: "Pull Request test - IGNORE - PR ${env.CHANGE_ID}, ${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\" (<${env.CHANGE_URL}|Open>)"
             }
         }
     }
