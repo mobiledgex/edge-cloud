@@ -30,6 +30,7 @@ func TestInfluxQ(t *testing.T) {
 		err := db.Start(addr)
 		require.Nil(t, err, "start InfluxDB server")
 		defer db.Stop()
+		time.Sleep(2 * time.Second)
 	}
 
 	q := influxq.NewInfluxQ(InfluxDBName)

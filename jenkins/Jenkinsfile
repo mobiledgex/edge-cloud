@@ -37,13 +37,29 @@ make
         stage('Test') {
             steps {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'unit tests', script: '''#!/bin/bash
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
+export GOPATH=$WORKSPACE/go
+go test ./...
+                    '''
+                }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make test', script: '''#!/bin/bash
-export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/9.5/bin
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
 make test
                     '''
                 }
+            }
+        }
+        stage('Notify') {
+            when {
+                changeRequest()
+                beforeAgent true
+            }
+            steps {
+                slackSend color: 'good', message: "Pull Request ready for review - PR ${env.CHANGE_ID}, ${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\" (<${env.CHANGE_URL}|Open>)"
             }
         }
     }
