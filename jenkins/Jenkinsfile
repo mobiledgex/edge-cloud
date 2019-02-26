@@ -36,22 +36,30 @@ make
         }
         stage('Test') {
             steps {
-                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                    sh label: 'unit tests', script: '''#!/bin/bash
+                lock('testbed') {
+                    retry(2) {
+                        sleep 10
+                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                            sh label: 'unit tests', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
 make test-stop
 go test ./...
-                    '''
-                }
-                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                    sh label: 'make test', script: '''#!/bin/bash
+                            '''
+                        }
+                    }
+                    retry(2) {
+                        sleep 10
+                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                            sh label: 'make test', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
 make test
-                    '''
+                            '''
+                        }
+                    }
                 }
             }
         }
@@ -61,13 +69,15 @@ make test
                 beforeAgent true
             }
             steps {
-                slackSend color: 'good', message: "Pull Request ready for review - PR ${env.CHANGE_ID}, ${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\" (<${env.CHANGE_URL}|Open>)"
+                slackSend color: 'good',
+                          channel: '#swdev',
+                          message: "<${env.CHANGE_URL}|Pull request PR-${env.CHANGE_ID}> ready for review: (${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\")"
             }
         }
     }
     post {
         success {
-            slackSend color: 'good', message: "Build Complete - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.RUN_DISPLAY_URL}|Open>)"
+            slackSend color: 'good', message: "Build Successful - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.RUN_DISPLAY_URL}|Open>)"
         }
         failure {
             slackSend color: 'warning', message: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.RUN_DISPLAY_URL}|Open>)"
