@@ -38,6 +38,7 @@ make
             steps {
                 lock('testbed') {
                     retry(2) {
+                        sleep 10
                         dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                             sh label: 'unit tests', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
@@ -49,6 +50,7 @@ go test ./...
                         }
                     }
                     retry(2) {
+                        sleep 10
                         dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                             sh label: 'make test', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
