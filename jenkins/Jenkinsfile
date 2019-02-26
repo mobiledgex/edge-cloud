@@ -1,0 +1,58 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    checkout scm
+                }
+            }
+        }
+        stage('Build') {
+            steps {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'dep ensure', script: '''#!/bin/bash
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
+export GOPATH=$WORKSPACE/go
+dep ensure -vendor-only
+                    '''
+                }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'make tools', script: '''#!/bin/bash
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
+export GOPATH=$WORKSPACE/go
+make tools
+                    '''
+                }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'make', script: '''#!/bin/bash
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
+export GOPATH=$WORKSPACE/go
+make clean
+make
+                    '''
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'make test', script: '''#!/bin/bash
+export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/9.5/bin
+export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
+export GOPATH=$WORKSPACE/go
+make test
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        success {
+            slackSend color: 'good', message: "Build Complete - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.RUN_DISPLAY_URL}|Open>)"
+        }
+        failure {
+            slackSend color: 'warning', message: "Build Failed - ${env.JOB_NAME} #${env.BUILD_NUMBER} (<${env.RUN_DISPLAY_URL}|Open>)"
+        }
+    }
+}
