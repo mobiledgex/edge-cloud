@@ -1,6 +1,5 @@
 pipeline {
     agent any
-    options { disableConcurrentBuilds() }
     stages {
         stage('Checkout') {
             steps {
@@ -37,25 +36,27 @@ make
         }
         stage('Test') {
             steps {
-                retry(2) {
-                    dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                        sh label: 'unit tests', script: '''#!/bin/bash
+                lock('testbed') {
+                    retry(2) {
+                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                            sh label: 'unit tests', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
 make test-stop
 go test ./...
-                        '''
+                            '''
+                        }
                     }
-                }
-                retry(2) {
-                    dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                        sh label: 'make test', script: '''#!/bin/bash
+                    retry(2) {
+                        dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                            sh label: 'make test', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
 make test
-                        '''
+                            '''
+                        }
                     }
                 }
             }
