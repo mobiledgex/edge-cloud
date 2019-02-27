@@ -5,6 +5,10 @@ all: build install
 
 linux: build-linux install-linux
 
+dep:
+	dep ensure -update github.com/mobiledgex/edge-cloud-infra
+	dep ensure -vendor-only
+
 build:
 	make -C protogen
 	make -C ./protoc-gen-gomex
