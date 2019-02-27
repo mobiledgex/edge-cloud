@@ -30,7 +30,6 @@ func TestInfluxQ(t *testing.T) {
 		err := db.Start(addr)
 		require.Nil(t, err, "start InfluxDB server")
 		defer db.Stop()
-		time.Sleep(2 * time.Second)
 	}
 
 	q := influxq.NewInfluxQ(InfluxDBName)
@@ -38,7 +37,15 @@ func TestInfluxQ(t *testing.T) {
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 
-	connected := q.WaitConnected()
+	// influxd might have just been started
+	// wait up to 5 seconds before giving up on it
+	connected := false
+	for ii := 0; ii < 25; ii++ {
+		connected = q.WaitConnected()
+		if connected {
+			break
+		}
+	}
 	assert.True(t, connected, "connected")
 
 	// clear test metrics
