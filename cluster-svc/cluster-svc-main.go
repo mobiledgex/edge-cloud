@@ -48,7 +48,6 @@ var MEXMetricsExporterAppName = "MEXMetricsExporter"
 var MEXMetricsExporterAppVer = "1.0"
 
 var exporterT *template.Template
-
 var MEXMetricsExporterTemplate = `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -84,6 +83,18 @@ spec:
         ports:
 `
 
+var prometheusT *template.Template
+var MEXPrometheusAppHelmTemplate = `prometheus:
+  prometheusSpec:
+    scrapeInterval: "{{.Interval}}"
+kubelet:
+  serviceMonitor:
+    ## Enable scraping the kubelet over https. For requirements to enable this see
+    ## https://github.com/coreos/prometheus-operator/issues/926
+    ##
+    https: true
+`
+
 var MEXMetricsExporterApp = edgeproto.App{
 	Key: edgeproto.AppKey{
 		Name:    MEXMetricsExporterAppName,
@@ -114,6 +125,14 @@ var dialOpts grpc.DialOption
 var sigChan chan os.Signal
 
 type ClusterInstHandler struct {
+}
+
+type exporterData struct {
+	Cluster      string
+	InfluxDBAddr string
+	InfluxDBUser string
+	InfluxDBPass string
+	Interval     time.Duration
 }
 
 // Process updates from notify framework about cluster instances
@@ -169,6 +188,7 @@ func (c *ClusterInstHandler) Flush(notifyId int64) {}
 
 func init() {
 	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterTemplate))
+	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
 
 func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
@@ -293,16 +313,22 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgep
 	return nil
 }
 func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
+	ex := exporterData{
+		Interval: *scrapeInterval,
+	}
+	buf := bytes.Buffer{}
+	err := prometheusT.Execute(&buf, &ex)
+	if err != nil {
+		return err
+	}
+	// Now add this yaml to the prometheus AppYamls
+	config := edgeproto.ConfigFile{
+		Kind:   cloudcommon.AppConfigHemYaml,
+		Config: buf.String(),
+	}
+	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config}
 	MEXPrometheusApp.AccessPorts = *externalPorts
 	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
-}
-
-type exporterData struct {
-	Cluster      string
-	InfluxDBAddr string
-	InfluxDBUser string
-	InfluxDBPass string
-	Interval     time.Duration
 }
 
 func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
