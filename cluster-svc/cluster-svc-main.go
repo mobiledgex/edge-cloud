@@ -326,7 +326,7 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 		Kind:   cloudcommon.AppConfigHemYaml,
 		Config: buf.String(),
 	}
-	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config} //What the shit is happening from memory standpoint?!
+	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config}
 	MEXPrometheusApp.AccessPorts = *externalPorts
 	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
 }
