@@ -201,11 +201,11 @@ func (q *InfluxQ) QueryDB(cmd string) ([]client.Result, error) {
 
 func (q *InfluxQ) WaitConnected() bool {
 	// wait till db online
-	for ii := 0; ii < 20; ii++ {
+	for ii := 0; ii < 200; ii++ {
 		if _, _, err := q.client.Ping(0); err == nil {
 			return true
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 	}
 	return false
 }
