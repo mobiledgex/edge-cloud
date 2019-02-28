@@ -37,15 +37,7 @@ func TestInfluxQ(t *testing.T) {
 	require.Nil(t, err, "new influx q")
 	defer q.Stop()
 
-	// influxd might have just been started
-	// wait up to 5 seconds before giving up on it
-	connected := false
-	for ii := 0; ii < 25; ii++ {
-		connected = q.WaitConnected()
-		if connected {
-			break
-		}
-	}
+	connected := q.WaitConnected()
 	assert.True(t, connected, "connected")
 
 	// clear test metrics
