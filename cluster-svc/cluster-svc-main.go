@@ -71,7 +71,23 @@ spec:
         imagePullPolicy: Always
         env:
         - name: MEX_CLUSTER_NAME
-          value: {{.Cluster}}
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-info
+              key: ClusterName
+              optional: true
+        - name: MEX_CLOUDLET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-info
+              key: CloudletName
+              optional: true
+        - name: MEX_OPERATOR_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-info
+              key: OperatorName
+              optional: true
         - name: MEX_INFLUXDB_ADDR
           value: {{.InfluxDBAddr}}
         - name: MEX_INFLUXDB_USER
@@ -335,7 +351,6 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 	app := MEXMetricsExporterApp
 
 	ex := exporterData{
-		Cluster:      cluster.Name,
 		InfluxDBAddr: *influxDBAddr,
 		InfluxDBUser: *influxDBUser,
 		InfluxDBPass: *influxDBPass,

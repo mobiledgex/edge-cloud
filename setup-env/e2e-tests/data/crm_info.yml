@@ -220,7 +220,23 @@ apps:
             imagePullPolicy: Always
             env:
             - name: MEX_CLUSTER_NAME
-              value: autoclustersomeapplication1
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-info
+                  key: ClusterName
+                  optional: true
+            - name: MEX_CLOUDLET_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-info
+                  key: CloudletName
+                  optional: true
+            - name: MEX_OPERATOR_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-info
+                  key: OperatorName
+                  optional: true
             - name: MEX_INFLUXDB_ADDR
               value: 0.0.0.0:8086
             - name: MEX_INFLUXDB_USER
