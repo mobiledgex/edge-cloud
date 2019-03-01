@@ -1,5 +1,5 @@
 status: FIND_FOUND
-fqdn: acmeappcosomeapplication110.default.developer.mobiledgex.net
+fqdn: default.someapplication.acme.com
 ports:
 - proto: LProtoTCP
   internalport: 80
