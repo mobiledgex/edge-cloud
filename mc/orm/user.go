@@ -2,12 +2,12 @@ package orm
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/util"
 )
 
@@ -17,7 +17,7 @@ func InitAdmin(superuser, superpass string) error {
 
 	// create superuser if it doesn't exist
 	passhash, salt, iter := NewPasshash(superpass)
-	super := User{
+	super := ormapi.User{
 		Name:          superuser,
 		Email:         superuser + "@mobiledgex.net",
 		EmailVerified: true,
@@ -28,33 +28,28 @@ func InitAdmin(superuser, superpass string) error {
 		FamilyName:    superuser,
 		Nickname:      superuser,
 	}
-	err := db.FirstOrCreate(&super, &User{Name: superuser}).Error
+	err := db.FirstOrCreate(&super, &ormapi.User{Name: superuser}).Error
 	if err != nil {
 		return err
 	}
 
 	// set role of superuser to admin manager
-	enforcer.AddGroupingPolicy(id2str(super.ID), RoleAdminManager)
+	enforcer.AddGroupingPolicy(super.Name, RoleAdminManager)
 	return nil
-}
-
-type UserLogin struct {
-	Username string `form:"username" json:"username"`
-	Password string `form:"password" json:"password"`
 }
 
 var BadAuthDelay = time.Second
 
 func Login(c echo.Context) error {
-	login := UserLogin{}
+	login := ormapi.UserLogin{}
 	if err := c.Bind(&login); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
 	if login.Username == "" {
 		return c.JSON(http.StatusBadRequest, Msg("Username not specified"))
 	}
-	user := User{}
-	lookup := User{Name: login.Username}
+	user := ormapi.User{}
+	lookup := ormapi.User{Name: login.Username}
 	err := db.Where(&lookup).First(&user).Error
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "user lookup failed", "lookup", lookup, "err", err)
@@ -71,18 +66,22 @@ func Login(c echo.Context) error {
 	}
 	cookie, err := GenerateCookie(&user)
 	if err != nil {
+		log.DebugLog(log.DebugLevelApi, "failed to generate cookie", "err", err)
 		return c.JSON(http.StatusBadRequest, Msg("Failed to generate cookie"))
 	}
 	return c.JSON(http.StatusOK, M{"token": cookie})
 }
 
 func CreateUser(c echo.Context) error {
-	user := User{}
+	user := ormapi.User{}
 	if err := c.Bind(&user); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
 	if user.Name == "" {
 		return c.JSON(http.StatusBadRequest, Msg("Name not specified"))
+	}
+	if strings.Contains(user.Name, "::") {
+		return c.JSON(http.StatusBadRequest, Msg("Name cannot contain ::"))
 	}
 	if !util.ValidEmail(user.Email) {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid email address"))
@@ -92,15 +91,12 @@ func CreateUser(c echo.Context) error {
 			err.Error()))
 	}
 	user.EmailVerified = false
-	user.ID = 0 // auto-assigned
 	// password should be passed through in Passhash field.
 	user.Passhash, user.Salt, user.Iter = NewPasshash(user.Passhash)
 	if err := db.Create(&user).Error; err != nil {
-		log.DebugLog(log.DebugLevelApi, "create user", "user", user,
-			"err", err)
-		return c.JSON(http.StatusBadRequest, Msg("User create failed"))
+		return setReply(c, dbErr(err), nil)
 	}
-	return c.JSON(http.StatusOK, MsgID("user created", user.ID))
+	return c.JSON(http.StatusOK, Msg("user created"))
 }
 
 func DeleteUser(c echo.Context) error {
@@ -108,15 +104,15 @@ func DeleteUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	user := User{}
+	user := ormapi.User{}
 	if err := c.Bind(&user); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-	if user.ID == 0 {
-		return c.JSON(http.StatusBadRequest, Msg("User ID not specified"))
+	if user.Name == "" {
+		return c.JSON(http.StatusBadRequest, Msg("User Name not specified"))
 	}
 	// Only user themself or super-user can delete user.
-	if user.ID != claims.UserID && !enforcer.Enforce(id2str(claims.UserID), "", ResourceUsers, ActionManage) {
+	if user.Name != claims.Username && !enforcer.Enforce(claims.Username, "", ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
 	}
 	// delete role mappings
@@ -126,14 +122,14 @@ func DeleteUser(c echo.Context) error {
 			continue
 		}
 		strs := strings.Split(grp[0], "::")
-		if grp[0] == id2str(user.ID) || (len(strs) == 2 && strs[1] == id2str(user.ID)) {
+		if grp[0] == user.Name || (len(strs) == 2 && strs[1] == user.Name) {
 			enforcer.RemoveGroupingPolicy(grp[0], grp[1])
 		}
 	}
 	// delete user
 	err = db.Delete(&user).Error
 	if err != nil {
-		return err
+		return setReply(c, dbErr(err), nil)
 	}
 	return c.JSON(http.StatusOK, Msg("user deleted"))
 }
@@ -144,10 +140,10 @@ func CurrentUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	user := User{ID: claims.UserID}
+	user := ormapi.User{Name: claims.Username}
 	err = db.Where(&user).First(&user).Error
 	if err != nil {
-		return err
+		return setReply(c, dbErr(err), nil)
 	}
 	user.Passhash = ""
 	user.Salt = ""
@@ -161,19 +157,19 @@ func ShowUser(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	filter := Organization{}
+	filter := ormapi.Organization{}
 	if err := c.Bind(&filter); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-	users := []User{}
-	if !enforcer.Enforce(id2str(claims.UserID), filter.Name, ResourceUsers, ActionView) {
+	users := []ormapi.User{}
+	if !enforcer.Enforce(claims.Username, filter.Name, ResourceUsers, ActionView) {
 		return echo.ErrForbidden
 	}
 	// if filter ID is 0, show all users (super user only)
 	if filter.Name == "" {
 		err = db.Find(&users).Error
 		if err != nil {
-			return err
+			return setReply(c, dbErr(err), nil)
 		}
 	} else {
 		groupings := enforcer.GetGroupingPolicy()
@@ -183,11 +179,11 @@ func ShowUser(c echo.Context) error {
 			}
 			orguser := strings.Split(grp[0], "::")
 			if len(orguser) > 1 && orguser[0] == filter.Name {
-				user := User{}
-				user.ID, _ = strconv.ParseInt(orguser[1], 10, 64)
+				user := ormapi.User{}
+				user.Name = orguser[1]
 				err = db.Where(&user).First(&user).Error
 				if err != nil {
-					return err
+					return setReply(c, dbErr(err), nil)
 				}
 				users = append(users, user)
 			}

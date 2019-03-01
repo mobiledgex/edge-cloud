@@ -91,6 +91,8 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "strconv"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 
 import io "io"
 
@@ -1563,6 +1565,10 @@ func (m *App) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortApp(a App, b App) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *App) ValidateEnums() error {
@@ -1590,6 +1596,24 @@ func (m *App) ValidateEnums() error {
 		}
 	}
 	return nil
+}
+
+func IgnoreAppFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "DeploymentManifest")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "DeploymentGenerator")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "DelOpt")
+	}
+	return cmpopts.IgnoreFields(App{}, names...)
 }
 
 var ImageTypeStrings = []string{

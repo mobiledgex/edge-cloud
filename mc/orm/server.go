@@ -161,6 +161,9 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/controller/create", CreateController)
 	auth.POST("/controller/delete", DeleteController)
 	auth.POST("/controller/show", ShowController)
+	auth.POST("/data/create", CreateData)
+	auth.POST("/data/delete", DeleteData)
+	auth.POST("/data/show", ShowData)
 	addControllerApis(auth)
 	go func() {
 		err := e.Start(config.ServAddr)

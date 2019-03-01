@@ -18,6 +18,7 @@ import (
 	plugin "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/gogo/protobuf/vanity"
 	"github.com/gogo/protobuf/vanity/command"
+	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 )
 
 const AutoGenComment = "// Auto-generated code: DO NOT EDIT"
@@ -273,6 +274,29 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 		return true
 	}
 	return false
+}
+
+func HasHideTags(g *generator.Generator, desc *generator.Descriptor, visited []*generator.Descriptor) bool {
+	if WasVisited(desc, visited) {
+		return false
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := GetDesc(g, field.GetTypeName())
+			if HasHideTags(g, subDesc, append(visited, desc)) {
+				return true
+			}
+		}
+		if GetHideTag(field) != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func GetHideTag(field *descriptor.FieldDescriptorProto) string {
+	return GetStringExtension(field.Options, protocmd.E_Hidetag, "")
 }
 
 func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescriptorProto {

@@ -938,6 +938,10 @@ func (m *Developer) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortDeveloper(a Developer, b Developer) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Developer) ValidateEnums() error {

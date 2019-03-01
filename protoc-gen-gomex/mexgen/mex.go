@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
+	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
@@ -33,6 +34,7 @@ type mex struct {
 	importStrconv bool
 	importSort    bool
 	importTime    bool
+	importCmp     bool
 	firstFile     string
 	support       gensupport.PluginSupport
 }
@@ -65,6 +67,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importStrconv = false
 	m.importSort = false
 	m.importTime = false
+	m.importCmp = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -76,6 +79,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 			m.generateService(file, service)
 		}
 	}
+
 	if m.firstFile == *file.FileDescriptorProto.Name {
 		m.P(matchOptions)
 	}
@@ -113,6 +117,10 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importTime {
 		m.gen.PrintImport("", "time")
+	}
+	if m.importCmp {
+		m.gen.PrintImport("", "github.com/google/go-cmp/cmp")
+		m.gen.PrintImport("", "github.com/google/go-cmp/cmp/cmpopts")
 	}
 	m.support.PrintUsedImports(m.gen)
 }
@@ -1202,10 +1210,20 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("return &m.Key")
 		m.P("}")
 		m.P("")
+
+		m.P("func CmpSort", message.Name, "(a ", message.Name, ", b ", message.Name, ") bool {")
+		m.P("return a.Key.GetKeyString() < b.Key.GetKeyString()")
+		m.P("}")
+		m.P("")
 	}
 
 	//Generate enum values validation
 	m.generateEnumValidation(message, desc)
+
+	visited := make([]*generator.Descriptor, 0)
+	if gensupport.HasHideTags(m.gen, desc, visited) {
+		m.generateHideTags(desc)
+	}
 }
 
 // Generate a single check for an enum
@@ -1268,6 +1286,52 @@ func (m *mex) generateEnumValidation(message *descriptor.DescriptorProto, desc *
 	m.P("")
 }
 
+func (m *mex) generateHideTags(desc *generator.Descriptor) {
+	msgName := desc.DescriptorProto.Name
+	m.P("func Ignore", msgName, "Fields(taglist string) cmp.Option {")
+	m.P("names := []string{}")
+	m.P("tags := make(map[string]struct{})")
+	m.P("for _, tag := range strings.Split(taglist, \",\") {")
+	m.P("tags[tag] = struct{}{}")
+	m.P("}")
+	visited := make([]*generator.Descriptor, 0)
+	m.generateHideTagFields(make([]string, 0), desc, visited)
+	m.P("return cmpopts.IgnoreFields(", msgName, "{}, names...)")
+	m.P("}")
+	m.P()
+	m.importStrings = true
+	m.importCmp = true
+}
+
+func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor, visited []*generator.Descriptor) {
+	if gensupport.WasVisited(desc, visited) {
+		return
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if field.Type == nil || field.OneofIndex != nil {
+			continue
+		}
+		tag := GetHideTag(field)
+		if tag == "" && *field.Type != descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			continue
+		}
+		name := generator.CamelCase(*field.Name)
+		hierField := strings.Join(append(parents, name), ".")
+
+		if tag != "" {
+			m.P("if _, found := tags[\"", tag, "\"]; found {")
+			m.P("names = append(names, \"", hierField, "\")")
+			m.P("}")
+		}
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := gensupport.GetDesc(m.gen, field.GetTypeName())
+			m.generateHideTagFields(append(parents, name),
+				subDesc, append(visited, desc))
+		}
+	}
+}
+
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {
 	if len(service.Method) != 0 {
 		for _, method := range service.Method {
@@ -1310,4 +1374,8 @@ func GetObjKey(message *descriptor.DescriptorProto) bool {
 
 func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 	return proto.GetBoolExtension(field.Options, protogen.E_Backend, false)
+}
+
+func GetHideTag(field *descriptor.FieldDescriptorProto) string {
+	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
 }

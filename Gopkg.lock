@@ -260,17 +260,18 @@
   revision = "e89373fe6b4a7413d7acd6da1725b83ef713e6e4"
 
 [[projects]]
-  digest = "1:2e3c336fc7fde5c984d2841455a658a6d626450b1754a854b3b32e7a8f49a07a"
+  branch = "master"
+  digest = "1:25483be45ca5227d994b86499ad041ceb52de9db4622bbab231936b6b0e8f35e"
   name = "github.com/google/go-cmp"
   packages = [
     "cmp",
+    "cmp/cmpopts",
     "cmp/internal/diff",
     "cmp/internal/function",
     "cmp/internal/value",
   ]
   pruneopts = "UT"
-  revision = "3af367b6b30c263d47e8895973edcca9a49cf029"
-  version = "v0.2.0"
+  revision = "64cb04e86054b58b5c3658c2d7dfbdbb81753f05"
 
 [[projects]]
   branch = "master"
@@ -1081,6 +1082,7 @@
     "github.com/casbin/gorm-adapter",
     "github.com/cespare/xxhash",
     "github.com/cloudflare/cloudflare-go",
+    "github.com/codeskyblue/go-sh",
     "github.com/coreos/etcd/clientv3",
     "github.com/coreos/etcd/clientv3/concurrency",
     "github.com/coreos/etcd/etcdserver/api/v3rpc/rpctypes",
@@ -1103,6 +1105,7 @@
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/protoc-gen-go",
     "github.com/google/go-cmp/cmp",
+    "github.com/google/go-cmp/cmp/cmpopts",
     "github.com/gophercloud/gophercloud",
     "github.com/gophercloud/gophercloud/openstack",
     "github.com/gophercloud/gophercloud/openstack/compute/v2/servers",

@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 )
 
 const ActionView = "view"
@@ -94,24 +94,18 @@ func InitRolePerms() error {
 	return nil
 }
 
-type RolePerm struct {
-	Role     string
-	Resource string
-	Action   string
-}
-
 func ShowRolePerms(c echo.Context) error {
 	_, err := getClaims(c)
 	if err != nil {
 		return nil
 	}
 	policies := enforcer.GetPolicy()
-	ret := []*RolePerm{}
+	ret := []*ormapi.RolePerm{}
 	for ii, _ := range policies {
 		if len(policies[ii]) < 3 {
 			continue
 		}
-		perm := RolePerm{
+		perm := ormapi.RolePerm{
 			Role:     policies[ii][0],
 			Resource: policies[ii][1],
 			Action:   policies[ii][2],
@@ -119,12 +113,6 @@ func ShowRolePerms(c echo.Context) error {
 		ret = append(ret, &perm)
 	}
 	return c.JSON(http.StatusOK, ret)
-}
-
-type Role struct {
-	Org    string `form:"org" json:"org"`
-	UserID int64  `form:"userid" json:"userid"`
-	Role   string `form:"role" json:"role"`
 }
 
 // Show roles assigned to the current user
@@ -135,19 +123,19 @@ func ShowRoleAssignment(c echo.Context) error {
 	}
 
 	super := false
-	if enforcer.Enforce(id2str(claims.UserID), "", ResourceUsers, ActionView) {
+	if enforcer.Enforce(claims.Username, "", ResourceUsers, ActionView) {
 		// super user, show all roles
 		super = true
 	}
 
 	groupings := enforcer.GetGroupingPolicy()
-	ret := []*Role{}
+	ret := []*ormapi.Role{}
 	for ii, _ := range groupings {
 		role := parseRole(groupings[ii])
 		if role == nil {
 			continue
 		}
-		if !super && claims.UserID != role.UserID {
+		if !super && claims.Username != role.Username {
 			continue
 		}
 		ret = append(ret, role)
@@ -155,27 +143,23 @@ func ShowRoleAssignment(c echo.Context) error {
 	return c.JSON(http.StatusOK, ret)
 }
 
-func parseRole(grp []string) *Role {
+func parseRole(grp []string) *ormapi.Role {
 	if len(grp) < 2 {
 		return nil
 	}
-	role := Role{Role: grp[1]}
+	role := ormapi.Role{Role: grp[1]}
 	domuser := strings.Split(grp[0], "::")
 	if len(domuser) > 1 {
 		role.Org = domuser[0]
-		role.UserID, _ = strconv.ParseInt(domuser[1], 10, 64)
+		role.Username = domuser[1]
 	} else {
-		role.UserID, _ = strconv.ParseInt(grp[0], 10, 64)
+		role.Username = grp[0]
 	}
 	return &role
 }
 
-func getCasbinGroup(org string, userID int64) string {
-	return org + "::" + id2str(userID)
-}
-
-func id2str(id int64) string {
-	return strconv.FormatInt(id, 10)
+func getCasbinGroup(org, username string) string {
+	return org + "::" + username
 }
 
 func ShowRole(c echo.Context) error {
@@ -200,33 +184,38 @@ func AddUserRole(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	role := Role{}
+	role := ormapi.Role{}
 	if err := c.Bind(&role); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-	if role.UserID == 0 {
-		return c.JSON(http.StatusBadRequest, Msg("UserID not specified"))
+	err = AddUserRoleObj(claims, &role)
+	return setReply(c, err, Msg("Role added to user"))
+}
+
+func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
+	if role.Username == "" {
+		return fmt.Errorf("Username not specified")
 	}
 	if role.Org == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Organziation not specified"))
+		return fmt.Errorf("Organziation not specified")
 	}
 	if role.Role == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Role not specified"))
+		return fmt.Errorf("Role not specified")
 	}
 	// check that user/org/role exists
-	res := db.Where(&User{ID: role.UserID}).First(&User{})
+	res := db.Where(&ormapi.User{Name: role.Username}).First(&ormapi.User{})
 	if res.RecordNotFound() {
-		return c.JSON(http.StatusBadRequest, Msg("UserID not found"))
+		return fmt.Errorf("Username not found")
 	}
 	if res.Error != nil {
-		return res.Error
+		return dbErr(res.Error)
 	}
-	res = db.Where(&Organization{Name: role.Org}).First(&Organization{})
+	res = db.Where(&ormapi.Organization{Name: role.Org}).First(&ormapi.Organization{})
 	if res.RecordNotFound() {
-		return c.JSON(http.StatusBadRequest, Msg("Organization not found"))
+		return fmt.Errorf("Organization not found")
 	}
 	if res.Error != nil {
-		return res.Error
+		return dbErr(res.Error)
 	}
 	policies := enforcer.GetPolicy()
 	roleFound := false
@@ -240,16 +229,16 @@ func AddUserRole(c echo.Context) error {
 		}
 	}
 	if !roleFound {
-		return c.JSON(http.StatusBadRequest, Msg("Role not found"))
+		return fmt.Errorf("Role not found")
 	}
 
 	// make sure caller has perms to modify users of target org
-	if !enforcer.Enforce(id2str(claims.UserID), role.Org, ResourceUsers, ActionManage) {
+	if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
 	}
-	psub := getCasbinGroup(role.Org, role.UserID)
+	psub := getCasbinGroup(role.Org, role.Username)
 	enforcer.AddGroupingPolicy(psub, role.Role)
-	return c.JSON(http.StatusOK, Msg("Role added to user"))
+	return nil
 }
 
 func RemoveUserRole(c echo.Context) error {
@@ -257,28 +246,62 @@ func RemoveUserRole(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	role := Role{}
+	role := ormapi.Role{}
 	if err := c.Bind(&role); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-	if role.UserID == 0 {
-		return c.JSON(http.StatusBadRequest, Msg("UserID not specified"))
+	err = RemoveUserRoleObj(claims, &role)
+	return setReply(c, err, Msg("Role removed from user"))
+}
+
+func RemoveUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
+	if role.Username == "" {
+		return fmt.Errorf("Username not specified")
 	}
 	if role.Org == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Organziation not specified"))
+		return fmt.Errorf("Organziation not specified")
 	}
 	if role.Role == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Role not specified"))
+		return fmt.Errorf("Role not specified")
 	}
 
 	// make sure caller has perms to modify users of target org
-	if !enforcer.Enforce(id2str(claims.UserID), role.Org, ResourceUsers, ActionManage) {
+	if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
 	}
 
-	psub := getCasbinGroup(role.Org, role.UserID)
+	psub := getCasbinGroup(role.Org, role.Username)
 	enforcer.RemoveGroupingPolicy(psub, role.Role)
-	return c.JSON(http.StatusOK, Msg("Role removed from user"))
+	return nil
+}
+
+func ShowUserRole(c echo.Context) error {
+	claims, err := getClaims(c)
+	if err != nil {
+		return err
+	}
+	roles, err := ShowUserRoleObj(claims)
+	return setReply(c, err, roles)
+}
+
+// show roles for organizations the current user has permission to
+// add/remove roles to. This "shows" all the actions taken by
+// Add/RemoveUserRole.
+func ShowUserRoleObj(claims *UserClaims) ([]ormapi.Role, error) {
+	roles := []ormapi.Role{}
+
+	groupings := enforcer.GetGroupingPolicy()
+	for ii, _ := range groupings {
+		role := parseRole(groupings[ii])
+		if role == nil {
+			continue
+		}
+		if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionView) {
+			continue
+		}
+		roles = append(roles, *role)
+	}
+	return roles, nil
 }
 
 // for debugging

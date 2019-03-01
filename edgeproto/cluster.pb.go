@@ -905,6 +905,10 @@ func (m *Cluster) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortCluster(a Cluster, b Cluster) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Cluster) ValidateEnums() error {

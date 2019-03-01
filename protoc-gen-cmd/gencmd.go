@@ -166,7 +166,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		visited := make([]*generator.Descriptor, 0)
-		if g.hasHideTags(desc, visited) {
+		if gensupport.HasHideTags(g.Generator, desc, visited) {
 			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
 			g.generateHideTags(desc)
 		}
@@ -252,25 +252,6 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		g.generateParseEnums(msgName, enumList)
 	}
 	gensupport.RunParseCheck(g.Generator, file)
-}
-
-func (g *GenCmd) hasHideTags(desc *generator.Descriptor, visited []*generator.Descriptor) bool {
-	if gensupport.WasVisited(desc, visited) {
-		return false
-	}
-	msg := desc.DescriptorProto
-	for _, field := range msg.Field {
-		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			subDesc := g.GetDesc(field.GetTypeName())
-			if g.hasHideTags(subDesc, append(visited, desc)) {
-				return true
-			}
-		}
-		if GetHideTag(field) != "" {
-			return true
-		}
-	}
-	return false
 }
 
 func (g *GenCmd) generateHideTags(desc *generator.Descriptor) {
