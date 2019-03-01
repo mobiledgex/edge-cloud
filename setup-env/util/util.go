@@ -604,7 +604,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 			p.PublicPort = 0
 		}
 		y1 = f1
-		y2 = f1
+		y2 = f2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
 		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
