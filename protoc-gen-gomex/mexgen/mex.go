@@ -10,7 +10,6 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
 
@@ -1221,7 +1220,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.generateEnumValidation(message, desc)
 
 	visited := make([]*generator.Descriptor, 0)
-	if gensupport.HasHideTags(m.gen, desc, protocmd.E_Hidetag, visited) {
+	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
 		m.generateHideTags(desc)
 	}
 }
@@ -1377,5 +1376,5 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 }
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
-	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
+	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
 }

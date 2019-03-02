@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
+	"github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
 )
 
@@ -166,7 +167,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		visited := make([]*generator.Descriptor, 0)
-		if gensupport.HasHideTags(g.Generator, desc, protocmd.E_Hidetag, visited) {
+		if gensupport.HasHideTags(g.Generator, desc, protogen.E_Hidetag, visited) {
 			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
 			g.generateHideTags(desc)
 		}
@@ -1112,7 +1113,7 @@ func GetNoConfig(message *descriptor.DescriptorProto) string {
 }
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
-	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
+	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
 }
 
 func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {
