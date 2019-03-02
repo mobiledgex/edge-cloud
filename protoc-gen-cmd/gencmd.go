@@ -166,7 +166,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		visited := make([]*generator.Descriptor, 0)
-		if gensupport.HasHideTags(g.Generator, desc, visited) {
+		if gensupport.HasHideTags(g.Generator, desc, protocmd.E_Hidetag, visited) {
 			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
 			g.generateHideTags(desc)
 		}

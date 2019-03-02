@@ -1221,7 +1221,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	m.generateEnumValidation(message, desc)
 
 	visited := make([]*generator.Descriptor, 0)
-	if gensupport.HasHideTags(m.gen, desc, visited) {
+	if gensupport.HasHideTags(m.gen, desc, protocmd.E_Hidetag, visited) {
 		m.generateHideTags(desc)
 	}
 }
