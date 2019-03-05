@@ -24,6 +24,8 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "strconv"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 
 import io "io"
 
@@ -427,6 +429,18 @@ func (m *NodeKey) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func IgnoreNodeKeyFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Name")
+	}
+	return cmpopts.IgnoreFields(NodeKey{}, names...)
 }
 
 func (m *Node) Matches(o *Node, fopts ...MatchOpt) bool {
@@ -952,6 +966,10 @@ func (m *Node) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortNode(a Node, b Node) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Node) ValidateEnums() error {
@@ -959,6 +977,21 @@ func (m *Node) ValidateEnums() error {
 		return err
 	}
 	return nil
+}
+
+func IgnoreNodeFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Key.Name")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "NotifyId")
+	}
+	return cmpopts.IgnoreFields(Node{}, names...)
 }
 
 var NodeTypeStrings = []string{

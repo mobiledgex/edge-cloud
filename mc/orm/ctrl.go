@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/tls"
 	"google.golang.org/grpc"
 )
@@ -14,6 +15,10 @@ func connectController(region string) (*grpc.ClientConn, error) {
 	if err != nil {
 		return nil, err
 	}
+	return connectControllerAddr(addr)
+}
+
+func connectControllerAddr(addr string) (*grpc.ClientConn, error) {
 	dialOption, err := tls.GetTLSClientDialOption(addr, serverConfig.TlsCertFile)
 	if err != nil {
 		return nil, err
@@ -22,7 +27,7 @@ func connectController(region string) (*grpc.ClientConn, error) {
 }
 
 func getControllerAddrForRegion(region string) (string, error) {
-	ctrl := Controller{
+	ctrl := ormapi.Controller{
 		Region: region,
 	}
 	res := db.Where(&ctrl).First(&ctrl)
@@ -40,24 +45,29 @@ func CreateController(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ctrl := Controller{}
+	ctrl := ormapi.Controller{}
 	if err := c.Bind(&ctrl); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid Post data"))
 	}
+	err = CreateControllerObj(claims, &ctrl)
+	return setReply(c, err, Msg("Controller created"))
+}
+
+func CreateControllerObj(claims *UserClaims, ctrl *ormapi.Controller) error {
 	if ctrl.Region == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Region not specified"))
+		return fmt.Errorf("Controller Region not specified")
 	}
 	if ctrl.Address == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Address not specified"))
+		return fmt.Errorf("Controller Address not specified")
 	}
-	if !enforcer.Enforce(id2str(claims.UserID), "", ResourceControllers, ActionManage) {
+	if !enforcer.Enforce(claims.Username, "", ResourceControllers, ActionManage) {
 		return echo.ErrForbidden
 	}
-	err = db.Create(&ctrl).Error
+	err := db.Create(ctrl).Error
 	if err != nil {
-		return err
+		return dbErr(err)
 	}
-	return c.JSON(http.StatusOK, Msg("Controller created"))
+	return nil
 }
 
 func DeleteController(c echo.Context) error {
@@ -65,18 +75,23 @@ func DeleteController(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ctrl := Controller{}
+	ctrl := ormapi.Controller{}
 	if err := c.Bind(&ctrl); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid Post data"))
 	}
-	if !enforcer.Enforce(id2str(claims.UserID), "", ResourceControllers, ActionManage) {
+	err = DeleteControllerObj(claims, &ctrl)
+	return setReply(c, err, Msg("Controller deleted"))
+}
+
+func DeleteControllerObj(claims *UserClaims, ctrl *ormapi.Controller) error {
+	if !enforcer.Enforce(claims.Username, "", ResourceControllers, ActionManage) {
 		return echo.ErrForbidden
 	}
-	err = db.Delete(&ctrl).Error
+	err := db.Delete(ctrl).Error
 	if err != nil {
-		return err
+		return dbErr(err)
 	}
-	return c.JSON(http.StatusOK, Msg("Controller deleted"))
+	return nil
 }
 
 func ShowController(c echo.Context) error {
@@ -84,17 +99,18 @@ func ShowController(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	ctrls := []Controller{}
-	if !enforcer.Enforce(id2str(claims.UserID), "", ResourceControllers, ActionView) {
-		return echo.ErrForbidden
-	}
-	err = db.Find(&ctrls).Error
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, ctrls)
+	ctrls, err := ShowControllerObj(claims)
+	return setReply(c, err, ctrls)
 }
 
-func ctrlErr(c echo.Context, err error) error {
-	return c.JSON(http.StatusBadRequest, Msg(err.Error()))
+func ShowControllerObj(claims *UserClaims) ([]ormapi.Controller, error) {
+	ctrls := []ormapi.Controller{}
+	if !enforcer.Enforce(claims.Username, "", ResourceControllers, ActionView) {
+		return nil, echo.ErrForbidden
+	}
+	err := db.Find(&ctrls).Error
+	if err != nil {
+		return nil, dbErr(err)
+	}
+	return ctrls, nil
 }

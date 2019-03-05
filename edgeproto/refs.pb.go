@@ -894,6 +894,10 @@ func (m *CloudletRefs) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortCloudletRefs(a CloudletRefs, b CloudletRefs) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 func (m *CloudletRefs) ValidateEnums() error {
 	if err := m.Key.ValidateEnums(); err != nil {
@@ -1355,6 +1359,10 @@ func (c *ClusterRefsCache) SyncListEnd() {
 
 func (m *ClusterRefs) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func CmpSortClusterRefs(a ClusterRefs, b ClusterRefs) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
 // Helper method to check that enums have valid values

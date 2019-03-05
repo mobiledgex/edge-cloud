@@ -3,10 +3,10 @@ package orm
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/labstack/echo"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 )
 
 // Organization Type names for ORM database
@@ -19,17 +19,22 @@ func CreateOrg(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	// any user can create their own organization
-	org := Organization{}
+	org := ormapi.Organization{}
 	if err := c.Bind(&org); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
+	err = CreateOrgObj(claims, &org)
+	return setReply(c, err, MsgName("Organization created", org.Name))
+}
+
+func CreateOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 	if org.Name == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Name not specified"))
+		return fmt.Errorf("Name not specified")
 	}
 	if strings.Contains(org.Name, "::") {
-		return c.JSON(http.StatusBadRequest, Msg("Name cannot contain ::"))
+		return fmt.Errorf("Name cannot contain ::")
 	}
+	// any user can create their own organization
 
 	role := ""
 	if org.Type == OrgTypeDeveloper {
@@ -37,23 +42,23 @@ func CreateOrg(c echo.Context) error {
 	} else if org.Type == OrgTypeOperator {
 		role = RoleOperatorManager
 	} else {
-		return c.JSON(http.StatusBadRequest, Msg(fmt.Sprintf("Organization type must be %s, or %s", OrgTypeDeveloper, OrgTypeOperator)))
+		return fmt.Errorf(fmt.Sprintf("Organization type must be %s, or %s", OrgTypeDeveloper, OrgTypeOperator))
 	}
 	if org.Address == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Address not specified"))
+		return fmt.Errorf("Address not specified")
 	}
 	if org.Phone == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Phone number not specified"))
+		return fmt.Errorf("Phone number not specified")
 	}
-	org.AdminUserID = claims.UserID
-	err = db.Create(&org).Error
+	org.AdminUsername = claims.Username
+	err := db.Create(&org).Error
 	if err != nil {
-		return err
+		return dbErr(err)
 	}
 	// set user to admin role of organization
-	psub := getCasbinGroup(org.Name, claims.UserID)
+	psub := getCasbinGroup(org.Name, claims.Username)
 	enforcer.AddGroupingPolicy(psub, role)
-	return c.JSON(http.StatusOK, MsgName("Organization created", org.Name))
+	return nil
 }
 
 func DeleteOrg(c echo.Context) error {
@@ -61,20 +66,25 @@ func DeleteOrg(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	org := &Organization{}
+	org := ormapi.Organization{}
 	if err := c.Bind(&org); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
+	err = DeleteOrgObj(claims, &org)
+	return setReply(c, err, Msg("Organization deleted"))
+}
+
+func DeleteOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 	if org.Name == "" {
-		return c.JSON(http.StatusBadRequest, Msg("Organization name not specified"))
+		return fmt.Errorf("Organization name not specified")
 	}
-	if !enforcer.Enforce(id2str(claims.UserID), org.Name, ResourceUsers, ActionManage) {
+	if !enforcer.Enforce(claims.Username, org.Name, ResourceUsers, ActionManage) {
 		return echo.ErrForbidden
 	}
 	// delete org
-	err = db.Delete(&org).Error
+	err := db.Delete(&org).Error
 	if err != nil {
-		return err
+		return dbErr(err)
 	}
 	// delete all casbin groups associated with org
 	groups := enforcer.GetGroupingPolicy()
@@ -87,7 +97,7 @@ func DeleteOrg(c echo.Context) error {
 			enforcer.RemoveGroupingPolicy(grp[0], grp[1])
 		}
 	}
-	return c.JSON(http.StatusOK, Msg("Organization deleted"))
+	return nil
 }
 
 // Show Organizations that current user belongs to.
@@ -96,33 +106,36 @@ func ShowOrg(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	orgs, err := ShowOrgObj(claims)
+	return setReply(c, err, orgs)
+}
 
-	orgs := []Organization{}
-	if enforcer.Enforce(id2str(claims.UserID), "", ResourceUsers, ActionView) {
+func ShowOrgObj(claims *UserClaims) ([]ormapi.Organization, error) {
+	orgs := []ormapi.Organization{}
+	if enforcer.Enforce(claims.Username, "", ResourceUsers, ActionView) {
 		// super user, show all orgs
-		err = db.Find(&orgs).Error
+		err := db.Find(&orgs).Error
+		if err != nil {
+			return nil, dbErr(err)
+		}
 	} else {
 		// show orgs for current user
-		userIDStr := strconv.FormatInt(claims.UserID, 10)
 		groupings := enforcer.GetGroupingPolicy()
 		for _, grp := range groupings {
 			if len(grp) < 2 {
 				continue
 			}
 			orguser := strings.Split(grp[0], "::")
-			if len(orguser) > 1 && orguser[1] == userIDStr {
-				org := Organization{}
+			if len(orguser) > 1 && orguser[1] == claims.Username {
+				org := ormapi.Organization{}
 				org.Name = orguser[0]
-				err = db.Where(&org).First(&org).Error
+				err := db.Where(&org).First(&org).Error
 				if err != nil {
-					return err
+					return nil, dbErr(err)
 				}
 				orgs = append(orgs, org)
 			}
 		}
 	}
-	if err != nil {
-		return err
-	}
-	return c.JSON(http.StatusOK, orgs)
+	return orgs, nil
 }
