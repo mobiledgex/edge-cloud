@@ -42,6 +42,7 @@ var (
 	outputDir   *string
 	compareYaml *string
 	dataDir     *string
+	curUserFile *string
 )
 
 //re-init the flags because otherwise we inherit a bunch of flags from the testing
@@ -57,6 +58,7 @@ func init() {
 	outputDir = flag.String("outputdir", "", "option directory to store output and logs")
 	compareYaml = flag.String("compareyaml", "", "comma separated list of yamls to compare")
 	dataDir = flag.String("datadir", "", "optional path of data files")
+	curUserFile = flag.String("curuserfile", "", "current user for MC apis")
 }
 
 //this is possible actions and optional parameters
@@ -67,6 +69,7 @@ var actionChoices = map[string]string{
 	"ctrlapi":       "procname",
 	"ctrlcli":       "procname",
 	"ctrlinfo":      "procname",
+	"mcapi":         "procname",
 	"dmeapi":        "procname",
 	"deploy":        "",
 	"cleanup":       "",
@@ -119,37 +122,46 @@ func validateArgs() {
 
 		optionalParam, validAction := actionChoices[action]
 		if !validAction {
-			fmt.Printf("ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
+			fmt.Fprintf(os.Stderr, "ERROR: -actions must be one of: %v, received: %s\n", actionList, action)
 			errFound = true
 		} else if action == "fetchlogs" && *outputDir == "" {
-			fmt.Printf("ERROR: cannot use action=fetchlogs option without -outputdir\n")
+			fmt.Fprintf(os.Stderr, "ERROR: cannot use action=fetchlogs option without -outputdir\n")
 			errFound = true
 		}
 		if optionalParam == "" && actionParam != "" {
-			fmt.Printf("ERROR: action %v does not take a parameter\n", action)
+			fmt.Fprintf(os.Stderr, "ERROR: action %v does not take a parameter\n", action)
 			errFound = true
 		}
 	}
 
 	if !validDeployment {
-		fmt.Printf("ERROR: -deployment must be one of: %v\n", deploymentList)
+		fmt.Fprintf(os.Stderr, "ERROR: -deployment must be one of: %v\n", deploymentList)
 		errFound = true
 	}
 	if *apiFile != "" {
-		if _, err := os.Stat(*apiFile); err != nil {
-			fmt.Fprint(os.Stderr, "ERROR: file "+*apiFile+" does not exist\n")
+		files := strings.Split(*apiFile, ",")
+		for _, file := range files {
+			if _, err := os.Stat(file); err != nil {
+				fmt.Fprint(os.Stderr, "ERROR: file "+file+" does not exist\n")
+				errFound = true
+			}
+		}
+	}
+	if *curUserFile != "" {
+		if _, err := os.Stat(*curUserFile); err != nil {
+			fmt.Fprint(os.Stderr, "ERROR: file "+*curUserFile+" does not exist\n")
 			errFound = true
 		}
 	}
 
 	if *apiType != "" {
 		if *apiType != "rest" && *apiType != "grpc" {
-			fmt.Printf("ERROR - apitype invalid")
+			fmt.Fprintf(os.Stderr, "ERROR - apitype invalid")
 			errFound = true
 		}
 	}
 	if *setupFile == "" {
-		fmt.Printf("ERROR -setupfile is mandatory\n")
+		fmt.Fprintf(os.Stderr, "ERROR -setupfile is mandatory\n")
 		errFound = true
 	} else {
 		if _, err := os.Stat(*setupFile); err != nil {
@@ -311,6 +323,16 @@ func main() {
 					log.Printf("Unable to run api for %s\n", action)
 					errorsFound++
 					errors = append(errors, "dme api failed")
+				}
+			}
+		case "mcapi":
+			if !setupmex.UpdateAPIAddrs() {
+				errorsFound++
+			} else {
+				if !apis.RunMcAPI(actionSubtype, actionParam, *apiFile, *curUserFile, *outputDir) {
+					log.Printf("Unable to run api for %s\n", action)
+					errorsFound++
+					errors = append(errors, "MC api failed")
 				}
 			}
 		case "cleanup":

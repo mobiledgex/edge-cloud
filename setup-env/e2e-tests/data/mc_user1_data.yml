@@ -1,0 +1,72 @@
+orgs:
+- name: tmus
+  type: operator
+  address: tmus headquarters
+  phone: 123-123-1234
+  adminusername: user1
+- name: azure
+  type: operator
+  address: amazon jungle
+  phone: 123-123-1234
+  adminusername: user1
+- name: gcp
+  type: operator
+  address: mountain view
+  phone: 123-123-1234
+  adminusername: user1
+
+roles:
+- username: user1
+  org: tmus
+  role: OperatorManager
+- username: user1
+  org: azure
+  role: OperatorManager
+- username: user1
+  org: gcp
+  role: OperatorManager
+
+regiondata:
+- region: local
+  appdata:
+    cloudlets:
+    - key:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      accessuri: cloud1.tmo
+      location:
+        latitude: 31
+        longitude: -91
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      accessuri: cloud2.tmo
+      location:
+        latitude: 35
+        longitude: -95
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: azure
+        name: azure-cloud-9
+      accessuri: cloud9.azure
+      location:
+        latitude: 32
+        longitude: -91
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: gcp
+        name: gcp-cloud-10
+      accessuri: cloud2.gcp
+      location:
+        latitude: 36
+        longitude: -95
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
