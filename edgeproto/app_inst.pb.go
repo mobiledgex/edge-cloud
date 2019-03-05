@@ -28,6 +28,8 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "time"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 
 import io "io"
 
@@ -1961,6 +1963,10 @@ func (m *AppInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortAppInst(a AppInst, b AppInst) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *AppInst) ValidateEnums() error {
@@ -1986,6 +1992,36 @@ func (m *AppInst) ValidateEnums() error {
 		return errors.New("invalid CrmOverride")
 	}
 	return nil
+}
+
+func IgnoreAppInstFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "MappedPorts")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "IpAccess")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "State")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Errors")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "CrmOverride")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "AllocatedIp")
+	}
+	if _, found := tags["timestamp"]; found {
+		names = append(names, "CreatedAt")
+	}
+	return cmpopts.IgnoreFields(AppInst{}, names...)
 }
 
 func (m *AppInstInfo) Matches(o *AppInstInfo, fopts ...MatchOpt) bool {
@@ -2586,6 +2622,10 @@ func (m *AppInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortAppInstInfo(a AppInstInfo, b AppInstInfo) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *AppInstInfo) ValidateEnums() error {
@@ -2596,6 +2636,18 @@ func (m *AppInstInfo) ValidateEnums() error {
 		return errors.New("invalid State")
 	}
 	return nil
+}
+
+func IgnoreAppInstInfoFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "NotifyId")
+	}
+	return cmpopts.IgnoreFields(AppInstInfo{}, names...)
 }
 
 func (m *AppInstMetrics) CopyInFields(src *AppInstMetrics) {

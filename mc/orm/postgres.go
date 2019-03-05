@@ -10,6 +10,7 @@ import (
 	_ "github.com/labstack/echo"
 	_ "github.com/lib/pq"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 )
 
 var retryInterval = 10 * time.Second
@@ -27,7 +28,7 @@ func InitSql(addr, username, password, dbname string) (*gorm.DB, *gormadapter.Ad
 	db, err := gorm.Open("postgres", psqlInfo)
 	if err != nil {
 		log.InfoLog("init sql", "host", hostport[0], "port", hostport[1],
-			"dbname", dbname)
+			"dbname", dbname, "err", err)
 		return nil, nil, err
 	}
 
@@ -52,7 +53,8 @@ func InitData(superuser, superpass string, stop *bool, done chan struct{}) {
 		first = false
 
 		// create or update tables
-		err := db.AutoMigrate(&User{}, &Organization{}, &Controller{}).Error
+		err := db.AutoMigrate(&ormapi.User{}, &ormapi.Organization{},
+			&ormapi.Controller{}).Error
 		if err != nil {
 			log.DebugLog(log.DebugLevelApi, "automigrate", "err", err)
 			continue

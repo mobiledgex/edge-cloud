@@ -848,6 +848,10 @@ func (m *Operator) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortOperator(a Operator, b Operator) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Operator) ValidateEnums() error {

@@ -7,6 +7,8 @@ import (
 
 	edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
+	"github.com/mobiledgex/edge-cloud/mc/ormclient"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"github.com/stretchr/testify/require"
@@ -58,23 +60,23 @@ func TestController(t *testing.T) {
 	require.Nil(t, err, "server online")
 
 	// login as super user
-	token, err := doLogin(uri, DefaultSuperuser, DefaultSuperpass)
+	token, err := ormclient.DoLogin(uri, DefaultSuperuser, DefaultSuperpass)
 	require.Nil(t, err, "login as superuser")
 
 	// test controller api
-	ctrls, status, err := showController(uri, token)
+	ctrls, status, err := ormclient.ShowController(uri, token)
 	require.Nil(t, err, "show controllers")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 0, len(ctrls))
-	ctrl := Controller{
+	ctrl := ormapi.Controller{
 		Region:  "USA",
 		Address: ctrlAddr,
 	}
 	// create controller
-	status, err = createController(uri, token, &ctrl)
+	status, err = ormclient.CreateController(uri, token, &ctrl)
 	require.Nil(t, err, "create controller")
 	require.Equal(t, http.StatusOK, status)
-	ctrls, status, err = showController(uri, token)
+	ctrls, status, err = ormclient.ShowController(uri, token)
 	require.Nil(t, err, "show controllers")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 1, len(ctrls))
@@ -102,30 +104,30 @@ func TestController(t *testing.T) {
 	badPermTestCloudlet(t, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
 
 	// add new users to orgs
-	testAddUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.ID, Success)
-	testAddUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperViewer", dev4.ID, Success)
-	testAddUserRole(t, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.ID, Success)
-	testAddUserRole(t, uri, tokenOper, orgOper.Name, "OperatorViewer", oper4.ID, Success)
+	testAddUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.Name, Success)
+	testAddUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperViewer", dev4.Name, Success)
+	testAddUserRole(t, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.Name, Success)
+	testAddUserRole(t, uri, tokenOper, orgOper.Name, "OperatorViewer", oper4.Name, Success)
 	// make sure dev/ops without user perms can't add new users
 	user5, _ := testCreateUser(t, uri, "user5")
-	testAddUserRole(t, uri, tokenDev3, orgDev.Name, "DeveloperViewer", user5.ID, Fail)
-	testAddUserRole(t, uri, tokenDev4, orgDev.Name, "DeveloperViewer", user5.ID, Fail)
-	testAddUserRole(t, uri, tokenOper3, orgOper.Name, "OperatorViewer", user5.ID, Fail)
-	testAddUserRole(t, uri, tokenOper4, orgOper.Name, "OperatorViewer", user5.ID, Fail)
+	testAddUserRole(t, uri, tokenDev3, orgDev.Name, "DeveloperViewer", user5.Name, Fail)
+	testAddUserRole(t, uri, tokenDev4, orgDev.Name, "DeveloperViewer", user5.Name, Fail)
+	testAddUserRole(t, uri, tokenOper3, orgOper.Name, "OperatorViewer", user5.Name, Fail)
+	testAddUserRole(t, uri, tokenOper4, orgOper.Name, "OperatorViewer", user5.Name, Fail)
 
 	// make sure developer and operator cannot see or modify controllers
-	ctrlNew := Controller{
+	ctrlNew := ormapi.Controller{
 		Region:  "Bad",
 		Address: "bad.mobiledgex.net",
 	}
-	status, err = createController(uri, tokenDev, &ctrlNew)
+	status, err = ormclient.CreateController(uri, tokenDev, &ctrlNew)
 	require.Equal(t, http.StatusForbidden, status)
-	status, err = createController(uri, tokenOper, &ctrlNew)
+	status, err = ormclient.CreateController(uri, tokenOper, &ctrlNew)
 	require.Equal(t, http.StatusForbidden, status)
-	ctrls, status, err = showController(uri, tokenDev)
+	ctrls, status, err = ormclient.ShowController(uri, tokenDev)
 	require.Equal(t, http.StatusForbidden, status)
 	require.Equal(t, 0, len(ctrls))
-	ctrls, status, err = showController(uri, tokenOper)
+	ctrls, status, err = ormclient.ShowController(uri, tokenOper)
 	require.Equal(t, http.StatusForbidden, status)
 	require.Equal(t, 0, len(ctrls))
 
@@ -160,82 +162,64 @@ func TestController(t *testing.T) {
 	badPermTestClusterInst(t, uri, tokenDev2, ctrl.Region, &testutil.ClusterInstData[0])
 
 	// remove users from roles, test that they can't modify anything anymore
-	testRemoveUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.ID, Success)
+	testRemoveUserRole(t, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.Name, Success)
 	badPermTestApp(t, uri, tokenDev3, ctrl.Region, &testutil.AppData[0])
 	badPermTestAppInst(t, uri, tokenDev3, ctrl.Region, &testutil.AppInstData[0])
-	testRemoveUserRole(t, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.ID, Success)
+	testRemoveUserRole(t, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.Name, Success)
 	badPermTestCloudlet(t, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
 
 	// delete controller
-	status, err = deleteController(uri, token, &ctrl)
+	status, err = ormclient.DeleteController(uri, token, &ctrl)
 	require.Nil(t, err, "delete controller")
 	require.Equal(t, http.StatusOK, status)
-	ctrls, status, err = showController(uri, token)
+	ctrls, status, err = ormclient.ShowController(uri, token)
 	require.Nil(t, err, "show controllers")
 	require.Equal(t, http.StatusOK, status)
 	require.Equal(t, 0, len(ctrls))
 }
 
-func createController(uri, token string, ctrl *Controller) (int, error) {
-	result := ResultID{}
-	status, err := postJson(uri+"/auth/controller/create", token, ctrl, &result)
-	return status, err
-}
-
-func deleteController(uri, token string, ctrl *Controller) (int, error) {
-	result := ResultID{}
-	status, err := postJson(uri+"/auth/controller/delete", token, ctrl, &result)
-	return status, err
-}
-
-func showController(uri, token string) ([]Controller, int, error) {
-	ctrls := []Controller{}
-	status, err := postJson(uri+"/auth/controller/show", token, nil, &ctrls)
-	return ctrls, status, err
-}
-
-func testCreateUser(t *testing.T, uri, name string) (*User, string) {
-	user := User{
+func testCreateUser(t *testing.T, uri, name string) (*ormapi.User, string) {
+	user := ormapi.User{
 		Name:     name,
 		Email:    name + "@gmail.com",
 		Passhash: name + "-password",
 	}
-	status, err := createUser(uri, &user)
+	status, err := ormclient.CreateUser(uri, &user)
 	require.Nil(t, err, "create user ", name)
 	require.Equal(t, http.StatusOK, status)
 	// login
-	token, err := doLogin(uri, user.Name, user.Passhash)
+	token, err := ormclient.DoLogin(uri, user.Name, user.Passhash)
 	require.Nil(t, err, "login as ", name)
 	return &user, token
 }
 
-func testCreateOrg(t *testing.T, uri, token, orgType, orgName string) *Organization {
+func testCreateOrg(t *testing.T, uri, token, orgType, orgName string) *ormapi.Organization {
 	// create org
-	org := Organization{
+	org := ormapi.Organization{
 		Type:    orgType,
 		Name:    orgName,
 		Address: orgName,
 		Phone:   "123-123-1234",
 	}
-	status, err := createOrg(uri, token, &org)
+	status, err := ormclient.CreateOrg(uri, token, &org)
 	require.Nil(t, err, "create org ", orgName)
 	require.Equal(t, http.StatusOK, status)
 	return &org
 }
 
-func testCreateUserOrg(t *testing.T, uri, name, orgType, orgName string) (*User, *Organization, string) {
+func testCreateUserOrg(t *testing.T, uri, name, orgType, orgName string) (*ormapi.User, *ormapi.Organization, string) {
 	user, token := testCreateUser(t, uri, name)
 	org := testCreateOrg(t, uri, token, orgType, orgName)
 	return user, org, token
 }
 
-func testAddUserRole(t *testing.T, uri, token, org, role string, userID int64, success bool) {
-	roleArg := Role{
-		UserID: userID,
-		Org:    org,
-		Role:   role,
+func testAddUserRole(t *testing.T, uri, token, org, role, username string, success bool) {
+	roleArg := ormapi.Role{
+		Username: username,
+		Org:      org,
+		Role:     role,
 	}
-	status, err := addUserRole(uri, token, &roleArg)
+	status, err := ormclient.AddUserRole(uri, token, &roleArg)
 	if success {
 		require.Nil(t, err, "add user role")
 		require.Equal(t, http.StatusOK, status)
@@ -244,13 +228,13 @@ func testAddUserRole(t *testing.T, uri, token, org, role string, userID int64, s
 	}
 }
 
-func testRemoveUserRole(t *testing.T, uri, token, org, role string, userID int64, success bool) {
-	roleArg := Role{
-		UserID: userID,
-		Org:    org,
-		Role:   role,
+func testRemoveUserRole(t *testing.T, uri, token, org, role, username string, success bool) {
+	roleArg := ormapi.Role{
+		Username: username,
+		Org:      org,
+		Role:     role,
 	}
-	status, err := removeUserRole(uri, token, &roleArg)
+	status, err := ormclient.RemoveUserRole(uri, token, &roleArg)
 	require.Nil(t, err, "remove user role")
 	require.Equal(t, http.StatusOK, status)
 	if success {

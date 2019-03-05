@@ -13,13 +13,6 @@ extend google.protobuf.MessageOptions {
   string noconfig = 52001;
 }
 
-extend google.protobuf.FieldOptions {
-  // hidetag is a string that can be used to hide fields on output objects.
-  // it will zero-out the field before generating output, which typically
-  // hides it (for json and our custom yaml)
-  string hidetag = 52002;
-}
-
 extend google.protobuf.MethodOptions {
   // show stream output objects incrementally as they come, rather than
   // collecting them into one output format. Only applies to commands

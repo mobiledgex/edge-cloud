@@ -37,6 +37,10 @@ extend google.protobuf.FieldOptions {
   // backend defines a field that is filled in by the back-end,
   // not by the user.
   bool backend = 51013;
+  // hidetag is a string that can be used to hide fields on output objects.
+  // it will zero-out the field before generating output, which typically
+  // hides it (for json and our custom yaml)
+  string hidetag = 52002;
 }
 
 extend google.protobuf.MethodOptions {
