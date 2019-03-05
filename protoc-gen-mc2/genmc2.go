@@ -27,6 +27,7 @@ type GenMC2 struct {
 	importJson      bool
 	importTesting   bool
 	importRequire   bool
+	importOrmclient bool
 }
 
 func (g *GenMC2) Name() string {
@@ -37,7 +38,7 @@ func (g *GenMC2) Init(gen *generator.Generator) {
 	g.Generator = gen
 	g.tmpl = template.Must(template.New("mc2").Parse(tmpl))
 	g.tmplMethodTest = template.Must(template.New("methodtest").Parse(tmplMethodTest))
-	g.tmplMessageTest = template.Must(template.New("messaegtest").Parse(tmplMessageTest))
+	g.tmplMessageTest = template.Must(template.New("messagetest").Parse(tmplMessageTest))
 	g.regionStructs = make(map[string]struct{})
 	g.firstFile = true
 }
@@ -65,6 +66,9 @@ func (g *GenMC2) GenerateImports(file *generator.FileDescriptor) {
 	if g.importRequire {
 		g.PrintImport("", "github.com/stretchr/testify/require")
 	}
+	if g.importOrmclient {
+		g.PrintImport("", "github.com/mobiledgex/edge-cloud/mc/ormclient")
+	}
 }
 
 func (g *GenMC2) Generate(file *generator.FileDescriptor) {
@@ -75,6 +79,7 @@ func (g *GenMC2) Generate(file *generator.FileDescriptor) {
 	g.importJson = false
 	g.importTesting = false
 	g.importRequire = false
+	g.importOrmclient = false
 
 	g.support.InitFile()
 	if !g.support.GenFile(*file.FileDescriptorProto.Name) {
@@ -183,20 +188,26 @@ func (g *GenMC2) generateMethod(service string, method *descriptor.MethodDescrip
 		GenStruct:  !found,
 		Resource:   apiVals[0],
 		Action:     apiVals[1],
-		Org:        "in." + inname + "." + apiVals[2],
+		Org:        "obj." + apiVals[2],
+		ShowOrg:    "res." + apiVals[2],
 		Outstream:  gensupport.ServerStreaming(method),
 	}
 	if apiVals[2] == "" {
 		args.Org = `""`
+		args.ShowOrg = `""`
 	}
 	if apiVals[2] == "skipenforce" {
 		args.SkipEnforce = true
+	}
+	if args.Action == "ActionView" && strings.HasPrefix(args.MethodName, "Show") {
+		args.Show = true
 	}
 	if g.gentest {
 		err := g.tmplMethodTest.Execute(g, &args)
 		if err != nil {
 			g.Fail("Failed to execute method test template: ", err.Error())
 		}
+		g.importOrmclient = true
 	} else {
 		err := g.tmpl.Execute(g, &args)
 		if err != nil {
@@ -224,8 +235,10 @@ type tmplArgs struct {
 	Resource    string
 	Action      string
 	Org         string
+	ShowOrg     string
 	Outstream   bool
 	SkipEnforce bool
+	Show        bool
 }
 
 var tmpl = `
@@ -237,37 +250,65 @@ type Region{{.InName}} struct {
 
 {{- end}}
 func {{.MethodName}}(c echo.Context) error {
-{{- if .SkipEnforce}}
-	_, err := getClaims(c)
-{{- else}}
+	rc := &RegionContext{}
 	claims, err := getClaims(c)
-{{- end}}
 	if err != nil {
 		return err
 	}
+	rc.claims = claims
+
 	in := Region{{.InName}}{}
 	if err := c.Bind(&in); err != nil {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
 	}
-{{- if not .SkipEnforce}}
-	if !enforcer.Enforce(id2str(claims.UserID), {{.Org}},
+	rc.region = in.Region
+{{- if .Outstream}}
+	// stream func may return "forbidden", so don't write
+	// header until we know it's ok.
+	wroteHeader := false
+	err = {{.MethodName}}Stream(rc, &in.{{.InName}}, func(res *edgeproto.{{.OutName}}) {
+		if !wroteHeader {
+			c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			c.Response().WriteHeader(http.StatusOK)
+		}
+		json.NewEncoder(c.Response()).Encode(res)
+		c.Response().Flush()
+	})
+{{- else}}
+	err = {{.MethodName}}Obj(rc, &in.{{.InName}})
+{{- end}}
+	return setReply(c, err, Msg("ok"))
+}
+
+{{if .Outstream}}
+func {{.MethodName}}Stream(rc *RegionContext, obj *edgeproto.{{.InName}}, cb func(res *edgeproto.{{.OutName}})) error {
+{{- else}}
+func {{.MethodName}}Obj(rc *RegionContext, obj *edgeproto.{{.InName}}) error {
+{{- end}}
+{{- if and (not .Show) (not .SkipEnforce)}}
+	if !enforcer.Enforce(rc.claims.Username, {{.Org}},
 		{{.Resource}}, {{.Action}}) {
 		return echo.ErrForbidden
 	}
 {{- end}}
-	conn, err := connectController(in.Region)
-	if err != nil {
-		return ctrlErr(c, err)
+	if rc.conn == nil {
+		conn, err := connectController(rc.region)
+		if err != nil {
+			return err
+		}
+		rc.conn = conn
+		defer func() {
+			rc.conn.Close()
+			rc.conn = nil
+		}()
 	}
-	api := edgeproto.New{{.Service}}Client(conn)
+	api := edgeproto.New{{.Service}}Client(rc.conn)
 	ctx := context.Background()
 {{- if .Outstream}}
-	stream, err := api.{{.MethodName}}(ctx, &in.{{.InName}})
+	stream, err := api.{{.MethodName}}(ctx, obj)
 	if err != nil {
-		return ctrlErr(c, err)
+		return err
 	}
-	c.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	c.Response().WriteHeader(http.StatusOK)
 	for {
 		res, err := stream.Recv()
 		if err == io.EOF {
@@ -275,23 +316,32 @@ func {{.MethodName}}(c echo.Context) error {
 			break
 		}
 		if err != nil {
-			return ctrlErr(c, err)
+			return err
 		}
-		err = json.NewEncoder(c.Response()).Encode(res)
-		if err != nil {
-			return ctrlErr(c, err)
+{{- if and (.Show) (not .SkipEnforce)}}
+		if !enforcer.Enforce(rc.claims.Username, {{.ShowOrg}},
+			{{.Resource}}, {{.Action}}) {
+			continue
 		}
-		c.Response().Flush()
+{{- end}}
+		cb(res)
 	}
 	return nil
 {{- else}}
-	res, err := api.{{.MethodName}}(ctx, &in.{{.InName}})
-	if err != nil {
-		return ctrlErr(c, err)
-	}
-	return c.JSON(http.StatusOK, res)
+	_, err := api.{{.MethodName}}(ctx, obj)
+	return err
 {{- end}}
 }
+
+{{ if .Outstream}}
+func {{.MethodName}}Obj(rc *RegionContext, obj *edgeproto.{{.InName}}) ([]edgeproto.{{.OutName}}, error) {
+	arr := []edgeproto.{{.OutName}}{}
+	err := {{.MethodName}}Stream(rc, obj, func(res *edgeproto.{{.OutName}}) {
+		arr = append(arr, *res)
+	})
+	return arr, err
+}
+{{- end}}
 
 `
 
@@ -302,11 +352,10 @@ func test{{.MethodName}}(uri, token, region string, in *edgeproto.{{.InName}}) (
 	dat.{{.InName}} = *in
 {{- if .Outstream}}
 	out := edgeproto.{{.OutName}}{}
-	//out := []edgeproto.{{.OutName}}{}
-	status, err := postJsonStreamOut(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out)
+	status, err := ormclient.PostJsonStreamOut(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out, nil)
 {{- else}}
 	out := edgeproto.{{.OutName}}{}
-	status, err := postJson(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out)
+	status, err := ormclient.PostJson(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out)
 {{- end}}
 	return status, err
 }
@@ -343,9 +392,10 @@ func badPermTest{{.Message}}(t *testing.T, uri, token, region string, obj *edgep
 	status, err = testDelete{{.Message}}(uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
+	// show is allowed but won't show anything
 	status, err = testShow{{.Message}}(uri, token, region, obj)
 	require.Nil(t, err)
-	require.Equal(t, http.StatusForbidden, status)
+	require.Equal(t, http.StatusOK, status)
 }
 
 // This tests the user can modify the object because the obj belongs to

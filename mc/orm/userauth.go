@@ -14,6 +14,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -71,7 +72,6 @@ func PasswordMatches(password, passhash, salt string, iter int) (bool, error) {
 type UserClaims struct {
 	jwt.StandardClaims
 	Username string `json:"username"`
-	UserID   int64  `json:"id"`
 	Kid      int    `json:"kid"`
 }
 
@@ -83,7 +83,7 @@ func (u *UserClaims) SetKid(kid int) {
 	u.Kid = kid
 }
 
-func GenerateCookie(user *User) (string, error) {
+func GenerateCookie(user *ormapi.User) (string, error) {
 	claims := UserClaims{
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt: time.Now().Unix(),
@@ -91,7 +91,6 @@ func GenerateCookie(user *User) (string, error) {
 			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
 		},
 		Username: user.Name,
-		UserID:   user.ID,
 	}
 	cookie, err := Jwks.GenerateCookie(&claims)
 	return cookie, err
@@ -113,7 +112,7 @@ func getClaims(c echo.Context) (*UserClaims, error) {
 		log.DebugLog(log.DebugLevelApi, "get claims: bad claims type")
 		return nil, echo.ErrUnauthorized
 	}
-	if claims.Username == "" || claims.UserID == 0 {
+	if claims.Username == "" {
 		log.DebugLog(log.DebugLevelApi, "get claims: bad claims content")
 		return nil, echo.ErrUnauthorized
 	}

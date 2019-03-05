@@ -24,6 +24,8 @@ import "github.com/mobiledgex/edge-cloud/util"
 import "github.com/mobiledgex/edge-cloud/log"
 import "errors"
 import "time"
+import "github.com/google/go-cmp/cmp"
+import "github.com/google/go-cmp/cmp/cmpopts"
 
 import io "io"
 
@@ -1440,6 +1442,10 @@ func (m *ClusterInst) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortClusterInst(a ClusterInst, b ClusterInst) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *ClusterInst) ValidateEnums() error {
@@ -1459,6 +1465,24 @@ func (m *ClusterInst) ValidateEnums() error {
 		return errors.New("invalid Liveness")
 	}
 	return nil
+}
+
+func IgnoreClusterInstFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "State")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "Errors")
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "CrmOverride")
+	}
+	return cmpopts.IgnoreFields(ClusterInst{}, names...)
 }
 
 func (m *ClusterInstInfo) Matches(o *ClusterInstInfo, fopts ...MatchOpt) bool {
@@ -2033,6 +2057,10 @@ func (m *ClusterInstInfo) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortClusterInstInfo(a ClusterInstInfo, b ClusterInstInfo) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *ClusterInstInfo) ValidateEnums() error {
@@ -2043,6 +2071,18 @@ func (m *ClusterInstInfo) ValidateEnums() error {
 		return errors.New("invalid State")
 	}
 	return nil
+}
+
+func IgnoreClusterInstInfoFields(taglist string) cmp.Option {
+	names := []string{}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(taglist, ",") {
+		tags[tag] = struct{}{}
+	}
+	if _, found := tags["nocmp"]; found {
+		names = append(names, "NotifyId")
+	}
+	return cmpopts.IgnoreFields(ClusterInstInfo{}, names...)
 }
 
 func (m *ClusterInstKey) Size() (n int) {

@@ -1,11 +1,13 @@
 package orm
 
 import (
+	"encoding/json"
 	"strings"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 )
 
 func logger(next echo.HandlerFunc) echo.HandlerFunc {
@@ -20,22 +22,35 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 		reqBody := []byte{}
 		resBody := []byte{}
 		var nexterr error
-		if !strings.HasSuffix(req.RequestURI, "login") {
-			// use body dump to capture req/res.
-			// This makes a copy of the req and resp so we
-			// avoid this unless needed.
-			bd := middleware.BodyDump(func(c echo.Context, reqB, resB []byte) {
-				reqBody = reqB
-				resBody = resB
-			})
-			handler := bd(next)
-			nexterr = handler(c)
-			if strings.HasSuffix(req.RequestURI, "usercreate") {
-				// req has password so don't log it
+		// use body dump to capture req/res.
+		bd := middleware.BodyDump(func(c echo.Context, reqB, resB []byte) {
+			reqBody = reqB
+			resBody = resB
+		})
+		handler := bd(next)
+		nexterr = handler(c)
+		// remove passwords from requests so they aren't logged
+		if strings.HasSuffix(req.RequestURI, "login") {
+			login := ormapi.UserLogin{}
+			err := json.Unmarshal(reqBody, &login)
+			if err == nil {
+				login.Password = ""
+				reqBody, err = json.Marshal(login)
+			}
+			if err != nil {
 				reqBody = []byte{}
 			}
-		} else {
-			nexterr = next(c)
+		}
+		if strings.HasSuffix(req.RequestURI, "usercreate") {
+			user := ormapi.User{}
+			err := json.Unmarshal(reqBody, &user)
+			if err == nil {
+				user.Passhash = ""
+				reqBody, err = json.Marshal(user)
+			}
+			if err != nil {
+				reqBody = []byte{}
+			}
 		}
 		kvs := []interface{}{}
 		kvs = append(kvs, "method")

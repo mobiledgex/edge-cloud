@@ -275,6 +275,25 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 	return false
 }
 
+func HasHideTags(g *generator.Generator, desc *generator.Descriptor, hideTag *proto.ExtensionDesc, visited []*generator.Descriptor) bool {
+	if WasVisited(desc, visited) {
+		return false
+	}
+	msg := desc.DescriptorProto
+	for _, field := range msg.Field {
+		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
+			subDesc := GetDesc(g, field.GetTypeName())
+			if HasHideTags(g, subDesc, hideTag, append(visited, desc)) {
+				return true
+			}
+		}
+		if GetStringExtension(field.Options, hideTag, "") != "" {
+			return true
+		}
+	}
+	return false
+}
+
 func GetMessageKey(message *descriptor.DescriptorProto) *descriptor.FieldDescriptorProto {
 	if message.Field == nil {
 		return nil
