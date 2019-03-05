@@ -138,3 +138,7 @@ required = [
 [[constraint]]
   name = "github.com/hashicorp/vault"
   version = "0.11.5"
+
+[[constraint]]
+  name = "github.com/google/go-cmp"
+  branch = "master"

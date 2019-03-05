@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
+	"github.com/mobiledgex/edge-cloud/protogen"
 	"github.com/spf13/cobra"
 )
 
@@ -166,7 +167,7 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 			continue
 		}
 		visited := make([]*generator.Descriptor, 0)
-		if g.hasHideTags(desc, visited) {
+		if gensupport.HasHideTags(g.Generator, desc, protogen.E_Hidetag, visited) {
 			g.hideTags[*desc.DescriptorProto.Name] = struct{}{}
 			g.generateHideTags(desc)
 		}
@@ -252,25 +253,6 @@ func (g *GenCmd) Generate(file *generator.FileDescriptor) {
 		g.generateParseEnums(msgName, enumList)
 	}
 	gensupport.RunParseCheck(g.Generator, file)
-}
-
-func (g *GenCmd) hasHideTags(desc *generator.Descriptor, visited []*generator.Descriptor) bool {
-	if gensupport.WasVisited(desc, visited) {
-		return false
-	}
-	msg := desc.DescriptorProto
-	for _, field := range msg.Field {
-		if *field.Type == descriptor.FieldDescriptorProto_TYPE_MESSAGE {
-			subDesc := g.GetDesc(field.GetTypeName())
-			if g.hasHideTags(subDesc, append(visited, desc)) {
-				return true
-			}
-		}
-		if GetHideTag(field) != "" {
-			return true
-		}
-	}
-	return false
 }
 
 func (g *GenCmd) generateHideTags(desc *generator.Descriptor) {
@@ -1131,7 +1113,7 @@ func GetNoConfig(message *descriptor.DescriptorProto) string {
 }
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
-	return gensupport.GetStringExtension(field.Options, protocmd.E_Hidetag, "")
+	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
 }
 
 func GetStreamOutIncremental(method *descriptor.MethodDescriptorProto) bool {

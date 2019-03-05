@@ -9,6 +9,8 @@ import (
 	"strconv"
 	strings "strings"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/util"
 )
@@ -398,4 +400,32 @@ func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 		appports = append(appports, p)
 	}
 	return appports, nil
+}
+
+func IgnoreTaggedFields(taglist string) []cmp.Option {
+	opts := []cmp.Option{}
+	opts = append(opts, IgnoreAppFields(taglist))
+	opts = append(opts, IgnoreAppInstFields(taglist))
+	opts = append(opts, IgnoreAppInstInfoFields(taglist))
+	opts = append(opts, IgnoreClusterInstFields(taglist))
+	opts = append(opts, IgnoreClusterInstInfoFields(taglist))
+	return opts
+}
+
+func CmpSortSlices() []cmp.Option {
+	opts := []cmp.Option{}
+	opts = append(opts, cmpopts.SortSlices(CmpSortApp))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInst))
+	opts = append(opts, cmpopts.SortSlices(CmpSortCloudlet))
+	opts = append(opts, cmpopts.SortSlices(CmpSortDeveloper))
+	opts = append(opts, cmpopts.SortSlices(CmpSortOperator))
+	opts = append(opts, cmpopts.SortSlices(CmpSortCluster))
+	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
+	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
+	opts = append(opts, cmpopts.SortSlices(CmpSortClusterFlavor))
+	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletInfo))
+	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstInfo))
+	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInstInfo))
+	opts = append(opts, cmpopts.SortSlices(CmpSortNode))
+	return opts
 }
