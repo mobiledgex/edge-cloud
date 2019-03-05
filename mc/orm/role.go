@@ -143,6 +143,10 @@ func ShowRoleAssignment(c echo.Context) error {
 	return c.JSON(http.StatusOK, ret)
 }
 
+// Parse out the roles stored by Casbin.
+// The "group" in Casbin is really the Organization
+// combined (via "::") with the Username. See the notes
+// for userauth.go:createRbacModel().
 func parseRole(grp []string) *ormapi.Role {
 	if len(grp) < 2 {
 		return nil
@@ -259,7 +263,7 @@ func RemoveUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 		return fmt.Errorf("Username not specified")
 	}
 	if role.Org == "" {
-		return fmt.Errorf("Organziation not specified")
+		return fmt.Errorf("Organization not specified")
 	}
 	if role.Role == "" {
 		return fmt.Errorf("Role not specified")
