@@ -105,7 +105,7 @@ namespace DistributedMatchEngine
     {
       if (host != null && host != "")
       {
-        return "http://" + host + ":" + port;
+        return "https://" + host + ":" + port;
       }
       return generateDmeBaseUri(null, port);
     }
