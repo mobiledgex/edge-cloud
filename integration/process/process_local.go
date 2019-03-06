@@ -27,6 +27,7 @@ import (
 
 type TLSCerts struct {
 	ServerCert string
+	ServerKey  string
 	ClientCert string
 }
 
@@ -40,7 +41,7 @@ type EtcdLocal struct {
 	cmd            *exec.Cmd
 }
 
-func (p *EtcdLocal) Start(logfile string) error {
+func (p *EtcdLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
 	var err error
 	p.cmd, err = StartLocal(p.Name, "etcd", args, nil, logfile)
@@ -306,6 +307,68 @@ func (p *CrmLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
+// Master Controller
+
+type MCLocal struct {
+	Name      string
+	Addr      string
+	SqlAddr   string
+	VaultAddr string
+	TLS       TLSCerts
+	cmd       *exec.Cmd
+}
+
+func (p *MCLocal) Start(logfile string, opts ...StartOp) error {
+	args := []string{}
+	if p.Addr != "" {
+		args = append(args, "--addr")
+		args = append(args, p.Addr)
+	}
+	if p.SqlAddr != "" {
+		args = append(args, "--sqlAddr")
+		args = append(args, p.SqlAddr)
+	}
+	if p.VaultAddr != "" {
+		args = append(args, "--vaultAddr")
+		args = append(args, p.VaultAddr)
+	}
+	if p.TLS.ServerCert != "" {
+		args = append(args, "--tls")
+		args = append(args, p.TLS.ServerCert)
+	}
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.Debug != "" {
+		args = append(args, "-d")
+		args = append(args, options.Debug)
+	}
+	var envs []string
+	if options.RolesFile != "" {
+		dat, err := ioutil.ReadFile(options.RolesFile)
+		if err != nil {
+			return err
+		}
+		roles := VaultRoles{}
+		err = yaml.Unmarshal(dat, &roles)
+		if err != nil {
+			return err
+		}
+		envs = []string{
+			fmt.Sprintf("VAULT_ROLE_ID=%s", roles.MCORMRoleID),
+			fmt.Sprintf("VAULT_SECRET_ID=%s", roles.MCORMSecretID),
+		}
+		log.Printf("MC envs: %v\n", envs)
+	}
+
+	var err error
+	p.cmd, err = StartLocal(p.Name, "mc", args, envs, logfile)
+	return err
+}
+
+func (p *MCLocal) Stop() {
+	StopLocal(p.cmd)
+}
+
 // InfluxLocal
 
 type InfluxLocal struct {
@@ -316,7 +379,7 @@ type InfluxLocal struct {
 	cmd      *exec.Cmd
 }
 
-func (p *InfluxLocal) Start(logfile string) error {
+func (p *InfluxLocal) Start(logfile string, opts ...StartOp) error {
 	configFile, err := influxsup.SetupInflux(p.DataDir)
 	if err != nil {
 		return err
@@ -396,7 +459,7 @@ type SqlLocal struct {
 	cmd      *exec.Cmd
 }
 
-func (p *SqlLocal) Start(logfile string) error {
+func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"-D", p.DataDir, "start"}
 	options := []string{}
 	addr := []string{}
@@ -409,7 +472,12 @@ func (p *SqlLocal) Start(logfile string) error {
 	}
 	if p.TLS.ServerCert != "" {
 		// files server.crt and server.key must exist
-		// in server's data directory (note: this is untested).
+		// in server's data directory.
+		os.Symlink(p.TLS.ServerCert, p.DataDir+"/server.crt")
+		os.Symlink(p.TLS.ServerKey, p.DataDir+"/server.key")
+		// sql db has strict requirements on cert perms
+		os.Chmod(p.TLS.ServerCert, 0600)
+		os.Chmod(p.TLS.ServerKey, 0600)
 		options = append(options, "-l")
 	}
 	if len(options) > 0 {
@@ -698,7 +766,7 @@ type LocApiSimLocal struct {
 	cmd     *exec.Cmd
 }
 
-func (p *LocApiSimLocal) Start(logfile string) error {
+func (p *LocApiSimLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"-port", fmt.Sprintf("%d", p.Port), "-file", p.Locfile}
 	if p.Geofile != "" {
 		args = append(args, "-geo", p.Geofile)
@@ -723,7 +791,7 @@ type TokSrvSimLocal struct {
 	cmd   *exec.Cmd
 }
 
-func (p *TokSrvSimLocal) Start(logfile string) error {
+func (p *TokSrvSimLocal) Start(logfile string, opts ...StartOp) error {
 	args := []string{"-port", fmt.Sprintf("%d", p.Port)}
 	if p.Token != "" {
 		args = append(args, "-token")

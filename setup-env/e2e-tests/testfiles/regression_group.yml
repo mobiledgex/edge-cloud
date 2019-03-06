@@ -8,6 +8,8 @@ tests:
     loops: 2
   - includefile: add_delete_2apps.yml
     loops: 2
+  - includefile: mc_add_delete.yml
+    loops: 2
   - includefile: get_appinstlist.yml
   - includefile: get_appinstlist.yml
     api: rest
