@@ -49,6 +49,7 @@ type e2e_test struct {
 	ApiType     string   `yaml:"api"`
 	Apifile     string   `yaml:"apifile"`
 	Actions     []string `yaml:"actions"`
+	CurUserFile string   `yaml:"curuserfile"`
 	Compareyaml struct {
 		Yaml1    string `yaml:"yaml1"`
 		Yaml2    string `yaml:"yaml2"`
@@ -184,6 +185,9 @@ func runTests(dirName string, fileName string, apiType string, depth int) (int, 
 			}
 			if t.Apifile != "" {
 				cmdstr += fmt.Sprintf("-apifile %s ", t.Apifile)
+			}
+			if t.CurUserFile != "" {
+				cmdstr += fmt.Sprintf("-curuserfile %s ", t.CurUserFile)
 			}
 			if t.Compareyaml.Yaml1 != "" {
 				cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)

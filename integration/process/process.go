@@ -30,7 +30,7 @@ type ProcessSetup struct {
 }
 
 type EtcdProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ResetData() error
 }
@@ -54,7 +54,7 @@ type CrmProcess interface {
 }
 
 type InfluxProcess interface {
-	Start(logfile string) error
+	Start(logfile string, opts ...StartOp) error
 	Stop()
 	ResetData() error
 }

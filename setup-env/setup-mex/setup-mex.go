@@ -428,9 +428,18 @@ func StopProcesses(processName string) bool {
 		p.ResetData()
 	}
 
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "cluster-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault", "mexosagent"}
+	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "mc", "cluster-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault", "mexosagent"}
 	for _, a := range util.Deployment.SampleApps {
 		processExeNames = append(processExeNames, a.Exename)
+	}
+	for _, p := range util.Deployment.Sqls {
+		if processName != "" && processName != p.Name {
+			continue
+		}
+		if !isLocalIP(p.Hostname) {
+			continue
+		}
+		p.Stop()
 	}
 
 	//anything not gracefully exited in maxwait seconds is forcefully killed
@@ -546,11 +555,11 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ctrlRemoteServers := make(map[string]string)
 	crmRemoteServers := make(map[string]string)
 	dmeRemoteServers := make(map[string]string)
+	mcRemoteServers := make(map[string]string)
 	clustersvcRemoteServers := make(map[string]string)
+	sqlRemoteServers := make(map[string]string)
 	locApiSimulators := make(map[string]string)
 	tokSrvSimulators := make(map[string]string)
-	vaults := make(map[string]string)
-
 	sampleApps := make(map[string]string)
 
 	for _, p := range util.Deployment.Vaults {
@@ -619,6 +628,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			foundServer = true
 		}
 	}
+	for _, p := range util.Deployment.Mcs {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			mcRemoteServers[i] = p.Name
+			foundServer = true
+		}
+	}
 	for _, p := range util.Deployment.ClusterSvcs {
 		if procNameFilter != "" && procNameFilter != p.Name {
 			continue
@@ -627,6 +647,17 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			i := hostNameToAnsible(p.Hostname)
 			allRemoteServers[i] = p.Name
 			clustersvcRemoteServers[i] = p.Name
+			foundServer = true
+		}
+	}
+	for _, p := range util.Deployment.Sqls {
+		if procNameFilter != "" && procNameFilter != p.Name {
+			continue
+		}
+		if p.Hostname != "" && !isLocalIP(p.Hostname) {
+			i := hostNameToAnsible(p.Hostname)
+			allRemoteServers[i] = p.Name
+			sqlRemoteServers[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -664,17 +695,6 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			i := hostNameToAnsible(p.Hostname)
 			allRemoteServers[i] = p.Name
 			sampleApps[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Vaults {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			vaults[i] = p.Name
 			foundServer = true
 		}
 	}
@@ -727,6 +747,20 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 			fmt.Fprintln(invfile, s)
 		}
 	}
+	if len(sqlRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[sqls]")
+		for s := range sqlRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
+	if len(mcRemoteServers) > 0 {
+		fmt.Fprintln(invfile, "")
+		fmt.Fprintln(invfile, "[mcs]")
+		for s := range mcRemoteServers {
+			fmt.Fprintln(invfile, s)
+		}
+	}
 	if len(clustersvcRemoteServers) > 0 {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[cluster-svcs]")
@@ -752,13 +786,6 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 		fmt.Fprintln(invfile, "")
 		fmt.Fprintln(invfile, "[sampleapps]")
 		for s := range sampleApps {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(sampleApps) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[vaults]")
-		for s := range vaults {
 			fmt.Fprintln(invfile, s)
 		}
 	}
@@ -1107,7 +1134,6 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != dme.Name {
 			continue
 		}
-
 		if isLocalIP(dme.Hostname) {
 			for k, v := range dme.EnvVars {
 				//doing it this way means the variable is set for other commands too.
@@ -1128,9 +1154,7 @@ func StartProcesses(processName string, outputDir string) bool {
 		if processName != "" && processName != clustersvc.Name {
 			continue
 		}
-
 		if isLocalIP(clustersvc.Hostname) {
-
 			log.Printf("Starting ClusterSvc %+v\n", clustersvc)
 			logfile := getLogFile(clustersvc.Name, outputDir)
 			err := clustersvc.Start(logfile, process.WithDebug("mexos,notify"))
@@ -1140,7 +1164,42 @@ func StartProcesses(processName string, outputDir string) bool {
 			}
 		}
 	}
-
+	for _, p := range util.Deployment.Sqls {
+		if processName != "" && processName != p.Name {
+			continue
+		}
+		if isLocalIP(p.Hostname) {
+			log.Printf("Starting SQL %+v\n", p)
+			if processName == "" {
+				//only init the data if this is a full start of all processes
+				err := p.InitDataDir()
+				if err != nil {
+					log.Printf("Error on SQL init: %v", err)
+					return false
+				}
+			}
+			logfile := getLogFile(p.Name, outputDir)
+			err := p.Start(logfile)
+			if err != nil {
+				log.Printf("Error on SQL startup: %v", err)
+				return false
+			}
+		}
+	}
+	for _, mc := range util.Deployment.Mcs {
+		if processName != "" && processName != mc.Name {
+			continue
+		}
+		if isLocalIP(mc.Hostname) {
+			log.Printf("Starting MC %+v\n", mc)
+			logfile := getLogFile(mc.Name, outputDir)
+			err := mc.Start(logfile, process.WithRolesFile(rolesfile), process.WithDebug("api"))
+			if err != nil {
+				log.Printf("Error on MC startup: %v", err)
+				return false
+			}
+		}
+	}
 	for _, loc := range util.Deployment.Locsims {
 		if processName != "" && processName != loc.Name {
 			continue
