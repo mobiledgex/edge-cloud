@@ -13,10 +13,6 @@ case "$1" in
 	shift
 	controller $*
 	;;
-    crmctl)
-	shift
-	crmctl $*
-	;;
     crmserver)
 	shift
 	crmserver $*
@@ -32,6 +28,10 @@ case "$1" in
     loc-api-sim)
 	shift
 	loc-api-sim $*
+	;;
+    mc)
+	shift
+	mc $*
 	;;
     tok-srv-sim)
 	shift
