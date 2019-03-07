@@ -7,7 +7,6 @@
 	It is generated from these files:
 		app.proto
 		app_inst.proto
-		cloud-resource-manager.proto
 		cloudlet.proto
 		cluster.proto
 		clusterflavor.proto
@@ -31,9 +30,6 @@
 		AppInst
 		AppInstInfo
 		AppInstMetrics
-		CloudResource
-		EdgeCloudApp
-		EdgeCloudApplication
 		CloudletKey
 		CloudletInfraCommon
 		AzureProperties

@@ -60,14 +60,11 @@ func main() {
 	}
 	controllerData = crmutil.NewControllerData()
 
-	srv, err := crmutil.NewCloudResourceManagerServer(controllerData)
 	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
-
-	edgeproto.RegisterCloudResourceManagerServer(grpcServer, srv)
 
 	platChan := make(chan string)
 
@@ -118,7 +115,6 @@ func main() {
 		notifyClient.Start()
 		defer notifyClient.Stop()
 	}
-
 	reflection.Register(grpcServer)
 
 	go func() {

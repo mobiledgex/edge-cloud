@@ -48,6 +48,9 @@ tools:
 	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogofast
 	go install ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
+doc:
+	make -C edgeproto doc
+
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
 
