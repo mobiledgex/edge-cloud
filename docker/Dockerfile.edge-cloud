@@ -27,13 +27,13 @@ RUN make
 FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl-gcloud-az
 
 COPY --from=build /go/bin/controller /usr/local/bin
-COPY --from=build /go/bin/crmctl /usr/local/bin
 COPY --from=build /go/bin/crmserver /usr/local/bin
 COPY --from=build /go/bin/dme-server /usr/local/bin
 COPY --from=build /go/bin/cluster-svc /usr/local/bin
 COPY --from=build /go/bin/edgectl /usr/local/bin
 COPY --from=build /go/bin/tok-srv-sim /usr/local/bin
 COPY --from=build /go/bin/loc-api-sim /usr/local/bin
+COPY --from=build /go/bin/mc /usr/local/bin
 
 ADD docker/mex-docker.env /root/mex-docker.env
 ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
