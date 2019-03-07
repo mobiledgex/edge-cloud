@@ -33,7 +33,9 @@ namespace RestSample
         MatchingEngine me = new MatchingEngine();
         port = MatchingEngine.defaultDmeRestPort;
 
-        // Start location task:
+        // Start location task. This is for test use only. The source of the
+        // location in an Unity application should be from an application context
+        // LocationService.
         var locTask = Util.GetLocationFromDevice();
 
         var registerClientRequest = me.CreateRegisterClientRequest(carrierName, appName, devName, appVers, developerAuthToken);
