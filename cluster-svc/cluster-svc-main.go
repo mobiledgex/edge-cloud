@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -70,24 +71,6 @@ spec:
         image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
         imagePullPolicy: Always
         env:
-        - name: MEX_CLUSTER_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: cluster-info
-              key: ClusterName
-              optional: true
-        - name: MEX_CLOUDLET_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: cluster-info
-              key: CloudletName
-              optional: true
-        - name: MEX_OPERATOR_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: cluster-info
-              key: OperatorName
-              optional: true
         - name: MEX_INFLUXDB_ADDR
           value: {{.InfluxDBAddr}}
         - name: MEX_INFLUXDB_USER
@@ -99,6 +82,25 @@ spec:
         ports:
 `
 
+var MEXMetricsExporterEnvVars = `- name: MEX_CLUSTER_NAME
+valueFrom:
+	configMapKeyRef:
+		name: cluster-info
+		key: ClusterName
+		optional: true
+- name: MEX_CLOUDLET_NAME
+valueFrom:
+	configMapKeyRef:
+		name: cluster-info
+		key: CloudletName
+		optional: true
+- name: MEX_OPERATOR_NAME
+valueFrom:
+	configMapKeyRef:
+		name: cluster-info
+		key: OperatorName
+		optional: true
+`
 var prometheusT *template.Template
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
@@ -144,7 +146,6 @@ type ClusterInstHandler struct {
 }
 
 type exporterData struct {
-	Cluster      string
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
@@ -362,6 +363,11 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 		return err
 	}
 	app.DeploymentManifest = buf.String()
+	config := edgeproto.ConfigFile{
+		Kind:   mexos.AppConfigEnvYaml,
+		Config: MEXMetricsExporterEnvVars,
+	}
+	app.Configs = []*edgeproto.ConfigFile{&config}
 	return createAppCommon(dialOpts, &app, cluster)
 }
 
