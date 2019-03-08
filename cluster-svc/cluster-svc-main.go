@@ -340,7 +340,7 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 	}
 	// Now add this yaml to the prometheus AppYamls
 	config := edgeproto.ConfigFile{
-		Kind:   cloudcommon.AppConfigHemYaml,
+		Kind:   mexos.AppConfigHemYaml,
 		Config: buf.String(),
 	}
 	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config}

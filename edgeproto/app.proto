@@ -95,16 +95,16 @@ message App {
   // Deployment target (kubernetes, docker, kvm, etc)
   string deployment = 15 [(protogen.backend) = true];
   // Deployment manifest is the deployment specific manifest file/config
-  string deployment_manifest = 16 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  string deployment_manifest = 16 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Deployment generator target
-  string deployment_generator = 17 [(protogen.backend) = true, (protocmd.hidetag) = "nocmp"];
+  string deployment_generator = 17 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Android package name, optional
   string android_package_name = 18;
   // Indicates whether or not platform apps are allowed to perform actions
 	// on behalf of this app, such as FindCloudlet
   bool permits_platform_apps = 19;
   // Override actions to Controller
-  DeleteType del_opt = 20 [(protocmd.hidetag) = "nocmp"];
+  DeleteType del_opt = 20 [(protogen.hidetag) = "nocmp"];
   // Customization files
   repeated ConfigFile configs = 21;
   // manifest - which cloudlets can this run on?

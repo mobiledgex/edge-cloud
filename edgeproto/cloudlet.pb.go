@@ -2027,6 +2027,10 @@ func (m *Cloudlet) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortCloudlet(a Cloudlet, b Cloudlet) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Cloudlet) ValidateEnums() error {
@@ -2636,6 +2640,10 @@ func (c *CloudletInfoCache) SyncListEnd() {
 
 func (m *CloudletInfo) GetKey() objstore.ObjKey {
 	return &m.Key
+}
+
+func CmpSortCloudletInfo(a CloudletInfo, b CloudletInfo) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
 }
 
 // Helper method to check that enums have valid values

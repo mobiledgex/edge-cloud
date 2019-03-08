@@ -250,3 +250,25 @@ crms:
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
+mcs:
+- mclocal:
+    name: mc1
+    addr: "127.0.0.1:9900"
+    sqladdr: "127.0.0.1:5432"
+    vaultaddr: "http://127.0.0.1:8200"
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "127.0.0.1"
+
+sqls:
+- sqllocal:
+    name: sql1
+    datadir: /var/tmp/edge-cloud-local-sql/sql1
+    httpaddr: "127.0.0.1:5432"
+    username: mcuser
+    dbname: mcdb
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       serverkey: "{{tlsoutdir}}/mex-server.key"
+  hostname: "127.0.0.1"

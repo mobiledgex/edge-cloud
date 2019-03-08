@@ -743,6 +743,10 @@ func (m *Controller) GetKey() objstore.ObjKey {
 	return &m.Key
 }
 
+func CmpSortController(a Controller, b Controller) bool {
+	return a.Key.GetKeyString() < b.Key.GetKeyString()
+}
+
 // Helper method to check that enums have valid values
 // NOTE: ValidateEnums checks all Fields even if some are not set
 func (m *Controller) ValidateEnums() error {

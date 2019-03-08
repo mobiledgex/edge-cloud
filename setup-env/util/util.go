@@ -21,10 +21,12 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"google.golang.org/grpc"
@@ -113,6 +115,16 @@ type CrmProcess struct {
 	DockerImage string
 	EnvVars     map[string]string
 }
+type MCProcess struct {
+	process.MCLocal
+	Hostname    string
+	DockerImage string
+}
+type SqlProcess struct {
+	process.SqlLocal
+	Hostname    string
+	DockerImage string
+}
 type LocSimProcess struct {
 	process.LocApiSimLocal
 	Hostname    string
@@ -170,6 +182,8 @@ type DeploymentData struct {
 	Controllers   []ControllerProcess `yaml:"controllers"`
 	Dmes          []DmeProcess        `yaml:"dmes"`
 	Crms          []CrmProcess        `yaml:"crms"`
+	Mcs           []MCProcess         `yaml:"mcs"`
+	Sqls          []SqlProcess        `yaml:"sqls"`
 	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
 	Influxs       []InfluxProcess     `yaml:"influxs"`
 	ClusterSvcs   []ClusterSvcProcess `yaml:"clustersvcs"`
@@ -290,6 +304,19 @@ func GetDme(dmename string) *DmeProcess {
 		}
 	}
 	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
+	return nil //unreachable
+}
+
+func GetMC(name string) *MCProcess {
+	if name == "" {
+		return &Deployment.Mcs[0]
+	}
+	for _, mc := range Deployment.Mcs {
+		if mc.Name == name {
+			return &mc
+		}
+	}
+	log.Fatalf("Error: could not find specified MC: %s\n", name)
 	return nil //unreachable
 }
 
@@ -489,6 +516,14 @@ func PrintToFile(fname string, outputDir string, out string, truncate bool) {
 	}
 }
 
+func PrintToYamlFile(fname, outputDir string, data interface{}, truncate bool) {
+	out, err := yaml.Marshal(data)
+	if err != nil {
+		log.Fatalf("yaml marshal data failed, %v, %+v\n", err, data)
+	}
+	PrintToFile(fname, outputDir, string(out), truncate)
+}
+
 //creates an output directory with an optional timestamp.  Server log files, output from APIs, and
 //output from the script itself will all go there if specified
 func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) string {
@@ -572,6 +607,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	var err2 error
 	var y1 interface{}
 	var y2 interface{}
+	copts := []cmp.Option{}
 
 	if fileType == "appdata" {
 		//for appdata, use the ApplicationData type so we can sort it
@@ -604,7 +640,38 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 			p.PublicPort = 0
 		}
 		y1 = f1
-		y2 = f1
+		y2 = f2
+	} else if fileType == "mcdata" {
+		var a1 ormapi.AllData
+		var a2 ormapi.AllData
+
+		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+
+		copts = []cmp.Option{
+			cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}),
+			cloudcommon.IgnoreAdminRole,
+			cloudcommon.IgnoreAppInstUri,
+		}
+		copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+		copts = append(copts, edgeproto.CmpSortSlices()...)
+
+		y1 = a1
+		y2 = a2
+	} else if fileType == "mcusers" {
+		// remove roles
+		var a1 []ormapi.User
+		var a2 []ormapi.User
+
+		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+
+		copts = []cmp.Option{
+			cmpopts.IgnoreTypes(time.Time{}),
+			cloudcommon.IgnoreAdminUser,
+		}
+		y1 = a1
+		y2 = a2
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
 		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
@@ -618,9 +685,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		return false
 	}
 
-	if !cmp.Equal(y1, y2) {
+	if !cmp.Equal(y1, y2, copts...) {
 		log.Println("Comparison fail")
-		log.Printf(cmp.Diff(y1, y2))
+		log.Printf(cmp.Diff(y1, y2, copts...))
 		return false
 	}
 	log.Println("Comparison success")

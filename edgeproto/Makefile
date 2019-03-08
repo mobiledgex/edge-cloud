@@ -16,9 +16,7 @@ build:
 	protoc ${INCLUDE} --mc2_out=${BUILTIN}:../mc/orm *.proto
 	protoc ${INCLUDE} --mc2_out=${BUILTIN},gentest,suffix=_mc2_test.go:../mc/orm *.proto
 
-	# to use protodoc, make sure you run:
-	# go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc
-	# go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+doc: build
 	protoc ${INCLUDE} --doc_out=./doc --doc_opt=html,index.html *.proto
 	protoc ${INCLUDE} --doc_out=./doc --doc_opt=markdown,README.md *.proto
 	#swagger annotations for REST APIs
