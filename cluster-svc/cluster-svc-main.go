@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -323,7 +324,7 @@ func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey)
 	}
 	// Now add this yaml to the prometheus AppYamls
 	config := edgeproto.ConfigFile{
-		Kind:   cloudcommon.AppConfigHemYaml,
+		Kind:   mexos.AppConfigHemYaml,
 		Config: buf.String(),
 	}
 	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config}
