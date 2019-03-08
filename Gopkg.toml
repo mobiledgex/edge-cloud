@@ -142,3 +142,7 @@ required = [
 [[constraint]]
   name = "github.com/google/go-cmp"
   branch = "master"
+
+[[constraint]]
+  name = "github.com/xanzy/go-gitlab"
+  version = "0.16.0"

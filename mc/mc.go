@@ -18,6 +18,8 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var localVault = flag.Bool("localVault", false, "Run local Vault")
+var ldapAddr = flag.String("ldapAddr", "127.0.0.1:9389", "LDAP listener address")
+var gitlabAddr = flag.String("gitlabAddr", "http://127.0.0.1:80", "Gitlab server address")
 
 var sigChan chan os.Signal
 
@@ -34,6 +36,8 @@ func main() {
 		InitLocal:   *initSql,
 		LocalVault:  *localVault,
 		TlsCertFile: *tlsCertFile,
+		LDAPAddr:    *ldapAddr,
+		GitlabAddr:  *gitlabAddr,
 	}
 	server, err := orm.RunServer(&config)
 	if err != nil {

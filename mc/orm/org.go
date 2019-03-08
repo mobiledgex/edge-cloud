@@ -34,6 +34,9 @@ func CreateOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 	if strings.Contains(org.Name, "::") {
 		return fmt.Errorf("Name cannot contain ::")
 	}
+	if !ValidUsername(org.Name) {
+		return fmt.Errorf("Invalid characters in name")
+	}
 	// any user can create their own organization
 
 	role := ""
@@ -58,6 +61,14 @@ func CreateOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 	// set user to admin role of organization
 	psub := getCasbinGroup(org.Name, claims.Username)
 	enforcer.AddGroupingPolicy(psub, role)
+
+	gitlabCreateGroup(org)
+	r := ormapi.Role{
+		Org:      org.Name,
+		Username: claims.Username,
+		Role:     role,
+	}
+	gitlabAddGroupMember(&r)
 	return nil
 }
 
@@ -97,6 +108,7 @@ func DeleteOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 			enforcer.RemoveGroupingPolicy(grp[0], grp[1])
 		}
 	}
+	gitlabDeleteGroup(org)
 	return nil
 }
 

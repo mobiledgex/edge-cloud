@@ -2,6 +2,7 @@ package orm
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -90,12 +91,17 @@ func CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid password, "+
 			err.Error()))
 	}
+	if !ValidUsername(user.Name) {
+		return c.JSON(http.StatusBadRequest, Msg("Invalid characters in user name"))
+	}
 	user.EmailVerified = false
 	// password should be passed through in Passhash field.
 	user.Passhash, user.Salt, user.Iter = NewPasshash(user.Passhash)
 	if err := db.Create(&user).Error; err != nil {
 		return setReply(c, dbErr(err), nil)
 	}
+	gitlabCreateLDAPUser(&user)
+
 	return c.JSON(http.StatusOK, Msg("user created"))
 }
 
@@ -131,6 +137,8 @@ func DeleteUser(c echo.Context) error {
 	if err != nil {
 		return setReply(c, dbErr(err), nil)
 	}
+	gitlabDeleteLDAPUser(user.Name)
+
 	return c.JSON(http.StatusOK, Msg("user deleted"))
 }
 
@@ -196,4 +204,14 @@ func ShowUser(c echo.Context) error {
 		users[ii].Iter = 0
 	}
 	return c.JSON(http.StatusOK, users)
+}
+
+// User names and Org names are used in LDAP Distinguished Names
+// which need to escape a bunch of special chars by converting to hex.
+// To avoid this annoyance, we are strict about allowed characters in
+// user names. See RFC4515.
+var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z.&!]*$")
+
+func ValidUsername(name string) bool {
+	return nameMatch.MatchString(name)
 }
