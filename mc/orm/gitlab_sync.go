@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
+	"github.com/mobiledgex/edge-cloud/util"
 	gitlab "github.com/xanzy/go-gitlab"
 )
 
@@ -144,6 +145,7 @@ func (s *GitlabSync) syncGroups() {
 	}
 
 	for name, org := range orgsT {
+		name = util.GitlabGroupSanitize(name)
 		if _, found := groupsT[name]; found {
 			delete(groupsT, name)
 		} else {
@@ -186,7 +188,8 @@ func (s *GitlabSync) syncGroupMembers() {
 		// get cached group
 		memberTable, found := members[role.Org]
 		if !found {
-			memberlist, _, err := gitlabClient.Groups.ListGroupMembers(role.Org, &gitlab.ListGroupMembersOptions{})
+			gname := util.GitlabGroupSanitize(role.Org)
+			memberlist, _, err := gitlabClient.Groups.ListGroupMembers(gname, &gitlab.ListGroupMembersOptions{})
 			if err != nil {
 				s.syncErr(err)
 				continue
@@ -224,7 +227,8 @@ func (s *GitlabSync) syncGroupMembers() {
 			log.DebugLog(log.DebugLevelApi,
 				"Gitlab Sync remove extra role",
 				"org", roleOrg, "member", groupMember.Username)
-			_, err = gitlabClient.GroupMembers.RemoveGroupMember(roleOrg, groupMember.ID)
+			gname := util.GitlabGroupSanitize(roleOrg)
+			_, err = gitlabClient.GroupMembers.RemoveGroupMember(gname, groupMember.ID)
 			if err != nil {
 				s.syncErr(err)
 			}
