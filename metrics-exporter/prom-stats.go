@@ -349,8 +349,10 @@ func PodStatToMetric(ts *types.Timestamp, key *MetricAppInstKey, stat *PodPromSt
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "crm-appinst"
-	metric.AddTag("dev", key.developer)
+	metric.AddTag("operator", key.operator)
+	metric.AddTag("cloudlet", key.cloudlet)
 	metric.AddTag("cluster", key.cluster)
+	metric.AddTag("dev", key.developer)
 	metric.AddTag("app", key.pod)
 	metric.AddDoubleVal("cpu", stat.cpu)
 	metric.AddIntVal("mem", stat.mem)
