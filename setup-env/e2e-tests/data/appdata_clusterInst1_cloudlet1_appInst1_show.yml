@@ -118,6 +118,37 @@ apps:
   cluster:
     name: SmallCluster
   deployment: kubernetes
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: MEX_INFLUXDB_ADDR
+        value: 0.0.0.0:8086
+      - name: MEX_INFLUXDB_USER
+        value: root
+      - name: MEX_INFLUXDB_PASS
+        value: root
+      - name: MEX_SCRAPE_INTERVAL
+        value: 15s
+  - kind: envVarsYaml
+    config: |
+      - name: MEX_CLUSTER_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: cluster-info
+            key: ClusterName
+            optional: true
+      - name: MEX_CLOUDLET_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: cluster-info
+            key: CloudletName
+            optional: true
+      - name: MEX_OPERATOR_NAME
+        valueFrom:
+          configMapKeyRef:
+            name: cluster-info
+            key: OperatorName
+            optional: true
 - key:
     name: MEXPrometheusAppName
     version: "1.0"

@@ -49,41 +49,35 @@ var MEXMetricsExporterAppName = "MEXMetricsExporter"
 var MEXMetricsExporterAppVer = "1.0"
 
 var exporterT *template.Template
-var MEXMetricsExporterTemplate = `apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mexmetricsexporter-deployment
-spec:
-  selector:
-    matchLabels:
-      run: mexmetricsexporter
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        run: mexmetricsexporter
-    spec:
-      volumes:
-      imagePullSecrets:
-      - name: mexregistrysecret
-      containers:
-      - name: mexmetricsexporter
-        image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
-        imagePullPolicy: Always
-        env:
-        - name: MEX_CLUSTER_NAME
-          value: {{.Cluster}}
-        - name: MEX_INFLUXDB_ADDR
-          value: {{.InfluxDBAddr}}
-        - name: MEX_INFLUXDB_USER
-          value: {{.InfluxDBUser}}
-        - name: MEX_INFLUXDB_PASS
-          value: {{.InfluxDBPass}}
-        - name: MEX_SCRAPE_INTERVAL
-          value: {{.Interval}}
-        ports:
-`
 
+var MEXMetricsExporterEnvVars = `- name: MEX_CLUSTER_NAME
+  valueFrom:
+    configMapKeyRef:
+      name: cluster-info
+      key: ClusterName
+      optional: true
+- name: MEX_CLOUDLET_NAME
+  valueFrom:
+    configMapKeyRef:
+      name: cluster-info
+      key: CloudletName
+      optional: true
+- name: MEX_OPERATOR_NAME
+  valueFrom:
+    configMapKeyRef:
+      name: cluster-info
+      key: OperatorName
+      optional: true
+`
+var MEXMetricsExporterEnvTempl = `- name: MEX_INFLUXDB_ADDR
+  value: {{.InfluxDBAddr}}
+- name: MEX_INFLUXDB_USER
+  value: {{.InfluxDBUser}}
+- name: MEX_INFLUXDB_PASS
+  value: {{.InfluxDBPass}}
+- name: MEX_SCRAPE_INTERVAL
+  value: {{.Interval}}
+`
 var prometheusT *template.Template
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
@@ -129,7 +123,6 @@ type ClusterInstHandler struct {
 }
 
 type exporterData struct {
-	Cluster      string
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
@@ -188,7 +181,7 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 func (c *ClusterInstHandler) Flush(notifyId int64) {}
 
 func init() {
-	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterTemplate))
+	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterEnvTempl))
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
 
@@ -336,7 +329,6 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 	app := MEXMetricsExporterApp
 
 	ex := exporterData{
-		Cluster:      cluster.Name,
 		InfluxDBAddr: *influxDBAddr,
 		InfluxDBUser: *influxDBUser,
 		InfluxDBPass: *influxDBPass,
@@ -347,7 +339,16 @@ func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.Cluste
 	if err != nil {
 		return err
 	}
-	app.DeploymentManifest = buf.String()
+	paramConf := edgeproto.ConfigFile{
+		Kind:   mexos.AppConfigEnvYaml,
+		Config: buf.String(),
+	}
+	envConf := edgeproto.ConfigFile{
+		Kind:   mexos.AppConfigEnvYaml,
+		Config: MEXMetricsExporterEnvVars,
+	}
+
+	app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
 	return createAppCommon(dialOpts, &app, cluster)
 }
 
