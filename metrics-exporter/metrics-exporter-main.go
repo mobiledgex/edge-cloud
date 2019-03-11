@@ -17,6 +17,8 @@ import (
 var promAddress = flag.String("apiAddr", "0.0.0.0:9090", "Prometheus address to bind to")
 var influxdb = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
+var operatorName = flag.String("operator", "local", "Cloudlet Operator Name")
+var cloudletName = flag.String("cloudlet", "local", "Cloudlet Name")
 var clusterName = flag.String("cluster", "myclust", "Cluster Name")
 var collectInterval = flag.Duration("interval", time.Second*15, "Metrics collection interval")
 
@@ -58,7 +60,15 @@ func getIPfromEnv() (string, error) {
 }
 
 func initEnv() {
-	val := os.Getenv("MEX_CLUSTER_NAME")
+	val := os.Getenv("MEX_OPERATOR_NAME")
+	if val != "" {
+		*operatorName = val
+	}
+	val = os.Getenv("MEX_CLOUDLET_NAME")
+	if val != "" {
+		*cloudletName = val
+	}
+	val = os.Getenv("MEX_CLUSTER_NAME")
 	if val != "" {
 		*clusterName = val
 	}
