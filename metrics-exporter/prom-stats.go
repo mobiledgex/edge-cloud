@@ -12,6 +12,8 @@ import (
 )
 
 type MetricAppInstKey struct {
+	operator  string
+	cloudlet  string
 	cluster   string
 	pod       string
 	developer string
@@ -93,6 +95,8 @@ func getPromMetrics(addr string, query string) (*PromResp, error) {
 
 func (p *PromStats) CollectPromStats() error {
 	appKey := MetricAppInstKey{
+		operator:  *operatorName,
+		cloudlet:  *cloudletName,
 		cluster:   *clusterName,
 		developer: "",
 	}
@@ -308,7 +312,8 @@ func (p *PromStats) RunNotify() {
 			if p.CollectPromStats() != nil {
 				continue
 			}
-			DebugPrint("Sending metrics for %s with timestamp %s\n", *clusterName, ts.String())
+			DebugPrint("Sending metrics for (%s-%s)%s with timestamp %s\n", *operatorName, *cloudletName,
+				*clusterName, ts.String())
 			for key, stat := range p.appStatsMap {
 				p.send(PodStatToMetric(ts, &key, stat))
 			}
@@ -324,6 +329,8 @@ func ClusterStatToMetric(ts *types.Timestamp, stat *ClustPromStat) *edgeproto.Me
 	metric := edgeproto.Metric{}
 	metric.Timestamp = *ts
 	metric.Name = "crm-cluster"
+	metric.AddTag("operator", *operatorName)
+	metric.AddTag("cloudlet", *cloudletName)
 	metric.AddTag("cluster", *clusterName)
 	metric.AddDoubleVal("cpu", stat.cpu)
 	metric.AddDoubleVal("mem", stat.mem)

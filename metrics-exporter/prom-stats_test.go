@@ -175,8 +175,12 @@ func getTestMetrics(addr string, query string) (*PromResp, error) {
 }
 
 func TestPromStats(t *testing.T) {
+	*operatorName = "testoper"
+	*cloudletName = "testcloudlet"
 	*clusterName = "testcluster"
 	testAppKey := MetricAppInstKey{
+		operator:  *operatorName,
+		cloudlet:  *cloudletName,
 		cluster:   *clusterName,
 		developer: "",
 	}
