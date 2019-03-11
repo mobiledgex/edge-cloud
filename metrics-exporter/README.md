@@ -34,6 +34,8 @@ $ metrics-exporter -h
 Usage of metrics-exporter:
   -apiAddr string
     	Prometheus address to bind to (default "0.0.0.0:9090")
+  -cloudlet string
+    	Cloudlet Name (default "local")
   -cluster string
     	Cluster Name (default "myclust")
   -d string
@@ -42,10 +44,14 @@ Usage of metrics-exporter:
     	InfluxDB address to export to (default "0.0.0.0:8086")
   -interval duration
     	Metrics collection interval (default 15s)
+  -operator string
+    	Cloudlet Operator Name (default "local")
 ```
 
 The following environment variable will take precedence over command-line arguments:
 
+   - MEX_OPERATOR_NAME - equivalent to `-operator`
+   - MEX_CLOUDLET_NAME - equivalent to `-cloudlet`
    - MEX_CLUSTER_NAME - equivalent to `-cluster`
    - MEX_INFLUXDB_ADDR - equivalent to `-influxdb`
    - MEX_INFLUXDB_USER - username that is used to connect to Influxdb, defaults to `root`
