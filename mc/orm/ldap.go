@@ -8,6 +8,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/nmcclain/ldap"
 )
 
@@ -164,6 +165,7 @@ func parseDN(str string) (ldapdn, error) {
 	dn := ldapdn{}
 	strs := strings.Split(str, ",")
 	for _, subdn := range strs {
+		subdn = util.UnescapeLDAPName(subdn)
 		kv := strings.Split(subdn, "=")
 		if len(kv) != 2 {
 			return dn, fmt.Errorf("LDAP DN Key-value parse error for %s", str)
@@ -183,10 +185,10 @@ func parseDN(str string) (ldapdn, error) {
 func (s *ldapdn) String() string {
 	strs := []string{}
 	if s.cn != "" {
-		strs = append(strs, "cn="+s.cn)
+		strs = append(strs, "cn="+util.EscapeLDAPName(s.cn))
 	}
 	if s.ou != "" {
-		strs = append(strs, "ou="+s.ou)
+		strs = append(strs, "ou="+util.EscapeLDAPName(s.ou))
 	}
 	if len(strs) == 0 {
 		return ""

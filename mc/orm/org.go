@@ -7,6 +7,7 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 // Organization Type names for ORM database
@@ -34,7 +35,7 @@ func CreateOrgObj(claims *UserClaims, org *ormapi.Organization) error {
 	if strings.Contains(org.Name, "::") {
 		return fmt.Errorf("Name cannot contain ::")
 	}
-	if !ValidUsername(org.Name) {
+	if !util.ValidLDAPName(org.Name) {
 		return fmt.Errorf("Invalid characters in name")
 	}
 	// any user can create their own organization

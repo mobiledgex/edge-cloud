@@ -2,7 +2,6 @@ package orm
 
 import (
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -91,7 +90,7 @@ func CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid password, "+
 			err.Error()))
 	}
-	if !ValidUsername(user.Name) {
+	if !util.ValidLDAPName(user.Name) {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid characters in user name"))
 	}
 	user.EmailVerified = false
@@ -204,14 +203,4 @@ func ShowUser(c echo.Context) error {
 		users[ii].Iter = 0
 	}
 	return c.JSON(http.StatusOK, users)
-}
-
-// User names and Org names are used in LDAP Distinguished Names
-// which need to escape a bunch of special chars by converting to hex.
-// To avoid this annoyance, we are strict about allowed characters in
-// user names. See RFC4515.
-var nameMatch = regexp.MustCompile("^[0-9a-zA-Z][-_0-9a-zA-Z.&!]*$")
-
-func ValidUsername(name string) bool {
-	return nameMatch.MatchString(name)
 }

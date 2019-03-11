@@ -1,6 +1,11 @@
 package util
 
-import "testing"
+import (
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/require"
+)
 
 func checkValidName(t *testing.T, name string, want bool) {
 	got := ValidName(name)
@@ -43,4 +48,47 @@ func TestValidIp(t *testing.T) {
 		14, 15, 16}, true)
 	checkValidIp(t, []byte{1, 2, 3, 4, 5}, false)
 	checkValidIp(t, nil, false)
+}
+
+func TestValidLDAPName(t *testing.T) {
+	checkValidLDAPName(t, "myname", true)
+	checkValidLDAPName(t, "my name", true)
+	checkValidLDAPName(t, "00112", true)
+	checkValidLDAPName(t, "My_name 0001-0002", true)
+	checkValidLDAPName(t, "Harry Potter Go", true)
+	checkValidLDAPName(t, "Deusche Telekom AG", true)
+	checkValidLDAPName(t, "Telefonica S.A.", true)
+	checkValidLDAPName(t, "AT&T Inc.", true)
+	checkValidLDAPName(t, "Niantic, Inc.", true)
+	checkValidLDAPName(t, "Pokemon Go!", true)
+	checkValidLDAPName(t, "", false)
+	checkValidLDAPName(t, " name", false)
+	checkValidLDAPName(t, "name ", false)
+	checkValidLDAPName(t, "name\\a", false)
+	checkValidLDAPName(t, "name#a", false)
+	checkValidLDAPName(t, "name+a", false)
+	checkValidLDAPName(t, "name<a", false)
+	checkValidLDAPName(t, "name>a", false)
+	checkValidLDAPName(t, "name;a", false)
+	checkValidLDAPName(t, "name\"a", false)
+
+	name := EscapeLDAPName("foo, Inc.")
+	require.Equal(t, "foo, Inc.", UnescapeLDAPName(name))
+
+	user := EscapeLDAPName("jon,user")
+	org := EscapeLDAPName("foo, Inc.")
+	split := strings.Split(user+","+org, ",")
+	require.Equal(t, "jon,user", UnescapeLDAPName(split[0]))
+	require.Equal(t, "foo, Inc.", UnescapeLDAPName(split[1]))
+
+	gname := GitlabGroupSanitize("niantic, inc.")
+	require.Equal(t, "niantic--inc", gname)
+}
+
+func checkValidLDAPName(t *testing.T, name string, want bool) {
+	got := ValidLDAPName(name)
+	if got != want {
+		t.Errorf("checking name %s, wanted %t but got %t",
+			name, want, got)
+	}
 }

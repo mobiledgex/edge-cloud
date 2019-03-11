@@ -65,6 +65,7 @@ func gitlabCreateLDAPUser(user *ormapi.User) {
 		log.DebugLog(log.DebugLevelApi, "gitlab create user",
 			"user", user.Name, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
@@ -72,28 +73,30 @@ func gitlabDeleteLDAPUser(username string) {
 	user, err := gitlabGetUser(username)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab get user",
-			"user", user.Name, "err", err)
+			"user", username, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 	_, err = gitlabClient.Users.DeleteUser(user.ID)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab delete user",
-			"user", user.Name, "err", err)
+			"user", username, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
 func gitlabCreateGroup(org *ormapi.Organization) {
-	path := util.DNSSanitize(org.Name)
+	name := util.GitlabGroupSanitize(org.Name)
 	groupOpts := gitlab.CreateGroupOptions{
-		Name:       &org.Name,
-		Path:       &path,
+		Name:       &name,
+		Path:       &name,
 		Visibility: gitlab.Visibility(gitlab.PrivateVisibility),
 	}
 	grp, _, err := gitlabClient.Groups.CreateGroup(&groupOpts)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab create group",
-			"org", org, "err", err)
+			"org", org, "name", name, "err", err)
 		gitlabSync.NeedsSync()
 		return
 	}
@@ -106,17 +109,19 @@ func gitlabCreateGroup(org *ormapi.Organization) {
 		log.DebugLog(log.DebugLevelApi, "gitlab set group attr",
 			"grp", grp, "attr", attr, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 	gitlabCreateProject(grp.ID, DefaultProjectName)
 }
 
 func gitlabDeleteGroup(org *ormapi.Organization) {
-	path := util.DNSSanitize(org.Name)
-	_, err := gitlabClient.Groups.DeleteGroup(path)
+	name := util.GitlabGroupSanitize(org.Name)
+	_, err := gitlabClient.Groups.DeleteGroup(name)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab delete group",
-			"org", org, "err", err)
+			"org", org, "name", name, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
@@ -138,11 +143,13 @@ func gitlabAddGroupMember(role *ormapi.Role) {
 		UserID:      &user.ID,
 		AccessLevel: access,
 	}
-	_, _, err = gitlabClient.GroupMembers.AddGroupMember(role.Org, &opts)
+	orgname := util.GitlabGroupSanitize(role.Org)
+	_, _, err = gitlabClient.GroupMembers.AddGroupMember(orgname, &opts)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab add group member",
 			"role", role, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
@@ -154,11 +161,13 @@ func gitlabRemoveGroupMember(role *ormapi.Role) {
 		gitlabSync.NeedsSync()
 		return
 	}
-	_, err = gitlabClient.GroupMembers.RemoveGroupMember(role.Org, user.ID)
+	orgname := util.GitlabGroupSanitize(role.Org)
+	_, err = gitlabClient.GroupMembers.RemoveGroupMember(orgname, user.ID)
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "gitlab remove group member",
 			"role", role, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
@@ -174,6 +183,7 @@ func gitlabCreateProject(groupID int, name string) {
 		log.DebugLog(log.DebugLevelApi, "gitlab create project",
 			"opts", opts, "err", err)
 		gitlabSync.NeedsSync()
+		return
 	}
 }
 
@@ -185,7 +195,7 @@ func gitlabGetUser(username string) (*gitlab.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(users) == 0 {
+	if len(users) == 0 || users[0] == nil {
 		return nil, fmt.Errorf("Gitlab user %s not found", username)
 	}
 	if len(users) > 1 {

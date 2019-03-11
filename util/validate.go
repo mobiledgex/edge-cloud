@@ -7,6 +7,7 @@ import (
 	"net"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 // If new valid characters are added here, be sure to update
@@ -67,6 +68,27 @@ func K8SSanitize(name string) string {
 		",", "",
 		"!", "")
 	return strings.ToLower(r.Replace(name))
+}
+
+// Gitlab groups can only contain letters, digits, _ . -
+// cannot start with '-' or end in '.', '.git' or '.atom'
+// This combines the rules for both name and path.
+func GitlabGroupSanitize(name string) string {
+	name = strings.TrimPrefix(name, "-")
+	name = strings.TrimSuffix(name, ".")
+	if strings.HasSuffix(name, ".git") {
+		name = name[:len(name)-4] + "-git"
+	}
+	if strings.HasSuffix(name, ".atom") {
+		name = name[:len(name)-5] + "-atom"
+	}
+	return strings.Map(func(r rune) rune {
+		if unicode.IsLetter(r) || unicode.IsNumber(r) ||
+			r == '_' || r == '.' || r == '-' {
+			return r
+		}
+		return '-'
+	}, name)
 }
 
 // IsLatitudeValid checks that the latitude is within accepted ranges
