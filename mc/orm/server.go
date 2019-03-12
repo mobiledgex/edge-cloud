@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/nmcclain/ldap"
+	gitlab "github.com/xanzy/go-gitlab"
 )
 
 // Server struct is just to track sql/db so we can stop them later.
@@ -33,6 +35,8 @@ type ServerConfig struct {
 	RbacModelPath string
 	TlsCertFile   string
 	LocalVault    bool
+	LDAPAddr      string
+	GitlabAddr    string
 }
 
 var DefaultDBUser = "mcuser"
@@ -44,6 +48,8 @@ var DefaultSuperpass = "mexadmin123"
 var db *gorm.DB
 var enforcer *casbin.Enforcer
 var serverConfig ServerConfig
+var gitlabClient *gitlab.Client
+var gitlabSync *GitlabSync
 
 func RunServer(config *ServerConfig) (*Server, error) {
 	dbuser := os.Getenv("db_username")
@@ -51,6 +57,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	dbname := os.Getenv("db_name")
 	superuser := os.Getenv("superuser")
 	superpass := os.Getenv("superpass")
+	gitlabToken := os.Getenv("gitlab_token")
 	if dbuser == "" || config.IgnoreEnv {
 		dbuser = DefaultDBUser
 	}
@@ -94,6 +101,15 @@ func RunServer(config *ServerConfig) (*Server, error) {
 		config.VaultAddr = process.VaultAddress
 	}
 	InitVault(config.VaultAddr, roleID, secretID)
+
+	if gitlabToken == "" {
+		log.InfoLog("Note: No gitlab_token env var found")
+	}
+	gitlabClient = gitlab.NewClient(nil, gitlabToken)
+	if err := gitlabClient.SetBaseURL(config.GitlabAddr); err != nil {
+		return nil, fmt.Errorf("Gitlab client set base URL to %s, %s",
+			config.GitlabAddr, err.Error())
+	}
 
 	serverConfig = *config
 	server := Server{config: *config}
@@ -155,6 +171,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/role/show", ShowRole)
 	auth.POST("/role/adduser", AddUserRole)
 	auth.POST("/role/removeuser", RemoveUserRole)
+	auth.POST("/role/showuser", ShowUserRole)
 	auth.POST("/org/create", CreateOrg)
 	auth.POST("/org/show", ShowOrg)
 	auth.POST("/org/delete", DeleteOrg)
@@ -164,6 +181,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/data/create", CreateData)
 	auth.POST("/data/delete", DeleteData)
 	auth.POST("/data/show", ShowData)
+	auth.POST("/gitlab/resync", GitlabResync)
 	addControllerApis(auth)
 	go func() {
 		err := e.Start(config.ServAddr)
@@ -171,6 +189,20 @@ func RunServer(config *ServerConfig) (*Server, error) {
 			log.FatalLog("Failed to serve", "err", err)
 		}
 	}()
+
+	ldapServer := ldap.NewServer()
+	handler := &ldapHandler{}
+	ldapServer.BindFunc("", handler)
+	ldapServer.SearchFunc("", handler)
+	go func() {
+		if err := ldapServer.ListenAndServe(config.LDAPAddr); err != nil {
+			log.FatalLog("LDAP Server Failed", "err", err)
+		}
+	}()
+
+	gitlabSync = gitlabNewSync()
+	gitlabSync.Start()
+
 	return &server, nil
 }
 
