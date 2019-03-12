@@ -130,6 +130,9 @@ sub printAppinst{
   cloudletloc:
     latitude: $lat
     longitude: $long
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 \n");
 
 }

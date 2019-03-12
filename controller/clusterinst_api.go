@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -123,6 +124,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			err := in.Validate(edgeproto.ClusterInstAllFieldsMap)
 			if err != nil {
 				return err
+			}
+			if !in.Auto && strings.HasPrefix(in.Key.ClusterKey.Name, ClusterAutoPrefix) {
+				return errors.New(ClusterAutoPrefixErr)
 			}
 		}
 		if in.Liveness == edgeproto.Liveness_LivenessUnknown {
