@@ -186,6 +186,8 @@ apps:
               protocol: UDP
   deploymentgenerator: kubernetes-basic
 - key:
+    developerkey:
+      name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
@@ -253,6 +255,8 @@ apps:
             key: OperatorName
             optional: true
 - key:
+    developerkey:
+      name: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -361,6 +365,8 @@ appinstances:
     appkey:
       name: MEXMetricsExporter
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -386,6 +392,8 @@ appinstances:
     appkey:
       name: MEXMetricsExporter
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -411,6 +419,8 @@ appinstances:
     appkey:
       name: MEXPrometheusAppName
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -436,6 +446,8 @@ appinstances:
     appkey:
       name: MEXPrometheusAppName
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: dmuus

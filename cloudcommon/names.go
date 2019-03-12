@@ -24,6 +24,7 @@ var OperatorAzure = "azure"
 var OperatorDeveloper = "developer"
 
 var Developerplatos = "platos"
+var DeveloperMobiledgeX = "MobiledgeX"
 
 // platform apps
 var PlatosEnablingLayer = "PlatosEnablingLayer"
