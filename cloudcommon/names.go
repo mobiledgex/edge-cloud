@@ -24,6 +24,7 @@ var OperatorAzure = "azure"
 var OperatorDeveloper = "developer"
 
 var DeveloperSamsung = "Samsung"
+var DeveloperMobiledgeX = "MobiledgeX"
 
 // platform apps
 var SamsungEnablingLayer = "SamsungEnablingLayer"
