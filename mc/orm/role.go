@@ -242,6 +242,8 @@ func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 	}
 	psub := getCasbinGroup(role.Org, role.Username)
 	enforcer.AddGroupingPolicy(psub, role.Role)
+
+	gitlabAddGroupMember(role)
 	return nil
 }
 
@@ -276,6 +278,8 @@ func RemoveUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 
 	psub := getCasbinGroup(role.Org, role.Username)
 	enforcer.RemoveGroupingPolicy(psub, role.Role)
+
+	gitlabRemoveGroupMember(role)
 	return nil
 }
 
@@ -284,14 +288,14 @@ func ShowUserRole(c echo.Context) error {
 	if err != nil {
 		return err
 	}
-	roles, err := ShowUserRoleObj(claims)
+	roles, err := ShowUserRoleObj(claims.Username)
 	return setReply(c, err, roles)
 }
 
 // show roles for organizations the current user has permission to
 // add/remove roles to. This "shows" all the actions taken by
 // Add/RemoveUserRole.
-func ShowUserRoleObj(claims *UserClaims) ([]ormapi.Role, error) {
+func ShowUserRoleObj(username string) ([]ormapi.Role, error) {
 	roles := []ormapi.Role{}
 
 	groupings := enforcer.GetGroupingPolicy()
@@ -300,7 +304,7 @@ func ShowUserRoleObj(claims *UserClaims) ([]ormapi.Role, error) {
 		if role == nil {
 			continue
 		}
-		if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionView) {
+		if !enforcer.Enforce(username, role.Org, ResourceUsers, ActionView) {
 			continue
 		}
 		roles = append(roles, *role)
