@@ -108,6 +108,8 @@ apps:
   accessports: "tcp:80,http:443,udp:10002"
   ipaccess: IpAccessDedicatedOrShared
 - key:
+    developerkey:
+      name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
@@ -150,6 +152,8 @@ apps:
             key: OperatorName
             optional: true
 - key:
+    developerkey:
+      name: MobiledgeX
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
@@ -201,6 +205,8 @@ appinstances:
     appkey:
       name: MEXMetricsExporter
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: tmus
@@ -224,6 +230,8 @@ appinstances:
     appkey:
       name: MEXPrometheusAppName
       version: "1.0"
+      developerkey:
+        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: tmus

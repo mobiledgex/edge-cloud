@@ -94,6 +94,9 @@ var MEXMetricsExporterApp = edgeproto.App{
 	Key: edgeproto.AppKey{
 		Name:    MEXMetricsExporterAppName,
 		Version: MEXMetricsExporterAppVer,
+		DeveloperKey: edgeproto.DeveloperKey{
+			Name: cloudcommon.DeveloperMobiledgeX,
+		},
 	},
 	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
@@ -108,6 +111,9 @@ var MEXPrometheusApp = edgeproto.App{
 	Key: edgeproto.AppKey{
 		Name:    MEXPrometheusAppName,
 		Version: MEXPrometheusAppVer,
+		DeveloperKey: edgeproto.DeveloperKey{
+			Name: cloudcommon.DeveloperMobiledgeX,
+		},
 	},
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,

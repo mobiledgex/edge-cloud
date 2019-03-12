@@ -134,6 +134,11 @@ func updateAppFields(in *edgeproto.App) error {
 		}
 	}
 
+	// for update, trigger regenerating deployment manifest
+	if in.DeploymentGenerator != "" {
+		in.DeploymentManifest = ""
+	}
+
 	deploymf, err := cloudcommon.GetAppDeploymentManifest(in)
 	if err != nil {
 		return err
@@ -195,11 +200,19 @@ func (s *AppApi) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)
 	}
-	err := updateAppFields(in)
-	if err != nil {
-		return &edgeproto.Result{}, err
-	}
-	return s.store.Update(in, s.sync.syncWait)
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+		cur := edgeproto.App{}
+		if !s.store.STMGet(stm, &in.Key, &cur) {
+			return objstore.ErrKVStoreKeyNotFound
+		}
+		cur.CopyInFields(in)
+		if err := updateAppFields(&cur); err != nil {
+			return err
+		}
+		s.store.STMPut(stm, &cur)
+		return nil
+	})
+	return &edgeproto.Result{}, err
 }
 
 func (s *AppApi) DeleteApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
