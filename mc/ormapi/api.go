@@ -10,7 +10,7 @@ import (
 
 type User struct {
 	Name          string `gorm:"primary_key"`
-	Email         string `gorm:"not null"`
+	Email         string `gorm:"unique;not null"`
 	EmailVerified bool
 	Passhash      string `gorm:"not null"`
 	Salt          string `gorm:"not null"`
