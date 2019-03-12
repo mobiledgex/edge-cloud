@@ -50,7 +50,7 @@ func CreateController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid Post data"))
 	}
 	err = CreateControllerObj(claims, &ctrl)
-	return setReply(c, err, Msg("Controller created"))
+	return setReply(c, err, Msg("Controller registered"))
 }
 
 func CreateControllerObj(claims *UserClaims, ctrl *ormapi.Controller) error {
@@ -80,7 +80,7 @@ func DeleteController(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Msg("Invalid Post data"))
 	}
 	err = DeleteControllerObj(claims, &ctrl)
-	return setReply(c, err, Msg("Controller deleted"))
+	return setReply(c, err, Msg("Controller deregistered"))
 }
 
 func DeleteControllerObj(claims *UserClaims, ctrl *ormapi.Controller) error {
