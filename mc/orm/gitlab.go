@@ -102,7 +102,7 @@ func gitlabCreateGroup(org *ormapi.Organization) {
 	}
 	attr := gitlab.CustomAttribute{
 		Key:   "createdby",
-		Value: "mastercontroller",
+		Value: GitlabMCTag,
 	}
 	_, _, err = gitlabClient.CustomAttribute.SetCustomGroupAttribute(grp.ID, attr)
 	if err != nil {

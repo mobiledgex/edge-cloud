@@ -19,6 +19,10 @@ import (
 // Sync Interval attempts to re-sync if there was a failure
 var GitlabSyncInterval = 5 * time.Minute
 
+// MC tag is used to tag groups/projects created by master controller
+var GitlabMCTag = "mastercontroller"
+var GitlabAdminID = 1
+
 type GitlabSync struct {
 	run       chan bool
 	needsSync bool
@@ -161,7 +165,7 @@ func (s *GitlabSync) syncGroups() {
 		if err != nil {
 			continue
 		}
-		if ca.Value != "mastercontroller" {
+		if ca.Value != GitlabMCTag {
 			continue
 		}
 		// delete extra group created by master controller
@@ -220,7 +224,7 @@ func (s *GitlabSync) syncGroupMembers() {
 	// delete members that shouldn't be part of the group anymore
 	for roleOrg, memberTable := range members {
 		for _, groupMember := range memberTable {
-			if groupMember.ID == 1 {
+			if groupMember.ID == GitlabAdminID {
 				// root is always member of a group
 				continue
 			}
