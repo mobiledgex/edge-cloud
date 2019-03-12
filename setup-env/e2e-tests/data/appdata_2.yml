@@ -116,7 +116,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -133,24 +135,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-
-
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-
-    id: 2
-  cloudletloc:
-    latitude: 1
-    longitude: 2
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -167,6 +154,28 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
+
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
+
+    id: 2
+  cloudletloc:
+    latitude: 1
+    longitude: 2
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
