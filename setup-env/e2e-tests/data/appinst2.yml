@@ -10,3 +10,6 @@ appinstances:
         name: tmus
       name: tmus-cloud-2
     id: 123
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
