@@ -218,8 +218,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 			}
 			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
+			// Explicit auto-cluster requirement
+			if cikey.ClusterKey.Name == "" {
+				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
+			}
 			// Check if specified ClusterInst exists
-			if cikey.ClusterKey.Name != "" {
+			if cikey.ClusterKey.Name != ClusterAutoPrefix {
 				if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
 					// developer may or may not be specified
 					// in clusterinst.
@@ -231,7 +235,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// cluster inst exists so we're good.
 				return nil
 			}
-			// No ClusterInst specified, auto-create one
+			// Auto-cluster
 			cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
 			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
 			autocluster = true
