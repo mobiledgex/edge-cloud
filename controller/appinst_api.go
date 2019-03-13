@@ -240,7 +240,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// find flavor from app
 				var app edgeproto.App
 				if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-					return errors.New("Specified app not found")
+					return edgeproto.ErrEdgeApiAppNotFound
 				}
 				in.Flavor = app.DefaultFlavor
 			}
@@ -327,7 +327,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		var app edgeproto.App
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return errors.New("Specified app not found")
+			return edgeproto.ErrEdgeApiAppNotFound
 		}
 		in.IpAccess = app.IpAccess
 		if in.Flavor.Name == "" {

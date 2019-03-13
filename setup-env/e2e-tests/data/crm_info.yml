@@ -193,8 +193,6 @@ apps:
   ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
-  cluster:
-    name: autoclustersomeapplication1
   deployment: kubernetes
   deploymentmanifest: |
     apiVersion: apps/v1
@@ -259,8 +257,6 @@ apps:
   ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
-  cluster:
-    name: autoclustersomeapplication1
   deployment: helm
   delopt: AutoDelete
   configs:
