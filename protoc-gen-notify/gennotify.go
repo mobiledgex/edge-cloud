@@ -143,8 +143,10 @@ type {{.Name}}Send struct {
 {{- if .Cache}}
 	handler Send{{.Name}}Handler
 	Keys map[{{.KeyType}}]struct{}
+	keysToSend map[{{.KeyType}}]struct{}
 {{- else}}
 	Data []*{{.NameType}}
+	dataToSend []*{{.NameType}}
 {{- end}}
 	Mux sync.Mutex
 	buf {{.NameType}}
@@ -235,11 +237,11 @@ func (s *{{.Name}}Send) Update(msg *{{.NameType}}) {
 func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer string) error {
 	s.Mux.Lock()
 {{- if .Cache}}
-	keys := s.Keys
-	s.Keys = make(map[{{.KeyType}}]struct{})
+	keys := s.keysToSend
+	s.keysToSend = nil
 {{- else}}
-	data := s.Data
-	s.Data = make([]*{{.NameType}}, 0)
+	data := s.dataToSend
+	s.dataToSend = nil
 {{- end}}
 	s.Mux.Unlock()
 
@@ -286,14 +288,23 @@ func (s *{{.Name}}Send) Send(stream StreamNotify, notice *edgeproto.Notice, peer
 	return nil
 }
 
-func (s *{{.Name}}Send) HasData() bool {
+func (s *{{.Name}}Send) PrepData() bool {
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 {{- if .Cache}}
-	return len(s.Keys) > 0
+	if len(s.Keys) > 0 {
+		s.keysToSend = s.Keys
+		s.Keys = make(map[{{.KeyType}}]struct{})
+		return true
+	}
 {{- else}}
-	return len(s.Data) > 0
+	if len(s.Data) > 0 {
+		s.dataToSend = s.Data
+		s.Data = make([]*{{.NameType}}, 0)
+		return true
+	}
 {{- end}}
+	return false
 }
 
 // Server accepts multiple clients so needs to track multiple
