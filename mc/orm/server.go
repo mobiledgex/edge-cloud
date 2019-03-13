@@ -166,6 +166,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/user/show", ShowUser)
 	auth.POST("/user/current", CurrentUser)
 	auth.POST("/user/delete", DeleteUser)
+	auth.POST("/user/newpass", NewPassword)
 	auth.POST("/role/assignment/show", ShowRoleAssignment)
 	auth.POST("/role/perms/show", ShowRolePerms)
 	auth.POST("/role/show", ShowRole)

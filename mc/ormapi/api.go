@@ -59,6 +59,10 @@ type UserLogin struct {
 	Password string `form:"password" json:"password"`
 }
 
+type NewPassword struct {
+	Password string `form:"password" json:"password"`
+}
+
 // Structs used in replies
 
 type Result struct {
