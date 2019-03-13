@@ -144,13 +144,16 @@ func TestNotifyBasic(t *testing.T) {
 		testutil.AppInstData[i].State = edgeproto.TrackedState_CreateRequested
 	}
 
-	// Now test cloudlets. Use the same receiver, but register it
-	// as a cloudlet mananger. CRM should have 2 connects since
-	// server was restarted.
-	clientCRM.WaitForConnect(1)
+	// Now test CRM
+	clientCRM.WaitForConnect(2)
 	require.Equal(t, uint64(2), clientCRM.sendrecv.stats.Connects, "connects")
+	require.Equal(t, 0, len(crmHandler.CloudletCache.Objs), "num cloudlets")
+	require.Equal(t, 0, len(crmHandler.FlavorCache.Objs), "num flavors")
+	require.Equal(t, 0, len(crmHandler.ClusterFlavorCache.Objs), "num cluster flavors")
+	require.Equal(t, 0, len(crmHandler.ClusterInstCache.Objs), "num clusterInsts")
+	require.Equal(t, 0, len(crmHandler.AppCache.Objs), "num apps")
+	require.Equal(t, 0, len(crmHandler.AppInstCache.Objs), "num appInsts")
 	// crm must send cloudletinfo to receive clusterInsts and appInsts
-	crmHandler.CloudletInfoCache.Update(&testutil.CloudletInfoData[0], 0)
 	serverHandler.CloudletCache.Update(&testutil.CloudletData[0], 0)
 	serverHandler.CloudletCache.Update(&testutil.CloudletData[1], 0)
 	serverHandler.FlavorCache.Update(&testutil.FlavorData[0], 0)
@@ -167,6 +170,12 @@ func TestNotifyBasic(t *testing.T) {
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[1], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[2], 0)
 	serverHandler.AppInstCache.Update(&testutil.AppInstData[3], 0)
+	// trigger updates with CloudletInfo update after updating other
+	// data, otherwise the updates here plus the updates triggered by
+	// updating CloudletInfo can cause updates to get sent twice,
+	// messing up the stats counter checks. There's no functional
+	// issue, just makes it difficult to predict the stats values.
+	crmHandler.CloudletInfoCache.Update(&testutil.CloudletInfoData[0], 0)
 	// Note: only ClusterInsts and AppInsts with cloudlet keys that
 	// match the CRM's cloudletinfo will be sent.
 	crmHandler.WaitForCloudlets(1)
@@ -248,6 +257,12 @@ func checkServerConnections(t *testing.T, serverMgr *ServerMgr, expected int) {
 	for addr, server := range serverMgr.table {
 		log.DebugLog(log.DebugLevelNotify, "server connections", "client", addr, "stats", server.sendrecv.stats)
 	}
-	require.Equal(t, expected, len(serverMgr.table), "num server connections")
 	serverMgr.mux.Unlock()
+	for ii := 0; ii < 10; ii++ {
+		if len(serverMgr.table) == expected {
+			break
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	require.Equal(t, expected, len(serverMgr.table), "num server connections")
 }
