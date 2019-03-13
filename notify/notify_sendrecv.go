@@ -31,8 +31,8 @@ type NotifySend interface {
 	GetSendCount() uint64
 	// Send the data
 	Send(stream StreamNotify, buf *edgeproto.Notice, peerAddr string) error
-	// Return true if there are keys to send
-	HasData() bool
+	// Return true if there are keys to send, prepares keys to send
+	PrepData() bool
 	// Queue all cached data for send
 	UpdateAll()
 }
@@ -177,22 +177,25 @@ func (s *SendRecv) send(stream StreamNotify) {
 			err = stream.Context().Err()
 			streamDone = true
 		}
-		if streamDone {
+		if streamDone || s.done {
 			break
 		}
-		s.mux.Lock()
 		hasData := false
-		for _, send := range s.sendlist {
-			if send.HasData() {
+		// UpdateAll/PrepData in reverse order, otherwise
+		// we may capture a dependent object update without
+		// capturing the earlier-in-the-loop object that
+		// it depended on.
+		for ii := len(s.sendlist) - 1; ii >= 0; ii-- {
+			if sendAll {
+				s.sendlist[ii].UpdateAll()
+			}
+			if s.sendlist[ii].PrepData() {
 				hasData = true
-				break
 			}
 		}
 		if !hasData && !s.done && !sendAll {
-			s.mux.Unlock()
 			continue
 		}
-		s.mux.Unlock()
 		if s.done {
 			break
 		}
@@ -207,9 +210,6 @@ func (s *SendRecv) send(stream StreamNotify) {
 		// caller to make sure CacheSend objects are registered
 		// in the desired send order.
 		for _, send := range s.sendlist {
-			if sendAll {
-				send.UpdateAll()
-			}
 			err = send.Send(stream, &notice, s.peerAddr)
 			if err != nil {
 				break
