@@ -254,7 +254,7 @@ func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 	// make sure caller has perms to modify users of target org
 	if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionManage) {
 		if role.Org == "" {
-			return fmt.Errorf("Organziation not specified or no permissions")
+			return fmt.Errorf("Organization not specified or no permissions")
 		}
 		return echo.ErrForbidden
 	}
