@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
-
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	locapi "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocationReply, carrier string, ckey *dmecommon.CookieKey, locVerUrl string, tokSrvUrl string) error {
@@ -35,12 +35,12 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 
 	if mreq.GpsLocation == nil || (mreq.GpsLocation.Latitude == 0 && mreq.GpsLocation.Longitude == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
-		return fmt.Errorf("Missing GpsLocation")
+		return grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 
 	if !util.IsLatitudeValid(mreq.GpsLocation.Latitude) || !util.IsLongitudeValid(mreq.GpsLocation.Longitude) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", mreq.GpsLocation.Latitude, "long", mreq.GpsLocation.Longitude)
-		return fmt.Errorf("Invalid GpsLocation")
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
 	tbl.RLock()
@@ -50,7 +50,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	if !ok {
 		log.DebugLog(log.DebugLevelDmereq, "Could not find key in app table", "key", key)
 		// return loc unknown
-		return fmt.Errorf("app not found: %s", key)
+		return grpc.Errorf(codes.NotFound, "app not found: %s", key)
 	}
 
 	//handling for each carrier may be different.  As of now there is only standalone and GDDT
@@ -59,7 +59,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		fallthrough
 	case "GDDT":
 		if mreq.VerifyLocToken == "" {
-			return fmt.Errorf("verifyloc token required")
+			return grpc.Errorf(codes.InvalidArgument, "verifyloc token required")
 		}
 		result := locapi.CallGDDTLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Latitude, mreq.GpsLocation.Longitude, mreq.VerifyLocToken, tokSrvUrl)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
@@ -69,7 +69,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		carr, ok := app.carriers[mreq.CarrierName]
 		if !ok {
 			log.DebugLog(log.DebugLevelDmereq, "Could not find carrier for app", "appKey", key, "carrierName", mreq.CarrierName)
-			return fmt.Errorf("carrier not found for app: %s", mreq.CarrierName)
+			return grpc.Errorf(codes.NotFound, "carrier not found for app: %s", mreq.CarrierName)
 		}
 		distance = dmecommon.InfiniteDistance
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
