@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"net"
 	"sync"
@@ -11,6 +10,8 @@ import (
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 // AppInst within a cloudlet
@@ -310,7 +311,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 		reqkey.Name = mreq.AppName
 		reqkey.Version = mreq.AppVers
 		if !requestedAppPermitsRegisteredApp(reqkey, appkey) {
-			return fmt.Errorf("Access to requested app: Devname: %s Appname: %s AppVers: %s not allowed for the registered app: Devname: %s Appname: %s Appvers: %s",
+			return grpc.Errorf(codes.PermissionDenied, "Access to requested app: Devname: %s Appname: %s AppVers: %s not allowed for the registered app: Devname: %s Appname: %s Appvers: %s",
 				mreq.DevName, mreq.AppName, mreq.AppVers, appkey.DeveloperKey.Name, appkey.Name, appkey.Version)
 		}
 		//update the appkey to use the requested key

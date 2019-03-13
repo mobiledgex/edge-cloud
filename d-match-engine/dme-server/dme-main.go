@@ -26,6 +26,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -65,21 +66,21 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 	reply := new(dme.FindCloudletReply)
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
-		return reply, errors.New("No valid session cookie")
+		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	if req.CarrierName == "" {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing CarrierName")
 
-		return reply, errors.New("missing carrierName")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
 	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
-		return reply, errors.New("Missing GpsLocation")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
 	}
 
 	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
-		return reply, errors.New("Invalid GpsLocation")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
 	}
 
 	err := findCloudlet(ckey, req, reply)
@@ -93,15 +94,15 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
-		return nil, errors.New("No valid session cookie")
+		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
-		return nil, err
+		return nil, grpc.Errorf(codes.InvalidArgument, err.Error())
 	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
 	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
-		return nil, fmt.Errorf("API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
+		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
 	}
 
 	getFqdnList(req, flist)
@@ -112,18 +113,18 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest) (*dme.AppInstListReply, error) {
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
-		return nil, errors.New("No valid session cookie")
+		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
-		return nil, err
+		return nil, grpc.Errorf(codes.InvalidArgument, err.Error())
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
 
 	if req.GpsLocation == nil {
 		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
-		return nil, fmt.Errorf("missing GPS location")
+		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)
 	getAppInstList(ckey, req, alist)
@@ -138,7 +139,7 @@ func (s *server) VerifyLocation(ctx context.Context,
 
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
-		return reply, errors.New("No valid session cookie")
+		return reply, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
 	err := VerifyClientLoc(req, reply, *carrier, ckey, *locVerUrl, *tokSrvUrl)
 	if err != nil {
@@ -182,7 +183,7 @@ func getAuthPublicKey(devname string, appname string, appvers string) (string, e
 	}
 
 	if !foundApp {
-		return "", errors.New("app not found")
+		return "", grpc.Errorf(codes.NotFound, "app not found")
 	}
 	return authkey, nil
 }
@@ -197,17 +198,17 @@ func (s *server) RegisterClient(ctx context.Context,
 	if req.DevName == "" {
 		log.DebugLog(log.DebugLevelDmereq, "DevName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
-		return mstatus, errors.New("DevName cannot be empty")
+		return mstatus, grpc.Errorf(codes.InvalidArgument, "DevName cannot be empty")
 	}
 	if req.AppName == "" {
 		log.DebugLog(log.DebugLevelDmereq, "AppName cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
-		return mstatus, errors.New("AppName cannot be empty")
+		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppName cannot be empty")
 	}
 	if req.AppVers == "" {
 		log.DebugLog(log.DebugLevelDmereq, "AppVers cannot be empty")
 		mstatus.Status = dme.ReplyStatus_RS_FAIL
-		return mstatus, errors.New("AppVers cannot be empty")
+		return mstatus, grpc.Errorf(codes.InvalidArgument, "AppVers cannot be empty")
 	}
 	authkey, err := getAuthPublicKey(req.DevName, req.AppName, req.AppVers)
 	if err != nil {
@@ -223,7 +224,7 @@ func (s *server) RegisterClient(ctx context.Context,
 			// we provisioned a key, and one was not provided.
 			log.DebugLog(log.DebugLevelDmereq, "App has key, no token received")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
-			return mstatus, errors.New("No authtoken received")
+			return mstatus, grpc.Errorf(codes.InvalidArgument, "No authtoken received")
 		}
 		// for now we will allow a tokenless register to pass if the app does not have one
 		log.DebugLog(log.DebugLevelDmereq, "Allowing register without token")
@@ -238,7 +239,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		if err != nil {
 			log.DebugLog(log.DebugLevelDmereq, "Failed to verify token", "err", err)
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
-			return mstatus, fmt.Errorf("failed to verify token - %s", err.Error())
+			return mstatus, grpc.Errorf(codes.Unauthenticated, "failed to verify token - %s", err.Error())
 		}
 	}
 	key := dmecommon.CookieKey{
@@ -248,7 +249,7 @@ func (s *server) RegisterClient(ctx context.Context,
 	}
 	cookie, err := dmecommon.GenerateCookie(&key, ctx)
 	if err != nil {
-		return mstatus, err
+		return mstatus, grpc.Errorf(codes.Internal, err.Error())
 	}
 	mstatus.SessionCookie = cookie
 	mstatus.TokenServerURI = *tokSrvUrl
