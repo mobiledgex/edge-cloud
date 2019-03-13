@@ -109,6 +109,9 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 - key:
     appkey:
       developerkey:
@@ -126,3 +129,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
+  clusterinstkey:
+    clusterkey:
+      name: autocluster

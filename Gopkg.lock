@@ -274,6 +274,14 @@
   revision = "64cb04e86054b58b5c3658c2d7dfbdbb81753f05"
 
 [[projects]]
+  digest = "1:a63cff6b5d8b95638bfe300385d93b2a6d9d687734b863da8e09dc834510a690"
+  name = "github.com/google/go-querystring"
+  packages = ["query"]
+  pruneopts = "UT"
+  revision = "44c6ddd0a2342c386950e880b658017258da92fc"
+  version = "v1.0.0"
+
+[[projects]]
   branch = "master"
   digest = "1:3ee90c0d94da31b442dde97c99635aaafec68d0b8a3c12ee2075c6bdabeec6bb"
   name = "github.com/google/gofuzz"
@@ -607,6 +615,22 @@
   revision = "c0212d558eba576f108c307cac2e6fd5eb39ecdf"
 
 [[projects]]
+  branch = "master"
+  digest = "1:1425ecbdc8449cf055118176863003ceb553777e288ffd5e64d426ce0dc2e163"
+  name = "github.com/nmcclain/asn1-ber"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "2661553a04840c556cf4f3cd69fa3332bae84e9d"
+
+[[projects]]
+  branch = "master"
+  digest = "1:360299c608532dbf9add4551318283446c309b1950e3774d56aa78342b2f87ee"
+  name = "github.com/nmcclain/ldap"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6e14e82719330c918c5b4139cc80c51d7ebc5fba"
+
+[[projects]]
   digest = "1:d776f3e95774a8719f2e57fabbbb33103035fe072dcf6f1864f33abd17b753e5"
   name = "github.com/parnurzeal/gorequest"
   packages = ["."]
@@ -707,6 +731,14 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
+
+[[projects]]
+  digest = "1:4819c884cfecb14c05d2bb631b249c308539f811a3b1f2b2a99a38ce5ee0cd8c"
+  name = "github.com/xanzy/go-gitlab"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ecd7ce0de62a071b909aca86854d251e95497b90"
+  version = "v0.16.0"
 
 [[projects]]
   digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
@@ -1114,10 +1146,12 @@
     "github.com/lib/pq",
     "github.com/mitchellh/mapstructure",
     "github.com/mobiledgex/edge-cloud-infra/mexos",
+    "github.com/nmcclain/ldap",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/require",
+    "github.com/xanzy/go-gitlab",
     "go.uber.org/zap",
     "golang.org/x/crypto/pbkdf2",
     "golang.org/x/net/context",

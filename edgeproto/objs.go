@@ -189,6 +189,9 @@ func (key *AppKey) Validate() error {
 	if !util.ValidName(key.Version) {
 		return errors.New("Invalid app version string")
 	}
+	if err := key.DeveloperKey.Validate(); err != nil {
+		return err
+	}
 	return nil
 }
 

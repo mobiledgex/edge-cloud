@@ -242,7 +242,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -259,7 +261,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 1
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -276,7 +280,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -293,7 +299,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -310,7 +318,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -327,7 +337,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -344,7 +356,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -361,7 +375,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -378,7 +394,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -395,7 +413,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -412,7 +432,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -429,7 +451,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 6
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -446,7 +470,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -463,7 +489,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -480,7 +508,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -497,7 +527,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -514,7 +546,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -531,7 +565,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 9
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -548,7 +584,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
-
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:
@@ -565,6 +603,9 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 10
+  clusterinstkey:
+    clusterkey:
+      name: autocluster
 
 - key:
     appkey:

@@ -220,7 +220,7 @@ Date: Thu, 07 Feb 2019 23:25:50 GMT
 Now the manager can add the new user to the organization. The request takes in the organization name, role name, and user id of the user to add. Because the user id is an integer in the request, we need to pass real json to the http tool.
 
 ```
-$ http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/role/adduser <<< '{"org":"bigorg","userid":3,"role":"DeveloperContributor"}'
+$ http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/role/adduser org=bigorg username=worker1 role=DeveloperContributor
 
 HTTP/1.1 200 OK
 Content-Length: 32
@@ -355,6 +355,134 @@ Date: Thu, 07 Feb 2019 23:36:23 GMT
 ]
 ```
 
+Roles can be seen by running role show. This shows the roles that exist. Being able to create and delete custom roles is not supported yet, so this will always show the built-in roles. Any user can access this API.
+
+```
+$ http --auth-type=jwt --auth=$BBTOKEN POST 127.0.0.1:9900/api/v1/auth/role/show
+HTTP/1.1 200 OK
+Content-Length: 166
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:01:58 GMT
+
+[
+    "AdminContributor",
+    "AdminManager",
+    "AdminViewer",
+    "DeveloperContributor",
+    "DeveloperManager",
+    "DeveloperViewer",
+    "OperatorContributor",
+    "OperatorManager",
+    "OperatorViewer"
+]
+```
+
+Role assignments for the current user can be seen (although when run by the superuser, it shows all role assignments):
+
+```
+$ http --auth-type=jwt --auth=$SUPERPASS POST 127.0.0.1:9900/api/v1/auth/role/assignment/show
+HTTP/1.1 200 OK
+Content-Length: 253
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:03:27 GMT
+
+[
+    {
+        "org": "",
+        "role": "AdminManager",
+        "username": "mexadmin"
+    },
+    {
+        "org": "bigorg",
+        "role": "DeveloperManager",
+        "username": "orgman"
+    },
+    {
+        "org": "bigorg",
+        "role": "DeveloperContributor",
+        "username": "worker1"
+    },
+    {
+        "org": "bigwaves",
+        "role": "OperatorManager",
+        "username": "beachboy"
+    }
+]
+
+$ http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/role/assignment/show
+HTTP/1.1 200 OK
+Content-Length: 64
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:04:00 GMT
+
+[
+    {
+        "org": "bigorg",
+        "role": "DeveloperManager",
+        "username": "orgman"
+    }
+]
+
+$ http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/role/assignment/show
+HTTP/1.1 200 OK
+Content-Length: 69
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:04:19 GMT
+
+[
+    {
+        "org": "bigorg",
+        "role": "DeveloperContributor",
+        "username": "worker1"
+    }
+]
+
+$ http --auth-type=jwt --auth=$BBTOKEN POST 127.0.0.1:9900/api/v1/auth/role/assignment/show
+HTTP/1.1 200 OK
+Content-Length: 67
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:03:11 GMT
+
+[
+    {
+        "org": "bigwaves",
+        "role": "OperatorManager",
+        "username": "beachboy"
+    }
+]
+```
+
+For users which have permission to manage or view user resources for Organizations, those users can see the role assignments for those Organizations. This command shows the result of role/adduser and role/removeuser operations.
+
+```
+$ http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/role/showuser
+HTTP/1.1 200 OK
+Content-Length: 132
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:05:50 GMT
+
+[
+    {
+        "org": "bigorg",
+        "role": "DeveloperManager",
+        "username": "orgman"
+    },
+    {
+        "org": "bigorg",
+        "role": "DeveloperContributor",
+        "username": "worker1"
+    }
+]
+
+$ http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/role/showuser
+HTTP/1.1 200 OK
+Content-Length: 2
+Content-Type: application/json; charset=UTF-8
+Date: Fri, 08 Mar 2019 22:06:36 GMT
+
+[]
+```
+
 ## Controller APIs
 
 Controller APIs on the MC are the same as controller REST APIs on the Controller, except that they are wrapped by a region. The region tells the MC which controller address to use when making a request.
@@ -368,6 +496,16 @@ http --auth-type=jwt --auth=$BBTOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/Create
 http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/CreateClusterInst <<< '{"region":"local","clusterinst":{"key":{"cluster_key":{"name":"bigclust"},"cloudlet_key":{"operator_key":{"name":"bigwaves"},"name":"oceanview"},"developer":"bigorg"},"flavor":{"name":"x1.medium"}}}'
 http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/CreateApp <<< '{"region":"local","app":{"key":{"developer_key":{"name":"bigorg"},"name":"myapp","version":"1.0.0"},"image_path":"registry.mobiledgex.net:5000/mobiledgex/simapp","image_type":1,"access_ports":"udp:12001,tcp:80,http:7777","default_flavor":{"name":"x1.medium"},"cluster":{"name":"bigclust"},"command":"simapp -port 7777"}}'
 http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/CreateAppInst <<< '{"region":"local","appinst":{"key":{"app_key":{"developer_key":{"name":"bigorg"},"name":"myapp","version":"1.0.0"},"cloudlet_key":{"operator_key":{"name":"bigwaves"},"name":"oceanview"}},"cluster_inst_key":{"cluster_key":{"name":"bigclust"},"cloudlet_key":{"operator_key":{"name":"bigwaves"},"name":"oceanview"}}}}'
+```
+
+Show commands must take at least the region. Other fields may also be specified for additional result filtering. Equivalent show commands for the above are below.
+```
+http --auth-type=jwt --auth=$SUPERPASS POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowFlavor region=local
+http --auth-type=jwt --auth=$SUPERPASS POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowClusterFlavor region=local
+http --auth-type=jwt --auth=$BBTOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowCloudlet region=local
+http --auth-type=jwt --auth=$ORGMANTOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowClusterInst region=local
+http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowApp region=local
+http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowAppInst region=local
 ```
 
 Notes:
