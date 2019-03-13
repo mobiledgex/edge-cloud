@@ -25,7 +25,9 @@ ENV CGO_ENABLED=0
 RUN make
 
 FROM registry.mobiledgex.net:5000/mobiledgex/openstack-kubectl-gcloud-az
-
+RUN apt-get -y update
+RUN apt-get -y install python-pip
+RUN pip install python-heatclient
 COPY --from=build /go/bin/controller /usr/local/bin
 COPY --from=build /go/bin/crmserver /usr/local/bin
 COPY --from=build /go/bin/dme-server /usr/local/bin
