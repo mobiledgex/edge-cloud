@@ -204,3 +204,28 @@ func ShowUser(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, users)
 }
+
+func NewPassword(c echo.Context) error {
+	claims, err := getClaims(c)
+	if err != nil {
+		return err
+	}
+	in := ormapi.NewPassword{}
+	if err := c.Bind(&in); err != nil {
+		return c.JSON(http.StatusBadRequest, Msg("Invalid POST data"))
+	}
+	if err := ValidPassword(in.Password); err != nil {
+		return c.JSON(http.StatusBadRequest, Msg("Invalid password, "+
+			err.Error()))
+	}
+	user := ormapi.User{Name: claims.Username}
+	err = db.Where(&user).First(&user).Error
+	if err != nil {
+		return setReply(c, dbErr(err), nil)
+	}
+	user.Passhash, user.Salt, user.Iter = NewPasshash(in.Password)
+	if err := db.Model(&user).Updates(&user).Error; err != nil {
+		return setReply(c, dbErr(err), nil)
+	}
+	return c.JSON(http.StatusOK, Msg("password updated"))
+}
