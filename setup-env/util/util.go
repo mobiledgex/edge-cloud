@@ -333,10 +333,15 @@ func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
 	api.Close()
 	// check that controller sees crm online (has received cloudletinfo),
 	// which is required before create clusterinst/appinst will work.
-	err = checkCloudletState(p, 10*time.Second)
-	if err != nil {
-		c <- ReturnCodeWithText{false, "Ok connect to " + p.Name + " but " + err.Error()}
+	if len(Deployment.Controllers) > 0 {
+		err = checkCloudletState(p, 10*time.Second)
+		if err != nil {
+			c <- ReturnCodeWithText{false, "Ok connect to " + p.Name + " but " + err.Error()}
+		} else {
+			c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+		}
 	} else {
+		// this is a CRM only test
 		c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
 	}
 }
