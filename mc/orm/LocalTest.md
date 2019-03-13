@@ -508,6 +508,20 @@ http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/S
 http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/ctrl/ShowAppInst region=local
 ```
 
+Change your password:
+
+```
+$http --auth-type=jwt --auth=$WORKER1TOKEN POST 127.0.0.1:9900/api/v1/auth/user/newpass password=yellow123
+HTTP/1.1 200 OK
+Content-Length: 30
+Content-Type: application/json; charset=UTF-8
+Date: Wed, 13 Mar 2019 19:05:23 GMT
+
+{
+    "message": "password updated"
+}
+```
+
 Notes:
 edgectl commands to populate controller directly:
 ```
