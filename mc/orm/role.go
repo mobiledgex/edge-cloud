@@ -163,6 +163,9 @@ func parseRole(grp []string) *ormapi.Role {
 }
 
 func getCasbinGroup(org, username string) string {
+	if org == "" {
+		return username
+	}
 	return org + "::" + username
 }
 
@@ -200,9 +203,6 @@ func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 	if role.Username == "" {
 		return fmt.Errorf("Username not specified")
 	}
-	if role.Org == "" {
-		return fmt.Errorf("Organziation not specified")
-	}
 	if role.Role == "" {
 		return fmt.Errorf("Role not specified")
 	}
@@ -210,13 +210,6 @@ func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 	res := db.Where(&ormapi.User{Name: role.Username}).First(&ormapi.User{})
 	if res.RecordNotFound() {
 		return fmt.Errorf("Username not found")
-	}
-	if res.Error != nil {
-		return dbErr(res.Error)
-	}
-	res = db.Where(&ormapi.Organization{Name: role.Org}).First(&ormapi.Organization{})
-	if res.RecordNotFound() {
-		return fmt.Errorf("Organization not found")
 	}
 	if res.Error != nil {
 		return dbErr(res.Error)
@@ -235,9 +228,34 @@ func AddUserRoleObj(claims *UserClaims, role *ormapi.Role) error {
 	if !roleFound {
 		return fmt.Errorf("Role not found")
 	}
+	if role.Org != "" {
+		org := &ormapi.Organization{}
+		res = db.Where(&ormapi.Organization{Name: role.Org}).First(&org)
+		if res.RecordNotFound() {
+			return fmt.Errorf("Organization not found")
+		}
+		if res.Error != nil {
+			return dbErr(res.Error)
+		}
+		// Restricting role types to match org types isn't strictly
+		// necessary. For example, giving role AdminManager for
+		// org foobar won't allow that user to modify controllers
+		// or flavors or clusterflavors, because those perms are
+		// tied to the blank org, "". But it does probably confuse
+		// the user, so disallow it to prevent confusion.
+		if org.Type == OrgTypeDeveloper && !isDeveloperRole(role.Role) {
+			return fmt.Errorf("Can only assign developer roles for developer organization")
+		}
+		if org.Type == OrgTypeOperator && !isOperatorRole(role.Role) {
+			return fmt.Errorf("Can only assign operator roles for operator organization")
+		}
+	}
 
 	// make sure caller has perms to modify users of target org
 	if !enforcer.Enforce(claims.Username, role.Org, ResourceUsers, ActionManage) {
+		if role.Org == "" {
+			return fmt.Errorf("Organization not specified or no permissions")
+		}
 		return echo.ErrForbidden
 	}
 	psub := getCasbinGroup(role.Org, role.Username)
@@ -322,4 +340,22 @@ func dumpRbac() {
 	for _, grp := range groups {
 		fmt.Printf("group: %+v\n", grp)
 	}
+}
+
+func isDeveloperRole(role string) bool {
+	if role == RoleDeveloperManager ||
+		role == RoleDeveloperContributor ||
+		role == RoleDeveloperViewer {
+		return true
+	}
+	return false
+}
+
+func isOperatorRole(role string) bool {
+	if role == RoleOperatorManager ||
+		role == RoleOperatorContributor ||
+		role == RoleOperatorViewer {
+		return true
+	}
+	return false
 }
