@@ -30,6 +30,8 @@ spec:
          - "/root/tls/mex-server.crt"
          - "--influxdb"
          - "monitoring-influxdb:8086"
+         - "--flavor"
+         - "x1.medium"
       imagePullSecrets:
        - name: mexreg-secret 
 

@@ -13,7 +13,6 @@ flavors:
   vcpus: 2
   disk: 2
 
-
 clusterflavors:
 - key:
     name: c1.tiny
