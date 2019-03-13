@@ -34,17 +34,9 @@ var externalPorts = flag.String("prometheus-ports", "", "ports to expose in form
 var influxDBAddr = flag.String("influxdb", "0.0.0.0:8086", "InfluxDB address to export to")
 var influxDBUser = flag.String("influxdb-user", "root", "InfluxDB username")
 var influxDBPass = flag.String("influxdb-pass", "root", "InfluxDB password")
-
-// TODO - scrapeInterval should be passed along to Prometheus app at creation time
 var scrapeInterval = flag.Duration("scrapeInterval", time.Second*15, "Metrics collection interval")
+var appFlavor = flag.String("flavor", "x1.medium", "App flavor for cluster-svc applications")
 
-var MEXInfraFlavorName = "x1.medium" // TODO - once we de-couple Apps from clusters change to "infra.small"
-var MEXInfraFlavor = edgeproto.Flavor{
-	Key:   edgeproto.FlavorKey{Name: MEXInfraFlavorName},
-	Vcpus: 1,
-	Ram:   1024,
-	Disk:  1,
-}
 var MEXMetricsExporterAppName = "MEXMetricsExporter"
 var MEXMetricsExporterAppVer = "1.0"
 
@@ -100,7 +92,7 @@ var MEXMetricsExporterApp = edgeproto.App{
 	},
 	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
-	DefaultFlavor: edgeproto.FlavorKey{Name: MEXInfraFlavorName},
+	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
@@ -117,7 +109,7 @@ var MEXPrometheusApp = edgeproto.App{
 	},
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
-	DefaultFlavor: edgeproto.FlavorKey{Name: MEXInfraFlavorName},
+	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
 }
 
@@ -137,25 +129,12 @@ type exporterData struct {
 
 // Process updates from notify framework about cluster instances
 // Create app/appInst when clusterInst transitions to a 'ready' state
-// TODO - Once App is decoupled from Cluster, we should create Apps on a startup
 func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 	var err error
 	log.DebugLog(log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name,
 		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
 	// Need to create a connection to server, as passed to us by commands
 	if in.State == edgeproto.TrackedState_Ready {
-		// Create Applications
-		// TODO - this should really be done on a strartup of cluster service
-		//      - however since the Metrics-exporter manifest requires us to eval the template
-		//        at CreateApp time, we cannot move this out - need to implement EDGECLOUD-386 first
-		if err = createMEXPrometheus(dialOpts, in.Key.ClusterKey); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator app create failed", "cluster", in.Key.ClusterKey.Name,
-				"error", err.Error())
-		}
-		if err = createMEXMetricsExporter(dialOpts, in.Key.ClusterKey); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "metrics Exporter app create failed", "cluster", in.Key.ClusterKey.Name,
-				"error", err.Error())
-		}
 		// Create Two applications on the cluster after creation
 		//   - Prometheus and MetricsExporter
 		if err = createMEXPromInst(dialOpts, in.Key); err != nil {
@@ -198,24 +177,7 @@ func initNotifyClient(addrs string, tlsCertFile string) *notify.Client {
 	return notifyClient
 }
 
-// create an appInst as a clustersvc
-func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, appKey edgeproto.AppKey) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
-	if err != nil {
-		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
-	}
-	defer conn.Close()
-	apiClient := edgeproto.NewAppInstApiClient(conn)
-
-	appInst := edgeproto.AppInst{
-		Key: edgeproto.AppInstKey{
-			AppKey:      appKey,
-			CloudletKey: instKey.CloudletKey,
-			Id:          1,
-		},
-		ClusterInstKey: instKey,
-	}
-
+func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.AppInst) (*edgeproto.Result, error) {
 	ctx := context.TODO()
 	stream, err := apiClient.CreateAppInst(ctx, &appInst)
 	var res *edgeproto.Result
@@ -231,7 +193,44 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 			}
 		}
 	}
+	return res, err
+}
+
+// create an appInst as a clustersvc
+func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
+		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
+	}
+	defer conn.Close()
+	apiClient := edgeproto.NewAppInstApiClient(conn)
+
+	appInst := edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey:      app.Key,
+			CloudletKey: instKey.CloudletKey,
+			Id:          1,
+		},
+		ClusterInstKey: instKey,
+	}
+
+	res, err := appInstCreateApi(apiClient, appInst)
+	if err != nil {
+		// Handle non-fatal errors
+		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
+			log.DebugLog(log.DebugLevelMexos, "appinst already exists", "app", app.String(), "cluster", instKey.String())
+			return nil
+		}
+		if strings.Contains(err.Error(), edgeproto.ErrEdgeApiAppNotFound.Error()) {
+			log.DebugLog(log.DebugLevelMexos, "app doesn't exist, create it first", "app", app.String())
+			// Create the app
+			if err = createAppCommon(dialOpts, app); err == nil {
+				if res, err = appInstCreateApi(apiClient, appInst); err == nil {
+					log.DebugLog(log.DebugLevelMexos, "create appinst", "appinst", appInst.String(), "result", res.String())
+					return nil
+				}
+			}
+		}
 		errstr := err.Error()
 		st, ok := status.FromError(err)
 		if ok {
@@ -245,62 +244,78 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 }
 
 func createMEXPromInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(dialOpts, instKey, MEXPrometheusApp.Key)
+	return createAppInstCommon(dialOpts, instKey, &MEXPrometheusApp)
 }
 
 func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey) error {
-	return createAppInstCommon(dialOpts, instKey, MEXMetricsExporterApp.Key)
+	return createAppInstCommon(dialOpts, instKey, &MEXMetricsExporterApp)
 }
 
-func createMEXInfraFlavor(dialOpts grpc.DialOption) error {
-	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
-	if err != nil {
-		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
-	}
-	defer conn.Close()
-	apiClient := edgeproto.NewFlavorApiClient(conn)
+func fillAppConfigs(app *edgeproto.App) error {
+	switch app.Key.Name {
+	case MEXMetricsExporterAppName:
+		ex := exporterData{
+			InfluxDBAddr: *influxDBAddr,
+			InfluxDBUser: *influxDBUser,
+			InfluxDBPass: *influxDBPass,
+			Interval:     *scrapeInterval,
+		}
+		buf := bytes.Buffer{}
+		err := exporterT.Execute(&buf, &ex)
+		if err != nil {
+			return err
+		}
+		paramConf := edgeproto.ConfigFile{
+			Kind:   mexos.AppConfigEnvYaml,
+			Config: buf.String(),
+		}
+		envConf := edgeproto.ConfigFile{
+			Kind:   mexos.AppConfigEnvYaml,
+			Config: MEXMetricsExporterEnvVars,
+		}
 
-	ctx := context.TODO()
-	res, err := apiClient.CreateFlavor(ctx, &MEXInfraFlavor)
-	if err != nil {
-		if err == objstore.ErrKVStoreKeyExists {
-			log.DebugLog(log.DebugLevelMexos, "flavor already exists", "flavor", MEXInfraFlavor.String())
-			return nil
+		app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
+	case MEXPrometheusAppName:
+		ex := exporterData{
+			Interval: *scrapeInterval,
 		}
-		errstr := err.Error()
-		st, ok := status.FromError(err)
-		if ok {
-			errstr = st.Message()
+		buf := bytes.Buffer{}
+		err := prometheusT.Execute(&buf, &ex)
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("CreateFlavor failed: %s", errstr)
+		// Now add this yaml to the prometheus AppYamls
+		config := edgeproto.ConfigFile{
+			Kind:   mexos.AppConfigHemYaml,
+			Config: buf.String(),
+		}
+		app.Configs = []*edgeproto.ConfigFile{&config}
+		app.AccessPorts = *externalPorts
+	default:
+		return fmt.Errorf("Unrecognized app %s", app.Key.Name)
 	}
-	log.DebugLog(log.DebugLevelMexos, "create flavor", "flavor", MEXInfraFlavor.String(), "result", res.String())
 	return nil
-
 }
 
-func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgeproto.ClusterKey) error {
+func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
 	}
 	defer conn.Close()
+
+	// add app customizations
+	if err = fillAppConfigs(app); err != nil {
+		return err
+	}
 	apiClient := edgeproto.NewAppApiClient(conn)
-
-	app.Cluster = cluster
-
 	ctx := context.TODO()
 	res, err := apiClient.CreateApp(ctx, app)
 	if err != nil {
 		// Handle non-fatal errors
-		switch err {
-		case objstore.ErrKVStoreKeyExists:
+		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyExists.Error()) {
 			log.DebugLog(log.DebugLevelMexos, "app already exists", "app", app.String())
 			return nil
-		case edgeproto.ErrEdgeApiFlavorNotFound:
-			if err2 := createMEXInfraFlavor(dialOpts); err2 == nil {
-				return createAppCommon(dialOpts, app, cluster)
-			}
 		}
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -311,51 +326,6 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App, cluster edgep
 	}
 	log.DebugLog(log.DebugLevelMexos, "create app", "app", app.String(), "result", res.String())
 	return nil
-}
-func createMEXPrometheus(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	ex := exporterData{
-		Interval: *scrapeInterval,
-	}
-	buf := bytes.Buffer{}
-	err := prometheusT.Execute(&buf, &ex)
-	if err != nil {
-		return err
-	}
-	// Now add this yaml to the prometheus AppYamls
-	config := edgeproto.ConfigFile{
-		Kind:   mexos.AppConfigHemYaml,
-		Config: buf.String(),
-	}
-	MEXPrometheusApp.Configs = []*edgeproto.ConfigFile{&config}
-	MEXPrometheusApp.AccessPorts = *externalPorts
-	return createAppCommon(dialOpts, &MEXPrometheusApp, cluster)
-}
-
-func createMEXMetricsExporter(dialOpts grpc.DialOption, cluster edgeproto.ClusterKey) error {
-	app := MEXMetricsExporterApp
-
-	ex := exporterData{
-		InfluxDBAddr: *influxDBAddr,
-		InfluxDBUser: *influxDBUser,
-		InfluxDBPass: *influxDBPass,
-		Interval:     *scrapeInterval,
-	}
-	buf := bytes.Buffer{}
-	err := exporterT.Execute(&buf, &ex)
-	if err != nil {
-		return err
-	}
-	paramConf := edgeproto.ConfigFile{
-		Kind:   mexos.AppConfigEnvYaml,
-		Config: buf.String(),
-	}
-	envConf := edgeproto.ConfigFile{
-		Kind:   mexos.AppConfigEnvYaml,
-		Config: MEXMetricsExporterEnvVars,
-	}
-
-	app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
-	return createAppCommon(dialOpts, &app, cluster)
 }
 
 func main() {
@@ -381,11 +351,6 @@ func main() {
 	if err != nil {
 		log.FatalLog("get TLS Credentials", "error", err)
 	}
-
-	// TODO - Uncomment this once we de-couple App from cluster for infra services
-	//      if err = createMEXInfraFlavor(dialOpts); err != nil {
-	//              log.DebugLog(log.DebugLevelMexos, "Failed to create flavor", "error", err)
-	//      }
 	log.InfoLog("Ready")
 	// wait until process in killed/interrupted
 	sig := <-sigChan

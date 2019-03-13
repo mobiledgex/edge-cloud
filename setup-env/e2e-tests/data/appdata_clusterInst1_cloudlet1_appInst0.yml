@@ -117,8 +117,6 @@ apps:
   ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
-  cluster:
-    name: SmallCluster
   deployment: kubernetes
   configs:
   - kind: envVarsYaml
@@ -160,8 +158,6 @@ apps:
   ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
-  cluster:
-    name: SmallCluster
   deployment: helm
   configs:
   - kind: hemlCustomizationYaml
