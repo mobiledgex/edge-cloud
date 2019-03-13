@@ -123,11 +123,18 @@
   - name: set the docker creds
     set_fact: mex_docker_reg_pass="{{ lookup('env','MEX_DOCKER_REG_PASS') }}"
 
+  - name: make crm env file
+    copy: content="{{ item.envvars|to_nice_yaml|regex_replace(':\\s', '=') }}" dest="{{remote_log_path}}/{{item.crmlocal.name}}.env"
+    when: item.dockerimage != "" 
+    with_items:
+      - "{{crms}}"
+
   - name: docker login to mex repo
     docker_login:
       registry: registry.mobiledgex.net:5000
       username: mobiledgex
       password: "{{mex_docker_reg_pass}}"
+
 
   - name: set tls option
     set_fact:
@@ -147,6 +154,7 @@
       command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --fakecloudlet={{ item.crmlocal.fakecloudlet }} --d api,notify,mexos"
       network_mode: host
       restart_policy: unless-stopped
+      env_file: "{{remote_log_path}}/{{item.crmlocal.name}}.env"
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
        -  "{{ crms }}"
