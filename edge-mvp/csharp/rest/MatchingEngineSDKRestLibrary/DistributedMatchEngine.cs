@@ -46,7 +46,6 @@ namespace DistributedMatchEngine
     UInt32 timeoutSec = 5000;
     string appName;
     string devName;
-    string appVersionStr = "1.0";
 
     public string sessionCookie { get; set; }
     string tokenServerURI;
@@ -219,10 +218,10 @@ namespace DistributedMatchEngine
       return new RegisterClientRequest {
         Ver = 1,
         CarrierName = carrierName,
+        DevName = developerName,
         AppName = appName,
-        AuthToken = authToken,
-        AppVers = appVersionStr,
-        DevName = developerName };
+        AppVers = appVersion,
+        AuthToken = authToken}
     }
 
     public async Task<RegisterClientReply> RegisterClient(string host, uint port, RegisterClientRequest request)

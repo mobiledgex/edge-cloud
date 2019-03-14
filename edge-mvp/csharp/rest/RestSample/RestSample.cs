@@ -36,7 +36,7 @@ namespace RestSample
         // Start location task:
         var locTask = Util.GetLocationFromDevice();
 
-        var registerClientRequest = me.CreateRegisterClientRequest(carrierName, appName, devName, appVers, developerAuthToken);
+        var registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, developerAuthToken);
 
         // Await synchronously.
         var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
