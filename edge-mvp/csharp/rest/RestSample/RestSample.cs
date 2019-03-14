@@ -12,7 +12,7 @@ namespace RestSample
     static string appVers = "1.0";
     static string developerAuthToken = "";
 
-    static string host = "tdg.dme.mobiledgex.net";
+    static string host = "tdg2.dme.mobiledgex.net";
     static UInt32 port = 38001;
 
     // Get the ephemerial carriername from device specific properties.
@@ -34,6 +34,7 @@ namespace RestSample
         port = MatchingEngine.defaultDmeRestPort;
 
         // Start location task:
+        // GetLocationFromDevice is stubbed. It is NOT implemented yet, it requires GPS.
         var locTask = Util.GetLocationFromDevice();
 
         var registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, developerAuthToken);
@@ -52,21 +53,21 @@ namespace RestSample
 
         // Async:
         var findCloudletTask = me.FindCloudlet(host, port, findCloudletRequest);
-        var verfiyLocationTask = me.VerifyLocation(host, port, verifyLocationRequest);
-
-
         var getLocationTask = me.GetLocation(host, port, getLocationRequest);
 
         // Awaits:
         var findCloudletReply = await findCloudletTask;
         Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
 
-        var verifyLocationReply = await verfiyLocationTask;
-        Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
 
+        // A MobiledgeX enabled carrier is required for these two APIs:
         var getLocationReply = await getLocationTask;
         var location = getLocationReply.NetworkLocation;
         Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
+
+        Console.WriteLine("VerifyLocation() may timeout, due to reachability of carrier verification servers from your network.");
+        var verifyLocationReply = await me.VerifyLocation(host, port, verifyLocationRequest);
+        Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
       }
       catch (InvalidTokenServerTokenException itste)
       {

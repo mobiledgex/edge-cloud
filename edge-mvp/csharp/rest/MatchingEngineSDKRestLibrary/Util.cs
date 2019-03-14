@@ -33,8 +33,8 @@ namespace DistributedMatchEngine
         altitude = 100,
         horizontal_accuracy = 5,
         speed = 2,
-        longitude = 37.459601,
-        latitude = -122.149349,
+        longitude = -122.149349,
+        latitude = 37.459601,
         vertical_accuracy = 20,
         timestamp = ts
       };

@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -25,8 +26,33 @@ namespace DistributedMatchEngine
     }
   }
 
+  // Minimal logger without log levels:
+  static class Log {
+    // Stdout:
+    public static void S(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+    // Stderr:
+    public static void E(string msg)
+    {
+      TextWriter errorWriter = Console.Error;
+      errorWriter.WriteLine(msg);
+    }
+
+    // Stdout:
+    [ConditionalAttribute("DEBUG")]
+    public static void D(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+
+  }
+
+
   public class MatchingEngine
   {
+    public const string TAG = "MatchingEngine";
     private static HttpClient httpClient;
     public const UInt32 defaultDmeRestPort = 38001;
     public const string carrierNameDefault = "tdg";
@@ -67,14 +93,14 @@ namespace DistributedMatchEngine
       byte[] clientCredentials = Convert.FromBase64String(Credentials.clientCrtBase64); // Pkcs12 binary source.
       var x509ClientCertKeyPair = new X509Certificate2(clientCredentials, "foo"); /* 2nd param: FIXME: password for credentials */
       httpClientHandler.ClientCertificates.Add(x509ClientCertKeyPair);
-      Console.WriteLine("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
+      Log.D("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
 
       httpClientHandler.ServerCertificateCustomValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
       {
-        Console.WriteLine("==== Sender: " + sender);
-        Console.WriteLine("==== Cert: " + cert);
-        Console.WriteLine("==== Chain: " + chain);
-        Console.WriteLine("==== SSLPolicyErrors: " + sslPolicyErrors);
+        Log.D("==== Sender: " + sender);
+        Log.D("==== Cert: " + cert);
+        Log.D("==== Chain: " + chain);
+        Log.D("==== SSLPolicyErrors: " + sslPolicyErrors);
         return true;
       };
 
@@ -111,7 +137,7 @@ namespace DistributedMatchEngine
     }
 
     /*
-     * This is temporary, and must be updated later.   
+     * This is temporary, and must be updated later.
      */
     private bool setCredentials(string caCert, string clientCert, string clientPrivKey)
     {
@@ -121,10 +147,10 @@ namespace DistributedMatchEngine
     private async Task<Stream> PostRequest(string uri, string jsonStr)
     {
       // Choose network TBD
-      Console.WriteLine("URI: " + uri);
+      Log.D("URI: " + uri);
       // static HTTPClient singleton, with instanced HttpContent is recommended for performance.
       var stringContent = new StringContent(jsonStr, Encoding.UTF8, "application/json");
-      Console.WriteLine("Post Body: " + jsonStr);
+      Log.D("Post Body: " + jsonStr);
       var response = await httpClient.PostAsync(uri, stringContent);
 
       response.EnsureSuccessStatusCode();
@@ -201,7 +227,7 @@ namespace DistributedMatchEngine
 
       if (uriLocation != null)
       {
-        System.Console.WriteLine("uriLocation: " + uriLocation);
+        Log.D("uriLocation: " + uriLocation);
         token = parseToken(uriLocation);
       }
 
@@ -215,13 +241,15 @@ namespace DistributedMatchEngine
 
     public RegisterClientRequest CreateRegisterClientRequest(string carrierName, string developerName, string appName, string appVersion, string authToken)
     {
-      return new RegisterClientRequest {
+      return new RegisterClientRequest
+      {
         Ver = 1,
         CarrierName = carrierName,
         DevName = developerName,
         AppName = appName,
         AppVers = appVersion,
-        AuthToken = authToken}
+        AuthToken = authToken
+      };
     }
 
     public async Task<RegisterClientReply> RegisterClient(string host, uint port, RegisterClientRequest request)
@@ -276,7 +304,7 @@ namespace DistributedMatchEngine
         return null;
       }
 
-      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(FindCloudletReply));      
+      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(FindCloudletReply));
       FindCloudletReply reply = (FindCloudletReply)deserializer.ReadObject(responseStream);
       return reply;
     }
