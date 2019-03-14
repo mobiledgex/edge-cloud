@@ -1,4 +1,7 @@
 pipeline {
+    options {
+        timeout(time: 20, unit: 'MINUTES')
+    }
     agent any
     stages {
         stage('Checkout') {
@@ -35,6 +38,9 @@ make
             }
         }
         stage('Test') {
+            options {
+                timeout(time: 15, unit: 'MINUTES')
+            }
             steps {
                 lock('testbed') {
                     retry(2) {
