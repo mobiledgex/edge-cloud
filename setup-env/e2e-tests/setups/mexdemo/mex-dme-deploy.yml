@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: dme
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0124
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0313
         imagePullPolicy: Always
         command:
          - "dme-server"
