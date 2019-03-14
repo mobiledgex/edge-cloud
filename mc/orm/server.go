@@ -105,7 +105,10 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	if gitlabToken == "" {
 		log.InfoLog("Note: No gitlab_token env var found")
 	}
-	gitlabClient = gitlab.NewClient(nil, gitlabToken)
+	httpClient := &http.Client{
+		Transport: NewGitlabTransport(),
+	}
+	gitlabClient = gitlab.NewClient(httpClient, gitlabToken)
 	if err := gitlabClient.SetBaseURL(config.GitlabAddr); err != nil {
 		return nil, fmt.Errorf("Gitlab client set base URL to %s, %s",
 			config.GitlabAddr, err.Error())
