@@ -98,7 +98,7 @@ class show_status:
        type,name,uri = endpoint.split("|")
        if "DME" in name:
            # see if we can register with the sample app
-           return self.checkDmeHealth(endpoint, "MobiledgeX SDK Demo", "MobiledgeX SDK Demo")
+           return self.checkDmeHealth(endpoint, "MobiledgeX SDK Demo", "MobiledgeX")
        try:
          headers = {}
          msg = ""
