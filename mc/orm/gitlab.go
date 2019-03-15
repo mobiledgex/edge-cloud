@@ -2,11 +2,14 @@ package orm
 
 import (
 	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/util"
 	gitlab "github.com/xanzy/go-gitlab"
+	"go.uber.org/zap"
 )
 
 /*
@@ -202,4 +205,39 @@ func gitlabGetUser(username string) (*gitlab.User, error) {
 		return nil, fmt.Errorf("Gitlab more than one user with name %s", username)
 	}
 	return users[0], nil
+}
+
+// Wrap default http transport for logging
+type GitlabTransport struct {
+	Transport http.RoundTripper
+	slog      *zap.SugaredLogger
+}
+
+func NewGitlabTransport() *GitlabTransport {
+	logger, _ := zap.NewDevelopment(zap.AddCallerSkip(7))
+	defer logger.Sync()
+	return &GitlabTransport{
+		Transport: http.DefaultTransport,
+		slog:      logger.Sugar(),
+	}
+}
+
+func (s *GitlabTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	start := time.Now()
+	resp, err := s.transport().RoundTrip(req)
+	status := ""
+	if resp != nil {
+		status = resp.Status
+	}
+	log.DebugSLog(s.slog, log.DebugLevelApi, "Call gitlab",
+		"method", req.Method, "url", req.URL,
+		"status", status, "err", err, "took", time.Since(start))
+	return resp, err
+}
+
+func (s *GitlabTransport) transport() http.RoundTripper {
+	if s.Transport != nil {
+		return s.Transport
+	}
+	return http.DefaultTransport
 }
