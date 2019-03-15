@@ -3,12 +3,16 @@ package orm
 import (
 	"encoding/json"
 	"strings"
+	"sync/atomic"
+	"time"
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 )
+
+var AuditId uint64
 
 func logger(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -18,6 +22,8 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			// don't log show commands
 			return next(c)
 		}
+		id := atomic.AddUint64(&AuditId, 1)
+		start := time.Now()
 
 		reqBody := []byte{}
 		resBody := []byte{}
@@ -27,6 +33,17 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			reqBody = reqB
 			resBody = resB
 		})
+		kvs := []interface{}{}
+		kvs = append(kvs, "id")
+		kvs = append(kvs, id)
+		kvs = append(kvs, "method")
+		kvs = append(kvs, req.Method)
+		kvs = append(kvs, "uri")
+		kvs = append(kvs, req.RequestURI)
+		kvs = append(kvs, "remote-ip")
+		kvs = append(kvs, c.RealIP())
+		log.InfoLog("Audit start", kvs...)
+
 		handler := bd(next)
 		nexterr = handler(c)
 		// remove passwords from requests so they aren't logged
@@ -52,13 +69,10 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 				reqBody = []byte{}
 			}
 		}
-		kvs := []interface{}{}
-		kvs = append(kvs, "method")
-		kvs = append(kvs, req.Method)
-		kvs = append(kvs, "uri")
-		kvs = append(kvs, req.RequestURI)
-		kvs = append(kvs, "remote-ip")
-		kvs = append(kvs, c.RealIP())
+
+		kvs = []interface{}{}
+		kvs = append(kvs, "id")
+		kvs = append(kvs, id)
 		if claims, err := getClaims(c); err == nil {
 			kvs = append(kvs, "user")
 			kvs = append(kvs, claims.Username)
@@ -77,8 +91,10 @@ func logger(next echo.HandlerFunc) echo.HandlerFunc {
 			kvs = append(kvs, "resp")
 			kvs = append(kvs, string(resBody))
 		}
+		kvs = append(kvs, "took")
+		kvs = append(kvs, time.Since(start))
 
-		log.InfoLog("Audit", kvs...)
+		log.InfoLog("Audit end", kvs...)
 		return nexterr
 	}
 }
