@@ -27,6 +27,13 @@ func DebugLog(lvl uint64, msg string, keysAndValues ...interface{}) {
 	slogger.Infow(msg, keysAndValues...)
 }
 
+func DebugSLog(slog *zap.SugaredLogger, lvl uint64, msg string, keysAndValues ...interface{}) {
+	if debugLevel&lvl == 0 {
+		return
+	}
+	slog.Infow(msg, keysAndValues...)
+}
+
 func InfoLog(msg string, keysAndValues ...interface{}) {
 	slogger.Infow(msg, keysAndValues...)
 }
