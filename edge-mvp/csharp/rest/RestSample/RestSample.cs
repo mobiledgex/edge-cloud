@@ -7,12 +7,12 @@ namespace RestSample
   class Program
   {
     static string carrierName = "tdg";
-    static string appName = "EmptyMatchEngineApp";
-    static string devName = "EmptyMatchEngineApp";
+    static string devName = "MobiledgeX";
+    static string appName = "MobiledgeX SDK Demo";
     static string appVers = "1.0";
     static string developerAuthToken = "";
 
-    static string host = "tdg2.dme.mobiledgex.net";
+    static string host = "mexdemo.dme.mobiledgex.net";
     static UInt32 port = 38001;
 
     // Get the ephemerial carriername from device specific properties.
@@ -58,6 +58,22 @@ namespace RestSample
         // Awaits:
         var findCloudletReply = await findCloudletTask;
         Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
+        Console.WriteLine("FindCloudlet:" +
+                " Ver: " + findCloudletReply.Ver +
+                ", FQDN: " + findCloudletReply.FQDN +
+                ", cloudlet_location: " +
+                " long: " + findCloudletReply.cloudlet_location.longitude +
+                ", lat: " + findCloudletReply.cloudlet_location.latitude);
+        // App Ports:
+        foreach (AppPort p in findCloudletReply.ports)
+        {
+          Console.WriteLine("Port: FQDN_prefix: " + p.FQDN_prefix +
+                ", protocol: " + p.proto +
+                ", public_port: " + p.public_port +
+                ", internal_port: " + p.internal_port +
+                ", public_path: " + p.public_path);
+        }
+
 
 
         // A MobiledgeX enabled carrier is required for these two APIs:
