@@ -140,46 +140,46 @@ func (FindCloudletReply_FindStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // Status of the reply
-type VerifyLocationReply_Tower_Status int32
+type VerifyLocationReply_TowerStatus int32
 
 const (
-	VerifyLocationReply_TOWER_UNKNOWN                    VerifyLocationReply_Tower_Status = 0
-	VerifyLocationReply_CONNECTED_TO_SPECIFIED_TOWER     VerifyLocationReply_Tower_Status = 1
-	VerifyLocationReply_NOT_CONNECTED_TO_SPECIFIED_TOWER VerifyLocationReply_Tower_Status = 2
+	VerifyLocationReply_TOWER_UNKNOWN                    VerifyLocationReply_TowerStatus = 0
+	VerifyLocationReply_CONNECTED_TO_SPECIFIED_TOWER     VerifyLocationReply_TowerStatus = 1
+	VerifyLocationReply_NOT_CONNECTED_TO_SPECIFIED_TOWER VerifyLocationReply_TowerStatus = 2
 )
 
-var VerifyLocationReply_Tower_Status_name = map[int32]string{
+var VerifyLocationReply_TowerStatus_name = map[int32]string{
 	0: "TOWER_UNKNOWN",
 	1: "CONNECTED_TO_SPECIFIED_TOWER",
 	2: "NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
-var VerifyLocationReply_Tower_Status_value = map[string]int32{
+var VerifyLocationReply_TowerStatus_value = map[string]int32{
 	"TOWER_UNKNOWN":                    0,
 	"CONNECTED_TO_SPECIFIED_TOWER":     1,
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER": 2,
 }
 
-func (x VerifyLocationReply_Tower_Status) String() string {
-	return proto.EnumName(VerifyLocationReply_Tower_Status_name, int32(x))
+func (x VerifyLocationReply_TowerStatus) String() string {
+	return proto.EnumName(VerifyLocationReply_TowerStatus_name, int32(x))
 }
-func (VerifyLocationReply_Tower_Status) EnumDescriptor() ([]byte, []int) {
+func (VerifyLocationReply_TowerStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{5, 0}
 }
 
-type VerifyLocationReply_GPS_Location_Status int32
+type VerifyLocationReply_GPSLocationStatus int32
 
 const (
-	VerifyLocationReply_LOC_UNKNOWN                  VerifyLocationReply_GPS_Location_Status = 0
-	VerifyLocationReply_LOC_VERIFIED                 VerifyLocationReply_GPS_Location_Status = 1
-	VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY    VerifyLocationReply_GPS_Location_Status = 2
-	VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY   VerifyLocationReply_GPS_Location_Status = 3
-	VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH    VerifyLocationReply_GPS_Location_Status = 4
-	VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH VerifyLocationReply_GPS_Location_Status = 5
-	VerifyLocationReply_LOC_ERROR_UNAUTHORIZED       VerifyLocationReply_GPS_Location_Status = 6
-	VerifyLocationReply_LOC_ERROR_OTHER              VerifyLocationReply_GPS_Location_Status = 7
+	VerifyLocationReply_LOC_UNKNOWN                  VerifyLocationReply_GPSLocationStatus = 0
+	VerifyLocationReply_LOC_VERIFIED                 VerifyLocationReply_GPSLocationStatus = 1
+	VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY    VerifyLocationReply_GPSLocationStatus = 2
+	VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY   VerifyLocationReply_GPSLocationStatus = 3
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH    VerifyLocationReply_GPSLocationStatus = 4
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH VerifyLocationReply_GPSLocationStatus = 5
+	VerifyLocationReply_LOC_ERROR_UNAUTHORIZED       VerifyLocationReply_GPSLocationStatus = 6
+	VerifyLocationReply_LOC_ERROR_OTHER              VerifyLocationReply_GPSLocationStatus = 7
 )
 
-var VerifyLocationReply_GPS_Location_Status_name = map[int32]string{
+var VerifyLocationReply_GPSLocationStatus_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_VERIFIED",
 	2: "LOC_MISMATCH_SAME_COUNTRY",
@@ -189,7 +189,7 @@ var VerifyLocationReply_GPS_Location_Status_name = map[int32]string{
 	6: "LOC_ERROR_UNAUTHORIZED",
 	7: "LOC_ERROR_OTHER",
 }
-var VerifyLocationReply_GPS_Location_Status_value = map[string]int32{
+var VerifyLocationReply_GPSLocationStatus_value = map[string]int32{
 	"LOC_UNKNOWN":                  0,
 	"LOC_VERIFIED":                 1,
 	"LOC_MISMATCH_SAME_COUNTRY":    2,
@@ -200,92 +200,92 @@ var VerifyLocationReply_GPS_Location_Status_value = map[string]int32{
 	"LOC_ERROR_OTHER":              7,
 }
 
-func (x VerifyLocationReply_GPS_Location_Status) String() string {
-	return proto.EnumName(VerifyLocationReply_GPS_Location_Status_name, int32(x))
+func (x VerifyLocationReply_GPSLocationStatus) String() string {
+	return proto.EnumName(VerifyLocationReply_GPSLocationStatus_name, int32(x))
 }
-func (VerifyLocationReply_GPS_Location_Status) EnumDescriptor() ([]byte, []int) {
+func (VerifyLocationReply_GPSLocationStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{5, 1}
 }
 
 // Status of the reply
-type GetLocationReply_Loc_Status int32
+type GetLocationReply_LocStatus int32
 
 const (
-	GetLocationReply_LOC_UNKNOWN GetLocationReply_Loc_Status = 0
-	GetLocationReply_LOC_FOUND   GetLocationReply_Loc_Status = 1
+	GetLocationReply_LOC_UNKNOWN GetLocationReply_LocStatus = 0
+	GetLocationReply_LOC_FOUND   GetLocationReply_LocStatus = 1
 	// The user does not allow his location to be tracked
-	GetLocationReply_LOC_DENIED GetLocationReply_Loc_Status = 2
+	GetLocationReply_LOC_DENIED GetLocationReply_LocStatus = 2
 )
 
-var GetLocationReply_Loc_Status_name = map[int32]string{
+var GetLocationReply_LocStatus_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_FOUND",
 	2: "LOC_DENIED",
 }
-var GetLocationReply_Loc_Status_value = map[string]int32{
+var GetLocationReply_LocStatus_value = map[string]int32{
 	"LOC_UNKNOWN": 0,
 	"LOC_FOUND":   1,
 	"LOC_DENIED":  2,
 }
 
-func (x GetLocationReply_Loc_Status) String() string {
-	return proto.EnumName(GetLocationReply_Loc_Status_name, int32(x))
+func (x GetLocationReply_LocStatus) String() string {
+	return proto.EnumName(GetLocationReply_LocStatus_name, int32(x))
 }
-func (GetLocationReply_Loc_Status) EnumDescriptor() ([]byte, []int) {
+func (GetLocationReply_LocStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{7, 0}
 }
 
 // Status of the reply
-type AppInstListReply_AI_Status int32
+type AppInstListReply_AIStatus int32
 
 const (
-	AppInstListReply_AI_UNDEFINED AppInstListReply_AI_Status = 0
-	AppInstListReply_AI_SUCCESS   AppInstListReply_AI_Status = 1
-	AppInstListReply_AI_FAIL      AppInstListReply_AI_Status = 2
+	AppInstListReply_AI_UNDEFINED AppInstListReply_AIStatus = 0
+	AppInstListReply_AI_SUCCESS   AppInstListReply_AIStatus = 1
+	AppInstListReply_AI_FAIL      AppInstListReply_AIStatus = 2
 )
 
-var AppInstListReply_AI_Status_name = map[int32]string{
+var AppInstListReply_AIStatus_name = map[int32]string{
 	0: "AI_UNDEFINED",
 	1: "AI_SUCCESS",
 	2: "AI_FAIL",
 }
-var AppInstListReply_AI_Status_value = map[string]int32{
+var AppInstListReply_AIStatus_value = map[string]int32{
 	"AI_UNDEFINED": 0,
 	"AI_SUCCESS":   1,
 	"AI_FAIL":      2,
 }
 
-func (x AppInstListReply_AI_Status) String() string {
-	return proto.EnumName(AppInstListReply_AI_Status_name, int32(x))
+func (x AppInstListReply_AIStatus) String() string {
+	return proto.EnumName(AppInstListReply_AIStatus_name, int32(x))
 }
-func (AppInstListReply_AI_Status) EnumDescriptor() ([]byte, []int) {
+func (AppInstListReply_AIStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{11, 0}
 }
 
 // Status of the reply
-type FqdnListReply_FL_Status int32
+type FqdnListReply_FLStatus int32
 
 const (
-	FqdnListReply_FL_UNDEFINED FqdnListReply_FL_Status = 0
-	FqdnListReply_FL_SUCCESS   FqdnListReply_FL_Status = 1
-	FqdnListReply_FL_FAIL      FqdnListReply_FL_Status = 2
+	FqdnListReply_FL_UNDEFINED FqdnListReply_FLStatus = 0
+	FqdnListReply_FL_SUCCESS   FqdnListReply_FLStatus = 1
+	FqdnListReply_FL_FAIL      FqdnListReply_FLStatus = 2
 )
 
-var FqdnListReply_FL_Status_name = map[int32]string{
+var FqdnListReply_FLStatus_name = map[int32]string{
 	0: "FL_UNDEFINED",
 	1: "FL_SUCCESS",
 	2: "FL_FAIL",
 }
-var FqdnListReply_FL_Status_value = map[string]int32{
+var FqdnListReply_FLStatus_value = map[string]int32{
 	"FL_UNDEFINED": 0,
 	"FL_SUCCESS":   1,
 	"FL_FAIL":      2,
 }
 
-func (x FqdnListReply_FL_Status) String() string {
-	return proto.EnumName(FqdnListReply_FL_Status_name, int32(x))
+func (x FqdnListReply_FLStatus) String() string {
+	return proto.EnumName(FqdnListReply_FLStatus_name, int32(x))
 }
-func (FqdnListReply_FL_Status) EnumDescriptor() ([]byte, []int) {
+func (FqdnListReply_FLStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{14, 0}
 }
 
@@ -360,7 +360,7 @@ type FindCloudletRequest struct {
 	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GPSLocation *Loc `protobuf:"bytes,4,opt,name=GPSLocation" json:"GPSLocation,omitempty"`
 	// DevName is applicable to Platform apps only
 	DevName string `protobuf:"bytes,5,opt,name=DevName,proto3" json:"DevName,omitempty"`
 	// App Name is applicable to Platform apps only
@@ -400,7 +400,7 @@ type VerifyLocationRequest struct {
 	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The GPS location to verify
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GPSLocation *Loc `protobuf:"bytes,4,opt,name=GPSLocation" json:"GPSLocation,omitempty"`
 	// token used for location verification, app must retrieve from TokenServerURI
 	VerifyLocToken string `protobuf:"bytes,5,opt,name=VerifyLocToken,proto3" json:"VerifyLocToken,omitempty"`
 }
@@ -412,9 +412,9 @@ func (*VerifyLocationRequest) Descriptor() ([]byte, []int) { return fileDescript
 
 type VerifyLocationReply struct {
 	// API version
-	Ver               uint32                                  `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	TowerStatus       VerifyLocationReply_Tower_Status        `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_Tower_Status" json:"tower_status,omitempty"`
-	GpsLocationStatus VerifyLocationReply_GPS_Location_Status `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPS_Location_Status" json:"gps_location_status,omitempty"`
+	Ver                 uint32                                `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	TowerStatus         VerifyLocationReply_TowerStatus       `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_TowerStatus" json:"tower_status,omitempty"`
+	GPS_Location_Status VerifyLocationReply_GPSLocationStatus `protobuf:"varint,3,opt,name=GPS_Location_Status,json=GPSLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPSLocationStatus" json:"GPS_Location_Status,omitempty"`
 	// location accuracy, the location is verified to
 	// be within this number of kilometers.  Negative value
 	// means no verification was done
@@ -441,8 +441,8 @@ func (*GetLocationRequest) ProtoMessage()               {}
 func (*GetLocationRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{6} }
 
 type GetLocationReply struct {
-	Ver    uint32                      `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
-	Status GetLocationReply_Loc_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.GetLocationReply_Loc_Status" json:"Status,omitempty"`
+	Ver    uint32                     `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Status GetLocationReply_LocStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.GetLocationReply_LocStatus" json:"Status,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The tower that user is currently connected to
@@ -464,7 +464,7 @@ type AppInstListRequest struct {
 	// The carrier name that user is connected to ("Cellular Carrier Name")
 	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
 	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GPSLocation *Loc `protobuf:"bytes,4,opt,name=GPSLocation" json:"GPSLocation,omitempty"`
 }
 
 func (m *AppInstListRequest) Reset()                    { *m = AppInstListRequest{} }
@@ -494,7 +494,7 @@ type CloudletLocation struct {
 	// Cloudlet Name
 	CloudletName string `protobuf:"bytes,2,opt,name=CloudletName,proto3" json:"CloudletName,omitempty"`
 	// The GPS Location of the user
-	GpsLocation *Loc `protobuf:"bytes,3,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GPSLocation *Loc `protobuf:"bytes,3,opt,name=GPSLocation" json:"GPSLocation,omitempty"`
 	// Distance of cloudlet vs loc in request
 	Distance float64 `protobuf:"fixed64,4,opt,name=Distance,proto3" json:"Distance,omitempty"`
 	// App instances
@@ -508,9 +508,9 @@ func (*CloudletLocation) Descriptor() ([]byte, []int) { return fileDescriptorApp
 
 type AppInstListReply struct {
 	// API version
-	Ver       uint32                     `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
-	Status    AppInstListReply_AI_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.AppInstListReply_AI_Status" json:"Status,omitempty"`
-	Cloudlets []*CloudletLocation        `protobuf:"bytes,3,rep,name=Cloudlets" json:"Cloudlets,omitempty"`
+	Ver       uint32                    `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Status    AppInstListReply_AIStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.AppInstListReply_AIStatus" json:"Status,omitempty"`
+	Cloudlets []*CloudletLocation       `protobuf:"bytes,3,rep,name=Cloudlets" json:"Cloudlets,omitempty"`
 }
 
 func (m *AppInstListReply) Reset()                    { *m = AppInstListReply{} }
@@ -550,9 +550,9 @@ func (*AppFqdn) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, [
 
 type FqdnListReply struct {
 	// API version
-	Ver      uint32                  `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	AppFqdns []*AppFqdn              `protobuf:"bytes,3,rep,name=AppFqdns" json:"AppFqdns,omitempty"`
-	Status   FqdnListReply_FL_Status `protobuf:"varint,4,opt,name=Status,proto3,enum=distributed_match_engine.FqdnListReply_FL_Status" json:"Status,omitempty"`
+	Ver      uint32                 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	AppFqdns []*AppFqdn             `protobuf:"bytes,3,rep,name=AppFqdns" json:"AppFqdns,omitempty"`
+	Status   FqdnListReply_FLStatus `protobuf:"varint,4,opt,name=Status,proto3,enum=distributed_match_engine.FqdnListReply_FLStatus" json:"Status,omitempty"`
 }
 
 func (m *FqdnListReply) Reset()                    { *m = FqdnListReply{} }
@@ -612,11 +612,11 @@ func init() {
 	proto.RegisterEnum("distributed_match_engine.IDTypes", IDTypes_name, IDTypes_value)
 	proto.RegisterEnum("distributed_match_engine.ReplyStatus", ReplyStatus_name, ReplyStatus_value)
 	proto.RegisterEnum("distributed_match_engine.FindCloudletReply_FindStatus", FindCloudletReply_FindStatus_name, FindCloudletReply_FindStatus_value)
-	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_Tower_Status", VerifyLocationReply_Tower_Status_name, VerifyLocationReply_Tower_Status_value)
-	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPS_Location_Status", VerifyLocationReply_GPS_Location_Status_name, VerifyLocationReply_GPS_Location_Status_value)
-	proto.RegisterEnum("distributed_match_engine.GetLocationReply_Loc_Status", GetLocationReply_Loc_Status_name, GetLocationReply_Loc_Status_value)
-	proto.RegisterEnum("distributed_match_engine.AppInstListReply_AI_Status", AppInstListReply_AI_Status_name, AppInstListReply_AI_Status_value)
-	proto.RegisterEnum("distributed_match_engine.FqdnListReply_FL_Status", FqdnListReply_FL_Status_name, FqdnListReply_FL_Status_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_TowerStatus", VerifyLocationReply_TowerStatus_name, VerifyLocationReply_TowerStatus_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPSLocationStatus", VerifyLocationReply_GPSLocationStatus_name, VerifyLocationReply_GPSLocationStatus_value)
+	proto.RegisterEnum("distributed_match_engine.GetLocationReply_LocStatus", GetLocationReply_LocStatus_name, GetLocationReply_LocStatus_value)
+	proto.RegisterEnum("distributed_match_engine.AppInstListReply_AIStatus", AppInstListReply_AIStatus_name, AppInstListReply_AIStatus_value)
+	proto.RegisterEnum("distributed_match_engine.FqdnListReply_FLStatus", FqdnListReply_FLStatus_name, FqdnListReply_FLStatus_value)
 	proto.RegisterEnum("distributed_match_engine.DynamicLocGroupRequest_DlgCommType", DynamicLocGroupRequest_DlgCommType_name, DynamicLocGroupRequest_DlgCommType_value)
 }
 
@@ -1015,11 +1015,11 @@ func (m *FindCloudletRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
 		i += copy(dAtA[i:], m.CarrierName)
 	}
-	if m.GpsLocation != nil {
+	if m.GPSLocation != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n1, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GPSLocation.Size()))
+		n1, err := m.GPSLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -1134,11 +1134,11 @@ func (m *VerifyLocationRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
 		i += copy(dAtA[i:], m.CarrierName)
 	}
-	if m.GpsLocation != nil {
+	if m.GPSLocation != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n3, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GPSLocation.Size()))
+		n3, err := m.GPSLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -1178,10 +1178,10 @@ func (m *VerifyLocationReply) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.TowerStatus))
 	}
-	if m.GpsLocationStatus != 0 {
+	if m.GPS_Location_Status != 0 {
 		dAtA[i] = 0x18
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocationStatus))
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GPS_Location_Status))
 	}
 	if m.GPS_Location_Accuracy_KM != 0 {
 		dAtA[i] = 0x21
@@ -1308,11 +1308,11 @@ func (m *AppInstListRequest) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CarrierName)))
 		i += copy(dAtA[i:], m.CarrierName)
 	}
-	if m.GpsLocation != nil {
+	if m.GPSLocation != nil {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n5, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GPSLocation.Size()))
+		n5, err := m.GPSLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -1396,11 +1396,11 @@ func (m *CloudletLocation) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.CloudletName)))
 		i += copy(dAtA[i:], m.CloudletName)
 	}
-	if m.GpsLocation != nil {
+	if m.GPSLocation != nil {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocation.Size()))
-		n6, err := m.GpsLocation.MarshalTo(dAtA[i:])
+		i = encodeVarintAppClient(dAtA, i, uint64(m.GPSLocation.Size()))
+		n6, err := m.GPSLocation.MarshalTo(dAtA[i:])
 		if err != nil {
 			return 0, err
 		}
@@ -1710,19 +1710,19 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
 	m.Ver = src.Ver
 	m.SessionCookie = src.SessionCookie
 	m.CarrierName = src.CarrierName
-	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
-		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+	if src.GPSLocation != nil {
+		m.GPSLocation = &Loc{}
+		m.GPSLocation.Latitude = src.GPSLocation.Latitude
+		m.GPSLocation.Longitude = src.GPSLocation.Longitude
+		m.GPSLocation.HorizontalAccuracy = src.GPSLocation.HorizontalAccuracy
+		m.GPSLocation.VerticalAccuracy = src.GPSLocation.VerticalAccuracy
+		m.GPSLocation.Altitude = src.GPSLocation.Altitude
+		m.GPSLocation.Course = src.GPSLocation.Course
+		m.GPSLocation.Speed = src.GPSLocation.Speed
+		if src.GPSLocation.Timestamp != nil {
+			m.GPSLocation.Timestamp = &Timestamp{}
+			m.GPSLocation.Timestamp.Seconds = src.GPSLocation.Timestamp.Seconds
+			m.GPSLocation.Timestamp.Nanos = src.GPSLocation.Timestamp.Nanos
 		}
 	}
 	m.DevName = src.DevName
@@ -1732,7 +1732,7 @@ func (m *FindCloudletRequest) CopyInFields(src *FindCloudletRequest) {
 
 // Helper method to check that enums have valid values
 func (m *FindCloudletRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
+	if err := m.GPSLocation.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -1792,19 +1792,19 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
 	m.Ver = src.Ver
 	m.SessionCookie = src.SessionCookie
 	m.CarrierName = src.CarrierName
-	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
-		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+	if src.GPSLocation != nil {
+		m.GPSLocation = &Loc{}
+		m.GPSLocation.Latitude = src.GPSLocation.Latitude
+		m.GPSLocation.Longitude = src.GPSLocation.Longitude
+		m.GPSLocation.HorizontalAccuracy = src.GPSLocation.HorizontalAccuracy
+		m.GPSLocation.VerticalAccuracy = src.GPSLocation.VerticalAccuracy
+		m.GPSLocation.Altitude = src.GPSLocation.Altitude
+		m.GPSLocation.Course = src.GPSLocation.Course
+		m.GPSLocation.Speed = src.GPSLocation.Speed
+		if src.GPSLocation.Timestamp != nil {
+			m.GPSLocation.Timestamp = &Timestamp{}
+			m.GPSLocation.Timestamp.Seconds = src.GPSLocation.Timestamp.Seconds
+			m.GPSLocation.Timestamp.Nanos = src.GPSLocation.Timestamp.Nanos
 		}
 	}
 	m.VerifyLocToken = src.VerifyLocToken
@@ -1812,7 +1812,7 @@ func (m *VerifyLocationRequest) CopyInFields(src *VerifyLocationRequest) {
 
 // Helper method to check that enums have valid values
 func (m *VerifyLocationRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
+	if err := m.GPSLocation.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -1821,17 +1821,17 @@ func (m *VerifyLocationRequest) ValidateEnums() error {
 func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
-	m.GpsLocationStatus = src.GpsLocationStatus
+	m.GPS_Location_Status = src.GPS_Location_Status
 	m.GPS_Location_Accuracy_KM = src.GPS_Location_Accuracy_KM
 }
 
 // Helper method to check that enums have valid values
 func (m *VerifyLocationReply) ValidateEnums() error {
-	if _, ok := VerifyLocationReply_Tower_Status_name[int32(m.TowerStatus)]; !ok {
+	if _, ok := VerifyLocationReply_TowerStatus_name[int32(m.TowerStatus)]; !ok {
 		return errors.New("invalid TowerStatus")
 	}
-	if _, ok := VerifyLocationReply_GPS_Location_Status_name[int32(m.GpsLocationStatus)]; !ok {
-		return errors.New("invalid GpsLocationStatus")
+	if _, ok := VerifyLocationReply_GPSLocationStatus_name[int32(m.GPS_Location_Status)]; !ok {
+		return errors.New("invalid GPS_Location_Status")
 	}
 	return nil
 }
@@ -1871,7 +1871,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 
 // Helper method to check that enums have valid values
 func (m *GetLocationReply) ValidateEnums() error {
-	if _, ok := GetLocationReply_Loc_Status_name[int32(m.Status)]; !ok {
+	if _, ok := GetLocationReply_LocStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	if err := m.NetworkLocation.ValidateEnums(); err != nil {
@@ -1884,26 +1884,26 @@ func (m *AppInstListRequest) CopyInFields(src *AppInstListRequest) {
 	m.Ver = src.Ver
 	m.SessionCookie = src.SessionCookie
 	m.CarrierName = src.CarrierName
-	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
-		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+	if src.GPSLocation != nil {
+		m.GPSLocation = &Loc{}
+		m.GPSLocation.Latitude = src.GPSLocation.Latitude
+		m.GPSLocation.Longitude = src.GPSLocation.Longitude
+		m.GPSLocation.HorizontalAccuracy = src.GPSLocation.HorizontalAccuracy
+		m.GPSLocation.VerticalAccuracy = src.GPSLocation.VerticalAccuracy
+		m.GPSLocation.Altitude = src.GPSLocation.Altitude
+		m.GPSLocation.Course = src.GPSLocation.Course
+		m.GPSLocation.Speed = src.GPSLocation.Speed
+		if src.GPSLocation.Timestamp != nil {
+			m.GPSLocation.Timestamp = &Timestamp{}
+			m.GPSLocation.Timestamp.Seconds = src.GPSLocation.Timestamp.Seconds
+			m.GPSLocation.Timestamp.Nanos = src.GPSLocation.Timestamp.Nanos
 		}
 	}
 }
 
 // Helper method to check that enums have valid values
 func (m *AppInstListRequest) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
+	if err := m.GPSLocation.ValidateEnums(); err != nil {
 		return err
 	}
 	return nil
@@ -1941,19 +1941,19 @@ func (m *Appinstance) ValidateEnums() error {
 func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 	m.CarrierName = src.CarrierName
 	m.CloudletName = src.CloudletName
-	if src.GpsLocation != nil {
-		m.GpsLocation = &Loc{}
-		m.GpsLocation.Latitude = src.GpsLocation.Latitude
-		m.GpsLocation.Longitude = src.GpsLocation.Longitude
-		m.GpsLocation.HorizontalAccuracy = src.GpsLocation.HorizontalAccuracy
-		m.GpsLocation.VerticalAccuracy = src.GpsLocation.VerticalAccuracy
-		m.GpsLocation.Altitude = src.GpsLocation.Altitude
-		m.GpsLocation.Course = src.GpsLocation.Course
-		m.GpsLocation.Speed = src.GpsLocation.Speed
-		if src.GpsLocation.Timestamp != nil {
-			m.GpsLocation.Timestamp = &Timestamp{}
-			m.GpsLocation.Timestamp.Seconds = src.GpsLocation.Timestamp.Seconds
-			m.GpsLocation.Timestamp.Nanos = src.GpsLocation.Timestamp.Nanos
+	if src.GPSLocation != nil {
+		m.GPSLocation = &Loc{}
+		m.GPSLocation.Latitude = src.GPSLocation.Latitude
+		m.GPSLocation.Longitude = src.GPSLocation.Longitude
+		m.GPSLocation.HorizontalAccuracy = src.GPSLocation.HorizontalAccuracy
+		m.GPSLocation.VerticalAccuracy = src.GPSLocation.VerticalAccuracy
+		m.GPSLocation.Altitude = src.GPSLocation.Altitude
+		m.GPSLocation.Course = src.GPSLocation.Course
+		m.GPSLocation.Speed = src.GPSLocation.Speed
+		if src.GPSLocation.Timestamp != nil {
+			m.GPSLocation.Timestamp = &Timestamp{}
+			m.GPSLocation.Timestamp.Seconds = src.GPSLocation.Timestamp.Seconds
+			m.GPSLocation.Timestamp.Nanos = src.GPSLocation.Timestamp.Nanos
 		}
 	}
 	m.Distance = src.Distance
@@ -1985,7 +1985,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 
 // Helper method to check that enums have valid values
 func (m *CloudletLocation) ValidateEnums() error {
-	if err := m.GpsLocation.ValidateEnums(); err != nil {
+	if err := m.GPSLocation.ValidateEnums(); err != nil {
 		return err
 	}
 	for _, e := range m.Appinstances {
@@ -2007,19 +2007,19 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 			m.Cloudlets[i0] = &CloudletLocation{}
 			m.Cloudlets[i0].CarrierName = src.Cloudlets[i0].CarrierName
 			m.Cloudlets[i0].CloudletName = src.Cloudlets[i0].CloudletName
-			if src.Cloudlets[i0].GpsLocation != nil {
-				m.Cloudlets[i0].GpsLocation = &Loc{}
-				m.Cloudlets[i0].GpsLocation.Latitude = src.Cloudlets[i0].GpsLocation.Latitude
-				m.Cloudlets[i0].GpsLocation.Longitude = src.Cloudlets[i0].GpsLocation.Longitude
-				m.Cloudlets[i0].GpsLocation.HorizontalAccuracy = src.Cloudlets[i0].GpsLocation.HorizontalAccuracy
-				m.Cloudlets[i0].GpsLocation.VerticalAccuracy = src.Cloudlets[i0].GpsLocation.VerticalAccuracy
-				m.Cloudlets[i0].GpsLocation.Altitude = src.Cloudlets[i0].GpsLocation.Altitude
-				m.Cloudlets[i0].GpsLocation.Course = src.Cloudlets[i0].GpsLocation.Course
-				m.Cloudlets[i0].GpsLocation.Speed = src.Cloudlets[i0].GpsLocation.Speed
-				if src.Cloudlets[i0].GpsLocation.Timestamp != nil {
-					m.Cloudlets[i0].GpsLocation.Timestamp = &Timestamp{}
-					m.Cloudlets[i0].GpsLocation.Timestamp.Seconds = src.Cloudlets[i0].GpsLocation.Timestamp.Seconds
-					m.Cloudlets[i0].GpsLocation.Timestamp.Nanos = src.Cloudlets[i0].GpsLocation.Timestamp.Nanos
+			if src.Cloudlets[i0].GPSLocation != nil {
+				m.Cloudlets[i0].GPSLocation = &Loc{}
+				m.Cloudlets[i0].GPSLocation.Latitude = src.Cloudlets[i0].GPSLocation.Latitude
+				m.Cloudlets[i0].GPSLocation.Longitude = src.Cloudlets[i0].GPSLocation.Longitude
+				m.Cloudlets[i0].GPSLocation.HorizontalAccuracy = src.Cloudlets[i0].GPSLocation.HorizontalAccuracy
+				m.Cloudlets[i0].GPSLocation.VerticalAccuracy = src.Cloudlets[i0].GPSLocation.VerticalAccuracy
+				m.Cloudlets[i0].GPSLocation.Altitude = src.Cloudlets[i0].GPSLocation.Altitude
+				m.Cloudlets[i0].GPSLocation.Course = src.Cloudlets[i0].GPSLocation.Course
+				m.Cloudlets[i0].GPSLocation.Speed = src.Cloudlets[i0].GPSLocation.Speed
+				if src.Cloudlets[i0].GPSLocation.Timestamp != nil {
+					m.Cloudlets[i0].GPSLocation.Timestamp = &Timestamp{}
+					m.Cloudlets[i0].GPSLocation.Timestamp.Seconds = src.Cloudlets[i0].GPSLocation.Timestamp.Seconds
+					m.Cloudlets[i0].GPSLocation.Timestamp.Nanos = src.Cloudlets[i0].GPSLocation.Timestamp.Nanos
 				}
 			}
 			m.Cloudlets[i0].Distance = src.Cloudlets[i0].Distance
@@ -2053,7 +2053,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 
 // Helper method to check that enums have valid values
 func (m *AppInstListReply) ValidateEnums() error {
-	if _, ok := AppInstListReply_AI_Status_name[int32(m.Status)]; !ok {
+	if _, ok := AppInstListReply_AIStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	for _, e := range m.Cloudlets {
@@ -2112,7 +2112,7 @@ func (m *FqdnListReply) ValidateEnums() error {
 			return err
 		}
 	}
-	if _, ok := FqdnListReply_FL_Status_name[int32(m.Status)]; !ok {
+	if _, ok := FqdnListReply_FLStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	return nil
@@ -2265,45 +2265,45 @@ func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var Tower_StatusStrings = []string{
+var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
 
 const (
-	Tower_StatusTOWER_UNKNOWN                    uint64 = 1 << 0
-	Tower_StatusCONNECTED_TO_SPECIFIED_TOWER     uint64 = 1 << 1
-	Tower_StatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
+	TowerStatusTOWER_UNKNOWN                    uint64 = 1 << 0
+	TowerStatusCONNECTED_TO_SPECIFIED_TOWER     uint64 = 1 << 1
+	TowerStatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
 )
 
-func (e *VerifyLocationReply_Tower_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *VerifyLocationReply_TowerStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := VerifyLocationReply_Tower_Status_value[str]
+	val, ok := VerifyLocationReply_TowerStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = VerifyLocationReply_Tower_Status_name[val]
+			_, ok = VerifyLocationReply_TowerStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = VerifyLocationReply_Tower_Status(val)
+	*e = VerifyLocationReply_TowerStatus(val)
 	return nil
 }
 
-func (e VerifyLocationReply_Tower_Status) MarshalYAML() (interface{}, error) {
+func (e VerifyLocationReply_TowerStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var GPS_Location_StatusStrings = []string{
+var GPSLocationStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_VERIFIED",
 	"LOC_MISMATCH_SAME_COUNTRY",
@@ -2315,153 +2315,153 @@ var GPS_Location_StatusStrings = []string{
 }
 
 const (
-	GPS_Location_StatusLOC_UNKNOWN                  uint64 = 1 << 0
-	GPS_Location_StatusLOC_VERIFIED                 uint64 = 1 << 1
-	GPS_Location_StatusLOC_MISMATCH_SAME_COUNTRY    uint64 = 1 << 2
-	GPS_Location_StatusLOC_MISMATCH_OTHER_COUNTRY   uint64 = 1 << 3
-	GPS_Location_StatusLOC_ROAMING_COUNTRY_MATCH    uint64 = 1 << 4
-	GPS_Location_StatusLOC_ROAMING_COUNTRY_MISMATCH uint64 = 1 << 5
-	GPS_Location_StatusLOC_ERROR_UNAUTHORIZED       uint64 = 1 << 6
-	GPS_Location_StatusLOC_ERROR_OTHER              uint64 = 1 << 7
+	GPSLocationStatusLOC_UNKNOWN                  uint64 = 1 << 0
+	GPSLocationStatusLOC_VERIFIED                 uint64 = 1 << 1
+	GPSLocationStatusLOC_MISMATCH_SAME_COUNTRY    uint64 = 1 << 2
+	GPSLocationStatusLOC_MISMATCH_OTHER_COUNTRY   uint64 = 1 << 3
+	GPSLocationStatusLOC_ROAMING_COUNTRY_MATCH    uint64 = 1 << 4
+	GPSLocationStatusLOC_ROAMING_COUNTRY_MISMATCH uint64 = 1 << 5
+	GPSLocationStatusLOC_ERROR_UNAUTHORIZED       uint64 = 1 << 6
+	GPSLocationStatusLOC_ERROR_OTHER              uint64 = 1 << 7
 )
 
-func (e *VerifyLocationReply_GPS_Location_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := VerifyLocationReply_GPS_Location_Status_value[str]
+	val, ok := VerifyLocationReply_GPSLocationStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = VerifyLocationReply_GPS_Location_Status_name[val]
+			_, ok = VerifyLocationReply_GPSLocationStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = VerifyLocationReply_GPS_Location_Status(val)
+	*e = VerifyLocationReply_GPSLocationStatus(val)
 	return nil
 }
 
-func (e VerifyLocationReply_GPS_Location_Status) MarshalYAML() (interface{}, error) {
+func (e VerifyLocationReply_GPSLocationStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var Loc_StatusStrings = []string{
+var LocStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_FOUND",
 	"LOC_DENIED",
 }
 
 const (
-	Loc_StatusLOC_UNKNOWN uint64 = 1 << 0
-	Loc_StatusLOC_FOUND   uint64 = 1 << 1
-	Loc_StatusLOC_DENIED  uint64 = 1 << 2
+	LocStatusLOC_UNKNOWN uint64 = 1 << 0
+	LocStatusLOC_FOUND   uint64 = 1 << 1
+	LocStatusLOC_DENIED  uint64 = 1 << 2
 )
 
-func (e *GetLocationReply_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := GetLocationReply_Loc_Status_value[str]
+	val, ok := GetLocationReply_LocStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = GetLocationReply_Loc_Status_name[val]
+			_, ok = GetLocationReply_LocStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = GetLocationReply_Loc_Status(val)
+	*e = GetLocationReply_LocStatus(val)
 	return nil
 }
 
-func (e GetLocationReply_Loc_Status) MarshalYAML() (interface{}, error) {
+func (e GetLocationReply_LocStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var AI_StatusStrings = []string{
+var AIStatusStrings = []string{
 	"AI_UNDEFINED",
 	"AI_SUCCESS",
 	"AI_FAIL",
 }
 
 const (
-	AI_StatusAI_UNDEFINED uint64 = 1 << 0
-	AI_StatusAI_SUCCESS   uint64 = 1 << 1
-	AI_StatusAI_FAIL      uint64 = 1 << 2
+	AIStatusAI_UNDEFINED uint64 = 1 << 0
+	AIStatusAI_SUCCESS   uint64 = 1 << 1
+	AIStatusAI_FAIL      uint64 = 1 << 2
 )
 
-func (e *AppInstListReply_AI_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := AppInstListReply_AI_Status_value[str]
+	val, ok := AppInstListReply_AIStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = AppInstListReply_AI_Status_name[val]
+			_, ok = AppInstListReply_AIStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = AppInstListReply_AI_Status(val)
+	*e = AppInstListReply_AIStatus(val)
 	return nil
 }
 
-func (e AppInstListReply_AI_Status) MarshalYAML() (interface{}, error) {
+func (e AppInstListReply_AIStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
-var FL_StatusStrings = []string{
+var FLStatusStrings = []string{
 	"FL_UNDEFINED",
 	"FL_SUCCESS",
 	"FL_FAIL",
 }
 
 const (
-	FL_StatusFL_UNDEFINED uint64 = 1 << 0
-	FL_StatusFL_SUCCESS   uint64 = 1 << 1
-	FL_StatusFL_FAIL      uint64 = 1 << 2
+	FLStatusFL_UNDEFINED uint64 = 1 << 0
+	FLStatusFL_SUCCESS   uint64 = 1 << 1
+	FLStatusFL_FAIL      uint64 = 1 << 2
 )
 
-func (e *FqdnListReply_FL_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := FqdnListReply_FL_Status_value[str]
+	val, ok := FqdnListReply_FLStatus_value[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = FqdnListReply_FL_Status_name[val]
+			_, ok = FqdnListReply_FLStatus_name[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = FqdnListReply_FL_Status(val)
+	*e = FqdnListReply_FLStatus(val)
 	return nil
 }
 
-func (e FqdnListReply_FL_Status) MarshalYAML() (interface{}, error) {
+func (e FqdnListReply_FLStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
@@ -2602,8 +2602,8 @@ func (m *FindCloudletRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
+	if m.GPSLocation != nil {
+		l = m.GPSLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	l = len(m.DevName)
@@ -2661,8 +2661,8 @@ func (m *VerifyLocationRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
+	if m.GPSLocation != nil {
+		l = m.GPSLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	l = len(m.VerifyLocToken)
@@ -2681,8 +2681,8 @@ func (m *VerifyLocationReply) Size() (n int) {
 	if m.TowerStatus != 0 {
 		n += 1 + sovAppClient(uint64(m.TowerStatus))
 	}
-	if m.GpsLocationStatus != 0 {
-		n += 1 + sovAppClient(uint64(m.GpsLocationStatus))
+	if m.GPS_Location_Status != 0 {
+		n += 1 + sovAppClient(uint64(m.GPS_Location_Status))
 	}
 	if m.GPS_Location_Accuracy_KM != 0 {
 		n += 9
@@ -2744,8 +2744,8 @@ func (m *AppInstListRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
+	if m.GPSLocation != nil {
+		l = m.GPSLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	return n
@@ -2786,8 +2786,8 @@ func (m *CloudletLocation) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if m.GpsLocation != nil {
-		l = m.GpsLocation.Size()
+	if m.GPSLocation != nil {
+		l = m.GPSLocation.Size()
 		n += 1 + l + sovAppClient(uint64(l))
 	}
 	if m.Distance != 0 {
@@ -3400,7 +3400,7 @@ func (m *FindCloudletRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GPSLocation", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3424,10 +3424,10 @@ func (m *FindCloudletRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.GpsLocation == nil {
-				m.GpsLocation = &Loc{}
+			if m.GPSLocation == nil {
+				m.GPSLocation = &Loc{}
 			}
-			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.GPSLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3828,7 +3828,7 @@ func (m *VerifyLocationRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GPSLocation", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -3852,10 +3852,10 @@ func (m *VerifyLocationRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.GpsLocation == nil {
-				m.GpsLocation = &Loc{}
+			if m.GPSLocation == nil {
+				m.GPSLocation = &Loc{}
 			}
-			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.GPSLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3971,16 +3971,16 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TowerStatus |= (VerifyLocationReply_Tower_Status(b) & 0x7F) << shift
+				m.TowerStatus |= (VerifyLocationReply_TowerStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 3:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocationStatus", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GPS_Location_Status", wireType)
 			}
-			m.GpsLocationStatus = 0
+			m.GPS_Location_Status = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowAppClient
@@ -3990,7 +3990,7 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GpsLocationStatus |= (VerifyLocationReply_GPS_Location_Status(b) & 0x7F) << shift
+				m.GPS_Location_Status |= (VerifyLocationReply_GPSLocationStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4216,7 +4216,7 @@ func (m *GetLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (GetLocationReply_Loc_Status(b) & 0x7F) << shift
+				m.Status |= (GetLocationReply_LocStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4431,7 +4431,7 @@ func (m *AppInstListRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GPSLocation", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4455,10 +4455,10 @@ func (m *AppInstListRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.GpsLocation == nil {
-				m.GpsLocation = &Loc{}
+			if m.GPSLocation == nil {
+				m.GPSLocation = &Loc{}
 			}
-			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.GPSLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4740,7 +4740,7 @@ func (m *CloudletLocation) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocation", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GPSLocation", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -4764,10 +4764,10 @@ func (m *CloudletLocation) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if m.GpsLocation == nil {
-				m.GpsLocation = &Loc{}
+			if m.GPSLocation == nil {
+				m.GPSLocation = &Loc{}
 			}
-			if err := m.GpsLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.GPSLocation.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -4896,7 +4896,7 @@ func (m *AppInstListReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (AppInstListReply_AI_Status(b) & 0x7F) << shift
+				m.Status |= (AppInstListReply_AIStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5339,7 +5339,7 @@ func (m *FqdnListReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (FqdnListReply_FL_Status(b) & 0x7F) << shift
+				m.Status |= (FqdnListReply_FLStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5774,108 +5774,108 @@ var (
 func init() { proto.RegisterFile("app-client.proto", fileDescriptorAppClient) }
 
 var fileDescriptorAppClient = []byte{
-	// 1646 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xcd, 0x6f, 0xdb, 0xc8,
-	0x15, 0x0f, 0xf5, 0xe1, 0x8f, 0x27, 0x59, 0xa6, 0xc7, 0x71, 0xaa, 0xaa, 0x8e, 0xe1, 0x12, 0x49,
-	0x9a, 0xba, 0x8d, 0xdc, 0xb8, 0x1f, 0x01, 0xd2, 0x04, 0x05, 0x2b, 0x52, 0x32, 0x1b, 0x89, 0x72,
-	0x49, 0xc9, 0x69, 0x0b, 0x14, 0x04, 0x23, 0x8e, 0x15, 0xc2, 0x32, 0x49, 0x93, 0x94, 0x03, 0x1f,
-	0x0a, 0x14, 0xed, 0xa1, 0xc8, 0xa5, 0x45, 0xd1, 0x43, 0x0f, 0xfd, 0x03, 0x7a, 0x2c, 0x50, 0x14,
-	0xe8, 0xbf, 0x90, 0xe3, 0x2e, 0xf6, 0xb6, 0xa7, 0xdd, 0x60, 0x17, 0x8b, 0xfd, 0x0f, 0xf6, 0xb4,
-	0x58, 0xcc, 0x90, 0x94, 0x48, 0xea, 0x63, 0xe5, 0xdd, 0xec, 0x21, 0x37, 0xce, 0x7b, 0x33, 0xef,
-	0xe3, 0xf7, 0x7e, 0x33, 0xf3, 0x86, 0xc0, 0xea, 0x8e, 0x73, 0xaf, 0x37, 0x30, 0xb1, 0xe5, 0x57,
-	0x1d, 0xd7, 0xf6, 0x6d, 0x54, 0x36, 0x4c, 0xcf, 0x77, 0xcd, 0x67, 0x43, 0x1f, 0x1b, 0xda, 0x99,
-	0xee, 0xf7, 0x9e, 0x6b, 0xd8, 0xea, 0x9b, 0x16, 0xae, 0x6c, 0xf7, 0x6d, 0xbb, 0x3f, 0xc0, 0xfb,
-	0xba, 0x63, 0xee, 0xeb, 0x96, 0x65, 0xfb, 0xba, 0x6f, 0xda, 0x96, 0x17, 0xac, 0xab, 0xac, 0x0e,
-	0xec, 0x5e, 0xf8, 0xb9, 0xae, 0x3b, 0x4e, 0xcf, 0x3e, 0x3b, 0xb3, 0xad, 0x40, 0xc0, 0xfd, 0x9f,
-	0x81, 0x2d, 0x05, 0xf7, 0x4d, 0xcf, 0xc7, 0x6e, 0x8d, 0x3a, 0x53, 0xf0, 0xf9, 0x10, 0x7b, 0x3e,
-	0x62, 0x21, 0x7b, 0x8c, 0xdd, 0x32, 0xb3, 0xcb, 0xdc, 0x5d, 0x53, 0xc8, 0x27, 0x2a, 0xc3, 0xb2,
-	0x80, 0x2f, 0x64, 0xfd, 0x0c, 0x97, 0x33, 0xbb, 0xcc, 0xdd, 0x55, 0x25, 0x1a, 0x12, 0x0d, 0xef,
-	0x38, 0x54, 0x93, 0x0d, 0x34, 0xe1, 0x30, 0xd4, 0x1c, 0x63, 0xd7, 0x2b, 0xe7, 0x46, 0x1a, 0x32,
-	0x44, 0xbb, 0x50, 0xa8, 0xe9, 0xae, 0x6b, 0x62, 0x97, 0xae, 0xcb, 0x53, 0x6d, 0x5c, 0x84, 0xb6,
-	0x61, 0x95, 0x1f, 0xfa, 0xcf, 0x3b, 0xf6, 0x29, 0xb6, 0xca, 0x4b, 0x54, 0x3f, 0x16, 0x70, 0xff,
-	0x63, 0x60, 0x33, 0x1d, 0xb9, 0x33, 0xb8, 0x9c, 0x12, 0xf7, 0x63, 0x58, 0x52, 0x7d, 0xdd, 0x1f,
-	0x7a, 0x34, 0xec, 0xd2, 0xc1, 0xed, 0xea, 0x2c, 0x20, 0xab, 0xd4, 0x44, 0x30, 0x59, 0x09, 0x17,
-	0xa1, 0x5b, 0xb0, 0xa6, 0x62, 0xcf, 0x33, 0x6d, 0xab, 0x66, 0xdb, 0xa7, 0x66, 0x94, 0x62, 0x52,
-	0x88, 0xee, 0x40, 0x89, 0xc6, 0xa5, 0x62, 0xf7, 0x02, 0xbb, 0x5d, 0x45, 0x0a, 0xf3, 0x4d, 0x49,
-	0xb9, 0xcf, 0x19, 0xd8, 0xac, 0x9b, 0x96, 0x51, 0x1b, 0xd8, 0x43, 0x63, 0x80, 0xe7, 0xc0, 0x3d,
-	0xe1, 0x37, 0x33, 0xcd, 0x6f, 0x0a, 0xc6, 0xec, 0x24, 0x8c, 0xbf, 0x80, 0x42, 0xc3, 0xf1, 0x9a,
-	0x76, 0x8f, 0x92, 0x82, 0x86, 0x55, 0x38, 0xb8, 0x39, 0x1b, 0x83, 0xa6, 0xdd, 0x53, 0xe2, 0x2b,
-	0xe2, 0x75, 0xcf, 0xcf, 0xac, 0xfb, 0xd2, 0xcc, 0xba, 0x2f, 0x27, 0xea, 0xce, 0xbd, 0x9b, 0x81,
-	0x8d, 0x24, 0x00, 0xd3, 0xab, 0x26, 0xc3, 0x92, 0x17, 0xaf, 0xda, 0xcf, 0x66, 0x47, 0x3c, 0x61,
-	0x8e, 0x4a, 0xa2, 0x32, 0x06, 0x56, 0x10, 0x82, 0x5c, 0xfd, 0xd7, 0x82, 0x1c, 0x22, 0x44, 0xbf,
-	0xd1, 0x03, 0xc8, 0x3b, 0xb6, 0xeb, 0x13, 0x6e, 0x66, 0xef, 0x16, 0x0e, 0xbe, 0x3b, 0xdb, 0x05,
-	0xef, 0x38, 0x47, 0xb6, 0xeb, 0x2b, 0xc1, 0x7c, 0xf4, 0x2b, 0xd8, 0xe8, 0x85, 0x0e, 0xb5, 0x41,
-	0x84, 0x6c, 0x7e, 0x11, 0x64, 0xd9, 0x68, 0x5d, 0x04, 0x2f, 0xc7, 0x03, 0x8c, 0xc3, 0x45, 0x2c,
-	0x14, 0xeb, 0x92, 0x2c, 0x68, 0x5d, 0xf9, 0x89, 0xdc, 0x7e, 0x2a, 0xb3, 0xd7, 0x50, 0x09, 0x80,
-	0x4a, 0xea, 0xed, 0xae, 0x2c, 0xb0, 0x0c, 0xda, 0x80, 0x35, 0x3a, 0x96, 0xdb, 0x9d, 0x40, 0x94,
-	0xe1, 0xde, 0x67, 0x60, 0xeb, 0x18, 0xbb, 0xe6, 0xc9, 0x65, 0x64, 0xf5, 0x2d, 0xa0, 0xd5, 0x1d,
-	0x28, 0x8d, 0x62, 0x0e, 0xf6, 0x78, 0xc0, 0xae, 0x94, 0x94, 0x7b, 0x99, 0x87, 0xcd, 0x74, 0x72,
-	0x21, 0x65, 0x2e, 0xc6, 0xa9, 0x5d, 0x60, 0x17, 0xfd, 0x1e, 0x8a, 0xbe, 0xfd, 0x02, 0xbb, 0x5a,
-	0x82, 0x38, 0x0f, 0x67, 0xc7, 0x34, 0xc5, 0x6c, 0xb5, 0x43, 0x2d, 0x84, 0xe4, 0x29, 0x50, 0x7b,
-	0x61, 0x69, 0xce, 0x61, 0xb3, 0xef, 0x78, 0xa3, 0x7a, 0x47, 0x5e, 0xb2, 0xd4, 0x0b, 0x7f, 0x35,
-	0x2f, 0x8d, 0x23, 0x55, 0x8b, 0x24, 0x91, 0xb3, 0x8d, 0xfe, 0x18, 0x9d, 0xd0, 0xe5, 0x03, 0x28,
-	0x27, 0x66, 0xf2, 0xbd, 0xde, 0xd0, 0xd5, 0x7b, 0x97, 0xda, 0x93, 0x16, 0x45, 0x9c, 0x51, 0xb6,
-	0x1a, 0x47, 0x6a, 0xa4, 0x8e, 0xb4, 0x4f, 0x5a, 0x9c, 0x09, 0xc5, 0x78, 0x22, 0x84, 0x34, 0x9d,
-	0xf6, 0x53, 0x51, 0x89, 0xf1, 0x6a, 0x17, 0xb6, 0x6b, 0x6d, 0x59, 0x16, 0x6b, 0x1d, 0x51, 0xd0,
-	0x3a, 0x6d, 0x4d, 0x3d, 0x12, 0x6b, 0x52, 0x5d, 0xa2, 0x83, 0xa7, 0xa2, 0xc2, 0x32, 0xe8, 0x16,
-	0xec, 0xca, 0xed, 0x8e, 0x36, 0x77, 0x56, 0x86, 0xfb, 0x94, 0x81, 0xcd, 0x29, 0xe9, 0xa0, 0x75,
-	0x28, 0x34, 0xdb, 0xb5, 0x98, 0x43, 0x16, 0x8a, 0x44, 0x70, 0x2c, 0x2a, 0xd4, 0x00, 0xcb, 0xa0,
-	0x9b, 0xf0, 0x6d, 0x22, 0x69, 0x49, 0x6a, 0x8b, 0xef, 0xd4, 0x0e, 0x35, 0x95, 0x6f, 0x89, 0x5a,
-	0xad, 0xdd, 0x95, 0x3b, 0xca, 0x6f, 0xd9, 0x0c, 0xda, 0x81, 0x4a, 0x42, 0xdd, 0xee, 0x1c, 0x8a,
-	0xca, 0x48, 0x9f, 0x8d, 0x96, 0x2b, 0x6d, 0xbe, 0x25, 0xc9, 0x8d, 0x48, 0xa1, 0xd1, 0xc9, 0x6c,
-	0x8e, 0x24, 0x38, 0x55, 0x1d, 0x9a, 0x63, 0xf3, 0xa8, 0x02, 0x37, 0xc8, 0x0c, 0x51, 0x51, 0xda,
-	0x04, 0x19, 0xbe, 0xdb, 0x39, 0x6c, 0x2b, 0xd2, 0xef, 0x44, 0x81, 0x5d, 0x42, 0x9b, 0xb0, 0x3e,
-	0xd6, 0x51, 0xcf, 0xec, 0x32, 0x67, 0x01, 0x6a, 0x8c, 0xb7, 0xee, 0x37, 0xbe, 0xc9, 0xb8, 0xff,
-	0x66, 0x80, 0x4d, 0x38, 0x9c, 0x7e, 0x56, 0xb6, 0x52, 0x37, 0xdc, 0x4f, 0x67, 0x93, 0x31, 0x6d,
-	0x8d, 0xec, 0x4b, 0x2d, 0x75, 0xe3, 0x7d, 0xf9, 0xe6, 0xbf, 0x0e, 0x79, 0x4a, 0x2f, 0x4a, 0xc2,
-	0x9c, 0x12, 0x0c, 0x50, 0x03, 0xd6, 0x65, 0xec, 0xbf, 0xb0, 0xdd, 0xd3, 0xe6, 0x95, 0xce, 0xc4,
-	0xf4, 0x2a, 0xee, 0x11, 0xc0, 0x38, 0xac, 0x49, 0x22, 0xad, 0xc1, 0x2a, 0x11, 0x44, 0x07, 0x62,
-	0x09, 0x80, 0x0c, 0x05, 0x51, 0x26, 0xac, 0xca, 0x70, 0xff, 0x61, 0x00, 0xf1, 0x8e, 0x23, 0x59,
-	0x9e, 0xdf, 0x34, 0xbd, 0xb7, 0xe0, 0x86, 0xe5, 0xfe, 0xca, 0x40, 0x81, 0x77, 0x1c, 0xd3, 0xf2,
-	0x7c, 0xdd, 0xea, 0x25, 0xee, 0x55, 0x66, 0xe6, 0xbd, 0x9a, 0x49, 0xf6, 0x53, 0x6f, 0xf2, 0x7e,
-	0xe3, 0xfe, 0x98, 0x01, 0xb6, 0x96, 0xba, 0xa8, 0xd2, 0x40, 0x30, 0x93, 0x40, 0x70, 0x50, 0x8c,
-	0x56, 0xc5, 0xda, 0xc4, 0x84, 0x2c, 0x0d, 0x56, 0xf6, 0xca, 0xf7, 0x46, 0x05, 0x56, 0x04, 0x33,
-	0x00, 0x2a, 0x3c, 0x03, 0x47, 0x63, 0x24, 0x41, 0x31, 0x86, 0xa3, 0x57, 0xce, 0xd3, 0xbc, 0x6f,
-	0xcf, 0xcd, 0x3b, 0x9a, 0xad, 0x24, 0x96, 0x72, 0x9f, 0x31, 0xc0, 0x26, 0x58, 0x34, 0x7d, 0xeb,
-	0x35, 0x53, 0x5b, 0xef, 0x27, 0x73, 0x7d, 0x25, 0xac, 0x55, 0x79, 0x29, 0xbd, 0xf3, 0x0e, 0x61,
-	0x35, 0x02, 0x8b, 0x5c, 0x2c, 0x24, 0xf8, 0xbd, 0xd9, 0x06, 0xd3, 0x15, 0x52, 0xc6, 0x8b, 0xb9,
-	0x87, 0xb0, 0x3a, 0x32, 0x4f, 0x4e, 0x5e, 0x5e, 0xd2, 0xba, 0xb2, 0x20, 0xd6, 0x25, 0x59, 0x14,
-	0x82, 0xa6, 0x82, 0xa8, 0xbb, 0xb5, 0x9a, 0xa8, 0xaa, 0x2c, 0x83, 0x0a, 0xb0, 0xcc, 0x4b, 0x5a,
-	0x9d, 0x97, 0x9a, 0x6c, 0x86, 0x93, 0x60, 0xbd, 0x7e, 0x6e, 0x58, 0x6f, 0x60, 0xf3, 0x70, 0xff,
-	0x62, 0x28, 0x61, 0x89, 0xb9, 0xaf, 0xc4, 0xea, 0x58, 0xef, 0x99, 0x4d, 0xf6, 0x9e, 0x11, 0xdf,
-	0x73, 0x31, 0xbe, 0x57, 0x01, 0xf1, 0x96, 0xe1, 0xda, 0xa6, 0x71, 0xa4, 0xf7, 0x4e, 0xf5, 0x3e,
-	0x8e, 0x35, 0xad, 0x53, 0x34, 0xdc, 0x27, 0x0c, 0xac, 0x8d, 0x33, 0x9d, 0xde, 0x54, 0x3c, 0x86,
-	0x95, 0x30, 0x81, 0xa8, 0x22, 0xf3, 0xb7, 0x11, 0x99, 0xa9, 0x8c, 0x96, 0x20, 0x69, 0xc4, 0x8f,
-	0x1c, 0xe5, 0xc7, 0xfd, 0x39, 0x6d, 0x6c, 0x3c, 0x92, 0x6a, 0xbd, 0x99, 0x22, 0x07, 0x29, 0xe9,
-	0x48, 0x48, 0xfb, 0xc4, 0x66, 0xba, 0xa4, 0x44, 0x1d, 0x2f, 0x69, 0xbd, 0x19, 0x95, 0xf4, 0x9f,
-	0x19, 0xb8, 0x21, 0x5c, 0x5a, 0xfa, 0x99, 0xd9, 0x6b, 0xda, 0xbd, 0x86, 0x6b, 0x0f, 0x9d, 0xaf,
-	0x7b, 0x2e, 0x22, 0xc8, 0x35, 0xfb, 0x92, 0x41, 0xeb, 0x92, 0x53, 0xe8, 0x37, 0xfa, 0x0d, 0xac,
-	0xd4, 0xec, 0xb3, 0xb3, 0xce, 0xa5, 0x83, 0xcb, 0x05, 0x9a, 0xef, 0xa3, 0xd9, 0xf9, 0x4e, 0x8f,
-	0xa7, 0x2a, 0x0c, 0xfa, 0x91, 0x0d, 0x65, 0x64, 0x8d, 0xec, 0xfa, 0xae, 0x87, 0x5d, 0x41, 0xf7,
-	0xf5, 0x72, 0x91, 0x86, 0x33, 0x1a, 0x73, 0x3f, 0x87, 0x42, 0x6c, 0x11, 0x81, 0x46, 0x18, 0xf4,
-	0xbb, 0x96, 0x81, 0x4f, 0x4c, 0x0b, 0x1b, 0xc1, 0x85, 0x21, 0x0c, 0xfa, 0x2a, 0xee, 0x0d, 0x5d,
-	0x1c, 0x20, 0x23, 0x0c, 0xfa, 0x6d, 0x07, 0x5b, 0x6c, 0x86, 0xfb, 0x37, 0x03, 0xd7, 0x27, 0x22,
-	0x99, 0x45, 0x85, 0xe4, 0x93, 0x64, 0xd1, 0x87, 0x64, 0xf8, 0x02, 0xd9, 0x86, 0x55, 0xd1, 0x75,
-	0x6d, 0xb7, 0x66, 0x1b, 0x01, 0x9b, 0xd7, 0x94, 0xb1, 0x80, 0x9c, 0xae, 0xd4, 0x79, 0x08, 0x79,
-	0xf8, 0x1e, 0x8e, 0x89, 0xf6, 0x1e, 0xc3, 0xb2, 0x24, 0x90, 0x0c, 0x69, 0xf5, 0x25, 0x21, 0x51,
-	0xfd, 0x15, 0xc8, 0x49, 0x2d, 0x51, 0x62, 0x19, 0x04, 0xb0, 0xd4, 0x52, 0x25, 0x55, 0x90, 0xd9,
-	0x0c, 0xf9, 0x96, 0x8e, 0x78, 0x41, 0x50, 0xd8, 0xec, 0xde, 0x23, 0x28, 0xc4, 0xa2, 0x22, 0x26,
-	0x14, 0x35, 0x4d, 0x20, 0x45, 0x4d, 0x12, 0x48, 0x51, 0x43, 0x02, 0x1d, 0x7c, 0xbc, 0x0c, 0x6c,
-	0x8b, 0x66, 0x28, 0xd2, 0x0c, 0x35, 0xde, 0x31, 0xd1, 0xdf, 0x18, 0x28, 0x25, 0xdf, 0xe0, 0x68,
-	0x7f, 0x1e, 0x26, 0x53, 0xfe, 0x33, 0x54, 0xee, 0x2d, 0xbe, 0xc0, 0x19, 0x5c, 0x72, 0x37, 0xff,
-	0xf4, 0xde, 0x47, 0xff, 0xc8, 0x7c, 0x8b, 0x43, 0xfb, 0x17, 0xf7, 0xf7, 0xdd, 0x70, 0x42, 0xf0,
-	0x9b, 0xe4, 0x21, 0xb3, 0x87, 0xfe, 0xc2, 0x40, 0x31, 0xfe, 0x1c, 0x44, 0xf7, 0x16, 0x7d, 0x36,
-	0x06, 0xd1, 0xfc, 0xe0, 0x0a, 0xaf, 0x4c, 0xee, 0x3b, 0x34, 0x96, 0x2d, 0x8e, 0x25, 0xb1, 0x9c,
-	0x98, 0x96, 0x11, 0xbd, 0xed, 0x48, 0x24, 0x04, 0x9b, 0x64, 0xe7, 0x3f, 0x0f, 0x9b, 0xa9, 0xaf,
-	0xb7, 0x79, 0xd8, 0x4c, 0x79, 0x54, 0x24, 0xb1, 0xb9, 0xa0, 0x13, 0xa2, 0xc7, 0x0a, 0x89, 0xe8,
-	0xcf, 0x0c, 0x14, 0x62, 0xed, 0x1f, 0xfa, 0xe1, 0x82, 0x5d, 0x62, 0x10, 0xcb, 0xde, 0xe2, 0x3d,
-	0x25, 0x57, 0xa1, 0x81, 0x5c, 0xe7, 0xd6, 0x49, 0x20, 0x7d, 0xec, 0xc7, 0xa3, 0xf8, 0x3b, 0x03,
-	0x25, 0xde, 0x30, 0xc8, 0xe6, 0xed, 0xd8, 0x94, 0xde, 0xe8, 0x47, 0x57, 0x3d, 0x23, 0x2a, 0xd5,
-	0x2b, 0xac, 0x98, 0x40, 0x46, 0x37, 0x8c, 0xa1, 0x87, 0x5d, 0xdf, 0xee, 0x93, 0x09, 0x24, 0xa6,
-	0x97, 0x0c, 0x94, 0x1a, 0xd8, 0x8f, 0x5d, 0xd0, 0xf3, 0xc0, 0x99, 0xec, 0x2d, 0xe7, 0x81, 0x93,
-	0xbe, 0xf5, 0x93, 0xb1, 0xf4, 0xb1, 0xaf, 0x07, 0x5d, 0xc7, 0xc0, 0xf4, 0x28, 0x6f, 0xfe, 0x40,
-	0x8b, 0x14, 0xdd, 0x05, 0xe8, 0xfb, 0x8b, 0xdc, 0x17, 0x41, 0x10, 0xdf, 0x5b, 0xf0, 0x6a, 0x99,
-	0x28, 0xcf, 0xc9, 0xb9, 0x61, 0x85, 0xee, 0x7f, 0xc9, 0xbe, 0xfa, 0x70, 0xe7, 0xda, 0xab, 0xd7,
-	0x3b, 0xcc, 0x3b, 0xaf, 0x77, 0x98, 0x0f, 0x5e, 0xef, 0x30, 0xcf, 0x96, 0xe8, 0x9f, 0xc2, 0x1f,
-	0x7f, 0x11, 0x00, 0x00, 0xff, 0xff, 0x49, 0x7b, 0xc0, 0xd5, 0x91, 0x14, 0x00, 0x00,
+	// 1641 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x4f, 0x6f, 0xdc, 0xc6,
+	0x15, 0x37, 0xf7, 0x8f, 0xfe, 0xbc, 0x95, 0x56, 0xd4, 0xc8, 0x72, 0xb7, 0x5b, 0x59, 0x50, 0x09,
+	0xdb, 0x75, 0xd5, 0x7a, 0xe5, 0xca, 0x45, 0x0d, 0xd7, 0x36, 0x0c, 0x76, 0xc9, 0x95, 0x58, 0xed,
+	0x72, 0x55, 0x72, 0x57, 0x6e, 0x8b, 0x02, 0x04, 0xbd, 0x1c, 0xad, 0x09, 0xad, 0x48, 0x9a, 0xe4,
+	0xca, 0xd0, 0xa1, 0x40, 0x51, 0x1f, 0x8a, 0x5e, 0x5a, 0x14, 0x3d, 0xe4, 0x90, 0x0f, 0x90, 0x63,
+	0x72, 0x08, 0x90, 0xaf, 0xe0, 0x63, 0x82, 0xdc, 0x72, 0x4a, 0x8c, 0x18, 0xf9, 0x06, 0x39, 0x06,
+	0xc1, 0x0c, 0xc9, 0x5d, 0x92, 0xfb, 0x27, 0xab, 0xc4, 0x39, 0xf8, 0xc6, 0x79, 0x33, 0x6f, 0xde,
+	0x7b, 0xbf, 0xf7, 0x9b, 0x79, 0x6f, 0x08, 0xac, 0xee, 0x38, 0xb7, 0x3a, 0x3d, 0x13, 0x5b, 0x7e,
+	0xc5, 0x71, 0x6d, 0xdf, 0x46, 0x25, 0xc3, 0xf4, 0x7c, 0xd7, 0x7c, 0xd2, 0xf7, 0xb1, 0xa1, 0x9d,
+	0xea, 0x7e, 0xe7, 0xa9, 0x86, 0xad, 0xae, 0x69, 0xe1, 0xf2, 0x46, 0xd7, 0xb6, 0xbb, 0x3d, 0xbc,
+	0xa3, 0x3b, 0xe6, 0x8e, 0x6e, 0x59, 0xb6, 0xaf, 0xfb, 0xa6, 0x6d, 0x79, 0x81, 0x5e, 0x79, 0xb1,
+	0x67, 0x77, 0xc2, 0xcf, 0x15, 0xdd, 0x71, 0x3a, 0xf6, 0xe9, 0xa9, 0x6d, 0x05, 0x02, 0xee, 0x23,
+	0x06, 0xd6, 0x15, 0xdc, 0x35, 0x3d, 0x1f, 0xbb, 0x55, 0x6a, 0x4c, 0xc1, 0xcf, 0xfa, 0xd8, 0xf3,
+	0x11, 0x0b, 0xd9, 0x23, 0xec, 0x96, 0x98, 0x2d, 0xe6, 0xe6, 0xb2, 0x42, 0x3e, 0x51, 0x09, 0xe6,
+	0x05, 0x7c, 0x26, 0xeb, 0xa7, 0xb8, 0x94, 0xd9, 0x62, 0x6e, 0x2e, 0x2a, 0xd1, 0x90, 0xcc, 0xf0,
+	0x8e, 0x43, 0x67, 0xb2, 0xc1, 0x4c, 0x38, 0x0c, 0x67, 0x8e, 0xb0, 0xeb, 0x95, 0x72, 0x83, 0x19,
+	0x32, 0x44, 0x5b, 0x50, 0xa8, 0xea, 0xae, 0x6b, 0x62, 0x97, 0xea, 0xe5, 0xe9, 0x6c, 0x5c, 0x84,
+	0x36, 0x60, 0x91, 0xef, 0xfb, 0x4f, 0x5b, 0xf6, 0x09, 0xb6, 0x4a, 0x73, 0x74, 0x7e, 0x28, 0xe0,
+	0x3e, 0x64, 0x60, 0x2d, 0xed, 0xb9, 0xd3, 0x3b, 0x1f, 0xe3, 0xf7, 0x43, 0x98, 0x53, 0x7d, 0xdd,
+	0xef, 0x7b, 0xd4, 0xed, 0xe2, 0xee, 0xf5, 0xca, 0x24, 0x20, 0x2b, 0x74, 0x8b, 0x60, 0xb1, 0x12,
+	0x2a, 0xa1, 0x6b, 0xb0, 0xac, 0x62, 0xcf, 0x33, 0x6d, 0xab, 0x6a, 0xdb, 0x27, 0x66, 0x14, 0x62,
+	0x52, 0x88, 0x6e, 0x40, 0x91, 0xfa, 0xa5, 0x62, 0xf7, 0x0c, 0xbb, 0x6d, 0x45, 0x0a, 0xe3, 0x4d,
+	0x49, 0xb9, 0x6f, 0x18, 0x58, 0xab, 0x99, 0x96, 0x51, 0xed, 0xd9, 0x7d, 0xa3, 0x87, 0xa7, 0xc0,
+	0x3d, 0x62, 0x37, 0x33, 0xce, 0x6e, 0x0a, 0xc6, 0xec, 0x28, 0x8c, 0x8f, 0xa0, 0xb0, 0x77, 0xa8,
+	0xd6, 0xed, 0x0e, 0x25, 0x05, 0x75, 0xab, 0xb0, 0x7b, 0x75, 0x32, 0x06, 0x75, 0xbb, 0xa3, 0xc4,
+	0x35, 0xe2, 0x79, 0xcf, 0x4f, 0xcc, 0xfb, 0xdc, 0xc4, 0xbc, 0xcf, 0x27, 0xf2, 0xce, 0x7d, 0x92,
+	0x81, 0xd5, 0x24, 0x00, 0xe3, 0xb3, 0x26, 0xc3, 0x9c, 0x17, 0xcf, 0xda, 0xef, 0x26, 0x7b, 0x3c,
+	0xb2, 0x1d, 0x95, 0x44, 0x69, 0x0c, 0x76, 0x41, 0x08, 0x72, 0xb5, 0x3f, 0x09, 0x72, 0x88, 0x10,
+	0xfd, 0x46, 0x77, 0x21, 0xef, 0xd8, 0xae, 0x4f, 0xb8, 0x99, 0xbd, 0x59, 0xd8, 0xfd, 0xf9, 0x64,
+	0x13, 0xbc, 0xe3, 0x1c, 0xda, 0xae, 0xaf, 0x04, 0xeb, 0xd1, 0x1f, 0x61, 0xb5, 0x13, 0x1a, 0xd4,
+	0x7a, 0x11, 0xb2, 0xf9, 0x59, 0x90, 0x65, 0x23, 0xbd, 0x08, 0x5e, 0x8e, 0x07, 0x18, 0xba, 0x8b,
+	0x58, 0x58, 0xaa, 0x49, 0xb2, 0xa0, 0xb5, 0xe5, 0x03, 0xb9, 0xf9, 0x58, 0x66, 0x2f, 0xa1, 0x22,
+	0x00, 0x95, 0xd4, 0x9a, 0x6d, 0x59, 0x60, 0x19, 0xb4, 0x0a, 0xcb, 0x74, 0x2c, 0x37, 0x5b, 0x81,
+	0x28, 0xc3, 0x7d, 0xc6, 0xc0, 0xfa, 0x11, 0x76, 0xcd, 0xe3, 0xf3, 0x68, 0xd7, 0xb7, 0x80, 0x56,
+	0x37, 0xa0, 0x38, 0xf0, 0x39, 0x38, 0xe3, 0x01, 0xbb, 0x52, 0x52, 0xee, 0x45, 0x1e, 0xd6, 0xd2,
+	0xc1, 0x85, 0x94, 0x39, 0x1b, 0x86, 0x76, 0x86, 0x5d, 0xf4, 0x37, 0x58, 0xf2, 0xed, 0xe7, 0xd8,
+	0xd5, 0x12, 0xc4, 0xb9, 0x37, 0xd9, 0xa7, 0x31, 0xdb, 0x56, 0x5a, 0x64, 0x87, 0x90, 0x3b, 0x05,
+	0x7f, 0x38, 0x40, 0x36, 0xac, 0xed, 0x1d, 0xaa, 0x5a, 0xb4, 0x5a, 0x0b, 0xef, 0x94, 0x2c, 0x35,
+	0xf2, 0xe8, 0x62, 0x46, 0x62, 0x38, 0x84, 0xa6, 0x56, 0x47, 0x44, 0xe8, 0x2e, 0x94, 0x12, 0x06,
+	0xf9, 0x4e, 0xa7, 0xef, 0xea, 0x9d, 0x73, 0xed, 0xa0, 0x41, 0xe1, 0x66, 0x94, 0xf5, 0x98, 0x52,
+	0x34, 0x7b, 0xd0, 0xe0, 0x9e, 0x42, 0x21, 0x16, 0x05, 0x21, 0x4c, 0xab, 0xf9, 0x58, 0x54, 0x62,
+	0x9c, 0xda, 0x82, 0x8d, 0x6a, 0x53, 0x96, 0xc5, 0x6a, 0x4b, 0x14, 0xb4, 0x56, 0x53, 0x53, 0x0f,
+	0xc5, 0xaa, 0x54, 0x93, 0xe8, 0xe0, 0xb1, 0xa8, 0xb0, 0x0c, 0xba, 0x06, 0x5b, 0x72, 0xb3, 0xa5,
+	0x4d, 0x5d, 0x95, 0xe1, 0xbe, 0x62, 0x60, 0x8c, 0xe3, 0x2b, 0x50, 0xa8, 0x37, 0xab, 0x31, 0x73,
+	0x2c, 0x2c, 0x11, 0xc1, 0x91, 0xa8, 0x50, 0x75, 0x96, 0x41, 0x57, 0xe1, 0xa7, 0x44, 0xd2, 0x90,
+	0xd4, 0x06, 0xdf, 0xaa, 0xee, 0x6b, 0x2a, 0xdf, 0x10, 0xb5, 0x6a, 0xb3, 0x2d, 0xb7, 0x94, 0xbf,
+	0xb0, 0x19, 0xb4, 0x09, 0xe5, 0xc4, 0x74, 0xb3, 0xb5, 0x2f, 0x2a, 0x83, 0xf9, 0x6c, 0xa4, 0xae,
+	0x34, 0xf9, 0x86, 0x24, 0xef, 0x45, 0x13, 0x1a, 0x5d, 0xcc, 0xe6, 0x48, 0x78, 0x63, 0xa7, 0xc3,
+	0xed, 0xd8, 0x3c, 0x2a, 0xc3, 0x15, 0xb2, 0x42, 0x54, 0x94, 0x26, 0xc1, 0x85, 0x6f, 0xb7, 0xf6,
+	0x9b, 0x8a, 0xf4, 0x57, 0x51, 0x60, 0xe7, 0xd0, 0x1a, 0xac, 0x0c, 0xe7, 0xa8, 0x65, 0x76, 0x9e,
+	0xb3, 0x00, 0xed, 0x0d, 0x0f, 0xed, 0x8f, 0x7e, 0xbc, 0xb8, 0x0f, 0x32, 0xc0, 0x26, 0x0c, 0x8e,
+	0xbf, 0x25, 0xeb, 0xa9, 0xda, 0xf6, 0xdb, 0xc9, 0x3c, 0x4c, 0xef, 0x46, 0x4e, 0x64, 0xaa, 0xd4,
+	0x7d, 0xf7, 0xa9, 0xbf, 0x0c, 0x79, 0x4a, 0x2d, 0x4a, 0xc0, 0x9c, 0x12, 0x0c, 0xd0, 0x1e, 0xac,
+	0xc8, 0xd8, 0x7f, 0x6e, 0xbb, 0x27, 0xf5, 0x0b, 0x5d, 0x86, 0x69, 0x2d, 0xee, 0x3e, 0x2c, 0x0e,
+	0xbc, 0x1a, 0xa5, 0xd1, 0x32, 0x2c, 0x12, 0x41, 0x74, 0x11, 0x16, 0x01, 0xc8, 0x50, 0x10, 0x65,
+	0xc2, 0xa9, 0x0c, 0xf7, 0x3e, 0x03, 0x88, 0x77, 0x1c, 0xc9, 0xf2, 0xfc, 0xba, 0xe9, 0xbd, 0x05,
+	0x95, 0x95, 0xfb, 0x0f, 0x03, 0x05, 0xde, 0x71, 0x4c, 0xcb, 0xf3, 0x75, 0xab, 0x93, 0xa8, 0xa7,
+	0xcc, 0xc4, 0x7a, 0x9a, 0x49, 0xf6, 0x51, 0x6f, 0xb2, 0xae, 0x71, 0xff, 0xc8, 0x00, 0x5b, 0x4d,
+	0x15, 0xa8, 0x34, 0x10, 0xcc, 0x28, 0x10, 0x1c, 0x2c, 0x45, 0x5a, 0xb1, 0xf6, 0x30, 0x21, 0x4b,
+	0x83, 0x95, 0xbd, 0x70, 0xbd, 0x28, 0xc3, 0x82, 0x60, 0x06, 0x40, 0x85, 0xd7, 0xdf, 0x60, 0x8c,
+	0x24, 0x58, 0x8a, 0xe1, 0xe8, 0x95, 0xf2, 0x34, 0xee, 0xeb, 0x53, 0xe3, 0x8e, 0x56, 0x2b, 0x09,
+	0x55, 0xee, 0x6b, 0x06, 0xd8, 0x04, 0x8b, 0xc6, 0x1f, 0xbc, 0x83, 0xd4, 0xc1, 0xbb, 0x33, 0xd5,
+	0x56, 0x62, 0xb7, 0x0a, 0x2f, 0xa5, 0xce, 0xdd, 0x3e, 0x2c, 0x46, 0x58, 0x91, 0x82, 0x42, 0x7c,
+	0xdf, 0x9e, 0xbc, 0x5f, 0x3a, 0x41, 0xca, 0x50, 0x99, 0xbb, 0x07, 0x0b, 0xd1, 0xee, 0xe4, 0xd6,
+	0xe5, 0x25, 0xad, 0x2d, 0x0b, 0x62, 0x4d, 0x92, 0x45, 0x21, 0x68, 0x25, 0x78, 0x49, 0x53, 0xdb,
+	0xd5, 0xaa, 0xa8, 0xaa, 0x2c, 0x83, 0x0a, 0x30, 0xcf, 0x4b, 0x5a, 0x8d, 0x97, 0xea, 0x6c, 0x86,
+	0x93, 0x60, 0xa5, 0xf6, 0xcc, 0xb0, 0xde, 0xc0, 0xd1, 0xe1, 0xde, 0x65, 0x28, 0x5d, 0xc9, 0x76,
+	0xdf, 0x8b, 0xd3, 0xb1, 0x8e, 0x33, 0x9b, 0xec, 0x38, 0x23, 0xb6, 0xe7, 0x62, 0x6c, 0xaf, 0x00,
+	0xe2, 0x2d, 0xc3, 0xb5, 0x4d, 0xe3, 0x50, 0xef, 0x9c, 0xe8, 0x5d, 0x1c, 0x6b, 0x55, 0xc7, 0xcc,
+	0x70, 0xaf, 0x19, 0x58, 0x1e, 0x46, 0x3a, 0xbe, 0x95, 0x78, 0x08, 0x0b, 0x61, 0x00, 0x51, 0x42,
+	0xa6, 0x1f, 0x22, 0xb2, 0x52, 0x19, 0xa8, 0xa0, 0xfd, 0x01, 0x3b, 0x72, 0x94, 0x1d, 0xb7, 0xa7,
+	0x34, 0xaf, 0x71, 0x4f, 0x2a, 0xb5, 0x7a, 0x92, 0x1a, 0x24, 0xa1, 0x91, 0x8c, 0xf6, 0x86, 0xf5,
+	0x74, 0x42, 0x6b, 0xf5, 0x64, 0x42, 0x6b, 0xf5, 0x28, 0xa1, 0xef, 0x64, 0xe0, 0x8a, 0x70, 0x6e,
+	0xe9, 0xa7, 0x66, 0xa7, 0x6e, 0x77, 0xf6, 0x5c, 0xbb, 0xef, 0xfc, 0xd0, 0x3b, 0x11, 0x41, 0xae,
+	0xde, 0x95, 0x0c, 0x9a, 0x95, 0x9c, 0x42, 0xbf, 0xd1, 0x9f, 0x61, 0xa1, 0x6a, 0x9f, 0x9e, 0xb6,
+	0xce, 0x1d, 0x5c, 0x2a, 0xd0, 0x68, 0x1f, 0x4c, 0x8e, 0x76, 0xbc, 0x3f, 0x15, 0xa1, 0xd7, 0x8d,
+	0xf6, 0x50, 0x06, 0xbb, 0x91, 0x13, 0xdf, 0xf6, 0xb0, 0x2b, 0xe8, 0xbe, 0x5e, 0x5a, 0xa2, 0xee,
+	0x0c, 0xc6, 0xdc, 0x7d, 0x28, 0xc4, 0x94, 0x08, 0x34, 0x42, 0xaf, 0xdb, 0xb6, 0x0c, 0x7c, 0x6c,
+	0x5a, 0xd8, 0x08, 0x8a, 0x85, 0xd0, 0xeb, 0xaa, 0xb8, 0xd3, 0x77, 0x71, 0x80, 0x8c, 0xd0, 0xeb,
+	0x36, 0x1d, 0x6c, 0xb1, 0x19, 0xee, 0x3d, 0x06, 0x2e, 0x8f, 0x78, 0x32, 0x89, 0x08, 0xc9, 0x67,
+	0xc8, 0xac, 0x8f, 0xc7, 0xf0, 0xd5, 0xb1, 0x01, 0x8b, 0xa2, 0xeb, 0xda, 0x6e, 0xd5, 0x36, 0x02,
+	0x2e, 0x2f, 0x2b, 0x43, 0x01, 0xb9, 0x59, 0xa9, 0xf1, 0x10, 0xf2, 0xf0, 0x0d, 0x1c, 0x13, 0x6d,
+	0x3f, 0x84, 0x79, 0x49, 0x20, 0x11, 0xd2, 0xec, 0x4b, 0x42, 0x22, 0xfb, 0x0b, 0x90, 0x93, 0x1a,
+	0xa2, 0xc4, 0x32, 0x08, 0x60, 0xae, 0xa1, 0x4a, 0xaa, 0x20, 0xb3, 0x19, 0xf2, 0x2d, 0x1d, 0xf2,
+	0x82, 0xa0, 0xb0, 0xd9, 0xed, 0x07, 0x50, 0x88, 0x79, 0x45, 0xb6, 0x50, 0xd4, 0x34, 0x81, 0x14,
+	0x35, 0x49, 0x20, 0x45, 0x0d, 0x09, 0xb4, 0xfb, 0x7a, 0x1e, 0xd8, 0x06, 0x8d, 0x50, 0xa4, 0x11,
+	0x6a, 0xbc, 0x63, 0xa2, 0xff, 0x32, 0x50, 0x4c, 0xbe, 0xbb, 0xd1, 0xce, 0x34, 0x4c, 0xc6, 0xfc,
+	0x5b, 0x28, 0xdf, 0x9a, 0x5d, 0xc1, 0xe9, 0x9d, 0x73, 0x57, 0xff, 0xf9, 0xe9, 0x97, 0xff, 0xcf,
+	0xfc, 0x84, 0x43, 0x3b, 0x67, 0xbf, 0xd9, 0x71, 0xc3, 0x05, 0xc1, 0xaf, 0x91, 0xdf, 0x33, 0xdb,
+	0xe8, 0x5f, 0x0c, 0x2c, 0xc5, 0x9f, 0x80, 0xe8, 0xd6, 0xac, 0x4f, 0xc5, 0xc0, 0x9b, 0x5f, 0x5d,
+	0xe0, 0x65, 0xc9, 0xfd, 0x8c, 0xfa, 0xb2, 0xce, 0xb1, 0xc4, 0x97, 0x63, 0xd3, 0x32, 0xa2, 0xf7,
+	0x1c, 0xf1, 0x84, 0x60, 0x93, 0x6c, 0xf7, 0xa7, 0x61, 0x33, 0xf6, 0xc5, 0x36, 0x0d, 0x9b, 0x31,
+	0x2f, 0x89, 0x24, 0x36, 0x67, 0x74, 0x41, 0xf4, 0x20, 0x25, 0x1e, 0xbd, 0x60, 0xa0, 0x10, 0x6b,
+	0xfc, 0xd0, 0xaf, 0x67, 0xec, 0x0f, 0x03, 0x5f, 0xb6, 0x67, 0xef, 0x26, 0xb9, 0x32, 0x75, 0xe4,
+	0x32, 0xb7, 0x42, 0x1c, 0xe9, 0x62, 0x3f, 0xee, 0xc5, 0xff, 0x18, 0x28, 0xf2, 0x86, 0x41, 0x0e,
+	0x6f, 0xcb, 0xa6, 0xf4, 0x46, 0xb7, 0x2f, 0x7a, 0x47, 0x94, 0x2b, 0x17, 0xd0, 0x18, 0x41, 0x46,
+	0x37, 0x8c, 0xbe, 0x87, 0x5d, 0xdf, 0xee, 0x92, 0x05, 0xc4, 0xa7, 0x7f, 0x33, 0x50, 0xdc, 0xc3,
+	0x7e, 0xac, 0x38, 0x4f, 0x03, 0x67, 0xb4, 0xaf, 0x9c, 0x06, 0x4e, 0xba, 0xe2, 0x27, 0x7d, 0xe9,
+	0x62, 0x5f, 0x0f, 0x3a, 0x8e, 0x9e, 0xe9, 0x51, 0xde, 0xfc, 0x9d, 0x26, 0x29, 0xaa, 0x04, 0xe8,
+	0x97, 0xb3, 0x54, 0x8b, 0xc0, 0x89, 0x5f, 0xcc, 0x58, 0x58, 0x46, 0xd2, 0x73, 0xfc, 0xcc, 0xb0,
+	0x42, 0xf3, 0x7f, 0x60, 0x5f, 0x7e, 0xb1, 0x79, 0xe9, 0xe5, 0xab, 0x4d, 0xe6, 0xe3, 0x57, 0x9b,
+	0xcc, 0xe7, 0xaf, 0x36, 0x99, 0x27, 0x73, 0xf4, 0xef, 0xe0, 0x9d, 0x6f, 0x03, 0x00, 0x00, 0xff,
+	0xff, 0xc3, 0x29, 0xb5, 0x71, 0x85, 0x14, 0x00, 0x00,
 }

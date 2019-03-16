@@ -54,7 +54,7 @@ message FindCloudletRequest {
   // The carrier name that user is connected to ("Cellular Carrier Name")
   string CarrierName = 3;
   // The GPS location of the user
-  Loc GpsLocation = 4;
+  Loc GPSLocation = 4;
   // DevName is applicable to Platform apps only
   string DevName = 5;
   // App Name is applicable to Platform apps only
@@ -89,7 +89,7 @@ message VerifyLocationRequest {
   // The carrier name that user is connected to ("Cellular Carrier Name")
   string CarrierName = 3;
   // The GPS location to verify
-  Loc GpsLocation = 4;
+  Loc GPSLocation = 4;
   // token used for location verification, app must retrieve from TokenServerURI
   string VerifyLocToken = 5;
 }
@@ -98,13 +98,13 @@ message VerifyLocationReply {
   // API version
   uint32 ver = 1;
   // Status of the reply
-  enum Tower_Status {
+  enum TowerStatus {
     TOWER_UNKNOWN = 0;
     CONNECTED_TO_SPECIFIED_TOWER = 1;
     NOT_CONNECTED_TO_SPECIFIED_TOWER = 2;
   }
-  Tower_Status tower_status = 2;
-  enum GPS_Location_Status {
+  TowerStatus tower_status = 2;
+  enum GPSLocationStatus {
     LOC_UNKNOWN = 0;
     LOC_VERIFIED = 1;
     LOC_MISMATCH_SAME_COUNTRY = 2;
@@ -114,7 +114,7 @@ message VerifyLocationReply {
     LOC_ERROR_UNAUTHORIZED = 6;
     LOC_ERROR_OTHER = 7;
   }
-  GPS_Location_Status gps_location_status = 3;
+  GPSLocationStatus GPS_Location_Status = 3;
   // location accuracy, the location is verified to 
   // be within this number of kilometers.  Negative value
   // means no verification was done 
@@ -133,13 +133,13 @@ message GetLocationRequest {
 message GetLocationReply {
   uint32 Ver = 1;
   // Status of the reply
-  enum Loc_Status {
+  enum LocStatus {
     LOC_UNKNOWN = 0;
     LOC_FOUND = 1;
     // The user does not allow his location to be tracked
     LOC_DENIED = 2;
   }
-  Loc_Status Status = 2;
+  LocStatus Status = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
   string CarrierName = 3;
   // The tower that user is currently connected to
@@ -156,7 +156,7 @@ message AppInstListRequest {
   // The carrier name that user is connected to ("Cellular Carrier Name")
   string CarrierName = 3;
   // The GPS location of the user 
-  Loc GpsLocation = 4;
+  Loc GPSLocation = 4;
 }
 
 message Appinstance{
@@ -176,7 +176,7 @@ message CloudletLocation {
   // Cloudlet Name
   string CloudletName = 2;
   // The GPS Location of the user
-  Loc GpsLocation = 3;
+  Loc GPSLocation = 3;
   // Distance of cloudlet vs loc in request
   double Distance = 4;
   // App instances
@@ -187,12 +187,12 @@ message AppInstListReply {
   // API version
   uint32 Ver = 1;
   // Status of the reply
-  enum AI_Status {
+  enum AIStatus {
     AI_UNDEFINED = 0;
     AI_SUCCESS = 1;
     AI_FAIL = 2;
   }
-  AI_Status Status = 2;
+  AIStatus Status = 2;
   repeated CloudletLocation Cloudlets = 3;
 }
 
@@ -220,13 +220,13 @@ message FqdnListReply{
   // API version
   uint32 ver = 1;
   // Status of the reply
-  enum FL_Status {
+  enum FLStatus {
     FL_UNDEFINED = 0;
     FL_SUCCESS = 1;
     FL_FAIL = 2;
   }
   repeated AppFqdn AppFqdns = 3;
-  FL_Status Status = 4;
+  FLStatus Status = 4;
 }
 
 message DynamicLocGroupRequest {

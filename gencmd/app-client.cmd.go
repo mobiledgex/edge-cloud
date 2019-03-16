@@ -100,13 +100,13 @@ var FindStatusStrings = []string{
 	"FIND_NOTFOUND",
 }
 
-var Tower_StatusStrings = []string{
+var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
 
-var GPS_Location_StatusStrings = []string{
+var GPSLocationStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_VERIFIED",
 	"LOC_MISMATCH_SAME_COUNTRY",
@@ -117,19 +117,19 @@ var GPS_Location_StatusStrings = []string{
 	"LOC_ERROR_OTHER",
 }
 
-var Loc_StatusStrings = []string{
+var LocStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_FOUND",
 	"LOC_DENIED",
 }
 
-var AI_StatusStrings = []string{
+var AIStatusStrings = []string{
 	"AI_UNDEFINED",
 	"AI_SUCCESS",
 	"AI_FAIL",
 }
 
-var FL_StatusStrings = []string{
+var FLStatusStrings = []string{
 	"FL_UNDEFINED",
 	"FL_SUCCESS",
 	"FL_FAIL",
@@ -232,21 +232,21 @@ func FindCloudletRequestSlicer(in *distributed_match_engine.FindCloudletRequest)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	s = append(s, in.CarrierName)
-	if in.GpsLocation == nil {
-		in.GpsLocation = &distributed_match_engine.Loc{}
+	if in.GPSLocation == nil {
+		in.GPSLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
-	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Speed), 'e', -1, 32))
+	if in.GPSLocation.Timestamp == nil {
+		in.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Nanos), 10))
 	s = append(s, in.DevName)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
@@ -258,15 +258,15 @@ func FindCloudletRequestHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "SessionCookie")
 	s = append(s, "CarrierName")
-	s = append(s, "GpsLocation-Latitude")
-	s = append(s, "GpsLocation-Longitude")
-	s = append(s, "GpsLocation-HorizontalAccuracy")
-	s = append(s, "GpsLocation-VerticalAccuracy")
-	s = append(s, "GpsLocation-Altitude")
-	s = append(s, "GpsLocation-Course")
-	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp-Seconds")
-	s = append(s, "GpsLocation-Timestamp-Nanos")
+	s = append(s, "GPSLocation-Latitude")
+	s = append(s, "GPSLocation-Longitude")
+	s = append(s, "GPSLocation-HorizontalAccuracy")
+	s = append(s, "GPSLocation-VerticalAccuracy")
+	s = append(s, "GPSLocation-Altitude")
+	s = append(s, "GPSLocation-Course")
+	s = append(s, "GPSLocation-Speed")
+	s = append(s, "GPSLocation-Timestamp-Seconds")
+	s = append(s, "GPSLocation-Timestamp-Nanos")
 	s = append(s, "DevName")
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
@@ -380,21 +380,21 @@ func VerifyLocationRequestSlicer(in *distributed_match_engine.VerifyLocationRequ
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	s = append(s, in.CarrierName)
-	if in.GpsLocation == nil {
-		in.GpsLocation = &distributed_match_engine.Loc{}
+	if in.GPSLocation == nil {
+		in.GPSLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
-	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Speed), 'e', -1, 32))
+	if in.GPSLocation.Timestamp == nil {
+		in.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Nanos), 10))
 	s = append(s, in.VerifyLocToken)
 	return s
 }
@@ -404,15 +404,15 @@ func VerifyLocationRequestHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "SessionCookie")
 	s = append(s, "CarrierName")
-	s = append(s, "GpsLocation-Latitude")
-	s = append(s, "GpsLocation-Longitude")
-	s = append(s, "GpsLocation-HorizontalAccuracy")
-	s = append(s, "GpsLocation-VerticalAccuracy")
-	s = append(s, "GpsLocation-Altitude")
-	s = append(s, "GpsLocation-Course")
-	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp-Seconds")
-	s = append(s, "GpsLocation-Timestamp-Nanos")
+	s = append(s, "GPSLocation-Latitude")
+	s = append(s, "GPSLocation-Longitude")
+	s = append(s, "GPSLocation-HorizontalAccuracy")
+	s = append(s, "GPSLocation-VerticalAccuracy")
+	s = append(s, "GPSLocation-Altitude")
+	s = append(s, "GPSLocation-Course")
+	s = append(s, "GPSLocation-Speed")
+	s = append(s, "GPSLocation-Timestamp-Seconds")
+	s = append(s, "GPSLocation-Timestamp-Nanos")
 	s = append(s, "VerifyLocToken")
 	return s
 }
@@ -443,8 +443,8 @@ func VerifyLocationRequestWriteOutputOne(obj *distributed_match_engine.VerifyLoc
 func VerifyLocationReplySlicer(in *distributed_match_engine.VerifyLocationReply) []string {
 	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.VerifyLocationReply_Tower_Status_name[int32(in.TowerStatus)])
-	s = append(s, distributed_match_engine.VerifyLocationReply_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
+	s = append(s, distributed_match_engine.VerifyLocationReply_TowerStatus_name[int32(in.TowerStatus)])
+	s = append(s, distributed_match_engine.VerifyLocationReply_GPSLocationStatus_name[int32(in.GPS_Location_Status)])
 	s = append(s, strconv.FormatFloat(float64(in.GPS_Location_Accuracy_KM), 'e', -1, 32))
 	return s
 }
@@ -453,7 +453,7 @@ func VerifyLocationReplyHeaderSlicer() []string {
 	s := make([]string, 0, 4)
 	s = append(s, "Ver")
 	s = append(s, "TowerStatus")
-	s = append(s, "GpsLocationStatus")
+	s = append(s, "GPS_Location_Status")
 	s = append(s, "GPS_Location_Accuracy_KM")
 	return s
 }
@@ -523,7 +523,7 @@ func GetLocationRequestWriteOutputOne(obj *distributed_match_engine.GetLocationR
 func GetLocationReplySlicer(in *distributed_match_engine.GetLocationReply) []string {
 	s := make([]string, 0, 5)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.GetLocationReply_Loc_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.GetLocationReply_LocStatus_name[int32(in.Status)])
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.NetworkLocation == nil {
@@ -590,21 +590,21 @@ func AppInstListRequestSlicer(in *distributed_match_engine.AppInstListRequest) [
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	s = append(s, in.CarrierName)
-	if in.GpsLocation == nil {
-		in.GpsLocation = &distributed_match_engine.Loc{}
+	if in.GPSLocation == nil {
+		in.GPSLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
-	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Speed), 'e', -1, 32))
+	if in.GPSLocation.Timestamp == nil {
+		in.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Nanos), 10))
 	return s
 }
 
@@ -613,15 +613,15 @@ func AppInstListRequestHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "SessionCookie")
 	s = append(s, "CarrierName")
-	s = append(s, "GpsLocation-Latitude")
-	s = append(s, "GpsLocation-Longitude")
-	s = append(s, "GpsLocation-HorizontalAccuracy")
-	s = append(s, "GpsLocation-VerticalAccuracy")
-	s = append(s, "GpsLocation-Altitude")
-	s = append(s, "GpsLocation-Course")
-	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp-Seconds")
-	s = append(s, "GpsLocation-Timestamp-Nanos")
+	s = append(s, "GPSLocation-Latitude")
+	s = append(s, "GPSLocation-Longitude")
+	s = append(s, "GPSLocation-HorizontalAccuracy")
+	s = append(s, "GPSLocation-VerticalAccuracy")
+	s = append(s, "GPSLocation-Altitude")
+	s = append(s, "GPSLocation-Course")
+	s = append(s, "GPSLocation-Speed")
+	s = append(s, "GPSLocation-Timestamp-Seconds")
+	s = append(s, "GPSLocation-Timestamp-Nanos")
 	return s
 }
 
@@ -707,21 +707,21 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	s := make([]string, 0, 5)
 	s = append(s, in.CarrierName)
 	s = append(s, in.CloudletName)
-	if in.GpsLocation == nil {
-		in.GpsLocation = &distributed_match_engine.Loc{}
+	if in.GPSLocation == nil {
+		in.GPSLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.GpsLocation.Speed), 'e', -1, 32))
-	if in.GpsLocation.Timestamp == nil {
-		in.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.GPSLocation.Speed), 'e', -1, 32))
+	if in.GPSLocation.Timestamp == nil {
+		in.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.GPSLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.Distance), 'e', -1, 32))
 	if in.Appinstances == nil {
 		in.Appinstances = make([]*distributed_match_engine.Appinstance, 1)
@@ -750,15 +750,15 @@ func CloudletLocationHeaderSlicer() []string {
 	s := make([]string, 0, 5)
 	s = append(s, "CarrierName")
 	s = append(s, "CloudletName")
-	s = append(s, "GpsLocation-Latitude")
-	s = append(s, "GpsLocation-Longitude")
-	s = append(s, "GpsLocation-HorizontalAccuracy")
-	s = append(s, "GpsLocation-VerticalAccuracy")
-	s = append(s, "GpsLocation-Altitude")
-	s = append(s, "GpsLocation-Course")
-	s = append(s, "GpsLocation-Speed")
-	s = append(s, "GpsLocation-Timestamp-Seconds")
-	s = append(s, "GpsLocation-Timestamp-Nanos")
+	s = append(s, "GPSLocation-Latitude")
+	s = append(s, "GPSLocation-Longitude")
+	s = append(s, "GPSLocation-HorizontalAccuracy")
+	s = append(s, "GPSLocation-VerticalAccuracy")
+	s = append(s, "GPSLocation-Altitude")
+	s = append(s, "GPSLocation-Course")
+	s = append(s, "GPSLocation-Speed")
+	s = append(s, "GPSLocation-Timestamp-Seconds")
+	s = append(s, "GPSLocation-Timestamp-Nanos")
 	s = append(s, "Distance")
 	s = append(s, "Appinstances-AppName")
 	s = append(s, "Appinstances-AppVers")
@@ -797,7 +797,7 @@ func CloudletLocationWriteOutputOne(obj *distributed_match_engine.CloudletLocati
 func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.AppInstListReply_AI_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.AppInstListReply_AIStatus_name[int32(in.Status)])
 	if in.Cloudlets == nil {
 		in.Cloudlets = make([]*distributed_match_engine.CloudletLocation, 1)
 	}
@@ -806,21 +806,21 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	}
 	s = append(s, in.Cloudlets[0].CarrierName)
 	s = append(s, in.Cloudlets[0].CloudletName)
-	if in.Cloudlets[0].GpsLocation == nil {
-		in.Cloudlets[0].GpsLocation = &distributed_match_engine.Loc{}
+	if in.Cloudlets[0].GPSLocation == nil {
+		in.Cloudlets[0].GPSLocation = &distributed_match_engine.Loc{}
 	}
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Latitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Longitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.HorizontalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.VerticalAccuracy), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Altitude), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Course), 'e', -1, 32))
-	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GpsLocation.Speed), 'e', -1, 32))
-	if in.Cloudlets[0].GpsLocation.Timestamp == nil {
-		in.Cloudlets[0].GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.Latitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.Longitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.HorizontalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.VerticalAccuracy), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.Altitude), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.Course), 'e', -1, 32))
+	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].GPSLocation.Speed), 'e', -1, 32))
+	if in.Cloudlets[0].GPSLocation.Timestamp == nil {
+		in.Cloudlets[0].GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
 	}
-	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GpsLocation.Timestamp.Seconds), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GpsLocation.Timestamp.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GPSLocation.Timestamp.Seconds), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].GPSLocation.Timestamp.Nanos), 10))
 	s = append(s, strconv.FormatFloat(float64(in.Cloudlets[0].Distance), 'e', -1, 32))
 	if in.Cloudlets[0].Appinstances == nil {
 		in.Cloudlets[0].Appinstances = make([]*distributed_match_engine.Appinstance, 1)
@@ -851,15 +851,15 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Status")
 	s = append(s, "Cloudlets-CarrierName")
 	s = append(s, "Cloudlets-CloudletName")
-	s = append(s, "Cloudlets-GpsLocation-Latitude")
-	s = append(s, "Cloudlets-GpsLocation-Longitude")
-	s = append(s, "Cloudlets-GpsLocation-HorizontalAccuracy")
-	s = append(s, "Cloudlets-GpsLocation-VerticalAccuracy")
-	s = append(s, "Cloudlets-GpsLocation-Altitude")
-	s = append(s, "Cloudlets-GpsLocation-Course")
-	s = append(s, "Cloudlets-GpsLocation-Speed")
-	s = append(s, "Cloudlets-GpsLocation-Timestamp-Seconds")
-	s = append(s, "Cloudlets-GpsLocation-Timestamp-Nanos")
+	s = append(s, "Cloudlets-GPSLocation-Latitude")
+	s = append(s, "Cloudlets-GPSLocation-Longitude")
+	s = append(s, "Cloudlets-GPSLocation-HorizontalAccuracy")
+	s = append(s, "Cloudlets-GPSLocation-VerticalAccuracy")
+	s = append(s, "Cloudlets-GPSLocation-Altitude")
+	s = append(s, "Cloudlets-GPSLocation-Course")
+	s = append(s, "Cloudlets-GPSLocation-Speed")
+	s = append(s, "Cloudlets-GPSLocation-Timestamp-Seconds")
+	s = append(s, "Cloudlets-GPSLocation-Timestamp-Nanos")
 	s = append(s, "Cloudlets-Distance")
 	s = append(s, "Cloudlets-Appinstances-AppName")
 	s = append(s, "Cloudlets-Appinstances-AppVers")
@@ -989,7 +989,7 @@ func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
 	s = append(s, in.AppFqdns[0].DevName)
 	s = append(s, in.AppFqdns[0].FQDN)
 	s = append(s, in.AppFqdns[0].AndroidPackageName)
-	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.FqdnListReply_FLStatus_name[int32(in.Status)])
 	return s
 }
 
@@ -1424,34 +1424,34 @@ func init() {
 	FindCloudletRequestFlagSet.Uint32Var(&FindCloudletRequestIn.Ver, "ver", 0, "Ver")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.CarrierName, "carriername", "", "CarrierName")
-	FindCloudletRequestIn.GpsLocation = &distributed_match_engine.Loc{}
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Latitude, "gpslocation-latitude", 0, "GpsLocation.Latitude")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Longitude, "gpslocation-longitude", 0, "GpsLocation.Longitude")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GpsLocation.VerticalAccuracy")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
-	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	FindCloudletRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
-	FindCloudletRequestFlagSet.Int64Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
-	FindCloudletRequestFlagSet.Int32Var(&FindCloudletRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	FindCloudletRequestIn.GPSLocation = &distributed_match_engine.Loc{}
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.Latitude, "gpslocation-latitude", 0, "GPSLocation.Latitude")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.Longitude, "gpslocation-longitude", 0, "GPSLocation.Longitude")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GPSLocation.HorizontalAccuracy")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GPSLocation.VerticalAccuracy")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.Altitude, "gpslocation-altitude", 0, "GPSLocation.Altitude")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.Course, "gpslocation-course", 0, "GPSLocation.Course")
+	FindCloudletRequestFlagSet.Float64Var(&FindCloudletRequestIn.GPSLocation.Speed, "gpslocation-speed", 0, "GPSLocation.Speed")
+	FindCloudletRequestIn.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	FindCloudletRequestFlagSet.Int64Var(&FindCloudletRequestIn.GPSLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GPSLocation.Timestamp.Seconds")
+	FindCloudletRequestFlagSet.Int32Var(&FindCloudletRequestIn.GPSLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GPSLocation.Timestamp.Nanos")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.DevName, "devname", "", "DevName")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.AppName, "appname", "", "AppName")
 	FindCloudletRequestFlagSet.StringVar(&FindCloudletRequestIn.AppVers, "appvers", "", "AppVers")
 	VerifyLocationRequestFlagSet.Uint32Var(&VerifyLocationRequestIn.Ver, "ver", 0, "Ver")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.CarrierName, "carriername", "", "CarrierName")
-	VerifyLocationRequestIn.GpsLocation = &distributed_match_engine.Loc{}
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Latitude, "gpslocation-latitude", 0, "GpsLocation.Latitude")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Longitude, "gpslocation-longitude", 0, "GpsLocation.Longitude")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GpsLocation.VerticalAccuracy")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
-	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	VerifyLocationRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
-	VerifyLocationRequestFlagSet.Int64Var(&VerifyLocationRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
-	VerifyLocationRequestFlagSet.Int32Var(&VerifyLocationRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	VerifyLocationRequestIn.GPSLocation = &distributed_match_engine.Loc{}
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.Latitude, "gpslocation-latitude", 0, "GPSLocation.Latitude")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.Longitude, "gpslocation-longitude", 0, "GPSLocation.Longitude")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GPSLocation.HorizontalAccuracy")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GPSLocation.VerticalAccuracy")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.Altitude, "gpslocation-altitude", 0, "GPSLocation.Altitude")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.Course, "gpslocation-course", 0, "GPSLocation.Course")
+	VerifyLocationRequestFlagSet.Float64Var(&VerifyLocationRequestIn.GPSLocation.Speed, "gpslocation-speed", 0, "GPSLocation.Speed")
+	VerifyLocationRequestIn.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	VerifyLocationRequestFlagSet.Int64Var(&VerifyLocationRequestIn.GPSLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GPSLocation.Timestamp.Seconds")
+	VerifyLocationRequestFlagSet.Int32Var(&VerifyLocationRequestIn.GPSLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GPSLocation.Timestamp.Nanos")
 	VerifyLocationRequestFlagSet.StringVar(&VerifyLocationRequestIn.VerifyLocToken, "verifyloctoken", "", "VerifyLocToken")
 	GetLocationRequestFlagSet.Uint32Var(&GetLocationRequestIn.Ver, "ver", 0, "Ver")
 	GetLocationRequestFlagSet.StringVar(&GetLocationRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
@@ -1459,17 +1459,17 @@ func init() {
 	AppInstListRequestFlagSet.Uint32Var(&AppInstListRequestIn.Ver, "ver", 0, "Ver")
 	AppInstListRequestFlagSet.StringVar(&AppInstListRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	AppInstListRequestFlagSet.StringVar(&AppInstListRequestIn.CarrierName, "carriername", "", "CarrierName")
-	AppInstListRequestIn.GpsLocation = &distributed_match_engine.Loc{}
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Latitude, "gpslocation-latitude", 0, "GpsLocation.Latitude")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Longitude, "gpslocation-longitude", 0, "GpsLocation.Longitude")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GpsLocation.HorizontalAccuracy")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GpsLocation.VerticalAccuracy")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Altitude, "gpslocation-altitude", 0, "GpsLocation.Altitude")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Course, "gpslocation-course", 0, "GpsLocation.Course")
-	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GpsLocation.Speed, "gpslocation-speed", 0, "GpsLocation.Speed")
-	AppInstListRequestIn.GpsLocation.Timestamp = &distributed_match_engine.Timestamp{}
-	AppInstListRequestFlagSet.Int64Var(&AppInstListRequestIn.GpsLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GpsLocation.Timestamp.Seconds")
-	AppInstListRequestFlagSet.Int32Var(&AppInstListRequestIn.GpsLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GpsLocation.Timestamp.Nanos")
+	AppInstListRequestIn.GPSLocation = &distributed_match_engine.Loc{}
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.Latitude, "gpslocation-latitude", 0, "GPSLocation.Latitude")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.Longitude, "gpslocation-longitude", 0, "GPSLocation.Longitude")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.HorizontalAccuracy, "gpslocation-horizontalaccuracy", 0, "GPSLocation.HorizontalAccuracy")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.VerticalAccuracy, "gpslocation-verticalaccuracy", 0, "GPSLocation.VerticalAccuracy")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.Altitude, "gpslocation-altitude", 0, "GPSLocation.Altitude")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.Course, "gpslocation-course", 0, "GPSLocation.Course")
+	AppInstListRequestFlagSet.Float64Var(&AppInstListRequestIn.GPSLocation.Speed, "gpslocation-speed", 0, "GPSLocation.Speed")
+	AppInstListRequestIn.GPSLocation.Timestamp = &distributed_match_engine.Timestamp{}
+	AppInstListRequestFlagSet.Int64Var(&AppInstListRequestIn.GPSLocation.Timestamp.Seconds, "gpslocation-timestamp-seconds", 0, "GPSLocation.Timestamp.Seconds")
+	AppInstListRequestFlagSet.Int32Var(&AppInstListRequestIn.GPSLocation.Timestamp.Nanos, "gpslocation-timestamp-nanos", 0, "GPSLocation.Timestamp.Nanos")
 	FqdnListRequestFlagSet.Uint32Var(&FqdnListRequestIn.Ver, "ver", 0, "Ver")
 	FqdnListRequestFlagSet.StringVar(&FqdnListRequestIn.SessionCookie, "sessioncookie", "", "SessionCookie")
 	DynamicLocGroupRequestFlagSet.Uint32Var(&DynamicLocGroupRequestIn.Ver, "ver", 0, "Ver")

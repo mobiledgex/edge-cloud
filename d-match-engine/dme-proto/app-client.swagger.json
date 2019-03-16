@@ -199,7 +199,7 @@
     }
   },
   "definitions": {
-    "AppInstListReplyAI_Status": {
+    "AppInstListReplyAIStatus": {
       "type": "string",
       "enum": [
         "AI_UNDEFINED",
@@ -238,7 +238,7 @@
       ],
       "default": "FIND_UNKNOWN"
     },
-    "FqdnListReplyFL_Status": {
+    "FqdnListReplyFLStatus": {
       "type": "string",
       "enum": [
         "FL_UNDEFINED",
@@ -248,7 +248,7 @@
       "default": "FL_UNDEFINED",
       "title": "Status of the reply"
     },
-    "GetLocationReplyLoc_Status": {
+    "GetLocationReplyLocStatus": {
       "type": "string",
       "enum": [
         "LOC_UNKNOWN",
@@ -259,7 +259,7 @@
       "description": "- LOC_DENIED: The user does not allow his location to be tracked",
       "title": "Status of the reply"
     },
-    "VerifyLocationReplyGPS_Location_Status": {
+    "VerifyLocationReplyGPSLocationStatus": {
       "type": "string",
       "enum": [
         "LOC_UNKNOWN",
@@ -273,7 +273,7 @@
       ],
       "default": "LOC_UNKNOWN"
     },
-    "VerifyLocationReplyTower_Status": {
+    "VerifyLocationReplyTowerStatus": {
       "type": "string",
       "enum": [
         "TOWER_UNKNOWN",
@@ -317,7 +317,7 @@
           "title": "API version"
         },
         "Status": {
-          "$ref": "#/definitions/AppInstListReplyAI_Status"
+          "$ref": "#/definitions/AppInstListReplyAIStatus"
         },
         "Cloudlets": {
           "type": "array",
@@ -343,7 +343,7 @@
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "GPSLocation": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
         }
@@ -412,7 +412,7 @@
           "type": "string",
           "title": "Cloudlet Name"
         },
-        "GpsLocation": {
+        "GPSLocation": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS Location of the user"
         },
@@ -540,7 +540,7 @@
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "GPSLocation": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
         },
@@ -573,7 +573,7 @@
           }
         },
         "Status": {
-          "$ref": "#/definitions/FqdnListReplyFL_Status"
+          "$ref": "#/definitions/FqdnListReplyFLStatus"
         }
       }
     },
@@ -599,7 +599,7 @@
           "format": "int64"
         },
         "Status": {
-          "$ref": "#/definitions/GetLocationReplyLoc_Status"
+          "$ref": "#/definitions/GetLocationReplyLocStatus"
         },
         "CarrierName": {
           "type": "string",
@@ -773,10 +773,10 @@
           "title": "API version"
         },
         "tower_status": {
-          "$ref": "#/definitions/VerifyLocationReplyTower_Status"
+          "$ref": "#/definitions/VerifyLocationReplyTowerStatus"
         },
-        "gps_location_status": {
-          "$ref": "#/definitions/VerifyLocationReplyGPS_Location_Status"
+        "GPS_Location_Status": {
+          "$ref": "#/definitions/VerifyLocationReplyGPSLocationStatus"
         },
         "GPS_Location_Accuracy_KM": {
           "type": "number",
@@ -801,7 +801,7 @@
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "GPSLocation": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location to verify"
         },

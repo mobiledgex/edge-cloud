@@ -20,7 +20,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.65, Longitude: 6.341},
+			GPSLocation: &dme.Loc{Latitude: 50.65, Longitude: 6.341},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[2].Uri,
@@ -36,7 +36,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 51.65, Longitude: 9.341},
+			GPSLocation: &dme.Loc{Latitude: 51.65, Longitude: 9.341},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[1].Uri,
@@ -52,7 +52,7 @@ var FindCloudletData = []FindCloudletRR{
 		}, // ATT does not exist and so should return default cloudlet
 		Req: dme.FindCloudletRequest{
 			CarrierName: "ATT",
-			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
+			GPSLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[4].Uri,
@@ -68,7 +68,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
+			GPSLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[2].Uri,
@@ -84,7 +84,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 52.75, Longitude: 12.9050},
+			GPSLocation: &dme.Loc{Latitude: 52.75, Longitude: 12.9050},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[1].Uri,
@@ -100,7 +100,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
+			GPSLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[1].Uri,
@@ -116,7 +116,7 @@ var FindCloudletData = []FindCloudletRR{
 		},
 		Req: dme.FindCloudletRequest{
 			CarrierName: "TMUS",
-			GpsLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
+			GPSLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
 		},
 		Reply: dme.FindCloudletReply{
 			FQDN:             Cloudlets[3].Uri,

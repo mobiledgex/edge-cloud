@@ -26,10 +26,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.73, Longitude: 7.1},
+			GPSLocation: &dme.Loc{Latitude: 50.73, Longitude: 7.1},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Verified,
+			GPS_Location_Status:      Verified,
 			GPS_Location_Accuracy_KM: 2,
 		},
 	},
@@ -41,10 +41,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 12.341},
+			GPSLocation: &dme.Loc{Latitude: 52.65, Longitude: 12.341},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Verified,
+			GPS_Location_Status:      Verified,
 			GPS_Location_Accuracy_KM: 100,
 		},
 	},
@@ -56,7 +56,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "ATT",
-			GpsLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
+			GPSLocation: &dme.Loc{Latitude: 52.65, Longitude: 10.341},
 		},
 		Reply: dme.VerifyLocationReply{},
 		Error: "carrier not found for app",
@@ -69,10 +69,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
+			GPSLocation: &dme.Loc{Latitude: 50.75, Longitude: 7.9050},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Verified,
+			GPS_Location_Status:      Verified,
 			GPS_Location_Accuracy_KM: 100,
 		},
 	},
@@ -84,10 +84,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 52.75, Longitude: 12.9050},
+			GPSLocation: &dme.Loc{Latitude: 52.75, Longitude: 12.9050},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Verified,
+			GPS_Location_Status:      Verified,
 			GPS_Location_Accuracy_KM: 100,
 		},
 	},
@@ -99,10 +99,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TDG",
-			GpsLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
+			GPSLocation: &dme.Loc{Latitude: 50.75, Longitude: 11.9050},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Mismatch,
+			GPS_Location_Status:      Mismatch,
 			GPS_Location_Accuracy_KM: -1,
 		},
 	},
@@ -114,10 +114,10 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Req: dme.VerifyLocationRequest{
 			CarrierName: "TMUS",
-			GpsLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
+			GPSLocation: &dme.Loc{Latitude: 47.75, Longitude: 122.9050},
 		},
 		Reply: dme.VerifyLocationReply{
-			GpsLocationStatus:        Verified,
+			GPS_Location_Status:      Verified,
 			GPS_Location_Accuracy_KM: 100,
 		},
 	},

@@ -321,7 +321,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.DeveloperKey.Name, "version", appkey.Version)
 
 	// first find carrier cloudlet
-	bestDistance, updated := findClosestForCarrier(mreq.CarrierName, appkey, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
+	bestDistance, updated := findClosestForCarrier(mreq.CarrierName, appkey, mreq.GPSLocation, dmecommon.InfiniteDistance, mreply)
 
 	if updated {
 		log.DebugLog(log.DebugLevelDmereq, "found carrier cloudlet", "FQDN", mreply.FQDN, "distance", bestDistance)
@@ -331,7 +331,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 		paddedCarrierDistance := bestDistance - publicCloudPadding
 
 		// look for an azure cloud closer than the carrier distance minus padding
-		azDistance, updated := findClosestForCarrier(cloudcommon.OperatorAzure, appkey, mreq.GpsLocation, paddedCarrierDistance, mreply)
+		azDistance, updated := findClosestForCarrier(cloudcommon.OperatorAzure, appkey, mreq.GPSLocation, paddedCarrierDistance, mreply)
 		if updated {
 			log.DebugLog(log.DebugLevelDmereq, "found closer azure cloudlet", "FQDN", mreply.FQDN, "distance", azDistance)
 			bestDistance = azDistance
@@ -339,7 +339,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 
 		// look for a gcp cloud closer than either the azure cloud or the carrier cloud
 		maxGCPDistance := math.Min(azDistance, paddedCarrierDistance)
-		gcpDistance, updated := findClosestForCarrier(cloudcommon.OperatorGCP, appkey, mreq.GpsLocation, maxGCPDistance, mreply)
+		gcpDistance, updated := findClosestForCarrier(cloudcommon.OperatorGCP, appkey, mreq.GPSLocation, maxGCPDistance, mreply)
 		if updated {
 			log.DebugLog(log.DebugLevelDmereq, "found closer gcp cloudlet", "FQDN", mreply.FQDN, "distance", gcpDistance)
 			bestDistance = gcpDistance
@@ -347,7 +347,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 	}
 	if mreply.Status == dme.FindCloudletReply_FIND_NOTFOUND {
 		// default cloudlet is at lat:0, long:0.  Look at any distance distance
-		_, updated := findClosestForCarrier(cloudcommon.OperatorDeveloper, appkey, mreq.GpsLocation, dmecommon.InfiniteDistance, mreply)
+		_, updated := findClosestForCarrier(cloudcommon.OperatorDeveloper, appkey, mreq.GPSLocation, dmecommon.InfiniteDistance, mreply)
 		if updated {
 			log.DebugLog(log.DebugLevelDmereq, "found default operator cloudlet", "FQDN", mreply.FQDN)
 			bestDistance = -1 //not used except in log
@@ -436,8 +436,8 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 					if i.cloudletKey == cloudcommon.DefaultCloudletKey {
 						continue
 					}
-					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
-					cloc.GpsLocation = &i.location
+					d = dmecommon.DistanceBetween(*mreq.GPSLocation, i.location)
+					cloc.GPSLocation = &i.location
 					cloc.CarrierName = i.cloudletKey.OperatorKey.Name
 					cloc.CloudletName = i.cloudletKey.Name
 					cloc.Distance = d

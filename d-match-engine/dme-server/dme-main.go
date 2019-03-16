@@ -73,14 +73,14 @@ func (s *server) FindCloudlet(ctx context.Context, req *dme.FindCloudletRequest)
 
 		return reply, grpc.Errorf(codes.InvalidArgument, "Missing carrierName")
 	}
-	if req.GpsLocation == nil || (req.GpsLocation.Latitude == 0 && req.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GpsLocation")
-		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GpsLocation")
+	if req.GPSLocation == nil || (req.GPSLocation.Latitude == 0 && req.GPSLocation.Longitude == 0) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet request", "Error", "Missing GPSLocation")
+		return reply, grpc.Errorf(codes.InvalidArgument, "Missing GPSLocation")
 	}
 
-	if !util.IsLatitudeValid(req.GpsLocation.Latitude) || !util.IsLongitudeValid(req.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GpsLocation", "lat", req.GpsLocation.Latitude, "long", req.GpsLocation.Longitude)
-		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	if !util.IsLatitudeValid(req.GPSLocation.Latitude) || !util.IsLongitudeValid(req.GPSLocation.Longitude) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid FindCloudlet GPSLocation", "lat", req.GPSLocation.Latitude, "long", req.GPSLocation.Longitude)
+		return reply, grpc.Errorf(codes.InvalidArgument, "Invalid GPSLocation")
 	}
 
 	err := findCloudlet(ckey, req, reply)
@@ -122,8 +122,8 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
 
-	if req.GpsLocation == nil {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GpsLocation")
+	if req.GPSLocation == nil {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid GetAppInstList request", "Error", "Missing GPSLocation")
 		return nil, grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 	alist := new(dme.AppInstListReply)

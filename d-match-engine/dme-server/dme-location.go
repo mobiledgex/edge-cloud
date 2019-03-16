@@ -23,7 +23,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	key.Name = ckey.AppName
 	key.Version = ckey.AppVers
 
-	mreply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
+	mreply.GPS_Location_Status = dme.VerifyLocationReply_LOC_UNKNOWN
 	mreply.GPS_Location_Accuracy_KM = -1
 
 	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
@@ -31,16 +31,16 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		"appVersion", key.Version,
 		"devName", key.DeveloperKey.Name,
 		"VerifyLocToken", mreq.VerifyLocToken,
-		"GpsLocation", mreq.GpsLocation)
+		"GPSLocation", mreq.GPSLocation)
 
-	if mreq.GpsLocation == nil || (mreq.GpsLocation.Latitude == 0 && mreq.GpsLocation.Longitude == 0) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GpsLocation")
+	if mreq.GPSLocation == nil || (mreq.GPSLocation.Latitude == 0 && mreq.GPSLocation.Longitude == 0) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation request", "Error", "Missing GPSLocation")
 		return grpc.Errorf(codes.InvalidArgument, "Missing GPS location")
 	}
 
-	if !util.IsLatitudeValid(mreq.GpsLocation.Latitude) || !util.IsLongitudeValid(mreq.GpsLocation.Longitude) {
-		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GpsLocation", "lat", mreq.GpsLocation.Latitude, "long", mreq.GpsLocation.Longitude)
-		return grpc.Errorf(codes.InvalidArgument, "Invalid GpsLocation")
+	if !util.IsLatitudeValid(mreq.GPSLocation.Latitude) || !util.IsLongitudeValid(mreq.GPSLocation.Longitude) {
+		log.DebugLog(log.DebugLevelDmereq, "Invalid VerifyLocation GPSLocation", "lat", mreq.GPSLocation.Latitude, "long", mreq.GPSLocation.Longitude)
+		return grpc.Errorf(codes.InvalidArgument, "Invalid GPSLocation")
 	}
 
 	tbl.RLock()
@@ -61,8 +61,8 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		if mreq.VerifyLocToken == "" {
 			return grpc.Errorf(codes.InvalidArgument, "verifyloc token required")
 		}
-		result := locapi.CallTDGLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Latitude, mreq.GpsLocation.Longitude, mreq.VerifyLocToken, tokSrvUrl)
-		mreply.GpsLocationStatus = result.MatchEngineLocStatus
+		result := locapi.CallTDGLocationVerifyAPI(locVerUrl, mreq.GPSLocation.Latitude, mreq.GPSLocation.Longitude, mreq.VerifyLocToken, tokSrvUrl)
+		mreply.GPS_Location_Status = result.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
 	default:
 		// non-API based location uses cloudlets and so default and public cloudlets are not applicable
@@ -74,10 +74,10 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		distance = dmecommon.InfiniteDistance
 		log.DebugLog(log.DebugLevelDmereq, ">>>Verify Location",
 			"appName", key.Name,
-			"lat", mreq.GpsLocation.Latitude,
-			"long", mreq.GpsLocation.Longitude)
+			"lat", mreq.GPSLocation.Latitude,
+			"long", mreq.GPSLocation.Longitude)
 		for _, c := range carr.insts {
-			d = dmecommon.DistanceBetween(*mreq.GpsLocation, c.location)
+			d = dmecommon.DistanceBetween(*mreq.GPSLocation, c.location)
 			log.DebugLog(log.DebugLevelDmereq, "verify location at",
 				"lat", c.location.Latitude,
 				"long", c.location.Longitude,
@@ -93,7 +93,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		locresult := dmecommon.GetLocationResultForDistance(distance)
 		locval := dmecommon.GetDistanceAndStatusForLocationResult(locresult)
 
-		mreply.GpsLocationStatus = locval.MatchEngineLocStatus
+		mreply.GPS_Location_Status = locval.MatchEngineLocStatus
 		mreply.GPS_Location_Accuracy_KM = locval.DistanceRange
 
 		log.DebugLog(log.DebugLevelDmereq, "verified location at",
@@ -101,7 +101,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 			"long", found.location.Longitude,
 			"actual distance", distance,
 			"distance range", mreply.GPS_Location_Accuracy_KM,
-			"status", mreply.GpsLocationStatus,
+			"status", mreply.GPS_Location_Status,
 			"uri", found.uri)
 
 	}
