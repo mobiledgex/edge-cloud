@@ -44,6 +44,10 @@ message AzureProperties{
   string location = 1;
   // azure resource group
   string resourceGroup = 2;
+  // azure username
+  string userName = 3;
+  // azure password
+  string password = 4;
 }
 
 message GcpProperties{
