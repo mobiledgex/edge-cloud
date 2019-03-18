@@ -26,7 +26,7 @@ a: a string from struct A
 b: a string from struct B
 `
 
-func Example_unmarshalEmbedded() {
+func ExampleUnmarshal_embedded() {
 	var b StructB
 
 	err := yaml.Unmarshal([]byte(data), &b)
