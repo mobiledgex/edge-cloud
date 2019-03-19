@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: mc
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:V1.0-pre-60-g0c1c15f
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:V1.0-pre-73-g113e4e8
         imagePullPolicy: Always
         command:
          - "mc"
@@ -24,10 +24,16 @@ spec:
          - "0.0.0.0:9900"
          - "-sqlAddr"
          - "postgres.mobiledgex.net:5432"
-         - "--vaultAddr"
+         - "-vaultAddr"
          - "https://vault.mobiledgex.net"
-         - "--tls"
+         - "-gitlabAddr"
+         - "https://container-registry.mobiledgex.net"
+         - "-ldapAddr"
+         - "0.0.0.0:9389"
+         - "-tls"
          - "/root/tls/mex-server.crt"
+         - "-d"
+         - "api"
         env:
          - name: db_username
            value: mcuser
@@ -37,6 +43,8 @@ spec:
            value: f4207f0f-c965-ac3e-181c-235de8838ff7
          - name: VAULT_SECRET_ID
            value: 528a3921-5afc-0150-1f9b-9e1fa4a49727
+         - name: gitlab_token
+           value: sx3vbbf2iLGgpwSMm3NZ
          
       imagePullSecrets:
        - name: mexreg-secret 
