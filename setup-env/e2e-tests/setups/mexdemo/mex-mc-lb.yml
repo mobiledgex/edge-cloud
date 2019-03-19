@@ -9,8 +9,13 @@ spec:
   externalTrafficPolicy: Cluster
   ports:
    - port: 9900
+     name: api
      protocol: TCP
      targetPort: 9900
+   - port: 9389
+     name: ldap
+     protocol: TCP
+     targetPort: 9389
   selector:
     app: mc
   sessionAffinity: None
