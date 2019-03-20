@@ -136,16 +136,20 @@ func CloudletInfraCommonWriteOutputOne(obj *edgeproto.CloudletInfraCommon) {
 	}
 }
 func AzurePropertiesSlicer(in *edgeproto.AzureProperties) []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, in.Location)
 	s = append(s, in.ResourceGroup)
+	s = append(s, in.UserName)
+	s = append(s, in.Password)
 	return s
 }
 
 func AzurePropertiesHeaderSlicer() []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, "Location")
 	s = append(s, "ResourceGroup")
+	s = append(s, "UserName")
+	s = append(s, "Password")
 	return s
 }
 
@@ -269,6 +273,8 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	}
 	s = append(s, in.AzureProperties.Location)
 	s = append(s, in.AzureProperties.ResourceGroup)
+	s = append(s, in.AzureProperties.UserName)
+	s = append(s, in.AzureProperties.Password)
 	if in.GcpProperties == nil {
 		in.GcpProperties = &edgeproto.GcpProperties{}
 	}
@@ -288,6 +294,8 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s = append(s, "OpenstackProperties-OSNetworkScheme")
 	s = append(s, "AzureProperties-Location")
 	s = append(s, "AzureProperties-ResourceGroup")
+	s = append(s, "AzureProperties-UserName")
+	s = append(s, "AzureProperties-Password")
 	s = append(s, "GcpProperties-Project")
 	s = append(s, "GcpProperties-Zone")
 	return s
