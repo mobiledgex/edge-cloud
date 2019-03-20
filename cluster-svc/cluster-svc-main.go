@@ -45,19 +45,19 @@ var exporterT *template.Template
 var MEXMetricsExporterEnvVars = `- name: MEX_CLUSTER_NAME
   valueFrom:
     configMapKeyRef:
-      name: cluster-info
+      name: mexcluster-info
       key: ClusterName
       optional: true
 - name: MEX_CLOUDLET_NAME
   valueFrom:
     configMapKeyRef:
-      name: cluster-info
+      name: mexcluster-info
       key: CloudletName
       optional: true
 - name: MEX_OPERATOR_NAME
   valueFrom:
     configMapKeyRef:
-      name: cluster-info
+      name: mexcluster-info
       key: OperatorName
       optional: true
 `
