@@ -181,9 +181,16 @@ namespace DistributedMatchEngine
       foreach (string keyValueStr in parameters)
       {
         string[] keyValue = keyValueStr.Split('=');
+        int pos = keyValue[0].Length + 1; // step over '='
+        if (pos >= keyValueStr.Length)
+        {
+          return null;
+        }
+
+        string value = keyValueStr.Substring(pos, keyValueStr.Length - pos);
         if (keyValue[0].Equals("dt-id"))
         {
-          return keyValue[1] + "="; // Have to keep it for some reason?
+          return value;
         }
       }
 
