@@ -50,7 +50,14 @@ func Login(c echo.Context) error {
 	}
 	user := ormapi.User{}
 	lookup := ormapi.User{Name: login.Username}
-	err := db.Where(&lookup).First(&user).Error
+	res := db.Where(&lookup).First(&user)
+	if res.RecordNotFound() {
+		// try look-up by email
+		lookup.Name = ""
+		lookup.Email = login.Username
+		res = db.Where(&lookup).First(&user)
+	}
+	err := res.Error
 	if err != nil {
 		log.DebugLog(log.DebugLevelApi, "user lookup failed", "lookup", lookup, "err", err)
 		time.Sleep(BadAuthDelay)
