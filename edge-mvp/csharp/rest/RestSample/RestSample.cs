@@ -43,7 +43,7 @@ namespace RestSample
         var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
         Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie);
 
-        // Do Verify and FindCloudlet in parallel tasks:
+        // Do Verify and FindCloudlet in concurrent tasks:
         var loc = await locTask;
 
         var verifyLocationRequest = me.CreateVerifyLocationRequest(carrierName, loc);
