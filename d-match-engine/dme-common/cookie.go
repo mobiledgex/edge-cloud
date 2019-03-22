@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 )
 
@@ -129,7 +130,7 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		// Verify session cookie, add decoded CookieKey to context
 		ckey, err := VerifyCookie(cookie)
 		if err != nil {
-			return nil, err
+			return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
 		ctx = NewCookieContext(ctx, ckey)
 	}
