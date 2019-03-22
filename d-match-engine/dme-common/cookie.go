@@ -130,7 +130,7 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		// Verify session cookie, add decoded CookieKey to context
 		ckey, err := VerifyCookie(cookie)
 		if err != nil {
-			return nil, grpc.Errorf(codes.InvalidArgument, err.Error())
+			return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
 		ctx = NewCookieContext(ctx, ckey)
 	}
