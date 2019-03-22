@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -124,7 +125,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
-	Interval     time.Duration
+	Interval 		 string
 }
 
 // Process updates from notify framework about cluster instances
@@ -253,14 +254,23 @@ func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.Cl
 	return createAppInstCommon(dialOpts, instKey, &MEXMetricsExporterApp)
 }
 
+func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
+	var scrapeStr strings.Builder
+	var secs = int(scrapeInterval.Seconds()) //round it to the second
+	scrapeStr.WriteString(strconv.Itoa(secs))
+	scrapeStr.WriteString("s")
+	return scrapeStr.String()
+}
+
 func fillAppConfigs(app *edgeproto.App) error {
+	var scrapeStr = scrapeIntervalInSeconds(*scrapeInterval)
 	switch app.Key.Name {
 	case MEXMetricsExporterAppName:
 		ex := exporterData{
 			InfluxDBAddr: *influxDBAddr,
 			InfluxDBUser: *influxDBUser,
 			InfluxDBPass: *influxDBPass,
-			Interval:     *scrapeInterval,
+			Interval:     scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := exporterT.Execute(&buf, &ex)
@@ -279,7 +289,7 @@ func fillAppConfigs(app *edgeproto.App) error {
 		app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
 	case MEXPrometheusAppName:
 		ex := exporterData{
-			Interval: *scrapeInterval,
+			Interval: scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := prometheusT.Execute(&buf, &ex)
@@ -333,6 +343,8 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 func main() {
 	var err error
 	flag.Parse()
+	fmt.Printf("\n\nTESTING SCRAPINTERVAL CONVERTER...\n")
+	fmt.Printf("Time Given: %s, converted time: %s\n\n\n", scrapeInterval.String(), scrapeIntervalInSeconds(*scrapeInterval))
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *standalone {
