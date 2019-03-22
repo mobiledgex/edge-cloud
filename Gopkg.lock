@@ -570,7 +570,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:df8023bd065303469f12ca7e07ab04db208e573ca6970fa25109febff63fc01d"
+  digest = "1:fe237c071be6420dbc74607d50d0f8e8e958d225c76640d142113a066e97c70c"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "k8s-prov/azure",
@@ -580,7 +580,7 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "0361cf49cab05d3911533b2caf4026276e94a3cc"
+  revision = "13bec7233e1c373d8bfb3df6f367f6680e3960a7"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -1103,6 +1103,8 @@
   input-imports = [
     "github.com/AsGz/geo/georeverse",
     "github.com/casbin/casbin",
+    "github.com/casbin/casbin/model",
+    "github.com/casbin/casbin/persist",
     "github.com/casbin/gorm-adapter",
     "github.com/cespare/xxhash",
     "github.com/cloudflare/cloudflare-go",

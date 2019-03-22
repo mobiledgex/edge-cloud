@@ -2,7 +2,6 @@ package main
 
 import (
 	ctls "crypto/tls"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -183,7 +182,7 @@ func getAuthPublicKey(devname string, appname string, appvers string) (string, e
 	}
 
 	if !foundApp {
-		return "", grpc.Errorf(codes.NotFound, "app not found")
+		return "", grpc.Errorf(codes.InvalidArgument, "app not found")
 	}
 	return authkey, nil
 }
@@ -233,7 +232,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		if authkey == "" {
 			log.DebugLog(log.DebugLevelDmereq, "No authkey provisioned to validate token")
 			mstatus.Status = dme.ReplyStatus_RS_FAIL
-			return mstatus, errors.New("No authkey found to validate token")
+			return mstatus, grpc.Errorf(codes.Unauthenticated, "No authkey found to validate token")
 		}
 		err := dmecommon.VerifyAuthToken(req.AuthToken, authkey, req.DevName, req.AppName, req.AppVers)
 		if err != nil {
