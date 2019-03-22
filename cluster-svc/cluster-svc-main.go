@@ -197,7 +197,9 @@ func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 }
 
 // create an appInst as a clustersvc
-func creat eAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+	//update flavor
+	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
@@ -305,8 +307,6 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 	defer conn.Close()
 
 	// add app customizations
-	//update flavor
-	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	if err = fillAppConfigs(app); err != nil {
 		return err
 	}
