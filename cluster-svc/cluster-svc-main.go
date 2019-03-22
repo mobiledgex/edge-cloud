@@ -331,6 +331,9 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 func main() {
 	var err error
 	flag.Parse()
+	//update these if provided custom flavors
+	MEXMetricsExporterApp.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
+	MEXPrometheusApp.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *standalone {
