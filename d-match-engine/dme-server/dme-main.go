@@ -97,7 +97,7 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 	}
 	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, err.Error())
+		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
 	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
@@ -116,7 +116,7 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	}
 	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
 	if err != nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, err.Error())
+		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
