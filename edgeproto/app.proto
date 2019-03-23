@@ -65,8 +65,6 @@ message App {
   string image_path = 4 [(protogen.backend) = true];
   // Image type (see ImageType)
   ImageType image_type = 5;
-  // IP access type
-  IpAccess ip_access = 6;
   // For Layer4 access, the ports the app listens on.
   // This is a comma separated list of protocol:port pairs, i.e.
   // tcp:80,http:443,udp:10002.

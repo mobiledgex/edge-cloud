@@ -45,6 +45,10 @@ message ClusterInst {
   repeated string errors = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Override actions to CRM
   CRMOverride crm_override = 6 [(protogen.hidetag) = "nocmp"];
+  // IP access type
+  IpAccess ip_access = 7 [(protogen.backend) = true];
+  // allocated IP for dedicated access
+  string allocated_ip = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
