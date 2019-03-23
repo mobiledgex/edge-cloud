@@ -153,11 +153,6 @@ func updateAppFields(in *edgeproto.App) error {
 func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.Result, error) {
 	var err error
 
-	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
-		// default to shared
-		in.IpAccess = edgeproto.IpAccess_IpAccessShared
-	}
-
 	if err = in.Validate(edgeproto.AppAllFieldsMap); err != nil {
 		return &edgeproto.Result{}, err
 	}
