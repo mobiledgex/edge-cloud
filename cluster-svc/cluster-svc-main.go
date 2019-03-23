@@ -9,9 +9,9 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/mobiledgex/edge-cloud-infra/mexos"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -125,7 +125,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
-	Interval 		 string
+	Interval     string
 }
 
 // Process updates from notify framework about cluster instances
@@ -255,11 +255,9 @@ func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.Cl
 }
 
 func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
-	var scrapeStr strings.Builder
 	var secs = int(scrapeInterval.Seconds()) //round it to the second
-	scrapeStr.WriteString(strconv.Itoa(secs))
-	scrapeStr.WriteString("s")
-	return scrapeStr.String()
+	var scrapeStr = strconv.Itoa(secs) + "s"
+	return scrapeStr
 }
 
 func fillAppConfigs(app *edgeproto.App) error {
@@ -343,8 +341,6 @@ func createAppCommon(dialOpts grpc.DialOption, app *edgeproto.App) error {
 func main() {
 	var err error
 	flag.Parse()
-	fmt.Printf("\n\nTESTING SCRAPINTERVAL CONVERTER...\n")
-	fmt.Printf("Time Given: %s, converted time: %s\n\n\n", scrapeInterval.String(), scrapeIntervalInSeconds(*scrapeInterval))
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *standalone {
