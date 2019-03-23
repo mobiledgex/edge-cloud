@@ -110,6 +110,10 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
 		return err
 	}
+	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
+		// default to shared
+		in.IpAccess = edgeproto.IpAccess_IpAccessShared
+	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
 			if !cctx.Undo && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
@@ -190,6 +194,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
 				return errors.New("Not enough Disk available")
 			}
+		}
+		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		err := allocateIP(in, &cloudlet, &refs)
+		if err != nil {
+			return err
 		}
 		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
@@ -321,6 +330,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			refs.UsedRam -= nodeFlavor.Ram * uint64(clusterFlavor.MaxNodes)
 			refs.UsedVcores -= nodeFlavor.Vcpus * uint64(clusterFlavor.MaxNodes)
 			refs.UsedDisk -= nodeFlavor.Disk * uint64(clusterFlavor.MaxNodes)
+			freeIP(in, &cloudlet, &refs)
+
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		if ignoreCRM(cctx) {

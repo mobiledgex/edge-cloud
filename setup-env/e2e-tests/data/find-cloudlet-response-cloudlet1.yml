@@ -1,4 +1,4 @@
-fqdn: dmuus-cloud-1.dmuus.mobiledgex.net
+fqdn: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
 ports:
 - proto: LProtoTCP
   internalport: 80

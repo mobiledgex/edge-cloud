@@ -129,7 +129,6 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
 		AccessPorts:   "http:443",
 		DefaultFlavor: FlavorData[0].Key,
 		Cluster:       ClusterData[0].Key,
@@ -141,7 +140,6 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessShared,
 		AccessPorts:   "tcp:80,http:443",
 		DefaultFlavor: FlavorData[0].Key,
 	},
@@ -152,7 +150,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicatedOrShared,
 		AccessPorts:   "tcp:443,udp:11111",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -163,7 +160,6 @@ var AppData = []edgeproto.App{
 			Version:      "1.2.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
 		AccessPorts:   "http:8080",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -174,7 +170,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
-		IpAccess:      edgeproto.IpAccess_IpAccessShared,
 		AccessPorts:   "udp:1024",
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
@@ -186,7 +181,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		Deployment:    "helm",
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
 		AccessPorts:   "udp:2024",
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
@@ -274,42 +268,48 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:   ClusterData[0].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:   ClusterData[0].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessShared,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:   ClusterData[0].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessDedicatedOrShared,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
+		Flavor:   ClusterData[1].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
+		Flavor:   ClusterData[1].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessShared,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[2].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[2].DefaultFlavor,
+		Flavor:   ClusterData[2].DefaultFlavor,
+		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -473,9 +473,10 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 			ClusterData[0].Key,
 			ClusterData[1].Key,
 		},
-		UsedRam:    GetCloudletUsedRam(0, 1),
-		UsedVcores: GetCloudletUsedVcores(0, 1),
-		UsedDisk:   GetCloudletUsedDisk(0, 1),
+		UsedRam:        GetCloudletUsedRam(0, 1),
+		UsedVcores:     GetCloudletUsedVcores(0, 1),
+		UsedDisk:       GetCloudletUsedDisk(0, 1),
+		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4]:
 	edgeproto.CloudletRefs{
@@ -495,9 +496,10 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 			ClusterData[0].Key,
 			ClusterData[2].Key,
 		},
-		UsedRam:    GetCloudletUsedRam(0, 2),
-		UsedVcores: GetCloudletUsedVcores(0, 2),
-		UsedDisk:   GetCloudletUsedDisk(0, 2),
+		UsedRam:        GetCloudletUsedRam(0, 2),
+		UsedVcores:     GetCloudletUsedVcores(0, 2),
+		UsedDisk:       GetCloudletUsedDisk(0, 2),
+		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[2,6]:
 	edgeproto.CloudletRefs{
@@ -515,7 +517,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 // Some of the app insts trigger creating auto-clusterinsts,
 // and ports are reserved with the creation of app insts.
 var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
-	// ClusterInstData[0,3]:
+	// ClusterInstData[0,3]: (dedicated,dedicated)
+	// AppInstData[0,1] -> ports[http:443;http:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -527,7 +530,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedDisk:       GetCloudletUsedDisk(0, 1),
 		UsedDynamicIps: 2,
 	},
-	// ClusterInstData[1,4], ClusterInstAutoData[0]:
+	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
+	// AppInstData[2,3] -> ports[http:443;tcp:80,http:443]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -535,13 +539,13 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 			ClusterData[1].Key,
 			ClusterInstAutoData[0].Key.ClusterKey,
 		},
-		UsedRam:        GetCloudletUsedRam(0, 1, 0),
-		UsedVcores:     GetCloudletUsedVcores(0, 1, 0),
-		UsedDisk:       GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts:    map[int32]int32{80: 1, 10000: 1},
-		UsedDynamicIps: 1,
+		UsedRam:     GetCloudletUsedRam(0, 1, 0),
+		UsedVcores:  GetCloudletUsedVcores(0, 1, 0),
+		UsedDisk:    GetCloudletUsedDisk(0, 1, 0),
+		RootLbPorts: map[int32]int32{80: 1, 443: 1, 10000: 1},
 	},
-	// ClusterInstData[2,5], ClusterInstAutoData[1]:
+	// ClusterInstData[2,5], ClusterInstAutoData[1]: (shared,dedicated,shared)
+	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -552,10 +556,10 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:        GetCloudletUsedRam(0, 2, 1),
 		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),
 		UsedDisk:       GetCloudletUsedDisk(0, 2, 1),
-		RootLbPorts:    map[int32]int32{10000: 1, 11111: 1},
 		UsedDynamicIps: 1,
+		RootLbPorts:    map[int32]int32{443: 1, 11111: 1, 2024: 1},
 	},
-	// ClusterInstData[2,6]:
+	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
 		Clusters: []edgeproto.ClusterKey{

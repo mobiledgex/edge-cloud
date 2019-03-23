@@ -97,7 +97,6 @@ var AppIn edgeproto.App
 var AppFlagSet = pflag.NewFlagSet("App", pflag.ExitOnError)
 var AppNoConfigFlagSet = pflag.NewFlagSet("AppNoConfig", pflag.ExitOnError)
 var AppInImageType string
-var AppInIpAccess string
 var AppInDelOpt string
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
@@ -187,7 +186,7 @@ func ConfigFileWriteOutputOne(obj *edgeproto.ConfigFile) {
 	}
 }
 func AppSlicer(in *edgeproto.App) []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 19)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -197,7 +196,6 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Key.Version)
 	s = append(s, in.ImagePath)
 	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
-	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, in.AccessPorts)
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
@@ -224,14 +222,13 @@ func AppSlicer(in *edgeproto.App) []string {
 }
 
 func AppHeaderSlicer() []string {
-	s := make([]string, 0, 20)
+	s := make([]string, 0, 19)
 	s = append(s, "Fields")
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Key-Version")
 	s = append(s, "ImagePath")
 	s = append(s, "ImageType")
-	s = append(s, "IpAccess")
 	s = append(s, "AccessPorts")
 	s = append(s, "Config")
 	s = append(s, "DefaultFlavor-Name")
@@ -504,7 +501,6 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
 	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
 	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
-	AppFlagSet.StringVar(&AppInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
@@ -548,9 +544,6 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("imagetype").Changed {
 		AppIn.Fields = append(AppIn.Fields, "5")
-	}
-	if AppFlagSet.Lookup("ipaccess").Changed {
-		AppIn.Fields = append(AppIn.Fields, "6")
 	}
 	if AppFlagSet.Lookup("accessports").Changed {
 		AppIn.Fields = append(AppIn.Fields, "7")
@@ -607,20 +600,6 @@ func parseAppEnums() error {
 			AppIn.ImageType = edgeproto.ImageType(2)
 		default:
 			return errors.New("Invalid value for AppInImageType")
-		}
-	}
-	if AppInIpAccess != "" {
-		switch AppInIpAccess {
-		case "IpAccessUnknown":
-			AppIn.IpAccess = edgeproto.IpAccess(0)
-		case "IpAccessDedicated":
-			AppIn.IpAccess = edgeproto.IpAccess(1)
-		case "IpAccessDedicatedOrShared":
-			AppIn.IpAccess = edgeproto.IpAccess(2)
-		case "IpAccessShared":
-			AppIn.IpAccess = edgeproto.IpAccess(3)
-		default:
-			return errors.New("Invalid value for AppInIpAccess")
 		}
 	}
 	if AppInDelOpt != "" {

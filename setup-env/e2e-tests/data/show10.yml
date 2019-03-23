@@ -43,6 +43,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -54,6 +55,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -65,6 +67,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessDedicated
   auto: true
 - key:
     clusterkey:
@@ -76,6 +79,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessDedicated
   auto: true
 - key:
     clusterkey:
@@ -87,6 +91,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -98,6 +103,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -109,6 +115,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -120,6 +127,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -131,6 +139,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -142,6 +151,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -153,6 +163,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -164,6 +175,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -175,6 +187,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -186,6 +199,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -197,6 +211,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -208,6 +223,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessDedicated
   auto: true
 - key:
     clusterkey:
@@ -219,6 +235,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessDedicated
   auto: true
 - key:
     clusterkey:
@@ -230,6 +247,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -241,6 +259,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 - key:
     clusterkey:
@@ -252,6 +271,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
 
 operators:
@@ -387,7 +407,6 @@ apps:
   imagepath: dummyvalue
   imagetype: ImageTypeDocker
   deployment: kubernetes
-  ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:64000
   defaultflavor:
     name: x1.small
@@ -399,7 +418,6 @@ apps:
   imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
-  ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -423,7 +441,6 @@ apps:
   imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
   deployment: kubernetes
-  ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
