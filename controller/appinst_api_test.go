@@ -50,7 +50,7 @@ func TestAppInstApi(t *testing.T) {
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
 	// create all the app insts will fail.
-	responder.SetSimulateCreateFailure(true)
+	responder.SetSimulateAppCreateFailure(true)
 	for _, obj := range testutil.AppInstData {
 		err := appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 		assert.NotNil(t, err, "Create app inst responder failures")
@@ -62,7 +62,7 @@ func TestAppInstApi(t *testing.T) {
 			assert.Equal(t, "Encountered failures: [crm create app inst failed]", err.Error())
 		}
 	}
-	responder.SetSimulateCreateFailure(false)
+	responder.SetSimulateAppCreateFailure(false)
 	assert.Equal(t, 0, len(appInstApi.cache.Objs))
 	assert.Equal(t, clusterInstCnt, len(clusterInstApi.cache.Objs))
 
@@ -79,11 +79,11 @@ func TestAppInstApi(t *testing.T) {
 	commonApi := testutil.NewInternalAppInstApi(&appInstApi)
 
 	// Set responder to fail delete.
-	responder.SetSimulateDeleteFailure(true)
+	responder.SetSimulateAppDeleteFailure(true)
 	obj := testutil.AppInstData[0]
 	err := appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	assert.NotNil(t, err, "Delete AppInst responder failure")
-	responder.SetSimulateDeleteFailure(false)
+	responder.SetSimulateAppDeleteFailure(false)
 	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
 
 	obj = testutil.AppInstData[0]
@@ -104,8 +104,8 @@ func TestAppInstApi(t *testing.T) {
 	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_NotPresent)
 
 	// override CRM error
-	responder.SetSimulateCreateFailure(true)
-	responder.SetSimulateDeleteFailure(true)
+	responder.SetSimulateAppCreateFailure(true)
+	responder.SetSimulateAppDeleteFailure(true)
 	obj = testutil.AppInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
 	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
@@ -124,8 +124,8 @@ func TestAppInstApi(t *testing.T) {
 	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
 	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	assert.Nil(t, err, "ignore crm")
-	responder.SetSimulateCreateFailure(false)
-	responder.SetSimulateDeleteFailure(false)
+	responder.SetSimulateAppCreateFailure(false)
+	responder.SetSimulateAppDeleteFailure(false)
 
 	dummy.Stop()
 }
