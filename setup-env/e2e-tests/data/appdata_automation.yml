@@ -1,100 +1,49 @@
 flavors:
 - key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
-- key:
-    name: x1.small
-  ram: 2048
-  vcpus: 2
-  disk: 2
-- key:
     name: x1.medium
   ram: 4096
   vcpus: 4
   disk: 4
+- key:
+    name: automation_api_flavor
+  ram: 1024
+  vcpus: 1
+  disk: 1
 
 clusterflavors:
 - key:
-    name: c1.tiny
+    name: automation_api_cluster_flavor
   nodeflavor:
-    name: x1.tiny
+    name: automation_api_flavor
   masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
+    name: automation_api_flavor
+  numnodes: 1
+  maxnodes: 1
   nummasters: 1
 
 clusters:
 - key:
-    name: SmallCluster
+    name: automationapicluster
   defaultflavor:
-    name: c1.small
+    name: automation_api_cluster_flavor
 
 clusterinsts:
-- key:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-1
-  flavor:
-    name: c1.small
-  liveness: LivenessStatic
-- key:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-2
-  flavor:
-    name: c1.small
-  liveness: LivenessStatic
 
 operators:
 - key:
-    name: ATT
+    name: TDG
 - key:
     name: tmus
 - key:
     name: azure
 - key:
     name: gcp
+- key:
+    name: att
 
 developers:
 - key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
+    name: automation_api
 
 cloudlets:
 - key:
@@ -117,42 +66,88 @@ cloudlets:
     longitude: -95
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: TDG
+    name: automationBonnCloudlet 
+  accessuri: cloud3.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: tmus
+    name: automationBerlinCloudlet
+  accessuri: cloud4.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: tmus
+    name: automationHamburgCloudlet
+  accessuri: cloud5.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: att
+    name: attcloud-1
+  accessuri: cloud6.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: tmus
+    name: automationProdHamburgCloudlet
+  accessuri: cloud7.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
 - key:
     developerkey:
-      name: AcmeAppCo
-    name: someapplication
+      name: automation_api
+    name: automation_api_app
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplication:1.0
+  imagepath: registry.mobiledgex.net:5000/automation_api/automation_api_app:1.0
   imagetype: ImageTypeDocker
   defaultflavor:
-    name: x1.small
+    name: automation_api_flavor
   cluster:
-    name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
+    name: automationapicluster
 - key:
     developerkey:
-      name: AcmeAppCo
-    name: someapplicationAuth
+      name: automation_api
+    name: automation_api_auth_app
     version: "1.0"
-  imagepath: mobiledgex_AcmeAppCo/someapplicationAuth:1.0
+  imagepath: registry.mobiledgex.net:5000/automation_api/automation_api_auth_app:1.0
   imagetype: ImageTypeDocker
   defaultflavor:
-    name: x1.small
+    name: automation_api_flavor
   cluster:
-    name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessShared
-  authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+    name: automationapicluster
+  authpublickey:  "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----"
 
 appinstances:
 - key:
     appkey:
       developerkey:
-        name: AcmeAppCo
-      name: someapplication
+        name: automation_api
+      name: automation_api_app
       version: "1.0"
     cloudletkey:
       operatorkey:
@@ -164,59 +159,12 @@ appinstances:
     longitude: -91
   clusterinstkey:
     clusterkey:
-      name: SmallCluster
+      name: autocluster
     cloudletkey:
       operatorkey:
         name: tmus
       name: tmocloud-1
   liveness: LivenessStatic
   flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-2
-    id: 123
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-2
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplicationAuth
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-2
-    id: 123
-  cloudletloc:
-    latitude: 35
-    longitude: -95
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmocloud-2
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
+    name: automation_api_flavor
+

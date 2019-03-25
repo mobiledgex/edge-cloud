@@ -57,6 +57,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
   state: Ready
 - key:
@@ -69,6 +70,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessDynamic
+  ipaccess: IpAccessShared
   auto: true
   state: Ready
 
@@ -114,7 +116,6 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  ipaccess: IpAccessDedicatedOrShared
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -192,7 +193,6 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
   imagetype: ImageTypeDocker
-  ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
   deployment: kubernetes
@@ -258,7 +258,6 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
-  ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
   deployment: helm
@@ -307,7 +306,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 10000
+    publicport: 443
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -315,7 +314,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -347,7 +345,7 @@ appinstances:
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoHTTP
     internalport: 443
-    publicport: 10000
+    publicport: 443
     fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
@@ -355,7 +353,6 @@ appinstances:
     fqdnprefix: someapplication1-udp.
   flavor:
     name: x1.small
-  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -382,7 +379,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -409,7 +405,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -436,7 +431,6 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
   state: Ready
 - key:
     appkey:
@@ -463,5 +457,4 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  ipaccess: IpAccessShared
   state: Ready

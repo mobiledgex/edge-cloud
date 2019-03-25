@@ -61,6 +61,7 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessStatic
+  ipaccess: IpAccessShared
 
 operators:
 - key:
@@ -106,7 +107,6 @@ apps:
   cluster:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessDedicatedOrShared
 - key:
     developerkey:
       name: MobiledgeX
@@ -114,7 +114,6 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
   imagetype: ImageTypeDocker
-  ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
   deployment: kubernetes
@@ -155,7 +154,6 @@ apps:
     name: MEXPrometheusAppName
     version: "1.0"
   imagepath: stable/prometheus-operator
-  ipaccess: IpAccessShared
   defaultflavor:
     name: x1.medium
   deployment: helm

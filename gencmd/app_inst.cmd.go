@@ -40,7 +40,6 @@ var AppInstFlagSet = pflag.NewFlagSet("AppInst", pflag.ExitOnError)
 var AppInstNoConfigFlagSet = pflag.NewFlagSet("AppInstNoConfig", pflag.ExitOnError)
 var AppInstInLiveness string
 var AppInstInMappedPortsProto string
-var AppInstInIpAccess string
 var AppInstInState string
 var AppInstInCrmOverride string
 var AppInstInfoIn edgeproto.AppInstInfo
@@ -97,7 +96,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 12)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -135,21 +134,19 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.MappedPorts[0].PublicPath)
 	s = append(s, in.MappedPorts[0].FQDNPrefix)
 	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
-	s = append(s, in.AllocatedIp)
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 12)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -178,11 +175,9 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-PublicPath")
 	s = append(s, "MappedPorts-FQDNPrefix")
 	s = append(s, "Flavor-Name")
-	s = append(s, "IpAccess")
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
-	s = append(s, "AllocatedIp")
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
 	return s
@@ -317,9 +312,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 		in.MappedPorts = nil
 	}
 	if _, found := tags["nocmp"]; found {
-		in.IpAccess = 0
-	}
-	if _, found := tags["nocmp"]; found {
 		in.State = 0
 	}
 	if _, found := tags["nocmp"]; found {
@@ -327,9 +319,6 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
-	}
-	if _, found := tags["nocmp"]; found {
-		in.AllocatedIp = ""
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
@@ -726,10 +715,8 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.Developer, "clusterinstkey-developer", "", "ClusterInstKey.Developer")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
-	AppInstFlagSet.StringVar(&AppInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
-	AppInstFlagSet.StringVar(&AppInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
@@ -832,17 +819,11 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("flavor-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "12.1")
 	}
-	if AppInstFlagSet.Lookup("ipaccess").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "13")
-	}
 	if AppInstFlagSet.Lookup("state").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "14")
 	}
 	if AppInstFlagSet.Lookup("crmoverride").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "16")
-	}
-	if AppInstFlagSet.Lookup("allocatedip").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "17")
 	}
 	if AppInstFlagSet.Lookup("createdat-seconds").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.1")
@@ -905,20 +886,6 @@ func parseAppInstEnums() error {
 			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(3)
 		default:
 			return errors.New("Invalid value for AppInstInMappedPortsProto")
-		}
-	}
-	if AppInstInIpAccess != "" {
-		switch AppInstInIpAccess {
-		case "IpAccessUnknown":
-			AppInstIn.IpAccess = edgeproto.IpAccess(0)
-		case "IpAccessDedicated":
-			AppInstIn.IpAccess = edgeproto.IpAccess(1)
-		case "IpAccessDedicatedOrShared":
-			AppInstIn.IpAccess = edgeproto.IpAccess(2)
-		case "IpAccessShared":
-			AppInstIn.IpAccess = edgeproto.IpAccess(3)
-		default:
-			return errors.New("Invalid value for AppInstInIpAccess")
 		}
 	}
 	if AppInstInState != "" {

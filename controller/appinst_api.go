@@ -159,7 +159,7 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
-func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (err error) {
+func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
 	if in.Liveness == edgeproto.Liveness_LivenessUnknown {
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
@@ -273,7 +273,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 		defer func() {
-			if err != nil && !cctx.Undo {
+			if reterr != nil && !cctx.Undo {
 				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
 				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
@@ -295,7 +295,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes
@@ -333,7 +333,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return edgeproto.ErrEdgeApiAppNotFound
 		}
-		in.IpAccess = app.IpAccess
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -342,6 +341,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
+		ipaccess := edgeproto.IpAccess_IpAccessDedicated
 		if !defaultCloudlet {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
@@ -355,6 +355,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
 				return errors.New("Info for cloudlet not found")
 			}
+			ipaccess = clusterInst.IpAccess
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -363,18 +364,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			initCloudletRefs(&cloudletRefs, &in.Key.CloudletKey)
 		}
 
-		// allocateIP also sets in.IpAccess to either Dedicated or Shared
-		if !defaultCloudlet {
-			err := allocateIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
-			if err != nil {
-				return err
-			}
-		}
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
-
 		if defaultCloudlet {
-			in.IpAccess = edgeproto.IpAccess_IpAccessDedicated
-		} else if in.IpAccess == edgeproto.IpAccess_IpAccessShared {
+			// nothing to do
+		} else if ipaccess == edgeproto.IpAccess_IpAccessShared {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
 			if cloudletRefs.RootLbPorts == nil {
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
@@ -390,7 +383,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
-					if iport != 22 && iport != 443 &&
+					if iport != 22 &&
 						iport != 18888 &&
 						iport != 18889 {
 						eport = iport
@@ -532,8 +525,6 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					cloudletRefsChanged = true
 				}
 			}
-			freeIP(in, &cloudlet, &cloudletRefs, &cloudletRefsChanged)
-
 			clusterInstKey = in.ClusterInstKey
 			if cloudletRefsChanged {
 				cloudletRefsApi.store.STMPut(stm, &cloudletRefs)
@@ -665,7 +656,7 @@ func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto
 	})
 }
 
-func allocateIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) error {
+func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
 	if inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorGCP || inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
 		// public cloud implements dedicated access
 		inst.IpAccess = edgeproto.IpAccess_IpAccessDedicated
@@ -696,13 +687,12 @@ func allocateIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edg
 		}
 		refs.UsedDynamicIps++
 		inst.AllocatedIp = cloudcommon.AllocatedIpDynamic
-		*refsChanged = true
 		return nil
 	}
 	return errors.New("Invalid IpSupport type")
 }
 
-func freeIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs, refsChanged *bool) {
+func freeIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) {
 	if inst.IpAccess == edgeproto.IpAccess_IpAccessShared {
 		return
 	}
@@ -711,7 +701,6 @@ func freeIP(inst *edgeproto.AppInst, cloudlet *edgeproto.Cloudlet, refs *edgepro
 	} else if cloudlet.IpSupport == edgeproto.IpSupport_IpSupportDynamic {
 		refs.UsedDynamicIps--
 		inst.AllocatedIp = ""
-		*refsChanged = true
 	}
 }
 

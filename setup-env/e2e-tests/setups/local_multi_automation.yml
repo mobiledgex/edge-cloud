@@ -8,7 +8,6 @@ tlscerts:
     - 127.0.0.1
     - 0.0.0.0
 
- 
 locsims:
 - locapisimlocal:
     name: locsim1
@@ -22,6 +21,11 @@ toksims:
 - toksrvsimlocal:
     name: toksim1
     port: 9999
+  hostname: "127.0.0.1"
+
+vaults:
+- vault:
+    name: vault
   hostname: "127.0.0.1"
 
 influxs:
@@ -66,7 +70,6 @@ controllers:
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
-    shorttimeouts: true
   hostname: "127.0.0.1"
 
 - controllerlocal:
@@ -78,7 +81,6 @@ controllers:
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
-    shorttimeouts: true
   hostname: "127.0.0.1"
 
 
@@ -91,7 +93,7 @@ dmes:
     locverurl: "{{locverurl}}"
     toksrvurl: "{{toksrvurl}}"
     carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"automationBonnCloudlet"}'
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -100,57 +102,6 @@ dmes:
      LOCAPI_USER: mexserver
      LOCAPI_PASSWD: eC2835!
 
-- dmelocal:
-    name: dme2
-    apiaddr: "0.0.0.0:50052"
-    httpaddr: "0.0.0.0:38002"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-  envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
-
-- dmelocal:
-    name: dme3
-    apiaddr: "0.0.0.0:50053"
-    httpaddr: "0.0.0.0:38003"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"azure"},"name":"tmocloud-2"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-  envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
-
-- dmelocal:
-    name: dme4
-    apiaddr: "0.0.0.0:50054"
-    httpaddr: "0.0.0.0:38004"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"gcp"},"name":"tmocloud-2"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-  envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
- 
 crms:
 - crmlocal:
     name: crm1
@@ -266,7 +217,7 @@ crms:
     name: crm11
     apiaddr: "0.0.0.0:55101"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"azure"},"name":"tmocloud-1"}'
+    cloudletkey: '{"operator_key":{"name":"azure"},"name":"azurecloud-1"}'
     fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
@@ -277,7 +228,18 @@ crms:
     name: crm12
     apiaddr: "0.0.0.0:55102"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"google"},"name":"tmocloud-2"}'
+    cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcpcloud-1"}'
+    fakecloudlet: true
+    tls:
+       servercert: "{{tlsoutdir}}/mex-server.crt"
+       clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "127.0.0.1"
+
+- crmlocal:
+    name: crm13
+    apiaddr: "0.0.0.0:55103"
+    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+    cloudletkey: '{"operator_key":{"name":"att"},"name":"attcloud-1"}'
     fakecloudlet: true
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
