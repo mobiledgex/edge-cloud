@@ -373,7 +373,7 @@ func LProtoStr(proto dme.LProto) (string, error) {
 	case dme.LProto_LProtoUDP:
 		return "udp", nil
 	case dme.LProto_LProtoHTTP:
-		return "tcp", nil
+		return "http", nil
 	}
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
