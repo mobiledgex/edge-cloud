@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
 
@@ -124,7 +125,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
-	Interval     time.Duration
+	Interval     string
 }
 
 // Process updates from notify framework about cluster instances
@@ -253,14 +254,21 @@ func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.Cl
 	return createAppInstCommon(dialOpts, instKey, &MEXMetricsExporterApp)
 }
 
+func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
+	var secs = int(scrapeInterval.Seconds()) //round it to the second
+	var scrapeStr = strconv.Itoa(secs) + "s"
+	return scrapeStr
+}
+
 func fillAppConfigs(app *edgeproto.App) error {
+	var scrapeStr = scrapeIntervalInSeconds(*scrapeInterval)
 	switch app.Key.Name {
 	case MEXMetricsExporterAppName:
 		ex := exporterData{
 			InfluxDBAddr: *influxDBAddr,
 			InfluxDBUser: *influxDBUser,
 			InfluxDBPass: *influxDBPass,
-			Interval:     *scrapeInterval,
+			Interval:     scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := exporterT.Execute(&buf, &ex)
@@ -279,7 +287,7 @@ func fillAppConfigs(app *edgeproto.App) error {
 		app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
 	case MEXPrometheusAppName:
 		ex := exporterData{
-			Interval: *scrapeInterval,
+			Interval: scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := prometheusT.Execute(&buf, &ex)
