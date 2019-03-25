@@ -744,6 +744,13 @@ func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) error {
 			continue
 		}
 		for _, kp := range ksvc.Spec.Ports {
+			lproto, err := edgeproto.LProtoStr(port.Proto)
+			if err != nil {
+				return err
+			}
+			if lproto != strings.ToLower(string(kp.Protocol)) {
+				continue
+			}
 			if kp.TargetPort.IntValue() == int(port.InternalPort) {
 				port.FQDNPrefix = cloudcommon.FQDNPrefix(ksvc.Name)
 				return nil
