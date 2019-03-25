@@ -26,4 +26,5 @@
   - setupfile: setup.yml
   - etcd_url: https://github.com/coreos/etcd/releases/download
   - etcd_version: v3.3.8
+  - vault_token: {{ lookup('file', '~/.mobiledgex/vault.txt') }}
  
