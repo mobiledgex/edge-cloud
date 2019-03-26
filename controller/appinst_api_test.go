@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -126,6 +128,25 @@ func TestAppInstApi(t *testing.T) {
 	assert.Nil(t, err, "ignore crm")
 	responder.SetSimulateAppCreateFailure(false)
 	responder.SetSimulateAppDeleteFailure(false)
+
+	// Test FQDN prefix
+	for _, obj := range testutil.AppInstData {
+		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
+		if app_name == "helmapp" {
+			continue
+		}
+		for _, port := range obj.MappedPorts {
+			lproto, err := edgeproto.LProtoStr(port.Proto)
+			if err != nil {
+				continue
+			}
+			if lproto == "http" {
+				continue
+			}
+			test_prefix := fmt.Sprintf("%s-%s.", app_name, lproto)
+			assert.Equal(t, test_prefix, port.FQDNPrefix, "check port fqdn prefix")
+		}
+	}
 
 	dummy.Stop()
 }

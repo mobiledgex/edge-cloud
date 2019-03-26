@@ -160,7 +160,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.2.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
-		AccessPorts:   "http:8080",
+		AccessPorts:   "http:8080,tcp:10002,udp:10002",
 		DefaultFlavor: FlavorData[1].Key,
 	},
 	edgeproto.App{

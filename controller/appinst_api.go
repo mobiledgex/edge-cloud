@@ -717,16 +717,13 @@ func setPortFQDNPrefixes(in *edgeproto.AppInst, app *edgeproto.App) error {
 			return fmt.Errorf("invalid kubernetes deployment yaml, %s", err.Error())
 		}
 		for ii, _ := range in.MappedPorts {
-			err = setPortFQDNPrefix(&in.MappedPorts[ii], objs)
-			if err != nil {
-				return err
-			}
+			setPortFQDNPrefix(&in.MappedPorts[ii], objs)
 		}
 	}
 	return nil
 }
 
-func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) error {
+func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) {
 	for _, obj := range objs {
 		ksvc, ok := obj.(*v1.Service)
 		if !ok {
@@ -735,16 +732,15 @@ func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) error {
 		for _, kp := range ksvc.Spec.Ports {
 			lproto, err := edgeproto.LProtoStr(port.Proto)
 			if err != nil {
-				return err
+				return
 			}
 			if lproto != strings.ToLower(string(kp.Protocol)) {
 				continue
 			}
 			if kp.TargetPort.IntValue() == int(port.InternalPort) {
 				port.FQDNPrefix = cloudcommon.FQDNPrefix(ksvc.Name)
-				return nil
+				return
 			}
 		}
 	}
-	return fmt.Errorf("no service for app port %d found in manifest", port.InternalPort)
 }
