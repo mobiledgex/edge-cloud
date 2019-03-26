@@ -60,7 +60,10 @@ func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
 	//TODO: we currently only return a subset and only max vals. When telemetry available on openstack return more
 	//  possibly return quota information as well. The 'info' structure is too rigid. We need a way to return
 
-	log.DebugLog(log.DebugLevelMexos, "got limits", "limits", info)
+	log.DebugLog(log.DebugLevelMexos, "got limits",
+		"max-vCPUs", info.OsMaxVcores,
+		"max-RAM", info.OsMaxRam,
+		"max-Vol-GB", info.OsMaxVolGb)
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
