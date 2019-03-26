@@ -307,7 +307,6 @@ appinstances:
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002
@@ -346,7 +345,6 @@ appinstances:
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
-    fqdnprefix: someapplication1-tcp.
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002

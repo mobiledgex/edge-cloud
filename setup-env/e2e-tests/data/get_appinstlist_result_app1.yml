@@ -18,7 +18,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -41,7 +40,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -64,7 +62,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -87,7 +84,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -110,7 +106,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -133,7 +128,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -156,7 +150,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -179,7 +172,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -202,7 +194,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
@@ -225,7 +216,6 @@ cloudlets:
     - proto: LProtoHTTP
       internalport: 443
       publicport: 443
-      fqdnprefix: someapplication1-tcp.
     - proto: LProtoUDP
       internalport: 10002
       publicport: 10002
