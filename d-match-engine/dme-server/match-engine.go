@@ -318,7 +318,7 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 		appkey = reqkey
 	}
 
-	// if the app it itself a platform app, it is not returned here
+	// if the app itself is a platform app, it is not returned here
 	if cloudcommon.IsPlatformApp(appkey.DeveloperKey.Name, appkey.Name) {
 		return nil
 	}
@@ -385,7 +385,7 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	tbl.RLock()
 	defer tbl.RUnlock()
 	for _, a := range tbl.apps {
-		// if the app it itself a platform app, it is not returned here
+		// if the app itself is a platform app, it is not returned here
 		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
 			continue
 		}
