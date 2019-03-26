@@ -57,12 +57,6 @@ test:
 test-debug:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
-# will 1)export PYTHONPATH 2)stop and start processes 3)run python testscases
-# can use: "make test-python" to run all tests
-# can use: "make test-python dir=controller/operator" to run only the operator testcases or any directory specified
-test-python:
-	bash ./setup-env/e2e-tests/python/tools/run_all_tests.sh
-
 # start/restart local processes to run individual python or other tests against
 test-start:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
@@ -76,6 +70,13 @@ test-stop:
 
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml
+
+# QA testing - manual
+test-robot-start:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_automation.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
+
+test-robot-stop:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
 
 ## note: DIND requires make from edge-cloud-infra to install dependencies
 test-dind-start:
