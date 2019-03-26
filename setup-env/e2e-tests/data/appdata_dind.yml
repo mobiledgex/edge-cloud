@@ -84,7 +84,6 @@ apps:
   cluster:
     name: AppCluster
   accessports: "tcp:7777"
-  ipaccess: IpAccessDedicatedOrShared
   androidpackagename: com.mobiledgex.sdkdemo
   permitsplatformapps: true
 
@@ -102,7 +101,6 @@ apps:
   cluster:
     name: AppCluster
   accessports: "tcp:8008"
-  ipaccess: IpAccessDedicatedOrShared
   androidpackagename: com.mobiledgex.facedemo
   permitsplatformapps: true
 
