@@ -82,6 +82,16 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 			return errors.New("Cannot specify less than one dynamic IP unless Ip Support Static is specified")
 		}
 	}
+	if _, found := fmap[edgeproto.CloudletFieldLocationLatitude]; found {
+		if in.Location.Latitude == 0 {
+			return errors.New("Invalid latitude value of 0")
+		}
+	}
+	if _, found := fmap[edgeproto.CloudletFieldLocationLongitude]; found {
+		if in.Location.Longitude == 0 {
+			return errors.New("Invalid longitude value of 0")
+		}
+	}
 
 	_, err := s.store.Update(in, s.sync.syncWait)
 
