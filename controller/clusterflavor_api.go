@@ -56,6 +56,9 @@ func (s *ClusterFlavorApi) CreateClusterFlavor(ctx context.Context, in *edgeprot
 	if in.MasterFlavor.Name == "" {
 		return &edgeproto.Result{}, errors.New("Please specify master flavor")
 	}
+	if in.Key.Name == "" {
+		return &edgeproto.Result{}, errors.New("Please specify a unique key")
+	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if s.store.STMGet(stm, &in.Key, nil) {
 			return objstore.ErrKVStoreKeyExists
