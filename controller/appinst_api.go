@@ -347,10 +347,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
 				return errors.New("Cluster instance does not exist for app")
 			}
-			if !ignoreCRM(cctx) {
-				if clusterInst.State != edgeproto.TrackedState_Ready {
-					return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
-				}
+			if clusterInst.State != edgeproto.TrackedState_Ready {
+				return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
 			}
 
 			var info edgeproto.CloudletInfo
@@ -503,14 +501,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && !ignoreTransient(cctx, in.State) {
-			/*if in.State == edgeproto.TrackedState_DeleteError {
-				cb.Send(&edgeproto.Result{Message: fmt.Sprintf("Previous delete failed, %v", in.Errors)})
-				cb.Send(&edgeproto.Result{Message: "Use CreateAppInst to rebuild, and try again"})
-			}*/
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 			return errors.New("AppInst busy, cannot delete")
 		}
-
 		var cloudlet edgeproto.Cloudlet
 		if !defaultCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
