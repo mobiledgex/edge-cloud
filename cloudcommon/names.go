@@ -33,7 +33,8 @@ var SamsungEnablingLayer = "SamsungEnablingLayer"
 var CloudletKindOpenStack = "openstack"
 var CloudletKindAzure = "azure"
 var CloudletKindGCP = "gcp"
-var CloudletKindDIND = "localdind"
+var CloudletKindLocalDIND = "localdind"
+var CloudletKindLinuxDIND = "linuxdind"
 var CloudletKindFake = "fake"
 
 // PlatformApps is the set of all special "platform" developers.   Key
