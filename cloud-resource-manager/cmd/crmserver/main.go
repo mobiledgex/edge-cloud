@@ -36,7 +36,6 @@ var hostname = flag.String("hostname", "", "unique hostname within Cloudlet")
 // from a file. The rest of the data is extraced from Openstack.
 var myCloudlet edgeproto.CloudletInfo //XXX this effectively makes one CRM per cloudlet
 var myNode edgeproto.Node
-var isDIND bool
 
 var sigChan chan os.Signal
 var mainStarted chan struct{}
@@ -166,7 +165,7 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
 				return
 			}
-			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet, isDIND)
+			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
 			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
 			// trigger send of info upstream to controller
 			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
@@ -209,7 +208,6 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr); err != nil {
 		return err
 	}
-	isDIND = mexos.CloudletIsLocalDIND()
 	log.DebugLog(log.DebugLevelMexos, "ok, RunMEXAgentCloudletKey with cloudlet key")
 	return nil
 }
