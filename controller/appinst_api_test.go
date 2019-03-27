@@ -130,7 +130,7 @@ func TestAppInstApi(t *testing.T) {
 	responder.SetSimulateAppDeleteFailure(false)
 
 	// Test FQDN prefix
-	for _, obj := range testutil.AppInstData {
+	for _, obj := range appInstApi.cache.Objs {
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
 		if app_name == "helmapp" {
 			continue
