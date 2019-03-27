@@ -3,6 +3,7 @@ vars:
 - vm1_external_ip: 40.114.198.180
 - vm1_internal_ip: 127.0.0.1
 - controller: mexdemo.ctrl.mobiledgex.net
+- vault_token: 0eb94cce-ab3f-33a3-bd66-0046e8743a14
 
 crms:
 - crmlocal:
@@ -22,6 +23,7 @@ crms:
     CLOUDLET_KIND: openstack
     MEX_OS_IMAGE: mobiledgex
     MEX_EXT_NETWORK: external-network-shared
+    VAULT_TOKEN: "{{vault_token}}"
 
 - crmlocal:
     name: crm-berlin
@@ -40,6 +42,7 @@ crms:
     CLOUDLET_KIND: openstack
     MEX_OS_IMAGE: mobiledgex
     MEX_EXT_NETWORK: external-network-shared
+    VAULT_TOKEN: "{{vault_token}}"
 
 - crmlocal:
     name: crm-frankfurt
@@ -58,6 +61,7 @@ crms:
     CLOUDLET_KIND: openstack
     MEX_OS_IMAGE: mobiledgex
     MEX_EXT_NETWORK: external-network-shared
+    VAULT_TOKEN: "{{vault_token}}"
 
 - crmlocal:
     name: crm-munich
@@ -76,3 +80,4 @@ crms:
     CLOUDLET_KIND: openstack
     MEX_OS_IMAGE: mobiledgex
     MEX_EXT_NETWORK: external-network-shared
+    VAULT_TOKEN: "{{vault_token}}"
