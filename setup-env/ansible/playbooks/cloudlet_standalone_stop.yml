@@ -13,10 +13,6 @@
        name: mexosagent
        state: stopped
 
-
   - name: stop crmserver process
     shell: "pkill -9 crmserver||true"
-    environment:
-      CLOUDLET_KIND: linuxdind
-      MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
 
