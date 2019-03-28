@@ -13,6 +13,10 @@ case "$1" in
 	shift
 	controller $*
 	;;
+    cluster-svc)
+	shift
+	cluster-svc $*
+	;;
     crmserver)
 	shift
 	crmserver $*

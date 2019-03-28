@@ -129,7 +129,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		AccessPorts:   "http:443",
+		AccessPorts:   "http:443,tcp:10002,udp:10002",
 		DefaultFlavor: FlavorData[0].Key,
 		Cluster:       ClusterData[0].Key,
 	},
@@ -542,7 +542,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:     GetCloudletUsedRam(0, 1, 0),
 		UsedVcores:  GetCloudletUsedVcores(0, 1, 0),
 		UsedDisk:    GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts: map[int32]int32{80: 1, 443: 1, 10000: 1},
+		RootLbPorts: map[int32]int32{80: 1, 443: 1, 10000: 1, 10001: 1, 10002: 1},
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1]: (shared,dedicated,shared)
 	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
