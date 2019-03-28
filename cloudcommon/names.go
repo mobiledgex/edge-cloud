@@ -33,9 +33,15 @@ var SamsungEnablingLayer = "SamsungEnablingLayer"
 var CloudletKindOpenStack = "openstack"
 var CloudletKindAzure = "azure"
 var CloudletKindGCP = "gcp"
-var CloudletKindLocalDIND = "localdind"
-var CloudletKindLinuxDIND = "linuxdind"
+var CloudletKindDIND = "dind"
 var CloudletKindFake = "fake"
+
+var OperatingSystemMac = "mac"
+var OperatingSystemLinux = "linux"
+
+// network schemes for use by standalone deployments (e.g. DIND)
+var NetworkSchemePublicIP = "publicip"
+var NetworkSchemePrivateIP = "privateip"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only Samsung's Enabling layer is included.
