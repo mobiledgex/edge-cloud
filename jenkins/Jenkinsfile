@@ -14,10 +14,10 @@ pipeline {
         stage('Build') {
             steps {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                    sh label: 'dep ensure', script: '''#!/bin/bash
+                    sh label: 'make dep', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
 export GOPATH=$WORKSPACE/go
-dep ensure -vendor-only
+make dep
                     '''
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
