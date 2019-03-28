@@ -95,10 +95,6 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
-	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
-	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
 	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
@@ -113,10 +109,6 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
-	}
-	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
