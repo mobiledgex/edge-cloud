@@ -37,6 +37,8 @@ message CloudletInfraCommon{
     string CF_user = 5; //MEX_CF_KEY
     // Docker registry password
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
+     // network scheme
+    string network_scheme = 7;
 }
 
 message AzureProperties{
@@ -66,10 +68,8 @@ message OpenStackProperties{
   string OS_external_router_name = 3;
   // openstack internal network
   string OS_mex_network = 4;
-  // openstack network scheme
-  string OS_network_scheme = 5;
   // openrc env vars 
-  map<string, string> open_rc_vars = 6;
+  map<string, string> open_rc_vars = 5;
 }
 
 message CloudletInfraProperties{
