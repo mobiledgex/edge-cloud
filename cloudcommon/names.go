@@ -33,8 +33,15 @@ var PlatosEnablingLayer = "PlatosEnablingLayer"
 var CloudletKindOpenStack = "openstack"
 var CloudletKindAzure = "azure"
 var CloudletKindGCP = "gcp"
-var CloudletKindDIND = "localdind"
+var CloudletKindDIND = "dind"
 var CloudletKindFake = "fake"
+
+var OperatingSystemMac = "mac"
+var OperatingSystemLinux = "linux"
+
+// network schemes for use by standalone deployments (e.g. DIND)
+var NetworkSchemePublicIP = "publicip"
+var NetworkSchemePrivateIP = "privateip"
 
 // PlatformApps is the set of all special "platform" developers.   Key
 // is DeveloperName:AppName.  Currently only platos's Enabling layer is included.
