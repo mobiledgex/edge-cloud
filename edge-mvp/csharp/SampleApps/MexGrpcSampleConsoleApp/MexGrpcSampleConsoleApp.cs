@@ -39,7 +39,7 @@ namespace MexGrpcSampleConsoleApp
     Loc location;
     string sessionCookie;
 
-    string dmeHost = "tdg2.dme.mobiledgex.net"; // DME server hostname or ip.
+    string dmeHost = "mexdemo.dme.mobiledgex.net"; // DME server hostname or ip.
     int dmePort = 50051; // DME port.
 
     Match_Engine_Api.Match_Engine_ApiClient client;
@@ -48,8 +48,8 @@ namespace MexGrpcSampleConsoleApp
     {
       location = getLocation();
       string uri = dmeHost + ":" + dmePort;
-      string devName = "EmptyMatchEngineApp";
-      string appName = "EmptyMatchEngineApp";
+      string devName = "MobiledgeX";
+      string appName = "MobiledgeX SDK Demo";
 
       // Channel:
       // TODO: Load from file or iostream, securely generate keys, etc.
@@ -59,7 +59,7 @@ namespace MexGrpcSampleConsoleApp
 
       client = new DistributedMatchEngine.Match_Engine_Api.Match_Engine_ApiClient(channel);
 
-      var registerClientRequest = CreateRegisterClientRequest(devName, appName, "1.0");
+      var registerClientRequest = CreateRegisterClientRequest(getCarrierName(), devName, appName, "1.0", "");
       var regReply = client.RegisterClient(registerClientRequest);
 
       Console.WriteLine("RegisterClient Reply: " + regReply);
@@ -101,14 +101,16 @@ namespace MexGrpcSampleConsoleApp
     }
 
 
-    RegisterClientRequest CreateRegisterClientRequest(string devName, string appName, string appVersion)
+    RegisterClientRequest CreateRegisterClientRequest(string carrierName, string devName, string appName, string appVersion, string authToken)
     {
       var request = new RegisterClientRequest
       {
         Ver = 1,
+        CarrierName = carrierName,
         DevName = devName,
         AppName = appName,
-        AppVers = appVersion
+        AppVers = appVersion,
+        AuthToken = authToken
       };
       return request;
     }
@@ -162,7 +164,13 @@ namespace MexGrpcSampleConsoleApp
         string[] keyValue = keyValueStr.Split('=');
         if (keyValue[0].Equals("dt-id"))
         {
-          return keyValue[1];
+          string value = null;
+          int pos = keyValue[0].Length + 1;
+          if (pos < keyValueStr.Length)
+          {
+            value = keyValueStr.Substring(pos, keyValueStr.Length - pos);
+          }
+          return value;
         }
       }
 
