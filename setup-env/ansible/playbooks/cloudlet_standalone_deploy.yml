@@ -1,0 +1,92 @@
+- name: deploy standalone cloudlet
+  gather_facts: yes
+  user: ubuntu
+  become: yes
+  hosts: mexservers
+  vars_files:
+    - mex_vars.yml
+ 
+  tasks:
+  - name: create remote log dir 
+    file:
+       state: directory
+       path: "{{ remote_log_path }}"
+
+  - name: create tls dir
+    file:
+       state: directory
+       path: "{{ remote_tls_path }}"
+  
+  - name: copy mex-ca.crt
+    copy: 
+      src: "{{ tlsoutdir }}/mex-ca.crt"
+      dest: "{{ remote_tls_path }}/mex-ca.crt"
+      mode: 0444
+
+  - name: copy mex-server.crt
+    copy:
+      src: "{{ tlsoutdir }}/mex-server.crt"
+      dest: "{{ remote_tls_path }}/mex-server.crt"
+      mode: 0444
+
+  - name: copy mex-server.key
+    copy:
+      src: "{{ tlsoutdir }}/mex-server.key"
+      dest: "{{ remote_tls_path }}/mex-server.key"
+      mode: 0444
+
+  - name: create remote mex dir
+    file:
+       state: directory
+       path: "{{ mex_path }}"
+
+  - name: copy vault file
+    copy: 
+       src: "{{ mex_path }}/vault.txt"
+       dest: "{{ mex_path }}/vault.txt"
+       mode: 0444
+
+  - name: install dind
+    get_url:
+      url: https://github.com/kubernetes-sigs/kubeadm-dind-cluster/releases/download/v0.1.0/dind-cluster-v1.13.sh
+      dest: /usr/local/bin/dind-cluster-v1.13.sh
+      mode: 755
+
+  - name: copy mexosagent bin
+    copy:
+      src: "{{ mexosagent_local_bin }}"
+      dest: "{{ mexosagent_remote_bin }}"
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: copy mexosagent service
+    copy:
+     src: "{{ mexosagent_local_svc }}"
+     dest: "{{ mexosagent_remote_svc }}"
+     owner: root
+     group: root
+     mode: 0755
+
+  #- name: start mexosagent 
+  #  service:
+  #     name: mexosagent
+  #     state: started
+
+  - name: copy crm binary
+    copy:
+       src: "{{ crm_bin }}"
+       dest: "{{ remote_bin_path }}"
+       mode: 0755 
+
+  - name: show CRM startup variables
+    debug:
+       var: crm
+
+  - name: start up crmserver process
+    shell: "nohup {{ crm_remote_bin }} --apiAddr 0.0.0.0:37001 --notifyAddrs {{ crm.ctrladdr }} --cloudletKey '{{ crm.cloudletkey }}' --tls {{ remote_tls_path }}/mex-server.crt  --d api,notify,mexos > {{ remote_log_path }}/{{ crm.name }}.log 2>&1 &"
+    environment:
+      CLOUDLET_KIND: dind
+      NETWORK_SCHEME: publicip
+      MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
+
