@@ -63,7 +63,7 @@ operators:
 
 developers:
 - key:
-    name: MobiledgeX SDK Demo
+    name: MobiledgeX
   username: mex
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
@@ -72,7 +72,7 @@ developers:
 apps:
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
@@ -89,7 +89,7 @@ apps:
 
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
@@ -108,7 +108,7 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
@@ -127,7 +127,7 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
     cloudletkey:
