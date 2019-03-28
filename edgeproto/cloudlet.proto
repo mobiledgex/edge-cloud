@@ -164,6 +164,18 @@ enum CloudletState {
   CloudletStateNotPresent = 4;
 }
 
+// Flavor details from the Cloudlet
+message FlavorInfo {
+  // Name of the flavor on the Cloudlet
+  string name = 1;
+  // Number of VCPU cores on the Cloudlet
+  uint64 vcpus = 2;
+  // Ram in MB on the Cloudlet
+  uint64 ram = 3;
+  // Amount of disk in GB on the Cloudlet
+  uint64 disk = 4;
+}
+
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
 message CloudletInfo {
   // Fields are used for the Update API to specify which fields to apply
@@ -184,6 +196,8 @@ message CloudletInfo {
   uint64 os_max_vol_gb = 8;
   // Any errors encountered while making changes to the Cloudlet
   repeated string errors = 9;
+  // Supported flavors by the Cloudlet
+  repeated FlavorInfo flavors = 10;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

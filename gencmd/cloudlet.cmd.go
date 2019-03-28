@@ -395,8 +395,49 @@ func CloudletWriteOutputOne(obj *edgeproto.Cloudlet) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func FlavorInfoSlicer(in *edgeproto.FlavorInfo) []string {
+	s := make([]string, 0, 4)
+	s = append(s, in.Name)
+	s = append(s, strconv.FormatUint(uint64(in.Vcpus), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Ram), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Disk), 10))
+	return s
+}
+
+func FlavorInfoHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "Name")
+	s = append(s, "Vcpus")
+	s = append(s, "Ram")
+	s = append(s, "Disk")
+	return s
+}
+
+func FlavorInfoWriteOutputArray(objs []*edgeproto.FlavorInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FlavorInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FlavorInfoWriteOutputOne(obj *edgeproto.FlavorInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FlavorInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -413,11 +454,21 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
+	if in.Flavors == nil {
+		in.Flavors = make([]*edgeproto.FlavorInfo, 1)
+	}
+	if in.Flavors[0] == nil {
+		in.Flavors[0] = &edgeproto.FlavorInfo{}
+	}
+	s = append(s, in.Flavors[0].Name)
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Vcpus), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Ram), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Disk), 10))
 	return s
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -428,6 +479,10 @@ func CloudletInfoHeaderSlicer() []string {
 	s = append(s, "OsMaxVcores")
 	s = append(s, "OsMaxVolGb")
 	s = append(s, "Errors")
+	s = append(s, "Flavors-Name")
+	s = append(s, "Flavors-Vcpus")
+	s = append(s, "Flavors-Ram")
+	s = append(s, "Flavors-Disk")
 	return s
 }
 

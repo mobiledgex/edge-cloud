@@ -65,20 +65,49 @@ func main() {
 	}
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
-	platChan := make(chan string)
-
 	// this is to be done even for fake cloudlet
 	if err := mexos.InitializeCloudletInfra(*fakecloudlet); err != nil {
 		log.DebugLog(log.DebugLevelMexos, "error, cannot initialize cloudlet infra", "error", err)
 		return
 	}
 
-	if *fakecloudlet {
+	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
+
+	if *standalone || *fakecloudlet {
+		// set fake cloudlet info
+		myCloudlet.OsMaxRam = 500
+		myCloudlet.OsMaxVcores = 50
+		myCloudlet.OsMaxVolGb = 5000
+		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
+		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
+		// trigger send of info upstream to controller
+		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+		controllerData.NodeCache.Update(&myNode, 0)
+		log.DebugLog(log.DebugLevelMexos, "sent fake cloudletinfocache update")
 		log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	} else {
 		go func() {
+			// gather cloudlet info from openstack, etc.
+			crmutil.GatherCloudletInfo(&myCloudlet)
+			if len(myCloudlet.Errors) > 0 {
+				log.DebugLog(log.DebugLevelMexos, "GatherCloudletInfo", "Error", myCloudlet.Errors[0])
+				return
+			}
+			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
+			// trigger send of info upstream to controller
+			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+			controllerData.NodeCache.Update(&myNode, 0)
+			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
+
+			/*
+			 * FIXME:For now choose first flavor as platform flavor
+			 * This will soon change when we support one rootlb per cluster for dedicated IP type
+			 */
+			pFlavor := myCloudlet.Flavors[0]
+			log.DebugLog(log.DebugLevelMexos, "platform flavor", "flavor", pFlavor)
+
 			log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-			if err := initPlatform(&myCloudlet); err != nil {
+			if err := initPlatform(&myCloudlet, pFlavor.Name); err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
 				return
 			}
@@ -86,10 +115,9 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
-			platChan <- "ready"
 		}()
 	}
+
 	// GatherInsts should be called before the notify client is started,
 	// so that the initial send to the controller has the current state.
 	controllerData.GatherInsts()
@@ -142,37 +170,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
-	if *standalone || *fakecloudlet {
-		// set fake cloudlet info
-		myCloudlet.OsMaxRam = 500
-		myCloudlet.OsMaxVcores = 50
-		myCloudlet.OsMaxVolGb = 5000
-		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
-		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
-		// trigger send of info upstream to controller
-		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-		controllerData.NodeCache.Update(&myNode, 0)
-		log.DebugLog(log.DebugLevelMexos, "sent fake cloudletinfocache update")
-	} else {
-		go func() {
-			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
-			platStat := <-platChan
-			log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
-			// gather cloudlet info from openstack, etc.
-			if controllerData.CRMRootLB == nil {
-				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
-				return
-			}
-			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
-			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
-			// trigger send of info upstream to controller
-			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-			controllerData.NodeCache.Update(&myNode, 0)
-			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
-		}()
-	}
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)
@@ -183,7 +181,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, platformFlavor string) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
@@ -205,7 +203,7 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	controllerData.CRMRootLB = crmRootLB
 
 	log.DebugLog(log.DebugLevelMexos, "calling RunMEXAgentCloudletKey", "cloudletkeystr", *cloudletKeyStr)
-	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr); err != nil {
+	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr, platformFlavor); err != nil {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "ok, RunMEXAgentCloudletKey with cloudlet key")
