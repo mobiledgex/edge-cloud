@@ -75,6 +75,8 @@ var prometheusT *template.Template
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
     scrapeInterval: "{{.Interval}}"
+  service:
+    type: LoadBalancer
 kubelet:
   serviceMonitor:
     ## Enable scraping the kubelet over https. For requirements to enable this see
