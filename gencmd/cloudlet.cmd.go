@@ -91,24 +91,26 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 	}
 }
 func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, in.DockerRegistry)
 	s = append(s, in.DNSZone)
 	s = append(s, in.RegistryFileServer)
 	s = append(s, in.CFKey)
 	s = append(s, in.CFUser)
 	s = append(s, in.DockerRegPass)
+	s = append(s, in.NetworkScheme)
 	return s
 }
 
 func CloudletInfraCommonHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "DockerRegistry")
 	s = append(s, "DNSZone")
 	s = append(s, "RegistryFileServer")
 	s = append(s, "CFKey")
 	s = append(s, "CFUser")
 	s = append(s, "DockerRegPass")
+	s = append(s, "NetworkScheme")
 	return s
 }
 
@@ -214,22 +216,20 @@ func GcpPropertiesWriteOutputOne(obj *edgeproto.GcpProperties) {
 	}
 }
 func OpenStackPropertiesSlicer(in *edgeproto.OpenStackProperties) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	s = append(s, in.OSExternalNetworkName)
 	s = append(s, in.OSImageName)
 	s = append(s, in.OSExternalRouterName)
 	s = append(s, in.OSMexNetwork)
-	s = append(s, in.OSNetworkScheme)
 	return s
 }
 
 func OpenStackPropertiesHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	s = append(s, "OSExternalNetworkName")
 	s = append(s, "OSImageName")
 	s = append(s, "OSExternalRouterName")
 	s = append(s, "OSMexNetwork")
-	s = append(s, "OSNetworkScheme")
 	return s
 }
 
@@ -267,7 +267,6 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	s = append(s, in.OpenstackProperties.OSImageName)
 	s = append(s, in.OpenstackProperties.OSExternalRouterName)
 	s = append(s, in.OpenstackProperties.OSMexNetwork)
-	s = append(s, in.OpenstackProperties.OSNetworkScheme)
 	if in.AzureProperties == nil {
 		in.AzureProperties = &edgeproto.AzureProperties{}
 	}
@@ -291,7 +290,6 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s = append(s, "OpenstackProperties-OSImageName")
 	s = append(s, "OpenstackProperties-OSExternalRouterName")
 	s = append(s, "OpenstackProperties-OSMexNetwork")
-	s = append(s, "OpenstackProperties-OSNetworkScheme")
 	s = append(s, "AzureProperties-Location")
 	s = append(s, "AzureProperties-ResourceGroup")
 	s = append(s, "AzureProperties-UserName")

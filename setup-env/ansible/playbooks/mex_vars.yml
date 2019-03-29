@@ -4,7 +4,8 @@
   - server_to_path:
       Linux_x86_64: "{{ gopath }}/bin/linux_amd64"
       Darwin_x86_64: "{{ gopath }}/bin"
- 
+  - mexosagent_local_svc: "{{ gopath }}/src/github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/mexosagent.service" 
+  - mexosagent_remote_svc: "/etc/systemd/system/mexosagent.service"
   - servertype: "{{ ansible_system }}_{{ ansible_architecture }}"
   - local_binpath: "{{ server_to_path[servertype] }}"
   - controller_bin: "{{ local_binpath }}/controller"
@@ -12,6 +13,8 @@
   - dme_bin: "{{ local_binpath }}/dme-server"
   - locsim_bin: "{{ local_binpath }}/loc-api-sim"
   - toksim_bin: "{{ local_binpath }}/tok-srv-sim"
+  - mexosagent_local_bin: "{{ local_binpath }}/agent"
+  - mexosagent_remote_bin: "/usr/local/bin/mexosagent"
   - remote_bin_path: /usr/local/bin
   - controller_remote_bin: "{{ remote_bin_path }}/controller"
   - crm_remote_bin: "{{ remote_bin_path }}/crmserver"  
@@ -23,6 +26,7 @@
   - toksim_remote_bin: "{{ remote_bin_path }}/tok-srv-sim"
   - remote_log_path: /var/log/mex
   - remote_tls_path: /root/tls
+  - mex_path: /root/.mobiledgex
   - setupfile: setup.yml
   - etcd_url: https://github.com/coreos/etcd/releases/download
   - etcd_version: v3.3.8
