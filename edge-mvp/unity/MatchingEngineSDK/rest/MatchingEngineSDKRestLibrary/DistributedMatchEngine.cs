@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -22,6 +23,30 @@ namespace DistributedMatchEngine
         : base(message, innerException)
     {
     }
+  }
+
+  // Minimal logger without log levels:
+  static class Log
+  {
+    // Stdout:
+    public static void S(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+    // Stderr:
+    public static void E(string msg)
+    {
+      TextWriter errorWriter = Console.Error;
+      errorWriter.WriteLine(msg);
+    }
+
+    // Stdout:
+    [ConditionalAttribute("DEBUG")]
+    public static void D(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+
   }
 
   public class MatchingEngine
@@ -67,15 +92,15 @@ namespace DistributedMatchEngine
       byte[] clientCredentials = Convert.FromBase64String(Credentials.clientCrtBase64); // Pkcs12 binary source.
       var x509ClientCertKeyPair = new X509Certificate2(clientCredentials, "foo"); /* 2nd param: FIXME: password for credentials */
       httpWebRequest.ClientCertificates.Add(x509ClientCertKeyPair);
-      Console.WriteLine("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
+      Log.D("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
 
       // FIXME: Real certs required.
       httpWebRequest.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
       {
-        Console.WriteLine("==== Sender: " + sender);
-        Console.WriteLine("==== Cert: " + cert);
-        Console.WriteLine("==== Chain: " + chain);
-        Console.WriteLine("==== SSLPolicyErrors: " + sslPolicyErrors);
+        Log.D("==== Sender: " + sender);
+        Log.D("==== Cert: " + cert);
+        Log.D("==== Chain: " + chain);
+        Log.D("==== SSLPolicyErrors: " + sslPolicyErrors);
         return true;
       };
 
@@ -218,7 +243,7 @@ namespace DistributedMatchEngine
 
       if (uriLocation != null)
       {
-        System.Console.WriteLine("uriLocation: " + uriLocation);
+        Log.D("uriLocation: " + uriLocation);
         token = parseToken(uriLocation);
       }
 
