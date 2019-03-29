@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud-infra/mexos"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8s"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -278,11 +278,11 @@ func fillAppConfigs(app *edgeproto.App) error {
 			return err
 		}
 		paramConf := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigEnvYaml,
+			Kind:   k8s.AppConfigEnvYaml,
 			Config: buf.String(),
 		}
 		envConf := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigEnvYaml,
+			Kind:   k8s.AppConfigEnvYaml,
 			Config: MEXMetricsExporterEnvVars,
 		}
 
@@ -298,7 +298,7 @@ func fillAppConfigs(app *edgeproto.App) error {
 		}
 		// Now add this yaml to the prometheus AppYamls
 		config := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigHemYaml,
+			Kind:   k8s.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}
