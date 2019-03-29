@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -96,12 +96,12 @@ namespace DistributedMatchEngine
       return carrierName + "." + baseDmeHost;
     }
 
-    string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
+    public string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
-    string createUri(string host, UInt32 port)
+    public string createUri(string host, UInt32 port)
     {
       if (host != null && host != "")
       {
@@ -286,7 +286,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + findcloudletAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + findcloudletAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
