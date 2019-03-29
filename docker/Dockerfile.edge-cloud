@@ -42,6 +42,7 @@ ADD tls/out/mex-server.crt /root/tls/mex-server.crt
 ADD tls/out/mex-server.key /root/tls/mex-server.key
 ADD docker/beredgecloudtelekomde.crt /root/.mobiledgex/beredgecloudtelekomde.crt
 ADD docker/bonnedgecloudtelekomde.crt /root/.mobiledgex/bonnedgecloudtelekomde.crt
+ADD docker/fraedgecloudtelekomde.crt /root/.mobiledgex/fraedgecloudtelekomde.crt
 ADD docker/telesec_chain.crt /root/.mobiledgex/telesec_chain.crt
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh /usr/local/bin/test-edgectl.sh
 #RUN apt-get update
