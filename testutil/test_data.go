@@ -268,55 +268,69 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor:   ClusterData[0].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[0].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor:   ClusterData[0].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessShared,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor:   ClusterData[0].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessDedicatedOrShared,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicatedOrShared,
+		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor:   ClusterData[1].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[0].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor:   ClusterData[1].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessShared,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[2].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor:   ClusterData[2].DefaultFlavor,
-		IpAccess: edgeproto.IpAccess_IpAccessDedicated,
+		Flavor:       ClusterData[2].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[3].Key,
 			CloudletKey: CloudletData[3].Key,
 		},
-		Flavor: ClusterData[3].DefaultFlavor,
+		Flavor:       ClusterData[3].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[3].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[3].Flavors[0].Name,
 	},
 }
 
@@ -331,8 +345,10 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			},
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
-		Auto:   true,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
+		Auto:         true,
 	},
 	// from AppInstData[4] -> AppData[2]
 	edgeproto.ClusterInst{
@@ -342,8 +358,10 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			},
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
-		Auto:   true,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
+		Auto:         true,
 	},
 }
 var AppInstData = []edgeproto.AppInst{
@@ -439,6 +457,14 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor1",
+				Vcpus: uint64(10),
+				Ram:   uint64(5120),
+				Disk:  uint64(200),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
@@ -446,6 +472,14 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor2",
+				Vcpus: uint64(8),
+				Ram:   uint64(5120),
+				Disk:  uint64(200),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
@@ -453,6 +487,14 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor3",
+				Vcpus: uint64(8),
+				Ram:   uint64(5120),
+				Disk:  uint64(200),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
@@ -460,6 +502,14 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor4",
+				Vcpus: uint64(8),
+				Ram:   uint64(5120),
+				Disk:  uint64(200),
+			},
+		},
 	},
 }
 
