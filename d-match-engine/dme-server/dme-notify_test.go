@@ -75,7 +75,7 @@ func waitForAppInst(appInst *edgeproto.AppInst) {
 	for i := 0; i < 10; i++ {
 		if app, found := tbl.apps[appkey]; found {
 			for _, c := range app.carriers {
-				if _, found := c.insts[appInst.Key.CloudletKey]; found {
+				if _, found := c.insts[appInst.Key.ClusterInstKey]; found {
 					break
 				}
 			}
@@ -94,7 +94,7 @@ func waitForNoAppInst(appInst *edgeproto.AppInst) {
 			break
 		}
 		for _, c := range app.carriers {
-			if _, found := c.insts[appInst.Key.CloudletKey]; !found {
+			if _, found := c.insts[appInst.Key.ClusterInstKey]; !found {
 				break
 			}
 		}

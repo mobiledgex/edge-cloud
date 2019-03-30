@@ -77,8 +77,8 @@ func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
 // for apps using "dedicated" IP access.
 func GetAppFQDN(key *edgeproto.AppInstKey) string {
-	loc := util.DNSSanitize(key.CloudletKey.Name)
-	oper := util.DNSSanitize(key.CloudletKey.OperatorKey.Name)
+	loc := util.DNSSanitize(key.ClusterInstKey.CloudletKey.Name)
+	oper := util.DNSSanitize(key.ClusterInstKey.CloudletKey.OperatorKey.Name)
 	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	app := util.DNSSanitize(key.AppKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)

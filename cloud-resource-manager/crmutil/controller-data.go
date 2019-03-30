@@ -285,10 +285,10 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+		clusterInstFound := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
 			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.ClusterInstKey.ClusterKey.Name)
+				appInst.Key.ClusterInstKey.ClusterKey.Name)
 			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
 			return
 		}
@@ -327,10 +327,10 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		// update (TODO)
 	} else if appInst.State == edgeproto.TrackedState_DeleteRequested {
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+		clusterInstFound := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 		if !clusterInstFound {
 			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.ClusterInstKey.ClusterKey.Name)
+				appInst.Key.ClusterInstKey.ClusterKey.Name)
 			cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
 			return
 		}

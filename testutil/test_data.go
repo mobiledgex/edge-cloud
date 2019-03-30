@@ -349,67 +349,55 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[0].Key,
-			CloudletKey: CloudletData[0].Key,
-			Id:          1,
+			AppKey:         AppData[0].Key,
+			ClusterInstKey: ClusterInstData[0].Key,
 		},
-		CloudletLoc:    CloudletData[0].Location,
-		ClusterInstKey: ClusterInstData[0].Key,
+		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[0].Key,
-			CloudletKey: CloudletData[0].Key,
-			Id:          2,
+			AppKey:         AppData[0].Key,
+			ClusterInstKey: ClusterInstData[0].Key,
 		},
-		CloudletLoc:    CloudletData[0].Location,
-		ClusterInstKey: ClusterInstData[0].Key,
+		CloudletLoc: CloudletData[0].Location,
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[0].Key,
-			CloudletKey: CloudletData[1].Key,
-			Id:          1,
-		},
-		CloudletLoc:    CloudletData[1].Location,
-		ClusterInstKey: ClusterInstData[1].Key,
-	},
-	edgeproto.AppInst{
-		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[1].Key,
-			CloudletKey: CloudletData[1].Key,
-			Id:          1,
+			AppKey:         AppData[0].Key,
+			ClusterInstKey: ClusterInstData[1].Key,
 		},
 		CloudletLoc: CloudletData[1].Location,
-		// ClusterInst is ClusterInstAutoData[0]
-		ClusterInstKey: edgeproto.ClusterInstKey{
-			ClusterKey: edgeproto.ClusterKey{
-				Name: "autocluster",
-			},
-		},
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[2].Key,
-			CloudletKey: CloudletData[2].Key,
-			Id:          1,
+			AppKey: AppData[1].Key,
+			// ClusterInst is ClusterInstAutoData[0]
+			ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: "autocluster",
+				},
+			},
+		},
+		CloudletLoc: CloudletData[1].Location,
+	},
+	edgeproto.AppInst{
+		Key: edgeproto.AppInstKey{
+			AppKey: AppData[2].Key,
+			// ClusterInst is ClusterInstAutoData[1]
+			ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: "autocluster",
+				},
+			},
 		},
 		CloudletLoc: CloudletData[2].Location,
-		// ClusterInst is ClusterInstAutoData[1]
-		ClusterInstKey: edgeproto.ClusterInstKey{
-			ClusterKey: edgeproto.ClusterKey{
-				Name: "autocluster",
-			},
-		},
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[5].Key,
-			CloudletKey: CloudletData[2].Key,
-			Id:          1,
+			AppKey:         AppData[5].Key,
+			ClusterInstKey: ClusterInstData[2].Key,
 		},
-		CloudletLoc:    CloudletData[2].Location,
-		ClusterInstKey: ClusterInstData[2].Key,
+		CloudletLoc: CloudletData[2].Location,
 	},
 }
 var AppInstInfoData = []edgeproto.AppInstInfo{

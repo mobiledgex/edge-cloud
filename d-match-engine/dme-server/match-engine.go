@@ -16,8 +16,8 @@ import (
 
 // AppInst within a cloudlet
 type dmeAppInst struct {
-	// Unique identifier key for the cloudlet
-	cloudletKey edgeproto.CloudletKey
+	// Unique identifier key for the clusterInst
+	clusterInstKey edgeproto.ClusterInstKey
 	// URI to connect to app inst in this cloudlet
 	uri string
 	// Ip to connect o app inst in this cloudlet (XXX why is this needed?)
@@ -30,7 +30,7 @@ type dmeAppInst struct {
 }
 
 type dmeAppInsts struct {
-	insts map[edgeproto.CloudletKey]*dmeAppInst
+	insts map[edgeproto.ClusterInstKey]*dmeAppInst
 }
 
 type dmeApp struct {
@@ -85,7 +85,7 @@ func addApp(in *edgeproto.App) {
 func addAppInst(appInst *edgeproto.AppInst) {
 	var cNew *dmeAppInst
 
-	carrierName := appInst.Key.CloudletKey.OperatorKey.Name
+	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
 
 	tbl := dmeAppTbl
 	appkey := appInst.Key.AppKey
@@ -102,9 +102,9 @@ func addAppInst(appInst *edgeproto.AppInst) {
 	} else {
 		log.DebugLog(log.DebugLevelDmedb, "adding carrier for app", "carrierName", carrierName)
 		app.carriers[carrierName] = new(dmeAppInsts)
-		app.carriers[carrierName].insts = make(map[edgeproto.CloudletKey]*dmeAppInst)
+		app.carriers[carrierName].insts = make(map[edgeproto.ClusterInstKey]*dmeAppInst)
 	}
-	if cl, foundAppInst := app.carriers[carrierName].insts[appInst.Key.CloudletKey]; foundAppInst {
+	if cl, foundAppInst := app.carriers[carrierName].insts[appInst.Key.ClusterInstKey]; foundAppInst {
 		// update existing app inst
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
@@ -116,16 +116,15 @@ func addAppInst(appInst *edgeproto.AppInst) {
 			"longitude", appInst.CloudletLoc.Longitude)
 	} else {
 		cNew = new(dmeAppInst)
-		cNew.cloudletKey = appInst.Key.CloudletKey
+		cNew.clusterInstKey = appInst.Key.ClusterInstKey
 		cNew.uri = appInst.Uri
 		cNew.location = appInst.CloudletLoc
-		cNew.id = appInst.Key.Id
 		cNew.ports = appInst.MappedPorts
-		app.carriers[carrierName].insts[cNew.cloudletKey] = cNew
+		app.carriers[carrierName].insts[cNew.clusterInstKey] = cNew
 		log.DebugLog(log.DebugLevelDmedb, "Adding app inst",
 			"appName", app.appKey.Name,
 			"appVersion", app.appKey.Version,
-			"cloudletKey", appInst.Key.CloudletKey,
+			"cloudletKey", appInst.Key.ClusterInstKey.CloudletKey,
 			"uri", appInst.Uri,
 			"latitude", cNew.location.Latitude,
 			"longitude", cNew.location.Longitude)
@@ -151,15 +150,15 @@ func removeAppInst(appInst *edgeproto.AppInst) {
 
 	tbl = dmeAppTbl
 	appkey := appInst.Key.AppKey
-	carrierName := appInst.Key.CloudletKey.OperatorKey.Name
+	carrierName := appInst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name
 	tbl.Lock()
 	defer tbl.Unlock()
 	app, ok := tbl.apps[appkey]
 	if ok {
 		app.Lock()
 		if c, foundCarrier := app.carriers[carrierName]; foundCarrier {
-			if cl, foundAppInst := c.insts[appInst.Key.CloudletKey]; foundAppInst {
-				delete(app.carriers[carrierName].insts, appInst.Key.CloudletKey)
+			if cl, foundAppInst := c.insts[appInst.Key.ClusterInstKey]; foundAppInst {
+				delete(app.carriers[carrierName].insts, appInst.Key.ClusterInstKey)
 				log.DebugLog(log.DebugLevelDmedb, "Removing app inst",
 					"appName", appkey.Name,
 					"appVersion", appkey.Version,
@@ -206,11 +205,10 @@ func pruneAppInsts(appInsts map[edgeproto.AppInstKey]struct{}) {
 		for c, carr := range app.carriers {
 			for _, inst := range carr.insts {
 				key.AppKey = app.appKey
-				key.CloudletKey = inst.cloudletKey
-				key.Id = inst.id
+				key.ClusterInstKey = inst.clusterInstKey
 				if _, foundAppInst := appInsts[key]; !foundAppInst {
 					log.DebugLog(log.DebugLevelDmereq, "pruning app", "key", key)
-					delete(carr.insts, key.CloudletKey)
+					delete(carr.insts, key.ClusterInstKey)
 				}
 			}
 			if len(carr.insts) == 0 {
@@ -393,7 +391,7 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		c, defaultCarrierFound := a.carriers[cloudcommon.OperatorDeveloper]
 		if defaultCarrierFound {
 			for _, i := range c.insts {
-				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
+				if i.clusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDN: i.uri, AndroidPackageName: a.androidPackageName}
 					clist.AppFqdns = append(clist.AppFqdns, &aq)
 				}
@@ -427,19 +425,19 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 				continue
 			}
 			for _, i := range c.insts {
-				cloc, exists := foundCloudlets[i.cloudletKey]
+				cloc, exists := foundCloudlets[i.clusterInstKey.CloudletKey]
 				if !exists {
 					cloc = new(dme.CloudletLocation)
 					var d float64
 
 					// do not return the default instance
-					if i.cloudletKey == cloudcommon.DefaultCloudletKey {
+					if i.clusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 						continue
 					}
 					d = dmecommon.DistanceBetween(*mreq.GpsLocation, i.location)
 					cloc.GpsLocation = &i.location
-					cloc.CarrierName = i.cloudletKey.OperatorKey.Name
-					cloc.CloudletName = i.cloudletKey.Name
+					cloc.CarrierName = i.clusterInstKey.CloudletKey.OperatorKey.Name
+					cloc.CloudletName = i.clusterInstKey.CloudletKey.Name
 					cloc.Distance = d
 				}
 				ai := dme.Appinstance{}
@@ -448,7 +446,7 @@ func getAppInstList(ckey *dmecommon.CookieKey, mreq *dme.AppInstListRequest, cli
 				ai.FQDN = i.uri
 				ai.Ports = copyPorts(i)
 				cloc.Appinstances = append(cloc.Appinstances, &ai)
-				foundCloudlets[i.cloudletKey] = cloc
+				foundCloudlets[i.clusterInstKey.CloudletKey] = cloc
 			}
 		}
 	}
