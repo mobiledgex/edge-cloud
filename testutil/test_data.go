@@ -31,6 +31,14 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 4,
 		Disk:  4,
 	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large",
+		},
+		Ram:   8192,
+		Vcpus: 10,
+		Disk:  40,
+	},
 }
 var ClusterFlavorData = []edgeproto.ClusterFlavor{
 	edgeproto.ClusterFlavor{
@@ -61,6 +69,16 @@ var ClusterFlavorData = []edgeproto.ClusterFlavor{
 		MasterFlavor: FlavorData[2].Key,
 		NumNodes:     3,
 		MaxNodes:     4,
+		NumMasters:   1,
+	},
+	edgeproto.ClusterFlavor{
+		Key: edgeproto.ClusterFlavorKey{
+			Name: "c1.large",
+		},
+		NodeFlavor:   FlavorData[3].Key,
+		MasterFlavor: FlavorData[3].Key,
+		NumNodes:     10,
+		MaxNodes:     15,
 		NumMasters:   1,
 	},
 }
@@ -270,8 +288,8 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		},
 		Flavor:       ClusterData[0].DefaultFlavor,
 		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[0].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[0].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[0].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -280,8 +298,8 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		},
 		Flavor:       ClusterData[0].DefaultFlavor,
 		IpAccess:     edgeproto.IpAccess_IpAccessShared,
-		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -290,8 +308,8 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		},
 		Flavor:       ClusterData[0].DefaultFlavor,
 		IpAccess:     edgeproto.IpAccess_IpAccessDedicatedOrShared,
-		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -300,8 +318,8 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		},
 		Flavor:       ClusterData[1].DefaultFlavor,
 		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[0].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[0].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[0].Flavors[3].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[3].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -320,8 +338,8 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		},
 		Flavor:       ClusterData[2].DefaultFlavor,
 		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[2].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
@@ -346,8 +364,8 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[1].Key,
 		},
 		Flavor:       ClusterData[0].DefaultFlavor,
-		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
 		Auto:         true,
 	},
 	// from AppInstData[4] -> AppData[2]
@@ -359,8 +377,8 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[2].Key,
 		},
 		Flavor:       ClusterData[1].DefaultFlavor,
-		NodeFlavor:   CloudletInfoData[2].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[0].Name,
+		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
 		Auto:         true,
 	},
 }
@@ -459,10 +477,28 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxVolGb:  500,
 		Flavors: []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
-				Name:  "flavor1",
-				Vcpus: uint64(10),
-				Ram:   uint64(5120),
-				Disk:  uint64(200),
+				Name:  "flavor.tiny1",
+				Vcpus: uint64(1),
+				Ram:   uint64(512),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.tiny2",
+				Vcpus: uint64(1),
+				Ram:   uint64(1024),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.small",
+				Vcpus: uint64(2),
+				Ram:   uint64(1024),
+				Disk:  uint64(20),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium",
+				Vcpus: uint64(4),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
 			},
 		},
 	},
@@ -474,10 +510,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxVolGb:  500,
 		Flavors: []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
-				Name:  "flavor2",
-				Vcpus: uint64(8),
-				Ram:   uint64(5120),
-				Disk:  uint64(200),
+				Name:  "flavor.small1",
+				Vcpus: uint64(2),
+				Ram:   uint64(2048),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.small2",
+				Vcpus: uint64(2),
+				Ram:   uint64(1024),
+				Disk:  uint64(20),
 			},
 		},
 	},
@@ -489,10 +531,22 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxVolGb:  500,
 		Flavors: []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
-				Name:  "flavor3",
-				Vcpus: uint64(8),
-				Ram:   uint64(5120),
-				Disk:  uint64(200),
+				Name:  "flavor.medium1",
+				Vcpus: uint64(4),
+				Ram:   uint64(8192),
+				Disk:  uint64(80),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium2",
+				Vcpus: uint64(4),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium3",
+				Vcpus: uint64(4),
+				Ram:   uint64(2048),
+				Disk:  uint64(20),
 			},
 		},
 	},
@@ -504,10 +558,16 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxVolGb:  500,
 		Flavors: []*edgeproto.FlavorInfo{
 			&edgeproto.FlavorInfo{
-				Name:  "flavor4",
+				Name:  "flavor.large",
 				Vcpus: uint64(8),
-				Ram:   uint64(5120),
-				Disk:  uint64(200),
+				Ram:   uint64(101024),
+				Disk:  uint64(100),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium",
+				Vcpus: uint64(4),
+				Ram:   uint64(1),
+				Disk:  uint64(1),
 			},
 		},
 	},
