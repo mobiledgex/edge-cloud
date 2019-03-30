@@ -25,7 +25,6 @@ var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var fakecloudlet = flag.Bool("fakecloudlet", false, "Fake cloudlet mode.  A fake cloudlet is reported to the controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
@@ -49,7 +48,8 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
+	standalone := false
+	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudlet.Key)
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
 
@@ -73,11 +73,19 @@ func main() {
 
 	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
-	if *standalone || *fakecloudlet {
+	if *fakecloudlet {
 		// set fake cloudlet info
 		myCloudlet.OsMaxRam = 500
 		myCloudlet.OsMaxVcores = 50
 		myCloudlet.OsMaxVolGb = 5000
+		myCloudlet.Flavors = []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor1",
+				Vcpus: uint64(10),
+				Ram:   uint64(101024),
+				Disk:  uint64(500),
+			},
+		}
 		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
 		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
 		// trigger send of info upstream to controller
@@ -93,11 +101,6 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "GatherCloudletInfo", "Error", myCloudlet.Errors[0])
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
-			// trigger send of info upstream to controller
-			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-			controllerData.NodeCache.Update(&myNode, 0)
-			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 
 			/*
 			 * FIXME:For now choose first flavor as platform flavor
@@ -115,6 +118,12 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
 				return
 			}
+
+			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
+			// trigger send of info upstream to controller
+			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+			controllerData.NodeCache.Update(&myNode, 0)
+			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 		}()
 	}
 
@@ -122,26 +131,12 @@ func main() {
 	// so that the initial send to the controller has the current state.
 	controllerData.GatherInsts()
 
-	if *standalone {
-		// In standalone mode, use "touch allownoconfig" for edgectl
-		// to set no-config fields like "flavor" on CreateClusterInst.
-		log.InfoLog("Running in Standalone mode")
-		saServer := standaloneServer{data: controllerData}
-		edgeproto.RegisterCloudletApiServer(grpcServer, &saServer)
-		edgeproto.RegisterFlavorApiServer(grpcServer, &saServer)
-		edgeproto.RegisterClusterInstApiServer(grpcServer, &saServer)
-		edgeproto.RegisterAppInstApiServer(grpcServer, &saServer)
-		edgeproto.RegisterAppInstInfoApiServer(grpcServer, &saServer)
-		edgeproto.RegisterClusterInstInfoApiServer(grpcServer, &saServer)
-		edgeproto.RegisterCloudletInfoApiServer(grpcServer, &saServer)
-	} else {
-		addrs := strings.Split(*notifyAddrs, ",")
-		notifyClient = notify.NewClient(addrs, *tlsCertFile)
-		notifyClient.SetFilterByCloudletKey()
-		InitNotify(notifyClient, controllerData)
-		notifyClient.Start()
-		defer notifyClient.Stop()
-	}
+	addrs := strings.Split(*notifyAddrs, ",")
+	notifyClient = notify.NewClient(addrs, *tlsCertFile)
+	notifyClient.SetFilterByCloudletKey()
+	InitNotify(notifyClient, controllerData)
+	notifyClient.Start()
+	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
 
 	go func() {

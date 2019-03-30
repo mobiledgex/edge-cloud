@@ -135,7 +135,7 @@ func GetClosestFlavor(info *edgeproto.CloudletInfo, nodeflavor edgeproto.Flavor)
 		log.InfoLog("Found closest flavor", "flavor", flavor)
 		return flavor.Name, nil
 	}
-	return "", errors.New("Unable to find any matching flavors")
+	return "", fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
 }
 
 // createClusterInstInternal is used to create dynamic cluster insts internally,
