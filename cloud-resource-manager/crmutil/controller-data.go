@@ -47,8 +47,8 @@ func NewControllerData() *ControllerData {
 
 // GatherCloudletInfo gathers all the information about the Cloudlet that
 // the controller needs to be able to manage it.
-func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
-	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info", "rootlb", rootlb.Name)
+func GatherCloudletInfo(info *edgeproto.CloudletInfo) {
+	log.DebugLog(log.DebugLevelMexos, "attempt to gather cloudlet info")
 
 	err := mexos.GetLimits(info)
 	if err != nil {
@@ -63,7 +63,8 @@ func GatherCloudletInfo(rootlb *mexos.MEXRootLB, info *edgeproto.CloudletInfo) {
 	log.DebugLog(log.DebugLevelMexos, "got limits",
 		"max-vCPUs", info.OsMaxVcores,
 		"max-RAM", info.OsMaxRam,
-		"max-Vol-GB", info.OsMaxVolGb)
+		"max-Vol-GB", info.OsMaxVolGb,
+		"num-flavors", len(info.Flavors))
 	// Is the cloudlet ready at this point?
 	info.Errors = nil
 	info.State = edgeproto.CloudletState_CloudletStateReady
@@ -174,7 +175,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				log.DebugLog(log.DebugLevelMexos, "can't create cluster inst, crmRootLB is null")
 				return
 			}
-			err = mexos.MEXClusterCreateClustInst(&clusterInst, cd.CRMRootLB.Name)
+			err = mexos.MEXClusterCreateClustInst(&clusterInst, cd.CRMRootLB.Name, &flavor)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Create failed: %s", err))
