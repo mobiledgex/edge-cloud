@@ -58,6 +58,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
   state: Ready
 - key:
@@ -71,6 +73,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
   state: Ready
 

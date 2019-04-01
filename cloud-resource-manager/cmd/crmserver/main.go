@@ -25,7 +25,6 @@ var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var standalone = flag.Bool("standalone", false, "Standalone mode. CRM does not interact with controller. Cloudlet/AppInsts can be created directly on CRM using controller API")
 var fakecloudlet = flag.Bool("fakecloudlet", false, "Fake cloudlet mode.  A fake cloudlet is reported to the controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
@@ -49,7 +48,8 @@ func main() {
 	sigChan = make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudlet.Key)
+	standalone := false
+	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudlet.Key)
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key)
 
@@ -65,20 +65,52 @@ func main() {
 	}
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 
-	platChan := make(chan string)
-
 	// this is to be done even for fake cloudlet
 	if err := mexos.InitializeCloudletInfra(*fakecloudlet); err != nil {
 		log.DebugLog(log.DebugLevelMexos, "error, cannot initialize cloudlet infra", "error", err)
 		return
 	}
 
+	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
+
 	if *fakecloudlet {
+		// set fake cloudlet info
+		myCloudlet.OsMaxRam = 500
+		myCloudlet.OsMaxVcores = 50
+		myCloudlet.OsMaxVolGb = 5000
+		myCloudlet.Flavors = []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor1",
+				Vcpus: uint64(10),
+				Ram:   uint64(101024),
+				Disk:  uint64(500),
+			},
+		}
+		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
+		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
+		// trigger send of info upstream to controller
+		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+		controllerData.NodeCache.Update(&myNode, 0)
+		log.DebugLog(log.DebugLevelMexos, "sent fake cloudletinfocache update")
 		log.DebugLog(log.DebugLevelMexos, "running in fake cloudlet mode")
 	} else {
 		go func() {
+			// gather cloudlet info from openstack, etc.
+			crmutil.GatherCloudletInfo(&myCloudlet)
+			if len(myCloudlet.Errors) > 0 {
+				log.DebugLog(log.DebugLevelMexos, "GatherCloudletInfo", "Error", myCloudlet.Errors[0])
+				return
+			}
+
+			/*
+			 * FIXME:For now choose first flavor as platform flavor
+			 * This will soon change when we support one rootlb per cluster for dedicated IP type
+			 */
+			pFlavor := myCloudlet.Flavors[0]
+			log.DebugLog(log.DebugLevelMexos, "platform flavor", "flavor", pFlavor)
+
 			log.DebugLog(log.DebugLevelMexos, "starting to init platform")
-			if err := initPlatform(&myCloudlet); err != nil {
+			if err := initPlatform(&myCloudlet, pFlavor.Name); err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error, cannot initialize platform", "error", err)
 				return
 			}
@@ -86,34 +118,25 @@ func main() {
 				log.DebugLog(log.DebugLevelMexos, "error, failed to init platform, crmRootLB is null")
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "send status on plat channel")
-			platChan <- "ready"
+
+			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
+			// trigger send of info upstream to controller
+			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
+			controllerData.NodeCache.Update(&myNode, 0)
+			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
 		}()
 	}
+
 	// GatherInsts should be called before the notify client is started,
 	// so that the initial send to the controller has the current state.
 	controllerData.GatherInsts()
 
-	if *standalone {
-		// In standalone mode, use "touch allownoconfig" for edgectl
-		// to set no-config fields like "flavor" on CreateClusterInst.
-		log.InfoLog("Running in Standalone mode")
-		saServer := standaloneServer{data: controllerData}
-		edgeproto.RegisterCloudletApiServer(grpcServer, &saServer)
-		edgeproto.RegisterFlavorApiServer(grpcServer, &saServer)
-		edgeproto.RegisterClusterInstApiServer(grpcServer, &saServer)
-		edgeproto.RegisterAppInstApiServer(grpcServer, &saServer)
-		edgeproto.RegisterAppInstInfoApiServer(grpcServer, &saServer)
-		edgeproto.RegisterClusterInstInfoApiServer(grpcServer, &saServer)
-		edgeproto.RegisterCloudletInfoApiServer(grpcServer, &saServer)
-	} else {
-		addrs := strings.Split(*notifyAddrs, ",")
-		notifyClient = notify.NewClient(addrs, *tlsCertFile)
-		notifyClient.SetFilterByCloudletKey()
-		InitNotify(notifyClient, controllerData)
-		notifyClient.Start()
-		defer notifyClient.Stop()
-	}
+	addrs := strings.Split(*notifyAddrs, ",")
+	notifyClient = notify.NewClient(addrs, *tlsCertFile)
+	notifyClient.SetFilterByCloudletKey()
+	InitNotify(notifyClient, controllerData)
+	notifyClient.Start()
+	defer notifyClient.Stop()
 	reflection.Register(grpcServer)
 
 	go func() {
@@ -142,37 +165,7 @@ func main() {
 			os.Exit(1)
 		}
 	}()
-	log.DebugLog(log.DebugLevelMexos, "gather cloudlet info")
 
-	if *standalone || *fakecloudlet {
-		// set fake cloudlet info
-		myCloudlet.OsMaxRam = 500
-		myCloudlet.OsMaxVcores = 50
-		myCloudlet.OsMaxVolGb = 5000
-		myCloudlet.State = edgeproto.CloudletState_CloudletStateReady
-		log.DebugLog(log.DebugLevelMexos, "sending fake cloudlet info cache update")
-		// trigger send of info upstream to controller
-		controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-		controllerData.NodeCache.Update(&myNode, 0)
-		log.DebugLog(log.DebugLevelMexos, "sent fake cloudletinfocache update")
-	} else {
-		go func() {
-			log.DebugLog(log.DebugLevelMexos, "wait for status on plat channel")
-			platStat := <-platChan
-			log.DebugLog(log.DebugLevelMexos, "got status on plat channel", "status", platStat)
-			// gather cloudlet info from openstack, etc.
-			if controllerData.CRMRootLB == nil {
-				log.DebugLog(log.DebugLevelMexos, "rootlb is nil in controllerdata")
-				return
-			}
-			crmutil.GatherCloudletInfo(controllerData.CRMRootLB, &myCloudlet)
-			log.DebugLog(log.DebugLevelMexos, "sending cloudlet info cache update")
-			// trigger send of info upstream to controller
-			controllerData.CloudletInfoCache.Update(&myCloudlet, 0)
-			controllerData.NodeCache.Update(&myNode, 0)
-			log.DebugLog(log.DebugLevelMexos, "sent cloudletinfocache update")
-		}()
-	}
 	if mainStarted != nil {
 		// for unit testing to detect when main is ready
 		close(mainStarted)
@@ -183,7 +176,7 @@ func main() {
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*
-func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
+func initPlatform(cloudlet *edgeproto.CloudletInfo, platformFlavor string) error {
 	loc := util.DNSSanitize(cloudlet.Key.Name) //XXX  key.name => loc
 	oper := util.DNSSanitize(cloudlet.Key.OperatorKey.Name)
 	//if err := mexos.FillManifestValues(mf, "platform"); err != nil {
@@ -205,7 +198,7 @@ func initPlatform(cloudlet *edgeproto.CloudletInfo) error {
 	controllerData.CRMRootLB = crmRootLB
 
 	log.DebugLog(log.DebugLevelMexos, "calling RunMEXAgentCloudletKey", "cloudletkeystr", *cloudletKeyStr)
-	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr); err != nil {
+	if err := mexos.RunMEXAgentCloudletKey(controllerData.CRMRootLB.Name, *cloudletKeyStr, platformFlavor); err != nil {
 		return err
 	}
 	log.DebugLog(log.DebugLevelMexos, "ok, RunMEXAgentCloudletKey with cloudlet key")
