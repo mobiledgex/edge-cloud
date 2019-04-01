@@ -99,8 +99,8 @@ func TestController(t *testing.T) {
 	crmNotify.WaitForClusterFlavors(3)
 
 	assert.Equal(t, 6, len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	assert.Equal(t, 3, len(crmNotify.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, 3, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
+	assert.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
+	assert.Equal(t, 4, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
 	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	assert.Equal(t, 6, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 

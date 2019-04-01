@@ -62,6 +62,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessStatic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
 
 operators:
 - key:
