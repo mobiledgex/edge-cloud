@@ -570,17 +570,18 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3e83f9509439eae351b8ea4f93b700105e5dca599ee468ce440292e8c2c8e773"
+  digest = "1:e2ce7aa17768862526b299c6c783524df62675da26ec567df862b5a9e77814a3"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
-    "k8s-prov/azure",
-    "k8s-prov/dind",
-    "k8s-prov/gcloud",
+    "crm-platforms/azure",
+    "crm-platforms/gcp",
+    "crm-platforms/mexdind",
+    "crm-platforms/openstack",
     "mexos",
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "1df7b1e2912cd8887550ee332eff1e22ba9974e0"
+  revision = "ac90a09efdcb5089074cdae8d8be239889a5d044"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -994,13 +995,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d300469b614dd3d7031b3da86ccc5b86a97086ec9d148dbef8917948816f33f7"
+  digest = "1:1272ad74b3565a2136430119dff76c12b7849db613901af8edd3d2611ff5eeee"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
     "pkg/apis/meta/v1",
+    "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -1034,6 +1036,14 @@
   ]
   pruneopts = "UT"
   revision = "3492ef8dace114d765f20d9c1a03f306449e5252"
+
+[[projects]]
+  branch = "master"
+  digest = "1:04ca94584f81662b6567cfffe9d55ae4fe7b9fb89dbf9ae972d4215a9ea675d4"
+  name = "k8s.io/cli-runtime"
+  packages = ["pkg/printers"]
+  pruneopts = "UT"
+  revision = "44a48934c135b31e4f1c0d12e91d384e1cb2304c"
 
 [[projects]]
   branch = "master"
@@ -1097,6 +1107,14 @@
   pruneopts = "UT"
   revision = "4bb327ea2f8ec2e1dd6438da60fea65cf68594bf"
 
+[[projects]]
+  digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
+  name = "sigs.k8s.io/yaml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fd68e9863619f6ec2fdd8625fe1f02e7c877e480"
+  version = "v1.1.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1147,7 +1165,10 @@
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
     "github.com/mitchellh/mapstructure",
-    "github.com/mobiledgex/edge-cloud-infra/mexos",
+    "github.com/mobiledgex/edge-cloud-infra/crm-platforms/azure",
+    "github.com/mobiledgex/edge-cloud-infra/crm-platforms/gcp",
+    "github.com/mobiledgex/edge-cloud-infra/crm-platforms/mexdind",
+    "github.com/mobiledgex/edge-cloud-infra/crm-platforms/openstack",
     "github.com/nmcclain/ldap",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
@@ -1173,6 +1194,7 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/cli-runtime/pkg/printers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",
