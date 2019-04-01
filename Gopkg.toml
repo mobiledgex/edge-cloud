@@ -146,3 +146,7 @@ required = [
 [[constraint]]
   name = "github.com/xanzy/go-gitlab"
   version = "0.16.0"
+
+[[constraint]]
+  branch = "master"
+  name = "k8s.io/cli-runtime"
