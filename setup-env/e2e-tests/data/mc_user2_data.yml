@@ -85,22 +85,17 @@ regiondata:
             name: AcmeAppCo
           name: someapplication1
           version: "1.0"
-        cloudletkey:
-          operatorkey:
-            name: tmus
-          name: tmus-cloud-1
-        id: 123
+        clusterinstkey:
+          clusterkey:
+            name: SmallCluster
+          cloudletkey:
+            operatorkey:
+              name: tmus
+            name: tmus-cloud-1
+          developer: AcmeAppCo
       cloudletloc:
         latitude: 31
         longitude: -91
-      clusterinstkey:
-        clusterkey:
-          name: SmallCluster
-        cloudletkey:
-          operatorkey:
-            name: tmus
-          name: tmus-cloud-1
-        developer: AcmeAppCo
       liveness: LivenessStatic
       flavor:
         name: x1.small
@@ -110,22 +105,17 @@ regiondata:
             name: AcmeAppCo
           name: someapplication1
           version: "1.0"
-        cloudletkey:
-          operatorkey:
-            name: tmus
-          name: tmus-cloud-2
-        id: 123
+        clusterinstkey:
+          clusterkey:
+            name: SmallCluster
+          cloudletkey:
+            operatorkey:
+              name: tmus
+            name: tmus-cloud-2
+          developer: AcmeAppCo
       cloudletloc:
         latitude: 35
         longitude: -95
-      clusterinstkey:
-        clusterkey:
-          name: SmallCluster
-        cloudletkey:
-          operatorkey:
-            name: tmus
-          name: tmus-cloud-2
-        developer: AcmeAppCo
       liveness: LivenessStatic
       flavor:
         name: x1.small
@@ -135,11 +125,13 @@ regiondata:
             name: Samsung
           name: SamsungEnablingLayer
           version: "1.0"
-        cloudletkey:
-          operatorkey:
-            name: developer
-          name: default
-        id: 123
+        clusterinstkey:
+          clusterkey:
+            name: default
+          cloudletkey:
+            operatorkey:
+              name: developer
+            name: default
       liveness: LivenessStatic
       uri: default.samsungenablement.samsung.com
       flavor:
