@@ -7,7 +7,7 @@ import (
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8s"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -25,7 +25,7 @@ func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst) error {
 	clusterName := clusterInst.Key.ClusterKey.Name
 	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 
-	kconfName := k8s.GetKconfName(clusterInst)
+	kconfName := k8smgmt.GetKconfName(clusterInst)
 	if err = s.CreateDINDCluster(clusterName, kconfName); err != nil {
 		return err
 	}

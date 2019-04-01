@@ -3,7 +3,7 @@ package crmutil
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8s"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -261,7 +261,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			names, err := k8s.GetKubeNames(&clusterInst, &app, &appInst)
+			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("get kube names failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
@@ -293,7 +293,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "appinst", appInst, "clusterinst", clusterInst)
-			names, err := k8s.GetKubeNames(&clusterInst, &app, &appInst)
+			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("get kube names failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
