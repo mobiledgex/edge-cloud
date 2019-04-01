@@ -37,6 +37,7 @@
 		OpenStackProperties
 		CloudletInfraProperties
 		Cloudlet
+		FlavorInfo
 		CloudletInfo
 		CloudletMetrics
 		ClusterKey

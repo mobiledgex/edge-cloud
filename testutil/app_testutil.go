@@ -37,6 +37,7 @@ It has these top-level messages:
 	OpenStackProperties
 	CloudletInfraProperties
 	Cloudlet
+	FlavorInfo
 	CloudletInfo
 	CloudletMetrics
 	ClusterKey
