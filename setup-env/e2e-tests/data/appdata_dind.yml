@@ -103,6 +103,13 @@ apps:
   accessports: "tcp:8008"
   androidpackagename: com.mobiledgex.facedemo
   permitsplatformapps: true
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: SOME_ENV1
+        value: value1
+      - name: SOME_ENV2
+        value: value2
 
 appinstances:
 - key:

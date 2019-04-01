@@ -1,6 +1,7 @@
 package k8s
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
+	"k8s.io/cli-runtime/pkg/printers"
 )
 
 const AppConfigEnvYaml = "envVarsYaml"
@@ -66,12 +68,14 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 		break
 	}
 	//marshal the objects back together and return as one string
+	printer := &printers.YAMLPrinter{}
 	for _, o := range objs {
-		d, err := yaml.Marshal(o)
+		buf := bytes.Buffer{}
+		err := printer.PrintObj(o, &buf)
 		if err != nil {
 			return kubeManifest, fmt.Errorf("unable to marshal the k8s objects back together, %s", err.Error())
 		} else {
-			files = append(files, string(d))
+			files = append(files, buf.String())
 		}
 	}
 	mf = strings.Join(files, "---\n")
