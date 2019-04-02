@@ -3,9 +3,12 @@
   - tlsoutdir: "{{ gopath }}/src/github.com/mobiledgex/edge-cloud/tls/out"
   - server_to_path:
       Linux_x86_64: "{{ gopath }}/bin/linux_amd64"
+      Linux_aarch64: "{{ gopath }}/bin/linux_arm64"
       Darwin_x86_64: "{{ gopath }}/bin"
   - mexosagent_local_svc: "{{ gopath }}/src/github.com/mobiledgex/edge-cloud-infra/openstack-tenant/agent/mexosagent.service" 
   - mexosagent_remote_svc: "/etc/systemd/system/mexosagent.service"
+  - crmserver_remote_svc:  "/etc/systemd/system/crmserver.service"
+  - vault_token: "0eb94cce-ab3f-33a3-bd66-0046e8743a14"
   - servertype: "{{ ansible_system }}_{{ ansible_architecture }}"
   - local_binpath: "{{ server_to_path[servertype] }}"
   - controller_bin: "{{ local_binpath }}/controller"

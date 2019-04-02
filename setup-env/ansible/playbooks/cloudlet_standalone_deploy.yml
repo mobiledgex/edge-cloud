@@ -68,10 +68,11 @@
      group: root
      mode: 0755
 
-  #- name: start mexosagent 
-  #  service:
-  #     name: mexosagent
-  #     state: started
+#  - name: start mexosagent 
+#    service:
+#       enabled: yes
+#       name: mexosagent
+#       state: started
 
   - name: copy crm binary
     copy:
@@ -79,14 +80,21 @@
        dest: "{{ remote_bin_path }}"
        mode: 0755 
 
+  - name: copy crmserver.service template
+    template:
+       src: templates/crmserver.j2
+       dest: "{{ crmserver_remote_svc }}"
+
   - name: show CRM startup variables
     debug:
        var: crm
 
-  - name: start up crmserver process
-    shell: "nohup {{ crm_remote_bin }} --apiAddr 0.0.0.0:37001 --notifyAddrs {{ crm.ctrladdr }} --cloudletKey '{{ crm.cloudletkey }}' --tls {{ remote_tls_path }}/mex-server.crt  --d api,notify,mexos > {{ remote_log_path }}/{{ crm.name }}.log 2>&1 &"
-    environment:
-      CLOUDLET_KIND: dind
-      NETWORK_SCHEME: publicip
-      MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
+  - name: systemctl daemon-reload
+    command: systemctl daemon-reload
+
+  - name: start crmserver
+    service: 
+       enabled: yes
+       name: crmserver
+       state: restarted
 
