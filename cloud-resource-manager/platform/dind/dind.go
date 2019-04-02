@@ -21,7 +21,19 @@ func (s *Platform) Init(key *edgeproto.CloudletKey) error {
 }
 
 func (s *Platform) GatherCloudletInfo(info *edgeproto.CloudletInfo) error {
-	return GetLimits(info)
+	err := GetLimits(info)
+	if err != nil {
+		return err
+	}
+	info.Flavors = []*edgeproto.FlavorInfo{
+		&edgeproto.FlavorInfo{
+			Name:  "DINDFlavor",
+			Vcpus: uint64(info.OsMaxVcores),
+			Ram:   uint64(info.OsMaxRam),
+			Disk:  uint64(500),
+		},
+	}
+	return nil
 }
 
 func (s *Platform) GetPlatformClient() pc.PlatformClient {
