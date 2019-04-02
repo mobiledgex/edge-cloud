@@ -79,6 +79,7 @@ dmes:
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
+    cookieexpr: "24h"
   hostname: "127.0.0.1"
 
 crms:
