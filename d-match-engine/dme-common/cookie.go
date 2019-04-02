@@ -76,7 +76,7 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	return claims.Key, nil
 }
 
-func GenerateCookie(key *CookieKey, ctx context.Context) (string, error) {
+func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return "", errors.New("unable to get peer IP info")
@@ -95,7 +95,7 @@ func GenerateCookie(key *CookieKey, ctx context.Context) (string, error) {
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt: time.Now().Unix(),
 			// 1 day expiration for now
-			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
 		},
 		Key: key,
 	}
