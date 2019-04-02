@@ -15,7 +15,9 @@ var sqlAddr = flag.String("sqlAddr", "127.0.0.1:5432", "Postgresql address")
 var localSql = flag.Bool("localSql", false, "Run local postgres db")
 var initSql = flag.Bool("initSql", false, "Init db when using localSql")
 var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
-var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
+var tlsCertFile = flag.String("tls", "", "server tls cert file")
+var tlsKeyFile = flag.String("tlskey", "", "server tls key file")
+var clientCert = flag.String("clientCert", "", "internal tls client cert file")
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var localVault = flag.Bool("localVault", false, "Run local Vault")
 var ldapAddr = flag.String("ldapAddr", "127.0.0.1:9389", "LDAP listener address")
@@ -36,8 +38,10 @@ func main() {
 		InitLocal:   *initSql,
 		LocalVault:  *localVault,
 		TlsCertFile: *tlsCertFile,
+		TlsKeyFile:  *tlsKeyFile,
 		LDAPAddr:    *ldapAddr,
 		GitlabAddr:  *gitlabAddr,
+		ClientCert:  *clientCert,
 	}
 	server, err := orm.RunServer(&config)
 	if err != nil {
