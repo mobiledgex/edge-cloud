@@ -17,10 +17,11 @@ import (
 
 // Server struct is just to track sql/db so we can stop them later.
 type Server struct {
-	config       ServerConfig
+	config       *ServerConfig
 	sql          *process.SqlLocal
 	db           *gorm.DB
 	echo         *echo.Echo
+	vault        *process.Vault
 	stopInitData bool
 	initDataDone chan struct{}
 }
@@ -34,9 +35,11 @@ type ServerConfig struct {
 	IgnoreEnv     bool
 	RbacModelPath string
 	TlsCertFile   string
+	TlsKeyFile    string
 	LocalVault    bool
 	LDAPAddr      string
 	GitlabAddr    string
+	ClientCert    string
 }
 
 var DefaultDBUser = "mcuser"
@@ -47,11 +50,15 @@ var DefaultSuperpass = "mexadmin123"
 
 var db *gorm.DB
 var enforcer *casbin.Enforcer
-var serverConfig ServerConfig
+var serverConfig *ServerConfig
 var gitlabClient *gitlab.Client
 var gitlabSync *GitlabSync
 
 func RunServer(config *ServerConfig) (*Server, error) {
+	server := Server{config: config}
+	// keep global pointer to config stored in server for easy access
+	serverConfig = server.config
+
 	dbuser := os.Getenv("db_username")
 	dbpass := os.Getenv("db_password")
 	dbname := os.Getenv("db_name")
@@ -95,10 +102,10 @@ func RunServer(config *ServerConfig) (*Server, error) {
 		if err != nil {
 			return nil, err
 		}
-		defer vault.Stop()
 		roleID = roles.MCORMRoleID
 		secretID = roles.MCORMSecretID
 		config.VaultAddr = process.VaultAddress
+		server.vault = &vault
 	}
 	InitVault(config.VaultAddr, roleID, secretID)
 
@@ -114,8 +121,6 @@ func RunServer(config *ServerConfig) (*Server, error) {
 			config.GitlabAddr, err.Error())
 	}
 
-	serverConfig = *config
-	server := Server{config: *config}
 	if config.RunLocal {
 		sql := process.SqlLocal{
 			Name:     "sql1",
@@ -188,8 +193,14 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	auth.POST("/gitlab/resync", GitlabResync)
 	addControllerApis(auth)
 	go func() {
-		err := e.Start(config.ServAddr)
+		var err error
+		if config.TlsCertFile != "" {
+			err = e.StartTLS(config.ServAddr, config.TlsCertFile, config.TlsKeyFile)
+		} else {
+			err = e.Start(config.ServAddr)
+		}
 		if err != nil && err != http.ErrServerClosed {
+			server.Stop()
 			log.FatalLog("Failed to serve", "err", err)
 		}
 	}()
@@ -200,6 +211,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	ldapServer.SearchFunc("", handler)
 	go func() {
 		if err := ldapServer.ListenAndServe(config.LDAPAddr); err != nil {
+			server.Stop()
 			log.FatalLog("LDAP Server Failed", "err", err)
 		}
 	}()
@@ -233,5 +245,8 @@ func (s *Server) Stop() {
 	s.db.Close()
 	if s.sql != nil {
 		s.sql.Stop()
+	}
+	if s.vault != nil {
+		s.vault.Stop()
 	}
 }

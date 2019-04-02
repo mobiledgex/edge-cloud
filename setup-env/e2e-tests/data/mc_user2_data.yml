@@ -34,6 +34,8 @@ regiondata:
         name: c1.small
       liveness: LivenessStatic
       ipaccess: IpAccessDedicated
+      nodeflavor: flavor1
+      masterflavor: flavor1
     - key:
         clusterkey:
           name: SmallCluster
@@ -46,6 +48,8 @@ regiondata:
         name: c1.small
       liveness: LivenessStatic
       ipaccess: IpAccessShared
+      nodeflavor: flavor1
+      masterflavor: flavor1
 
     apps:
     - key:

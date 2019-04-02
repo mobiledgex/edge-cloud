@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -103,6 +104,40 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
+func GetClosestFlavor(info *edgeproto.CloudletInfo, nodeflavor edgeproto.Flavor) (string, error) {
+	log.InfoLog("Get closest flavor available in Cloudlet")
+	FlavorList := info.Flavors
+	sort.Slice(FlavorList[:], func(i, j int) bool {
+		if FlavorList[i].Vcpus < FlavorList[j].Vcpus {
+			return true
+		}
+		if FlavorList[i].Vcpus > FlavorList[j].Vcpus {
+			return false
+		}
+		if FlavorList[i].Ram < FlavorList[j].Ram {
+			return true
+		}
+		if FlavorList[i].Ram > FlavorList[j].Ram {
+			return false
+		}
+		return FlavorList[i].Disk < FlavorList[j].Disk
+	})
+	for _, flavor := range FlavorList {
+		if flavor.Vcpus < nodeflavor.Vcpus {
+			continue
+		}
+		if flavor.Ram < nodeflavor.Ram {
+			continue
+		}
+		if flavor.Disk < nodeflavor.Disk {
+			continue
+		}
+		log.InfoLog("Found closest flavor", "flavor", flavor)
+		return flavor.Name, nil
+	}
+	return "", fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
+}
+
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -169,10 +204,21 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("Cluster flavor %s node flavor %s not found",
 				in.Flavor.Name, clusterFlavor.NodeFlavor.Name)
 		}
-		if !flavorApi.store.STMGet(stm, &clusterFlavor.MasterFlavor, nil) {
+		masterFlavor := edgeproto.Flavor{}
+		if !flavorApi.store.STMGet(stm, &clusterFlavor.MasterFlavor, &masterFlavor) {
 			return fmt.Errorf("Cluster flavor %s master flavor %s not found",
 				in.Flavor.Name, clusterFlavor.MasterFlavor.Name)
 		}
+		var err error
+		in.NodeFlavor, err = GetClosestFlavor(&info, nodeFlavor)
+		if err != nil {
+			return err
+		}
+		in.MasterFlavor, err = GetClosestFlavor(&info, masterFlavor)
+		if err != nil {
+			return err
+		}
+		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor, "Master Flavor", in.MasterFlavor)
 
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(clusterFlavor.MaxNodes)
@@ -196,7 +242,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			}
 		}
 		// allocateIP also sets in.IpAccess to either Dedicated or Shared
-		err := allocateIP(in, &cloudlet, &refs)
+		err = allocateIP(in, &cloudlet, &refs)
 		if err != nil {
 			return err
 		}
