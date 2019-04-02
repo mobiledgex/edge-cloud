@@ -1,7 +1,6 @@
 *~
 *.kubeconfig
 protoc-gen-cmd/protoc-gen-cmd
-protoc-gen-cmd/protocmd/protocmd.pb.go
 protoc-gen-gomex/protoc-gen-gomex
 setup-env/ansible/playbooks/setup.yml
 vendor
