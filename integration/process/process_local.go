@@ -161,6 +161,7 @@ type DmeLocal struct {
 	Carrier     string
 	CloudletKey string
 	VaultAddr   string
+	CookieExpr  string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -198,6 +199,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
+	}
+	if p.CookieExpr != "" {
+		args = append(args, "--cookieExpiration")
+		args = append(args, p.CookieExpr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
