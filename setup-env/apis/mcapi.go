@@ -12,9 +12,11 @@ import (
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
+var mcClient = ormclient.Client{SkipVerify: true}
+
 func RunMcAPI(api, mcname, apiFile, curUserFile, outputDir string) bool {
 	mc := util.GetMC(mcname)
-	uri := "http://" + mc.Addr + "/api/v1"
+	uri := "https://" + mc.Addr + "/api/v1"
 	log.Printf("Using MC %s at %s", mc.Name, uri)
 
 	if strings.HasSuffix(api, "users") {
@@ -32,7 +34,7 @@ func runMcUsersAPI(api, uri, apiFile, curUserFile, outputDir string) bool {
 		if !rc {
 			return false
 		}
-		users, status, err := ormclient.ShowUsers(uri, token, "")
+		users, status, err := mcClient.ShowUsers(uri, token, "")
 		checkMcErr("ShowUser", status, err, &rc)
 		util.PrintToYamlFile("show-commands.yml", outputDir, users, true)
 		return rc
@@ -47,7 +49,7 @@ func runMcUsersAPI(api, uri, apiFile, curUserFile, outputDir string) bool {
 	switch api {
 	case "createusers":
 		for _, user := range users {
-			status, err := ormclient.CreateUser(uri, &user)
+			status, err := mcClient.CreateUser(uri, &user)
 			checkMcErr("CreateUser", status, err, &rc)
 		}
 	case "deleteusers":
@@ -56,7 +58,7 @@ func runMcUsersAPI(api, uri, apiFile, curUserFile, outputDir string) bool {
 			return false
 		}
 		for _, user := range users {
-			status, err := ormclient.DeleteUser(uri, token, &user)
+			status, err := mcClient.DeleteUser(uri, token, &user)
 			checkMcErr("DeleteUser", status, err, &rc)
 		}
 	}
@@ -76,7 +78,7 @@ func runMcDataAPI(api, uri, apiFile, curUserFile, outputDir string) bool {
 	}
 
 	if api == "show" {
-		showData, status, err := ormclient.ShowData(uri, token)
+		showData, status, err := mcClient.ShowData(uri, token)
 		checkMcErr("ShowData", status, err, &rc)
 		util.PrintToYamlFile("show-commands.yml", outputDir, showData, true)
 		return rc
@@ -89,12 +91,12 @@ func runMcDataAPI(api, uri, apiFile, curUserFile, outputDir string) bool {
 	data := readMCDataFile(apiFile)
 	switch api {
 	case "create":
-		status, err := ormclient.CreateData(uri, token, data, func(res *ormapi.Result) {
+		status, err := mcClient.CreateData(uri, token, data, func(res *ormapi.Result) {
 			log.Printf("CreateData: %s\n", res.Message)
 		})
 		checkMcErr("CreateData", status, err, &rc)
 	case "delete":
-		status, err := ormclient.DeleteData(uri, token, data, func(res *ormapi.Result) {
+		status, err := mcClient.DeleteData(uri, token, data, func(res *ormapi.Result) {
 			log.Printf("DeleteData: %s\n", res.Message)
 		})
 		checkMcErr("DeleteData", status, err, &rc)
@@ -141,7 +143,7 @@ func loginCurUser(uri, curUserFile string) (string, bool) {
 		log.Printf("no user to run MC create api\n")
 		return "", false
 	}
-	token, err := ormclient.DoLogin(uri, users[0].Name, users[0].Passhash)
+	token, err := mcClient.DoLogin(uri, users[0].Name, users[0].Passhash)
 	rc := true
 	checkMcErr("DoLogin", http.StatusOK, err, &rc)
 	return token, rc

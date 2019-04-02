@@ -44,6 +44,7 @@ var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
+var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -238,7 +239,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		AppName: req.AppName,
 		AppVers: req.AppVers,
 	}
-	cookie, err := dmecommon.GenerateCookie(&key, ctx)
+	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
 	if err != nil {
 		return mstatus, grpc.Errorf(codes.Internal, err.Error())
 	}

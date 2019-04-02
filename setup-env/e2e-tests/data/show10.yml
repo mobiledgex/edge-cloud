@@ -44,6 +44,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -56,6 +58,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -68,6 +72,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessDedicated
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -80,6 +86,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessDedicated
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -92,6 +100,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -104,6 +114,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -116,6 +128,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -128,6 +142,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -140,6 +156,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -152,6 +170,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -164,6 +184,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -176,6 +198,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -188,6 +212,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -200,6 +226,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -212,6 +240,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -224,6 +254,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessDedicated
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -236,6 +268,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessDedicated
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -248,6 +282,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -260,6 +296,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 - key:
     clusterkey:
@@ -272,6 +310,8 @@ clusterinsts:
     name: c1.small
   liveness: LivenessDynamic
   ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
   auto: true
 
 operators:

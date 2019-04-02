@@ -346,16 +346,16 @@ func {{.MethodName}}Obj(rc *RegionContext, obj *edgeproto.{{.InName}}) ([]edgepr
 `
 
 var tmplMethodTest = `
-func test{{.MethodName}}(uri, token, region string, in *edgeproto.{{.InName}}) (int, error) {
+func test{{.MethodName}}(mcClient *ormclient.Client, uri, token, region string, in *edgeproto.{{.InName}}) (int, error) {
 	dat := &Region{{.InName}}{}
 	dat.Region = region
 	dat.{{.InName}} = *in
 {{- if .Outstream}}
 	out := edgeproto.{{.OutName}}{}
-	status, err := ormclient.PostJsonStreamOut(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out, nil)
+	status, err := mcClient.PostJsonStreamOut(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out, nil)
 {{- else}}
 	out := edgeproto.{{.OutName}}{}
-	status, err := ormclient.PostJson(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out)
+	status, err := mcClient.PostJson(uri+"/auth/ctrl/{{.MethodName}}", token, dat, &out)
 {{- end}}
 	return status, err
 }
@@ -382,49 +382,49 @@ type msgArgs struct {
 var tmplMessageTest = `
 // This tests the user cannot modify the object because the obj belongs to
 // an organization that the user does not have permissions for.
-func badPermTest{{.Message}}(t *testing.T, uri, token, region string, obj *edgeproto.{{.Message}}) {
-	status, err := testCreate{{.Message}}(uri, token, region, obj)
+func badPermTest{{.Message}}(t *testing.T, mcClient *ormclient.Client, uri, token, region string, obj *edgeproto.{{.Message}}) {
+	status, err := testCreate{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
-	status, err = testUpdate{{.Message}}(uri, token, region, obj)
+	status, err = testUpdate{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
-	status, err = testDelete{{.Message}}(uri, token, region, obj)
+	status, err = testDelete{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
 	// show is allowed but won't show anything
-	status, err = testShow{{.Message}}(uri, token, region, obj)
+	status, err = testShow{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 }
 
 // This tests the user can modify the object because the obj belongs to
 // an organization that the user has permissions for.
-func goodPermTest{{.Message}}(t *testing.T, uri, token, region string, obj *edgeproto.{{.Message}}) {
-	status, err := testCreate{{.Message}}(uri, token, region, obj)
+func goodPermTest{{.Message}}(t *testing.T, mcClient *ormclient.Client, uri, token, region string, obj *edgeproto.{{.Message}}) {
+	status, err := testCreate{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	status, err = testUpdate{{.Message}}(uri, token, region, obj)
+	status, err = testUpdate{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	status, err = testDelete{{.Message}}(uri, token, region, obj)
+	status, err = testDelete{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
-	status, err = testShow{{.Message}}(uri, token, region, obj)
+	status, err = testShow{{.Message}}(mcClient, uri, token, region, obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 
 	// make sure region check works
-	status, err = testCreate{{.Message}}(uri, token, "bad region", obj)
+	status, err = testCreate{{.Message}}(mcClient, uri, token, "bad region", obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
-	status, err = testUpdate{{.Message}}(uri, token, "bad region", obj)
+	status, err = testUpdate{{.Message}}(mcClient, uri, token, "bad region", obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
-	status, err = testDelete{{.Message}}(uri, token, "bad region", obj)
+	status, err = testDelete{{.Message}}(mcClient, uri, token, "bad region", obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
-	status, err = testShow{{.Message}}(uri, token, "bad region", obj)
+	status, err = testShow{{.Message}}(mcClient, uri, token, "bad region", obj)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusBadRequest, status)
 }
@@ -432,11 +432,11 @@ func goodPermTest{{.Message}}(t *testing.T, uri, token, region string, obj *edge
 // Test permissions for user with token1 who should have permissions for
 // modifying obj1, and user with token2 who should have permissions for obj2.
 // They should not have permissions to modify each other's objects.
-func permTest{{.Message}}(t *testing.T, uri, token1, token2, region string, obj1, obj2 *edgeproto.{{.Message}}) {
-	badPermTest{{.Message}}(t, uri, token1, region, obj2)
-	badPermTest{{.Message}}(t, uri, token2, region, obj1)
-	goodPermTest{{.Message}}(t, uri, token1, region, obj1)
-	goodPermTest{{.Message}}(t, uri, token2, region, obj2)
+func permTest{{.Message}}(t *testing.T, mcClient *ormclient.Client, uri, token1, token2, region string, obj1, obj2 *edgeproto.{{.Message}}) {
+	badPermTest{{.Message}}(t, mcClient, uri, token1, region, obj2)
+	badPermTest{{.Message}}(t, mcClient, uri, token2, region, obj1)
+	goodPermTest{{.Message}}(t, mcClient, uri, token1, region, obj1)
+	goodPermTest{{.Message}}(t, mcClient, uri, token2, region, obj2)
 }
 `
 
