@@ -570,7 +570,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e2ce7aa17768862526b299c6c783524df62675da26ec567df862b5a9e77814a3"
+  digest = "1:1fe3eeeb5bb29a650db4c09a0b09fd7ffbb4a65f575a51ef997ba382295d2599"
   name = "github.com/mobiledgex/edge-cloud-infra"
   packages = [
     "crm-platforms/azure",
@@ -581,7 +581,7 @@
     "openstack-tenant/agent/cloudflare",
   ]
   pruneopts = "UT"
-  revision = "ac90a09efdcb5089074cdae8d8be239889a5d044"
+  revision = "a5d5f211e7c3e6bc2cea4d114e248d532eef3ea7"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
