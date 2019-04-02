@@ -98,7 +98,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 12)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -141,11 +141,12 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 11)
+	s := make([]string, 0, 12)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -176,6 +177,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CrmOverride")
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
+	s = append(s, "Version")
 	return s
 }
 
@@ -320,6 +322,9 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
+	}
+	if _, found := tags["nocmp"]; found {
+		in.Version = 0
 	}
 }
 
@@ -714,6 +719,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
+	AppInstFlagSet.Uint32Var(&AppInstIn.Version, "version", 0, "Version")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -817,6 +823,9 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("createdat-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
+	}
+	if AppInstFlagSet.Lookup("version").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "99")
 	}
 }
 

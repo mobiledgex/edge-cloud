@@ -210,6 +210,7 @@ func main() {
 }
 
 func InitApis(sync *Sync) {
+	
 	InitDeveloperApi(sync)
 	InitAppApi(sync)
 	InitOperatorApi(sync)

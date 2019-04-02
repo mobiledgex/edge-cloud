@@ -41,4 +41,6 @@ type AppInstV0 struct {
 	CrmOverride edgeproto.CRMOverride `protobuf:"varint,16,opt,name=crm_override,json=crmOverride,proto3,enum=edgeproto.CRMOverride" json:"crm_override,omitempty"`
 	// Created at time
 	CreatedAt distributed_match_engine.Timestamp `protobuf:"bytes,21,opt,name=created_at,json=createdAt" json:"created_at"`
+	// Version of this object
+	Version uint32 `protobuf:"varint,99,opt,name=version,proto3" json:"version,omitempty"`
 }
