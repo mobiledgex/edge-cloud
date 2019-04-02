@@ -336,6 +336,14 @@ func (p *MCLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
 	}
+	if p.TLS.ServerKey != "" {
+		args = append(args, "--tlskey")
+		args = append(args, p.TLS.ServerKey)
+	}
+	if p.TLS.ClientCert != "" {
+		args = append(args, "--clientCert")
+		args = append(args, p.TLS.ClientCert)
+	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
 	if options.Debug != "" {
