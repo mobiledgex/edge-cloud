@@ -3,6 +3,23 @@ package upgrade
 import "github.com/mobiledgex/edge-cloud/edgeproto"
 import distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 
+// ApplicationData with AppInstKey V0
+type ApplicationData_AppInstV0 struct {
+	Operators        []edgeproto.Operator        `yaml:"operators"`
+	Cloudlets        []edgeproto.Cloudlet        `yaml:"cloudlets"`
+	Flavors          []edgeproto.Flavor          `yaml:"flavors"`
+	ClusterFlavors   []edgeproto.ClusterFlavor   `yaml:"clusterflavors"`
+	Clusters         []edgeproto.Cluster         `yaml:"clusters"`
+	ClusterInsts     []edgeproto.ClusterInst     `yaml:"clusterinsts"`
+	Developers       []edgeproto.Developer       `yaml:"developers"`
+	Applications     []edgeproto.App             `yaml:"apps"`
+	AppInstances     []AppInstV0                 `yaml:"appinstances"`
+	CloudletInfos    []edgeproto.CloudletInfo    `yaml:"cloudletinfos"`
+	AppInstInfos     []edgeproto.AppInstInfo     `yaml:"appinstinfos"`
+	ClusterInstInfos []edgeproto.ClusterInstInfo `yaml:"clusterinstinfos"`
+	Nodes            []edgeproto.Node            `yaml:"nodes"`
+}
+
 // AppInstKey V0
 type AppInstKeyV0 struct {
 	// App key

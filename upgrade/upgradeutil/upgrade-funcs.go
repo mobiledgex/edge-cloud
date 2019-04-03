@@ -2,12 +2,25 @@ package upgrade
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
 var ErrUpgradNotSupported = errors.New("Unsupported upgrade path")
+
+// Map of the names to upgrade functions
+var UpgradeFuncs = map[string]interface{}{
+	"UpgradeAppInstV0toV1":   UpgradeAppInstV0toV1,
+	"DowngradeAppInstV1toV0": DowngradeAppInstV1toV0,
+}
+
+// Map of the names to yaml upgrade functions
+var UpgradeYamlFuncs = map[string]interface{}{
+	"UpgradeAppInstV0toV1": UpgradeYamlAppInstV0toV1,
+}
 
 func UpgradeAppInstV0toV1(appInst *AppInstV0) (*edgeproto.AppInst, error) {
 	if appInst.Version != 0 {
@@ -55,4 +68,41 @@ func DowngradeAppInstV1toV0(appInst *edgeproto.AppInst) (*AppInstV0, error) {
 	oldAppInst.CreatedAt = appInst.CreatedAt
 	oldAppInst.Version = 0
 	return &oldAppInst, nil
+}
+
+func UpgradeYamlAppInstV0toV1(yaml string) (*edgeproto.ApplicationData, error) {
+	var appData ApplicationData_AppInstV0
+	var appDataNew *edgeproto.ApplicationData = &edgeproto.ApplicationData{}
+	// Read in the yaml file
+	if err := util.ReadYamlFile(yaml, &appData, "", false); err != nil {
+		return nil, fmt.Errorf("Could not parse the input yaml %s, err: %v\n", yaml, err)
+	}
+	appDataNew.Operators = appData.Operators
+	appDataNew.Cloudlets = appData.Cloudlets
+	appDataNew.Flavors = appData.Flavors
+	appDataNew.ClusterFlavors = appData.ClusterFlavors
+	appDataNew.Clusters = appData.Clusters
+	appDataNew.ClusterInsts = appData.ClusterInsts
+	appDataNew.Developers = appData.Developers
+	appDataNew.Applications = appData.Applications
+
+	// Convert AppInstaces V0 to V1
+	for _, app := range appData.AppInstances {
+		newApp, err := UpgradeAppInstV0toV1(&app)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to upgrade appInst %v, err: %v\n", app, err)
+		}
+		log.DebugLog(log.DebugLevelUpgrade, "Upgraded app to V1", "old", app, "new", newApp)
+		appDataNew.AppInstances = append(appDataNew.AppInstances, *newApp)
+	}
+	appDataNew.CloudletInfos = appData.CloudletInfos
+	appDataNew.AppInstInfos = appData.AppInstInfos
+	appDataNew.ClusterInstInfos = appData.ClusterInstInfos
+	appDataNew.Nodes = appData.Nodes
+	return appDataNew, nil
+}
+
+func UpgradeEtcdAppInstV0toV1(etcdUrls string) error {
+	//TODO
+	return nil
 }
