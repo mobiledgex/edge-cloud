@@ -164,8 +164,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Liveness = edgeproto.Liveness_LivenessDynamic
 	}
 	cctx.SetOverride(&in.CrmOverride)
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 
 	var autocluster bool
@@ -492,8 +494,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		defaultCloudlet = true
 	}
 
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
