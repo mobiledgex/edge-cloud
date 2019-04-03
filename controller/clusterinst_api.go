@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
+
+	flavor "github.com/mobiledgex/edge-cloud/flavor"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -104,40 +105,6 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func GetClosestFlavor(info *edgeproto.CloudletInfo, nodeflavor edgeproto.Flavor) (string, error) {
-	log.InfoLog("Get closest flavor available in Cloudlet")
-	FlavorList := info.Flavors
-	sort.Slice(FlavorList[:], func(i, j int) bool {
-		if FlavorList[i].Vcpus < FlavorList[j].Vcpus {
-			return true
-		}
-		if FlavorList[i].Vcpus > FlavorList[j].Vcpus {
-			return false
-		}
-		if FlavorList[i].Ram < FlavorList[j].Ram {
-			return true
-		}
-		if FlavorList[i].Ram > FlavorList[j].Ram {
-			return false
-		}
-		return FlavorList[i].Disk < FlavorList[j].Disk
-	})
-	for _, flavor := range FlavorList {
-		if flavor.Vcpus < nodeflavor.Vcpus {
-			continue
-		}
-		if flavor.Ram < nodeflavor.Ram {
-			continue
-		}
-		if flavor.Disk < nodeflavor.Disk {
-			continue
-		}
-		log.InfoLog("Found closest flavor", "flavor", flavor)
-		return flavor.Name, nil
-	}
-	return "", fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
-}
-
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
@@ -212,11 +179,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				in.Flavor.Name, clusterFlavor.MasterFlavor.Name)
 		}
 		var err error
-		in.NodeFlavor, err = GetClosestFlavor(&info, nodeFlavor)
+		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
 		if err != nil {
 			return err
 		}
-		in.MasterFlavor, err = GetClosestFlavor(&info, masterFlavor)
+		in.MasterFlavor, err = flavor.GetClosestFlavor(info.Flavors, masterFlavor)
 		if err != nil {
 			return err
 		}
