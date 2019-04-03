@@ -142,8 +142,10 @@ func GetClosestFlavor(info *edgeproto.CloudletInfo, nodeflavor edgeproto.Flavor)
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
@@ -296,8 +298,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
 	}
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	cctx.SetOverride(&in.CrmOverride)
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 
 	var prevState edgeproto.TrackedState
@@ -331,7 +336,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
-	cctx.SetOverride(&in.CrmOverride)
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
