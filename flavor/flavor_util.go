@@ -9,7 +9,7 @@ import (
 )
 
 func GetClosestFlavor(flavorList []*edgeproto.FlavorInfo, nodeflavor edgeproto.Flavor) (string, error) {
-	//	log.InfoLog("Get closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
+	log.InfoLog("Get closest flavor available", "flavorList", flavorList, "nodeflavor", nodeflavor)
 
 	sort.Slice(flavorList[:], func(i, j int) bool {
 		if flavorList[i].Vcpus < flavorList[j].Vcpus {
