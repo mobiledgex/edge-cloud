@@ -32,6 +32,10 @@ func UpgradeAppInstV0toV1(appInst *AppInstV0) (*edgeproto.AppInst, error) {
 	newAppInst.Fields = appInst.Fields
 	newAppInst.Key.AppKey = appInst.Key.AppKey
 	newAppInst.Key.ClusterInstKey = appInst.ClusterInstKey
+	// There is a case in a yml file conversion that autocluster clusterInst doesn't specify cloudletkey
+	if appInst.Key.CloudletKey != appInst.ClusterInstKey.CloudletKey {
+		newAppInst.Key.ClusterInstKey.CloudletKey = appInst.Key.CloudletKey
+	}
 	newAppInst.CloudletLoc = appInst.CloudletLoc
 	newAppInst.Uri = appInst.Uri
 	newAppInst.Liveness = appInst.Liveness

@@ -30,6 +30,11 @@ var testClusterInstKey = edgeproto.ClusterInstKey{
 	},
 	CloudletKey: testCloudletKey,
 }
+var testAutoClusterInstKey = edgeproto.ClusterInstKey{
+	ClusterKey: edgeproto.ClusterKey{
+		Name: "autocluster",
+	},
+}
 var appInstV0 = AppInstV0{
 	Key: AppInstKeyV0{
 		AppKey: edgeproto.AppKey{
@@ -74,7 +79,15 @@ func TestAppInstV0toV1Upgrade(t *testing.T) {
 	assert.Nil(t, err, "Unable to check correct version")
 	assert.NotNil(t, res, "didn't get a new app back")
 	assert.Equal(t, &appInstV1, res, "result doesn't match the expected appInst")
-
+	// test autocluster upgrade
+	expectedV1 := appInstV1
+	expectedV1.Key.ClusterInstKey = testAutoClusterInstKey
+	expectedV1.Key.ClusterInstKey.CloudletKey = testCloudletKey
+	testAppInst.ClusterInstKey = testAutoClusterInstKey
+	res, err = UpgradeAppInstV0toV1(&testAppInst)
+	assert.Nil(t, err, "Unable to check correct version")
+	assert.NotNil(t, res, "didn't get a new app back")
+	assert.Equal(t, &expectedV1, res, "autocluster result doesn't match the expected appInst")
 }
 func TestAppInstV1toV0Downgrade(t *testing.T) {
 	testAppInst := appInstV1
