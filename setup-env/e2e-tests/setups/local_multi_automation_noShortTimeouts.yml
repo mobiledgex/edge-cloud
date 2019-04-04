@@ -161,7 +161,7 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-1"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -172,7 +172,7 @@ crms:
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-2"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -183,7 +183,7 @@ crms:
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-3"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -194,7 +194,7 @@ crms:
     apiaddr: "0.0.0.0:55094"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-4"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -205,7 +205,7 @@ crms:
     apiaddr: "0.0.0.0:55095"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-5"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -216,7 +216,7 @@ crms:
     apiaddr: "0.0.0.0:55096"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-6"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -227,7 +227,7 @@ crms:
     apiaddr: "0.0.0.0:55097"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-7"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -238,7 +238,7 @@ crms:
     apiaddr: "0.0.0.0:55098"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-8"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -249,7 +249,7 @@ crms:
     apiaddr: "0.0.0.0:55099"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-9"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -260,7 +260,7 @@ crms:
     apiaddr: "0.0.0.0:55100"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"dmuus"},"name":"tmocloud-10"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -271,7 +271,7 @@ crms:
     apiaddr: "0.0.0.0:55101"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"azure"},"name":"tmocloud-2"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -282,7 +282,7 @@ crms:
     apiaddr: "0.0.0.0:55102"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"gcp"},"name":"tmocloud-2"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
