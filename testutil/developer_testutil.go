@@ -311,16 +311,58 @@ func (s *DummyServer) UpdateDeveloper(ctx context.Context, in *edgeproto.Develop
 }
 
 func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.DeveloperApi_ShowDeveloperServer) error {
-	server.Send(&edgeproto.Developer{})
-	server.Send(&edgeproto.Developer{})
-	server.Send(&edgeproto.Developer{})
+	obj := &edgeproto.Developer{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.Developer{})
+		server.Send(&edgeproto.Developer{})
+		server.Send(&edgeproto.Developer{})
+	}
+	for _, out := range s.Developers {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
 
-type DummyServer struct{}
+type DummyServer struct {
+	Developers       []edgeproto.Developer
+	Flavors          []edgeproto.Flavor
+	ClusterFlavors   []edgeproto.ClusterFlavor
+	Clusters         []edgeproto.Cluster
+	Apps             []edgeproto.App
+	Operators        []edgeproto.Operator
+	Cloudlets        []edgeproto.Cloudlet
+	CloudletInfos    []edgeproto.CloudletInfo
+	ClusterInsts     []edgeproto.ClusterInst
+	ClusterInstInfos []edgeproto.ClusterInstInfo
+	AppInsts         []edgeproto.AppInst
+	AppInstInfos     []edgeproto.AppInstInfo
+	Controllers      []edgeproto.Controller
+	Nodes            []edgeproto.Node
+	CloudletRefss    []edgeproto.CloudletRefs
+	ClusterRefss     []edgeproto.ClusterRefs
+}
 
-func RegisterDummyServer(server *grpc.Server) {
+func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d := &DummyServer{}
+	d.Developers = make([]edgeproto.Developer, 0)
+	d.Flavors = make([]edgeproto.Flavor, 0)
+	d.ClusterFlavors = make([]edgeproto.ClusterFlavor, 0)
+	d.Clusters = make([]edgeproto.Cluster, 0)
+	d.Apps = make([]edgeproto.App, 0)
+	d.Operators = make([]edgeproto.Operator, 0)
+	d.Cloudlets = make([]edgeproto.Cloudlet, 0)
+	d.CloudletInfos = make([]edgeproto.CloudletInfo, 0)
+	d.ClusterInsts = make([]edgeproto.ClusterInst, 0)
+	d.ClusterInstInfos = make([]edgeproto.ClusterInstInfo, 0)
+	d.AppInsts = make([]edgeproto.AppInst, 0)
+	d.AppInstInfos = make([]edgeproto.AppInstInfo, 0)
+	d.Controllers = make([]edgeproto.Controller, 0)
+	d.Nodes = make([]edgeproto.Node, 0)
+	d.CloudletRefss = make([]edgeproto.CloudletRefs, 0)
+	d.ClusterRefss = make([]edgeproto.ClusterRefs, 0)
 	edgeproto.RegisterDeveloperApiServer(server, d)
 	edgeproto.RegisterFlavorApiServer(server, d)
 	edgeproto.RegisterClusterFlavorApiServer(server, d)
@@ -337,4 +379,5 @@ func RegisterDummyServer(server *grpc.Server) {
 	edgeproto.RegisterNodeApiServer(server, d)
 	edgeproto.RegisterCloudletRefsApiServer(server, d)
 	edgeproto.RegisterClusterRefsApiServer(server, d)
+	return d
 }
