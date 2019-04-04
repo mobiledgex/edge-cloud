@@ -104,7 +104,7 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -117,7 +117,7 @@ crms:
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -129,7 +129,7 @@ crms:
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "{{vm1_internal_ip}}:37001"
     cloudletkey: '{"operator_key":{"name":"azure"},"name":"mexdemo-westindia-cloudlet"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
