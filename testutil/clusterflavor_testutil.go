@@ -292,8 +292,17 @@ func (s *DummyServer) UpdateClusterFlavor(ctx context.Context, in *edgeproto.Clu
 }
 
 func (s *DummyServer) ShowClusterFlavor(in *edgeproto.ClusterFlavor, server edgeproto.ClusterFlavorApi_ShowClusterFlavorServer) error {
-	server.Send(&edgeproto.ClusterFlavor{})
-	server.Send(&edgeproto.ClusterFlavor{})
-	server.Send(&edgeproto.ClusterFlavor{})
+	obj := &edgeproto.ClusterFlavor{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.ClusterFlavor{})
+		server.Send(&edgeproto.ClusterFlavor{})
+		server.Send(&edgeproto.ClusterFlavor{})
+	}
+	for _, out := range s.ClusterFlavors {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }

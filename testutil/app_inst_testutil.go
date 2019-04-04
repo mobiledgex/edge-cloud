@@ -482,36 +482,60 @@ func GetAppInstInfo(t *testing.T, api *AppInstInfoCommonApi, key *edgeproto.AppI
 }
 
 func (s *DummyServer) CreateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_CreateAppInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) DeleteAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_DeleteAppInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) UpdateAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_UpdateAppInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowAppInst(in *edgeproto.AppInst, server edgeproto.AppInstApi_ShowAppInstServer) error {
-	server.Send(&edgeproto.AppInst{})
-	server.Send(&edgeproto.AppInst{})
-	server.Send(&edgeproto.AppInst{})
+	obj := &edgeproto.AppInst{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.AppInst{})
+		server.Send(&edgeproto.AppInst{})
+		server.Send(&edgeproto.AppInst{})
+	}
+	for _, out := range s.AppInsts {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowAppInstInfo(in *edgeproto.AppInstInfo, server edgeproto.AppInstInfoApi_ShowAppInstInfoServer) error {
-	server.Send(&edgeproto.AppInstInfo{})
-	server.Send(&edgeproto.AppInstInfo{})
-	server.Send(&edgeproto.AppInstInfo{})
+	obj := &edgeproto.AppInstInfo{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.AppInstInfo{})
+		server.Send(&edgeproto.AppInstInfo{})
+		server.Send(&edgeproto.AppInstInfo{})
+	}
+	for _, out := range s.AppInstInfos {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
