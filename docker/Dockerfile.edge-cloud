@@ -24,7 +24,7 @@ RUN make clean
 ENV CGO_ENABLED=0
 RUN make
 
-FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.12-19-gbf7c504
+FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-2-gdbcb89c
 COPY --from=build /go/bin/controller /usr/local/bin
 COPY --from=build /go/bin/crmserver /usr/local/bin
 COPY --from=build /go/bin/dme-server /usr/local/bin
