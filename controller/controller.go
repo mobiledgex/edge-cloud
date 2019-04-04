@@ -18,6 +18,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	etcd "github.com/mobiledgex/edge-cloud/controller/etcd_client"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -76,7 +77,7 @@ func main() {
 		etcdUrls = &etcdServer.Config.ClientUrls
 		defer etcdServer.Stop()
 	}
-	objStore, err := GetEtcdClientBasic(*etcdUrls)
+	objStore, err := etcd.GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
 		log.FatalLog("Failed to initialize Object Store", "err", err)
 	}
@@ -210,7 +211,6 @@ func main() {
 }
 
 func InitApis(sync *Sync) {
-	
 	InitDeveloperApi(sync)
 	InitAppApi(sync)
 	InitOperatorApi(sync)

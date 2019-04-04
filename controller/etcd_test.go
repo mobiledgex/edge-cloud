@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	etcd_client "github.com/mobiledgex/edge-cloud/controller/etcd_client"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/stretchr/testify/assert"
@@ -324,7 +325,7 @@ func TestEtcdReal(t *testing.T) {
 	_, err = os.Stat(etcd.Config.LogFile)
 	assert.Nil(t, err, "Stat log file %s", etcd.Config.LogFile)
 
-	objStore, err := GetEtcdClientBasic(etcd.Config.ClientUrls)
+	objStore, err := etcd_client.GetEtcdClientBasic(etcd.Config.ClientUrls)
 	assert.Nil(t, err, "Etcd client")
 	if err != nil {
 		return
