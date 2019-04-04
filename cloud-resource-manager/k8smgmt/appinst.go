@@ -2,6 +2,7 @@ package k8smgmt
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -36,10 +37,15 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 }
 
 func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+	log.DebugLog(log.DebugLevelMexos, "deleting app", "name", names.AppName)
 	cmd := fmt.Sprintf("%s kubectl delete -f %s.yaml", names.KconfEnv, names.AppName)
 	out, err := client.Output(cmd)
 	if err != nil {
-		return fmt.Errorf("error deleting kuberknetes app, %s, %s, %s, %v", names.AppName, cmd, out, err)
+		if strings.Contains(string(out), "not found") {
+			log.DebugLog(log.DebugLevelMexos, "app not found, cannot delete", "name", names.AppName)
+		} else {
+			return fmt.Errorf("error deleting kuberknetes app, %s, %s, %s, %v", names.AppName, cmd, out, err)
+		}
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", names.AppName)
 	return nil
