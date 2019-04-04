@@ -63,10 +63,19 @@ func InitRolePerms() error {
 
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionManage)
 	enforcer.AddPolicy(RoleDeveloperManager, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleDeveloperContributor, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleDeveloperViewer, ResourceUsers, ActionView)
+
 	enforcer.AddPolicy(RoleOperatorManager, ResourceUsers, ActionManage)
 	enforcer.AddPolicy(RoleOperatorManager, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleOperatorContributor, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleOperatorViewer, ResourceUsers, ActionView)
+
 	enforcer.AddPolicy(RoleAdminManager, ResourceUsers, ActionManage)
 	enforcer.AddPolicy(RoleAdminManager, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleAdminContributor, ResourceUsers, ActionView)
+	enforcer.AddPolicy(RoleAdminViewer, ResourceUsers, ActionView)
+
 	for _, str := range DeveloperResources {
 		enforcer.AddPolicy(RoleDeveloperManager, str, ActionManage)
 		enforcer.AddPolicy(RoleDeveloperManager, str, ActionView)
@@ -79,6 +88,18 @@ func InitRolePerms() error {
 		enforcer.AddPolicy(RoleAdminContributor, str, ActionView)
 		enforcer.AddPolicy(RoleAdminViewer, str, ActionView)
 	}
+	enforcer.AddPolicy(RoleDeveloperManager, ResourceCloudlets, ActionView)
+	enforcer.AddPolicy(RoleDeveloperContributor, ResourceCloudlets, ActionView)
+	enforcer.AddPolicy(RoleDeveloperViewer, ResourceCloudlets, ActionView)
+
+	enforcer.AddPolicy(RoleDeveloperManager, ResourceFlavors, ActionView)
+	enforcer.AddPolicy(RoleDeveloperContributor, ResourceFlavors, ActionView)
+	enforcer.AddPolicy(RoleDeveloperViewer, ResourceFlavors, ActionView)
+
+	enforcer.AddPolicy(RoleDeveloperManager, ResourceClusterFlavors, ActionView)
+	enforcer.AddPolicy(RoleDeveloperContributor, ResourceClusterFlavors, ActionView)
+	enforcer.AddPolicy(RoleDeveloperViewer, ResourceClusterFlavors, ActionView)
+
 	for _, str := range OperatorResources {
 		enforcer.AddPolicy(RoleOperatorManager, str, ActionManage)
 		enforcer.AddPolicy(RoleOperatorManager, str, ActionView)

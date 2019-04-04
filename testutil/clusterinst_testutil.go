@@ -480,36 +480,60 @@ func GetClusterInstInfo(t *testing.T, api *ClusterInstInfoCommonApi, key *edgepr
 }
 
 func (s *DummyServer) CreateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_CreateClusterInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) DeleteClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) UpdateClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_UpdateClusterInstServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowClusterInst(in *edgeproto.ClusterInst, server edgeproto.ClusterInstApi_ShowClusterInstServer) error {
-	server.Send(&edgeproto.ClusterInst{})
-	server.Send(&edgeproto.ClusterInst{})
-	server.Send(&edgeproto.ClusterInst{})
+	obj := &edgeproto.ClusterInst{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.ClusterInst{})
+		server.Send(&edgeproto.ClusterInst{})
+		server.Send(&edgeproto.ClusterInst{})
+	}
+	for _, out := range s.ClusterInsts {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowClusterInstInfo(in *edgeproto.ClusterInstInfo, server edgeproto.ClusterInstInfoApi_ShowClusterInstInfoServer) error {
-	server.Send(&edgeproto.ClusterInstInfo{})
-	server.Send(&edgeproto.ClusterInstInfo{})
-	server.Send(&edgeproto.ClusterInstInfo{})
+	obj := &edgeproto.ClusterInstInfo{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.ClusterInstInfo{})
+		server.Send(&edgeproto.ClusterInstInfo{})
+		server.Send(&edgeproto.ClusterInstInfo{})
+	}
+	for _, out := range s.ClusterInstInfos {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }

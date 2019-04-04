@@ -74,6 +74,6 @@ service ClusterFlavorApi {
       post: "/show/clusterflavor"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionView,";
+    option (protogen.mc2_api) = "ResourceClusterFlavors,ActionView,skipenforce";
   }
 }
