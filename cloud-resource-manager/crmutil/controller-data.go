@@ -5,6 +5,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -254,6 +255,20 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 				appInst.ClusterInstKey.ClusterKey.Name)
 			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
 			return
+		}
+		clusterflavor := edgeproto.ClusterFlavor{}
+		flavorFound = cd.ClusterFlavorCache.Get(&clusterInst.Flavor, &clusterflavor)
+		if !flavorFound {
+			str := fmt.Sprintf("Cluster Flavor %s not found",
+				clusterInst.Flavor.Name)
+			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
+			return
+		}
+
+		err := cloudcommon.UpdateDeploygenConfig(&app, "Replicas", int(clusterflavor.NumNodes))
+		if err != nil {
+			// Ignore this error, just log it
+			log.DebugLog(log.DebugLevelMexos, "Failed to update deploygen-config", "error", err)
 		}
 
 		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)

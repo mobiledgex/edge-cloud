@@ -19,15 +19,16 @@ type PortSpec struct {
 }
 
 type AppSpec struct {
-	Name        string     `json:"name"`
-	DevName     string     `json:"devname"`
-	Version     string     `json:"version"`
-	ImagePath   string     `json:"imagepath"`
-	ImageType   string     `json:"imagetype"`
-	Command     string     `json:"command"`
-	Config      string     `json:"config"`
-	Annotations string     `json:"annotations"`
-	Ports       []PortSpec `json:"ports"`
+	Name        string                  `json:"name"`
+	DevName     string                  `json:"devname"`
+	Version     string                  `json:"version"`
+	ImagePath   string                  `json:"imagepath"`
+	ImageType   string                  `json:"imagetype"`
+	Command     string                  `json:"command"`
+	Config      string                  `json:"config"`
+	Annotations string                  `json:"annotations"`
+	Ports       []PortSpec              `json:"ports"`
+	Configs     []*edgeproto.ConfigFile `json:"configs"`
 }
 
 func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
@@ -39,6 +40,7 @@ func NewAppSpec(app *edgeproto.App) (*AppSpec, error) {
 		ImageType:   edgeproto.ImageType_name[int32(app.ImageType)],
 		Command:     app.Command,
 		Annotations: app.Annotations,
+		Configs:     app.Configs,
 	}
 	if app.AccessPorts == "" {
 		return out, nil

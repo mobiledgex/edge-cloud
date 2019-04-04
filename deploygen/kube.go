@@ -2,10 +2,14 @@ package deploygen
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"text/template"
 
+	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/util"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var kubeLbT *template.Template
@@ -121,6 +125,27 @@ spec:
     run: {{.Run}}
 `
 
+type ConfigVars struct {
+	Replicas int
+}
+
+const DeploygenConfigVars = "deploygen-config"
+
+func UnmarshalDeploygenConfig(configs []*edgeproto.ConfigFile) (ConfigVars, error) {
+	configVars := ConfigVars{}
+
+	for _, v := range configs {
+		if v.Kind == DeploygenConfigVars {
+			if err := yaml.Unmarshal([]byte(v.Config), &configVars); err != nil {
+				err = fmt.Errorf("cannot unmarshal config vars, kind %s, "+
+					"config %s, error %s", v.Kind, v.Config, err)
+				return configVars, err
+			}
+		}
+	}
+	return configVars, nil
+}
+
 func (g *kubeBasicGen) kubeApp() {
 	if g.err != nil {
 		return
@@ -129,6 +154,19 @@ func (g *kubeBasicGen) kubeApp() {
 	if g.app.Command != "" {
 		cs = strings.Split(g.app.Command, " ")
 	}
+
+	// By default, replicas is set to 1
+	replicas := 1
+
+	configVars, err := UnmarshalDeploygenConfig(g.app.Configs)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "Unmarshal error", "error", err)
+		return
+	}
+	if configVars.Replicas > 0 {
+		replicas = configVars.Replicas
+	}
+
 	data := appData{
 		Name:      util.DNSSanitize(g.app.Name + "-deployment"),
 		DNSName:   util.DNSSanitize(g.app.Name),
@@ -136,7 +174,9 @@ func (g *kubeBasicGen) kubeApp() {
 		Ports:     g.ports,
 		ImagePath: g.app.ImagePath,
 		Command:   cs,
+		Replicas:  replicas,
 	}
+
 	buf := bytes.Buffer{}
 	g.err = kubeAppT.Execute(&buf, &data)
 	if g.err != nil {
@@ -152,6 +192,7 @@ type appData struct {
 	ImagePath string
 	Ports     []kubePort
 	Command   []string
+	Replicas  int
 }
 
 var appTemplate = `apiVersion: apps/v1
@@ -162,7 +203,7 @@ spec:
   selector:
     matchLabels:
       run: {{.Run}}
-  replicas: 1
+  replicas: {{.Replicas}}
   template:
     metadata:
       labels:
