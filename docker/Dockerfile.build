@@ -16,7 +16,7 @@ ENV GOVERS 1.12.1
 ENV PROTOCVERS 3.6.0
 
 RUN apt-get update
-RUN apt-get install -y wget curl unzip  make git
+RUN apt-get install -y wget curl unzip  make git build-essential
 RUN wget --quiet https://dl.google.com/go/go${GOVERS}.linux-amd64.tar.gz
 RUN tar xf go${GOVERS}.linux-amd64.tar.gz
 RUN mv go/* /usr/local/
