@@ -109,6 +109,10 @@ apps:
   cluster:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
+  configs:
+  - kind: deploygenConfig
+    config: |
+      - replicas: 4
 
 appinstances:
 - key:

@@ -14,9 +14,9 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	if err != nil {
 		return err
 	}
-	mf, err = MergeEnvVars(mf, app.Configs)
+	mf, err = MergeConfigsVars(client, names, mf, app.Configs)
 	if err != nil {
-		log.DebugLog(log.DebugLevelMexos, "failed to merge env vars", "error", err)
+		log.DebugLog(log.DebugLevelMexos, "failed to merge Configs vars", "error", err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "writing config file", "kubeManifest", mf)
 	file := names.AppName + ".yaml"

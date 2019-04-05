@@ -8,7 +8,6 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	yaml "gopkg.in/yaml.v2"
 )
 
 var AppDeploymentTypeKubernetes = "kubernetes"
@@ -120,44 +119,4 @@ func GetRemoteManifest(target string) (string, error) {
 		return "", err
 	}
 	return string(manifestBytes), nil
-}
-
-/*
- * Update specific field in Configs of kind "deploygen-config"
- * If updated, then regenerate manifest file
- */
-func UpdateDeploygenConfig(app *edgeproto.App, key string, value int) error {
-	configVars, err := deploygen.UnmarshalDeploygenConfig(app.Configs)
-	if err != nil {
-		return err
-	}
-	if key != "Replicas" {
-		return nil
-	}
-	// Proceed only if replicas is not set
-	if configVars.Replicas > 0 {
-		return nil
-	}
-	if value <= 0 {
-		return fmt.Errorf("Incorrect value %d", value)
-	}
-
-	configVars.Replicas = value
-
-	newConfig, err := yaml.Marshal(&configVars)
-	if err != nil {
-		return err
-	}
-	for _, v := range app.Configs {
-		if v.Kind == deploygen.DeploygenConfigVars {
-			v.Config = string(newConfig)
-			break
-		}
-	}
-	deploymf, err := GetAppDeploymentManifest(app)
-	if err != nil {
-		return err
-	}
-	app.DeploymentManifest = deploymf
-	return nil
 }

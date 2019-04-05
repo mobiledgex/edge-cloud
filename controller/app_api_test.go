@@ -4,10 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 func TestAppApi(t *testing.T) {
@@ -37,5 +39,37 @@ func TestAppApi(t *testing.T) {
 
 	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)
 
+	// Test replicas being set via deploygenConfig (replicas: 5)
+	app_mf := appApi.cache.Objs[testutil.AppData[0].Key].DeploymentManifest
+	objs, _, err := cloudcommon.DecodeK8SYaml(app_mf)
+	assert.Nil(t, err, "Decode K8s deployment manifest file")
+
+	for i, _ := range objs {
+		deployment, ok := objs[i].(*appsv1.Deployment)
+		if !ok {
+			continue
+		}
+		assert.Equal(t, int32(5), *deployment.Spec.Replicas, "Replicas count is set correctly (5)")
+		break
+	}
+
+	// Test replicas being set via deploygenConfig (replicas: )
+	app_mf = appApi.cache.Objs[testutil.AppData[2].Key].DeploymentManifest
+	objs, _, err = cloudcommon.DecodeK8SYaml(app_mf)
+	assert.Nil(t, err, "Decode K8s deployment manifest file")
+
+	for i, _ := range objs {
+		deployment, ok := objs[i].(*appsv1.Deployment)
+		if !ok {
+			continue
+		}
+		assert.Equal(t, int32(1), *deployment.Spec.Replicas, "Replicas count is set correctly (1)")
+		break
+	}
+
 	dummy.Stop()
+}
+
+type K8sMgmtConfig struct {
+	ReplicaPolicy string `yaml:"replicaPolicy"`
 }

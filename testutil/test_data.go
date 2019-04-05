@@ -150,6 +150,12 @@ var AppData = []edgeproto.App{
 		AccessPorts:   "http:443,tcp:10002,udp:10002",
 		DefaultFlavor: FlavorData[0].Key,
 		Cluster:       ClusterData[0].Key,
+		Configs: []*edgeproto.ConfigFile{
+			&edgeproto.ConfigFile{
+				Kind:   "deploygenConfig",
+				Config: "replicas: 5",
+			},
+		},
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{
@@ -170,6 +176,12 @@ var AppData = []edgeproto.App{
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
 		AccessPorts:   "tcp:443,udp:11111",
 		DefaultFlavor: FlavorData[1].Key,
+		Configs: []*edgeproto.ConfigFile{
+			&edgeproto.ConfigFile{
+				Kind:   "deploygenConfig",
+				Config: "replicas: ",
+			},
+		},
 	},
 	edgeproto.App{
 		Key: edgeproto.AppKey{

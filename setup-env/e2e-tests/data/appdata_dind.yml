@@ -110,6 +110,9 @@ apps:
         value: value1
       - name: SOME_ENV2
         value: value2
+  - kind: k8smgmtConfig
+    config: |
+      replicaPolicy: "match-cluster-nodes"
 
 appinstances:
 - key:

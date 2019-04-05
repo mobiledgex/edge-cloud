@@ -3,8 +3,10 @@ package k8smgmt
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -14,12 +16,38 @@ import (
 	"k8s.io/cli-runtime/pkg/printers"
 )
 
-const AppConfigEnvYaml = "envVarsYaml"
+const (
+	AppConfigEnvYaml  = "envVarsYaml"
+	k8smgmtConfigVars = "k8smgmtConfig"
+)
 
-// Merge in all the environment variables into
-func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string, error) {
+type K8sMgmtConfig struct {
+	ReplicaPolicy string `yaml:"replicaPolicy"`
+}
+
+func GetKubeNodeCount(client pc.PlatformClient, names *KubeNames) (int, error) {
+	log.DebugLog(log.DebugLevelMexos, "fetching kubectl node count (excluding master)")
+	cmd := fmt.Sprintf("%s kubectl get nodes -l node-role.kubernetes.io/master!= --no-headers | wc -l", names.KconfEnv)
+
+	out, err := client.Output(cmd)
+	if err != nil {
+		return 0, fmt.Errorf("error fetching kubernetes node count, %s, %v", out, err)
+	}
+	count, err := strconv.Atoi(strings.TrimSpace(out))
+	if err != nil {
+		return 0, fmt.Errorf("error parsing kubernetes node count, %s, %v", out, err)
+	}
+	return count, nil
+}
+
+// Merge in all the "configs" settings into manifest file
+func MergeConfigsVars(client pc.PlatformClient, names *KubeNames, kubeManifest string, configs []*edgeproto.ConfigFile) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
+	setConfig := false
+	replicas := 0
+
+	log.DebugLog(log.DebugLevelMexos, "merge configs vars into k8s manifest file")
 	//quick bail, if nothing to do
 	if len(configs) == 0 {
 		return kubeManifest, nil
@@ -34,14 +62,30 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 					"config", v.Config, "error", err1)
 			} else {
 				envVars = append(envVars, curVars...)
+				setConfig = true
+			}
+		} else if v.Kind == k8smgmtConfigVars {
+			k8sconfig := K8sMgmtConfig{}
+			if err := yaml.Unmarshal([]byte(v.Config), &k8sconfig); err != nil {
+				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal k8smgmt config", "kind", v.Kind,
+					"config", v.Config, "error", err)
+			} else {
+				if k8sconfig.ReplicaPolicy == "match-cluster-nodes" {
+					replicas, err = GetKubeNodeCount(client, names)
+					if err != nil {
+						log.DebugLog(log.DebugLevelMexos, "k8mgmt config error", "error", err)
+					}
+					setConfig = true
+				}
 			}
 		}
 	}
+
 	//nothing to do if no variables to merge
-	if len(envVars) == 0 {
+	if !setConfig {
 		return kubeManifest, nil
 	}
-	log.DebugLog(log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
+
 	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
 	if err != nil {
 		return mf, err
@@ -59,10 +103,20 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 		if !ok {
 			continue
 		}
-		//walk the containers and append environment variables to each
-		for i, _ := range deployment.Spec.Template.Spec.Containers {
-			deployment.Spec.Template.Spec.Containers[i].Env =
-				append(deployment.Spec.Template.Spec.Containers[i].Env, envVars...)
+		if len(envVars) > 0 {
+			log.DebugLog(log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
+			//walk the containers and append environment variables to each
+			for i, _ := range deployment.Spec.Template.Spec.Containers {
+				deployment.Spec.Template.Spec.Containers[i].Env =
+					append(deployment.Spec.Template.Spec.Containers[i].Env, envVars...)
+			}
+		}
+
+		if replicas > 0 {
+			log.DebugLog(log.DebugLevelMexos, "Set replicas to match number of cluster nodes",
+				"replicas", replicas)
+			nreplicas := int32(replicas)
+			deployment.Spec.Replicas = &nreplicas
 		}
 		//there should only be one deployment object, so break out of the loop
 		break

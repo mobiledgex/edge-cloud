@@ -129,10 +129,16 @@ type ConfigVars struct {
 	Replicas int
 }
 
-const DeploygenConfigVars = "deploygen-config"
+const (
+	DeploygenConfigVars = "deploygenConfig"
+	DefaultReplicas     = 1
+)
 
 func UnmarshalDeploygenConfig(configs []*edgeproto.ConfigFile) (ConfigVars, error) {
 	configVars := ConfigVars{}
+
+	// By default, Replicas is set to 1
+	configVars.Replicas = DefaultReplicas
 
 	for _, v := range configs {
 		if v.Kind == DeploygenConfigVars {
@@ -140,6 +146,9 @@ func UnmarshalDeploygenConfig(configs []*edgeproto.ConfigFile) (ConfigVars, erro
 				err = fmt.Errorf("cannot unmarshal config vars, kind %s, "+
 					"config %s, error %s", v.Kind, v.Config, err)
 				return configVars, err
+			}
+			if configVars.Replicas == 0 {
+				configVars.Replicas = DefaultReplicas
 			}
 		}
 	}
@@ -155,16 +164,10 @@ func (g *kubeBasicGen) kubeApp() {
 		cs = strings.Split(g.app.Command, " ")
 	}
 
-	// By default, replicas is set to 1
-	replicas := 1
-
 	configVars, err := UnmarshalDeploygenConfig(g.app.Configs)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "Unmarshal error", "error", err)
 		return
-	}
-	if configVars.Replicas > 0 {
-		replicas = configVars.Replicas
 	}
 
 	data := appData{
@@ -174,7 +177,7 @@ func (g *kubeBasicGen) kubeApp() {
 		Ports:     g.ports,
 		ImagePath: g.app.ImagePath,
 		Command:   cs,
-		Replicas:  replicas,
+		Replicas:  configVars.Replicas,
 	}
 
 	buf := bytes.Buffer{}
