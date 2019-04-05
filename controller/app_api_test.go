@@ -69,7 +69,3 @@ func TestAppApi(t *testing.T) {
 
 	dummy.Stop()
 }
-
-type K8sMgmtConfig struct {
-	ReplicaPolicy string `yaml:"replicaPolicy"`
-}
