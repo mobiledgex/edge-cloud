@@ -71,14 +71,16 @@ func (s *AppInstApi) HasKey(key *edgeproto.AppInstKey) bool {
 }
 
 func (s *AppInstApi) UsesCloudlet(in *edgeproto.CloudletKey, dynInsts map[edgeproto.AppInstKey]struct{}) bool {
+	var app edgeproto.App
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	static := false
 	for key, val := range s.cache.Objs {
-		if key.CloudletKey.Matches(in) {
-			if val.Liveness == edgeproto.Liveness_LivenessStatic {
+		if key.CloudletKey.Matches(in) && appApi.Get(&val.Key.AppKey, &app) {
+			if (val.Liveness == edgeproto.Liveness_LivenessStatic) && (app.DelOpt == edgeproto.DeleteType_NoAutoDelete) {
 				static = true
-			} else if val.Liveness == edgeproto.Liveness_LivenessDynamic {
+				//if can autodelete it then also add it to the dynInsts to be deleted later
+			} else if (val.Liveness == edgeproto.Liveness_LivenessDynamic) || (app.DelOpt == edgeproto.DeleteType_AutoDelete) {
 				dynInsts[key] = struct{}{}
 			}
 		}
