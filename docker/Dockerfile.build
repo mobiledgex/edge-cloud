@@ -10,17 +10,20 @@
 # All the tools will be inside the docker.
 #
 
-FROM ubuntu:latest AS build
+FROM ubuntu:18.04 AS build
+
+ENV GOVERS 1.12.1
+ENV PROTOCVERS 3.6.0
 
 RUN apt-get update
 RUN apt-get install -y wget curl unzip  make git
-RUN wget --quiet https://dl.google.com/go/go1.10.2.linux-amd64.tar.gz
-RUN tar xf go1.10.2.linux-amd64.tar.gz
+RUN wget --quiet https://dl.google.com/go/go${GOVERS}.linux-amd64.tar.gz
+RUN tar xf go${GOVERS}.linux-amd64.tar.gz
 RUN mv go/* /usr/local/
 RUN rmdir go 
 RUN rm *.gz
-RUN wget https://github.com/google/protobuf/releases/download/v3.6.0/protoc-3.6.0-linux-x86_64.zip
-RUN unzip protoc-3.6.0-linux-x86_64.zip
+RUN wget https://github.com/google/protobuf/releases/download/v${PROTOCVERS}/protoc-${PROTOCVERS}-linux-x86_64.zip
+RUN unzip protoc-${PROTOCVERS}-linux-x86_64.zip
 RUN mv bin/protoc /usr/local/bin
 RUN mv include/google /usr/local/include/
 RUN mkdir -p /root/go/bin
