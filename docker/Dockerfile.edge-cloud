@@ -10,7 +10,7 @@
 # All the tools will be inside the docker.
 #
 
-FROM registry.mobiledgex.net:5000/mobiledgex/build AS build
+FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.12.1 AS build
 
 WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
 ENV GOPATH=/go
