@@ -12,16 +12,19 @@
 
 FROM registry.mobiledgex.net:5000/mobiledgex/build:go1.12.1 AS build
 
-WORKDIR /go/src/github.com/mobiledgex/edge-cloud/
 ENV GOPATH=/go
 ENV PATH="/go/bin:${PATH}"
-COPY . .
+WORKDIR /go/src/github.com/mobiledgex
+COPY edge-cloud edge-cloud
+COPY edge-cloud-infra edge-cloud-infra
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud
 RUN go get github.com/grpc-ecosystem/grpc-gateway; exit 0
 RUN go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc; exit 0
 RUN go get github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger; exit 0
 RUN make tools
 RUN make clean
-ENV CGO_ENABLED=0
+ENV CGO_ENABLED=1
+WORKDIR /go/src/github.com/mobiledgex/edge-cloud-infra
 RUN make
 
 FROM registry.mobiledgex.net:5000/mobiledgex/edge-cloud-base-image:v0.0.14-2-gdbcb89c
@@ -33,17 +36,18 @@ COPY --from=build /go/bin/edgectl /usr/local/bin
 COPY --from=build /go/bin/tok-srv-sim /usr/local/bin
 COPY --from=build /go/bin/loc-api-sim /usr/local/bin
 COPY --from=build /go/bin/mc /usr/local/bin
+COPY --from=build /go/plugins /plugins
 
-ADD docker/mex-docker.env /root/mex-docker.env
-ADD docker/edge-cloud-entrypoint.sh /usr/local/bin
-ADD docker/test-edgectl.sh /usr/local/bin
-ADD tls/out/mex-ca.crt /root/tls/mex-ca.crt
-ADD tls/out/mex-server.crt /root/tls/mex-server.crt
-ADD tls/out/mex-server.key /root/tls/mex-server.key
-ADD docker/beredgecloudtelekomde.crt /root/.mobiledgex/beredgecloudtelekomde.crt
-ADD docker/bonnedgecloudtelekomde.crt /root/.mobiledgex/bonnedgecloudtelekomde.crt
-ADD docker/fraedgecloudtelekomde.crt /root/.mobiledgex/fraedgecloudtelekomde.crt
-ADD docker/telesec_chain.crt /root/.mobiledgex/telesec_chain.crt
+ADD edge-cloud/docker/mex-docker.env /root/mex-docker.env
+ADD edge-cloud/docker/edge-cloud-entrypoint.sh /usr/local/bin
+ADD edge-cloud/docker/test-edgectl.sh /usr/local/bin
+ADD edge-cloud/tls/out/mex-ca.crt /root/tls/mex-ca.crt
+ADD edge-cloud/tls/out/mex-server.crt /root/tls/mex-server.crt
+ADD edge-cloud/tls/out/mex-server.key /root/tls/mex-server.key
+ADD edge-cloud/docker/beredgecloudtelekomde.crt /root/.mobiledgex/beredgecloudtelekomde.crt
+ADD edge-cloud/docker/bonnedgecloudtelekomde.crt /root/.mobiledgex/bonnedgecloudtelekomde.crt
+ADD edge-cloud/docker/fraedgecloudtelekomde.crt /root/.mobiledgex/fraedgecloudtelekomde.crt
+ADD edge-cloud/docker/telesec_chain.crt /root/.mobiledgex/telesec_chain.crt
 RUN chmod +x /usr/local/bin/edge-cloud-entrypoint.sh /usr/local/bin/test-edgectl.sh
 #RUN apt-get update
 #RUN apt -y install openssh-server

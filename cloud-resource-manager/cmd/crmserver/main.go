@@ -162,7 +162,7 @@ func getPlatform(plat string) (pf.Platform, error) {
 	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", *solib)
 	plug, err := plugin.Open(*solib)
 	if err != nil {
-		log.FatalLog("failed to load plugin", "plugin", *solib)
+		log.FatalLog("failed to load plugin", "plugin", *solib, "error", err)
 	}
 	sym, err := plug.Lookup("GetPlatform")
 	if err != nil {
