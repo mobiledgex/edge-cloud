@@ -3,13 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
-	mexlog "github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	upgrade "github.com/mobiledgex/edge-cloud/upgrade/upgradeutil"
 )
@@ -19,14 +18,14 @@ var yamlFile = flag.String("yaml", "", "File to be upgraded")
 var outputFile = flag.String("output", "upgrade.yml", "Output yaml file(if theinput is a yaml file)")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
 var upgradeFuncName = flag.String("upgrade", "", "Upgrade function to run")
-var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", mexlog.DebugLevelStrings))
+var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v", log.DebugLevelStrings))
 
 func main() {
 	// Running count of upgraded entries
 	var upgCnt uint
 	var err error
 	flag.Parse()
-	mexlog.SetDebugLevelStrs(*debugLevels)
+	log.SetDebugLevelStrs(*debugLevels)
 	fmt.Printf("Using function %s to upgrade\n", *upgradeFuncName)
 	// Upgrading an input yaml file
 	if *yamlFile != "" {
@@ -41,16 +40,16 @@ func main() {
 
 		uf, found := upgrade.UpgradeYamlFuncs[*upgradeFuncName]
 		if !found {
-			log.Fatalf("Upgrade function %s not found.", *upgradeFuncName)
+			panic(fmt.Errorf("Upgrade function %s not found.", *upgradeFuncName))
 		}
 
 		upgradeFunc, ok := uf.(func(string) (*edgeproto.ApplicationData, uint, error))
 		if !ok {
-			log.Fatalf("Upgrade function if invalid %v\n", uf)
+			panic(fmt.Errorf("Upgrade function if invalid %v\n", uf))
 		}
 		appData, upgCnt, err = upgradeFunc(*yamlFile)
 		if err != nil {
-			log.Fatalf("Failed to do upgrade a file(%s) err:%v\n", *upgradeFuncName, err)
+			panic(fmt.Errorf("Failed to do upgrade a file(%s) err:%v\n", *upgradeFuncName, err))
 		}
 		outdir := filepath.Dir(*outputFile)
 		outfile := filepath.Base(*outputFile)
@@ -60,15 +59,15 @@ func main() {
 		// Upgrading a running etcd database
 		uf, found := upgrade.UpgradeFuncs[*upgradeFuncName]
 		if !found {
-			log.Fatalf("Upgrade function %s not found.", *upgradeFuncName)
+			panic(fmt.Errorf("Upgrade function %s not found.", *upgradeFuncName))
 		}
 		upgradeFunc, ok := uf.(func(string, uint) (uint, error))
 		if !ok {
-			log.Fatalf("Upgrade function if invalid %v\n", uf)
+			panic(fmt.Errorf("Upgrade function if invalid %v\n", uf))
 		}
 
 		if upgCnt, err = upgradeFunc(*etcdUrls, *region); err != nil {
-			log.Fatalf("Failed to upgrade etcd database, err: %v\n", err)
+			panic(fmt.Errorf("Failed to upgrade etcd database, err: %v\n", err))
 		}
 	}
 	fmt.Printf("Object upgrade complete - Updated %d entries\n", upgCnt)

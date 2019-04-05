@@ -13,7 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
-var ErrUpgradNotSupported = errors.New("Unsupported upgrade path")
+var ErrUpgradeNotSupported = errors.New("Unsupported upgrade path")
 
 // Map of the names to upgrade functions
 var UpgradeFuncs = map[string]interface{}{
@@ -29,7 +29,7 @@ func UpgradeAppInstV0toV1(appInst *AppInstV0) (*edgeproto.AppInst, error) {
 	if appInst.Version != 0 {
 		log.DebugLog(log.DebugLevelUpgrade, "Already at a non zero version", "key", appInst.Key,
 			"version", appInst.Version)
-		return nil, ErrUpgradNotSupported
+		return nil, ErrUpgradeNotSupported
 	}
 	newAppInst := edgeproto.AppInst{}
 	newAppInst.Fields = appInst.Fields
@@ -56,7 +56,7 @@ func DowngradeAppInstV1toV0(appInst *edgeproto.AppInst) (*AppInstV0, error) {
 	if appInst.Version != 1 {
 		log.DebugLog(log.DebugLevelUpgrade, "Downgrading an incorrect version", "key", appInst.Key,
 			"version", appInst.Version)
-		return nil, ErrUpgradNotSupported
+		return nil, ErrUpgradeNotSupported
 	}
 	oldAppInst := AppInstV0{}
 	oldAppInst.Fields = appInst.Fields

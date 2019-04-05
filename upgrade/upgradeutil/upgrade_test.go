@@ -72,7 +72,7 @@ func TestAppInstV0toV1Upgrade(t *testing.T) {
 	testAppInst.Version = 1
 	res, err := UpgradeAppInstV0toV1(&testAppInst)
 	assert.Nil(t, res, "upgrade of an incorrect version")
-	assert.EqualError(t, err, ErrUpgradNotSupported.Error(), "incorrect error returned")
+	assert.EqualError(t, err, ErrUpgradeNotSupported.Error(), "incorrect error returned")
 	// test supported upgrade
 	testAppInst.Version = 0
 	res, err = UpgradeAppInstV0toV1(&testAppInst)
@@ -95,7 +95,7 @@ func TestAppInstV1toV0Downgrade(t *testing.T) {
 	testAppInst.Version = 2
 	res, err := DowngradeAppInstV1toV0(&testAppInst)
 	assert.Nil(t, res, "downgrade of an incorrect version")
-	assert.EqualError(t, err, ErrUpgradNotSupported.Error(), "incorrect error returned")
+	assert.EqualError(t, err, ErrUpgradeNotSupported.Error(), "incorrect error returned")
 	// test supported upgrade
 	testAppInst.Version = 1
 	res, err = DowngradeAppInstV1toV0(&testAppInst)
