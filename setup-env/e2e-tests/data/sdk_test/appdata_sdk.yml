@@ -392,7 +392,7 @@ appinstances:
         name: developer
       name: default
   liveness: LivenessStatic
-  uri: mexdemoapp.mexdemo.mobiledgex.net
+  uri: mexdemoapp.mexdemo.mobiledgex.net,mexdemoapp2.mexdemo.mobiledgex.net
   flavor:
     name: x1.small
 
@@ -422,7 +422,7 @@ appinstances:
         name: developer
       name: default
   liveness: LivenessStatic
-  uri: nianticdemo.niantic.mobiledgex.net
+  uri: nianticdemo.niantic.mobiledgex.net,nianticdemo2.niantic.mobiledgex.net
   flavor:
     name: x1.small
 

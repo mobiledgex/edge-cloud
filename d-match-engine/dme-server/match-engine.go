@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -399,7 +400,8 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		if defaultCarrierFound {
 			for _, i := range c.insts {
 				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
-					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDNs: []string{i.uri}, AndroidPackageName: a.androidPackageName}
+					fqdns := strings.Split(i.uri, ",")
+					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDNs: fqdns, AndroidPackageName: a.androidPackageName}
 					clist.AppFqdns = append(clist.AppFqdns, &aq)
 				}
 			}
