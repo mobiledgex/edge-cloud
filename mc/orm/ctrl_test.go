@@ -49,7 +49,7 @@ func TestController(t *testing.T) {
 	ctrlAddr := "127.0.0.1:9998"
 	lis, err := net.Listen("tcp", ctrlAddr)
 	require.Nil(t, err)
-	testutil.RegisterDummyServer(dc)
+	ds := testutil.RegisterDummyServer(dc)
 	go func() {
 		dc.Serve(lis)
 	}()
@@ -85,37 +85,61 @@ func TestController(t *testing.T) {
 	require.Equal(t, ctrl.Region, ctrls[0].Region)
 	require.Equal(t, ctrl.Address, ctrls[0].Address)
 
+	// create admin
+	admin, tokenAd := testCreateUser(t, mcClient, uri, "admin1")
+	testAddUserRole(t, mcClient, uri, token, "", "AdminManager", admin.Name, Success)
+
 	// create a developers
-	_, orgDev, tokenDev := testCreateUserOrg(t, mcClient, uri, "dev", "developer",
-		testutil.DevData[0].Key.Name)
-	_, _, tokenDev2 := testCreateUserOrg(t, mcClient, uri, "dev2", "developer",
-		testutil.DevData[3].Key.Name)
+	org1 := "org1"
+	org2 := "org2"
+	_, _, tokenDev := testCreateUserOrg(t, mcClient, uri, "dev", "developer", org1)
+	_, _, tokenDev2 := testCreateUserOrg(t, mcClient, uri, "dev2", "developer", org2)
 	dev3, tokenDev3 := testCreateUser(t, mcClient, uri, "dev3")
 	dev4, tokenDev4 := testCreateUser(t, mcClient, uri, "dev4")
 	// create an operator
-	_, orgOper, tokenOper := testCreateUserOrg(t, mcClient, uri, "oper", "operator",
-		testutil.OperatorData[0].Key.Name)
-	_, _, tokenOper2 := testCreateUserOrg(t, mcClient, uri, "oper2", "operator",
-		testutil.OperatorData[1].Key.Name)
+	org3 := "org3"
+	org4 := "org4"
+	_, _, tokenOper := testCreateUserOrg(t, mcClient, uri, "oper", "operator", org3)
+	_, _, tokenOper2 := testCreateUserOrg(t, mcClient, uri, "oper2", "operator", org4)
 	oper3, tokenOper3 := testCreateUser(t, mcClient, uri, "oper3")
 	oper4, tokenOper4 := testCreateUser(t, mcClient, uri, "oper4")
 
+	// number of fake objects internally sent back by dummy server
+	icnt := 3
+
+	// number of dummy objects we add of each type and org
+	dcnt := 3
+	addDummyObjs(ds, org1, dcnt)
+	addDummyObjs(ds, org2, dcnt)
+	addDummyObjs(ds, org3, dcnt)
+	addDummyObjs(ds, org4, dcnt)
+
+	// number of objects total of each type (sum of above)
+	count := icnt + 4*dcnt
+
 	// additional users don't have access to orgs yet
-	badPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppData[0])
-	badPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppInstData[0])
-	badPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
+	badPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	badPermTestShowApp(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+
+	badPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	badPermTestShowAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+
+	badPermTestClusterInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	badPermTestShowClusterInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+
+	badPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, org1)
 
 	// add new users to orgs
-	testAddUserRole(t, mcClient, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.Name, Success)
-	testAddUserRole(t, mcClient, uri, tokenDev, orgDev.Name, "DeveloperViewer", dev4.Name, Success)
-	testAddUserRole(t, mcClient, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.Name, Success)
-	testAddUserRole(t, mcClient, uri, tokenOper, orgOper.Name, "OperatorViewer", oper4.Name, Success)
+	testAddUserRole(t, mcClient, uri, tokenDev, org1, "DeveloperContributor", dev3.Name, Success)
+	testAddUserRole(t, mcClient, uri, tokenDev, org1, "DeveloperViewer", dev4.Name, Success)
+	testAddUserRole(t, mcClient, uri, tokenOper, org3, "OperatorContributor", oper3.Name, Success)
+	testAddUserRole(t, mcClient, uri, tokenOper, org3, "OperatorViewer", oper4.Name, Success)
 	// make sure dev/ops without user perms can't add new users
 	user5, _ := testCreateUser(t, mcClient, uri, "user5")
-	testAddUserRole(t, mcClient, uri, tokenDev3, orgDev.Name, "DeveloperViewer", user5.Name, Fail)
-	testAddUserRole(t, mcClient, uri, tokenDev4, orgDev.Name, "DeveloperViewer", user5.Name, Fail)
-	testAddUserRole(t, mcClient, uri, tokenOper3, orgOper.Name, "OperatorViewer", user5.Name, Fail)
-	testAddUserRole(t, mcClient, uri, tokenOper4, orgOper.Name, "OperatorViewer", user5.Name, Fail)
+	testAddUserRole(t, mcClient, uri, tokenDev3, org1, "DeveloperViewer", user5.Name, Fail)
+	testAddUserRole(t, mcClient, uri, tokenDev4, org1, "DeveloperViewer", user5.Name, Fail)
+	testAddUserRole(t, mcClient, uri, tokenOper3, org3, "OperatorViewer", user5.Name, Fail)
+	testAddUserRole(t, mcClient, uri, tokenOper4, org3, "OperatorViewer", user5.Name, Fail)
 
 	// make sure developer and operator cannot see or modify controllers
 	ctrlNew := ormapi.Controller{
@@ -133,42 +157,114 @@ func TestController(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, status)
 	require.Equal(t, 0, len(ctrls))
 
-	// tie cluster insts to dev
-	setClusterInstDev(orgDev.Name, testutil.ClusterInstData)
+	// admin can do everything
+	goodPermTestFlavor(t, mcClient, uri, tokenAd, ctrl.Region, "", icnt)
+	goodPermTestClusterFlavor(t, mcClient, uri, tokenAd, ctrl.Region, "", icnt)
+	goodPermTestCloudlet(t, mcClient, uri, tokenAd, ctrl.Region, org3, count)
+	goodPermTestCloudlet(t, mcClient, uri, tokenAd, ctrl.Region, org4, count)
+	goodPermTestApp(t, mcClient, uri, tokenAd, ctrl.Region, org1, dcnt)
+	goodPermTestApp(t, mcClient, uri, tokenAd, ctrl.Region, org2, dcnt)
+	goodPermTestAppInst(t, mcClient, uri, tokenAd, ctrl.Region, org1, dcnt)
+	goodPermTestAppInst(t, mcClient, uri, tokenAd, ctrl.Region, org2, dcnt)
+	goodPermTestClusterInst(t, mcClient, uri, tokenAd, ctrl.Region, org1, dcnt)
+	goodPermTestClusterInst(t, mcClient, uri, tokenAd, ctrl.Region, org2, dcnt)
+
+	// flavors, clusterflavors, and cloudlets are special - can be seen by all
+	goodPermTestShowFlavor(t, mcClient, uri, tokenDev, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenDev2, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenDev3, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenDev4, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenOper, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenOper2, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenOper3, ctrl.Region, "", icnt)
+	goodPermTestShowFlavor(t, mcClient, uri, tokenOper4, ctrl.Region, "", icnt)
+
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenDev, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenDev2, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenDev3, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenDev4, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenOper, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenOper2, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenOper3, ctrl.Region, "", icnt)
+	goodPermTestShowClusterFlavor(t, mcClient, uri, tokenOper4, ctrl.Region, "", icnt)
+
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenDev, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenDev2, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenDev3, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenDev4, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenOper, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenOper2, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, "", count)
+	goodPermTestShowCloudlet(t, mcClient, uri, tokenOper4, ctrl.Region, "", count)
+	// However, flavors and clusterflavors cannot be modified by non-admins
+	badPermTestFlavor(t, mcClient, uri, tokenDev, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenDev2, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenDev3, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenDev4, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenOper, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenOper2, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenOper3, ctrl.Region, "")
+	badPermTestFlavor(t, mcClient, uri, tokenOper4, ctrl.Region, "")
+
+	badPermTestClusterFlavor(t, mcClient, uri, tokenDev, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenDev2, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenDev3, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenDev4, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenOper, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenOper2, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenOper3, ctrl.Region, "")
+	badPermTestClusterFlavor(t, mcClient, uri, tokenOper4, ctrl.Region, "")
 
 	// make sure operator cannot create apps, appinsts, clusters, etc
-	badPermTestApp(t, mcClient, uri, tokenOper, ctrl.Region, &testutil.AppData[0])
-	badPermTestAppInst(t, mcClient, uri, tokenOper, ctrl.Region, &testutil.AppInstData[0])
-	badPermTestClusterInst(t, mcClient, uri, tokenOper, ctrl.Region, &testutil.ClusterInstData[0])
-	badPermTestApp(t, mcClient, uri, tokenOper2, ctrl.Region, &testutil.AppData[0])
-	badPermTestAppInst(t, mcClient, uri, tokenOper2, ctrl.Region, &testutil.AppInstData[0])
-	badPermTestClusterInst(t, mcClient, uri, tokenOper2, ctrl.Region, &testutil.ClusterInstData[0])
-	// make sure developer cannot create cloudlet
-	badPermTestCloudlet(t, mcClient, uri, tokenDev, ctrl.Region, &testutil.CloudletData[0])
-	badPermTestCloudlet(t, mcClient, uri, tokenDev2, ctrl.Region, &testutil.CloudletData[0])
+	badPermTestApp(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+	badPermTestShowApp(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+
+	badPermTestAppInst(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+	badPermTestShowAppInst(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+
+	badPermTestClusterInst(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+	badPermTestShowClusterInst(t, mcClient, uri, tokenOper, ctrl.Region, org1)
+
+	badPermTestApp(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+	badPermTestShowApp(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+
+	badPermTestAppInst(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+	badPermTestShowAppInst(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+
+	badPermTestClusterInst(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+	badPermTestShowClusterInst(t, mcClient, uri, tokenOper2, ctrl.Region, org1)
+
+	// make sure developer cannot create cloudlet (but they can see all of them)
+	badPermTestCloudlet(t, mcClient, uri, tokenDev, ctrl.Region, org3)
+	badPermTestCloudlet(t, mcClient, uri, tokenDev2, ctrl.Region, org3)
 
 	// test operators can modify their own objs but not each other's
-	permTestCloudlet(t, mcClient, uri, tokenOper, tokenOper2, ctrl.Region,
-		&testutil.CloudletData[0], &testutil.CloudletData[2])
+	badPermTestCloudlet(t, mcClient, uri, tokenOper, ctrl.Region, org4)
+	badPermTestCloudlet(t, mcClient, uri, tokenOper2, ctrl.Region, org3)
+
 	// test developers can modify their own objs but not each other's
 	permTestApp(t, mcClient, uri, tokenDev, tokenDev2, ctrl.Region,
-		&testutil.AppData[0], &testutil.AppData[5])
+		org1, org2, dcnt)
 	permTestAppInst(t, mcClient, uri, tokenDev, tokenDev2, ctrl.Region,
-		&testutil.AppInstData[0], &testutil.AppInstData[5])
+		org1, org2, dcnt)
+	permTestClusterInst(t, mcClient, uri, tokenDev, tokenDev2, ctrl.Region,
+		org1, org2, dcnt)
 	// test users with different roles
-	goodPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppData[0])
-	goodPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppInstData[0])
+	goodPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, org1, dcnt)
+	goodPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1, dcnt)
+	goodPermTestClusterInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1, dcnt)
 	// test users with different roles
-	goodPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
-	goodPermTestClusterInst(t, mcClient, uri, tokenDev, ctrl.Region, &testutil.ClusterInstData[0])
-	badPermTestClusterInst(t, mcClient, uri, tokenDev2, ctrl.Region, &testutil.ClusterInstData[0])
+	goodPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, org3, count)
+	goodPermTestClusterInst(t, mcClient, uri, tokenDev, ctrl.Region, org1, dcnt)
+	badPermTestClusterInst(t, mcClient, uri, tokenDev2, ctrl.Region, org1)
 
 	// remove users from roles, test that they can't modify anything anymore
-	testRemoveUserRole(t, mcClient, uri, tokenDev, orgDev.Name, "DeveloperContributor", dev3.Name, Success)
-	badPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppData[0])
-	badPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, &testutil.AppInstData[0])
-	testRemoveUserRole(t, mcClient, uri, tokenOper, orgOper.Name, "OperatorContributor", oper3.Name, Success)
-	badPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, &testutil.CloudletData[0])
+	testRemoveUserRole(t, mcClient, uri, tokenDev, org1, "DeveloperContributor", dev3.Name, Success)
+	badPermTestApp(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	badPermTestAppInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	badPermTestClusterInst(t, mcClient, uri, tokenDev3, ctrl.Region, org1)
+	testRemoveUserRole(t, mcClient, uri, tokenOper, org3, "OperatorContributor", oper3.Name, Success)
+	badPermTestCloudlet(t, mcClient, uri, tokenOper3, ctrl.Region, org3)
 
 	// delete controller
 	status, err = mcClient.DeleteController(uri, token, &ctrl)
@@ -248,5 +344,25 @@ func testRemoveUserRole(t *testing.T, mcClient *ormclient.Client, uri, token, or
 func setClusterInstDev(dev string, insts []edgeproto.ClusterInst) {
 	for ii, _ := range insts {
 		insts[ii].Key.Developer = dev
+	}
+}
+
+func addDummyObjs(d *testutil.DummyServer, org string, num int) {
+	for ii := 0; ii < num; ii++ {
+		app := edgeproto.App{}
+		app.Key.DeveloperKey.Name = org
+		d.Apps = append(d.Apps, app)
+
+		appinst := edgeproto.AppInst{}
+		appinst.Key.AppKey.DeveloperKey.Name = org
+		d.AppInsts = append(d.AppInsts, appinst)
+
+		cinst := edgeproto.ClusterInst{}
+		cinst.Key.Developer = org
+		d.ClusterInsts = append(d.ClusterInsts, cinst)
+
+		cloudlet := edgeproto.Cloudlet{}
+		cloudlet.Key.OperatorKey.Name = org
+		d.Cloudlets = append(d.Cloudlets, cloudlet)
 	}
 }

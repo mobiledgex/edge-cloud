@@ -146,7 +146,7 @@ service CloudletApi {
       post: "/show/cloudlet"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,skipenforce";
   }
 }
 

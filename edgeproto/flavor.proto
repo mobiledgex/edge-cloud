@@ -69,6 +69,6 @@ service FlavorApi {
       post: "/show/flavor"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceFlavors,ActionView,";
+    option (protogen.mc2_api) = "ResourceFlavors,ActionView,skipenforce";
   }
 }

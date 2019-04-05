@@ -356,8 +356,17 @@ func (s *DummyServer) UpdateApp(ctx context.Context, in *edgeproto.App) (*edgepr
 }
 
 func (s *DummyServer) ShowApp(in *edgeproto.App, server edgeproto.AppApi_ShowAppServer) error {
-	server.Send(&edgeproto.App{})
-	server.Send(&edgeproto.App{})
-	server.Send(&edgeproto.App{})
+	obj := &edgeproto.App{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.App{})
+		server.Send(&edgeproto.App{})
+		server.Send(&edgeproto.App{})
+	}
+	for _, out := range s.Apps {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }

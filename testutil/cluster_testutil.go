@@ -292,8 +292,17 @@ func (s *DummyServer) UpdateCluster(ctx context.Context, in *edgeproto.Cluster) 
 }
 
 func (s *DummyServer) ShowCluster(in *edgeproto.Cluster, server edgeproto.ClusterApi_ShowClusterServer) error {
-	server.Send(&edgeproto.Cluster{})
-	server.Send(&edgeproto.Cluster{})
-	server.Send(&edgeproto.Cluster{})
+	obj := &edgeproto.Cluster{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.Cluster{})
+		server.Send(&edgeproto.Cluster{})
+		server.Send(&edgeproto.Cluster{})
+	}
+	for _, out := range s.Clusters {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
