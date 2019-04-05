@@ -71,7 +71,7 @@ func TestServer(t *testing.T) {
 	policies, status, err := showRolePerms(mcClient, uri, token)
 	require.Nil(t, err, "show role perms err")
 	require.Equal(t, http.StatusOK, status, "show role perms status")
-	require.Equal(t, 82, len(policies), "number of role perms")
+	require.Equal(t, 97, len(policies), "number of role perms")
 	roles, status, err := showRoles(mcClient, uri, token)
 	require.Nil(t, err, "show roles err")
 	require.Equal(t, http.StatusOK, status, "show roles status")
@@ -198,6 +198,29 @@ func TestServer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, http.StatusForbidden, status)
 
+	// create more users
+	user3, token3 := testCreateUser(t, mcClient, uri, "user3")
+	user4, token4 := testCreateUser(t, mcClient, uri, "user4")
+	// add users to org with different roles, make sure they can see users
+	testAddUserRole(t, mcClient, uri, tokenMisterX, org1.Name, "DeveloperContributor", user3.Name, Success)
+	testAddUserRole(t, mcClient, uri, tokenMisterX, org1.Name, "DeveloperViewer", user4.Name, Success)
+	// check that they can see all users in org
+	users, status, err = mcClient.ShowUsers(uri, token3, org1.Name)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, 3, len(users))
+	users, status, err = mcClient.ShowUsers(uri, token4, org1.Name)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusOK, status)
+	require.Equal(t, 3, len(users))
+	// make sure they can't see users from other org
+	users, status, err = mcClient.ShowUsers(uri, token3, org2.Name)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusForbidden, status)
+	users, status, err = mcClient.ShowUsers(uri, token4, org2.Name)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusForbidden, status)
+
 	// delete orgs
 	status, err = mcClient.DeleteOrg(uri, tokenMisterX, &org1)
 	require.Nil(t, err)
@@ -210,6 +233,12 @@ func TestServer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 	status, err = mcClient.DeleteUser(uri, tokenMisterY, &user2)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusOK, status)
+	status, err = mcClient.DeleteUser(uri, token3, user3)
+	require.Nil(t, err)
+	require.Equal(t, http.StatusOK, status)
+	status, err = mcClient.DeleteUser(uri, token4, user4)
 	require.Nil(t, err)
 	require.Equal(t, http.StatusOK, status)
 
