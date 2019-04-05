@@ -1,0 +1,236 @@
+orgs:
+- name: AcmeAppCo
+  type: developer
+  address: 123 Maple Street, Gainesville, FL 32604
+  phone: 123-123-1234
+  adminusername: user2
+- name: platos
+  type: developer
+  address: 1 Samstreet, platos Town, South Korea
+  phone: 123-123-1234
+  adminusername: user2
+
+roles:
+- username: user2
+  org: AcmeAppCo
+  role: DeveloperManager
+- username: user2
+  org: platos
+  role: DeveloperManager
+
+regiondata:
+- region: local
+  appdata:
+    clusterinsts:
+    - key:
+        clusterkey:
+          name: SmallCluster
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-1
+        developer: AcmeAppCo
+      flavor:
+        name: c1.small
+      liveness: LivenessStatic
+      ipaccess: IpAccessDedicated
+      nodeflavor: flavor1
+      masterflavor: flavor1
+    - key:
+        clusterkey:
+          name: SmallCluster
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-2
+        developer: AcmeAppCo
+      flavor:
+        name: c1.small
+      liveness: LivenessStatic
+      ipaccess: IpAccessShared
+      nodeflavor: flavor1
+      masterflavor: flavor1
+
+    apps:
+    - key:
+        developerkey:
+          name: AcmeAppCo
+        name: someapplication1
+        version: "1.0"
+      imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
+      imagetype: ImageTypeDocker
+      deployment: "kubernetes"
+      defaultflavor:
+        name: x1.small
+      cluster:
+        name: SmallCluster
+      accessports: "tcp:80,http:443,udp:10002"
+      androidpackagename: com.acme.someapplication1
+      permitsplatformapps: true
+      authpublickey: "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\n/QIDAQAB\n-----END PUBLIC KEY-----\n"
+    - key:
+        developerkey:
+          name: platos
+        name: PlatosEnablingLayer
+        version: "1.0"
+      imagepath: dummyvalue
+      imagetype: ImageTypeDocker
+      deployment: "kubernetes"
+      defaultflavor:
+        name: x1.small
+      cluster:
+        name: SmallCluster
+      accessports: "tcp:64000"
+
+    appinstances:
+    - key:
+        appkey:
+          developerkey:
+            name: AcmeAppCo
+          name: someapplication1
+          version: "1.0"
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-1
+        id: 123
+      cloudletloc:
+        latitude: 31
+        longitude: -91
+      clusterinstkey:
+        clusterkey:
+          name: SmallCluster
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-1
+        developer: AcmeAppCo
+      liveness: LivenessStatic
+      flavor:
+        name: x1.small
+    - key:
+        appkey:
+          developerkey:
+            name: AcmeAppCo
+          name: someapplication1
+          version: "1.0"
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-2
+        id: 123
+      cloudletloc:
+        latitude: 35
+        longitude: -95
+      clusterinstkey:
+        clusterkey:
+          name: SmallCluster
+        cloudletkey:
+          operatorkey:
+            name: dmuus
+          name: dmuus-cloud-2
+        developer: AcmeAppCo
+      liveness: LivenessStatic
+      flavor:
+        name: x1.small
+    - key:
+        appkey:
+          developerkey:
+            name: platos
+          name: PlatosEnablingLayer
+          version: "1.0"
+        cloudletkey:
+          operatorkey:
+            name: developer
+          name: default
+        id: 123
+      liveness: LivenessStatic
+      uri: default.platosenablement.platos.com
+      flavor:
+        name: x1.small
+
+    cloudlets:
+    - key:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      accessuri: cloud1.tmo
+      location:
+        latitude: 31
+        longitude: -91
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      accessuri: cloud2.tmo
+      location:
+        latitude: 35
+        longitude: -95
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: azure
+        name: azure-cloud-9
+      accessuri: cloud9.azure
+      location:
+        latitude: 32
+        longitude: -91
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    - key:
+        operatorkey:
+          name: gcp
+        name: gcp-cloud-10
+      accessuri: cloud2.gcp
+      location:
+        latitude: 36
+        longitude: -95
+      ipsupport: IpSupportDynamic
+      numdynamicips: 254
+    flavors:
+    - key:
+        name: x1.small
+      ram: 2048
+      vcpus: 2
+      disk: 2
+    - key:
+        name: x1.medium
+      ram: 4096
+      vcpus: 4
+      disk: 4
+    - key:
+        name: x1.tiny
+      ram: 1024
+      vcpus: 1
+      disk: 1
+    clusterflavors:
+    - key:
+        name: c1.tiny
+      nodeflavor:
+        name: x1.tiny
+      masterflavor:
+        name: x1.tiny
+      numnodes: 2
+      maxnodes: 2
+      nummasters: 1
+    - key:
+        name: c1.small
+      nodeflavor:
+        name: x1.small
+      masterflavor:
+        name: x1.small
+      numnodes: 3
+      maxnodes: 3
+      nummasters: 1
+    - key:
+        name: c1.medium
+      nodeflavor:
+        name: x1.medium
+      masterflavor:
+        name: x1.medium
+      numnodes: 3
+      maxnodes: 4
+      nummasters: 1
