@@ -501,37 +501,61 @@ func GetCloudletInfo(t *testing.T, api *CloudletInfoCommonApi, key *edgeproto.Cl
 }
 
 func (s *DummyServer) CreateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_CreateCloudletServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) DeleteCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_DeleteCloudletServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) UpdateCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_UpdateCloudletServer) error {
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
-	server.Send(&edgeproto.Result{})
+	if true {
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+		server.Send(&edgeproto.Result{})
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowCloudlet(in *edgeproto.Cloudlet, server edgeproto.CloudletApi_ShowCloudletServer) error {
-	server.Send(&edgeproto.Cloudlet{})
-	server.Send(&edgeproto.Cloudlet{})
-	server.Send(&edgeproto.Cloudlet{})
+	obj := &edgeproto.Cloudlet{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.Cloudlet{})
+		server.Send(&edgeproto.Cloudlet{})
+		server.Send(&edgeproto.Cloudlet{})
+	}
+	for _, out := range s.Cloudlets {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
 
 func (s *DummyServer) ShowCloudletInfo(in *edgeproto.CloudletInfo, server edgeproto.CloudletInfoApi_ShowCloudletInfoServer) error {
-	server.Send(&edgeproto.CloudletInfo{})
-	server.Send(&edgeproto.CloudletInfo{})
-	server.Send(&edgeproto.CloudletInfo{})
+	obj := &edgeproto.CloudletInfo{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.CloudletInfo{})
+		server.Send(&edgeproto.CloudletInfo{})
+		server.Send(&edgeproto.CloudletInfo{})
+	}
+	for _, out := range s.CloudletInfos {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
 
