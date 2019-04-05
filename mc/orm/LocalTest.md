@@ -282,7 +282,6 @@ Date: Thu, 07 Feb 2019 23:36:01 GMT
 [
     {
         "Address": "123 abc st",
-        "AdminUserID": 2,
         "CreatedAt": "2019-02-07T15:18:55.132651-08:00",
         "Name": "bigorg",
         "Phone": "123-456-1234",
@@ -291,7 +290,6 @@ Date: Thu, 07 Feb 2019 23:36:01 GMT
     },
     {
         "Address": "120 ocean st",
-        "AdminUserID": 4,
         "CreatedAt": "2019-02-07T15:35:14.81412-08:00",
         "Name": "bigwaves",
         "Phone": "808-456-1234",
@@ -309,7 +307,6 @@ Date: Thu, 07 Feb 2019 23:36:10 GMT
 [
     {
         "Address": "123 abc st",
-        "AdminUserID": 2,
         "CreatedAt": "2019-02-07T15:18:55.132651-08:00",
         "Name": "bigorg",
         "Phone": "123-456-1234",
@@ -327,7 +324,6 @@ Date: Thu, 07 Feb 2019 23:36:18 GMT
 [
     {
         "Address": "123 abc st",
-        "AdminUserID": 2,
         "CreatedAt": "2019-02-07T15:18:55.132651-08:00",
         "Name": "bigorg",
         "Phone": "123-456-1234",
@@ -345,7 +341,6 @@ Date: Thu, 07 Feb 2019 23:36:23 GMT
 [
     {
         "Address": "120 ocean st",
-        "AdminUserID": 4,
         "CreatedAt": "2019-02-07T15:35:14.81412-08:00",
         "Name": "bigwaves",
         "Phone": "808-456-1234",

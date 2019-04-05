@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"time"
+
+	flavor "github.com/mobiledgex/edge-cloud/flavor"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -104,46 +105,14 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 	return s.createClusterInstInternal(DefCallContext(), in, cb)
 }
 
-func GetClosestFlavor(info *edgeproto.CloudletInfo, nodeflavor edgeproto.Flavor) (string, error) {
-	log.InfoLog("Get closest flavor available in Cloudlet")
-	FlavorList := info.Flavors
-	sort.Slice(FlavorList[:], func(i, j int) bool {
-		if FlavorList[i].Vcpus < FlavorList[j].Vcpus {
-			return true
-		}
-		if FlavorList[i].Vcpus > FlavorList[j].Vcpus {
-			return false
-		}
-		if FlavorList[i].Ram < FlavorList[j].Ram {
-			return true
-		}
-		if FlavorList[i].Ram > FlavorList[j].Ram {
-			return false
-		}
-		return FlavorList[i].Disk < FlavorList[j].Disk
-	})
-	for _, flavor := range FlavorList {
-		if flavor.Vcpus < nodeflavor.Vcpus {
-			continue
-		}
-		if flavor.Ram < nodeflavor.Ram {
-			continue
-		}
-		if flavor.Disk < nodeflavor.Disk {
-			continue
-		}
-		log.InfoLog("Found closest flavor", "flavor", flavor)
-		return flavor.Name, nil
-	}
-	return "", fmt.Errorf("no suitable platform flavor found for %s, please try a smaller flavor", nodeflavor.Key.Name)
-}
-
 // createClusterInstInternal is used to create dynamic cluster insts internally,
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
@@ -210,11 +179,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 				in.Flavor.Name, clusterFlavor.MasterFlavor.Name)
 		}
 		var err error
-		in.NodeFlavor, err = GetClosestFlavor(&info, nodeFlavor)
+		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
 		if err != nil {
 			return err
 		}
-		in.MasterFlavor, err = GetClosestFlavor(&info, masterFlavor)
+		in.MasterFlavor, err = flavor.GetClosestFlavor(info.Flavors, masterFlavor)
 		if err != nil {
 			return err
 		}
@@ -296,8 +265,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
 	}
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	cctx.SetOverride(&in.CrmOverride)
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 
 	var prevState edgeproto.TrackedState
@@ -331,7 +303,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
-	cctx.SetOverride(&in.CrmOverride)
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
