@@ -292,8 +292,17 @@ func (s *DummyServer) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*
 }
 
 func (s *DummyServer) ShowFlavor(in *edgeproto.Flavor, server edgeproto.FlavorApi_ShowFlavorServer) error {
-	server.Send(&edgeproto.Flavor{})
-	server.Send(&edgeproto.Flavor{})
-	server.Send(&edgeproto.Flavor{})
+	obj := &edgeproto.Flavor{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.Flavor{})
+		server.Send(&edgeproto.Flavor{})
+		server.Send(&edgeproto.Flavor{})
+	}
+	for _, out := range s.Flavors {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }
