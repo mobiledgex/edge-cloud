@@ -18,7 +18,7 @@ import (
 
 const (
 	AppConfigEnvYaml  = "envVarsYaml"
-	k8smgmtConfigVars = "k8smgmtConfig"
+	K8smgmtConfigVars = "k8smgmtConfig"
 )
 
 type K8sMgmtConfig struct {
@@ -47,7 +47,6 @@ func MergeConfigsVars(client pc.PlatformClient, names *KubeNames, kubeManifest s
 	setConfig := false
 	replicas := 0
 
-	log.DebugLog(log.DebugLevelMexos, "merge configs vars into k8s manifest file")
 	//quick bail, if nothing to do
 	if len(configs) == 0 {
 		return kubeManifest, nil
@@ -64,7 +63,7 @@ func MergeConfigsVars(client pc.PlatformClient, names *KubeNames, kubeManifest s
 				envVars = append(envVars, curVars...)
 				setConfig = true
 			}
-		} else if v.Kind == k8smgmtConfigVars {
+		} else if v.Kind == K8smgmtConfigVars {
 			k8sconfig := K8sMgmtConfig{}
 			if err := yaml.Unmarshal([]byte(v.Config), &k8sconfig); err != nil {
 				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal k8smgmt config", "kind", v.Kind,
@@ -86,6 +85,7 @@ func MergeConfigsVars(client pc.PlatformClient, names *KubeNames, kubeManifest s
 		return kubeManifest, nil
 	}
 
+	log.DebugLog(log.DebugLevelMexos, "merge configs vars into k8s manifest file")
 	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
 	if err != nil {
 		return mf, err
