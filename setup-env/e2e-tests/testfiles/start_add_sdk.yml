@@ -13,5 +13,5 @@ tests:
   actions: [status]
 
 - name: create provisioning
-  apifile: "{{datadir}}/appdata_sdk.yml"
+  apifile: "{{datadir}}/sdk_test/appdata_sdk.yml"
   actions: [ctrlapi-create,ctrlapi-show]
