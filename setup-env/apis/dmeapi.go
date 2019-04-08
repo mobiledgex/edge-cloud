@@ -290,7 +290,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		resp, err := client.GetFqdnList(ctx, &apiRequest.Fqreq)
 		if err == nil {
 			sort.Slice((*resp).AppFqdns, func(i, j int) bool {
-				return (*resp).AppFqdns[i].FQDN < (*resp).AppFqdns[j].FQDN
+				return (*resp).AppFqdns[i].FQDNs[0] < (*resp).AppFqdns[j].FQDNs[0]
 			})
 		}
 		dmereply = resp
