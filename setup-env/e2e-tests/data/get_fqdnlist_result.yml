@@ -2,11 +2,13 @@ appfqdns:
 - appname: someapplication1
   appvers: "1.0"
   devname: AcmeAppCo
-  fqdn: default.someapplication1.AcmeAppCo.com
+  fqdns:
+  - default.someapplication1.AcmeAppCo.com
   androidpackagename: com.acmeappco.someapplication1
 - appname: someapplication2
   appvers: "1.0"
   devname: AcmeAppCo
-  fqdn: default.someapplication2.AcmeAppCo.com
+  fqdns:
+  - default.someapplication2.AcmeAppCo.com
   androidpackagename: com.acmeappco.someapplication2
 status: FL_SUCCESS
