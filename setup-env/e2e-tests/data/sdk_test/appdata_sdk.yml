@@ -67,11 +67,20 @@ clusterinsts:
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
+      name: mexdemo-bonn
   flavor:
     name: c1.small
   liveness: LivenessStatic
-
+- key:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: westindia-mexdemo
+  flavor:
+    name: c1.small
+  liveness: LivenessStatic
 
 
 operators:
@@ -96,7 +105,7 @@ developers:
   address: 000 Nowhere Street, Gainesville, FL 32604
   email: empty@xxxx.com
 - key:
-    name: MobiledgeX SDK Demo
+    name: MobiledgeX
   username: bruce
   passhash: 9999999222222222211111
   address: 000 Sooner Street, Norman, OK 73026
@@ -124,7 +133,7 @@ cloudlets:
 - key:
     operatorkey:
       name: TDG
-    name: mexdemo-bonn-cloudlet
+    name: mexdemo-bonn
   location:
     latitude: 50.7374
     longitude: -7.0982
@@ -133,7 +142,7 @@ cloudlets:
 - key:
     operatorkey:
       name: azure
-    name: mexdemo-westindia-cloudlet
+    name: westindia-mexdemo
   location:
     latitude: 19.076
     longitude: 82.877
@@ -155,7 +164,6 @@ apps:
   cluster:
     name: SmallCluster
   accessports: "tcp:64000"
-  ipaccess: IpAccessDedicatedOrShared
 
 - key:
     developerkey:
@@ -169,11 +177,9 @@ apps:
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
@@ -182,12 +188,10 @@ apps:
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:7777"
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
   imagepath: mobiledgex_MobiledgeXSDKDemo/FaceDemo:1
@@ -196,8 +200,6 @@ apps:
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   accessports: "tcp:8008"
 
 - key:
@@ -211,8 +213,6 @@ apps:
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
   accessports: "http:443,tcp:8080"
 
@@ -227,8 +227,6 @@ apps:
   permitsplatformapps: true
   defaultflavor:
     name: x1.small
-  cluster:
-    name: SmallCluster
   apptemplate: "http://35.199.188.102/apps/apptemplate.yaml"
   accessports: "tcp:8081"
 
@@ -242,25 +240,15 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: T-Mobile
-      name: tmocloud1
-    id: 5011
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-
-
-- key:
-    appkey:
-      developerkey:
-        name: EmptyMatchEngineApp
-      name: EmptyMatchEngineApp
-      version: "1.0"
+        name: TDG
+      name: mexdemo-bonn
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
-    id: 5011
+      name: mexdemo-bonn
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -268,21 +256,20 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: azure
-      name: mexdemo-westindia-cloudlet
-    id: 123
+      name: westindia-mexdemo
   clusterinstkey:
     clusterkey:
       name: SmallCluster
     cloudletkey:
       operatorkey:
         name: azure
-      name: mexdemo-westindia-cloudlet
+      name: westindia-mexdemo
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -290,21 +277,20 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: azure
-      name: mexdemo-westindia-cloudlet
-    id: 123
+      name: westindia-mexdemo
   clusterinstkey:
     clusterkey:
       name: SmallCluster
     cloudletkey:
       operatorkey:
         name: azure
-      name: mexdemo-westindia-cloudlet
+      name: westindia-mexdemo
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -313,21 +299,20 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
-    id: 123
+      name: mexdemo-bonn
   clusterinstkey:
     clusterkey:
       name: SmallCluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
+      name: mexdemo-bonn
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -335,40 +320,79 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
-    id: 123
+      name: mexdemo-bonn
   clusterinstkey:
     clusterkey:
       name: SmallCluster
     cloudletkey:
       operatorkey:
         name: TDG
-      name: mexdemo-bonn-cloudlet
+      name: mexdemo-bonn
   liveness: LivenessStatic
   flavor:
     name: x1.small
 
 
+- key:
+    appkey:
+      developerkey:
+        name: Niantic
+      name: Niantic Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
 
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: Niantic
+      name: PokemonGo Demo
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn
+  clusterinstkey:
+    clusterkey:
+      name: SmallCluster
+    cloudletkey:
+      operatorkey:
+        name: TDG
+      name: mexdemo-bonn
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+
+- key:
+    appkey:
+      developerkey:
+        name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: developer
       name: default
-    id: 123
   liveness: LivenessStatic
-  uri: mexdemoapp.mexdemo.mobiledgex.net
+  uri: mexdemoapp.mexdemo.mobiledgex.net,mexdemoapp2.mexdemo.mobiledgex.net
   flavor:
     name: x1.small
 
@@ -382,7 +406,6 @@ appinstances:
       operatorkey:
         name: developer
       name: default
-    id: 123
   liveness: LivenessStatic
   uri: samsung.enabling.mobiledgex.net
   flavor:
@@ -398,9 +421,8 @@ appinstances:
       operatorkey:
         name: developer
       name: default
-    id: 123
   liveness: LivenessStatic
-  uri: nianticdemo.niantic.mobiledgex.net
+  uri: nianticdemo.niantic.mobiledgex.net,nianticdemo2.niantic.mobiledgex.net
   flavor:
     name: x1.small
 
@@ -414,7 +436,6 @@ appinstances:
       operatorkey:
         name: developer
       name: default
-    id: 123
   liveness: LivenessStatic
   uri: pokemongodemo.niantic.mobiledgex.net
   flavor:
