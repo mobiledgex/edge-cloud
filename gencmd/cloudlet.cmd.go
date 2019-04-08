@@ -91,24 +91,26 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 	}
 }
 func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, in.DockerRegistry)
 	s = append(s, in.DNSZone)
 	s = append(s, in.RegistryFileServer)
 	s = append(s, in.CFKey)
 	s = append(s, in.CFUser)
 	s = append(s, in.DockerRegPass)
+	s = append(s, in.NetworkScheme)
 	return s
 }
 
 func CloudletInfraCommonHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 7)
 	s = append(s, "DockerRegistry")
 	s = append(s, "DNSZone")
 	s = append(s, "RegistryFileServer")
 	s = append(s, "CFKey")
 	s = append(s, "CFUser")
 	s = append(s, "DockerRegPass")
+	s = append(s, "NetworkScheme")
 	return s
 }
 
@@ -214,22 +216,20 @@ func GcpPropertiesWriteOutputOne(obj *edgeproto.GcpProperties) {
 	}
 }
 func OpenStackPropertiesSlicer(in *edgeproto.OpenStackProperties) []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	s = append(s, in.OSExternalNetworkName)
 	s = append(s, in.OSImageName)
 	s = append(s, in.OSExternalRouterName)
 	s = append(s, in.OSMexNetwork)
-	s = append(s, in.OSNetworkScheme)
 	return s
 }
 
 func OpenStackPropertiesHeaderSlicer() []string {
-	s := make([]string, 0, 6)
+	s := make([]string, 0, 5)
 	s = append(s, "OSExternalNetworkName")
 	s = append(s, "OSImageName")
 	s = append(s, "OSExternalRouterName")
 	s = append(s, "OSMexNetwork")
-	s = append(s, "OSNetworkScheme")
 	return s
 }
 
@@ -267,7 +267,6 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	s = append(s, in.OpenstackProperties.OSImageName)
 	s = append(s, in.OpenstackProperties.OSExternalRouterName)
 	s = append(s, in.OpenstackProperties.OSMexNetwork)
-	s = append(s, in.OpenstackProperties.OSNetworkScheme)
 	if in.AzureProperties == nil {
 		in.AzureProperties = &edgeproto.AzureProperties{}
 	}
@@ -291,7 +290,6 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s = append(s, "OpenstackProperties-OSImageName")
 	s = append(s, "OpenstackProperties-OSExternalRouterName")
 	s = append(s, "OpenstackProperties-OSMexNetwork")
-	s = append(s, "OpenstackProperties-OSNetworkScheme")
 	s = append(s, "AzureProperties-Location")
 	s = append(s, "AzureProperties-ResourceGroup")
 	s = append(s, "AzureProperties-UserName")
@@ -395,8 +393,49 @@ func CloudletWriteOutputOne(obj *edgeproto.Cloudlet) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func FlavorInfoSlicer(in *edgeproto.FlavorInfo) []string {
+	s := make([]string, 0, 4)
+	s = append(s, in.Name)
+	s = append(s, strconv.FormatUint(uint64(in.Vcpus), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Ram), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Disk), 10))
+	return s
+}
+
+func FlavorInfoHeaderSlicer() []string {
+	s := make([]string, 0, 4)
+	s = append(s, "Name")
+	s = append(s, "Vcpus")
+	s = append(s, "Ram")
+	s = append(s, "Disk")
+	return s
+}
+
+func FlavorInfoWriteOutputArray(objs []*edgeproto.FlavorInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorInfoHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(FlavorInfoSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func FlavorInfoWriteOutputOne(obj *edgeproto.FlavorInfo) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(FlavorInfoHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(FlavorInfoSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -413,11 +452,21 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
+	if in.Flavors == nil {
+		in.Flavors = make([]*edgeproto.FlavorInfo, 1)
+	}
+	if in.Flavors[0] == nil {
+		in.Flavors[0] = &edgeproto.FlavorInfo{}
+	}
+	s = append(s, in.Flavors[0].Name)
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Vcpus), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Ram), 10))
+	s = append(s, strconv.FormatUint(uint64(in.Flavors[0].Disk), 10))
 	return s
 }
 
 func CloudletInfoHeaderSlicer() []string {
-	s := make([]string, 0, 9)
+	s := make([]string, 0, 10)
 	s = append(s, "Fields")
 	s = append(s, "Key-OperatorKey-Name")
 	s = append(s, "Key-Name")
@@ -428,6 +477,10 @@ func CloudletInfoHeaderSlicer() []string {
 	s = append(s, "OsMaxVcores")
 	s = append(s, "OsMaxVolGb")
 	s = append(s, "Errors")
+	s = append(s, "Flavors-Name")
+	s = append(s, "Flavors-Vcpus")
+	s = append(s, "Flavors-Ram")
+	s = append(s, "Flavors-Disk")
 	return s
 }
 

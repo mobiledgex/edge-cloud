@@ -26,14 +26,6 @@
   version = "v3.0.0"
 
 [[projects]]
-  digest = "1:320e7ead93de9fd2b0e59b50fd92a4d50c1f8ab455d96bc2eb083267453a9709"
-  name = "github.com/asaskevich/govalidator"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
-  version = "v9"
-
-[[projects]]
   digest = "1:2f30fb22e56424a767d5734756a4cffc489fcbac43146edb15ca5bf4e233cf0d"
   name = "github.com/casbin/casbin"
   packages = [
@@ -130,26 +122,6 @@
   pruneopts = "UT"
   revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
   version = "v3.2.0"
-
-[[projects]]
-  digest = "1:6c06722e816e161ff90421991ff7edc6d660936a835cfa666bd3ad606644a880"
-  name = "github.com/docker/docker"
-  packages = ["pkg/term"]
-  pruneopts = "UT"
-  revision = "a8a31eff10544860d2188dddabdee4d727545796"
-  version = "v1.5.0"
-
-[[projects]]
-  digest = "1:420922cc05ed0f2e81bc0ce9e3b6f32fad50e9c9ae1202e1f719a74dea7b0c21"
-  name = "github.com/docker/machine"
-  packages = [
-    "libmachine/log",
-    "libmachine/mcnutils",
-    "version",
-  ]
-  pruneopts = "UT"
-  revision = "b48dc28d9139c93d166f07d8b3a049b59bceef9c"
-  version = "v0.15.0"
 
 [[projects]]
   digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
@@ -470,14 +442,6 @@
   version = "v1.6.2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:89df516e4ec36be36c4ccc661f2e9007ccb13d4e970e3b7e9c96e87fe4ceb5ba"
-  name = "github.com/jcelliott/lumber"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "dd349441af25132d146d7095c6693a15431fc9b1"
-
-[[projects]]
   digest = "1:235ae01f32fb5f12c5f6d2e0e05ab48e651ab31c126e45a4efc4f510810941ac"
   name = "github.com/jinzhu/gorm"
   packages = ["."]
@@ -569,20 +533,6 @@
   version = "v1.1.2"
 
 [[projects]]
-  branch = "master"
-  digest = "1:fe237c071be6420dbc74607d50d0f8e8e958d225c76640d142113a066e97c70c"
-  name = "github.com/mobiledgex/edge-cloud-infra"
-  packages = [
-    "k8s-prov/azure",
-    "k8s-prov/dind",
-    "k8s-prov/gcloud",
-    "mexos",
-    "openstack-tenant/agent/cloudflare",
-  ]
-  pruneopts = "UT"
-  revision = "13bec7233e1c373d8bfb3df6f367f6680e3960a7"
-
-[[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -600,22 +550,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7aefb397a53fc437c90f0fdb3e1419c751c5a3a165ced52325d5d797edf1aca6"
-  name = "github.com/moul/http2curl"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "9ac6cf4d929b2fa8fd2d2e6dec5bb0feb4f4911d"
-
-[[projects]]
-  branch = "master"
-  digest = "1:d33c9113cf9ebb4d505328579fc81f8813a1c9a15ad2a5f2df1bc3b21b10a3c3"
-  name = "github.com/nanobox-io/golang-ssh"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "c0212d558eba576f108c307cac2e6fd5eb39ecdf"
-
-[[projects]]
-  branch = "master"
   digest = "1:1425ecbdc8449cf055118176863003ceb553777e288ffd5e64d426ce0dc2e163"
   name = "github.com/nmcclain/asn1-ber"
   packages = ["."]
@@ -629,14 +563,6 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "6e14e82719330c918c5b4139cc80c51d7ebc5fba"
-
-[[projects]]
-  digest = "1:d776f3e95774a8719f2e57fabbbb33103035fe072dcf6f1864f33abd17b753e5"
-  name = "github.com/parnurzeal/gorequest"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "a578a48e8d6ca8b01a3b18314c43c6716bb5f5a3"
-  version = "v0.2.15"
 
 [[projects]]
   branch = "master"
@@ -773,18 +699,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4ed6f399808e498062fd42c6300531d566e4f62642667ac454890a52e479b1d2"
+  digest = "1:0061a68d0aca0e936bce8e6ecbc8961a2185858a176ff40889f7507b2d39196d"
   name = "golang.org/x/crypto"
   packages = [
     "acme",
     "acme/autocert",
-    "curve25519",
-    "ed25519",
-    "ed25519/internal/edwards25519",
-    "internal/chacha20",
     "pbkdf2",
-    "poly1305",
-    "ssh",
     "ssh/terminal",
   ]
   pruneopts = "UT"
@@ -792,7 +712,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:096ec535d5d1403216d3e60e4da768359eb3c488e99d7d18e2b2c6daa68121ad"
+  digest = "1:3f14180c6649aeae872e969dd5ff1243cd34449532a7d057a117dce153249b04"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -802,7 +722,6 @@
     "http2/hpack",
     "idna",
     "internal/timeseries",
-    "publicsuffix",
     "trace",
   ]
   pruneopts = "UT"
@@ -994,13 +913,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d300469b614dd3d7031b3da86ccc5b86a97086ec9d148dbef8917948816f33f7"
+  digest = "1:1272ad74b3565a2136430119dff76c12b7849db613901af8edd3d2611ff5eeee"
   name = "k8s.io/apimachinery"
   packages = [
     "pkg/api/errors",
     "pkg/api/meta",
     "pkg/api/resource",
     "pkg/apis/meta/v1",
+    "pkg/apis/meta/v1/unstructured",
     "pkg/apis/meta/v1beta1",
     "pkg/conversion",
     "pkg/conversion/queryparams",
@@ -1034,6 +954,14 @@
   ]
   pruneopts = "UT"
   revision = "3492ef8dace114d765f20d9c1a03f306449e5252"
+
+[[projects]]
+  branch = "master"
+  digest = "1:04ca94584f81662b6567cfffe9d55ae4fe7b9fb89dbf9ae972d4215a9ea675d4"
+  name = "k8s.io/cli-runtime"
+  packages = ["pkg/printers"]
+  pruneopts = "UT"
+  revision = "44a48934c135b31e4f1c0d12e91d384e1cb2304c"
 
 [[projects]]
   branch = "master"
@@ -1097,6 +1025,14 @@
   pruneopts = "UT"
   revision = "4bb327ea2f8ec2e1dd6438da60fea65cf68594bf"
 
+[[projects]]
+  digest = "1:7719608fe0b52a4ece56c2dde37bedd95b938677d1ab0f84b8a7852e4c59f849"
+  name = "sigs.k8s.io/yaml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "fd68e9863619f6ec2fdd8625fe1f02e7c877e480"
+  version = "v1.1.0"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -1147,7 +1083,6 @@
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
     "github.com/mitchellh/mapstructure",
-    "github.com/mobiledgex/edge-cloud-infra/mexos",
     "github.com/nmcclain/ldap",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
@@ -1173,6 +1108,7 @@
     "k8s.io/apimachinery/pkg/apis/meta/v1",
     "k8s.io/apimachinery/pkg/runtime",
     "k8s.io/apimachinery/pkg/runtime/schema",
+    "k8s.io/cli-runtime/pkg/printers",
     "k8s.io/client-go/kubernetes",
     "k8s.io/client-go/kubernetes/scheme",
     "k8s.io/client-go/plugin/pkg/client/auth/gcp",

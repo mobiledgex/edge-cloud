@@ -145,7 +145,7 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -156,7 +156,7 @@ crms:
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -167,7 +167,7 @@ crms:
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-3"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -178,7 +178,7 @@ crms:
     apiaddr: "0.0.0.0:55094"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-4"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -189,7 +189,7 @@ crms:
     apiaddr: "0.0.0.0:55095"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-5"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -200,7 +200,7 @@ crms:
     apiaddr: "0.0.0.0:55096"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-6"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -211,7 +211,7 @@ crms:
     apiaddr: "0.0.0.0:55097"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-7"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -222,7 +222,7 @@ crms:
     apiaddr: "0.0.0.0:55098"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-8"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -233,7 +233,7 @@ crms:
     apiaddr: "0.0.0.0:55099"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"azure"},"name":"azure-cloud-9"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -244,7 +244,7 @@ crms:
     apiaddr: "0.0.0.0:55100"
     notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
     cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcp-cloud-10"}'
-    fakecloudlet: true
+    platform: fakecloudlet
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
@@ -258,6 +258,7 @@ mcs:
     vaultaddr: "http://127.0.0.1:8200"
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
+       serverkey: "{{tlsoutdir}}/mex-server.key"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 

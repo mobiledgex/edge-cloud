@@ -1,0 +1,18 @@
+- name: stop standalone cloudlet
+  gather_facts: yes
+  user: ubuntu
+  become: yes
+  hosts: mexservers
+  vars_files:
+    - mex_vars.yml
+ 
+  tasks:
+
+  - name: stop mexosagent 
+    service:
+       name: mexosagent
+       state: stopped
+
+  - name: stop crmserver process
+    shell: "pkill -9 crmserver||true"
+

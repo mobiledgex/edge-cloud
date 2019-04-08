@@ -122,12 +122,12 @@ namespace DistributedMatchEngine
       return carrierName + "." + baseDmeHost;
     }
 
-    string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
+    public string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
-    string createUri(string host, UInt32 port)
+    public string createUri(string host, UInt32 port)
     {
       if (host != null && host != "")
       {

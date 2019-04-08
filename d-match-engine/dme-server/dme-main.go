@@ -44,6 +44,7 @@ var scaleID = flag.String("scaleID", "", "ID to distinguish multiple DMEs in the
 var vaultAddr = flag.String("vaultAddr", "http://127.0.0.1:8200", "Vault address")
 var statsInterval = flag.Int("statsInterval", 1, "interval in seconds between sending stats")
 var statsShards = flag.Uint("statsShards", 10, "number of shards (locks) in memory for parallel stat collection")
+var cookieExpiration = flag.Duration("cookieExpiration", time.Hour*24, "Cookie expiration time")
 
 // TODO: carrier arg is redundant with OperatorKey.Name in myCloudletKey, and
 // should be replaced by it, but requires dealing with carrier-specific
@@ -95,10 +96,6 @@ func (s *server) GetFqdnList(ctx context.Context, req *dme.FqdnListRequest) (*dm
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
 	}
-	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
-	}
 	// normal applications are not allowed to access this, only special platform developer/app combos
 	if !cloudcommon.IsPlatformApp(ckey.DevName, ckey.AppName) {
 		return nil, grpc.Errorf(codes.PermissionDenied, "API Not allowed for developer: %s app: %s", ckey.DevName, ckey.AppName)
@@ -113,10 +110,6 @@ func (s *server) GetAppInstList(ctx context.Context, req *dme.AppInstListRequest
 	ckey, ok := dmecommon.CookieFromContext(ctx)
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "No valid session cookie")
-	}
-	ckey, err := dmecommon.VerifyCookie(req.SessionCookie)
-	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 	}
 
 	log.DebugLog(log.DebugLevelDmereq, "GetAppInstList", "carrier", req.CarrierName, "ckey", ckey)
@@ -246,7 +239,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		AppName: req.AppName,
 		AppVers: req.AppVers,
 	}
-	cookie, err := dmecommon.GenerateCookie(&key, ctx)
+	cookie, err := dmecommon.GenerateCookie(&key, ctx, cookieExpiration)
 	if err != nil {
 		return mstatus, grpc.Errorf(codes.Internal, err.Error())
 	}
