@@ -616,6 +616,15 @@ func (g *GenCmd) generateSetFields(msgName string, parents, nums []string, desc 
 
 func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 	g.P("func parse", msgName, "Enums() error {")
+	//generate empty function instead of no function so that "show__cmd" wont get messed up by this
+	desc := g.inMessages[msgName]
+	message := desc.DescriptorProto
+	if !GetGenerateParseEnum(message) {
+		g.P("return nil")
+		g.P("}")
+		g.P()
+		return
+	}
 	for _, enumArg := range enumList {
 		en := g.GetEnumDesc(enumArg.field.GetTypeName())
 		if en == nil {
@@ -1110,6 +1119,10 @@ func HasGrpcFields(message *descriptor.DescriptorProto) bool {
 
 func GetNoConfig(message *descriptor.DescriptorProto) string {
 	return gensupport.GetStringExtension(message.Options, protocmd.E_Noconfig, "")
+}
+
+func GetGenerateParseEnum(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protocmd.E_GenerateParseEnum, true)
 }
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {

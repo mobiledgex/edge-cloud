@@ -11,6 +11,7 @@ extend google.protobuf.MessageOptions {
   // comma separated list of hierarchical paths for fields to
   // not generate argument flags for Create/Delete/Update commands.
   string noconfig = 52001;
+  bool generate_parse_enum = 52002;
 }
 
 extend google.protobuf.MethodOptions {

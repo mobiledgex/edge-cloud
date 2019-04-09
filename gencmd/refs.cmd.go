@@ -33,9 +33,16 @@ var ClusterRefsApiCmd edgeproto.ClusterRefsApiClient
 var CloudletRefsIn edgeproto.CloudletRefs
 var CloudletRefsFlagSet = pflag.NewFlagSet("CloudletRefs", pflag.ExitOnError)
 var CloudletRefsNoConfigFlagSet = pflag.NewFlagSet("CloudletRefsNoConfig", pflag.ExitOnError)
+var CloudletRefsInRootLbPortsValue string
 var ClusterRefsIn edgeproto.ClusterRefs
 var ClusterRefsFlagSet = pflag.NewFlagSet("ClusterRefs", pflag.ExitOnError)
 var ClusterRefsNoConfigFlagSet = pflag.NewFlagSet("ClusterRefsNoConfig", pflag.ExitOnError)
+var port_protoStrings = []string{
+	"Proto_Unknown",
+	"Proto_TCP",
+	"Proto_UDP",
+	"Proto_TCP_UDP",
+}
 
 func CloudletRefsSlicer(in *edgeproto.CloudletRefs) []string {
 	s := make([]string, 0, 8)
@@ -151,6 +158,10 @@ var ShowCloudletRefsCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// if we got this far, usage has been met.
 		cmd.SilenceUsage = true
+		err := parseCloudletRefsEnums()
+		if err != nil {
+			return fmt.Errorf("ShowCloudletRefs failed: %s", err.Error())
+		}
 		return ShowCloudletRefs(&CloudletRefsIn)
 	},
 }
@@ -289,4 +300,8 @@ func CloudletRefsApiAllowNoConfig() {
 
 func ClusterRefsApiAllowNoConfig() {
 	ShowClusterRefsCmd.Flags().AddFlagSet(ClusterRefsNoConfigFlagSet)
+}
+
+func parseCloudletRefsEnums() error {
+	return nil
 }
