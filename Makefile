@@ -36,7 +36,8 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
-	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
+	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
+		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	for ADDLTAG in ${ADDLTAGS}; do \
