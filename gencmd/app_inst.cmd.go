@@ -765,16 +765,16 @@ func AppInstSetFields() {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.3")
 	}
 	if AppInstFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.1.1")
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.1.1")
 	}
 	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.2.1.1")
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.1.1")
 	}
 	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.2.2")
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.2")
 	}
 	if AppInstFlagSet.Lookup("key-clusterinstkey-developer").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.3")
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.3")
 	}
 	if AppInstNoConfigFlagSet.Lookup("cloudletloc-latitude").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
@@ -841,16 +841,16 @@ func AppInstInfoSetFields() {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.3")
 	}
 	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.1.1")
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.1.1")
 	}
 	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.2.1.1")
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.1.1")
 	}
 	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.2.2")
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.2")
 	}
 	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-developer").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.3")
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.3")
 	}
 	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
