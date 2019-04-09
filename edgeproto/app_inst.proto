@@ -20,7 +20,7 @@ message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
   // Cluster instance on which this is instantiated
-  ClusterInstKey cluster_inst_key = 2 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  ClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
