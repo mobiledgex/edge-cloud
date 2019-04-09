@@ -11,17 +11,16 @@ crms:
     apiaddr: "0.0.0.0:55091"
     notifyaddrs: "{{controller}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"hamburg-mexdemo"}'
-    fakecloudlet: false
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0329
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
     OPENRC_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/hamburg/openrc.json
     MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
     CLOUDLET_KIND: openstack
-    MEX_OS_IMAGE: mobiledgex
+    PLATFORM: openstack
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
@@ -30,17 +29,16 @@ crms:
     apiaddr: "0.0.0.0:55092"
     notifyaddrs: "{{controller}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"berlin-mexdemo"}'
-    fakecloudlet: false
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0329
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
     OPENRC_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/berlin/openrc.json
     MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
     CLOUDLET_KIND: openstack
-    MEX_OS_IMAGE: mobiledgex
+    PLATFORM: openstack
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
@@ -49,17 +47,16 @@ crms:
     apiaddr: "0.0.0.0:55093"
     notifyaddrs: "{{controller}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"frankfurt-mexdemo"}'
-    fakecloudlet: false
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0329
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
     OPENRC_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/frankfurt/openrc.json
     MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
     CLOUDLET_KIND: openstack
-    MEX_OS_IMAGE: mobiledgex
+    PLATFORM: openstack
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
@@ -68,17 +65,16 @@ crms:
     apiaddr: "0.0.0.0:55094"
     notifyaddrs: "{{controller}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"munich-mexdemo"}'
-    fakecloudlet: false
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0329
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
     OPENRC_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/munich/openrc.json
     MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
     CLOUDLET_KIND: openstack
-    MEX_OS_IMAGE: mobiledgex
+    PLATFORM: openstack
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
@@ -87,16 +83,15 @@ crms:
     apiaddr: "0.0.0.0:55095"
     notifyaddrs: "{{controller}}:37001"
     cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn-mexdemo"}'
-    fakecloudlet: false
     tls:
        servercert: "{{tlsoutdir}}/mex-server.crt"
        clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
-  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0329
+  dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
     OPENRC_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/bonn/openrc.json
     MEXENV_URL: https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
     CLOUDLET_KIND: openstack
-    MEX_OS_IMAGE: mobiledgex
+    PLATFORM: openstack
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
