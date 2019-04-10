@@ -159,6 +159,36 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
+func getProtocol(proto dme.LProto) (int32, error) {
+	var protocol int32
+	switch proto {
+	//put all "TCP" protocols below here
+	case dme.LProto_LProtoHTTP:
+	case dme.LProto_LProtoTCP:
+		protocol = 1 //01
+		break
+	//put all "UDP" protocols below here
+	case dme.LProto_LProtoUDP:
+		protocol = 2 //10
+		break
+	default:
+		return 0, errors.New("Unknown protocol in use for this app")
+	}
+	return protocol, nil
+}
+
+func protocolInUse(protocolsToCheck int32, usedProtocols int32) bool {
+	return (protocolsToCheck & usedProtocols) != 0
+}
+
+func addProtocol(protos int32, protocolToAdd int32) int32 {
+	return protos | protocolToAdd
+}
+
+func removeProtocol(protos int32, protocolToRemove int32) int32 {
+	return protos & (^protocolToRemove)
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -384,8 +414,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// Samsung enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
 				// external port so port remap is not required.
+				protocol, err := getProtocol(ports[ii].Proto)
+				if err != nil {
+					return err
+				}
+				iport := ports[ii].InternalPort
 				eport := int32(-1)
-				if _, found := cloudletRefs.RootLbPorts[ports[ii].InternalPort]; !found {
+				if usedProtocols, found := cloudletRefs.RootLbPorts[iport]; !found || !protocolInUse(protocol, usedProtocols) {
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
@@ -400,7 +435,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// nginx proxy that runs in the rootLB,
 					// and http ports are also mapped to it,
 					// so there is no shared L7 port + path.
-					if _, found := cloudletRefs.RootLbPorts[p]; found {
+					if usedProtocols, found := cloudletRefs.RootLbPorts[p]; found && protocolInUse(protocol, usedProtocols) {
 						continue
 					}
 					eport = p
@@ -409,7 +444,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return errors.New("no free external ports")
 				}
 				ports[ii].PublicPort = eport
-				cloudletRefs.RootLbPorts[eport] = 1
+				proto, _ := cloudletRefs.RootLbPorts[eport]
+				cloudletRefs.RootLbPorts[eport] = addProtocol(protocol, proto)
 				cloudletRefsChanged = true
 			}
 		} else {
@@ -524,7 +560,12 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// shared root load balancer
 				for ii, _ := range in.MappedPorts {
 					p := in.MappedPorts[ii].PublicPort
-					delete(cloudletRefs.RootLbPorts, p)
+					protocol, err := getProtocol(in.MappedPorts[ii].Proto)
+					if err != nil {
+						return err
+					}
+					protos, _ := cloudletRefs.RootLbPorts[p]
+					cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
 					cloudletRefsChanged = true
 				}
 			}
