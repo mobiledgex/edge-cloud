@@ -40,7 +40,8 @@ type CloudletRefs struct {
 	UsedVcores uint64 `protobuf:"varint,5,opt,name=used_vcores,json=usedVcores,proto3" json:"used_vcores,omitempty"`
 	// Used disk in GB
 	UsedDisk uint64 `protobuf:"varint,6,opt,name=used_disk,json=usedDisk,proto3" json:"used_disk,omitempty"`
-	// Used ports on root load balancer. Map key is public port, value is unused.
+	// Used ports on root load balancer. Map key is public port, value is a bitmap for the protocol
+	// bitmap: bit 0: tcp, bit 1: udp
 	RootLbPorts map[int32]int32 `protobuf:"bytes,8,rep,name=root_lb_ports,json=rootLbPorts" json:"root_lb_ports,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	// Used dynamic IPs
 	UsedDynamicIps int32 `protobuf:"varint,9,opt,name=used_dynamic_ips,json=usedDynamicIps,proto3" json:"used_dynamic_ips,omitempty"`
