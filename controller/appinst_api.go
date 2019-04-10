@@ -374,16 +374,31 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		} else if ipaccess == edgeproto.IpAccess_IpAccessShared {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
 			if cloudletRefs.RootLbPorts == nil {
-				cloudletRefs.RootLbPorts = make(map[int32]int32)
+				cloudletRefs.RootLbPorts = make(map[int32]edgeproto.CloudletRefsPortProto)
 			}
 
 			p := RootLBSharedPortBegin
-			for ii, _ := range ports {
+			for ii, appport := range ports {
 				// Samsung enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
 				// external port so port remap is not required.
+				var ii_protocol edgeproto.CloudletRefsPortProto
+				var other_protocol edgeproto.CloudletRefsPortProto
+				switch appport.Proto {
+				case dme.LProto_LProtoTCP:
+					ii_protocol = edgeproto.CloudletRefs_Proto_TCP
+					other_protocol = edgeproto.CloudletRefs_Proto_UDP
+					break
+				case dme.LProto_LProtoUDP:
+					ii_protocol = edgeproto.CloudletRefs_Proto_UDP
+					other_protocol = edgeproto.CloudletRefs_Proto_TCP
+					break
+				default:
+					return errors.New("Unknown port protocol")
+				}
 				eport := int32(-1)
-				if _, found := cloudletRefs.RootLbPorts[ports[ii].InternalPort]; !found {
+				//make sure the port is unused by that protocol
+				if e_protocol, found := cloudletRefs.RootLbPorts[ports[ii].InternalPort]; !found || e_protocol == other_protocol {
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
@@ -398,7 +413,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// nginx proxy that runs in the rootLB,
 					// and http ports are also mapped to it,
 					// so there is no shared L7 port + path.
-					if _, found := cloudletRefs.RootLbPorts[p]; found {
+					if e_protocol, found := cloudletRefs.RootLbPorts[p]; found && e_protocol != other_protocol {
 						continue
 					}
 					eport = p
@@ -407,7 +422,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return errors.New("no free external ports")
 				}
 				ports[ii].PublicPort = eport
-				cloudletRefs.RootLbPorts[eport] = 1
+				new_protocol := ii_protocol
+				//if found here then the other protocol is already in use
+				if _, found := cloudletRefs.RootLbPorts[eport]; found {
+					new_protocol = edgeproto.CloudletRefs_Proto_TCP_UDP
+				}
+				cloudletRefs.RootLbPorts[eport] = new_protocol
 				cloudletRefsChanged = true
 			}
 		} else {
@@ -522,7 +542,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// shared root load balancer
 				for ii, _ := range in.MappedPorts {
 					p := in.MappedPorts[ii].PublicPort
-					delete(cloudletRefs.RootLbPorts, p)
+					if cloudletRefs.RootLbPorts[p] != edgeproto.CloudletRefs_Proto_TCP_UDP {
+						delete(cloudletRefs.RootLbPorts, p)
+						//both protocols of this port number in use, only get rid of one protocol
+					} else if in.MappedPorts[ii].Proto == dme.LProto_LProtoTCP {
+						cloudletRefs.RootLbPorts[p] = edgeproto.CloudletRefs_Proto_UDP
+						//else its UDP we want to drop
+					} else {
+						cloudletRefs.RootLbPorts[p] = edgeproto.CloudletRefs_Proto_TCP
+					}
 					cloudletRefsChanged = true
 				}
 			}

@@ -32,5 +32,5 @@ func (s *CloudletRefsApi) ShowCloudletRefs(in *edgeproto.CloudletRefs, cb edgepr
 
 func initCloudletRefs(refs *edgeproto.CloudletRefs, key *edgeproto.CloudletKey) {
 	refs.Key = *key
-	refs.RootLbPorts = make(map[int32]int32)
+	refs.RootLbPorts = make(map[int32]edgeproto.CloudletRefsPortProto)
 }
