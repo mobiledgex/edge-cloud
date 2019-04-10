@@ -21,6 +21,7 @@ It is generated from these files:
 	operator.proto
 	refs.proto
 	result.proto
+	version.proto
 
 It has these top-level messages:
 	AppKey
@@ -64,6 +65,9 @@ It has these top-level messages:
 	CloudletRefs
 	ClusterRefs
 	Result
+	UpgradeFunc
+	DataVersionUpgrades
+	DataModelVersion
 */
 package testutil
 

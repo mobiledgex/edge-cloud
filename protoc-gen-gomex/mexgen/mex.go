@@ -1,7 +1,11 @@
 package mexgen
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"text/template"
 
@@ -12,6 +16,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
+
+var keyMessages []descriptor.DescriptorProto
 
 func RegisterMex() {
 	generator.RegisterPlugin(new(mex))
@@ -1102,6 +1108,30 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 
 `
 
+type ugpradeError struct {
+	CurHash        string
+	CurHashEnumVal int32
+	NewHash        string
+	NewHashEnumVal int32
+}
+
+var upgradeErrorTemplete = `
+======WARNING=======
+Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.CurHash}}).
+This is due to an upsupported change in the key of some objects in a .proto file.
+In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
+
+enum VersionHash {
+	...
+	{{.CurHash}} = {{.CurHashEnumVal}};
+	{{.NewHash}} = {{.NewHashEnumVal}}; <<<===== Add this line
+	...
+}
+
+//TODO - Instructions for the upgrade function in the upgrade infra
+====================
+`
+
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
 	message := desc.DescriptorProto
 	if GetGenerateMatches(message) && message.Field != nil {
@@ -1185,6 +1215,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 	}
 	if GetObjKey(message) {
+		keyMessages = append(keyMessages, *message)
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
 		m.P("key, err := json.Marshal(m)")
 		m.P("if err != nil {")
@@ -1223,6 +1254,73 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
 		m.generateHideTags(desc)
 	}
+
+	// Generate version check code for version message
+	if GetCheckVersion(message) {
+		m.P("func (m *", message.Name, ") VersionCheck(oldVer ", message.Name, ") bool {")
+		m.P("return m.VersionHash == oldVer.VersionHash && m.Version == oldVer.Version")
+		m.P("}")
+		m.P("")
+	}
+
+	// Generate a hash of all the key messages.
+	if GetGenerateVersion(message) {
+		m.P("//Messages hash:")
+		for _, v := range keyMessages {
+			m.P("// ", v.Name)
+		}
+		str := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
+		m.P("var versionHashString = \"", str, "\"")
+		m.P("")
+		m.P("func GetDataModelVersion() string {")
+		m.P("return versionHashString")
+		m.P("}")
+
+		// Find the version hash
+		for _, desc := range file.Enums() {
+			en := desc.EnumDescriptorProto
+			if GetVersionHashOpt(en) {
+				// We need to check the hash and verify that we have the correct one
+				// If we don't have a correct one fail suggesting an upgrade function
+				// Check the last one(it's the latest) and if it doesn't match fail
+				lastIndex := 0
+				for i, _ := range en.Value {
+					if i > lastIndex {
+						lastIndex = i
+					}
+				}
+				latestVer := en.Value[lastIndex]
+				m.P("// Lat Value = ", latestVer.Name)
+				// Check the substring of the value
+				if !strings.Contains(*latestVer.Name, str) {
+					var upgradeTemplate *template.Template
+					upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
+					buf := bytes.Buffer{}
+					upgErr := ugpradeError{
+						CurHash:        *latestVer.Name,
+						CurHashEnumVal: *latestVer.Number,
+						NewHash:        "HASH_" + str,
+						NewHashEnumVal: *latestVer.Number + 1,
+					}
+					if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
+						log.Fatalf("Cannot execute upgrade error template %v\n", err)
+					}
+					log.Fatalf("%s", buf.String())
+
+				}
+			}
+		}
+	}
+}
+
+func getKeyVersionHash(msgs []descriptor.DescriptorProto) [16]byte {
+	arrBytes := []byte{}
+	for _, i := range msgs {
+		jsonBytes, _ := json.Marshal(i)
+		arrBytes = append(arrBytes, jsonBytes...)
+	}
+	return md5.Sum(arrBytes)
+
 }
 
 // Generate a single check for an enum
@@ -1377,4 +1475,16 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
+}
+
+func GetCheckVersion(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_CheckVersion, false)
+}
+
+func GetGenerateVersion(message *descriptor.DescriptorProto) bool {
+	return proto.GetBoolExtension(message.Options, protogen.E_GenerateVersion, false)
+}
+
+func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
+	return proto.GetBoolExtension(enum.Options, protogen.E_VersionHash, false)
 }

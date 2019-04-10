@@ -1,0 +1,39 @@
+// version definitions
+
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+
+  // Below enum lists hashes as well as corresponding versions
+  enum VersionHash {
+    HASH_c7889840e4365a901ca3fa938eb589e4 = 0;
+    option (protogen.version_hash) = true;
+  }
+
+/*
+var versionHash = []byte{
+	0xc7, 0x88, 0x98, 0x40, 0xe4, 0x36, 0x5a, 0x90, 0x1c, 0xa3, 0xfa, 0x93, 0x8e, 0xb5, 0x89, 0xe4,
+}
+*/
+// Upgrade functions
+message UpgradeFunc {
+    string name = 1;
+}
+
+// Map of version hashes to ugpgrade function
+message DataVersionUpgrades {
+    map<int32, UpgradeFunc> upgrade_functions = 1;
+}
+
+// Version of the edgeproto
+message DataModelVersion {
+  // Version ID
+  fixed32 version = 1;
+  // Hash string for comparison
+  VersionHash version_hash = 2 [(protogen.backend) = true];
+  option (protogen.check_version) = true;
+  option (protogen.generate_version) = true;
+}
