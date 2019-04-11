@@ -65,8 +65,6 @@
 		CloudletRefs
 		ClusterRefs
 		Result
-		UpgradeFunc
-		DataVersionUpgrades
 		DataModelVersion
 */
 package edgeproto

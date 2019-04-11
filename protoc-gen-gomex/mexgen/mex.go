@@ -1255,59 +1255,60 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.generateHideTags(desc)
 	}
 
-	// Generate version check code for version message
-	if GetCheckVersion(message) {
-		m.P("func (m *", message.Name, ") VersionCheck(oldVer ", message.Name, ") bool {")
-		m.P("return m.VersionHash == oldVer.VersionHash && m.Version == oldVer.Version")
-		m.P("}")
-		m.P("")
-	}
-
+	hashStr := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
 	// Generate a hash of all the key messages.
 	if GetGenerateVersion(message) {
-		m.P("//Messages hash:")
-		for _, v := range keyMessages {
-			m.P("// ", v.Name)
-		}
-		str := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
-		m.P("var versionHashString = \"", str, "\"")
-		m.P("")
-		m.P("func GetDataModelVersion() string {")
-		m.P("return versionHashString")
-		m.P("}")
+		m.generateVersionString(hashStr)
+	}
+	// Generate version check code for version message
+	if GetCheckVersion(message) {
+		validateVersionHash(hashStr, file)
+	}
 
-		// Find the version hash
-		for _, desc := range file.Enums() {
-			en := desc.EnumDescriptorProto
-			if GetVersionHashOpt(en) {
-				// We need to check the hash and verify that we have the correct one
-				// If we don't have a correct one fail suggesting an upgrade function
-				// Check the last one(it's the latest) and if it doesn't match fail
-				lastIndex := 0
-				for i, _ := range en.Value {
-					if i > lastIndex {
-						lastIndex = i
-					}
-				}
-				latestVer := en.Value[lastIndex]
-				m.P("// Lat Value = ", latestVer.Name)
-				// Check the substring of the value
-				if !strings.Contains(*latestVer.Name, str) {
-					var upgradeTemplate *template.Template
-					upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
-					buf := bytes.Buffer{}
-					upgErr := ugpradeError{
-						CurHash:        *latestVer.Name,
-						CurHashEnumVal: *latestVer.Number,
-						NewHash:        "HASH_" + str,
-						NewHashEnumVal: *latestVer.Number + 1,
-					}
-					if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
-						log.Fatalf("Cannot execute upgrade error template %v\n", err)
-					}
-					log.Fatalf("%s", buf.String())
+}
 
+func (m *mex) generateVersionString(hashStr string) {
+	m.P("// Keys being hashed:")
+	for _, v := range keyMessages {
+		m.P("// ", v.Name)
+	}
+	m.P("var versionHashString = \"", hashStr, "\"")
+	m.P("")
+	m.P("func GetDataModelVersion() string {")
+	m.P("return versionHashString")
+	m.P("}")
+}
+
+func validateVersionHash(hashStr string, file *generator.FileDescriptor) {
+	// Find the version hash
+	for _, desc := range file.Enums() {
+		en := desc.EnumDescriptorProto
+		if GetVersionHashOpt(en) {
+			// We need to check the hash and verify that we have the correct one
+			// If we don't have a correct one fail suggesting an upgrade function
+			// Check the last one(it's the latest) and if it doesn't match fail
+			lastIndex := 0
+			for i, _ := range en.Value {
+				if i > lastIndex {
+					lastIndex = i
 				}
+			}
+			latestVer := en.Value[lastIndex]
+			// Check the substring of the value
+			if !strings.Contains(*latestVer.Name, hashStr) {
+				var upgradeTemplate *template.Template
+				upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
+				buf := bytes.Buffer{}
+				upgErr := ugpradeError{
+					CurHash:        *latestVer.Name,
+					CurHashEnumVal: *latestVer.Number,
+					NewHash:        "HASH_" + hashStr,
+					NewHashEnumVal: *latestVer.Number + 1,
+				}
+				if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
+					log.Fatalf("Cannot execute upgrade error template %v\n", err)
+				}
+				log.Fatalf("%s", buf.String())
 			}
 		}
 	}

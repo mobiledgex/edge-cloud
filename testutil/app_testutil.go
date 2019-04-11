@@ -65,8 +65,6 @@ It has these top-level messages:
 	CloudletRefs
 	ClusterRefs
 	Result
-	UpgradeFunc
-	DataVersionUpgrades
 	DataModelVersion
 */
 package testutil

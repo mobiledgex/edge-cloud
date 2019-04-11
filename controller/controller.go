@@ -85,6 +85,10 @@ func main() {
 		log.FatalLog("Failed to connect to etcd servers", "err", err)
 	}
 
+	// First off - check version of the objectStore we are running
+	if err = checkVersion(objStore); err != nil {
+		log.FatalLog("Running version doesn't match the version of etcd: %v\n", err)
+	}
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
 		log.FatalLog("Failed to listen on address", "address", *apiAddr,
@@ -207,6 +211,31 @@ func main() {
 	// wait until process in killed/interrupted
 	sig := <-sigChan
 	fmt.Println(sig)
+}
+
+// Helper function to verify the compatibility of etcd version and
+// current data model version
+func checkVersion(objStore objstore.KVStore) error {
+	verHash, err := objStore.Version()
+	if err != nil {
+		return err
+	}
+	// If this is the first upgrade, make sure we are at Verson 0
+	if verHash == "" {
+		if _, found := edgeproto.VersionHash_name[1]; !found {
+			key := objstore.DbKeyPrefixString("Version")
+			_, err = objStore.Put(key, edgeproto.GetDataModelVersion())
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+	}
+	if edgeproto.GetDataModelVersion() != verHash {
+		return fmt.Errorf("Current: [%s], etcd version: [%s]",
+			edgeproto.GetDataModelVersion(), verHash)
+	}
+	return nil
 }
 
 func InitApis(sync *Sync) {
