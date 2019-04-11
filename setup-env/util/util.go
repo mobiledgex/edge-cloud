@@ -27,8 +27,8 @@ import (
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	"github.com/mobiledgex/yaml"
 	"google.golang.org/grpc"
 )
 

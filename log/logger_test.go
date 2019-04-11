@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+	"github.com/mobiledgex/yaml"
 	"github.com/stretchr/testify/assert"
 )
 

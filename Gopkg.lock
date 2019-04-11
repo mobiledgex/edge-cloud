@@ -533,6 +533,14 @@
   version = "v1.1.2"
 
 [[projects]]
+  branch = "v2"
+  digest = "1:879f9faf6d611afe0f691cade136da6080da65be457ea33105c2bb366b956068"
+  name = "github.com/mobiledgex/yaml"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3f4513ca6355e12518de37b4c61292717f072f02"
+
+[[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -850,14 +858,6 @@
   version = "v1.12.0"
 
 [[projects]]
-  branch = "v1"
-  digest = "1:dcb51660fc1fd7bfa3f45305db912fa587c12c17658fd66b3ab55339b59ffbe6"
-  name = "gopkg.in/check.v1"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
-
-[[projects]]
   digest = "1:2d1fbdc6777e5408cabeb02bf336305e724b925ff4546ded0fa8715a7267922a"
   name = "gopkg.in/inf.v0"
   packages = ["."]
@@ -1051,6 +1051,7 @@
     "github.com/coreos/etcd/mvcc/mvccpb",
     "github.com/daviddengcn/go-colortext",
     "github.com/dgrijalva/jwt-go",
+    "github.com/ghodss/yaml",
     "github.com/gogo/gateway",
     "github.com/gogo/googleapis/google/api",
     "github.com/gogo/protobuf/gogoproto",
@@ -1083,6 +1084,7 @@
     "github.com/labstack/echo/middleware",
     "github.com/lib/pq",
     "github.com/mitchellh/mapstructure",
+    "github.com/mobiledgex/yaml",
     "github.com/nmcclain/ldap",
     "github.com/spf13/cobra",
     "github.com/spf13/pflag",
@@ -1101,7 +1103,6 @@
     "google.golang.org/grpc/reflection",
     "google.golang.org/grpc/stats",
     "google.golang.org/grpc/status",
-    "gopkg.in/check.v1",
     "gopkg.in/yaml.v2",
     "k8s.io/api/apps/v1",
     "k8s.io/api/core/v1",
