@@ -409,7 +409,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
 
-			p := RootLBSharedPortBegin
 			for ii, _ := range ports {
 				// Samsung enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
@@ -430,7 +429,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						eport = iport
 					}
 				}
-				for ; p < 65000 && eport == int32(-1); p++ {
+				for p := RootLBSharedPortBegin; p < 65000 && eport == int32(-1); p++ {
 					// each kubernetes service gets its own
 					// nginx proxy that runs in the rootLB,
 					// and http ports are also mapped to it,
