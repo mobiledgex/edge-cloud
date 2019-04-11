@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	yaml "gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/printers"
