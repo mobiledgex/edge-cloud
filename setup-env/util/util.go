@@ -28,7 +28,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/mobiledgex/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 

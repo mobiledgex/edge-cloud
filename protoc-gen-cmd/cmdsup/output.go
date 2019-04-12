@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	yaml "github.com/mobiledgex/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/spf13/pflag"
 )
 

@@ -18,7 +18,7 @@ import (
 	locutil "github.com/mobiledgex/edge-cloud/d-match-engine/dme-locapi/util"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	"github.com/mobiledgex/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 )
 
 var locations map[string]dme.Loc

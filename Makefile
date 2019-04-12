@@ -3,6 +3,8 @@ include Makedefs
 
 GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
 
+export GO111MODULE=on
+
 all: build install 
 
 linux: build-linux install-linux

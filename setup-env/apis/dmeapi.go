@@ -17,7 +17,7 @@ import (
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	"github.com/mobiledgex/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 

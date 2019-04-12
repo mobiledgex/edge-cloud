@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/mobiledgex/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/stretchr/testify/assert"
 )
 
