@@ -109,7 +109,11 @@ apps:
       - name: SOME_ENV1
         value: value1
       - name: SOME_ENV2
-        value: value2
+        valueFrom:
+          configMapKeyRef:
+            key: CloudletName
+            name: mexcluster-info
+            optional: true
 
 appinstances:
 - key:
