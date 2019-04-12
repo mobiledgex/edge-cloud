@@ -3,7 +3,6 @@ package crmutil
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -260,20 +259,13 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
-			if err != nil {
-				errstr := fmt.Sprintf("get kube names failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
-				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
-				return
-			}
-			err = cd.platform.CreateAppInst(&clusterInst, &app, &appInst, names)
+			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
 				log.InfoLog("can't create app inst", "error", errstr, "key", key)
 				log.DebugLog(log.DebugLevelMexos, "cleaning up failed appinst", "key", key)
-				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst, names)
+				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
 				if derr != nil {
 					log.InfoLog("can't cleanup app inst", "error", errstr, "key", key)
 				}
@@ -297,14 +289,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "appinst", appInst, "clusterinst", clusterInst)
-			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
-			if err != nil {
-				errstr := fmt.Sprintf("get kube names failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
-				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
-				return
-			}
-			err = cd.platform.DeleteAppInst(&clusterInst, &app, &appInst, names)
+			err := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)
