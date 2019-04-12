@@ -30,8 +30,6 @@ extend google.protobuf.MessageOptions {
   bool notify_filter_cloudlet_key = 51019;
   bool notify_flush = 51020;
   bool notify_print_send_recv = 51022;
-  bool generate_version = 51023;
-  bool check_version = 51024;
 }
 
 extend google.protobuf.EnumOptions {

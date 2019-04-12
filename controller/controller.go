@@ -222,7 +222,9 @@ func checkVersion(objStore objstore.KVStore) error {
 	}
 	// If this is the first upgrade, make sure we are at Verson 0
 	if verHash == "" {
+		log.InfoLog("Could not find a previous version", "curr hash", edgeproto.GetDataModelVersion())
 		if _, found := edgeproto.VersionHash_name[1]; !found {
+			log.InfoLog("Not in etcd", "should be", edgeproto.VersionHash_name[0])
 			key := objstore.DbKeyPrefixString("Version")
 			_, err = objStore.Put(key, edgeproto.GetDataModelVersion())
 			if err != nil {

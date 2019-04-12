@@ -12,13 +12,4 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
     HASH_c7889840e4365a901ca3fa938eb589e4 = 0;
     option (protogen.version_hash) = true;
   }
-
-// Version of the edgeproto
-message DataModelVersion {
-  // Version ID
-  fixed32 version = 1;
-  // Hash string for comparison
-  VersionHash version_hash = 2 [(protogen.backend) = true];
-  option (protogen.check_version) = true;
-  option (protogen.generate_version) = true;
-}
+  

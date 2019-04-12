@@ -151,6 +151,14 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
 	m.importStrconv = true
+
+	if GetVersionHashOpt(en) {
+		hashStr := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
+		// Generate a hash of all the key messages.
+		m.generateVersionString(hashStr)
+		// Generate version check code for version message
+		validateVersionHash(en, hashStr, file)
+	}
 }
 
 type enumTempl struct {
@@ -1254,17 +1262,6 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
 		m.generateHideTags(desc)
 	}
-
-	hashStr := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
-	// Generate a hash of all the key messages.
-	if GetGenerateVersion(message) {
-		m.generateVersionString(hashStr)
-	}
-	// Generate version check code for version message
-	if GetCheckVersion(message) {
-		validateVersionHash(hashStr, file)
-	}
-
 }
 
 func (m *mex) generateVersionString(hashStr string) {
@@ -1279,38 +1276,32 @@ func (m *mex) generateVersionString(hashStr string) {
 	m.P("}")
 }
 
-func validateVersionHash(hashStr string, file *generator.FileDescriptor) {
-	// Find the version hash
-	for _, desc := range file.Enums() {
-		en := desc.EnumDescriptorProto
-		if GetVersionHashOpt(en) {
-			// We need to check the hash and verify that we have the correct one
-			// If we don't have a correct one fail suggesting an upgrade function
-			// Check the last one(it's the latest) and if it doesn't match fail
-			lastIndex := 0
-			for i, _ := range en.Value {
-				if i > lastIndex {
-					lastIndex = i
-				}
-			}
-			latestVer := en.Value[lastIndex]
-			// Check the substring of the value
-			if !strings.Contains(*latestVer.Name, hashStr) {
-				var upgradeTemplate *template.Template
-				upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
-				buf := bytes.Buffer{}
-				upgErr := ugpradeError{
-					CurHash:        *latestVer.Name,
-					CurHashEnumVal: *latestVer.Number,
-					NewHash:        "HASH_" + hashStr,
-					NewHashEnumVal: *latestVer.Number + 1,
-				}
-				if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
-					log.Fatalf("Cannot execute upgrade error template %v\n", err)
-				}
-				log.Fatalf("%s", buf.String())
-			}
+func validateVersionHash(en *descriptor.EnumDescriptorProto, hashStr string, file *generator.FileDescriptor) {
+	// We need to check the hash and verify that we have the correct one
+	// If we don't have a correct one fail suggesting an upgrade function
+	// Check the last one(it's the latest) and if it doesn't match fail
+	lastIndex := 0
+	for i, _ := range en.Value {
+		if i > lastIndex {
+			lastIndex = i
 		}
+	}
+	latestVer := en.Value[lastIndex]
+	// Check the substring of the value
+	if !strings.Contains(*latestVer.Name, hashStr) {
+		var upgradeTemplate *template.Template
+		upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
+		buf := bytes.Buffer{}
+		upgErr := ugpradeError{
+			CurHash:        *latestVer.Name,
+			CurHashEnumVal: *latestVer.Number,
+			NewHash:        "HASH_" + hashStr,
+			NewHashEnumVal: *latestVer.Number + 1,
+		}
+		if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
+			log.Fatalf("Cannot execute upgrade error template %v\n", err)
+		}
+		log.Fatalf("%s", buf.String())
 	}
 }
 
@@ -1476,14 +1467,6 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
-}
-
-func GetCheckVersion(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_CheckVersion, false)
-}
-
-func GetGenerateVersion(message *descriptor.DescriptorProto) bool {
-	return proto.GetBoolExtension(message.Options, protogen.E_GenerateVersion, false)
 }
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {

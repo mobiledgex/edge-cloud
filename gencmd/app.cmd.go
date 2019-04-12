@@ -65,7 +65,6 @@ It has these top-level messages:
 	CloudletRefs
 	ClusterRefs
 	Result
-	DataModelVersion
 */
 package gencmd
 

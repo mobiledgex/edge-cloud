@@ -65,7 +65,6 @@
 		CloudletRefs
 		ClusterRefs
 		Result
-		DataModelVersion
 */
 package edgeproto
 
