@@ -345,7 +345,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
-		ipaccess := edgeproto.IpAccess_IpAccessDedicated
+		var clusterKey *edgeproto.ClusterKey
+		ipaccess := edgeproto.IpAccess_IpAccessShared
 		if !defaultCloudlet {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
@@ -360,6 +361,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Info for cloudlet not found")
 			}
 			ipaccess = clusterInst.IpAccess
+			clusterKey = &clusterInst.Key.ClusterKey
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -411,7 +413,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			in.Uri = cloudcommon.GetAppFQDN(&in.Key)
+			in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}

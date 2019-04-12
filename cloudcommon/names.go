@@ -74,15 +74,23 @@ func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
 	return fmt.Sprintf("%s.%s.%s", loc, oper, AppDNSRoot)
 }
 
+// GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
+// for clusters using "dedicated" IP access.
+func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+	clust := util.DNSSanitize(clusterKey.Name)
+	loc := util.DNSSanitize(cloudletKey.Name)
+	oper := util.DNSSanitize(cloudletKey.OperatorKey.Name)
+	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, AppDNSRoot)
+}
+
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
 // for apps using "dedicated" IP access.
-func GetAppFQDN(key *edgeproto.AppInstKey) string {
-	loc := util.DNSSanitize(key.CloudletKey.Name)
-	oper := util.DNSSanitize(key.CloudletKey.OperatorKey.Name)
-	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
+func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey)
 	app := util.DNSSanitize(key.AppKey.Name)
+	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s%s%s.%s.%s.%s", dev, app, ver, loc, oper, AppDNSRoot)
+	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
 }
 
 func FQDNPrefix(svcName string) string {
