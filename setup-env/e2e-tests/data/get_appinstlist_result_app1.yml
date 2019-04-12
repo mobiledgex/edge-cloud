@@ -9,7 +9,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: acmeappcosomeapplication110.azure-cloud-9.azure.mobiledgex.net
+    fqdn: someapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
@@ -31,7 +31,7 @@ cloudlets:
   appinstances:
   - appname: someapplication1
     appvers: "1.0"
-    fqdn: acmeappcosomeapplication110.gcp-cloud-10.gcp.mobiledgex.net
+    fqdn: someapplication110.autoclustersomeapplication1.gcp-cloud-10.gcp.mobiledgex.net
     ports:
     - proto: LProtoTCP
       internalport: 80
