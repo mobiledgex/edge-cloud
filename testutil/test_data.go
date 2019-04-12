@@ -667,7 +667,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),
 		UsedDisk:       GetCloudletUsedDisk(0, 2, 1),
 		UsedDynamicIps: 1,
-		RootLbPorts:    map[int32]int32{443: 1, 11111: 1, 2024: 1},
+		RootLbPorts:    map[int32]int32{443: 1, 11111: 2, 2024: 2},
 	},
 	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
