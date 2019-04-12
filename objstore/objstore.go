@@ -65,9 +65,6 @@ type KVStore interface {
 	Grant(ctx context.Context, ttl int64) (int64, error)
 	// KeepAlive keeps a lease alive. This call blocks.
 	KeepAlive(ctx context.Context, leaseID int64) error
-	// Version call gives back a string of the Version of the object store
-	// data model
-	Version() (string, error)
 }
 
 var ErrKVStoreNotInitialized = errors.New("Object Storage not initialized")

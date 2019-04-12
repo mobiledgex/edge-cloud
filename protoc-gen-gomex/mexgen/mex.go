@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -16,8 +17,6 @@ import (
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protogen"
 )
-
-var keyMessages []descriptor.DescriptorProto
 
 func RegisterMex() {
 	generator.RegisterPlugin(new(mex))
@@ -42,6 +41,7 @@ type mex struct {
 	importCmp     bool
 	firstFile     string
 	support       gensupport.PluginSupport
+	keyMessages   []descriptor.DescriptorProto
 }
 
 func (m *mex) Name() string {
@@ -61,6 +61,16 @@ func (m *mex) Init(gen *generator.Generator) {
 // P forwards to g.gen.P
 func (m *mex) P(args ...interface{}) {
 	m.gen.P(args...)
+}
+
+func (m *mex) getAllKeyMessages() {
+	for _, file := range m.gen.Request.ProtoFile {
+		for _, desc := range file.MessageType {
+			if GetObjKey(desc) {
+				m.keyMessages = append(m.keyMessages, *desc)
+			}
+		}
+	}
 }
 
 func (m *mex) Generate(file *generator.FileDescriptor) {
@@ -153,7 +163,9 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.importStrconv = true
 
 	if GetVersionHashOpt(en) {
-		hashStr := fmt.Sprintf("%x", getKeyVersionHash(keyMessages))
+		// Collect all key objects
+		m.getAllKeyMessages()
+		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
 		// Generate version check code for version message
@@ -1223,7 +1235,6 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 	}
 	if GetObjKey(message) {
-		keyMessages = append(keyMessages, *message)
 		m.P("func (m *", message.Name, ") GetKeyString() string {")
 		m.P("key, err := json.Marshal(m)")
 		m.P("if err != nil {")
@@ -1266,7 +1277,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 
 func (m *mex) generateVersionString(hashStr string) {
 	m.P("// Keys being hashed:")
-	for _, v := range keyMessages {
+	for _, v := range m.keyMessages {
 		m.P("// ", v.Name)
 	}
 	m.P("var versionHashString = \"", hashStr, "\"")
@@ -1305,7 +1316,11 @@ func validateVersionHash(en *descriptor.EnumDescriptorProto, hashStr string, fil
 	}
 }
 
+// Hash function for the Data Model Version
 func getKeyVersionHash(msgs []descriptor.DescriptorProto) [16]byte {
+	sort.Slice(msgs, func(i, j int) bool {
+		return *msgs[i].Name < *msgs[j].Name
+	})
 	arrBytes := []byte{}
 	for _, i := range msgs {
 		jsonBytes, _ := json.Marshal(i)

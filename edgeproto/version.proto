@@ -9,7 +9,7 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 
 // Below enum lists hashes as well as corresponding versions
 enum VersionHash {
-  HASH_c7889840e4365a901ca3fa938eb589e4 = 0;
+  HASH_d0311c4f0d3e56f5727fd801646d39cb = 0;
   option (protogen.version_hash) = true;
 }
 

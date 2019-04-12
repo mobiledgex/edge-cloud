@@ -335,15 +335,3 @@ func (e *EtcdClient) KeepAlive(ctx context.Context, leaseID int64) error {
 	}
 	return nil
 }
-
-func (e *EtcdClient) Version() (string, error) {
-	key := objstore.DbKeyPrefixString("Version")
-	val, _, _, err := e.Get(key)
-	if err != nil {
-		if strings.Contains(err.Error(), objstore.ErrKVStoreKeyNotFound.Error()) {
-			return "", nil
-		}
-		return "", err
-	}
-	return string(val), nil
-}

@@ -310,10 +310,6 @@ func (e *dummyEtcd) commit(stm *dummySTM) (int64, error) {
 	return e.rev, nil
 }
 
-func (d *dummyEtcd) Version() (string, error) {
-	return "", nil
-}
-
 type dummyReadResp struct {
 	val    string
 	modRev int64
