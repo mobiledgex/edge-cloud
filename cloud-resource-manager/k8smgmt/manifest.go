@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	yaml "github.com/ghodss/yaml"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -21,7 +22,7 @@ const (
 )
 
 type K8sMgmtConfig struct {
-	ReplicaPolicy string `yaml:"replicaPolicy"`
+	ReplicaScalingPolicy string `yaml:"replicaScalingPolicy"`
 }
 
 func GetKubeNodeCount(client pc.PlatformClient, names *KubeNames) (int, error) {
@@ -68,7 +69,7 @@ func MergeConfigsVars(client pc.PlatformClient, names *KubeNames, kubeManifest s
 				log.DebugLog(log.DebugLevelMexos, "cannot unmarshal k8smgmt config", "kind", v.Kind,
 					"config", v.Config, "error", err)
 			} else {
-				if k8sconfig.ReplicaPolicy == "match-cluster-nodes" {
+				if k8sconfig.ReplicaScalingPolicy == "match-cluster-nodes" {
 					replicas, err = GetKubeNodeCount(client, names)
 					if err != nil {
 						log.DebugLog(log.DebugLevelMexos, "k8mgmt config error", "error", err)

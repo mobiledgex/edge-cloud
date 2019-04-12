@@ -116,7 +116,7 @@ apps:
             optional: true
   - kind: k8smgmtConfig
     config: |
-      replicaPolicy: "match-cluster-nodes"
+      replicaScalingPolicy: "match-cluster-nodes"
 
 appinstances:
 - key:
