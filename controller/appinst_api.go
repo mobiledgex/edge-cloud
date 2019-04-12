@@ -161,6 +161,7 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
 	var bitmap int32
+
 	switch proto {
 	//put all "TCP" protocols below here
 	case dme.LProto_LProtoHTTP:
@@ -170,6 +171,7 @@ func getProtocolBitMap(proto dme.LProto) (int32, error) {
 	//put all "UDP" protocols below here
 	case dme.LProto_LProtoUDP:
 		bitmap = 2 //10
+
 		break
 	default:
 		return 0, errors.New("Unknown protocol in use for this app")
@@ -420,6 +422,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				iport := ports[ii].InternalPort
 				eport := int32(-1)
 				if usedProtocols, found := cloudletRefs.RootLbPorts[iport]; !found || !protocolInUse(protocolBits, usedProtocols) {
+
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
@@ -435,6 +438,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// and http ports are also mapped to it,
 					// so there is no shared L7 port + path.
 					if usedProtocols, found := cloudletRefs.RootLbPorts[p]; found && protocolInUse(protocolBits, usedProtocols) {
+
 						continue
 					}
 					eport = p
@@ -445,6 +449,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				ports[ii].PublicPort = eport
 				existingProtoBits, _ := cloudletRefs.RootLbPorts[eport]
 				cloudletRefs.RootLbPorts[eport] = addProtocol(protocolBits, existingProtoBits)
+
 				cloudletRefsChanged = true
 			}
 		} else {
@@ -560,6 +565,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				for ii, _ := range in.MappedPorts {
 					p := in.MappedPorts[ii].PublicPort
 					protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
+
 					if err != nil {
 						return err
 					}
