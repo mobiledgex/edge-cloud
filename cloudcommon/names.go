@@ -88,8 +88,9 @@ func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeprot
 func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
 	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey)
 	app := util.DNSSanitize(key.AppKey.Name)
+	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s%s.%s", app, ver, lb)
+	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
 }
 
 func FQDNPrefix(svcName string) string {
