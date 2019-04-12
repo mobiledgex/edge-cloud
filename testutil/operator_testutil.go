@@ -291,8 +291,17 @@ func (s *DummyServer) UpdateOperator(ctx context.Context, in *edgeproto.Operator
 }
 
 func (s *DummyServer) ShowOperator(in *edgeproto.Operator, server edgeproto.OperatorApi_ShowOperatorServer) error {
-	server.Send(&edgeproto.Operator{})
-	server.Send(&edgeproto.Operator{})
-	server.Send(&edgeproto.Operator{})
+	obj := &edgeproto.Operator{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+		server.Send(&edgeproto.Operator{})
+		server.Send(&edgeproto.Operator{})
+		server.Send(&edgeproto.Operator{})
+	}
+	for _, out := range s.Operators {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
 	return nil
 }

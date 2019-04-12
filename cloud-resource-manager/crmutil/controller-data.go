@@ -271,7 +271,12 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
-				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
+				log.InfoLog("can't create app inst", "error", errstr, "key", key)
+				log.DebugLog(log.DebugLevelMexos, "cleaning up failed appinst", "key", key)
+				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst, names)
+				if derr != nil {
+					log.InfoLog("can't cleanup app inst", "error", errstr, "key", key)
+				}
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "created docker app inst", "appisnt", appInst, "clusterinst", clusterInst)

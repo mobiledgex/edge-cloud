@@ -1,15 +1,23 @@
 # Makefile
 include Makedefs
 
+GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
+
 all: build install 
 
 linux: build-linux install-linux
 
-dep:
-	dep ensure -update github.com/mobiledgex/edge-cloud-infra
+check-vers:
+	@if test $(GOVERS) != go1.12; then \
+		echo "Go version is $(GOVERS)"; \
+		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
+		exit 2; \
+	fi
+
+dep: check-vers
 	dep ensure -vendor-only
 
-build:
+build: check-vers
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
@@ -28,7 +36,8 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
-	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud .
+	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
+		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	for ADDLTAG in ${ADDLTAGS}; do \

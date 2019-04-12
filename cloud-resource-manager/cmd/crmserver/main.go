@@ -6,13 +6,10 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"plugin"
 	"strings"
 	"syscall"
 
-	"github.com/mobiledgex/edge-cloud-infra/crm-platforms/azure"
-	"github.com/mobiledgex/edge-cloud-infra/crm-platforms/gcp"
-	"github.com/mobiledgex/edge-cloud-infra/crm-platforms/mexdind"
-	"github.com/mobiledgex/edge-cloud-infra/crm-platforms/openstack"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/crmutil"
 	pf "github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/dind"
@@ -31,11 +28,11 @@ var bindAddress = flag.String("apiAddr", "0.0.0.0:55099", "Address to bind")
 var controllerAddress = flag.String("controller", "127.0.0.1:55001", "Address of controller API")
 var notifyAddrs = flag.String("notifyAddrs", "127.0.0.1:50001", "Comma separated list of controller notify listener addresses")
 var cloudletKeyStr = flag.String("cloudletKey", "", "Json or Yaml formatted cloudletKey for the cloudlet in which this CRM is instantiated; e.g. '{\"operator_key\":{\"name\":\"TMUS\"},\"name\":\"tmocloud1\"}'")
-var fakecloudlet = flag.Bool("fakecloudlet", false, "Fake cloudlet mode.  A fake cloudlet is reported to the controller")
 var debugLevels = flag.String("d", "", fmt.Sprintf("Comma separated list of %v", log.DebugLevelStrings))
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var hostname = flag.String("hostname", "", "Unique hostname within Cloudlet")
 var platformName = flag.String("platform", "", "Platform type of Cloudlet")
+var solib = flag.String("plugin", "", "plugin file")
 
 // myCloudlet is the information for the cloudlet in which the CRM is instantiated.
 // The key for myCloudlet is provided as a configuration - either command line or
@@ -59,12 +56,6 @@ func main() {
 	standalone := false
 	cloudcommon.ParseMyCloudletKey(standalone, cloudletKeyStr, &myCloudlet.Key)
 	cloudcommon.SetNodeKey(hostname, edgeproto.NodeType_NodeCRM, &myCloudlet.Key, &myNode.Key)
-	if standalone {
-		*fakecloudlet = true
-	}
-	if *fakecloudlet {
-		*platformName = "fakecloudlet"
-	}
 	if *platformName == "" {
 		// see if env var was set
 		*platformName = os.Getenv("PLATFORM")
@@ -75,25 +66,14 @@ func main() {
 	}
 	log.DebugLog(log.DebugLevelMexos, "Using cloudletKey", "key", myCloudlet.Key, "platform", *platformName)
 
-	// Get platform implementation.
-	// this is a switch for now, but eventually will load plugin modules
-	// based on platform name so we can disentangle edge-cloud from
-	// edge-cloud-infra.
-	switch *platformName {
-	case "fakecloudlet":
-		platform = &fake.Platform{}
-	case "dind":
-		platform = &dind.Platform{}
-	case "mexdind":
-		platform = &mexdind.Platform{}
-	case "gcp":
-		platform = &gcp.Platform{}
-	case "azure":
-		platform = &azure.Platform{}
-	default:
-		platform = &openstack.Platform{}
+	// Load platform implementation.
+	var err error
+	platform, err = getPlatform(*platformName)
+	if err != nil {
+		log.FatalLog("Failed to get platform %s, %s", *platformName, err.Error())
 	}
 
+	// Start Communictions.
 	listener, err := net.Listen("tcp", *bindAddress)
 	if err != nil {
 		log.FatalLog("Failed to bind", "addr", *bindAddress, "err", err)
@@ -164,6 +144,36 @@ func main() {
 
 	<-sigChan
 	os.Exit(0)
+}
+
+func getPlatform(plat string) (pf.Platform, error) {
+	// Building plugins is slow, so directly importable
+	// platforms are not built as plugins.
+	if plat == "dind" {
+		return &dind.Platform{}, nil
+	} else if plat == "fakecloudlet" {
+		return &fake.Platform{}, nil
+	}
+
+	// Load platform from plugin
+	if *solib == "" {
+		*solib = os.Getenv("GOPATH") + "/plugins/platforms.so"
+	}
+	log.DebugLog(log.DebugLevelMexos, "Loading plugin", "plugin", *solib)
+	plug, err := plugin.Open(*solib)
+	if err != nil {
+		log.FatalLog("failed to load plugin", "plugin", *solib, "error", err)
+	}
+	sym, err := plug.Lookup("GetPlatform")
+	if err != nil {
+		log.FatalLog("plugin does not have GetPlatform symbol", "plugin", *solib)
+	}
+	getPlatFunc, ok := sym.(func(plat string) (pf.Platform, error))
+	if !ok {
+		log.FatalLog("plugin GetPlatform symbol does not implement func(plat string) (platform.Platform, error)", "plugin", *solib)
+	}
+	log.DebugLog(log.DebugLevelMexos, "Creating platform")
+	return getPlatFunc(*platformName)
 }
 
 //initializePlatform *Must be called as a seperate goroutine.*

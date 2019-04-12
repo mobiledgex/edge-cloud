@@ -513,14 +513,30 @@ type methodArgs struct {
 	InName    string
 	OutName   string
 	Outstream bool
+	OutList   bool
 }
 
 var methodTmpl = `
 {{- if .Outstream}}
 func (s *DummyServer) {{.Method}}(in *edgeproto.{{.InName}}, server edgeproto.{{.Service}}_{{.Method}}Server) error {
-	server.Send(&edgeproto.{{.OutName}}{})
-	server.Send(&edgeproto.{{.OutName}}{})
-	server.Send(&edgeproto.{{.OutName}}{})
+{{- if (eq .InName .OutName)}}
+	obj := &edgeproto.{{.OutName}}{}
+	if obj.Matches(in, edgeproto.MatchFilter()) {
+{{- else}}
+	if true {
+{{- end}}
+		server.Send(&edgeproto.{{.OutName}}{})
+		server.Send(&edgeproto.{{.OutName}}{})
+		server.Send(&edgeproto.{{.OutName}}{})
+	}
+{{- if .OutList}}
+	for _, out := range s.{{.OutName}}s {
+		if !out.Matches(in, edgeproto.MatchFilter()) {
+			continue
+		}
+		server.Send(&out)
+	}
+{{- end}}
 	return nil
 }
 {{- else}}
@@ -543,6 +559,7 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 		InName:    *in.DescriptorProto.Name,
 		OutName:   *out.DescriptorProto.Name,
 		Outstream: gensupport.ServerStreaming(method),
+		OutList:   GetGenerateCud(out.DescriptorProto),
 	}
 	err := t.methodTmpl.Execute(t, &args)
 	if err != nil {
@@ -555,11 +572,30 @@ func (t *TestCud) genDummyMethod(service string, method *descriptor.MethodDescri
 }
 
 func (t *TestCud) genDummyServer() {
-	t.P("type DummyServer struct {}")
+	t.P("type DummyServer struct {")
+
+	for _, file := range t.Generator.Request.ProtoFile {
+		for _, desc := range file.MessageType {
+			if !GetGenerateCud(desc) {
+				continue
+			}
+			t.P(desc.Name, "s []edgeproto.", desc.Name)
+		}
+	}
+	t.P("}")
 	t.P()
-	t.P("func RegisterDummyServer(server *grpc.Server) {")
+
+	t.P("func RegisterDummyServer(server *grpc.Server) *DummyServer {")
 	t.P("d := &DummyServer{}")
 
+	for _, file := range t.Generator.Request.ProtoFile {
+		for _, desc := range file.MessageType {
+			if !GetGenerateCud(desc) {
+				continue
+			}
+			t.P("d.", desc.Name, "s = make([]edgeproto.", desc.Name, ", 0)")
+		}
+	}
 	for _, file := range t.Generator.Request.ProtoFile {
 		if len(file.Service) == 0 {
 			continue
@@ -583,6 +619,7 @@ func (t *TestCud) genDummyServer() {
 			}
 		}
 	}
+	t.P("return d")
 	t.P("}")
 	t.P()
 	t.importGrpc = true
