@@ -9,10 +9,11 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/mobiledgex/edge-cloud-infra/mexos"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -74,6 +75,8 @@ var prometheusT *template.Template
 var MEXPrometheusAppHelmTemplate = `prometheus:
   prometheusSpec:
     scrapeInterval: "{{.Interval}}"
+  service:
+    type: LoadBalancer
 kubelet:
   serviceMonitor:
     ## Enable scraping the kubelet over https. For requirements to enable this see
@@ -124,7 +127,7 @@ type exporterData struct {
 	InfluxDBAddr string
 	InfluxDBUser string
 	InfluxDBPass string
-	Interval     time.Duration
+	Interval     string
 }
 
 // Process updates from notify framework about cluster instances
@@ -198,6 +201,8 @@ func appInstCreateApi(apiClient edgeproto.AppInstApiClient, appInst edgeproto.Ap
 
 // create an appInst as a clustersvc
 func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInstKey, app *edgeproto.App) error {
+	//update flavor
+	app.DefaultFlavor = edgeproto.FlavorKey{Name: *appFlavor}
 	conn, err := grpc.Dial(*ctrlAddr, dialOpts, grpc.WithBlock(), grpc.WithWaitForHandshake())
 	if err != nil {
 		return fmt.Errorf("Connect to server %s failed: %s", *ctrlAddr, err.Error())
@@ -251,14 +256,21 @@ func createMEXMetricsExporterInst(dialOpts grpc.DialOption, instKey edgeproto.Cl
 	return createAppInstCommon(dialOpts, instKey, &MEXMetricsExporterApp)
 }
 
+func scrapeIntervalInSeconds(scrapeInterval time.Duration) string {
+	var secs = int(scrapeInterval.Seconds()) //round it to the second
+	var scrapeStr = strconv.Itoa(secs) + "s"
+	return scrapeStr
+}
+
 func fillAppConfigs(app *edgeproto.App) error {
+	var scrapeStr = scrapeIntervalInSeconds(*scrapeInterval)
 	switch app.Key.Name {
 	case MEXMetricsExporterAppName:
 		ex := exporterData{
 			InfluxDBAddr: *influxDBAddr,
 			InfluxDBUser: *influxDBUser,
 			InfluxDBPass: *influxDBPass,
-			Interval:     *scrapeInterval,
+			Interval:     scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := exporterT.Execute(&buf, &ex)
@@ -266,18 +278,18 @@ func fillAppConfigs(app *edgeproto.App) error {
 			return err
 		}
 		paramConf := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigEnvYaml,
+			Kind:   k8smgmt.AppConfigEnvYaml,
 			Config: buf.String(),
 		}
 		envConf := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigEnvYaml,
+			Kind:   k8smgmt.AppConfigEnvYaml,
 			Config: MEXMetricsExporterEnvVars,
 		}
 
 		app.Configs = []*edgeproto.ConfigFile{&paramConf, &envConf}
 	case MEXPrometheusAppName:
 		ex := exporterData{
-			Interval: *scrapeInterval,
+			Interval: scrapeStr,
 		}
 		buf := bytes.Buffer{}
 		err := prometheusT.Execute(&buf, &ex)
@@ -286,7 +298,7 @@ func fillAppConfigs(app *edgeproto.App) error {
 		}
 		// Now add this yaml to the prometheus AppYamls
 		config := edgeproto.ConfigFile{
-			Kind:   mexos.AppConfigHemYaml,
+			Kind:   k8smgmt.AppConfigHelmYaml,
 			Config: buf.String(),
 		}
 		app.Configs = []*edgeproto.ConfigFile{&config}

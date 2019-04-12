@@ -13,21 +13,27 @@ my $Usage = "Usage...\n";
 my $App = 0;
 my $Operator = 0;
 my $Developer = 0;
+my $Cloudlet = "cloud";
 my $Max = 0;
 my $GenCloudletInfo = 0;
 my $Help = 0;
+my $GenSamsungApp = 0;
 ############################################################################
 
 GetOptions(
-           'debug' => \$Debug,
-	   'app=s' => \$App,
-           'operator=s' => \$Operator,
-	   'max=i' =>\$Max,
-	   'developer=s' => \$Developer,
-	   'gencloudletinfo' => \$GenCloudletInfo,
-	   'help' => \$Help
+     'debug' => \$Debug,
+     'app=s' => \$App,
+     'operator=s' => \$Operator,
+     'max=i' =>\$Max,
+     'developer=s' => \$Developer,
+     'cloudlet=s' => \$Cloudlet,
+     'gencloudletinfo' => \$GenCloudletInfo,
+     'genplatformapp' => \$GenSamsungApp,
+     'help' => \$Help
           ) or die "Invalid options \n $Usage";
 
+# genplatformapp is Samsung enabling layer app
+# if this option is passed we will create Samsung enabling layer app and a developer for it
 my $MAXLAT = 85;
 my $MAXLONG = 175;
 
@@ -37,11 +43,13 @@ my $Usage = "
            -operator <Operator name>
            -app <App names list separated by comma, e.g. app1,app2>
            -developer <developer name>
+           -cloudlet <cloudlet name>
+           -genplatformapp
            -max <max cloudlets to create>
            -help <show this message>
 
      Example:
-        ./genAppData.pl -operator OP1 -developer Dev1 -app app1,app2 -max 100 > appdata_100.yml\n";
+        ./genAppData.pl -operator OP1 -developer Dev1 -app app1,app2 -genplatformapp -max 100 > appdata_100.yml\n";
 
 
 
@@ -73,6 +81,7 @@ sub checkOptions{
 
 sub printCloudlet{
   my $operator = shift;
+  my $cloudlet = shift;
   my $cid = shift;
   my $lat = shift;
   my $long = shift;
@@ -80,8 +89,8 @@ sub printCloudlet{
 - key:
     operatorkey:
       name: $operator
-    name: $operator-cloud-$cid
-  accessuri: $operator-cloud.$cid
+    name: $operator-$cloudlet-$cid
+  accessuri: $operator-$cloudlet.$cid
 
   location:
     latitude: $lat
@@ -93,12 +102,13 @@ sub printCloudlet{
 
 sub printCloudletInfo{
   my $operator = shift;
+  my $cloudlet = shift;
   my $cid = shift;
   print ("
 - key:
     operatorkey:
       name: $operator
-    name: $operator-cloud-$cid
+    name: $operator-$cloudlet-$cid
 
   state: CloudletStateReady
   osmaxram: 65536
@@ -109,6 +119,7 @@ sub printCloudletInfo{
 
 sub printAppinst{
   my $operator = shift;
+  my $cloudlet = shift;
   my $cid = shift;
   my $lat = shift;
   my $long = shift;
@@ -124,7 +135,7 @@ sub printAppinst{
     cloudletkey:
       operatorkey:
         name: $operator
-      name: $operator-cloud-$cid
+      name: $operator-$cloudlet-$cid
 
     id: $cid
   cloudletloc:
@@ -133,7 +144,7 @@ sub printAppinst{
   clusterinstkey:
     clusterkey:
       name: autocluster
-\n");
+");
 
 }
 
@@ -157,15 +168,15 @@ sub genLatLongs{
           $operator = "gcp";
       }
       if ($type eq "cloudlets"){
-        printCloudlet($operator,$c,$lat,$long);
+        printCloudlet($operator,$Cloudlet,$c,$lat,$long);
       }
       if ($type eq "cloudletinfos"){
-        printCloudletInfo($operator,$c)
+        printCloudletInfo($operator,$Cloudlet,$c)
       }
       if ($type eq "appinstances"){
         my @apps = split(",", $App);
         foreach my $app(@apps){
-          printAppinst($operator,$c,$lat,$long,$app);
+          printAppinst($operator,$Cloudlet,$c,$lat,$long,$app);
         }
       }
     }
@@ -195,13 +206,18 @@ developers:
   passhash: 123456789012345670
   address: 1234 $Developer street
   email: $Developer\@gmail.com
+\n")
+}
+
+sub genSamsungDeveloper{
+  print("
 - key:
     name: Samsung
   username: Samsung-user
   passhash: 123456789012345670
   address: 1234 Samsung street
   email: samsung\@gmail.com
-\n\n")
+\n")
 }
 
 sub genFlavor{
@@ -255,13 +271,16 @@ sub genApp{
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.small
-  accessports: tcp:80,http:443,udp:10002
-  ipaccess: IpAccessDedicatedOrShared
+  accessports: tcp:80,http:443,udp:10002");
+  # if this is a platrfom app we need to add android package
+  if ($GenSamsungApp) {
+    print("
   androidpackagename: $androidpackagename
-  permitsplatformapps: true
+  permitsplatformapps: true");
+  }
+  print("
   authpublickey: \"-----BEGIN PUBLIC KEY-----\\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij\\nTkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0\\nVU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC\\nGJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS\\nz3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m\\nQnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C\\n/QIDAQAB\\n-----END PUBLIC KEY-----\\n\"
 ")
-
 }
 
 
@@ -313,7 +332,6 @@ print(
   defaultflavor:
     name: x1.small
   accessports: \"tcp:64000\"
-  ipaccess: IpAccessDedicatedOrShared
 \n")
 }
 
@@ -334,6 +352,12 @@ my $extra = "";
 if ($GenCloudletInfo) {
   $extra = $extra . " -gencloudletinfo"
 }
+if ($GenSamsungApp) {
+  $extra = $extra . " -genplatformapp"
+}
+if ($Cloudlet ne "cloud") {
+  $extra = $extra . " -cloudlet " . $Cloudlet
+}
 print ("# Generated by genAppData.pl as follows:
 #   ./genAppData.pl -operator $Operator -developer $Developer -app $App -max $Max $extra\n");
 
@@ -345,9 +369,14 @@ if ($GenCloudletInfo) {
   genLatLongs("cloudletinfos");
 }
 genDeveloper();
+if ($GenSamsungApp) {
+  genSamsungDeveloper();
+}
 
 print "apps:\n";
-genSamsungApp();
+if ($GenSamsungApp) {
+  genSamsungApp();
+}
 my @apps = split(",", $App);
 foreach my $app(@apps){
    genApp($app);
@@ -357,4 +386,6 @@ genLatLongs("appinstances");
 foreach my $app(@apps){
    genDefaultAppInst($app);
 }
-genSamsungAppInst();
+if ($GenSamsungApp) {
+  genSamsungAppInst();
+}

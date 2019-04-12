@@ -211,7 +211,7 @@ message AppFqdn{
   // developer name
   string DevName = 3;
   // App FQDN
-  string FQDN = 4;
+  repeated string FQDNs = 4;
   // optional android package name
   string AndroidPackageName = 5;
 }

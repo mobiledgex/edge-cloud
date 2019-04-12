@@ -1,0 +1,17 @@
+[Unit]
+Description=CRM Service
+Wants=network.target
+After=network.target
+
+[Service]
+ExecStart=/bin/bash -ce "exec /usr/local/bin/crmserver --apiAddr 0.0.0.0:37001 --notifyAddrs {{ crm.ctrladdr }} --cloudletKey '{\"operator_key\":{\"name\":\"{{ crm.operator }}\"},\"name\":\"{{ crm.cloudlet }}\"}' --tls {{ remote_tls_path }}/mex-server.crt --platform mexdind --d api,notify,mexos >> {{ remote_log_path }}/{{ crm.name }}.log 2>&1"
+WorkingDirectory=/root
+Restart=always
+User=root
+Environment=MEX_NETWORK_SCHEME=publicip
+Environment=MEXENV_URL=https://vault.mobiledgex.net/v1/secret/data/cloudlet/openstack/mexenv.json
+Environment=VAULT_TOKEN={{ vault_token }}
+Environment=MEX_NETWORK_SCHEME=privateip
+[Install]
+WantedBy=multi-user.target
+Alias=crmserver

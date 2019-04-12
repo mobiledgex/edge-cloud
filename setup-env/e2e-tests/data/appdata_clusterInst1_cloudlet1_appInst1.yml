@@ -61,6 +61,9 @@ clusterinsts:
   flavor:
     name: c1.small
   liveness: LivenessStatic
+  ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  masterflavor: flavor1
 
 operators:
 - key:
@@ -106,7 +109,6 @@ apps:
   cluster:
     name: SmallCluster
   accessports: "tcp:80,http:443,udp:10002"
-  ipaccess: IpAccessDedicatedOrShared
 
 appinstances:
 - key:

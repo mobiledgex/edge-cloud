@@ -1,15 +1,23 @@
 # Makefile
 include Makedefs
 
+GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
+
 all: build install 
 
 linux: build-linux install-linux
 
-dep:
-	dep ensure -update github.com/mobiledgex/edge-cloud-infra
+check-vers:
+	@if test $(GOVERS) != go1.12; then \
+		echo "Go version is $(GOVERS)"; \
+		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
+		exit 2; \
+	fi
+
+dep: check-vers
 	dep ensure -vendor-only
 
-build:
+build: check-vers
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
@@ -28,7 +36,8 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
-	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud .
+	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
+		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	for ADDLTAG in ${ADDLTAGS}; do \
@@ -57,12 +66,6 @@ test:
 test-debug:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
 
-# will 1)export PYTHONPATH 2)stop and start processes 3)run python testscases
-# can use: "make test-python" to run all tests
-# can use: "make test-python dir=controller/operator" to run only the operator testcases or any directory specified
-test-python:
-	bash ./setup-env/e2e-tests/python/tools/run_all_tests.sh
-
 # start/restart local processes to run individual python or other tests against
 test-start:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml -stop -notimestamp
@@ -77,9 +80,16 @@ test-stop:
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml
 
+# QA testing - manual
+test-robot-start:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_automation.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
+
+test-robot-stop:
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
+
 ## note: DIND requires make from edge-cloud-infra to install dependencies
 test-dind-start:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_dind.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp
+	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_dind.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp -stop
 
 test-dind-stop:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/delete_dind_stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp

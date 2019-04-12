@@ -14,6 +14,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/vault"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 )
 
@@ -75,7 +76,7 @@ func VerifyCookie(cookie string) (*CookieKey, error) {
 	return claims.Key, nil
 }
 
-func GenerateCookie(key *CookieKey, ctx context.Context) (string, error) {
+func GenerateCookie(key *CookieKey, ctx context.Context, cookieExpiration *time.Duration) (string, error) {
 	p, ok := peer.FromContext(ctx)
 	if !ok {
 		return "", errors.New("unable to get peer IP info")
@@ -94,7 +95,7 @@ func GenerateCookie(key *CookieKey, ctx context.Context) (string, error) {
 		StandardClaims: jwt.StandardClaims{
 			IssuedAt: time.Now().Unix(),
 			// 1 day expiration for now
-			ExpiresAt: time.Now().AddDate(0, 0, 1).Unix(),
+			ExpiresAt: time.Now().Add(*cookieExpiration).Unix(),
 		},
 		Key: key,
 	}
@@ -129,7 +130,7 @@ func UnaryAuthInterceptor(ctx context.Context, req interface{}, info *grpc.Unary
 		// Verify session cookie, add decoded CookieKey to context
 		ckey, err := VerifyCookie(cookie)
 		if err != nil {
-			return nil, err
+			return nil, grpc.Errorf(codes.Unauthenticated, err.Error())
 		}
 		ctx = NewCookieContext(ctx, ckey)
 	}

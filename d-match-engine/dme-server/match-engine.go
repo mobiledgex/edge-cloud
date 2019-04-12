@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"net"
+	"strings"
 	"sync"
 
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -318,6 +319,11 @@ func findCloudlet(ckey *dmecommon.CookieKey, mreq *dme.FindCloudletRequest, mrep
 		appkey = reqkey
 	}
 
+	// if the app itself is a platform app, it is not returned here
+	if cloudcommon.IsPlatformApp(appkey.DeveloperKey.Name, appkey.Name) {
+		return nil
+	}
+
 	log.DebugLog(log.DebugLevelDmereq, "findCloudlet", "carrier", mreq.CarrierName, "app", appkey.Name, "developer", appkey.DeveloperKey.Name, "version", appkey.Version)
 
 	// first find carrier cloudlet
@@ -380,7 +386,7 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 	tbl.RLock()
 	defer tbl.RUnlock()
 	for _, a := range tbl.apps {
-		// if the app it itself a platform app, it is not returned here
+		// if the app itself is a platform app, it is not returned here
 		if cloudcommon.IsPlatformApp(a.appKey.DeveloperKey.Name, a.appKey.Name) {
 			continue
 		}
@@ -394,7 +400,8 @@ func getFqdnList(mreq *dme.FqdnListRequest, clist *dme.FqdnListReply) {
 		if defaultCarrierFound {
 			for _, i := range c.insts {
 				if i.cloudletKey == cloudcommon.DefaultCloudletKey {
-					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDN: i.uri, AndroidPackageName: a.androidPackageName}
+					fqdns := strings.Split(i.uri, ",")
+					aq := dme.AppFqdn{AppName: a.appKey.Name, DevName: a.appKey.DeveloperKey.Name, AppVers: a.appKey.Version, FQDNs: fqdns, AndroidPackageName: a.androidPackageName}
 					clist.AppFqdns = append(clist.AppFqdns, &aq)
 				}
 			}

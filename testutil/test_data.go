@@ -31,6 +31,14 @@ var FlavorData = []edgeproto.Flavor{
 		Vcpus: 4,
 		Disk:  4,
 	},
+	edgeproto.Flavor{
+		Key: edgeproto.FlavorKey{
+			Name: "x1.large",
+		},
+		Ram:   8192,
+		Vcpus: 10,
+		Disk:  40,
+	},
 }
 var ClusterFlavorData = []edgeproto.ClusterFlavor{
 	edgeproto.ClusterFlavor{
@@ -61,6 +69,16 @@ var ClusterFlavorData = []edgeproto.ClusterFlavor{
 		MasterFlavor: FlavorData[2].Key,
 		NumNodes:     3,
 		MaxNodes:     4,
+		NumMasters:   1,
+	},
+	edgeproto.ClusterFlavor{
+		Key: edgeproto.ClusterFlavorKey{
+			Name: "c1.large",
+		},
+		NodeFlavor:   FlavorData[3].Key,
+		MasterFlavor: FlavorData[3].Key,
+		NumNodes:     10,
+		MaxNodes:     15,
 		NumMasters:   1,
 	},
 }
@@ -129,8 +147,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
-		AccessPorts:   "http:443",
+		AccessPorts:   "http:443,tcp:10002,udp:10002",
 		DefaultFlavor: FlavorData[0].Key,
 		Cluster:       ClusterData[0].Key,
 	},
@@ -141,7 +158,6 @@ var AppData = []edgeproto.App{
 			Version:      "1.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessShared,
 		AccessPorts:   "tcp:80,http:443",
 		DefaultFlavor: FlavorData[0].Key,
 	},
@@ -152,7 +168,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeDocker,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicatedOrShared,
 		AccessPorts:   "tcp:443,udp:11111",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -163,7 +178,6 @@ var AppData = []edgeproto.App{
 			Version:      "1.2.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
 		AccessPorts:   "http:8080",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -174,7 +188,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
-		IpAccess:      edgeproto.IpAccess_IpAccessShared,
 		AccessPorts:   "udp:1024",
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
@@ -186,7 +199,6 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		Deployment:    "helm",
-		IpAccess:      edgeproto.IpAccess_IpAccessDedicated,
 		AccessPorts:   "udp:2024",
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
@@ -274,49 +286,69 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[0].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicatedOrShared,
+		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[0].Flavors[3].Name,
+		MasterFlavor: CloudletInfoData[0].Flavors[3].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[2].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[2].DefaultFlavor,
+		Flavor:       ClusterData[2].DefaultFlavor,
+		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor:   CloudletInfoData[2].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[1].Name,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[3].Key,
 			CloudletKey: CloudletData[3].Key,
 		},
-		Flavor: ClusterData[3].DefaultFlavor,
+		Flavor:       ClusterData[3].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[3].Flavors[0].Name,
+		MasterFlavor: CloudletInfoData[3].Flavors[0].Name,
 	},
 }
 
@@ -331,8 +363,10 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			},
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor: ClusterData[0].DefaultFlavor,
-		Auto:   true,
+		Flavor:       ClusterData[0].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
+		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
+		Auto:         true,
 	},
 	// from AppInstData[4] -> AppData[2]
 	edgeproto.ClusterInst{
@@ -342,8 +376,10 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			},
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor: ClusterData[1].DefaultFlavor,
-		Auto:   true,
+		Flavor:       ClusterData[1].DefaultFlavor,
+		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
+		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
+		Auto:         true,
 	},
 }
 var AppInstData = []edgeproto.AppInst{
@@ -439,6 +475,32 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.tiny1",
+				Vcpus: uint64(1),
+				Ram:   uint64(512),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.tiny2",
+				Vcpus: uint64(1),
+				Ram:   uint64(1024),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.small",
+				Vcpus: uint64(2),
+				Ram:   uint64(1024),
+				Disk:  uint64(20),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium",
+				Vcpus: uint64(4),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[1].Key,
@@ -446,6 +508,20 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.small1",
+				Vcpus: uint64(2),
+				Ram:   uint64(2048),
+				Disk:  uint64(10),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.small2",
+				Vcpus: uint64(2),
+				Ram:   uint64(1024),
+				Disk:  uint64(20),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[2].Key,
@@ -453,6 +529,26 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium1",
+				Vcpus: uint64(4),
+				Ram:   uint64(8192),
+				Disk:  uint64(80),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium2",
+				Vcpus: uint64(4),
+				Ram:   uint64(4096),
+				Disk:  uint64(40),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium3",
+				Vcpus: uint64(4),
+				Ram:   uint64(2048),
+				Disk:  uint64(20),
+			},
+		},
 	},
 	edgeproto.CloudletInfo{
 		Key:         CloudletData[3].Key,
@@ -460,6 +556,20 @@ var CloudletInfoData = []edgeproto.CloudletInfo{
 		OsMaxRam:    65536,
 		OsMaxVcores: 16,
 		OsMaxVolGb:  500,
+		Flavors: []*edgeproto.FlavorInfo{
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.large",
+				Vcpus: uint64(8),
+				Ram:   uint64(101024),
+				Disk:  uint64(100),
+			},
+			&edgeproto.FlavorInfo{
+				Name:  "flavor.medium",
+				Vcpus: uint64(4),
+				Ram:   uint64(1),
+				Disk:  uint64(1),
+			},
+		},
 	},
 }
 
@@ -473,9 +583,10 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 			ClusterData[0].Key,
 			ClusterData[1].Key,
 		},
-		UsedRam:    GetCloudletUsedRam(0, 1),
-		UsedVcores: GetCloudletUsedVcores(0, 1),
-		UsedDisk:   GetCloudletUsedDisk(0, 1),
+		UsedRam:        GetCloudletUsedRam(0, 1),
+		UsedVcores:     GetCloudletUsedVcores(0, 1),
+		UsedDisk:       GetCloudletUsedDisk(0, 1),
+		UsedDynamicIps: 2,
 	},
 	// ClusterInstData[1,4]:
 	edgeproto.CloudletRefs{
@@ -495,9 +606,10 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 			ClusterData[0].Key,
 			ClusterData[2].Key,
 		},
-		UsedRam:    GetCloudletUsedRam(0, 2),
-		UsedVcores: GetCloudletUsedVcores(0, 2),
-		UsedDisk:   GetCloudletUsedDisk(0, 2),
+		UsedRam:        GetCloudletUsedRam(0, 2),
+		UsedVcores:     GetCloudletUsedVcores(0, 2),
+		UsedDisk:       GetCloudletUsedDisk(0, 2),
+		UsedDynamicIps: 1,
 	},
 	// ClusterInstData[2,6]:
 	edgeproto.CloudletRefs{
@@ -515,7 +627,8 @@ var CloudletRefsData = []edgeproto.CloudletRefs{
 // Some of the app insts trigger creating auto-clusterinsts,
 // and ports are reserved with the creation of app insts.
 var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
-	// ClusterInstData[0,3]:
+	// ClusterInstData[0,3]: (dedicated,dedicated)
+	// AppInstData[0,1] -> ports[http:443;http:443]:
 	edgeproto.CloudletRefs{
 		Key: CloudletData[0].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -527,7 +640,8 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedDisk:       GetCloudletUsedDisk(0, 1),
 		UsedDynamicIps: 2,
 	},
-	// ClusterInstData[1,4], ClusterInstAutoData[0]:
+	// ClusterInstData[1,4], ClusterInstAutoData[0]: (shared,shared,shared)
+	// AppInstData[2,3] -> ports[http:443;tcp:80,http:443]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[1].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -535,13 +649,13 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 			ClusterData[1].Key,
 			ClusterInstAutoData[0].Key.ClusterKey,
 		},
-		UsedRam:        GetCloudletUsedRam(0, 1, 0),
-		UsedVcores:     GetCloudletUsedVcores(0, 1, 0),
-		UsedDisk:       GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts:    map[int32]int32{80: 1, 10000: 1},
-		UsedDynamicIps: 1,
+		UsedRam:     GetCloudletUsedRam(0, 1, 0),
+		UsedVcores:  GetCloudletUsedVcores(0, 1, 0),
+		UsedDisk:    GetCloudletUsedDisk(0, 1, 0),
+		RootLbPorts: map[int32]int32{80: 1, 443: 1, 10000: 1, 10001: 1, 10002: 1},
 	},
-	// ClusterInstData[2,5], ClusterInstAutoData[1]:
+	// ClusterInstData[2,5], ClusterInstAutoData[1]: (shared,dedicated,shared)
+	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
 	edgeproto.CloudletRefs{
 		Key: CloudletData[2].Key,
 		Clusters: []edgeproto.ClusterKey{
@@ -552,10 +666,10 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:        GetCloudletUsedRam(0, 2, 1),
 		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),
 		UsedDisk:       GetCloudletUsedDisk(0, 2, 1),
-		RootLbPorts:    map[int32]int32{10000: 1, 11111: 1},
 		UsedDynamicIps: 1,
+		RootLbPorts:    map[int32]int32{443: 1, 11111: 1, 2024: 1},
 	},
-	// ClusterInstData[2,6]:
+	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{
 		Key: CloudletData[3].Key,
 		Clusters: []edgeproto.ClusterKey{

@@ -151,7 +151,7 @@
       pull: yes
       image: "{{ item.dockerimage }}"
       name: "{{ item.crmlocal.name }}"
-      command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --fakecloudlet={{ item.crmlocal.fakecloudlet }} --d api,notify,mexos"
+      command: "crmserver --apiAddr {{ item.crmlocal.apiaddr }} --notifyAddrs {{ item.crmlocal.notifyaddrs }} --cloudletKey '{{ item.crmlocal.cloudletkey }}' {{ tlsopt }} --d api,notify,mexos"
       network_mode: host
       restart_policy: unless-stopped
       env_file: "{{remote_log_path}}/{{item.crmlocal.name}}.env"

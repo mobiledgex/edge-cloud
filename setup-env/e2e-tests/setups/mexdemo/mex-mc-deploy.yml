@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: mc
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:V1.0-pre-73-g113e4e8
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:V1.0-pre-108-g46b989e
         imagePullPolicy: Always
         command:
          - "mc"
@@ -31,6 +31,10 @@ spec:
          - "-ldapAddr"
          - "0.0.0.0:9389"
          - "-tls"
+         - "/root/tls/mex-server.crt"
+         - "-tlskey"
+         - "/root/tls/mex-server.key"
+         - "-clientCert"
          - "/root/tls/mex-server.crt"
          - "-d"
          - "api"

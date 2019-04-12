@@ -37,6 +37,8 @@ message CloudletInfraCommon{
     string CF_user = 5; //MEX_CF_KEY
     // Docker registry password
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
+     // network scheme
+    string network_scheme = 7;
 }
 
 message AzureProperties{
@@ -66,10 +68,8 @@ message OpenStackProperties{
   string OS_external_router_name = 3;
   // openstack internal network
   string OS_mex_network = 4;
-  // openstack network scheme
-  string OS_network_scheme = 5;
   // openrc env vars 
-  map<string, string> open_rc_vars = 6;
+  map<string, string> open_rc_vars = 5;
 }
 
 message CloudletInfraProperties{
@@ -146,7 +146,7 @@ service CloudletApi {
       post: "/show/cloudlet"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,Key.OperatorKey.Name";
+    option (protogen.mc2_api) = "ResourceCloudlets,ActionView,skipenforce";
   }
 }
 
@@ -162,6 +162,18 @@ enum CloudletState {
   CloudletStateOffline = 3;
   // Cloudlet is not present
   CloudletStateNotPresent = 4;
+}
+
+// Flavor details from the Cloudlet
+message FlavorInfo {
+  // Name of the flavor on the Cloudlet
+  string name = 1;
+  // Number of VCPU cores on the Cloudlet
+  uint64 vcpus = 2;
+  // Ram in MB on the Cloudlet
+  uint64 ram = 3;
+  // Amount of disk in GB on the Cloudlet
+  uint64 disk = 4;
 }
 
 // CloudletInfo provides information from the Cloudlet Resource Manager about the state of the Cloudlet.
@@ -184,6 +196,8 @@ message CloudletInfo {
   uint64 os_max_vol_gb = 8;
   // Any errors encountered while making changes to the Cloudlet
   repeated string errors = 9;
+  // Supported flavors by the Cloudlet
+  repeated FlavorInfo flavors = 10;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cache) = true;

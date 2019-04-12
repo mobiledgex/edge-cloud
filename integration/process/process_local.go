@@ -161,6 +161,7 @@ type DmeLocal struct {
 	Carrier     string
 	CloudletKey string
 	VaultAddr   string
+	CookieExpr  string
 	TLS         TLSCerts
 	cmd         *exec.Cmd
 }
@@ -198,6 +199,10 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	if p.VaultAddr != "" {
 		args = append(args, "--vaultAddr")
 		args = append(args, p.VaultAddr)
+	}
+	if p.CookieExpr != "" {
+		args = append(args, "--cookieExpiration")
+		args = append(args, p.CookieExpr)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -257,13 +262,14 @@ func (p *DmeLocal) GetRestClient(timeout time.Duration) (*http.Client, error) {
 // CrmLocal
 
 type CrmLocal struct {
-	Name         string
-	ApiAddr      string
-	NotifyAddrs  string
-	CloudletKey  string
-	FakeCloudlet bool
-	TLS          TLSCerts
-	cmd          *exec.Cmd
+	Name        string
+	ApiAddr     string
+	NotifyAddrs string
+	CloudletKey string
+	Platform    string
+	Plugin      string
+	TLS         TLSCerts
+	cmd         *exec.Cmd
 }
 
 func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
@@ -284,8 +290,13 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "--hostname")
 		args = append(args, p.Name)
 	}
-	if p.FakeCloudlet {
-		args = append(args, "--fakecloudlet")
+	if p.Platform != "" {
+		args = append(args, "--platform")
+		args = append(args, p.Platform)
+	}
+	if p.Plugin != "" {
+		args = append(args, "--plugin")
+		args = append(args, p.Plugin)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)
@@ -335,6 +346,14 @@ func (p *MCLocal) Start(logfile string, opts ...StartOp) error {
 	if p.TLS.ServerCert != "" {
 		args = append(args, "--tls")
 		args = append(args, p.TLS.ServerCert)
+	}
+	if p.TLS.ServerKey != "" {
+		args = append(args, "--tlskey")
+		args = append(args, p.TLS.ServerKey)
+	}
+	if p.TLS.ClientCert != "" {
+		args = append(args, "--clientCert")
+		args = append(args, p.TLS.ClientCert)
 	}
 	options := StartOptions{}
 	options.ApplyStartOptions(opts...)

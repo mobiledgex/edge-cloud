@@ -63,7 +63,7 @@ operators:
 
 developers:
 - key:
-    name: MobiledgeX SDK Demo
+    name: MobiledgeX
   username: mex
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
@@ -72,7 +72,7 @@ developers:
 apps:
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
@@ -84,13 +84,12 @@ apps:
   cluster:
     name: AppCluster
   accessports: "tcp:7777"
-  ipaccess: IpAccessDedicatedOrShared
   androidpackagename: com.mobiledgex.sdkdemo
   permitsplatformapps: true
 
 - key:
     developerkey:
-      name: MobiledgeX SDK Demo
+      name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
@@ -102,15 +101,25 @@ apps:
   cluster:
     name: AppCluster
   accessports: "tcp:8008"
-  ipaccess: IpAccessDedicatedOrShared
   androidpackagename: com.mobiledgex.facedemo
   permitsplatformapps: true
+  configs:
+  - kind: envVarsYaml
+    config: |
+      - name: SOME_ENV1
+        value: value1
+      - name: SOME_ENV2
+        valueFrom:
+          configMapKeyRef:
+            key: CloudletName
+            name: mexcluster-info
+            optional: true
 
 appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
     cloudletkey:
@@ -129,7 +138,7 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: MobiledgeX SDK Demo
+        name: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
     cloudletkey:

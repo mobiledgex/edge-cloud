@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -22,6 +23,30 @@ namespace DistributedMatchEngine
         : base(message, innerException)
     {
     }
+  }
+
+  // Minimal logger without log levels:
+  static class Log
+  {
+    // Stdout:
+    public static void S(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+    // Stderr:
+    public static void E(string msg)
+    {
+      TextWriter errorWriter = Console.Error;
+      errorWriter.WriteLine(msg);
+    }
+
+    // Stdout:
+    [ConditionalAttribute("DEBUG")]
+    public static void D(string msg)
+    {
+      Console.WriteLine(msg);
+    }
+
   }
 
   public class MatchingEngine
@@ -67,15 +92,15 @@ namespace DistributedMatchEngine
       byte[] clientCredentials = Convert.FromBase64String(Credentials.clientCrtBase64); // Pkcs12 binary source.
       var x509ClientCertKeyPair = new X509Certificate2(clientCredentials, "foo"); /* 2nd param: FIXME: password for credentials */
       httpWebRequest.ClientCertificates.Add(x509ClientCertKeyPair);
-      Console.WriteLine("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
+      Log.D("Has Private Key?" + x509ClientCertKeyPair.HasPrivateKey);
 
       // FIXME: Real certs required.
       httpWebRequest.ServerCertificateValidationCallback = (sender, cert, chain, sslPolicyErrors) =>
       {
-        Console.WriteLine("==== Sender: " + sender);
-        Console.WriteLine("==== Cert: " + cert);
-        Console.WriteLine("==== Chain: " + chain);
-        Console.WriteLine("==== SSLPolicyErrors: " + sslPolicyErrors);
+        Log.D("==== Sender: " + sender);
+        Log.D("==== Cert: " + cert);
+        Log.D("==== Chain: " + chain);
+        Log.D("==== SSLPolicyErrors: " + sslPolicyErrors);
         return true;
       };
 
@@ -96,12 +121,12 @@ namespace DistributedMatchEngine
       return carrierName + "." + baseDmeHost;
     }
 
-    string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
+    public string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
-    string createUri(string host, UInt32 port)
+    public string createUri(string host, UInt32 port)
     {
       if (host != null && host != "")
       {
@@ -165,9 +190,16 @@ namespace DistributedMatchEngine
       foreach (string keyValueStr in parameters)
       {
         string[] keyValue = keyValueStr.Split('=');
+        int pos = keyValue[0].Length + 1; // step over '='
+        if (pos >= keyValueStr.Length)
+        {
+          return null;
+        }
+
+        string value = keyValueStr.Substring(pos, keyValueStr.Length - pos);
         if (keyValue[0].Equals("dt-id"))
         {
-          return keyValue[1] + "="; // Have to keep it for some reason?
+          return value;
         }
       }
 
@@ -211,7 +243,7 @@ namespace DistributedMatchEngine
 
       if (uriLocation != null)
       {
-        System.Console.WriteLine("uriLocation: " + uriLocation);
+        Log.D("uriLocation: " + uriLocation);
         token = parseToken(uriLocation);
       }
 
@@ -279,7 +311,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(generateDmeBaseUri(null, port) + findcloudletAPI, jsonStr);
+      Stream responseStream = await PostRequest(createUri(host, port) + findcloudletAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;

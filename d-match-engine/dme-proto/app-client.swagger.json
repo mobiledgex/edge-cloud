@@ -298,8 +298,11 @@
           "type": "string",
           "title": "developer name"
         },
-        "FQDN": {
-          "type": "string",
+        "FQDNs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "title": "App FQDN"
         },
         "AndroidPackageName": {

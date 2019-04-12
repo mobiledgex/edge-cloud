@@ -44,14 +44,14 @@ func TestClusterInstApi(t *testing.T) {
 	// Set responder to fail. This should clean up the object after
 	// the fake crm returns a failure. If it doesn't, the next test to
 	// create all the cluster insts will fail.
-	responder.SetSimulateCreateFailure(true)
+	responder.SetSimulateClusterCreateFailure(true)
 	for _, obj := range testutil.ClusterInstData {
 		err := clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 		assert.NotNil(t, err, "Create cluster inst responder failures")
 		// make sure error matches responder
 		assert.Equal(t, "Encountered failures: [crm create cluster inst failed]", err.Error())
 	}
-	responder.SetSimulateCreateFailure(false)
+	responder.SetSimulateClusterCreateFailure(false)
 	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
 
 	testutil.InternalClusterInstTest(t, "cud", &clusterInstApi, testutil.ClusterInstData)
@@ -61,11 +61,11 @@ func TestClusterInstApi(t *testing.T) {
 	commonApi := testutil.NewInternalClusterInstApi(&clusterInstApi)
 
 	// Set responder to fail delete.
-	responder.SetSimulateDeleteFailure(true)
+	responder.SetSimulateClusterDeleteFailure(true)
 	obj := testutil.ClusterInstData[0]
 	err := clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 	assert.NotNil(t, err, "Delete ClusterInst responder failure")
-	responder.SetSimulateDeleteFailure(false)
+	responder.SetSimulateClusterDeleteFailure(false)
 	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
 
 	// check override of error DeleteError
@@ -85,8 +85,8 @@ func TestClusterInstApi(t *testing.T) {
 	checkClusterInstState(t, commonApi, &obj, edgeproto.TrackedState_NotPresent)
 
 	// override CRM error
-	responder.SetSimulateCreateFailure(true)
-	responder.SetSimulateDeleteFailure(true)
+	responder.SetSimulateClusterCreateFailure(true)
+	responder.SetSimulateClusterDeleteFailure(true)
 	obj = testutil.ClusterInstData[0]
 	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
 	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
@@ -105,8 +105,15 @@ func TestClusterInstApi(t *testing.T) {
 	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
 	err = clusterInstApi.DeleteClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 	assert.Nil(t, err, "ignore crm")
-	responder.SetSimulateCreateFailure(false)
-	responder.SetSimulateDeleteFailure(false)
+
+	// inavailability of matching node flavor
+	obj = testutil.ClusterInstData[0]
+	obj.Flavor = testutil.ClusterFlavorData[3].Key
+	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
+	assert.NotNil(t, err, "flavor not available")
+
+	responder.SetSimulateClusterCreateFailure(false)
+	responder.SetSimulateClusterDeleteFailure(false)
 
 	dummy.Stop()
 }

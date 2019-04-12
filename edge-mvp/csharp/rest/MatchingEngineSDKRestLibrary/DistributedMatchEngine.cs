@@ -122,12 +122,12 @@ namespace DistributedMatchEngine
       return carrierName + "." + baseDmeHost;
     }
 
-    string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
+    public string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
-    string createUri(string host, UInt32 port)
+    public string createUri(string host, UInt32 port)
     {
       if (host != null && host != "")
       {
@@ -181,9 +181,16 @@ namespace DistributedMatchEngine
       foreach (string keyValueStr in parameters)
       {
         string[] keyValue = keyValueStr.Split('=');
+        int pos = keyValue[0].Length + 1; // step over '='
+        if (pos >= keyValueStr.Length)
+        {
+          return null;
+        }
+
+        string value = keyValueStr.Substring(pos, keyValueStr.Length - pos);
         if (keyValue[0].Equals("dt-id"))
         {
-          return keyValue[1] + "="; // Have to keep it for some reason?
+          return value;
         }
       }
 

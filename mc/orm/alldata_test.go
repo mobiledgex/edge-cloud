@@ -40,6 +40,8 @@ func TestAllData(t *testing.T) {
 		Refresh: "1s",
 	}
 
+	mcClient := &ormclient.Client{}
+
 	// wait till mc is ready
 	err = server.WaitUntilReady()
 	require.Nil(t, err, "server online")
@@ -89,26 +91,26 @@ roles:
 
 	// create users
 	for _, user := range users {
-		status, err := ormclient.CreateUser(uri, &user)
+		status, err := mcClient.CreateUser(uri, &user)
 		require.Nil(t, err)
 		require.Equal(t, http.StatusOK, status)
 	}
 
-	testData(t, uri, &adminUser, admindata)
-	testData(t, uri, &users[0], dev1data)
+	testData(t, mcClient, uri, &adminUser, admindata)
+	testData(t, mcClient, uri, &users[0], dev1data)
 }
 
-func testData(t *testing.T, uri string, user *ormapi.User, yamldata string) {
+func testData(t *testing.T, mcClient *ormclient.Client, uri string, user *ormapi.User, yamldata string) {
 	data := &ormapi.AllData{}
 	err := yaml.Unmarshal([]byte(yamldata), data)
 	require.Nil(t, err, "unmarshal yaml")
 
 	// login as specified user
-	token, err := ormclient.DoLogin(uri, user.Name, user.Passhash)
+	token, err := mcClient.DoLogin(uri, user.Name, user.Passhash)
 	require.Nil(t, err, "login for %s", user.Name)
 
 	// run create
-	status, err := ormclient.CreateData(uri, token, data, func(res *ormapi.Result) {
+	status, err := mcClient.CreateData(uri, token, data, func(res *ormapi.Result) {
 		fmt.Println(res)
 	})
 	require.Nil(t, err, "create admin data")
@@ -121,14 +123,14 @@ func testData(t *testing.T, uri string, user *ormapi.User, yamldata string) {
 	}
 
 	// run show and compare
-	showData, status, err := ormclient.ShowData(uri, token)
+	showData, status, err := mcClient.ShowData(uri, token)
 	if !cmp.Equal(data, showData, copts...) {
 		mismatch := cmp.Diff(data, showData, copts...)
 		require.True(t, false, "show data mismatch\n%s", mismatch)
 	}
 
 	// run delete
-	status, err = ormclient.DeleteData(uri, token, data, func(res *ormapi.Result) {
+	status, err = mcClient.DeleteData(uri, token, data, func(res *ormapi.Result) {
 		fmt.Println(res)
 	})
 	require.Nil(t, err, "delete data")
@@ -136,7 +138,7 @@ func testData(t *testing.T, uri string, user *ormapi.User, yamldata string) {
 
 	// show and compare empty data
 	emptyData := ormapi.AllData{}
-	showData, status, err = ormclient.ShowData(uri, token)
+	showData, status, err = mcClient.ShowData(uri, token)
 	if !cmp.Equal(&emptyData, showData, copts...) {
 		mismatch := cmp.Diff(&emptyData, showData, copts...)
 		require.True(t, false, "show empty data mismatch\n%s", mismatch)

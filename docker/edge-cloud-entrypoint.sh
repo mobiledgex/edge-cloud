@@ -13,6 +13,10 @@ case "$1" in
 	shift
 	controller $*
 	;;
+    cluster-svc)
+	shift
+	cluster-svc $*
+	;;
     crmserver)
 	shift
 	crmserver $*
@@ -40,6 +44,10 @@ case "$1" in
     test-edgectl)
 	shift
 	test-edgectl.sh $*
+	;;
+    version)
+	shift
+	cat /version.txt
 	;;
     bash)
 	shift

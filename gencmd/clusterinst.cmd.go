@@ -37,6 +37,7 @@ var ClusterInstNoConfigFlagSet = pflag.NewFlagSet("ClusterInstNoConfig", pflag.E
 var ClusterInstInLiveness string
 var ClusterInstInState string
 var ClusterInstInCrmOverride string
+var ClusterInstInIpAccess string
 var ClusterInstInfoIn edgeproto.ClusterInstInfo
 var ClusterInstInfoFlagSet = pflag.NewFlagSet("ClusterInstInfo", pflag.ExitOnError)
 var ClusterInstInfoNoConfigFlagSet = pflag.NewFlagSet("ClusterInstInfoNoConfig", pflag.ExitOnError)
@@ -84,7 +85,7 @@ func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
 	}
 }
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 12)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -102,11 +103,15 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	}
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
+	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
+	s = append(s, in.AllocatedIp)
+	s = append(s, in.NodeFlavor)
+	s = append(s, in.MasterFlavor)
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 8)
+	s := make([]string, 0, 12)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -118,6 +123,10 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
+	s = append(s, "IpAccess")
+	s = append(s, "AllocatedIp")
+	s = append(s, "NodeFlavor")
+	s = append(s, "MasterFlavor")
 	return s
 }
 
@@ -215,6 +224,9 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.AllocatedIp = ""
 	}
 }
 
@@ -535,6 +547,10 @@ func init() {
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
 	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
+	ClusterInstFlagSet.StringVar(&ClusterInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
+	ClusterInstFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	ClusterInstFlagSet.StringVar(&ClusterInstIn.NodeFlavor, "nodeflavor", "", "NodeFlavor")
+	ClusterInstFlagSet.StringVar(&ClusterInstIn.MasterFlavor, "masterflavor", "", "MasterFlavor")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
@@ -587,6 +603,18 @@ func ClusterInstSetFields() {
 	}
 	if ClusterInstFlagSet.Lookup("crmoverride").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "6")
+	}
+	if ClusterInstFlagSet.Lookup("ipaccess").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "7")
+	}
+	if ClusterInstFlagSet.Lookup("allocatedip").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "8")
+	}
+	if ClusterInstFlagSet.Lookup("nodeflavor").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "11")
+	}
+	if ClusterInstFlagSet.Lookup("masterflavor").Changed {
+		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "12")
 	}
 }
 
@@ -671,6 +699,20 @@ func parseClusterInstEnums() error {
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for ClusterInstInCrmOverride")
+		}
+	}
+	if ClusterInstInIpAccess != "" {
+		switch ClusterInstInIpAccess {
+		case "IpAccessUnknown":
+			ClusterInstIn.IpAccess = edgeproto.IpAccess(0)
+		case "IpAccessDedicated":
+			ClusterInstIn.IpAccess = edgeproto.IpAccess(1)
+		case "IpAccessDedicatedOrShared":
+			ClusterInstIn.IpAccess = edgeproto.IpAccess(2)
+		case "IpAccessShared":
+			ClusterInstIn.IpAccess = edgeproto.IpAccess(3)
+		default:
+			return errors.New("Invalid value for ClusterInstInIpAccess")
 		}
 	}
 	return nil

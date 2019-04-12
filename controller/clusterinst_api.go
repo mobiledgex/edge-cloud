@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	flavor "github.com/mobiledgex/edge-cloud/flavor"
+
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -107,8 +109,14 @@ func (s *ClusterInstApi) CreateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 // bypassing static assignment. It is also used to create auto-cluster insts.
 func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_CreateClusterInstServer) error {
 	cctx.SetOverride(&in.CrmOverride)
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
+	}
+	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
+		// default to shared
+		in.IpAccess = edgeproto.IpAccess_IpAccessShared
 	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
@@ -165,10 +173,21 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return fmt.Errorf("Cluster flavor %s node flavor %s not found",
 				in.Flavor.Name, clusterFlavor.NodeFlavor.Name)
 		}
-		if !flavorApi.store.STMGet(stm, &clusterFlavor.MasterFlavor, nil) {
+		masterFlavor := edgeproto.Flavor{}
+		if !flavorApi.store.STMGet(stm, &clusterFlavor.MasterFlavor, &masterFlavor) {
 			return fmt.Errorf("Cluster flavor %s master flavor %s not found",
 				in.Flavor.Name, clusterFlavor.MasterFlavor.Name)
 		}
+		var err error
+		in.NodeFlavor, err = flavor.GetClosestFlavor(info.Flavors, nodeFlavor)
+		if err != nil {
+			return err
+		}
+		in.MasterFlavor, err = flavor.GetClosestFlavor(info.Flavors, masterFlavor)
+		if err != nil {
+			return err
+		}
+		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor, "Master Flavor", in.MasterFlavor)
 
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(clusterFlavor.MaxNodes)
@@ -190,6 +209,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			if refs.UsedDisk+diskOverhead > info.OsMaxVolGb {
 				return errors.New("Not enough Disk available")
 			}
+		}
+		// allocateIP also sets in.IpAccess to either Dedicated or Shared
+		err = allocateIP(in, &cloudlet, &refs)
+		if err != nil {
+			return err
 		}
 		refs.Clusters = append(refs.Clusters, in.Key.ClusterKey)
 		cloudletRefsApi.store.STMPut(stm, &refs)
@@ -241,8 +265,11 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 	if appInstApi.UsesClusterInst(&in.Key) {
 		return errors.New("ClusterInst in use by Application Instance")
 	}
-	if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
-		return err
+	cctx.SetOverride(&in.CrmOverride)
+	if !ignoreCRM(cctx) {
+		if err := cloudletInfoApi.checkCloudletReady(&in.Key.CloudletKey); err != nil {
+			return err
+		}
 	}
 
 	var prevState edgeproto.TrackedState
@@ -276,7 +303,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			in.Key.ClusterKey.Name, err.Error())
 	}
 
-	cctx.SetOverride(&in.CrmOverride)
 	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
 			return objstore.ErrKVStoreKeyNotFound
@@ -321,6 +347,8 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 			refs.UsedRam -= nodeFlavor.Ram * uint64(clusterFlavor.MaxNodes)
 			refs.UsedVcores -= nodeFlavor.Vcpus * uint64(clusterFlavor.MaxNodes)
 			refs.UsedDisk -= nodeFlavor.Disk * uint64(clusterFlavor.MaxNodes)
+			freeIP(in, &cloudlet, &refs)
+
 			cloudletRefsApi.store.STMPut(stm, &refs)
 		}
 		if ignoreCRM(cctx) {
