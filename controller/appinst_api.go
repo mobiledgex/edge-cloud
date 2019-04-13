@@ -570,7 +570,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						return err
 					}
 					protos, _ := cloudletRefs.RootLbPorts[p]
-					cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
+					if cloudletRefs.RootLbPorts != nil {
+						cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
+					}
 					cloudletRefsChanged = true
 				}
 			}
