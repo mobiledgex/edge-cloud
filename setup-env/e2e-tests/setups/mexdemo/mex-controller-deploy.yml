@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: controller
-        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0313
+        image: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm0412
         imagePullPolicy: Always
         command:
          - "controller"
