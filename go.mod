@@ -95,6 +95,8 @@ require (
 	github.com/julienschmidt/httprouter v1.2.0 // indirect
 	github.com/keybase/go-crypto v0.0.0-20190403132359-d65b6b94177f // indirect
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
+	github.com/kr/pty v1.1.3
 	github.com/labstack/echo v0.0.0-20180911044237-1abaa3049251
 	github.com/labstack/gommon v0.2.7 // indirect
 	github.com/lib/pq v1.0.0
@@ -118,7 +120,7 @@ require (
 	github.com/pascaldekloe/goe v0.1.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
-	github.com/pkg/errors v0.8.0 // indirect
+	github.com/pion/webrtc/v2 v2.0.7
 	github.com/prometheus/client_model v0.0.0-20190129233127-fd36f4220a90 // indirect
 	github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1 // indirect
 	github.com/ryanuber/go-glob v0.0.0-20160226084822-572520ed46db // indirect
@@ -139,10 +141,11 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.8.0
 	golang.org/x/build v0.0.0-20190314133821-5284462c4bec // indirect
-	golang.org/x/crypto v0.0.0-20190325154230-a5d413f7728c
+	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 	golang.org/x/lint v0.0.0-20190301231843-5614ed5bae6f // indirect
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
+	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138 // indirect
 	google.golang.org/api v0.1.0 // indirect

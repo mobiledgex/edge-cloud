@@ -599,6 +599,11 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 		}
 		if inst.State == in.State {
 			// already in that state
+			if in.State == edgeproto.TrackedState_Ready {
+				// update runtime info
+				inst.RuntimeInfo = in.RuntimeInfo
+				s.store.STMPut(stm, &inst)
+			}
 			return nil
 		}
 		// please see state_transitions.md
@@ -611,6 +616,7 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 		if in.State == edgeproto.TrackedState_CreateError || in.State == edgeproto.TrackedState_DeleteError || in.State == edgeproto.TrackedState_UpdateError {
 			inst.Errors = in.Errors
 		}
+		inst.RuntimeInfo = in.RuntimeInfo
 		s.store.STMPut(stm, &inst)
 		return nil
 	})
