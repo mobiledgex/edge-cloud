@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -247,19 +248,21 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
-		if !clusterInstFound {
-			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.ClusterInstKey.ClusterKey.Name)
-			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
-			return
+		if cloudcommon.IsClusterInstReqd(&app) {
+			clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+			if !clusterInstFound {
+				str := fmt.Sprintf("Cluster instance %s not found",
+					appInst.ClusterInstKey.ClusterKey.Name)
+				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
+				return
+			}
 		}
 
 		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst)
+			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
@@ -278,12 +281,14 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 		// update (TODO)
 	} else if appInst.State == edgeproto.TrackedState_DeleteRequested {
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
-		if !clusterInstFound {
-			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.ClusterInstKey.ClusterKey.Name)
-			cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
-			return
+		if cloudcommon.IsClusterInstReqd(&app) {
+			clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+			if !clusterInstFound {
+				str := fmt.Sprintf("Cluster instance %s not found",
+					appInst.ClusterInstKey.ClusterKey.Name)
+				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+				return
+			}
 		}
 		// appInst was deleted
 		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)

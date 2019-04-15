@@ -112,6 +112,8 @@ func updateAppFields(in *edgeproto.App) error {
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
+		} else if in.ImageType == edgeproto.ImageType_ImageTypeQCOW {
+			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
