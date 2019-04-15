@@ -210,9 +210,9 @@ func (s *App) Validate(fields map[string]struct{}) error {
 		}
 	}
 	if s.AuthPublicKey != "" {
-		out, err := sh.Command("ssh-keygen", "-l", "-f", "/dev/stdin").SetInput(s.AuthPublicKey).Output()
+		_, err := sh.Command("ssh-keygen", "-l", "-f", "/dev/stdin").SetInput(s.AuthPublicKey).Output()
 		if err != nil {
-			return fmt.Errorf("Failed to decode public key %s %v", out, err)
+			return fmt.Errorf("Failed to decode public key %v", err)
 		}
 	}
 	return nil
