@@ -32,7 +32,11 @@ func request_ClusterInstApi_CreateClusterInst_0(ctx context.Context, marshaler r
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -53,7 +57,11 @@ func request_ClusterInstApi_DeleteClusterInst_0(ctx context.Context, marshaler r
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -74,7 +82,11 @@ func request_ClusterInstApi_UpdateClusterInst_0(ctx context.Context, marshaler r
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -95,7 +107,11 @@ func request_ClusterInstApi_ShowClusterInst_0(ctx context.Context, marshaler run
 	var protoReq ClusterInst
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -116,7 +132,11 @@ func request_ClusterInstInfoApi_ShowClusterInstInfo_0(ctx context.Context, marsh
 	var protoReq ClusterInstInfo
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -143,14 +163,14 @@ func RegisterClusterInstApiHandlerFromEndpoint(ctx context.Context, mux *runtime
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -164,8 +184,8 @@ func RegisterClusterInstApiHandler(ctx context.Context, mux *runtime.ServeMux, c
 	return RegisterClusterInstApiHandlerClient(ctx, mux, NewClusterInstApiClient(conn))
 }
 
-// RegisterClusterInstApiHandler registers the http handlers for service ClusterInstApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "ClusterInstApiClient".
+// RegisterClusterInstApiHandlerClient registers the http handlers for service ClusterInstApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "ClusterInstApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "ClusterInstApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "ClusterInstApiClient" to call the correct interceptors.
@@ -174,15 +194,6 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 	mux.Handle("POST", pattern_ClusterInstApi_CreateClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -203,15 +214,6 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 	mux.Handle("POST", pattern_ClusterInstApi_DeleteClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -232,15 +234,6 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 	mux.Handle("POST", pattern_ClusterInstApi_UpdateClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -261,15 +254,6 @@ func RegisterClusterInstApiHandlerClient(ctx context.Context, mux *runtime.Serve
 	mux.Handle("POST", pattern_ClusterInstApi_ShowClusterInst_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -320,14 +304,14 @@ func RegisterClusterInstInfoApiHandlerFromEndpoint(ctx context.Context, mux *run
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -341,8 +325,8 @@ func RegisterClusterInstInfoApiHandler(ctx context.Context, mux *runtime.ServeMu
 	return RegisterClusterInstInfoApiHandlerClient(ctx, mux, NewClusterInstInfoApiClient(conn))
 }
 
-// RegisterClusterInstInfoApiHandler registers the http handlers for service ClusterInstInfoApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "ClusterInstInfoApiClient".
+// RegisterClusterInstInfoApiHandlerClient registers the http handlers for service ClusterInstInfoApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "ClusterInstInfoApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "ClusterInstInfoApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "ClusterInstInfoApiClient" to call the correct interceptors.
@@ -351,15 +335,6 @@ func RegisterClusterInstInfoApiHandlerClient(ctx context.Context, mux *runtime.S
 	mux.Handle("POST", pattern_ClusterInstInfoApi_ShowClusterInstInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {

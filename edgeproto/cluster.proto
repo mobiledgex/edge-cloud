@@ -10,7 +10,7 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 import "result.proto";
 import "developer.proto";
 import "clusterflavor.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // ClusterKey uniquely identifies a Cluster.
 message ClusterKey {

@@ -3,7 +3,6 @@
 protoc-gen-cmd/protoc-gen-cmd
 protoc-gen-gomex/protoc-gen-gomex
 setup-env/ansible/playbooks/setup.yml
-vendor
 mc/mc
 mc/orm/dump.sql
 mc/orm/rbac.conf

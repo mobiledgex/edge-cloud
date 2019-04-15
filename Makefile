@@ -16,9 +16,6 @@ check-vers:
 		exit 2; \
 	fi
 
-dep: check-vers
-	dep ensure -vendor-only
-
 build: check-vers
 	make -C protogen
 	make -C ./protoc-gen-gomex
@@ -53,11 +50,15 @@ install:
 install-linux:
 	${LINUX_XCOMPILE_ENV} go install ./...
 
+PROTOBUF	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/golang/protobuf)
+GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
+GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+
 tools:
-	go install ./vendor/github.com/golang/protobuf/protoc-gen-go
-	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
-	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogofast
-	go install ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	go install ${PROTOBUF}/protoc-gen-go
+	go install ${GOGOPROTO}/protoc-gen-gogo
+	go install ${GOGOPROTO}/protoc-gen-gogofast
+	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
 
 doc:
 	make -C edgeproto doc

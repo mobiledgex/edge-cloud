@@ -32,7 +32,11 @@ func request_CloudletApi_CreateCloudlet_0(ctx context.Context, marshaler runtime
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -53,7 +57,11 @@ func request_CloudletApi_DeleteCloudlet_0(ctx context.Context, marshaler runtime
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -74,7 +82,11 @@ func request_CloudletApi_UpdateCloudlet_0(ctx context.Context, marshaler runtime
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -95,7 +107,11 @@ func request_CloudletApi_ShowCloudlet_0(ctx context.Context, marshaler runtime.M
 	var protoReq Cloudlet
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -116,7 +132,11 @@ func request_CloudletInfoApi_ShowCloudletInfo_0(ctx context.Context, marshaler r
 	var protoReq CloudletInfo
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -137,7 +157,11 @@ func request_CloudletMetricsApi_ShowCloudletMetrics_0(ctx context.Context, marsh
 	var protoReq CloudletMetrics
 	var metadata runtime.ServerMetadata
 
-	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -164,14 +188,14 @@ func RegisterCloudletApiHandlerFromEndpoint(ctx context.Context, mux *runtime.Se
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -185,8 +209,8 @@ func RegisterCloudletApiHandler(ctx context.Context, mux *runtime.ServeMux, conn
 	return RegisterCloudletApiHandlerClient(ctx, mux, NewCloudletApiClient(conn))
 }
 
-// RegisterCloudletApiHandler registers the http handlers for service CloudletApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "CloudletApiClient".
+// RegisterCloudletApiHandlerClient registers the http handlers for service CloudletApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CloudletApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "CloudletApiClient" to call the correct interceptors.
@@ -195,15 +219,6 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 	mux.Handle("POST", pattern_CloudletApi_CreateCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -224,15 +239,6 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 	mux.Handle("POST", pattern_CloudletApi_DeleteCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -253,15 +259,6 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 	mux.Handle("POST", pattern_CloudletApi_UpdateCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -282,15 +279,6 @@ func RegisterCloudletApiHandlerClient(ctx context.Context, mux *runtime.ServeMux
 	mux.Handle("POST", pattern_CloudletApi_ShowCloudlet_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -341,14 +329,14 @@ func RegisterCloudletInfoApiHandlerFromEndpoint(ctx context.Context, mux *runtim
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -362,8 +350,8 @@ func RegisterCloudletInfoApiHandler(ctx context.Context, mux *runtime.ServeMux, 
 	return RegisterCloudletInfoApiHandlerClient(ctx, mux, NewCloudletInfoApiClient(conn))
 }
 
-// RegisterCloudletInfoApiHandler registers the http handlers for service CloudletInfoApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "CloudletInfoApiClient".
+// RegisterCloudletInfoApiHandlerClient registers the http handlers for service CloudletInfoApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CloudletInfoApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletInfoApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "CloudletInfoApiClient" to call the correct interceptors.
@@ -372,15 +360,6 @@ func RegisterCloudletInfoApiHandlerClient(ctx context.Context, mux *runtime.Serv
 	mux.Handle("POST", pattern_CloudletInfoApi_ShowCloudletInfo_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -419,14 +398,14 @@ func RegisterCloudletMetricsApiHandlerFromEndpoint(ctx context.Context, mux *run
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -440,8 +419,8 @@ func RegisterCloudletMetricsApiHandler(ctx context.Context, mux *runtime.ServeMu
 	return RegisterCloudletMetricsApiHandlerClient(ctx, mux, NewCloudletMetricsApiClient(conn))
 }
 
-// RegisterCloudletMetricsApiHandler registers the http handlers for service CloudletMetricsApi to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "CloudletMetricsApiClient".
+// RegisterCloudletMetricsApiHandlerClient registers the http handlers for service CloudletMetricsApi
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "CloudletMetricsApiClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "CloudletMetricsApiClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "CloudletMetricsApiClient" to call the correct interceptors.
@@ -450,15 +429,6 @@ func RegisterCloudletMetricsApiHandlerClient(ctx context.Context, mux *runtime.S
 	mux.Handle("POST", pattern_CloudletMetricsApi_ShowCloudletMetrics_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {

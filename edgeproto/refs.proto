@@ -10,7 +10,7 @@ import "cloudlet.proto";
 import "cluster.proto";
 import "clusterinst.proto";
 import "app.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // Refs track ref counts of used resources, ports, etc.
 // They are not part of the base Cloudlet/Cluster objects because
