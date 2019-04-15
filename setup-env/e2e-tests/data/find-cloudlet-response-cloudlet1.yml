@@ -1,4 +1,5 @@
-fqdn: acmeappcosomeapplication110.tmus-cloud-1.tmus.mobiledgex.net
+status: FIND_FOUND
+fqdn: acmeappcosomeapplication110.smallcluster.tmus-cloud-1.tmus.mobiledgex.net
 ports:
 - proto: LProtoTCP
   internalport: 80
@@ -11,7 +12,6 @@ ports:
   internalport: 10002
   publicport: 10002
   fqdnprefix: someapplication1-udp.
-status: FIND_FOUND
 cloudletlocation:
   latitude: 31
   longitude: -91
