@@ -40,6 +40,11 @@
        state: directory
        path: "{{ mex_path }}"
 
+  - name: create remote plugin dir
+    file:
+       state: directory
+       path: "{{ remote_plugin_path }}"
+
   - name: copy vault file
     copy: 
        src: "{{ mex_path }}/vault.txt"
@@ -51,6 +56,16 @@
       url: https://github.com/kubernetes-sigs/kubeadm-dind-cluster/releases/download/v0.1.0/dind-cluster-v1.13.sh
       dest: /usr/local/bin/dind-cluster-v1.13.sh
       mode: 755
+
+  - name: pull kubeadm dind image
+    docker_image:
+      name: mirantis/kubeadm-dind-cluster
+      tag: "{{ kubeadm_dind_image_tag}}"
+
+  - name: pull nginx image
+    docker_image:
+      name: nginx
+      tag: latest
 
   - name: copy mexosagent bin
     copy:
@@ -68,17 +83,17 @@
      group: root
      mode: 0755
 
-#  - name: start mexosagent 
-#    service:
-#       enabled: yes
-#       name: mexosagent
-#       state: started
-
   - name: copy crm binary
     copy:
        src: "{{ crm_bin }}"
        dest: "{{ remote_bin_path }}"
        mode: 0755 
+
+  - name: copy crm plugin
+    copy:
+       src: "{{ local_plugin_file }}"
+       dest: "{{ remote_plugin_file }}"
+       mode: 0755
 
   - name: copy crmserver.service template
     template:
