@@ -14,7 +14,7 @@ import "clusterinst.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/appcommon.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // AppInstKey uniquely identifies an Application Instance (AppInst) or Application Instance state (AppInstInfo).
 message AppInstKey {

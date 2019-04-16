@@ -10,7 +10,7 @@ import "operator.proto";
 import "result.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
