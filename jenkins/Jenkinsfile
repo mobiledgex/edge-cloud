@@ -21,13 +21,6 @@ make clean
                     '''
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                    sh label: 'make dep', script: '''#!/bin/bash
-export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
-export GOPATH=$WORKSPACE/go
-make dep
-                    '''
-                }
-                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make tools', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
 export GOPATH=$WORKSPACE/go
@@ -57,6 +50,7 @@ make
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
+export GO111MODULE=on
 make test-stop
 go test ./...
                             '''
