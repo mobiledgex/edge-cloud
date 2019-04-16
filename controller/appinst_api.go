@@ -276,7 +276,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			if cloudcommon.IsClusterInstReqd(&app) {
 				// Auto-cluster
-				cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
+				cikey.ClusterKey.Name = fmt.Sprintf("%s%s%s", ClusterAutoPrefix, in.Key.AppKey.Name, in.Key.AppKey.DeveloperKey.Name)
 				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
 				autocluster = true
 			}
