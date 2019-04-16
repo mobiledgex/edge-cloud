@@ -46,7 +46,7 @@ func InitSql(addr, username, password, dbname string) (*gorm.DB, persist.Adapter
 	return db, &adapterLogger{adapter}, nil
 }
 
-func InitData(superuser, superpass string, stop *bool, done chan struct{}) {
+func InitData(superuser, superpass string, pingInterval time.Duration, stop *bool, done chan struct{}) {
 	if db == nil {
 		log.FatalLog("db not initialized")
 	}
@@ -81,6 +81,12 @@ func InitData(superuser, superpass string, stop *bool, done chan struct{}) {
 		log.DebugLog(log.DebugLevelApi, "init data done")
 		break
 	}
+	go func() {
+		for {
+			time.Sleep(pingInterval)
+			db.DB().Ping()
+		}
+	}()
 	close(done)
 }
 
