@@ -6,7 +6,7 @@ package edgeproto;
 import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "result.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // DeveloperKey uniquely identifies a Developer (Mobiledgex customer)
 message DeveloperKey {
