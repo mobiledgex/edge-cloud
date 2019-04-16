@@ -1,0 +1,34 @@
+syntax = "proto3";
+package edgeproto;
+
+import "google/api/annotations.proto";
+import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
+import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
+import "gogoproto/gogo.proto";
+import "app_inst.proto";
+
+message ExecRequest {
+  // Target AppInst
+  AppInstKey app_inst_key = 1;
+  // Command or Shell
+  string command = 2;
+  // ContainerID is the name of the target container, if applicable
+  string container_id = 3;
+  // WebRTC Offer
+  string offer = 4 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // WebRTC Answer
+  string answer = 5 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
+  // Any error message
+  string err = 6;
+  option (protogen.notify_message) = true;
+  option (protogen.notify_custom_update) = true;
+  option (protogen.notify_filter_cloudlet_key) = true;
+  option (protocmd.noconfig) = "Offer,Answer,Err";
+}
+
+service ExecApi {
+  // Run a Command or Shell on a container or VM
+  rpc RunCommand(ExecRequest) returns (ExecRequest) {}
+  // This is used internally to forward requests to other Controllers.
+  rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
+}
