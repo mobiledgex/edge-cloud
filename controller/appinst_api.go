@@ -373,6 +373,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.CloudletLoc = dme.Loc{}
 		}
 
+		var app edgeproto.App
+		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+			return edgeproto.ErrEdgeApiAppNotFound
+		}
+
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -394,10 +399,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 			ipaccess = clusterInst.IpAccess
 			clusterKey = &clusterInst.Key.ClusterKey
-		}
-		var info edgeproto.CloudletInfo
-		if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
-			return errors.New("Info for cloudlet not found")
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}

@@ -11,13 +11,13 @@ import (
 )
 
 var AppDeploymentTypeKubernetes = "kubernetes"
-var AppDeploymentTypeKVM = "kvm"
+var AppDeploymentTypeVM = "vm"
 var AppDeploymentTypeHelm = "helm"
 var AppDeploymentTypeDockerSwarm = "docker-swarm"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
-	AppDeploymentTypeKVM,
+	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
 	AppDeploymentTypeDockerSwarm,
 }
@@ -38,7 +38,7 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeQCOW:
-		if deployment == AppDeploymentTypeKVM {
+		if deployment == AppDeploymentTypeVM {
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeUnknown:
@@ -54,7 +54,7 @@ func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	case edgeproto.ImageType_ImageTypeDocker:
 		return AppDeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_ImageTypeQCOW:
-		return AppDeploymentTypeKVM, nil
+		return AppDeploymentTypeVM, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }

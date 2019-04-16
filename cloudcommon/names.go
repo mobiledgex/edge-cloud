@@ -153,7 +153,7 @@ func SetNodeKey(hostname *string, nodeType edgeproto.NodeType, cloudletKey *edge
 }
 
 func IsClusterInstReqd(app *edgeproto.App) bool {
-	if app.ImageType == edgeproto.ImageType_ImageTypeQCOW {
+	if app.Deployment == AppDeploymentTypeVM {
 		return false
 	}
 	return true
