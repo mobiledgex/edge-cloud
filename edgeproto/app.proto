@@ -10,8 +10,7 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 import "developer.proto";
 import "flavor.proto";
 import "cluster.proto";
-import "common.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // It is important that embedded key structs are not referenced by a
 // pointer, otherwise the enclosing struct cannot properly function

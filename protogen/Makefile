@@ -1,7 +1,6 @@
 # Makefile
 
-PROTOCGRPC	= ../../../grpc-ecosystem/grpc-gateway/third_party/googleapis
-GOGOPROTO	= 
+APIS		= $(shell go list -f '{{ .Dir }}' -m github.com/gogo/googleapis)
 
 build:
-	protoc -I. -I${PROTOCGRPC} --gogofast_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. *.proto
+	protoc -I. -I${APIS} --gogofast_out=Mgoogle/protobuf/descriptor.proto=github.com/gogo/protobuf/protoc-gen-gogo/descriptor:. *.proto

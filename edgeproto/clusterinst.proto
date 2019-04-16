@@ -11,7 +11,7 @@ import "clusterflavor.proto";
 import "cluster.proto";
 import "cloudlet.proto";
 import "common.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 message ClusterInstKey {
