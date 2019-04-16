@@ -23,7 +23,7 @@
 
   - name: Add kubernetes apt repository
     apt_repository:
-      repo: deb [arch=amd64] http://apt.kubernetes.io kubernetes-{{ansible_distribution_release}} main
+      repo: deb [arch=amd64] http://apt.kubernetes.io kubernetes-xenial main
 
   - name: Install apt packages
     package:
