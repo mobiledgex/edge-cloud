@@ -1,7 +1,7 @@
 package platform
 
 import (
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 )
 
@@ -19,7 +19,13 @@ type Platform interface {
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteCluster(clusterInst *edgeproto.ClusterInst) error
 	// Create an AppInst on a Cluster
-	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error
+	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
 	// Delete an AppInst on a Cluster
-	DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error
+	DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
+	// Get AppInst runtime information
+	GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
+	// Get the Platform Client to run commands against
+	GetPlatformClient() (pc.PlatformClient, error)
+	// Get the command to pass to PlatformClient for the container command
+	GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 }
