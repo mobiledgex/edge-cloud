@@ -14,6 +14,7 @@ It is generated from these files:
 	common.proto
 	controller.proto
 	developer.proto
+	exec.proto
 	flavor.proto
 	metric.proto
 	node.proto
@@ -28,6 +29,7 @@ It has these top-level messages:
 	App
 	AppInstKey
 	AppInst
+	AppInstRuntime
 	AppInstInfo
 	AppInstMetrics
 	CloudletKey
@@ -51,6 +53,7 @@ It has these top-level messages:
 	Controller
 	DeveloperKey
 	Developer
+	ExecRequest
 	FlavorKey
 	Flavor
 	MetricTag

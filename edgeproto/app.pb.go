@@ -14,6 +14,7 @@
 		common.proto
 		controller.proto
 		developer.proto
+		exec.proto
 		flavor.proto
 		metric.proto
 		node.proto
@@ -28,6 +29,7 @@
 		App
 		AppInstKey
 		AppInst
+		AppInstRuntime
 		AppInstInfo
 		AppInstMetrics
 		CloudletKey
@@ -51,6 +53,7 @@
 		Controller
 		DeveloperKey
 		Developer
+		ExecRequest
 		FlavorKey
 		Flavor
 		MetricTag
