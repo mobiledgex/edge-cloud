@@ -203,16 +203,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
-	var app edgeproto.App
-	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
-		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-			return edgeproto.ErrEdgeApiAppNotFound
-		}
-		return nil
-	})
-	if err != nil {
-		return err
-	}
 
 	var autocluster bool
 	// See if we need to create auto-cluster.
@@ -267,6 +257,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// Explicit auto-cluster requirement
 			if cikey.ClusterKey.Name == "" {
 				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
+			}
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return edgeproto.ErrEdgeApiAppNotFound
 			}
 			// Check if specified ClusterInst exists
 			if cikey.ClusterKey.Name != ClusterAutoPrefix && cloudcommon.IsClusterInstReqd(&app) {
@@ -339,7 +333,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return fmt.Errorf("Cannot specify URI %s for non-default cloudlet", in.Uri)
 	}
 
-	err = s.sync.ApplySTMWait(func(stm concurrency.STM) error {
+	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		buf := in
 		if !defaultCloudlet {
 			// lookup already done, don't overwrite changes

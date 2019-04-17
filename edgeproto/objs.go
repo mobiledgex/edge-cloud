@@ -7,7 +7,6 @@ import (
 	"strconv"
 	strings "strings"
 
-	sh "github.com/codeskyblue/go-sh"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
@@ -210,9 +209,9 @@ func (s *App) Validate(fields map[string]struct{}) error {
 		}
 	}
 	if s.AuthPublicKey != "" {
-		_, err := sh.Command("ssh-keygen", "-l", "-f", "/dev/stdin").SetInput(s.AuthPublicKey).Output()
+		_, err := util.ValidatePublicKey(s.AuthPublicKey)
 		if err != nil {
-			return fmt.Errorf("Failed to decode public key %v", err)
+			return err
 		}
 	}
 	return nil
