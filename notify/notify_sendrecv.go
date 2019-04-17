@@ -53,7 +53,7 @@ type NotifyRecv interface {
 	// Start receiving a send all
 	RecvAllStart()
 	// End receiving a send all
-	RecvAllEnd()
+	RecvAllEnd(cleanup Cleanup)
 }
 
 type StreamNotify interface {
@@ -76,6 +76,24 @@ type Stats struct {
 	ObjSend         map[string]uint64
 	ObjRecv         map[string]uint64
 }
+
+// There are two ways to clean up stale cache entries.
+// On Servers, which can handle multiple clients sending
+// it the same types of objects, we delete objects when a
+// client disconnects (Flush). Only objects associated
+// with the disconnected client are flushed.
+// On clients, which only connect to one server, and want
+// to keep a cache of what the server sent even when
+// disconnected, we maintain the cache after disconnect,
+// but Prune stale entries after reconnect and receiving
+// the SendAllEnd message. All entries not sent by the
+// server are pruned (deleted).
+type Cleanup int
+
+const (
+	CleanupPrune Cleanup = iota
+	CleanupFlush
+)
 
 type SendRecv struct {
 	cliserv            string // client or server
@@ -238,7 +256,7 @@ func (s *SendRecv) send(stream StreamNotify) {
 	close(s.sendRunning)
 }
 
-func (s *SendRecv) recv(stream StreamNotify, notifyId int64) {
+func (s *SendRecv) recv(stream StreamNotify, notifyId int64, cleanup Cleanup) {
 	recvAll := true
 	for _, recv := range s.recvmap {
 		recv.RecvAllStart()
@@ -263,7 +281,7 @@ func (s *SendRecv) recv(stream StreamNotify, notifyId int64) {
 		}
 		if recvAll && notice.Action == edgeproto.NoticeAction_SENDALL_END {
 			for _, recv := range s.recvmap {
-				recv.RecvAllEnd()
+				recv.RecvAllEnd(cleanup)
 			}
 			recvAll = false
 			continue
