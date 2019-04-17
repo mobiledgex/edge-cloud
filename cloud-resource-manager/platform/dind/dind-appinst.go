@@ -16,10 +16,6 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
-	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
-	if err != nil {
-		return fmt.Errorf("get kube names failed: %s", err)
-	}
 
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
@@ -46,10 +42,6 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
-	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
-	if err != nil {
-		return fmt.Errorf("get kube names failed: %s", err)
-	}
 
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
