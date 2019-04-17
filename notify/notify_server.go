@@ -58,6 +58,7 @@ type ServerMgr struct {
 	recvs    []NotifyRecvMany
 	notifyId int64
 	serv     *grpc.Server
+	name     string
 }
 
 // NotifySendMany and NotifyRecvMany are implemented by auto-generated code.
@@ -85,6 +86,7 @@ var ServerMgrOne ServerMgr
 func (mgr *ServerMgr) Init() {
 	mgr.sends = make([]NotifySendMany, 0)
 	mgr.recvs = make([]NotifyRecvMany, 0)
+	mgr.name = "server"
 }
 
 func (mgr *ServerMgr) RegisterSend(sendMany NotifySendMany) {
@@ -152,7 +154,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	server := Server{}
 	server.peerAddr = peerAddr
 	server.running = make(chan struct{})
-	server.sendrecv.init("server")
+	server.sendrecv.init(mgr.name)
 	server.sendrecv.peerAddr = peerAddr
 
 	mgr.mux.Lock()
@@ -187,7 +189,7 @@ func (mgr *ServerMgr) StreamNotice(stream edgeproto.NotifyApi_StreamNoticeServer
 	// start send/recv threads.
 	// recv thread will exit once stream is terminated after this
 	// function returns.
-	go server.sendrecv.recv(stream, server.notifyId)
+	go server.sendrecv.recv(stream, server.notifyId, CleanupFlush)
 	// to reduce number of threads, send is run inline
 	server.sendrecv.send(stream)
 	<-server.sendrecv.recvRunning

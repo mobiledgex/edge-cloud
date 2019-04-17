@@ -99,7 +99,7 @@ func (s *Client) run() {
 		s.sendrecv.sendRunning = make(chan struct{})
 		s.sendrecv.recvRunning = make(chan struct{})
 		go s.sendrecv.send(stream)
-		go s.sendrecv.recv(stream, 0)
+		go s.sendrecv.recv(stream, 0, CleanupPrune)
 		// if there is a communication error, both threads will exit
 		<-s.sendrecv.sendRunning
 		<-s.sendrecv.recvRunning
