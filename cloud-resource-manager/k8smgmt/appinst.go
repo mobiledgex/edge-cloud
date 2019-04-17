@@ -8,6 +8,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) error {
@@ -49,4 +50,53 @@ func DeleteAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	}
 	log.DebugLog(log.DebugLevelMexos, "deleted deployment", "name", names.AppName)
 	return nil
+}
+
+func GetAppInstRuntime(client pc.PlatformClient, names *KubeNames, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+	rt := &edgeproto.AppInstRuntime{}
+	rt.ContainerIds = make([]string, 0)
+
+	objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
+	if err != nil {
+		return nil, err
+	}
+	for ii, _ := range objs {
+		deployment, ok := objs[ii].(*appsv1.Deployment)
+		if ok {
+			name := deployment.ObjectMeta.Name
+			cmd := fmt.Sprintf("%s kubectl get pods -o custom-columns=NAME:.metadata.name --sort-by=.metadata.name --no-headers --selector=%s=%s", names.KconfEnv, MexAppLabel, name)
+			out, err := client.Output(cmd)
+			if err != nil {
+				return nil, fmt.Errorf("error getting kubernetes pods, %s, %s, %s", cmd, out, err.Error())
+			}
+			lines := strings.Split(out, "\n")
+			for _, line := range lines {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				rt.ContainerIds = append(rt.ContainerIds, strings.TrimSpace(line))
+			}
+		}
+	}
+
+	return rt, nil
+}
+
+func GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+	// If no container specified, pick the first one in the AppInst.
+	// Note that some deployments may not require a container id.
+	if req.ContainerId == "" {
+		if appInst.RuntimeInfo.ContainerIds == nil ||
+			len(appInst.RuntimeInfo.ContainerIds) == 0 {
+			return "", fmt.Errorf("no containers to run command in")
+		}
+		req.ContainerId = appInst.RuntimeInfo.ContainerIds[0]
+	}
+	names, err := GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return "", fmt.Errorf("failed to get kube names, %v", err)
+	}
+	cmdStr := fmt.Sprintf("%s kubectl exec -it %s -- %s",
+		names.KconfEnv, req.ContainerId, req.Command)
+	return cmdStr, nil
 }

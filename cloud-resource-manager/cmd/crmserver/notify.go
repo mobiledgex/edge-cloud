@@ -13,9 +13,11 @@ func InitNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvAppInstCache(&cd.AppInstCache)
 	client.RegisterRecvCloudletCache(&cd.CloudletCache)
 	client.RegisterRecvClusterInstCache(&cd.ClusterInstCache)
+	client.RegisterRecv(notify.NewExecRequestRecv(cd.ExecReqHandler))
 
 	client.RegisterSendCloudletInfoCache(&cd.CloudletInfoCache)
 	client.RegisterSendAppInstInfoCache(&cd.AppInstInfoCache)
 	client.RegisterSendClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	client.RegisterSendNodeCache(&cd.NodeCache)
+	client.RegisterSend(cd.ExecReqSend)
 }
