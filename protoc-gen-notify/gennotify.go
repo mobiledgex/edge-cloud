@@ -468,13 +468,15 @@ func (s *{{.Name}}Recv) RecvAllStart() {
 {{- end}}
 }
 
-func (s *{{.Name}}Recv) RecvAllEnd() {
+func (s *{{.Name}}Recv) RecvAllEnd(cleanup Cleanup) {
 {{- if .Cache}}
 	s.Mux.Lock()
 	validKeys := s.sendAllKeys
 	s.sendAllKeys = nil
 	s.Mux.Unlock()
-	s.handler.Prune(validKeys)
+	if cleanup == CleanupPrune {
+		s.handler.Prune(validKeys)
+	}
 {{- end}}
 }
 

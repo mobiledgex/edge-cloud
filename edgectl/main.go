@@ -78,6 +78,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
 	gencmd.ControllerApiCmd = edgeproto.NewControllerApiClient(conn)
 	gencmd.NodeApiCmd = edgeproto.NewNodeApiClient(conn)
+	execApiCmd = edgeproto.NewExecApiClient(conn)
 	return nil
 }
 
@@ -120,6 +121,7 @@ func main() {
 
 	controllerCmd.AddCommand(createCmd)
 	controllerCmd.AddCommand(deleteCmd)
+	controllerCmd.AddCommand(NewExecRequestCmd())
 
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)
