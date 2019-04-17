@@ -115,11 +115,11 @@ func WaitFor(cache WaitForCache, count int) {
 	if cache == nil {
 		return
 	}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		if cache.GetCount() == count {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 }
 
@@ -169,13 +169,13 @@ func (s *Client) WaitForConnect(connect uint64) {
 }
 
 func (mgr *ServerMgr) WaitServerCount(count int) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		mgr.mux.Lock()
 		cnt := len(mgr.table)
 		mgr.mux.Unlock()
 		if cnt == count {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 }
