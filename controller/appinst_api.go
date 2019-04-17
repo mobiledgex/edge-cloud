@@ -161,17 +161,16 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 
 func getProtocolBitMap(proto dme.LProto) (int32, error) {
 	var bitmap int32
-
 	switch proto {
 	//put all "TCP" protocols below here
 	case dme.LProto_LProtoHTTP:
+		fallthrough
 	case dme.LProto_LProtoTCP:
 		bitmap = 1 //01
 		break
 	//put all "UDP" protocols below here
 	case dme.LProto_LProtoUDP:
 		bitmap = 2 //10
-
 		break
 	default:
 		return 0, errors.New("Unknown protocol in use for this app")
