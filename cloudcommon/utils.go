@@ -16,12 +16,8 @@ func GetFileNameWithExt(fileUrlPath string) (string, error) {
 		return "", fmt.Errorf("Error parsing file URL %s, %v", fileUrlPath, err)
 	}
 
-	path := fileUrl.Path
-	segments := strings.Split(path, "/")
-	if len(segments) <= 0 {
-		return "", fmt.Errorf("Error parsing file URL %s, path %s", fileUrlPath, path)
-	}
-	return segments[len(segments)-1], nil
+	_, file := filepath.Split(fileUrl.Path)
+	return file, nil
 }
 
 func GetFileName(fileUrlPath string) (string, error) {

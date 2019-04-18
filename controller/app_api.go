@@ -175,6 +175,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	if err != nil {
 		return &edgeproto.Result{}, err
 	}
+	if in.DeploymentManifest != "" {
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.DeploymentManifest)
+		if err != nil {
+			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest %v", err)
+		}
+	}
 
 	if s.AndroidPackageConflicts(in) {
 		return &edgeproto.Result{}, fmt.Errorf("AndroidPackageName: %s in use by another app", in.AndroidPackageName)

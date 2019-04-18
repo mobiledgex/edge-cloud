@@ -49,6 +49,16 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
+func IsValidDeploymentManifest(appDeploymentType string, manifest string) error {
+	if appDeploymentType == AppDeploymentTypeVM {
+		if strings.HasPrefix(manifest, "#cloud-config") {
+			return nil
+		}
+		return fmt.Errorf("Only cloud-init script support, must start with '#cloud-config'")
+	}
+	return nil
+}
+
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
