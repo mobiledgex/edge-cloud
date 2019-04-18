@@ -10,12 +10,17 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 )
 
-func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error {
+func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "call runKubectlCreateApp for dind")
 
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
+
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return err
+	}
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		err = k8smgmt.CreateAppInst(client, names, app, appInst)
@@ -31,12 +36,17 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	return nil
 }
 
-func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, names *k8smgmt.KubeNames) error {
+func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
 	log.DebugLog(log.DebugLevelMexos, "run kubectl delete app for dind")
 
 	var err error
 	client := &pc.LocalClient{}
 	appDeploymentType := app.Deployment
+
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return err
+	}
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
 		err = k8smgmt.DeleteAppInst(client, names, app, appInst)
@@ -49,4 +59,21 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 		return err
 	}
 	return nil
+}
+
+func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
+	client, err := s.GetPlatformClient()
+	if err != nil {
+		return nil, err
+	}
+	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
+	if err != nil {
+		return nil, err
+	}
+
+	return k8smgmt.GetAppInstRuntime(client, names, app, appInst)
+}
+
+func (s *Platform) GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error) {
+	return k8smgmt.GetContainerCommand(clusterInst, app, appInst, req)
 }

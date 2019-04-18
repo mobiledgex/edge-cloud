@@ -141,6 +141,7 @@ func main() {
 	edgeproto.RegisterCloudletRefsApiServer(server, &cloudletRefsApi)
 	edgeproto.RegisterControllerApiServer(server, &controllerApi)
 	edgeproto.RegisterNodeApiServer(server, &nodeApi)
+	edgeproto.RegisterExecApiServer(server, &execApi)
 	log.RegisterDebugApiServer(server, &log.Api{})
 
 	go func() {
@@ -261,6 +262,7 @@ func InitApis(sync *Sync) {
 	InitCloudletRefsApi(sync)
 	InitControllerApi(sync)
 	InitNodeApi(sync)
+	InitExecApi()
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "nohostname"
@@ -276,10 +278,12 @@ func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
 	notify.ServerMgrOne.RegisterSendAppCache(&appApi.cache)
 	notify.ServerMgrOne.RegisterSendAppInstCache(&appInstApi.cache)
+	notify.ServerMgrOne.RegisterSend(execRequestSendMany)
 
 	notify.ServerMgrOne.RegisterRecv(notify.NewCloudletInfoRecvMany(&cloudletInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewAppInstInfoRecvMany(&appInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewClusterInstInfoRecvMany(&clusterInstInfoApi))
 	notify.ServerMgrOne.RegisterRecv(notify.NewMetricRecvMany(influxQ))
 	notify.ServerMgrOne.RegisterRecv(notify.NewNodeRecvMany(&nodeApi))
+	notify.ServerMgrOne.RegisterRecv(notify.NewExecRequestRecvMany(&execApi))
 }

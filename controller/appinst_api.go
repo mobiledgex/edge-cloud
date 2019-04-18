@@ -159,6 +159,37 @@ func (s *AppInstApi) CreateAppInst(in *edgeproto.AppInst, cb edgeproto.AppInstAp
 	return s.createAppInstInternal(DefCallContext(), in, cb)
 }
 
+func getProtocolBitMap(proto dme.LProto) (int32, error) {
+	var bitmap int32
+	switch proto {
+	//put all "TCP" protocols below here
+	case dme.LProto_LProtoHTTP:
+		fallthrough
+	case dme.LProto_LProtoTCP:
+		bitmap = 1 //01
+		break
+	//put all "UDP" protocols below here
+	case dme.LProto_LProtoUDP:
+		bitmap = 2 //10
+		break
+	default:
+		return 0, errors.New("Unknown protocol in use for this app")
+	}
+	return bitmap, nil
+}
+
+func protocolInUse(protocolsToCheck int32, usedProtocols int32) bool {
+	return (protocolsToCheck & usedProtocols) != 0
+}
+
+func addProtocol(protos int32, protocolToAdd int32) int32 {
+	return protos | protocolToAdd
+}
+
+func removeProtocol(protos int32, protocolToRemove int32) int32 {
+	return protos & (^protocolToRemove)
+}
+
 // createAppInstInternal is used to create dynamic app insts internally,
 // bypassing static assignment.
 func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppInst, cb edgeproto.AppInstApi_CreateAppInstServer) (reterr error) {
@@ -345,7 +376,8 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return fmt.Errorf("Flavor %s not found", in.Flavor.Name)
 		}
 
-		ipaccess := edgeproto.IpAccess_IpAccessDedicated
+		var clusterKey *edgeproto.ClusterKey
+		ipaccess := edgeproto.IpAccess_IpAccessShared
 		if !defaultCloudlet {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
@@ -360,6 +392,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return errors.New("Info for cloudlet not found")
 			}
 			ipaccess = clusterInst.IpAccess
+			clusterKey = &clusterInst.Key.ClusterKey
 		}
 
 		cloudletRefs := edgeproto.CloudletRefs{}
@@ -377,13 +410,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefs.RootLbPorts = make(map[int32]int32)
 			}
 
-			p := RootLBSharedPortBegin
 			for ii, _ := range ports {
 				// Samsung enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
 				// external port so port remap is not required.
+				protocolBits, err := getProtocolBitMap(ports[ii].Proto)
+				if err != nil {
+					return err
+				}
+				iport := ports[ii].InternalPort
 				eport := int32(-1)
-				if _, found := cloudletRefs.RootLbPorts[ports[ii].InternalPort]; !found {
+				if usedProtocols, found := cloudletRefs.RootLbPorts[iport]; !found || !protocolInUse(protocolBits, usedProtocols) {
+
 					// rootLB has its own ports it uses
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
@@ -393,12 +431,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 						eport = iport
 					}
 				}
-				for ; p < 65000 && eport == int32(-1); p++ {
+				for p := RootLBSharedPortBegin; p < 65000 && eport == int32(-1); p++ {
 					// each kubernetes service gets its own
 					// nginx proxy that runs in the rootLB,
 					// and http ports are also mapped to it,
 					// so there is no shared L7 port + path.
-					if _, found := cloudletRefs.RootLbPorts[p]; found {
+					if usedProtocols, found := cloudletRefs.RootLbPorts[p]; found && protocolInUse(protocolBits, usedProtocols) {
+
 						continue
 					}
 					eport = p
@@ -407,11 +446,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					return errors.New("no free external ports")
 				}
 				ports[ii].PublicPort = eport
-				cloudletRefs.RootLbPorts[eport] = 1
+				existingProtoBits, _ := cloudletRefs.RootLbPorts[eport]
+				cloudletRefs.RootLbPorts[eport] = addProtocol(protocolBits, existingProtoBits)
+
 				cloudletRefsChanged = true
 			}
 		} else {
-			in.Uri = cloudcommon.GetAppFQDN(&in.Key)
+			in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
@@ -522,7 +563,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// shared root load balancer
 				for ii, _ := range in.MappedPorts {
 					p := in.MappedPorts[ii].PublicPort
-					delete(cloudletRefs.RootLbPorts, p)
+					protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
+
+					if err != nil {
+						return err
+					}
+					protos, _ := cloudletRefs.RootLbPorts[p]
+					if cloudletRefs.RootLbPorts != nil {
+						cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
+					}
 					cloudletRefsChanged = true
 				}
 			}
@@ -597,6 +646,11 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 		}
 		if inst.State == in.State {
 			// already in that state
+			if in.State == edgeproto.TrackedState_Ready {
+				// update runtime info
+				inst.RuntimeInfo = in.RuntimeInfo
+				s.store.STMPut(stm, &inst)
+			}
 			return nil
 		}
 		// please see state_transitions.md
@@ -609,6 +663,7 @@ func (s *AppInstApi) UpdateFromInfo(in *edgeproto.AppInstInfo) {
 		if in.State == edgeproto.TrackedState_CreateError || in.State == edgeproto.TrackedState_DeleteError || in.State == edgeproto.TrackedState_UpdateError {
 			inst.Errors = in.Errors
 		}
+		inst.RuntimeInfo = in.RuntimeInfo
 		s.store.STMPut(stm, &inst)
 		return nil
 	})

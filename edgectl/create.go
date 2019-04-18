@@ -6,7 +6,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/gencmd"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"github.com/spf13/cobra"
 )
 

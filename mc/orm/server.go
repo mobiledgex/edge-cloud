@@ -40,6 +40,7 @@ type ServerConfig struct {
 	LDAPAddr      string
 	GitlabAddr    string
 	ClientCert    string
+	PingInterval  time.Duration
 }
 
 var DefaultDBUser = "mcuser"
@@ -149,7 +150,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	server.db = db
 
 	server.initDataDone = make(chan struct{}, 1)
-	go InitData(superuser, superpass, &server.stopInitData, server.initDataDone)
+	go InitData(superuser, superpass, config.PingInterval, &server.stopInitData, server.initDataDone)
 
 	e := echo.New()
 	e.HideBanner = true
