@@ -112,6 +112,8 @@ func updateAppFields(in *edgeproto.App) error {
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
+		} else if in.ImageType == edgeproto.ImageType_ImageTypeQCOW {
+			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			in.ImagePath = cloudcommon.Registry + ":5000/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
@@ -172,6 +174,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	err = updateAppFields(in)
 	if err != nil {
 		return &edgeproto.Result{}, err
+	}
+	if in.DeploymentManifest != "" {
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.DeploymentManifest)
+		if err != nil {
+			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest %v", err)
+		}
 	}
 
 	if s.AndroidPackageConflicts(in) {
