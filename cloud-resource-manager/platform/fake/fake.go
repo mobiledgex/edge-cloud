@@ -42,7 +42,7 @@ func (s *Platform) DeleteCluster(clusterInst *edgeproto.ClusterInst) error {
 	return nil
 }
 
-func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error {
+func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error {
 	log.DebugLog(log.DebugLevelMexos, "fake AppInst ready")
 	return nil
 }

@@ -19,7 +19,7 @@ type Platform interface {
 	// Delete a Kuberentes Cluster on the cloudlet.
 	DeleteCluster(clusterInst *edgeproto.ClusterInst) error
 	// Create an AppInst on a Cluster
-	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
+	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error
 	// Delete an AppInst on a Cluster
 	DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) error
 	// Get AppInst runtime information
