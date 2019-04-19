@@ -276,11 +276,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			if cloudcommon.IsClusterInstReqd(&app) {
 				// Auto-cluster
+				//TODO  figure out if theres a way without having the redundant developer name in the cluster name
 				cikey.ClusterKey.Name = fmt.Sprintf("%s%s%s", ClusterAutoPrefix, in.Key.AppKey.Name, in.Key.AppKey.DeveloperKey.Name)
 				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
+				//set the developer the same as the app dev if not specified
+				if cikey.Developer == "" {
+					cikey.Developer = in.Key.AppKey.DeveloperKey.Name
+				}
 				autocluster = true
 			}
-
 			if in.Flavor.Name == "" {
 				// find flavor from app
 				in.Flavor = app.DefaultFlavor
