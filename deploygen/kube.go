@@ -45,7 +45,7 @@ func kubeBasic(app *AppSpec) (string, error) {
 
 }
 
-func setKubePorts(ports []PortSpec) []kubePort {
+func setKubePorts(ports []util.PortSpec) []kubePort {
 	kports := []kubePort{}
 	for _, port := range ports {
 		kp := kubePort{

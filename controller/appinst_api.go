@@ -257,8 +257,12 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if cikey.ClusterKey.Name == "" {
 				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
 			}
+			var app edgeproto.App
+			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
+				return edgeproto.ErrEdgeApiAppNotFound
+			}
 			// Check if specified ClusterInst exists
-			if cikey.ClusterKey.Name != ClusterAutoPrefix {
+			if cikey.ClusterKey.Name != ClusterAutoPrefix && cloudcommon.IsClusterInstReqd(&app) {
 				if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, nil) {
 					// developer may or may not be specified
 					// in clusterinst.
@@ -270,17 +274,15 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// cluster inst exists so we're good.
 				return nil
 			}
-			// Auto-cluster
-			cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
-			cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
-			autocluster = true
+			if cloudcommon.IsClusterInstReqd(&app) {
+				// Auto-cluster
+				cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
+				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
+				autocluster = true
+			}
 
 			if in.Flavor.Name == "" {
 				// find flavor from app
-				var app edgeproto.App
-				if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
-					return edgeproto.ErrEdgeApiAppNotFound
-				}
 				in.Flavor = app.DefaultFlavor
 			}
 			return nil
@@ -368,6 +370,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 			return edgeproto.ErrEdgeApiAppNotFound
 		}
+
 		if in.Flavor.Name == "" {
 			in.Flavor = app.DefaultFlavor
 		}
@@ -378,7 +381,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		var clusterKey *edgeproto.ClusterKey
 		ipaccess := edgeproto.IpAccess_IpAccessShared
-		if !defaultCloudlet {
+		if !defaultCloudlet && cloudcommon.IsClusterInstReqd(&app) {
 			clusterInst := edgeproto.ClusterInst{}
 			if !clusterInstApi.store.STMGet(stm, &in.ClusterInstKey, &clusterInst) {
 				return errors.New("Cluster instance does not exist for app")
@@ -387,10 +390,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
 			}
 
-			var info edgeproto.CloudletInfo
-			if !cloudletInfoApi.store.STMGet(stm, &in.Key.CloudletKey, &info) {
-				return errors.New("Info for cloudlet not found")
-			}
 			ipaccess = clusterInst.IpAccess
 			clusterKey = &clusterInst.Key.ClusterKey
 		}
@@ -402,7 +401,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 
 		ports, _ := edgeproto.ParseAppPorts(app.AccessPorts)
-		if defaultCloudlet {
+		if defaultCloudlet || !cloudcommon.IsClusterInstReqd(&app) {
 			// nothing to do
 		} else if ipaccess == edgeproto.IpAccess_IpAccessShared {
 			in.Uri = cloudcommon.GetRootLBFQDN(&in.Key.CloudletKey)
