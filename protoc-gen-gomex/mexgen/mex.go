@@ -165,7 +165,8 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	if GetVersionHashOpt(en) {
 		// Collect all key objects
 		m.getAllKeyMessages()
-		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages))
+		salt := GetVersionHashSalt(en)
+		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
 		// Generate version check code for version message
@@ -1316,16 +1317,22 @@ func validateVersionHash(en *descriptor.EnumDescriptorProto, hashStr string, fil
 	}
 }
 
+type HashableKey struct {
+}
+
 // Hash function for the Data Model Version
-func getKeyVersionHash(msgs []descriptor.DescriptorProto) [16]byte {
+func getKeyVersionHash(msgs []descriptor.DescriptorProto, salt string) [16]byte {
 	sort.Slice(msgs, func(i, j int) bool {
 		return *msgs[i].Name < *msgs[j].Name
 	})
+	// Need to build an array of HashableKeys from msgs
 	arrBytes := []byte{}
 	for _, i := range msgs {
 		jsonBytes, _ := json.Marshal(i)
 		arrBytes = append(arrBytes, jsonBytes...)
 	}
+	// add salt
+	arrBytes = append([]byte(salt))
 	return md5.Sum(arrBytes)
 
 }
@@ -1486,4 +1493,8 @@ func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 
 func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
 	return proto.GetBoolExtension(enum.Options, protogen.E_VersionHash, false)
+}
+
+func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
+	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
 }

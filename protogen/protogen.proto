@@ -34,7 +34,8 @@ extend google.protobuf.MessageOptions {
 
 extend google.protobuf.EnumOptions {
   // This enum has hashes of the model version
-  bool version_hash = 51025;
+  bool version_hash = 51023;
+  string version_hash_salt = 51024;
 }
 
 extend google.protobuf.FieldOptions {
