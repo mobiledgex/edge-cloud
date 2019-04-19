@@ -1317,18 +1317,56 @@ func validateVersionHash(en *descriptor.EnumDescriptorProto, hashStr string, fil
 	}
 }
 
+// Subset of the FieldDescriptorProto that is used to identify whether we need to trigger an
+// incompatible upgrade or not
+type FieldDescriptorProtoHashable struct {
+	Name     *string
+	Number   *int32
+	Label    *descriptor.FieldDescriptorProto_Label
+	Type     *descriptor.FieldDescriptorProto_Type
+	TypeName *string
+	Extendee *string
+}
+
+// Unique idenitifable message object, which is used in a version hash calculation
 type HashableKey struct {
+	Name  *string
+	Field []FieldDescriptorProtoHashable
+}
+
+func getHashObjsFromMsgs(msgs []descriptor.DescriptorProto) []HashableKey {
+	objs := make([]HashableKey, 0)
+	for _, m := range msgs {
+		o := HashableKey{
+			Name: m.Name,
+		}
+		for _, dp := range m.Field {
+			dpHash := FieldDescriptorProtoHashable{
+				Name:     dp.Name,
+				Number:   dp.Number,
+				Label:    dp.Label,
+				Type:     dp.Type,
+				TypeName: dp.TypeName,
+				Extendee: dp.Extendee,
+			}
+			o.Field = append(o.Field, dpHash)
+		}
+		objs = append(objs, o)
+	}
+	return objs
 }
 
 // Hash function for the Data Model Version
 func getKeyVersionHash(msgs []descriptor.DescriptorProto, salt string) [16]byte {
+	// Sort the messages to make sure we are generate repeatable hash
 	sort.Slice(msgs, func(i, j int) bool {
 		return *msgs[i].Name < *msgs[j].Name
 	})
 	// Need to build an array of HashableKeys from msgs
+	hashObjs := getHashObjsFromMsgs(msgs)
 	arrBytes := []byte{}
-	for _, i := range msgs {
-		jsonBytes, _ := json.Marshal(i)
+	for _, o := range hashObjs {
+		jsonBytes, _ := json.Marshal(o)
 		arrBytes = append(arrBytes, jsonBytes...)
 	}
 	// add salt
