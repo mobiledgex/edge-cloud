@@ -285,6 +285,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 				autocluster = true
 			}
+
 			if in.Flavor.Name == "" {
 				// find flavor from app
 				in.Flavor = app.DefaultFlavor
