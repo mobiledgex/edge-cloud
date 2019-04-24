@@ -181,8 +181,9 @@ func DbKeyPrefixParse(inkey string) (region, typ, key string, err error) {
 	key = key[ii+1:]
 
 	ii = strings.IndexByte(key, '/')
+	// Single element in db - type is the key
 	if ii == -1 {
-		return "", "", "", errors.New("No type prefix on db key")
+		return region, key, "", nil
 	}
 	typ = key[:ii]
 	key = key[ii+1:]
