@@ -1142,11 +1142,13 @@ Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.
 This is due to an upsupported change in the key of some objects in a .proto file.
 In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
 
+NOTE: For now replace the following: 
 enum VersionHash {
-	...
 	{{.CurHash}} = {{.CurHashEnumVal}};
-	{{.NewHash}} = {{.NewHashEnumVal}}; <<<===== Add this line
-	...
+}
+ with:
+ enum VersionHash {
+	{{.NewHash}} = {{.CurHashEnumVal}};
 }
 
 //TODO - Instructions for the upgrade function in the upgrade infra
@@ -1334,6 +1336,13 @@ type HashableKey struct {
 	Field []FieldDescriptorProtoHashable
 }
 
+// This function generates an array of HashableKey[s] from an array of the DescriptorProto
+// messages. HashableKey is defined to keep track of only the specific sets of
+// fields of the DescriptorProto which make it unique
+// NOTE: There is a possiblity that some of the sub-strucutres of the key messages
+// is not an obj_key itself and we might miss it in a hash calculation.
+// If this ever becomes a problem we should make sure to track all the sub-structs that
+// are not key_obj
 func getHashObjsFromMsgs(msgs []descriptor.DescriptorProto) []HashableKey {
 	objs := make([]HashableKey, 0)
 	for _, m := range msgs {
@@ -1370,7 +1379,7 @@ func getKeyVersionHash(msgs []descriptor.DescriptorProto, salt string) [16]byte 
 		arrBytes = append(arrBytes, jsonBytes...)
 	}
 	// add salt
-	arrBytes = append([]byte(salt))
+	arrBytes = append(arrBytes, []byte(salt)...)
 	return md5.Sum(arrBytes)
 
 }

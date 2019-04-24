@@ -17,7 +17,7 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var VersionHashStrings = []string{
-	"HASH_d41d8cd98f00b204e9800998ecf8427e",
+	"HASH_0c189a128f5b98cba41984fcf88a1fe0",
 }
 
 func init() {
