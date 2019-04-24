@@ -8,46 +8,38 @@ vars:
 - dockerimage-mexdemo: "registry.mobiledgex.net:5000/mobiledgex/simapp"
 
 sampleapps:
-- sampleapplocal:
-    name: facedetection-bonn
+- name: facedetection-bonn
   hostname: "{{bonnvm}}"
   dockerimage: "{{dockerimage-face}}"
 
-- sampleapplocal:
-    name: facedetection-berlin
+- name: facedetection-berlin
   hostname: "{{berlinvm}}"
   dockerimage: "{{dockerimage-face}}"
 
-- sampleapplocal:
-    name: facedetection-hamburg
+- name: facedetection-hamburg
   hostname: "{{hamburgvm}}"
   dockerimage: "{{dockerimage-face}}"
 
-- sampleapplocal:
-    name: facedetection-centralus
+- name: facedetection-centralus
   hostname: "{{centralusvm}}"
   dockerimage: "{{dockerimage-face}}"
 
-- sampleapplocal:
-    name: mexdemo-bonn
+- name: mexdemo-bonn
   hostname: "{{bonnvm}}"
   dockerimage: "{{dockerimage-mexdemo}}"
   command: "simapp -port 7777"
 
-- sampleapplocal:
-    name: mexdemo-berlin
+- name: mexdemo-berlin
   hostname: "{{berlinvm}}"
   dockerimage: "{{dockerimage-mexdemo}}"
   command: "simapp -port 7777"
 
-- sampleapplocal:
-    name: mexdemo-hamburg
+- name: mexdemo-hamburg
   hostname: "{{hamburgvm}}"
   dockerimage: "{{dockerimage-mexdemo}}"
   command: "simapp -port 7777"
 
-- sampleapplocal:
-    name: mexdemo-centralus
+- name: mexdemo-centralus
   hostname: "{{centralusvm}}"
   dockerimage: "{{dockerimage-mexdemo}}"
   command: "simapp -port 7777"

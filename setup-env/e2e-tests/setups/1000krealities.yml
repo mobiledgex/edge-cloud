@@ -20,17 +20,14 @@ cloudflare:
 
 
 sampleapps:
-- sampleapplocal:
-    name: 100krealities-bonn
+- name: 100krealities-bonn
   hostname: "{{bonnvm}}"
   dockerimage: "{{dockerimage}}"
 
-- sampleapplocal:
-    name: 100krealities-berlin
+- name: 100krealities-berlin
   hostname: "{{berlinvm}}"
   dockerimage: "{{dockerimage}}"
 
-- sampleapplocal:
-    name: 100krealities-hamburg
+- name: 100krealities-hamburg
   hostname: "{{hamburgvm}}"
   dockerimage: "{{dockerimage}}"

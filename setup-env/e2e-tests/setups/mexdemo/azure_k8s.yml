@@ -135,25 +135,22 @@ k8s-deployment:
 
 
 controllers:
-- controllerlocal:
-    name: ctrl-pool
-    apiaddr: "0.0.0.0:55001"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: ctrl-pool
+  apiaddr: "0.0.0.0:55001"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "mexdemo.ctrl.mobiledgex.net"
 
 dmes:
-- dmelocal:
-    name: dme-pool
-    carrier: tdg
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: dme-pool
+  carrier: tdg
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
 
 crms:
- - crmlocal:
-     name: crm-pool
-     tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-pool
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"

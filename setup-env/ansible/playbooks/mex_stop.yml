@@ -94,11 +94,11 @@
     with_items:
        -  "{{ crms }}"
 
-- name: stop locsims
+- name: stop locapisims
   gather_facts: no
   user: ubuntu
   become: yes
-  hosts: locsims
+  hosts: locapisims
 
   vars_files:
   - mex_vars.yml
@@ -109,19 +109,19 @@
     shell: "pkill -9 loc-api-sim||true"
     when: item.hostname == inventory_hostname and item.dockerimage == ""
     with_items:
-       -  "{{ locsims }}"
+       -  "{{ locapisims }}"
 
   - name: stop locsim docker container
     shell: "docker kill $(docker ps|grep {{item.locapisimlocal.name}}|cut -d' ' -f 1)||true"
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
-       -  "{{ locsims }}"
+       -  "{{ locapisims }}"
 
-- name: stop toksims
+- name: stop toksrvsims
   gather_facts: no
   user: ubuntu
   become: yes
-  hosts: toksims
+  hosts: toksrvsims
 
   vars_files:
   - mex_vars.yml
@@ -132,13 +132,13 @@
     shell: "pkill -9 tok-srv-sim||true"
     when: item.hostname == inventory_hostname 
     with_items:
-       -  "{{ toksims }}"
+       -  "{{ toksrvsims }}"
 
   - name: stop toksim docker container
     shell: "docker kill $(docker ps|grep {{item.toksrvsimlocal.name}}|cut -d' ' -f 1)||true"
     when: item.hostname == inventory_hostname and item.dockerimage != ""
     with_items:
-       -  "{{ toksims }}"
+       -  "{{ toksrvsims }}"
 
 - name: stop sample apps
   gather_facts: no

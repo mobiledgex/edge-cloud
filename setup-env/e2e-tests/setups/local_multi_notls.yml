@@ -3,155 +3,136 @@ vars:
   - toksrvurl: "http://127.0.0.1:9999/its?followURL%3Dhttps://dme.mobiledgex.net/verifyLoc" 
 
 locsims:
-- locapisimlocal:
-    name: locsim1
-    port: 8888
-    locfile: "{{datadir}}/locsim.yml"
-    geofile: "{{datadir}}/geocode.dat"
-    country: US
+- name: locsim1
+  port: 8888
+  locfile: "{{datadir}}/locsim.yml"
+  geofile: "{{datadir}}/geocode.dat"
+  country: US
   hostname: "127.0.0.1"
 
 toksims:
-- toksrvsimlocal:
-    name: toksim1
-    port: 9999
+- name: toksim1
+  port: 9999
   hostname: "127.0.0.1"
 
 etcds:
-- etcdlocal:
-    name: etcd1
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
-    peeraddrs: "http://127.0.0.1:30011"
-    clientaddrs: "http://127.0.0.1:30001"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: "http://127.0.0.1:30011"
+  clientaddrs: "http://127.0.0.1:30001"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd2
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
-    peeraddrs: "http://127.0.0.1:30012"
-    clientaddrs: "http://127.0.0.1:30002"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: "http://127.0.0.1:30012"
+  clientaddrs: "http://127.0.0.1:30002"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd3
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
-    peeraddrs: "http://127.0.0.1:30013"
-    clientaddrs: "http://127.0.0.1:30003"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+  peeraddrs: "http://127.0.0.1:30013"
+  clientaddrs: "http://127.0.0.1:30003"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
 controllers:
-- controllerlocal:
-    name: ctrl1
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55001"
-    httpaddr: "0.0.0.0:36001"
-    notifyaddr: "127.0.0.1:37001"
-    shorttimeouts: true
+- name: ctrl1
+  etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+  apiaddr: "0.0.0.0:55001"
+  httpaddr: "0.0.0.0:36001"
+  notifyaddr: "127.0.0.1:37001"
+  shorttimeouts: true
   hostname: "127.0.0.1"
 
-- controllerlocal:
-    name: ctrl2
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55002"
-    httpaddr: "0.0.0.0:36002"
-    notifyaddr: "127.0.0.1:37002"
-    shorttimeouts: true
+- name: ctrl2
+  etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+  apiaddr: "0.0.0.0:55002"
+  httpaddr: "0.0.0.0:36002"
+  notifyaddr: "127.0.0.1:37002"
+  shorttimeouts: true
   hostname: "127.0.0.1"
 
 
 dmes:
-- dmelocal:
-    name: dme1
-    apiaddr: "0.0.0.0:50051"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+- name: dme1
+  apiaddr: "0.0.0.0:50051"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
   hostname: "127.0.0.1"
 
-- dmelocal:
-    name: dme2
-    apiaddr: "0.0.0.0:50052"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
+- name: dme2
+  apiaddr: "0.0.0.0:50052"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
   hostname: "127.0.0.1"
 
   
 crms:
-- crmlocal:
-    name: crm1
-    apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+- name: crm1
+  apiaddr: "0.0.0.0:55091"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm2
-    apiaddr: "0.0.0.0:55092"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
+- name: crm2
+  apiaddr: "0.0.0.0:55092"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-2"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm3
-    apiaddr: "0.0.0.0:55093"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-3"}'
+- name: crm3
+  apiaddr: "0.0.0.0:55093"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-3"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm4
-    apiaddr: "0.0.0.0:55094"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-4"}'
+- name: crm4
+  apiaddr: "0.0.0.0:55094"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-4"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm5
-    apiaddr: "0.0.0.0:55095"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-5"}'
+- name: crm5
+  apiaddr: "0.0.0.0:55095"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-5"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm6
-    apiaddr: "0.0.0.0:55096"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-6"}'
+- name: crm6
+  apiaddr: "0.0.0.0:55096"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-6"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm7
-    apiaddr: "0.0.0.0:55097"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-7"}'
+- name: crm7
+  apiaddr: "0.0.0.0:55097"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-7"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm8
-    apiaddr: "0.0.0.0:55098"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-8"}'
+- name: crm8
+  apiaddr: "0.0.0.0:55098"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-8"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm9
-    apiaddr: "0.0.0.0:55099"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-9"}'
+- name: crm9
+  apiaddr: "0.0.0.0:55099"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-9"}'
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm10
-    apiaddr: "0.0.0.0:55100"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-10"}'
+- name: crm10
+  apiaddr: "0.0.0.0:55100"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-10"}'
   hostname: "127.0.0.1"
 

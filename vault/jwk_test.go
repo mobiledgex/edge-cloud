@@ -11,13 +11,15 @@ import (
 
 func TestJwk(t *testing.T) {
 	vault := process.Vault{
-		Name:        "vault",
+		Common: process.Common{
+			Name: "vault",
+		},
 		DmeSecret:   "123456",
 		McormSecret: "987664",
 	}
-	roles, err := vault.StartLocal()
+	roles, err := vault.StartLocalRoles()
 	require.Nil(t, err, "start local vault")
-	defer vault.Stop()
+	defer vault.StopLocal()
 
 	// this represents a dme process accessing vault
 	jwks := JWKS{}

@@ -39,50 +39,37 @@ func isLocalIP(hostname string) bool {
 func WaitForProcesses(processName string) bool {
 	log.Println("Wait for processes to respond to APIs")
 	c := make(chan util.ReturnCodeWithText)
-	var numProcs = 0 //len(procs Controllers) + len(procs.Crms) + len(procs.Dmes)
-	var pnames []string
+	procs := make([]process.Process, 0)
 	for _, ctrl := range util.Deployment.Controllers {
 		if processName != "" && processName != ctrl.Name {
 			continue
 		}
-		numProcs += 1
-		ctrlp := ctrl.ControllerLocal
-		if isLocalIP(ctrl.Hostname) {
-			pnames = append(pnames, ctrlp.Name)
-		}
-		go util.ConnectController(&ctrlp, c)
+		procs = append(procs, ctrl)
+		go util.ConnectController(ctrl, c)
 	}
 	for _, dme := range util.Deployment.Dmes {
 		if processName != "" && processName != dme.Name {
 			continue
 		}
-		numProcs += 1
-		dmep := dme.DmeLocal
-		if isLocalIP(dme.Hostname) {
-			pnames = append(pnames, dmep.Name)
-		}
-		go util.ConnectDme(&dmep, c)
+		procs = append(procs, dme)
+		go util.ConnectDme(dme, c)
 	}
 	for _, crm := range util.Deployment.Crms {
 		if processName != "" && processName != crm.Name {
 			continue
 		}
-		numProcs += 1
-		crmp := crm.CrmLocal
-		if isLocalIP(crm.Hostname) {
-			pnames = append(pnames, crmp.Name)
-		}
-		go util.ConnectCrm(&crmp, c)
+		procs = append(procs, crm)
+		go util.ConnectCrm(crm, c)
 	}
 	allpass := true
-	for i := 0; i < numProcs; i++ {
+	for i := 0; i < len(procs); i++ {
 		rc := <-c
 		log.Println(rc.Text)
 		if !rc.Success {
 			allpass = false
 		}
 	}
-	if !ensureProcesses(pnames) {
+	if !ensureProcesses(procs) {
 		allpass = false
 	}
 	return allpass
@@ -90,79 +77,24 @@ func WaitForProcesses(processName string) bool {
 
 // This uses the same methods as kill processes to look for local processes,
 // to ensure that the lookup method for finding local processes is valid.
-func ensureProcesses(processNames []string) bool {
+func ensureProcesses(procs []process.Process) bool {
 	if util.IsK8sDeployment() {
 		return true
 	}
 	ensured := true
-	for _, p := range processNames {
-		hostName, exeName, args := findProcess(p)
-		log.Printf("Looking for host %v processexe %v processargs %v\n", hostName, exeName, args)
+	for _, p := range procs {
+		if !isLocalIP(p.GetHostname()) {
+			continue
+		}
+		exeName := p.GetExeName()
+		args := p.LookupArgs()
+		log.Printf("Looking for host %v processexe %v processargs %v\n", p.GetHostname(), exeName, args)
 		if !util.EnsureProcessesByName(exeName, args) {
 			ensured = false
 			break
 		}
 	}
 	return ensured
-}
-
-//to identify running processes, we need to know where they are running
-//and some unique arguments to look for for pgrep. Returns info about
-// the hostname, process executable and arguments
-func findProcess(processName string) (string, string, string) {
-	for _, v := range util.Deployment.Vaults {
-		if v.Name == processName {
-			return v.Hostname, "vault", "-dev"
-		}
-	}
-	for _, etcd := range util.Deployment.Etcds {
-		if etcd.Name == processName {
-			return etcd.Hostname, "etcd", "-name " + etcd.Name
-		}
-	}
-	for _, influx := range util.Deployment.Influxs {
-		if influx.Name == processName {
-			return influx.Hostname, "influxd", "-config " + influx.Config
-		}
-	}
-	for _, ctrl := range util.Deployment.Controllers {
-		if ctrl.Name == processName {
-			return ctrl.Hostname, "controller", "-apiAddr " + ctrl.ApiAddr
-		}
-	}
-	for _, crm := range util.Deployment.Crms {
-		if crm.Name == processName {
-
-			return crm.Hostname, "crmserver", "-apiAddr " + crm.ApiAddr
-		}
-	}
-	for _, dme := range util.Deployment.Dmes {
-		if dme.Name == processName {
-			return dme.Hostname, "dme-server", "-apiAddr " + dme.ApiAddr
-		}
-	}
-	for _, clustersvc := range util.Deployment.ClusterSvcs {
-		if clustersvc.Name == processName {
-			return clustersvc.Hostname, "cluster-svc", "-ctrlAddrs " + clustersvc.CtrlAddrs
-		}
-	}
-	for _, tok := range util.Deployment.Toksims {
-		if tok.Name == processName {
-			return tok.Hostname, "tok-srv-sim", fmt.Sprintf("port -%d", tok.Port)
-		}
-	}
-	for _, loc := range util.Deployment.Locsims {
-		if loc.Name == processName {
-			return loc.Hostname, "loc-api-sim", fmt.Sprintf("port -%d", loc.Port)
-		}
-	}
-	for _, sam := range util.Deployment.SampleApps {
-		if sam.Name == processName {
-			argstr := strings.Join(sam.Args, " ")
-			return sam.Hostname, sam.Exename, argstr
-		}
-	}
-	return "", "", ""
 }
 
 func getExternalApiAddress(internalApiAddr string, externalHost string) string {
@@ -402,54 +334,41 @@ func CleanupDIND() error {
 
 }
 
-func StopProcesses(processName string) bool {
+func StopProcesses(processName string, allprocs []process.Process) bool {
 	util.PrintStepBanner("stopping processes " + processName)
 	maxWait := time.Second * 15
 	c := make(chan string)
+	count := 0
 
-	//if a process name is specified, we stop just that one.  The name here identifies the
-	//specific instance of the application, e.g. 'ctrl1'
-	if processName != "" {
-		hostName, processExeName, processArgs := findProcess(processName)
-		log.Printf("Found host %v processexe %v processargs %v\n", hostName, processExeName, processArgs)
-		if hostName == "" {
-			log.Printf("Error: unable to find process name %v in setup\n", processName)
-			return false
-		}
-		if isLocalIP(hostName) {
-			//passing zero wait time to kill forcefully
-			go util.KillProcessesByName(processExeName, maxWait, processArgs, c)
-			log.Printf("kill result: %v\n", <-c)
-		}
-		return true
-	}
-	for _, p := range util.Deployment.Etcds {
-		log.Printf("cleaning etcd %+v", p)
-		p.ResetData()
-	}
-
-	processExeNames := []string{"etcd", "controller", "dme-server", "crmserver", "mc", "cluster-svc", "loc-api-sim", "tok-srv-sim", "influx", "vault", "mexosagent"}
-	for _, a := range util.Deployment.SampleApps {
-		processExeNames = append(processExeNames, a.Exename)
-	}
-	for _, p := range util.Deployment.Sqls {
-		if processName != "" && processName != p.Name {
+	for ii, p := range allprocs {
+		if !isLocalIP(p.GetHostname()) {
 			continue
 		}
-		if !isLocalIP(p.Hostname) {
+		if processName != "" && processName != p.GetName() {
+			// If a process name is specified, we stop just that one.
+			// The name here identifies the specific instance of the
+			// application, e.g. 'ctrl1'.
 			continue
 		}
-		p.Stop()
+		log.Println("stopping/killing processes " + p.GetName())
+		go util.StopProcess(allprocs[ii], maxWait, c)
+		count++
+	}
+	if processName != "" && count == 0 {
+		log.Printf("Error: unable to find process name %v in setup\n", processName)
+		return false
 	}
 
-	//anything not gracefully exited in maxwait seconds is forcefully killed
-
-	for _, p := range processExeNames {
-		log.Println("killing processes " + p)
-		go util.KillProcessesByName(p, maxWait, "", c)
+	for i := 0; i < count; i++ {
+		log.Printf("stop/kill result: %v\n", <-c)
 	}
-	for i := 0; i < len(processExeNames); i++ {
-		log.Printf("kill result: %v\n", <-c)
+
+	if processName == "" {
+		// doing full clean up
+		for _, p := range util.Deployment.Etcds {
+			log.Printf("cleaning etcd %+v", p)
+			p.ResetData()
+		}
 	}
 	return true
 }
@@ -532,7 +451,6 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 	log.Printf("Creating inventory file in ANSIBLE_DIR:%s using procname filter: %s\n", ansHome, procNameFilter)
 
-	foundServer := false
 	if ansHome == "" {
 		fmt.Fprint(os.Stderr, "Need to set ANSIBLE_DIR environment variable for deployment")
 	}
@@ -547,250 +465,50 @@ func createAnsibleInventoryFile(procNameFilter string) (string, bool) {
 	//use the mobiledgex ssh key
 	fmt.Fprintln(invfile, "[all:vars]")
 	fmt.Fprintln(invfile, "ansible_ssh_private_key_file=~/.mobiledgex/id_rsa_mex")
+	allservers := make(map[string]map[string]string)
 
-	allRemoteServers := make(map[string]string)
-	vaultRemoteServers := make(map[string]string)
-	etcdRemoteServers := make(map[string]string)
-	influxRemoteServers := make(map[string]string)
-	ctrlRemoteServers := make(map[string]string)
-	crmRemoteServers := make(map[string]string)
-	dmeRemoteServers := make(map[string]string)
-	mcRemoteServers := make(map[string]string)
-	clustersvcRemoteServers := make(map[string]string)
-	sqlRemoteServers := make(map[string]string)
-	locApiSimulators := make(map[string]string)
-	tokSrvSimulators := make(map[string]string)
-	sampleApps := make(map[string]string)
+	allprocs := util.GetAllProcesses()
+	for _, p := range allprocs {
+		if procNameFilter != "" && procNameFilter != p.GetName() {
+			continue
+		}
+		if p.GetHostname() == "" || isLocalIP(p.GetHostname()) {
+			continue
+		}
 
-	for _, p := range util.Deployment.Vaults {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
+		i := hostNameToAnsible(p.GetHostname())
+		typ := process.GetTypeString(p)
+		alltyps, found := allservers[typ]
+		if !found {
+			alltyps = make(map[string]string)
+			allservers[typ] = alltyps
 		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			vaultRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Etcds {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			etcdRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Influxs {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			influxRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Controllers {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			ctrlRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Crms {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			crmRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Dmes {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			dmeRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Mcs {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			mcRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.ClusterSvcs {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			clustersvcRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Sqls {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			sqlRemoteServers[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.Locsims {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			locApiSimulators[i] = p.Name
-			foundServer = true
+		alltyps[i] = p.GetName()
 
-			if p.Locfile != "" {
-				stageLocDbFile(p.Locfile, ansHome+"/playbooks")
+		// type-specific stuff
+		if locsim, ok := p.(*process.LocApiSim); ok {
+			if locsim.Locfile != "" {
+				stageLocDbFile(locsim.Locfile, ansHome+"/playbooks")
 			}
-		}
-	}
-	for _, p := range util.Deployment.Toksims {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			tokSrvSimulators[i] = p.Name
-			foundServer = true
-		}
-	}
-	for _, p := range util.Deployment.SampleApps {
-		if procNameFilter != "" && procNameFilter != p.Name {
-			continue
-		}
-		if p.Hostname != "" && !isLocalIP(p.Hostname) {
-			i := hostNameToAnsible(p.Hostname)
-			allRemoteServers[i] = p.Name
-			sampleApps[i] = p.Name
-			foundServer = true
 		}
 	}
 
 	//create ansible inventory
 	fmt.Fprintln(invfile, "[mexservers]")
-	for s := range allRemoteServers {
-		fmt.Fprintln(invfile, s)
-	}
-
-	if len(vaultRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[vaults]")
-		for s := range vaultRemoteServers {
+	for _, alltyps := range allservers {
+		for s := range alltyps {
 			fmt.Fprintln(invfile, s)
 		}
 	}
-	if len(etcdRemoteServers) > 0 {
+	for typ, alltyps := range allservers {
 		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[etcds]")
-		for s := range etcdRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(influxRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[influxs]")
-		for s := range influxRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(ctrlRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[controllers]")
-		for s := range ctrlRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(crmRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[crms]")
-		for s := range crmRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(dmeRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[dmes]")
-		for s := range dmeRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(sqlRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[sqls]")
-		for s := range sqlRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(mcRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[mcs]")
-		for s := range mcRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(clustersvcRemoteServers) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[cluster-svcs]")
-		for s := range clustersvcRemoteServers {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(locApiSimulators) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[locsims]")
-		for s := range locApiSimulators {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(tokSrvSimulators) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[toksims]")
-		for s := range tokSrvSimulators {
-			fmt.Fprintln(invfile, s)
-		}
-	}
-	if len(sampleApps) > 0 {
-		fmt.Fprintln(invfile, "")
-		fmt.Fprintln(invfile, "[sampleapps]")
-		for s := range sampleApps {
+		fmt.Fprintln(invfile, "["+strings.ToLower(typ)+"]")
+		for s := range alltyps {
 			fmt.Fprintln(invfile, s)
 		}
 	}
 	fmt.Fprintln(invfile, "")
-	return invfile.Name(), foundServer
+	return invfile.Name(), len(allservers) > 0
 }
 
 // CleanupTLSCerts . Deletes certs for a CN
@@ -1010,13 +728,12 @@ func StopRemoteProcesses(processName string) bool {
 	ansHome := os.Getenv("ANSIBLE_DIR")
 
 	if processName != "" {
-		hostName, processExeName, processArgs := findProcess(processName)
-
-		if isLocalIP(hostName) {
+		p := util.GetProcessByName(processName)
+		if isLocalIP(p.GetHostname()) {
 			log.Printf("process %v is not remote\n", processName)
 			return true
 		}
-		vars := []string{"processbin=" + processExeName, "processargs=\"" + processArgs + "\""}
+		vars := []string{"processbin=" + p.GetExeName(), "processargs=\"" + p.LookupArgs() + "\""}
 		playbook := ansHome + "/playbooks/mex_stop_matching_process.yml"
 		return runPlaybook(playbook, vars, processName)
 
@@ -1041,176 +758,112 @@ func FetchRemoteLogs(outputDir string) bool {
 	return runPlaybook(playbook, []string{"local_log_path=" + outputDir}, "")
 }
 
+func StartLocal(processName, outputDir string, p process.Process, opts ...process.StartOp) bool {
+	if processName != "" && processName != p.GetName() {
+		return true
+	}
+	if !isLocalIP(p.GetHostname()) {
+		return true
+	}
+	envvars := p.GetEnvVars()
+	if envvars != nil {
+		for k, v := range envvars {
+			// doing it this way means the variable is set for
+			// other commands too. Not ideal but not
+			// problematic, and only will happen on local
+			// process deploy
+			os.Setenv(k, v)
+		}
+	}
+	typ := process.GetTypeString(p)
+	log.Printf("Starting %s %s+v\n", typ, p)
+	logfile := getLogFile(p.GetName(), outputDir)
+
+	err := p.StartLocal(logfile, opts...)
+	if err != nil {
+		log.Printf("Error on %s startup: %v\n", typ, err)
+		return false
+	}
+	return true
+}
+
 func StartProcesses(processName string, outputDir string) bool {
 	if util.IsK8sDeployment() {
 		return true //nothing to do for k8s
 	}
 	rolesfile := outputDir + "/roles.yaml"
 	util.PrintStepBanner("starting local processes")
-	for _, v := range util.Deployment.Vaults {
-		if processName != "" && processName != v.Name {
-			continue
-		}
-		if isLocalIP(v.Hostname) {
-			log.Printf("Starting Vault %+v", v)
-			logfile := getLogFile(v.Name, outputDir)
-			err := v.Start(logfile, process.WithRolesFile(rolesfile))
-			if err != nil {
-				log.Printf("Error on Vault startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, etcd := range util.Deployment.Etcds {
-		if processName != "" && processName != etcd.Name {
-			continue
-		}
-		if isLocalIP(etcd.Hostname) {
-			log.Printf("Starting Etcd %+v", etcd)
-			if processName == "" {
-				//only reset the data if this is a full start of all etcds
-				etcd.ResetData()
-			}
-			logfile := getLogFile(etcd.Name, outputDir)
-			err := etcd.Start(logfile)
-			if err != nil {
-				log.Printf("Error on Etcd startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, influx := range util.Deployment.Influxs {
-		if processName != "" && processName != influx.Name {
-			continue
-		}
-		if isLocalIP(influx.Hostname) {
-			log.Printf("Starting InfluxDB +%v", influx)
-			if processName == "" {
-				// only reset the data if this is a full start of all
-				influx.ResetData()
-			}
-			logfile := getLogFile(influx.Name, outputDir)
-			err := influx.Start(logfile)
-			if err != nil {
-				log.Printf("Error on Influx startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, ctrl := range util.Deployment.Controllers {
-		if processName != "" && processName != ctrl.Name {
-			continue
-		}
-		if isLocalIP(ctrl.Hostname) {
-			log.Printf("Starting Controller %+v\n", ctrl)
-			logfile := getLogFile(ctrl.Name, outputDir)
-			err := ctrl.Start(logfile, process.WithDebug("etcd,api,notify"))
-			if err != nil {
-				log.Printf("Error on controller startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, crm := range util.Deployment.Crms {
-		if processName != "" && processName != crm.Name {
-			continue
-		}
-		if isLocalIP(crm.Hostname) {
-			for k, v := range crm.EnvVars {
-				//doing it this way means the variable is set for other commands too.
-				// Not ideal but not problematic, and only will happen on local process deploy
-				os.Setenv(k, v)
-			}
-			log.Printf("Starting CRM %+v\n", crm)
-			logfile := getLogFile(crm.Name, outputDir)
-			err := crm.Start(logfile, process.WithDebug("api,notify,mexos"))
-			if err != nil {
-				log.Printf("Error on CRM startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, dme := range util.Deployment.Dmes {
-		if processName != "" && processName != dme.Name {
-			continue
-		}
-		if isLocalIP(dme.Hostname) {
-			for k, v := range dme.EnvVars {
-				//doing it this way means the variable is set for other commands too.
-				// Not ideal but not problematic, and only will happen on local process deploy
-				os.Setenv(k, v)
-			}
 
-			log.Printf("Starting DME %+v\n", dme)
-			logfile := getLogFile(dme.Name, outputDir)
-			err := dme.Start(logfile, process.WithRolesFile(rolesfile), process.WithDebug("locapi,dmedb,dmereq,notify"))
-			if err != nil {
-				log.Printf("Error on DME startup: %v", err)
-				return false
-			}
+	opts := []process.StartOp{}
+	if processName == "" {
+		// full start of all processes, do clean start
+		opts = append(opts, process.WithCleanStartup())
+	}
+
+	for _, p := range util.Deployment.Vaults {
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
 		}
 	}
-	for _, clustersvc := range util.Deployment.ClusterSvcs {
-		if processName != "" && processName != clustersvc.Name {
-			continue
+	for _, p := range util.Deployment.Etcds {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
 		}
-		if isLocalIP(clustersvc.Hostname) {
-			log.Printf("Starting ClusterSvc %+v\n", clustersvc)
-			logfile := getLogFile(clustersvc.Name, outputDir)
-			err := clustersvc.Start(logfile, process.WithDebug("mexos,notify"))
-			if err != nil {
-				log.Printf("Error on ClusterSvc startup: %v", err)
-				return false
-			}
+	}
+	for _, p := range util.Deployment.Influxs {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.Controllers {
+		opts = append(opts, process.WithDebug("etcd,api,notify"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.Crms {
+		opts = append(opts, process.WithDebug("api,notify,mexos"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.Dmes {
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		opts = append(opts, process.WithDebug("locapi,dmedb,dmereq,notify"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.ClusterSvcs {
+		opts = append(opts, process.WithDebug("notify,mexos"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
 		}
 	}
 	for _, p := range util.Deployment.Sqls {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.Mcs {
+		opts = append(opts, process.WithRolesFile(rolesfile))
+		opts = append(opts, process.WithDebug("api"))
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
+		}
+	}
+	for _, p := range util.Deployment.Locsims {
 		if processName != "" && processName != p.Name {
 			continue
 		}
 		if isLocalIP(p.Hostname) {
-			log.Printf("Starting SQL %+v\n", p)
-			if processName == "" {
-				//only init the data if this is a full start of all processes
-				err := p.InitDataDir()
-				if err != nil {
-					log.Printf("Error on SQL init: %v", err)
-					return false
-				}
+			log.Printf("Starting LocSim %+v\n", p)
+			if p.Locfile != "" {
+				stageLocDbFile(p.Locfile, "/var/tmp")
 			}
 			logfile := getLogFile(p.Name, outputDir)
-			err := p.Start(logfile)
-			if err != nil {
-				log.Printf("Error on SQL startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, mc := range util.Deployment.Mcs {
-		if processName != "" && processName != mc.Name {
-			continue
-		}
-		if isLocalIP(mc.Hostname) {
-			log.Printf("Starting MC %+v\n", mc)
-			logfile := getLogFile(mc.Name, outputDir)
-			err := mc.Start(logfile, process.WithRolesFile(rolesfile), process.WithDebug("api"))
-			if err != nil {
-				log.Printf("Error on MC startup: %v", err)
-				return false
-			}
-		}
-	}
-	for _, loc := range util.Deployment.Locsims {
-		if processName != "" && processName != loc.Name {
-			continue
-		}
-		if isLocalIP(loc.Hostname) {
-			log.Printf("Starting LocSim %+v\n", loc)
-			if loc.Locfile != "" {
-				stageLocDbFile(loc.Locfile, "/var/tmp")
-			}
-			logfile := getLogFile(loc.Name, outputDir)
-			err := loc.Start(logfile)
+			err := p.StartLocal(logfile)
 			if err != nil {
 				log.Printf("Error on LocSim startup: %v", err)
 				return false
@@ -1218,32 +871,14 @@ func StartProcesses(processName string, outputDir string) bool {
 
 		}
 	}
-	for _, tok := range util.Deployment.Toksims {
-		if processName != "" && processName != tok.Name {
-			continue
-		}
-		if isLocalIP(tok.Hostname) {
-			log.Printf("Starting TokSim %+v\n", tok)
-			logfile := getLogFile(tok.Name, outputDir)
-			err := tok.Start(logfile)
-			if err != nil {
-				log.Printf("Error on TokSim startup: %v", err)
-				return false
-			}
+	for _, p := range util.Deployment.Toksims {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
 		}
 	}
-	for _, sam := range util.Deployment.SampleApps {
-		if processName != "" && processName != sam.Name {
-			continue
-		}
-		if isLocalIP(sam.Hostname) {
-			log.Printf("Starting Sample app %+v\n", sam)
-			logfile := getLogFile(sam.Name, outputDir)
-			err := sam.Start(logfile)
-			if err != nil {
-				log.Printf("Error on Sample App startup: %v", err)
-				return false
-			}
+	for _, p := range util.Deployment.SampleApps {
+		if !StartLocal(processName, outputDir, p, opts...) {
+			return false
 		}
 	}
 	return true

@@ -18,7 +18,7 @@ import (
 // Server struct is just to track sql/db so we can stop them later.
 type Server struct {
 	config       *ServerConfig
-	sql          *process.SqlLocal
+	sql          *process.Sql
 	db           *gorm.DB
 	echo         *echo.Echo
 	vault        *process.Vault
@@ -95,11 +95,13 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	secretID := os.Getenv("VAULT_SECRET_ID")
 	if config.LocalVault {
 		vault := process.Vault{
-			Name:        "vault",
+			Common: process.Common{
+				Name: "vault",
+			},
 			DmeSecret:   "123456",
 			McormSecret: "987664",
 		}
-		roles, err := vault.StartLocal()
+		roles, err := vault.StartLocalRoles()
 		if err != nil {
 			return nil, err
 		}
@@ -123,8 +125,10 @@ func RunServer(config *ServerConfig) (*Server, error) {
 	}
 
 	if config.RunLocal {
-		sql := process.SqlLocal{
-			Name:     "sql1",
+		sql := process.Sql{
+			Common: process.Common{
+				Name: "sql1",
+			},
 			DataDir:  "./.postgres",
 			HttpAddr: config.SqlAddr,
 			Username: dbuser,
@@ -134,7 +138,7 @@ func RunServer(config *ServerConfig) (*Server, error) {
 		if config.InitLocal || os.IsNotExist(err) {
 			sql.InitDataDir()
 		}
-		err = sql.Start("")
+		err = sql.StartLocal("")
 		if err != nil {
 			return nil, fmt.Errorf("local sql start failed, %s",
 				err.Error())
@@ -245,9 +249,9 @@ func (s *Server) Stop() {
 	s.echo.Close()
 	s.db.Close()
 	if s.sql != nil {
-		s.sql.Stop()
+		s.sql.StopLocal()
 	}
 	if s.vault != nil {
-		s.vault.Stop()
+		s.vault.StopLocal()
 	}
 }

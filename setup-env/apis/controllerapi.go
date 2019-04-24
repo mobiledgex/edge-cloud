@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	"google.golang.org/grpc"
@@ -33,7 +34,7 @@ const (
 	ShowCmp bool = true
 )
 
-func runShow(ctrl *util.ControllerProcess, showCmds []string, outputDir string, cmp bool) bool {
+func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp bool) bool {
 	errFound := false
 	for i, c := range showCmds {
 		label := strings.Split(c, " ")[0]
@@ -63,7 +64,7 @@ func runShow(ctrl *util.ControllerProcess, showCmds []string, outputDir string, 
 	return !errFound
 }
 
-func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
+func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	var showCmds = []string{
 		"flavors: ShowFlavor",
 		"clusterflavors: ShowClusterFlavor",
@@ -94,7 +95,7 @@ func runShowCommands(ctrl *util.ControllerProcess, outputDir string, cmp bool) b
 	return false
 }
 
-func runNodeShow(ctrl *util.ControllerProcess, outputDir string, cmp bool) bool {
+func runNodeShow(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	var showCmds = []string{
 		"nodes: ShowNode",
 	}

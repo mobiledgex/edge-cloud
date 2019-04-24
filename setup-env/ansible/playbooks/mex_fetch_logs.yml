@@ -88,7 +88,7 @@
   gather_facts: no
   user: ubuntu
   become: yes
-  hosts: locsims
+  hosts: locapisims
 
   vars_files:
   - mex_vars.yml
@@ -102,14 +102,14 @@
       flat: yes
     when: item.hostname == inventory_hostname
     with_items:
-       -  "{{ locsims }}"
+       -  "{{ locapisims }}"
 
 
 - name: get toksim logs
   gather_facts: no
   user: ubuntu
   become: yes
-  hosts: toksims
+  hosts: toksrvsims
 
   vars_files:
   - mex_vars.yml
@@ -123,5 +123,5 @@
       flat: yes
     when: item.hostname == inventory_hostname
     with_items:
-       -  "{{ toksims }}"
+       -  "{{ toksrvsims }}"
 

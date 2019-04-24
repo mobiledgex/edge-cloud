@@ -6,14 +6,13 @@ vars:
 - vault_token: 0eb94cce-ab3f-33a3-bd66-0046e8743a14
 
 crms:
-- crmlocal:
-    name: crm-hamburg
-    apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "{{controller}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"hamburg-mexdemo"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-hamburg
+  apiaddr: "0.0.0.0:55091"
+  notifyaddrs: "{{controller}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"hamburg-mexdemo"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
@@ -24,14 +23,13 @@ crms:
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
-- crmlocal:
-    name: crm-berlin
-    apiaddr: "0.0.0.0:55092"
-    notifyaddrs: "{{controller}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"berlin-mexdemo"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-berlin
+  apiaddr: "0.0.0.0:55092"
+  notifyaddrs: "{{controller}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"berlin-mexdemo"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
@@ -42,14 +40,13 @@ crms:
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
-- crmlocal:
-    name: crm-frankfurt
-    apiaddr: "0.0.0.0:55093"
-    notifyaddrs: "{{controller}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"frankfurt-mexdemo"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-frankfurt
+  apiaddr: "0.0.0.0:55093"
+  notifyaddrs: "{{controller}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"frankfurt-mexdemo"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
@@ -60,14 +57,13 @@ crms:
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
-- crmlocal:
-    name: crm-munich
-    apiaddr: "0.0.0.0:55094"
-    notifyaddrs: "{{controller}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"munich-mexdemo"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-munich
+  apiaddr: "0.0.0.0:55094"
+  notifyaddrs: "{{controller}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"munich-mexdemo"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:
@@ -78,14 +74,13 @@ crms:
     MEX_EXT_NETWORK: external-network-shared
     VAULT_TOKEN: "{{vault_token}}"
 
-- crmlocal:
-    name: crm-bonn
-    apiaddr: "0.0.0.0:55095"
-    notifyaddrs: "{{controller}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn-mexdemo"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm-bonn
+  apiaddr: "0.0.0.0:55095"
+  notifyaddrs: "{{controller}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonn-mexdemo"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:2019-04-09-a582255
   envvars:

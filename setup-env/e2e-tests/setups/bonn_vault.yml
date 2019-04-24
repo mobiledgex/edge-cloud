@@ -10,11 +10,10 @@ vars:
 
 
 vaults:
-- vault:
-    name: vault
+- name: vault
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/mex-vault:latest
   envvars:
-     VAULT_ADDR: "http://127.0.0.1:8200"
-     DMESECRET: "dme-secret-12345"
-     MCORMSECRET: "mcorm-secret-12345"
+    VAULT_ADDR: "http://127.0.0.1:8200"
+    DMESECRET: "dme-secret-12345"
+    MCORMSECRET: "mcorm-secret-12345"
