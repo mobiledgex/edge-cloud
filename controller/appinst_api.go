@@ -451,7 +451,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
+			if isIPAllocatedPerService(in.Key.CloudletKey.OperatorKey.Name) {
+				//dedicated access in which each service gets a different ip
+				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
+			} else {
+				//dedicated access in which IP is that of the LB
+				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.CloudletKey, clusterKey)
+			}
 			for ii, _ := range ports {
 				ports[ii].PublicPort = ports[ii].InternalPort
 			}
@@ -712,8 +718,13 @@ func (s *AppInstApi) ReplaceErrorState(in *edgeproto.AppInst, newState edgeproto
 	})
 }
 
+// public cloud k8s cluster allocates a separate IP per service.  This is a type of dedicated access
+func isIPAllocatedPerService(operator string) bool {
+	return operator == cloudcommon.OperatorGCP || operator == cloudcommon.OperatorAzure
+}
+
 func allocateIP(inst *edgeproto.ClusterInst, cloudlet *edgeproto.Cloudlet, refs *edgeproto.CloudletRefs) error {
-	if inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorGCP || inst.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
+	if isIPAllocatedPerService(cloudlet.Key.OperatorKey.Name) {
 		// public cloud implements dedicated access
 		inst.IpAccess = edgeproto.IpAccess_IpAccessDedicated
 		return nil

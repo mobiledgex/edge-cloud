@@ -13,13 +13,13 @@ import (
 var AppDeploymentTypeKubernetes = "kubernetes"
 var AppDeploymentTypeVM = "vm"
 var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDockerSwarm = "docker-swarm"
+var AppDeploymentTypeDocker = "docker"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
 	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
-	AppDeploymentTypeDockerSwarm,
+	AppDeploymentTypeDocker,
 }
 
 func IsValidDeploymentType(appDeploymentType string) bool {
@@ -34,7 +34,7 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
-		if deployment == AppDeploymentTypeKubernetes { // also later docker
+		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeQCOW:
