@@ -1,67 +1,59 @@
 etcds:
-- etcdlocal:
-    name: etcd1
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
-    peeraddrs: http://192.168.56.101:30011
-    clientaddrs: http://192.168.56.101:30001
-    initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: http://192.168.56.101:30011
+  clientaddrs: http://192.168.56.101:30001
+  initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
   hostname: 192.168.56.101
 
-- etcdlocal:
-    name: etcd2
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
-    peeraddrs: http://192.168.56.102:30012
-    clientaddrs: http://192.168.56.102:30002
-    initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: http://192.168.56.102:30012
+  clientaddrs: http://192.168.56.102:30002
+  initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
   hostname: 192.168.56.102
 
-- etcdlocal:
-    name: etcd3
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
-    peeraddrs: http://192.168.56.103:30013
-    clientaddrs: http://192.168.56.103:30003
-    initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+  peeraddrs: http://192.168.56.103:30013
+  clientaddrs: http://192.168.56.103:30003
+  initialcluster: etcd1=http://192.168.56.101:30011,etcd2=http://192.168.56.102:30012,etcd3=http://192.168.56.103:30013
   hostname: 192.168.56.103
 
 controllers:
-- controllerlocal:
-    name: ctrl1
-    etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
-    apiaddr: 192.168.56.101:55001
-    httpaddr: 192.168.56.101:36001
-    notifyaddr: 192.168.56.101:37001
+- name: ctrl1
+  etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
+  apiaddr: 192.168.56.101:55001
+  httpaddr: 192.168.56.101:36001
+  notifyaddr: 192.168.56.101:37001
   hostname: 192.168.56.101
 
-- controllerlocal:
-    name: ctrl2
-    etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
-    apiaddr: 192.168.56.102:55001
-    httpaddr: 192.168.56.102:36001
-    notifyaddr: 192.168.56.102:37001
+- name: ctrl2
+  etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
+  apiaddr: 192.168.56.102:55001
+  httpaddr: 192.168.56.102:36001
+  notifyaddr: 192.168.56.102:37001
   hostname: 192.168.56.102
 
-- controllerlocal:
-    name: ctrl3
-    etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
-    apiaddr: 192.168.56.103:55001
-    httpaddr: 192.168.56.103:36001
-    notifyaddr: 192.168.56.103:37001
+- name: ctrl3
+  etcdaddrs: http://192.168.56.101:30001,http://192.168.56.102:30002,http://192.168.56.103:30003
+  apiaddr: 192.168.56.103:55001
+  httpaddr: 192.168.56.103:36001
+  notifyaddr: 192.168.56.103:37001
   hostname: 192.168.56.103
 
 
 dmes:
-- dmelocal:
-    name: dme1
-    apiaddr: 192.168.56.102:50051
-    notifyaddrs: 192.168.56.101:37001
-    cloudletkey: '{"operator_key":{"name":"UFGT Inc."},"name":"San Jose Site"}'
+- name: dme1
+  apiaddr: 192.168.56.102:50051
+  notifyaddrs: 192.168.56.101:37001
+  cloudletkey: '{"operator_key":{"name":"UFGT Inc."},"name":"San Jose Site"}'
   hostname: 192.168.56.102
 
   
 crms:
-- crmlocal:
-    name: crm1
-    apiaddr: 192.168.56.103:55091
-    notifyaddrs: 192.168.56.101:37001
-    cloudletkey: '{"operator_key":{"name":"UFGT Inc."},"name":"San Jose Site"}'
+- name: crm1
+  apiaddr: 192.168.56.103:55091
+  notifyaddrs: 192.168.56.101:37001
+  cloudletkey: '{"operator_key":{"name":"UFGT Inc."},"name":"San Jose Site"}'
   hostname: 192.168.56.103
