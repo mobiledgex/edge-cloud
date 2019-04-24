@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -43,6 +44,7 @@ var debugLevels = flag.String("d", "", fmt.Sprintf("comma separated list of %v",
 var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA file mex-ca.crt must be in same directory")
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
+var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
 var ControllerId = ""
 var InfluxDBName = "metrics"
 
@@ -85,6 +87,12 @@ func main() {
 		log.FatalLog("Failed to connect to etcd servers", "err", err)
 	}
 
+	if !*skipVersionCheck {
+		// First off - check version of the objectStore we are running
+		if err = checkVersion(objStore); err != nil {
+			log.FatalLog("Running version doesn't match the version of etcd: %v\n", err)
+		}
+	}
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
 		log.FatalLog("Failed to listen on address", "address", *apiAddr,
@@ -208,6 +216,34 @@ func main() {
 	// wait until process in killed/interrupted
 	sig := <-sigChan
 	fmt.Println(sig)
+}
+
+// Helper function to verify the compatibility of etcd version and
+// current data model version
+func checkVersion(objStore objstore.KVStore) error {
+	key := objstore.DbKeyPrefixString("Version")
+	val, _, _, err := objStore.Get(key)
+	if err != nil {
+		if !strings.Contains(err.Error(), objstore.ErrKVStoreKeyNotFound.Error()) {
+			return err
+		}
+	}
+	verHash := string(val)
+	// If this is the first upgrade, just write the latest hash into etcd
+	if verHash == "" {
+		log.InfoLog("Could not find a previous version", "curr hash", edgeproto.GetDataModelVersion())
+		key := objstore.DbKeyPrefixString("Version")
+		_, err = objStore.Put(key, edgeproto.GetDataModelVersion())
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+	if edgeproto.GetDataModelVersion() != verHash {
+		return fmt.Errorf("Current: [%s], etcd version: [%s]",
+			edgeproto.GetDataModelVersion(), verHash)
+	}
+	return nil
 }
 
 func InitApis(sync *Sync) {
