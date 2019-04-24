@@ -22,6 +22,7 @@
 		operator.proto
 		refs.proto
 		result.proto
+		version.proto
 
 	It has these top-level messages:
 		AppKey
