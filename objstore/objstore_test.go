@@ -10,6 +10,6 @@ func TestDbKeyPrefixParse(t *testing.T) {
 	assert.Equal(t, "app", typ)
 	assert.Equal(t, "my app key", key)
 
-	reg, typ, key, err = DbKeyPrefixParse("1/app")
-	assert.NotNil(t, err)
+	reg, typ, key, err = DbKeyPrefixParse("1/version")
+	assert.Nil(t, err)
 }
