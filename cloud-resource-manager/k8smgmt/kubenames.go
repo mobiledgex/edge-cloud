@@ -21,6 +21,7 @@ type KubeNames struct {
 	ServiceNames      []string
 	KconfName         string
 	KconfEnv          string
+	NonK8sDocker      bool
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -78,6 +79,10 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	} else if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
 		// for helm chart just make sure it's the same prefix
 		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
+	} else if app.Deployment == cloudcommon.AppDeploymentTypeDocker {
+		// for docker use the app name
+		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
+		kubeNames.NonK8sDocker = true
 	}
 	return &kubeNames, nil
 }
