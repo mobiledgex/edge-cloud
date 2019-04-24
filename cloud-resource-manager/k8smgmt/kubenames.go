@@ -21,6 +21,7 @@ type KubeNames struct {
 	ServiceNames      []string
 	KconfName         string
 	KconfEnv          string
+	DeploymentType    string
 }
 
 func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
@@ -59,7 +60,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 	kubeNames.OperatorName = NormalizeName(clusterInst.Key.CloudletKey.OperatorKey.Name)
 	kubeNames.KconfName = GetKconfName(clusterInst)
 	kubeNames.KconfEnv = "KUBECONFIG=" + kubeNames.KconfName
-
+	kubeNames.DeploymentType = app.Deployment
 	//get service names from the yaml
 	if app.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
 		objs, _, err := cloudcommon.DecodeK8SYaml(app.DeploymentManifest)
@@ -77,6 +78,9 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		}
 	} else if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
 		// for helm chart just make sure it's the same prefix
+		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
+	} else if app.Deployment == cloudcommon.AppDeploymentTypeDocker {
+		// for docker use the app name
 		kubeNames.ServiceNames = append(kubeNames.ServiceNames, kubeNames.AppName)
 	}
 	return &kubeNames, nil
