@@ -251,6 +251,7 @@ func main() {
 			}
 		case "start":
 			startFailed := false
+			allprocs := util.GetAllProcesses()
 			if !setupmex.StartProcesses(actionParam, *outputDir) {
 				startFailed = true
 				errorsFound += 1
@@ -265,7 +266,7 @@ func main() {
 				}
 			}
 			if startFailed {
-				setupmex.StopProcesses(actionParam)
+				setupmex.StopProcesses(actionParam, allprocs)
 				setupmex.StopRemoteProcesses(actionParam)
 				errorsFound++
 				errors = append(errors, "stop failed")
@@ -290,7 +291,8 @@ func main() {
 				}
 			}
 		case "stop":
-			setupmex.StopProcesses(actionParam)
+			allprocs := util.GetAllProcesses()
+			setupmex.StopProcesses(actionParam, allprocs)
 			if !setupmex.StopRemoteProcesses(actionParam) {
 				errorsFound++
 				errors = append(errors, "stop failed")
