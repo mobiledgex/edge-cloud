@@ -9,80 +9,72 @@ tlscerts:
     - 0.0.0.0
 
 locsims:
-- locapisimlocal:
-    name: locsim1
-    port: 8888
-    locfile: "{{datadir}}/locsim.yml"
+- name: locsim1
+  port: 8888
+  locfile: "{{datadir}}/locsim.yml"
   hostname: "127.0.0.1"
 
 toksims:
-- toksrvsimlocal:
-    name: toksim1
-    port: 9999
+- name: toksim1
+  port: 9999
   hostname: "127.0.0.1"
 
 etcds:
-- etcdlocal:
-    name: etcd1
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
-    peeraddrs: "http://127.0.0.1:30011"
-    clientaddrs: "http://127.0.0.1:30001"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: "http://127.0.0.1:30011"
+  clientaddrs: "http://127.0.0.1:30001"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd2
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
-    peeraddrs: "http://127.0.0.1:30012"
-    clientaddrs: "http://127.0.0.1:30002"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: "http://127.0.0.1:30012"
+  clientaddrs: "http://127.0.0.1:30002"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd3
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
-    peeraddrs: "http://127.0.0.1:30013"
-    clientaddrs: "http://127.0.0.1:30003"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+  peeraddrs: "http://127.0.0.1:30013"
+  clientaddrs: "http://127.0.0.1:30003"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
 controllers:
-- controllerlocal:
-    name: ctrl1
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55001"
-    httpaddr: "0.0.0.0:36001"
-    notifyaddr: "127.0.0.1:37001"
-    tls:
-       servercert: "{{tlsoutdir}}/localserver.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: ctrl1
+  etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+  apiaddr: "0.0.0.0:55001"
+  httpaddr: "0.0.0.0:36001"
+  notifyaddr: "127.0.0.1:37001"
+  tls:
+    servercert: "{{tlsoutdir}}/localserver.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
 dmes:
-- dmelocal:
-    name: dme1
-    apiaddr: "0.0.0.0:50051"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
-    tls:
-       servercert: "{{tlsoutdir}}/localserver.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: dme1
+  apiaddr: "0.0.0.0:50051"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+  tls:
+    servercert: "{{tlsoutdir}}/localserver.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     - LOCAPI_USER: mexserver
-     - LOCAPI_PASSWD: seC2835!
+    - LOCAPI_USER: mexserver
+    - LOCAPI_PASSWD: seC2835!
 
 crms:
-- crmlocal:
-    name: crm1
-    apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
-    tls:
-       servercert: "{{tlsoutdir}}/localserver.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm1
+  apiaddr: "0.0.0.0:55091"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmocloud-1"}'
+  tls:
+    servercert: "{{tlsoutdir}}/localserver.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 

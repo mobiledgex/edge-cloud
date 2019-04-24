@@ -20,24 +20,21 @@ cloudflare:
 
 
 sampleapps:
-- sampleapplocal:
-    name: edgemeshsupernode-bonn
+- name: edgemeshsupernode-bonn
   hostname: "{{bonnvm}}"
   volumemounts: 
     - /data:/usr/local/etc/edgemesh
   command: "/bin/sh -c /usr/bin/supernode"
   dockerimage: "{{dockerimage}}"
 
-- sampleapplocal:
-    name: edgemeshsupernode-berlin
+- name: edgemeshsupernode-berlin
   hostname: "{{berlinvm}}"
   volumemounts:
     - /data:/usr/local/etc/edgemesh
   command: "/bin/sh -c /usr/bin/supernode"
   dockerimage: "{{dockerimage}}"
 
-- sampleapplocal:
-    name: edgemeshsupernode-hamburg
+- name: edgemeshsupernode-hamburg
   hostname: "{{hamburgvm}}"
   volumemounts:
     - /data:/usr/local/etc/edgemesh

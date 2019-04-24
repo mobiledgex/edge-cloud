@@ -158,14 +158,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	var client dmeproto.Match_Engine_ApiClient
 
 	if apiType == "rest" {
-		httpClient, err := dme.DmeLocal.GetRestClient(apiConnectTimeout)
+		httpClient, err := dme.GetRestClient(apiConnectTimeout)
 		if err != nil {
 			log.Printf("Error: unable to connect to dme addr %v\n", dme.HttpAddr)
 			return false
 		}
-		client = NewdmeRestClient(httpClient, dme.DmeLocal.HttpAddr)
+		client = NewdmeRestClient(httpClient, dme.HttpAddr)
 	} else {
-		conn, err := dme.DmeLocal.ConnectAPI(apiConnectTimeout)
+		conn, err := dme.ConnectAPI(apiConnectTimeout)
 		if err != nil {
 			log.Printf("Error: unable to connect to dme addr %v\n", dme.ApiAddr)
 			return false
