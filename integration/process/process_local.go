@@ -32,44 +32,38 @@ type TLSCerts struct {
 }
 
 // EtcdLocal
-type EtcdLocal struct {
-	Name           string
-	DataDir        string
-	PeerAddrs      string
-	ClientAddrs    string
-	InitialCluster string
-	cmd            *exec.Cmd
-}
 
-func (p *EtcdLocal) Start(logfile string, opts ...StartOp) error {
+func (p *Etcd) StartLocal(logfile string, opts ...StartOp) error {
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.CleanStartup {
+		if err := p.ResetData(); err != nil {
+			return err
+		}
+	}
+
 	args := []string{"--name", p.Name, "--data-dir", p.DataDir, "--listen-peer-urls", p.PeerAddrs, "--listen-client-urls", p.ClientAddrs, "--advertise-client-urls", p.ClientAddrs, "--initial-advertise-peer-urls", p.PeerAddrs, "--initial-cluster", p.InitialCluster}
+
 	var err error
-	p.cmd, err = StartLocal(p.Name, "etcd", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *EtcdLocal) Stop() {
+func (p *Etcd) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-func (p *EtcdLocal) ResetData() error {
+func (p *Etcd) GetExeName() string { return "etcd" }
+
+func (p *Etcd) LookupArgs() string { return "--name " + p.Name }
+
+func (p *Etcd) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
 // ControllerLocal
 
-type ControllerLocal struct {
-	Name          string
-	EtcdAddrs     string
-	ApiAddr       string
-	HttpAddr      string
-	NotifyAddr    string
-	TLS           TLSCerts
-	ShortTimeouts bool
-	cmd           *exec.Cmd
-}
-
-func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
+func (p *Controller) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--etcdUrls", p.EtcdAddrs, "--notifyAddr", p.NotifyAddr}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -94,13 +88,17 @@ func (p *ControllerLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "controller", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *ControllerLocal) Stop() {
+func (p *Controller) StopLocal() {
 	StopLocal(p.cmd)
 }
+
+func (p *Controller) GetExeName() string { return "controller" }
+
+func (p *Controller) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
 func getRestClientImpl(timeout time.Duration, addr string, tlsCertFile string) (*http.Client, error) {
 	tlsConfig, err := tls.GetTLSClientConfig(addr, tlsCertFile)
@@ -146,27 +144,13 @@ func connectAPIImpl(timeout time.Duration, apiaddr string, tlsCertFile string) (
 	return conn, err
 }
 
-func (p *ControllerLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+func (p *Controller) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
 // DmeLocal
-type DmeLocal struct {
-	Name        string
-	ApiAddr     string
-	HttpAddr    string
-	NotifyAddrs string
-	LocVerUrl   string
-	TokSrvUrl   string
-	Carrier     string
-	CloudletKey string
-	VaultAddr   string
-	CookieExpr  string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
-}
 
-func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
+func (p *Dme) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -229,50 +213,29 @@ func (p *DmeLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "dme-server", args, envs, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
-func (p *DmeLocal) Stop() {
+func (p *Dme) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-type MexAgentLocal struct {
-	Name string
-	cmd  *exec.Cmd
-}
+func (p *Dme) GetExeName() string { return "dme-server" }
 
-func (p *MexAgentLocal) Start(logfile string, opts ...StartOp) error {
-	var err error
-	args := []string{"--debug", "--proxy", ""}
-	var envs []string
+func (p *Dme) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
 
-	p.cmd, err = StartLocal(p.Name, "mexosagent", args, envs, logfile)
-	return err
-}
-
-func (p *DmeLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+func (p *Dme) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
-func (p *DmeLocal) GetRestClient(timeout time.Duration) (*http.Client, error) {
+func (p *Dme) GetRestClient(timeout time.Duration) (*http.Client, error) {
 	return getRestClientImpl(timeout, p.HttpAddr, p.TLS.ClientCert)
 }
 
 // CrmLocal
 
-type CrmLocal struct {
-	Name        string
-	ApiAddr     string
-	NotifyAddrs string
-	CloudletKey string
-	Platform    string
-	Plugin      string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
-}
-
-func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
+func (p *Crm) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.ApiAddr != "" {
 		args = append(args, "--apiAddr")
@@ -306,30 +269,25 @@ func (p *CrmLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "crmserver", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *CrmLocal) Stop() {
+func (p *Crm) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-func (p *CrmLocal) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
+func (p *Crm) GetExeName() string { return "crmserver" }
+
+func (p *Crm) LookupArgs() string { return "--apiAddr " + p.ApiAddr }
+
+func (p *Crm) ConnectAPI(timeout time.Duration) (*grpc.ClientConn, error) {
 	return connectAPIImpl(timeout, p.ApiAddr, p.TLS.ClientCert)
 }
 
 // Master Controller
 
-type MCLocal struct {
-	Name      string
-	Addr      string
-	SqlAddr   string
-	VaultAddr string
-	TLS       TLSCerts
-	cmd       *exec.Cmd
-}
-
-func (p *MCLocal) Start(logfile string, opts ...StartOp) error {
+func (p *MC) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{}
 	if p.Addr != "" {
 		args = append(args, "--addr")
@@ -380,56 +338,54 @@ func (p *MCLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "mc", args, envs, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, envs, logfile)
 	return err
 }
 
-func (p *MCLocal) Stop() {
+func (p *MC) StopLocal() {
 	StopLocal(p.cmd)
 }
 
+func (p *MC) GetExeName() string { return "mc" }
+
+func (p *MC) LookupArgs() string { return "--addr " + p.Addr }
+
 // InfluxLocal
 
-type InfluxLocal struct {
-	Name     string
-	DataDir  string
-	HttpAddr string
-	Config   string // set during Start
-	cmd      *exec.Cmd
-}
+func (p *Influx) StartLocal(logfile string, opts ...StartOp) error {
+	options := StartOptions{}
+	options.ApplyStartOptions(opts...)
+	if options.CleanStartup {
+		if err := p.ResetData(); err != nil {
+			return err
+		}
+	}
 
-func (p *InfluxLocal) Start(logfile string, opts ...StartOp) error {
 	configFile, err := influxsup.SetupInflux(p.DataDir)
 	if err != nil {
 		return err
 	}
 	p.Config = configFile
 	args := []string{"-config", configFile}
-	p.cmd, err = StartLocal(p.Name, "influxd", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *InfluxLocal) Stop() {
+func (p *Influx) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-func (p *InfluxLocal) ResetData() error {
+func (p *Influx) GetExeName() string { return "influxd" }
+
+func (p *Influx) LookupArgs() string { return "" }
+
+func (p *Influx) ResetData() error {
 	return os.RemoveAll(p.DataDir)
 }
 
 // ClusterSvc process
-type ClusterSvcLocal struct {
-	Name        string
-	NotifyAddrs string
-	CtrlAddrs   string
-	PromPorts   string
-	InfluxDB    string
-	Interval    string
-	TLS         TLSCerts
-	cmd         *exec.Cmd
-}
 
-func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
+func (p *ClusterSvc) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"--notifyAddrs", p.NotifyAddrs}
 	if p.CtrlAddrs != "" {
 		args = append(args, "--ctrlAddrs")
@@ -459,26 +415,29 @@ func (p *ClusterSvcLocal) Start(logfile string, opts ...StartOp) error {
 	}
 
 	var err error
-	p.cmd, err = StartLocal(p.Name, "cluster-svc", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *ClusterSvcLocal) Stop() {
+func (p *ClusterSvc) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-// Postgres Sql
-type SqlLocal struct {
-	Name     string
-	DataDir  string
-	HttpAddr string
-	Username string
-	Dbname   string
-	TLS      TLSCerts
-	cmd      *exec.Cmd
-}
+func (p *ClusterSvc) GetExeName() string { return "cluster-svc" }
 
-func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
+func (p *ClusterSvc) LookupArgs() string { return "" }
+
+// Postgres Sql
+
+func (p *Sql) StartLocal(logfile string, opts ...StartOp) error {
+	sopts := StartOptions{}
+	sopts.ApplyStartOptions(opts...)
+	if sopts.CleanStartup {
+		if err := p.InitDataDir(); err != nil {
+			return err
+		}
+	}
+
 	args := []string{"-D", p.DataDir, "start"}
 	options := []string{}
 	addr := []string{}
@@ -524,7 +483,7 @@ func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
 	out, err := p.runPsql([]string{"-c", "select rolname from pg_roles",
 		"postgres"})
 	if err != nil {
-		p.Stop()
+		p.StopLocal()
 		return fmt.Errorf("sql: failed to list postgres roles, %s", err.Error())
 	}
 	if !strings.Contains(string(out), p.Username) {
@@ -532,7 +491,7 @@ func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
 			fmt.Sprintf("create user %s", p.Username), "postgres"})
 		fmt.Println(string(out))
 		if err != nil {
-			p.Stop()
+			p.StopLocal()
 			return fmt.Errorf("sql: failed to create user %s, %s",
 				p.Username, err.Error())
 		}
@@ -542,7 +501,7 @@ func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
 	out, err = p.runPsql([]string{"-c", "select datname from pg_database",
 		"postgres"})
 	if err != nil {
-		p.Stop()
+		p.StopLocal()
 		return fmt.Errorf("sql: failed to list databases, %s", err.Error())
 	}
 	if !strings.Contains(string(out), p.Dbname) {
@@ -550,17 +509,22 @@ func (p *SqlLocal) Start(logfile string, opts ...StartOp) error {
 			fmt.Sprintf("create database %s", p.Dbname), "postgres"})
 		fmt.Println(string(out))
 		if err != nil {
-			p.Stop()
+			p.StopLocal()
 			return fmt.Errorf("sql: failed to create user %s, %s",
 				p.Username, err.Error())
 		}
 	}
 	return nil
 }
-func (p *SqlLocal) Stop() {
+func (p *Sql) StopLocal() {
 	exec.Command("pg_ctl", "-D", p.DataDir, "stop").CombinedOutput()
 }
-func (p *SqlLocal) InitDataDir() error {
+
+func (p *Sql) GetExeName() string { return "postgres" }
+
+func (p *Sql) LookupArgs() string { return "" }
+
+func (p *Sql) InitDataDir() error {
 	err := os.RemoveAll(p.DataDir)
 	if err != nil {
 		return err
@@ -568,7 +532,7 @@ func (p *SqlLocal) InitDataDir() error {
 	_, err = exec.Command("initdb", p.DataDir).CombinedOutput()
 	return err
 }
-func (p *SqlLocal) runPsql(args []string) ([]byte, error) {
+func (p *Sql) runPsql(args []string) ([]byte, error) {
 	if p.HttpAddr != "" {
 		addr := strings.Split(p.HttpAddr, ":")
 		if len(addr) == 2 {
@@ -579,12 +543,6 @@ func (p *SqlLocal) runPsql(args []string) ([]byte, error) {
 }
 
 // Vault
-type Vault struct {
-	Name        string
-	DmeSecret   string
-	McormSecret string
-	cmd         *exec.Cmd
-}
 
 // In dev mode, Vault is locked to below address
 var VaultAddress = "http://127.0.0.1:8200"
@@ -598,7 +556,7 @@ type VaultRoles struct {
 	RotatorSecretID string `json:"rotatorsecretid"`
 }
 
-func (p *Vault) Start(logfile string, opts ...StartOp) error {
+func (p *Vault) StartLocal(logfile string, opts ...StartOp) error {
 	// Note: for e2e tests, vault is started in dev mode.
 	// In dev mode, vault is automatically unsealed, TLS is disabled,
 	// data is in-memory only, and root key is printed during startup.
@@ -612,7 +570,7 @@ func (p *Vault) Start(logfile string, opts ...StartOp) error {
 
 	args := []string{"server", "-dev"}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "vault", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	if err != nil {
 		return err
 	}
@@ -643,7 +601,7 @@ func (p *Vault) Start(logfile string, opts ...StartOp) error {
 	p.putSecret("mcorm", p.McormSecret+"-old", &err)
 	p.putSecret("mcorm", p.McormSecret, &err)
 	if err != nil {
-		p.Stop()
+		p.StopLocal()
 		return err
 	}
 	options := StartOptions{}
@@ -651,21 +609,25 @@ func (p *Vault) Start(logfile string, opts ...StartOp) error {
 	if options.RolesFile != "" {
 		roleYaml, err := yaml.Marshal(&roles)
 		if err != nil {
-			p.Stop()
+			p.StopLocal()
 			return err
 		}
 		err = ioutil.WriteFile(options.RolesFile, roleYaml, 0644)
 		if err != nil {
-			p.Stop()
+			p.StopLocal()
 			return err
 		}
 	}
 	return err
 }
 
-func (p *Vault) Stop() {
+func (p *Vault) StopLocal() {
 	StopLocal(p.cmd)
 }
+
+func (p *Vault) GetExeName() string { return "vault" }
+
+func (p *Vault) LookupArgs() string { return "" }
 
 func (p *Vault) getAppRole(name string, roleID, secretID *string, err *error) {
 	if *err != nil {
@@ -713,13 +675,13 @@ func (p *Vault) mapVals(resp string) map[string]string {
 	return vals
 }
 
-func (p *Vault) StartLocal() (*VaultRoles, error) {
+func (p *Vault) StartLocalRoles() (*VaultRoles, error) {
 	dir, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 	rolesfile := dir + "/roles.yaml"
-	err = p.Start(dir+"/vault.log", WithRolesFile(rolesfile))
+	err = p.StartLocal(dir+"/vault.log", WithRolesFile(rolesfile))
 	if err != nil {
 		return nil, err
 	}
@@ -727,13 +689,13 @@ func (p *Vault) StartLocal() (*VaultRoles, error) {
 	// rolesfile contains the roleIDs/secretIDs needed to access vault
 	dat, err := ioutil.ReadFile(rolesfile)
 	if err != nil {
-		p.Stop()
+		p.StopLocal()
 		return nil, err
 	}
 	roles := VaultRoles{}
 	err = yaml.Unmarshal(dat, &roles)
 	if err != nil {
-		p.Stop()
+		p.StopLocal()
 		return nil, err
 	}
 	return &roles, nil
@@ -776,16 +738,12 @@ func StopLocal(cmd *exec.Cmd) {
 }
 
 //Location API simulator
-type LocApiSimLocal struct {
-	Name    string
-	Port    int
-	Locfile string
-	Geofile string
-	Country string
-	cmd     *exec.Cmd
-}
 
-func (p *LocApiSimLocal) Start(logfile string, opts ...StartOp) error {
+func (p *LocApiSim) StartLocal(logfile string, opts ...StartOp) error {
+	if p.Locfile != "" {
+
+	}
+
 	args := []string{"-port", fmt.Sprintf("%d", p.Port), "-file", p.Locfile}
 	if p.Geofile != "" {
 		args = append(args, "-geo", p.Geofile)
@@ -794,53 +752,59 @@ func (p *LocApiSimLocal) Start(logfile string, opts ...StartOp) error {
 		args = append(args, "-country", p.Country)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "loc-api-sim", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *LocApiSimLocal) Stop() {
+func (p *LocApiSim) StopLocal() {
 	StopLocal(p.cmd)
 }
 
-//Token service simulator
-type TokSrvSimLocal struct {
-	Name  string
-	Port  int
-	Token string
-	cmd   *exec.Cmd
+func (p *LocApiSim) GetExeName() string { return "loc-api-sim" }
+
+func (p *LocApiSim) LookupArgs() string {
+	return fmt.Sprintf("-port %d", p.Port)
 }
 
-func (p *TokSrvSimLocal) Start(logfile string, opts ...StartOp) error {
+//Token service simulator
+
+func (p *TokSrvSim) StartLocal(logfile string, opts ...StartOp) error {
 	args := []string{"-port", fmt.Sprintf("%d", p.Port)}
 	if p.Token != "" {
 		args = append(args, "-token")
 		args = append(args, p.Token)
 	}
 	var err error
-	p.cmd, err = StartLocal(p.Name, "tok-srv-sim", args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), args, nil, logfile)
 	return err
 }
 
-func (p *TokSrvSimLocal) Stop() {
+func (p *TokSrvSim) StopLocal() {
 	StopLocal(p.cmd)
+}
+
+func (p *TokSrvSim) GetExeName() string { return "tok-srv-sim" }
+
+func (p *TokSrvSim) LookupArgs() string {
+	return fmt.Sprintf("-port %d", p.Port)
 }
 
 //Generic sample app for use in test
-type SampleAppLocal struct {
-	Name    string
-	Exename string
-	Args    []string
-	cmd     *exec.Cmd
-}
 
-func (p *SampleAppLocal) Start(logfile string) error {
+func (p *SampleApp) StartLocal(logfile string, opts ...StartOp) error {
 	var err error
-	p.cmd, err = StartLocal(p.Name, p.Exename, p.Args, nil, logfile)
+	p.cmd, err = StartLocal(p.Name, p.GetExeName(), p.Args, nil, logfile)
 	return err
 }
 
-func (p *SampleAppLocal) Stop() {
+func (p *SampleApp) StopLocal() {
 	StopLocal(p.cmd)
+}
+
+func (p *SampleApp) GetExeName() string { return p.Exename }
+
+func (p *SampleApp) LookupArgs() string {
+	return strings.Join(p.Args, " ")
 }
 
 type ColorWriter struct {

@@ -79,7 +79,7 @@
        name: "{{ crm_remote_bin }}"
        state: absent
 
-- name: cleanup locsims
+- name: cleanup locapisims
   gather_facts: no
   user: ubuntu
   become: yes
@@ -100,7 +100,7 @@
        name: "{{ locsim_remote_data_file }}"
        state: absent
 
-- name: cleanup toksims
+- name: cleanup toksrvsims
   gather_facts: no
   user: ubuntu
   become: yes
