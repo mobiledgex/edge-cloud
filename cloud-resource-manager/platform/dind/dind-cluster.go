@@ -22,7 +22,7 @@ type DindCluster struct {
 func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edgeproto.ClusterFlavor) error {
 	var err error
 
-	clusterName := clusterInst.Key.ClusterKey.Name
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	log.DebugLog(log.DebugLevelMexos, "creating local dind cluster", "clusterName", clusterName)
 
 	kconfName := k8smgmt.GetKconfName(clusterInst)
@@ -34,7 +34,8 @@ func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edg
 }
 
 func (s *Platform) DeleteCluster(clusterInst *edgeproto.ClusterInst) error {
-	return s.DeleteDINDCluster(clusterInst.Key.ClusterKey.Name)
+	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
+	return s.DeleteDINDCluster(clusterName)
 }
 
 //CreateDINDCluster creates kubernetes cluster on local mac
