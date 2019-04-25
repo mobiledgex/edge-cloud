@@ -1,5 +1,5 @@
 status: FIND_FOUND
-fqdn: acmeappcosomeapplication110.smallcluster.tmus-cloud-1.tmus.mobiledgex.net
+fqdn: smallcluster.tmus-cloud-1.tmus.mobiledgex.net
 ports:
 - proto: LProtoTCP
   internalport: 80
