@@ -33,7 +33,8 @@ func GetKconfName(clusterInst *edgeproto.ClusterInst) string {
 func GetK8sNodeNameSuffix(clusterInst *edgeproto.ClusterInst) string {
 	cloudletName := clusterInst.Key.CloudletKey.Name
 	clusterName := clusterInst.Key.ClusterKey.Name
-	return NormalizeName(cloudletName + "-" + clusterName)
+	devName := clusterInst.Key.Developer
+	return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
 }
 
 func NormalizeName(name string) string {
@@ -52,7 +53,7 @@ func GetKubeNames(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appIns
 		return nil, fmt.Errorf("nil app inst")
 	}
 	kubeNames := KubeNames{}
-	kubeNames.ClusterName = clusterInst.Key.ClusterKey.Name
+	kubeNames.ClusterName = NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	kubeNames.K8sNodeNameSuffix = GetK8sNodeNameSuffix(clusterInst)
 	kubeNames.AppName = NormalizeName(app.Key.Name)
 	kubeNames.AppURI = appInst.Uri
