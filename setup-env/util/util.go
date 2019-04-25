@@ -21,12 +21,10 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/mc/ormapi"
 	"github.com/mobiledgex/edge-cloud/testutil"
 	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
@@ -641,37 +639,39 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
-	} else if fileType == "mcdata" {
-		var a1 ormapi.AllData
-		var a2 ormapi.AllData
+		/*
+			} else if fileType == "mcdata" {
+				var a1 ormapi.AllData
+				var a2 ormapi.AllData
 
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+				err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+				err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
 
-		copts = []cmp.Option{
-			cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}),
-			cloudcommon.IgnoreAdminRole,
-			cloudcommon.IgnoreAppInstUri,
-		}
-		copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
-		copts = append(copts, edgeproto.CmpSortSlices()...)
+				copts = []cmp.Option{
+					cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}),
+					cloudcommon.IgnoreAdminRole,
+					cloudcommon.IgnoreAppInstUri,
+				}
+				copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
+				copts = append(copts, edgeproto.CmpSortSlices()...)
 
-		y1 = a1
-		y2 = a2
-	} else if fileType == "mcusers" {
-		// remove roles
-		var a1 []ormapi.User
-		var a2 []ormapi.User
+				y1 = a1
+				y2 = a2
+			} else if fileType == "mcusers" {
+				// remove roles
+				var a1 []ormapi.User
+				var a2 []ormapi.User
 
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+				err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
+				err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
 
-		copts = []cmp.Option{
-			cmpopts.IgnoreTypes(time.Time{}),
-			cloudcommon.IgnoreAdminUser,
-		}
-		y1 = a1
-		y2 = a2
+				copts = []cmp.Option{
+					cmpopts.IgnoreTypes(time.Time{}),
+					cloudcommon.IgnoreAdminUser,
+				}
+				y1 = a1
+				y2 = a2
+		*/
 	} else {
 		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
 		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)

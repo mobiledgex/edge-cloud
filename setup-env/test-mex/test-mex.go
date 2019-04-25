@@ -327,16 +327,6 @@ func main() {
 					errors = append(errors, "dme api failed")
 				}
 			}
-		case "mcapi":
-			if !setupmex.UpdateAPIAddrs() {
-				errorsFound++
-			} else {
-				if !apis.RunMcAPI(actionSubtype, actionParam, *apiFile, *curUserFile, *outputDir) {
-					log.Printf("Unable to run api for %s\n", action)
-					errorsFound++
-					errors = append(errors, "MC api failed")
-				}
-			}
 		case "cleanup":
 			err := setupmex.DeleteCloudfareRecords()
 			if err != nil {
