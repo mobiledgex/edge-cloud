@@ -34,7 +34,11 @@ func GetK8sNodeNameSuffix(clusterInst *edgeproto.ClusterInst) string {
 	cloudletName := clusterInst.Key.CloudletKey.Name
 	clusterName := clusterInst.Key.ClusterKey.Name
 	devName := clusterInst.Key.Developer
-	return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
+	if devName != "" {
+		return NormalizeName(cloudletName + "-" + clusterName + "-" + devName)
+	}
+	return NormalizeName(cloudletName + "-" + clusterName)
+
 }
 
 func NormalizeName(name string) string {
