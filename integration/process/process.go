@@ -1,7 +1,6 @@
 package process
 
 import (
-	"os/exec"
 	"reflect"
 )
 
@@ -28,7 +27,6 @@ type Common struct {
 	Hostname    string
 	DockerImage string
 	EnvVars     map[string]string
-	cmd         *exec.Cmd
 }
 
 func (c *Common) GetName() string {
