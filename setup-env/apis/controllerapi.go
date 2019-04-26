@@ -20,7 +20,7 @@ import (
 var appData edgeproto.ApplicationData
 
 func readAppDataFile(file string) {
-	err := util.ReadYamlFile(file, &appData, util.DeploymentReplacementVars, true)
+	err := util.ReadYamlFile(file, &appData, util.WithVars(util.DeploymentReplacementVars), util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "appdata") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", file)

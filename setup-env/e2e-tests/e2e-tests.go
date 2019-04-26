@@ -4,14 +4,15 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path"
-	"strings"
 
+	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
 )
 
@@ -20,7 +21,7 @@ var (
 	testFile    *string
 	outputDir   *string
 	setupFile   *string
-	dataDir     *string
+	varsFile    *string
 	stopOnFail  *bool
 	verbose     *bool
 	notimestamp *bool
@@ -34,36 +35,31 @@ func init() {
 	testFile = flag.String("testfile", "", "input file with tests")
 	outputDir = flag.String("outputdir", "/tmp/e2e_test_out", "output directory, timestamp will be appended")
 	setupFile = flag.String("setupfile", "", "network config setup file")
-	dataDir = flag.String("datadir", "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data", "directory where app data files exist")
+	varsFile = flag.String("varsfile", "", "yaml file containing vars, key: value definitions")
 	stopOnFail = flag.Bool("stop", false, "stop on failures")
 	verbose = flag.Bool("verbose", false, "prints full output screen")
-	notimestamp = flag.Bool("notimestamp", false, "no timestamp on outputdir, logs will be overwritten by subsequent runs")
+	notimestamp = flag.Bool("notimestamp", false, "no timestamp on outputdir, logs will be appended to by subsequent runs")
 }
 
 // a list of tests, which may include another file which has tests.  Looping can
 //be done at either test level or the included file level.
 type e2e_test struct {
-	Name        string   `yaml:"name"`
-	IncludeFile string   `yaml:"includefile"`
-	Loops       int      `yaml:"loops"`
-	ApiType     string   `yaml:"api"`
-	Apifile     string   `yaml:"apifile"`
-	Actions     []string `yaml:"actions"`
-	CurUserFile string   `yaml:"curuserfile"`
-	Compareyaml struct {
-		Yaml1    string `yaml:"yaml1"`
-		Yaml2    string `yaml:"yaml2"`
-		Filetype string ` yaml:"filetype"`
-	}
+	Name        string `yaml:"name"`
+	IncludeFile string `yaml:"includefile"`
+	Loops       int    `yaml:"loops"`
 }
 
 type e2e_tests struct {
-	Description string     `yaml:"description"`
-	Tests       []e2e_test `yaml:"tests"`
+	Description string                   `yaml:"description"`
+	Program     string                   `yaml:"program"`
+	Tests       []map[string]interface{} `yaml:"tests"`
 }
 
 var testsToRun e2e_tests
 var e2eHome string
+var configStr string
+var testConfig e2eapi.TestConfig
+var defaultProgram string
 
 func printUsage() {
 	fmt.Println("\nUsage: \n" + commandName + " [options]\n\noptions:")
@@ -71,9 +67,9 @@ func printUsage() {
 }
 
 func validateArgs() {
-
 	//re-init the flags so we don't get a bunch of test flags in the usage
 	flag.Parse()
+	testConfig.Vars = make(map[string]string)
 
 	errorFound := false
 
@@ -89,37 +85,67 @@ func validateArgs() {
 		fmt.Println("Argument -setupfile <file> is required")
 		errorFound = true
 	}
-	if *dataDir == "" {
-		fmt.Println("Argument -datadir <dir> is required")
-		errorFound = true
-	} else if strings.Contains(*dataDir, "$GOPATH") && os.Getenv("GOPATH") == "" {
-		//note $GOPATH is not evaluated until setup-mex is called
-		fmt.Println("Argument -datadir <dir> is required, or set GOPATH properly to use default data dir")
+	if err := e2eapi.ReadVarsFile(*varsFile, testConfig.Vars); err != nil {
+		fmt.Printf("failed to read yaml vars file %s, %v\n", *varsFile, err)
 		errorFound = true
 	}
+	testConfig.SetupFile = *setupFile
+	testConfig.Vars["outputdir"] = *outputDir
+
+	dataDir, found := testConfig.Vars["datadir"]
+	if !found {
+		dataDir = "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
+		testConfig.Vars["datadir"] = dataDir
+	}
+
+	// expand any environment variables in path (like $GOPATH)
+	for key, val := range testConfig.Vars {
+		testConfig.Vars[key] = os.ExpandEnv(val)
+	}
+
+	defaultProgram = testConfig.Vars["default-program"]
+
+	configBytes, err := json.Marshal(&testConfig)
+	if err != nil {
+		fmt.Printf("failed to marshal TestConfig, %v\n", err)
+		errorFound = true
+	}
+	configStr = string(configBytes)
+
 	if errorFound {
 		printUsage()
 		os.Exit(1)
 	}
-
 }
 
 func readYamlFile(fileName string, tests interface{}) bool {
-	//outputdir is always appended as a variable
-	varstr := "outputdir=" + *outputDir
-	varstr += ",datadir=" + *dataDir
-
-	err := util.ReadYamlFile(fileName, tests, varstr, true)
+	err := util.ReadYamlFile(fileName, tests, util.WithVars(testConfig.Vars), util.ValidateReplacedVars())
 	if err != nil {
 		log.Fatalf("*** Error in reading test file: %v - err: %v\n", *testFile, err)
 	}
 	return true
 }
 
-func runTests(dirName string, fileName string, apiType string, depth int) (int, int, int) {
+func parseTest(testinfo map[string]interface{}, test *e2e_test) error {
+	// we could use mapstructure here but it's easy to just
+	// convert map to json and then unmarshal json.
+	spec, err := json.Marshal(testinfo)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(spec, test)
+}
+
+func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
+
+	if fileName[0] == '/' {
+		// absolute path
+		dirName = path.Dir(fileName)
+		fileName = path.Base(fileName)
+	}
 
 	indentstr := ""
 	for i := 0; i < depth; i++ {
@@ -130,16 +156,29 @@ func runTests(dirName string, fileName string, apiType string, depth int) (int, 
 		log.Printf("\n** unable to read yaml file %s\n", fileName)
 		return 0, 0, 0
 	}
+	if testsToRun.Program != "" {
+		progName = testsToRun.Program
+	}
+	if progName == "" {
+		progName = "test-mex"
+	}
 
 	//if no loop count specified, run once
 
-	for _, t := range testsToRun.Tests {
+	for _, testinfo := range testsToRun.Tests {
+		t := e2e_test{}
+		err := parseTest(testinfo, &t)
+		if err != nil {
+			log.Printf("\nfailed to parse test %v, %v\n", testinfo, err)
+			numTestsRun++
+			numFailed++
+			if *stopOnFail {
+				return numTestsRun, numPassed, numFailed
+			}
+			continue
+		}
 		loopCount := 1
 		loopStr := ""
-		apitypestr := ""
-		if t.ApiType == "" {
-			t.ApiType = apiType
-		}
 
 		if t.Loops > loopCount {
 			loopCount = t.Loops
@@ -150,26 +189,26 @@ func runTests(dirName string, fileName string, apiType string, depth int) (int, 
 			}
 			namestr := t.Name
 			if namestr == "" && t.IncludeFile != "" {
-				namestr = "include: " + t.IncludeFile
+				if len(t.IncludeFile) > 58 {
+					ilen := len(t.IncludeFile)
+					namestr = "include: ..." +
+						t.IncludeFile[ilen-58:ilen]
+				} else {
+					namestr = "include: " + t.IncludeFile
+				}
 			}
-			if t.ApiType != "" {
-				apitypestr = " (" + t.ApiType + ")"
-			}
-			f := indentstr + fileName + apitypestr
+			f := indentstr + fileName
 			if len(f) > 30 {
 				f = f[0:27] + "..."
 			}
 			fmt.Printf("%-30s %-60s ", f, namestr+loopStr)
 			if t.IncludeFile != "" {
-				if len(t.Actions) > 0 || t.Compareyaml.Yaml1 != "" {
-					log.Fatalf("Test %s cannot have both included files and actions or yaml compares\n", t.Name)
-				}
 				if depth >= 10 {
 					//avoid an infinite recusive loop in which a testfile contains itself
 					log.Fatalf("excessive include depth %d, possible loop: %s", depth, fileName)
 				}
 				fmt.Println()
-				nr, np, nf := runTests(dirName, t.IncludeFile, t.ApiType, depth+1)
+				nr, np, nf := runTests(dirName, t.IncludeFile, progName, depth+1)
 				numTestsRun += nr
 				numPassed += np
 				numFailed += nf
@@ -178,29 +217,23 @@ func runTests(dirName string, fileName string, apiType string, depth int) (int, 
 				}
 				continue
 			}
-
-			cmdstr := fmt.Sprintf("test-mex -outputdir %s -setupfile %s -datadir %s ", *outputDir, *setupFile, *dataDir)
-			if len(t.Actions) > 0 {
-				cmdstr += fmt.Sprintf("-actions %s ", strings.Join(t.Actions, ","))
+			testSpec, err := json.Marshal(testinfo)
+			if err != nil {
+				fmt.Printf("FAIL: cannot marshal test info %v, %v\n", err, testinfo)
+				numTestsRun++
+				numFailed++
+				if *stopOnFail {
+					return numTestsRun, numPassed, numFailed
+				}
+				continue
 			}
-			if t.Apifile != "" {
-				cmdstr += fmt.Sprintf("-apifile %s ", t.Apifile)
-			}
-			if t.CurUserFile != "" {
-				cmdstr += fmt.Sprintf("-curuserfile %s ", t.CurUserFile)
-			}
-			if t.Compareyaml.Yaml1 != "" {
-				cmdstr += fmt.Sprintf("-compareyaml %s,%s,%s ", t.Compareyaml.Yaml1, t.Compareyaml.Yaml2, t.Compareyaml.Filetype)
-			}
-			if t.ApiType != "" {
-				cmdstr += fmt.Sprintf("-apitype %s ", apiType)
-			}
+			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s'", progName, configStr, string(testSpec))
 			cmd := exec.Command("sh", "-c", cmdstr)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
 			cmd.Stdout = &out
 			cmd.Stderr = &stderr
-			err := cmd.Run()
+			err = cmd.Run()
 			if *verbose {
 				fmt.Println(out.String())
 			}
@@ -240,7 +273,7 @@ func main() {
 	if *testFile != "" {
 		dirName := path.Dir(*testFile)
 		fileName := path.Base(*testFile)
-		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, "", 0)
+		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, defaultProgram, 0)
 		fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
 		if totalFailed > 0 {
 			fmt.Printf("Failed Tests: ")

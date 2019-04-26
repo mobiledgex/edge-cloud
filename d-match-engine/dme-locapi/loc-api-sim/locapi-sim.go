@@ -227,7 +227,7 @@ func findLocForIP(ipaddr string) (dme.Loc, error) {
 
 func readLocationFile() {
 	locations = make(map[string]dme.Loc)
-	err := util.ReadYamlFile(*locdbfile, &locations, "", false)
+	err := util.ReadYamlFile(*locdbfile, &locations)
 	if err != nil {
 		log.Printf("unable to read yaml location file %v\n", err)
 	}
