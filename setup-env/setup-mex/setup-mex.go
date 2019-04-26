@@ -415,6 +415,9 @@ func StartLocal(processName, outputDir string, p process.Process, opts ...proces
 }
 
 func StartProcesses(processName string, outputDir string) bool {
+	if outputDir == "" {
+		outputDir = "."
+	}
 	rolesfile := outputDir + "/roles.yaml"
 	util.PrintStepBanner("starting local processes")
 

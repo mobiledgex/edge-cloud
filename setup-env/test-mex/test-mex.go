@@ -143,13 +143,11 @@ func main() {
 		}
 
 	}
-	if outputDir != "" {
-		fmt.Printf("\nNum Errors found: %d, Results in: %s\n", len(errors), outputDir)
-		if len(errors) > 0 {
-			errstring := strings.Join(errors, ",")
-			fmt.Fprint(os.Stderr, errstring)
-			os.Exit(len(errors))
-		}
-		os.Exit(0)
+	fmt.Printf("\nNum Errors found: %d, Results in: %s\n", len(errors), outputDir)
+	if len(errors) > 0 {
+		errstring := strings.Join(errors, ",")
+		fmt.Fprint(os.Stderr, errstring)
+		os.Exit(len(errors))
 	}
+	os.Exit(0)
 }
