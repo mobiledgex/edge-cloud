@@ -131,7 +131,7 @@ func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInst
 }
 
 func readDMEApiFile(apifile string) {
-	err := util.ReadYamlFile(apifile, &apiRequest, "", true)
+	err := util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "dmeapi") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
@@ -141,7 +141,7 @@ func readDMEApiFile(apifile string) {
 }
 
 func readMatchEngineStatus(filename string, mes *registration) {
-	util.ReadYamlFile(filename, &mes, "", false)
+	util.ReadYamlFile(filename, &mes)
 }
 
 func RunDmeAPI(api string, procname string, apiFile string, apiType string, outputDir string) bool {

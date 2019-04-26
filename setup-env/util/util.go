@@ -40,12 +40,13 @@ const (
 	YamlOther   yamlFileType = 1
 )
 
-type YamlReplacementVariables struct {
-	Vars []map[string]string
+type SetupVariables struct {
+	Vars     []map[string]string
+	Includes []string
 }
 
 // replacement variables taken from the setup
-var DeploymentReplacementVars string
+var DeploymentReplacementVars map[string]string
 
 type ProcessInfo struct {
 	pid   int
@@ -92,35 +93,18 @@ type TLSCertInfo struct {
 	DNSNames   []string
 }
 
-type DnsRecord struct {
-	Name    string
-	Type    string
-	Content string
-}
-
-//cloudflare dns records
-type CloudflareDNS struct {
-	Zone    string
-	Records []DnsRecord
-}
-
 type DeploymentData struct {
-	TLSCerts      []*TLSCertInfo        `yaml:"tlscerts"`
-	Cluster       ClusterInfo           `yaml:"cluster"`
-	K8sDeployment []*K8sDeploymentStep  `yaml:"k8s-deployment"`
-	Locsims       []*process.LocApiSim  `yaml:"locsims"`
-	Toksims       []*process.TokSrvSim  `yaml:"toksims"`
-	Vaults        []*process.Vault      `yaml:"vaults"`
-	Etcds         []*process.Etcd       `yaml:"etcds"`
-	Controllers   []*process.Controller `yaml:"controllers"`
-	Dmes          []*process.Dme        `yaml:"dmes"`
-	Crms          []*process.Crm        `yaml:"crms"`
-	Mcs           []*process.MC         `yaml:"mcs"`
-	Sqls          []*process.Sql        `yaml:"sqls"`
-	SampleApps    []*process.SampleApp  `yaml:"sampleapps"`
-	Influxs       []*process.Influx     `yaml:"influxs"`
-	ClusterSvcs   []*process.ClusterSvc `yaml:"clustersvcs"`
-	Cloudflare    CloudflareDNS         `yaml:"cloudflare"`
+	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
+	Locsims     []*process.LocApiSim  `yaml:"locsims"`
+	Toksims     []*process.TokSrvSim  `yaml:"toksims"`
+	Vaults      []*process.Vault      `yaml:"vaults"`
+	Etcds       []*process.Etcd       `yaml:"etcds"`
+	Controllers []*process.Controller `yaml:"controllers"`
+	Dmes        []*process.Dme        `yaml:"dmes"`
+	Crms        []*process.Crm        `yaml:"crms"`
+	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
+	Influxs     []*process.Influx     `yaml:"influxs"`
+	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
 }
 
 type errorReply struct {
@@ -150,12 +134,6 @@ func GetAllProcesses() []process.Process {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.Crms {
-		all = append(all, p)
-	}
-	for _, p := range Deployment.Sqls {
-		all = append(all, p)
-	}
-	for _, p := range Deployment.Mcs {
 		all = append(all, p)
 	}
 	for _, p := range Deployment.SampleApps {
@@ -188,10 +166,6 @@ var yamlExceptions = map[string]map[string]bool{
 	"appdata": {
 		"ip_str": true, // ansible workaround
 	},
-}
-
-func IsK8sDeployment() bool {
-	return Deployment.Cluster.MexManifest != "" //TODO Azure
 }
 
 func IsYamlOk(e error, yamltype string) bool {
@@ -287,19 +261,6 @@ func GetDme(dmename string) *process.Dme {
 		}
 	}
 	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
-	return nil //unreachable
-}
-
-func GetMC(name string) *process.MC {
-	if name == "" {
-		return Deployment.Mcs[0]
-	}
-	for _, mc := range Deployment.Mcs {
-		if mc.Name == name {
-			return mc
-		}
-	}
-	log.Fatalf("Error: could not find specified MC: %s\n", name)
 	return nil //unreachable
 }
 
@@ -547,7 +508,19 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 	return outputDir
 }
 
-func ReadYamlFile(filename string, iface interface{}, varlist string, validateReplacedVars bool) error {
+type ReadYamlOptions struct {
+	vars                 map[string]string
+	validateReplacedVars bool
+}
+
+type ReadYamlOp func(opts *ReadYamlOptions)
+
+func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
+	opts := ReadYamlOptions{}
+	for _, op := range ops {
+		op(&opts)
+	}
+
 	if strings.HasPrefix(filename, "~") {
 		filename = strings.Replace(filename, "~", os.Getenv("HOME"), 1)
 	}
@@ -555,18 +528,15 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 	if err != nil {
 		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
 	}
-	if varlist != "" {
+	if opts.vars != nil {
 		//replace variables denoted as {{variablename}}
 		yamlstr := string(yamlFile)
-		vars := strings.Split(varlist, ",")
-		for _, va := range vars {
-			k := strings.Split(va, "=")[0]
-			v := strings.Split(va, "=")[1]
+		for k, v := range opts.vars {
 			yamlstr = strings.Replace(yamlstr, "{{"+k+"}}", v, -1)
 		}
 		yamlFile = []byte(yamlstr)
 	}
-	if validateReplacedVars {
+	if opts.validateReplacedVars {
 		//make sure there are no unreplaced variables left and inform the user if so
 		re := regexp.MustCompile("{{(\\S+)}}")
 		matches := re.FindAllStringSubmatch(string(yamlFile), 1)
@@ -575,12 +545,24 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 		}
 	}
 
-	err = yaml.UnmarshalStrict(yamlFile, iface)
+	err = yaml.Unmarshal(yamlFile, iface)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func WithVars(vars map[string]string) ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.vars = vars
+	}
+}
+
+func ValidateReplacedVars() ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.validateReplacedVars = true
+	}
 }
 
 func removeAppinstUris(appdata *edgeproto.ApplicationData) {
@@ -612,8 +594,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var a1 edgeproto.ApplicationData
 		var a2 edgeproto.ApplicationData
 
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
 		// Appinstance URIs usually not provisioned, as they are inherited from the cloudlet. However
@@ -627,8 +609,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
 
-		err1 = ReadYamlFile(firstYamlFile, &f1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &f2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &f1)
+		err2 = ReadYamlFile(secondYamlFile, &f2)
 
 		//publicport is variable so we nil it out for comparison purposes.
 		for _, p := range f1.Ports {
@@ -639,42 +621,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
-		/*
-			} else if fileType == "mcdata" {
-				var a1 ormapi.AllData
-				var a2 ormapi.AllData
-
-				err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-				err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
-
-				copts = []cmp.Option{
-					cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}),
-					cloudcommon.IgnoreAdminRole,
-					cloudcommon.IgnoreAppInstUri,
-				}
-				copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
-				copts = append(copts, edgeproto.CmpSortSlices()...)
-
-				y1 = a1
-				y2 = a2
-			} else if fileType == "mcusers" {
-				// remove roles
-				var a1 []ormapi.User
-				var a2 []ormapi.User
-
-				err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-				err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
-
-				copts = []cmp.Option{
-					cmpopts.IgnoreTypes(time.Time{}),
-					cloudcommon.IgnoreAdminUser,
-				}
-				y1 = a1
-				y2 = a2
-		*/
 	} else {
-		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &y1)
+		err2 = ReadYamlFile(secondYamlFile, &y2)
 	}
 	if err1 != nil {
 		log.Printf("Error in reading yaml file %v -- %v\n", firstYamlFile, err1)
