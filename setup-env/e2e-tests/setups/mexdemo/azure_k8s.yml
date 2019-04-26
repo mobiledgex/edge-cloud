@@ -148,9 +148,11 @@ dmes:
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "mexdemo.dme.mobiledgex.net"
 
 crms:
 - name: crm-pool
   tls:
     servercert: "{{tlsoutdir}}/mex-server.crt"
     clientcert: "{{tlsoutdir}}/mex-client.crt"
+  hostname: "mexdemo.crm.mobiledgex.net"

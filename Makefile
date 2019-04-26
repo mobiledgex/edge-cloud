@@ -82,14 +82,10 @@ test-stop:
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml
 
-# QA testing - manual
-test-robot-start:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_automation.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
+## note: DIND requires make install-dind to be run once
+install-dind:
+	./install-dind.sh
 
-test-robot-stop:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
-
-## note: DIND requires make from edge-cloud-infra to install dependencies
 test-dind-start:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_dind.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp -stop
 

@@ -1,9 +1,12 @@
 package process
 
+import "os/exec"
+
 type Vault struct {
 	Common      `yaml:",inline"`
 	DmeSecret   string
 	McormSecret string
+	cmd         *exec.Cmd
 }
 type Etcd struct {
 	Common         `yaml:",inline"`
@@ -11,6 +14,7 @@ type Etcd struct {
 	PeerAddrs      string
 	ClientAddrs    string
 	InitialCluster string
+	cmd            *exec.Cmd
 }
 type Controller struct {
 	Common        `yaml:",inline"`
@@ -20,6 +24,7 @@ type Controller struct {
 	NotifyAddr    string
 	TLS           TLSCerts
 	ShortTimeouts bool
+	cmd           *exec.Cmd
 }
 type Dme struct {
 	Common      `yaml:",inline"`
@@ -33,6 +38,7 @@ type Dme struct {
 	VaultAddr   string
 	CookieExpr  string
 	TLS         TLSCerts
+	cmd         *exec.Cmd
 }
 type Crm struct {
 	Common      `yaml:",inline"`
@@ -42,22 +48,7 @@ type Crm struct {
 	Platform    string
 	Plugin      string
 	TLS         TLSCerts
-}
-type MC struct {
-	Common    `yaml:",inline"`
-	Addr      string
-	SqlAddr   string
-	VaultAddr string
-	RolesFile string
-	TLS       TLSCerts
-}
-type Sql struct {
-	Common   `yaml:",inline"`
-	DataDir  string
-	HttpAddr string
-	Username string
-	Dbname   string
-	TLS      TLSCerts
+	cmd         *exec.Cmd
 }
 type LocApiSim struct {
 	Common  `yaml:",inline"`
@@ -65,11 +56,13 @@ type LocApiSim struct {
 	Locfile string
 	Geofile string
 	Country string
+	cmd     *exec.Cmd
 }
 type TokSrvSim struct {
 	Common `yaml:",inline"`
 	Port   int
 	Token  string
+	cmd    *exec.Cmd
 }
 type SampleApp struct {
 	Common       `yaml:",inline"`
@@ -77,12 +70,14 @@ type SampleApp struct {
 	Args         []string
 	Command      string
 	VolumeMounts []string
+	cmd          *exec.Cmd
 }
 type Influx struct {
 	Common   `yaml:",inline"`
 	DataDir  string
 	HttpAddr string
 	Config   string // set during Start
+	cmd      *exec.Cmd
 }
 type ClusterSvc struct {
 	Common      `yaml:",inline"`
@@ -92,4 +87,5 @@ type ClusterSvc struct {
 	InfluxDB    string
 	Interval    string
 	TLS         TLSCerts
+	cmd         *exec.Cmd
 }
