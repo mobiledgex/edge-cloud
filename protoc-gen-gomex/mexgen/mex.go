@@ -1153,16 +1153,17 @@ Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.
 This is due to an upsupported change in the key of some objects in a .proto file.
 In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
 
-NOTE: For now replace the following: 
 enum VersionHash {
+	...
 	{{.CurHash}} = {{.CurHashEnumVal}};
-}
- with:
- enum VersionHash {
-	{{.NewHash}} = {{.CurHashEnumVal}};
+	{{.NewHash}} = {{.NewHashEnumVal}};  [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
+	...
 }
 
-//TODO - Instructions for the upgrade function in the upgrade infra
+Implementation of "sample_upgrade_function" should be added tp edge-cloud/upgrade/upgrade-types.go
+
+NOTE: If no upgrade function is needed don't need to add "[(protogen.upgrade_func) = "sample_upgrade_function];" to
+the VersionHash enum.
 ====================
 `
 
