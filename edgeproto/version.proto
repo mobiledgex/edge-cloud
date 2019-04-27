@@ -9,8 +9,9 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 
 // Below enum lists hashes as well as corresponding versions
 enum VersionHash {
-  HASH_0c189a128f5b98cba41984fcf88a1fe0 = 0;
+  HASH_d41d8cd98f00b204e9800998ecf8427e = 0;
+  HASH_d0e4bef9e3b9df9706bdf22ca21b7f10 = 1 [(protogen.upgrade_func) = "mex_salt_ugprade"];
   option (protogen.version_hash) = true;
-  option (protogen.version_hash_salt) = "";
+  option (protogen.version_hash_salt) = "abc";
 }
 

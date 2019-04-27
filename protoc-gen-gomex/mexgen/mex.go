@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -140,6 +141,14 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	m.support.PrintUsedImports(m.gen)
 }
 
+func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]string{")
+	for _, e := range enum.Value {
+		m.P(e.Number, ": ", strconv.Quote(GetUpgadeFunc(e)), ",")
+	}
+	m.P("}")
+}
+
 func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumDescriptor) {
 	en := desc.EnumDescriptorProto
 	m.P("var ", en.Name, "Strings = []string{")
@@ -169,6 +178,8 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
+		// Generate an array with function names
+		m.generateUpgradeFuncs(en)
 		// Generate version check code for version message
 		validateVersionHash(en, hashStr, file)
 	}
@@ -1544,4 +1555,8 @@ func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
 
 func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
+}
+
+func GetUpgadeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
+	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
 }
