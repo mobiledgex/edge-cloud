@@ -62,7 +62,7 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 }
 
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
-	client, err := s.GetPlatformClient()
+	client, err := s.GetPlatformClient(clusterInst)
 	if err != nil {
 		return nil, err
 	}

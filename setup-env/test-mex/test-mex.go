@@ -131,18 +131,24 @@ func main() {
 		util.DeploymentReplacementVars = config.Vars
 	}
 
+	ranTest := false
 	for _, a := range spec.Actions {
 		util.PrintStepBanner("running action: " + a)
 		errs := setupmex.RunAction(a, outputDir, &spec)
 		errors = append(errors, errs...)
+		ranTest = true
 	}
 	if spec.CompareYaml.Yaml1 != "" && spec.CompareYaml.Yaml2 != "" {
 		if !util.CompareYamlFiles(spec.CompareYaml.Yaml1,
 			spec.CompareYaml.Yaml2, spec.CompareYaml.FileType) {
 			errors = append(errors, "compare yaml failed")
 		}
-
+		ranTest = true
 	}
+	if !ranTest {
+		errors = append(errors, "no test content")
+	}
+
 	fmt.Printf("\nNum Errors found: %d, Results in: %s\n", len(errors), outputDir)
 	if len(errors) > 0 {
 		errstring := strings.Join(errors, ",")
