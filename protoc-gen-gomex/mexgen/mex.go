@@ -757,10 +757,11 @@ func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.
 	return true
 }
 
-func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}) {
+func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {

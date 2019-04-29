@@ -1284,10 +1284,11 @@ func (s *AppStore) STMGet(stm concurrency.STM, key *AppKey, buf *App) bool {
 	return true
 }
 
-func (s *AppStore) STMPut(stm concurrency.STM, obj *App) {
+func (s *AppStore) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *AppStore) STMDel(stm concurrency.STM, key *AppKey) {
