@@ -644,10 +644,11 @@ func (s *ClusterStore) STMGet(stm concurrency.STM, key *ClusterKey, buf *Cluster
 	return true
 }
 
-func (s *ClusterStore) STMPut(stm concurrency.STM, obj *Cluster) {
+func (s *ClusterStore) STMPut(stm concurrency.STM, obj *Cluster, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Cluster", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterStore) STMDel(stm concurrency.STM, key *ClusterKey) {

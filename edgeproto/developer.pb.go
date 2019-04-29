@@ -677,10 +677,11 @@ func (s *DeveloperStore) STMGet(stm concurrency.STM, key *DeveloperKey, buf *Dev
 	return true
 }
 
-func (s *DeveloperStore) STMPut(stm concurrency.STM, obj *Developer) {
+func (s *DeveloperStore) STMPut(stm concurrency.STM, obj *Developer, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Developer", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *DeveloperStore) STMDel(stm concurrency.STM, key *DeveloperKey) {

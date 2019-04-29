@@ -1198,10 +1198,11 @@ func (s *ClusterInstStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf 
 	return true
 }
 
-func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst) {
+func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInst", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterInstStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
@@ -1875,10 +1876,11 @@ func (s *ClusterInstInfoStore) STMGet(stm concurrency.STM, key *ClusterInstKey, 
 	return true
 }
 
-func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo) {
+func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInstInfo", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterInstInfoStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {

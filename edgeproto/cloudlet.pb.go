@@ -1856,10 +1856,11 @@ func (s *CloudletStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *Cloud
 	return true
 }
 
-func (s *CloudletStore) STMPut(stm concurrency.STM, obj *Cloudlet) {
+func (s *CloudletStore) STMPut(stm concurrency.STM, obj *Cloudlet, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Cloudlet", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *CloudletStore) STMDel(stm concurrency.STM, key *CloudletKey) {
@@ -2531,10 +2532,11 @@ func (s *CloudletInfoStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *C
 	return true
 }
 
-func (s *CloudletInfoStore) STMPut(stm concurrency.STM, obj *CloudletInfo) {
+func (s *CloudletInfoStore) STMPut(stm concurrency.STM, obj *CloudletInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletInfo", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *CloudletInfoStore) STMDel(stm concurrency.STM, key *CloudletKey) {
