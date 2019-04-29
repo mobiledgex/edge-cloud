@@ -482,10 +482,11 @@ func (s *ControllerStore) STMGet(stm concurrency.STM, key *ControllerKey, buf *C
 	return true
 }
 
-func (s *ControllerStore) STMPut(stm concurrency.STM, obj *Controller) {
+func (s *ControllerStore) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ControllerStore) STMDel(stm concurrency.STM, key *ControllerKey) {
