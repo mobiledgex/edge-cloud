@@ -56,7 +56,7 @@ func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *ed
 	return &edgeproto.AppInstRuntime{}, nil
 }
 
-func (s *Platform) GetPlatformClient() (pc.PlatformClient, error) {
+func (s *Platform) GetPlatformClient(clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error) {
 	return &pc.LocalClient{}, nil
 }
 

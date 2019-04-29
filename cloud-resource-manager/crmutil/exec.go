@@ -65,7 +65,7 @@ func (cd *ControllerData) ProcessExecReq(req *edgeproto.ExecRequest) error {
 		return err
 	}
 
-	run.client, err = cd.platform.GetPlatformClient()
+	run.client, err = cd.platform.GetPlatformClient(&clusterInst)
 	if err != nil {
 		return err
 	}
