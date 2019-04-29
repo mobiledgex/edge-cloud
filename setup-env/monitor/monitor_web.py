@@ -130,13 +130,13 @@ class show_status:
           return uris
         
        for appinst in data: 
-          pubport = appinst['mappedports'][0]['publicport']
-          fqdnprefix = appinst['mappedports'][0]['fqdnprefix']
-          uri  = appinst['uri']
-      
-          fulluri = fqdnprefix+uri+":"+str(pubport)
-          print "fulluri: %s " % fulluri
-          uris.append(fulluri)
+          if 'publicport' in appinst['mappedports'][0]:
+             pubport = appinst['mappedports'][0]['publicport']
+             fqdnprefix = appinst['mappedports'][0]['fqdnprefix']
+             uri  = appinst['uri']
+             fulluri = fqdnprefix+uri+":"+str(pubport)
+             print "fulluri: %s " % fulluri
+             uris.append(fulluri)
        return uris
                   
    def getHealthResults(self, appnames):
