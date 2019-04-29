@@ -25,7 +25,7 @@ type Platform interface {
 	// Get AppInst runtime information
 	GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error)
 	// Get the Platform Client to run commands against
-	GetPlatformClient() (pc.PlatformClient, error)
+	GetPlatformClient(clusterInst *edgeproto.ClusterInst) (pc.PlatformClient, error)
 	// Get the command to pass to PlatformClient for the container command
 	GetContainerCommand(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, req *edgeproto.ExecRequest) (string, error)
 }
