@@ -90,8 +90,8 @@ func validateArgs() {
 		errorFound = true
 	}
 	testConfig.SetupFile = *setupFile
+	*outputDir = util.CreateOutputDir(!*notimestamp, *outputDir, commandName+".log")
 	testConfig.Vars["outputdir"] = *outputDir
-
 	dataDir, found := testConfig.Vars["datadir"]
 	if !found {
 		dataDir = "$GOPATH/src/github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/data"
@@ -266,7 +266,6 @@ func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
 
 func main() {
 	validateArgs()
-	*outputDir = util.CreateOutputDir(!*notimestamp, *outputDir, commandName+".log")
 
 	fmt.Printf("\n%-30s %-60s Result\n", "Testfile", "Test")
 	fmt.Printf("-----------------------------------------------------------------------------------------------------\n")
