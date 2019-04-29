@@ -650,10 +650,11 @@ func (s *FlavorStore) STMGet(stm concurrency.STM, key *FlavorKey, buf *Flavor) b
 	return true
 }
 
-func (s *FlavorStore) STMPut(stm concurrency.STM, obj *Flavor) {
+func (s *FlavorStore) STMPut(stm concurrency.STM, obj *Flavor, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Flavor", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *FlavorStore) STMDel(stm concurrency.STM, key *FlavorKey) {

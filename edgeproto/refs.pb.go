@@ -634,10 +634,11 @@ func (s *CloudletRefsStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *C
 	return true
 }
 
-func (s *CloudletRefsStore) STMPut(stm concurrency.STM, obj *CloudletRefs) {
+func (s *CloudletRefsStore) STMPut(stm concurrency.STM, obj *CloudletRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletRefs", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *CloudletRefsStore) STMDel(stm concurrency.STM, key *CloudletKey) {
@@ -1101,10 +1102,11 @@ func (s *ClusterRefsStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf 
 	return true
 }
 
-func (s *ClusterRefsStore) STMPut(stm concurrency.STM, obj *ClusterRefs) {
+func (s *ClusterRefsStore) STMPut(stm concurrency.STM, obj *ClusterRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterRefs", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterRefsStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
