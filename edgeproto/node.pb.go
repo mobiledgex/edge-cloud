@@ -687,10 +687,11 @@ func (s *NodeStore) STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool {
 	return true
 }
 
-func (s *NodeStore) STMPut(stm concurrency.STM, obj *Node) {
+func (s *NodeStore) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Node", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *NodeStore) STMDel(stm concurrency.STM, key *NodeKey) {
