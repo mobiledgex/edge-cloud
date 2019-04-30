@@ -21,6 +21,9 @@ make clean
                     '''
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'git clean edge-cloud', script: 'git clean -f -d'
+                }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make tools', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
 export GOPATH=$WORKSPACE/go
