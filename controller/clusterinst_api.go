@@ -9,6 +9,7 @@ import (
 	flavor "github.com/mobiledgex/edge-cloud/flavor"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -117,6 +118,9 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared
+	}
+	if in.Key.CloudletKey.OperatorKey.Name == cloudcommon.OperatorAzure {
+		in.Key.ClusterKey.Name = azureSanitize(in.Key.ClusterKey.Name)
 	}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if clusterInstApi.store.STMGet(stm, &in.Key, in) {
@@ -526,4 +530,11 @@ func (s *ClusterInstApi) ReplaceErrorState(in *edgeproto.ClusterInst, newState e
 		}
 		return nil
 	})
+}
+
+//removes periods from the name since azure doesnt allow it
+func azureSanitize(clusterName string) string {
+	r := strings.NewReplacer(
+		".", "")
+	return r.Replace(clusterName)
 }
