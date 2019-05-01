@@ -122,6 +122,7 @@ func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
 
 func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var app edgeproto.App
+	var err error
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
@@ -133,10 +134,25 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 		}
 	}
 	s.cache.Mux.Unlock()
+
+	//spin until the timeout
+	var spinTime time.Duration
+	start := time.Now()
 	for _, val := range apps {
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
-		if err := s.deleteAppInstInternal(DefCallContext(), val, cb); err != nil {
+		err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+		for err.Error() == "AppInst busy, cannot delete" {
+			spinTime = time.Since(start)
+			if spinTime > DeleteAppInstTimeout {
+				log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app" val.Key,AppKey.Name)
+				return err
+			}
+			log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", val.Key.AppKey.Name)
+			time.Sleep(500 * time.Millisecond)
+			err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+		}
+		if err != nil {
 			return err
 		}
 	}
@@ -558,17 +574,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return objstore.ErrKVStoreKeyNotFound
 		}
 
-		//spin until the timeout
-		var spinTime time.Duration
-		start := time.Now()
-		for !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
-			//wait 0.5s before trying again
-			time.Sleep(500 * time.Millisecond)
-			//check if we went past the timeout
-			spinTime = time.Since(start)
-			if spinTime > DeleteAppInstTimeout {
-				return errors.New("AppInst busy, cannot delete")
-			}
+		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
+			return errors.New("AppInst busy, cannot delete")
 		}
 
 		var cloudlet edgeproto.Cloudlet
