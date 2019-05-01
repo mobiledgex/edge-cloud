@@ -557,9 +557,20 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
-		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
-			return errors.New("AppInst busy, cannot delete")
+
+		//spin until the timeout
+		var spinTime time.Duration
+		start := time.Now()
+		for !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
+			//wait 0.5s before trying again
+			time.Sleep(500 * time.Millisecond)
+			//check if we went past the timeout
+			spinTime = time.Since(start)
+			if spinTime > DeleteAppInstTimeout {
+				return errors.New("AppInst busy, cannot delete")
+			}
 		}
+
 		var cloudlet edgeproto.Cloudlet
 		if !defaultCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
