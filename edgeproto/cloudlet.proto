@@ -57,6 +57,10 @@ message GcpProperties{
   string project = 1;
   // availability zone
   string zone = 2;
+  // service account to login with
+  string service_account = 3;
+  // vault credentials link
+  string GCP_auth_key_url = 4;
 }
 
 message OpenStackProperties{
