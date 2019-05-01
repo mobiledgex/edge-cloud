@@ -104,6 +104,8 @@ func main() {
 	sync.Start()
 	defer sync.Done()
 
+	// register controller must be called before starting Notify protocol
+	// to set up controllerAliveLease.
 	err = controllerApi.registerController()
 	if err != nil {
 		log.FatalLog("Failed to register controller", "err", err)

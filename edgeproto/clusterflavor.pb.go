@@ -702,10 +702,11 @@ func (s *ClusterFlavorStore) STMGet(stm concurrency.STM, key *ClusterFlavorKey, 
 	return true
 }
 
-func (s *ClusterFlavorStore) STMPut(stm concurrency.STM, obj *ClusterFlavor) {
+func (s *ClusterFlavorStore) STMPut(stm concurrency.STM, obj *ClusterFlavor, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterFlavor", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterFlavorStore) STMDel(stm concurrency.STM, key *ClusterFlavorKey) {
