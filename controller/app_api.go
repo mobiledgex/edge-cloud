@@ -176,7 +176,7 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 		return &edgeproto.Result{}, err
 	}
 	if in.DeploymentManifest != "" {
-		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.DeploymentManifest)
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest)
 		if err != nil {
 			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest %v", err)
 		}
