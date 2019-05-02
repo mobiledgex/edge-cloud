@@ -372,6 +372,18 @@ func LProtoStr(proto dme.LProto) (string, error) {
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
+func L4ProtoStr(proto dme.LProto) (string, error) {
+	switch proto {
+	case dme.LProto_LProtoHTTP:
+		fallthrough
+	case dme.LProto_LProtoTCP:
+		return "tcp", nil
+	case dme.LProto_LProtoUDP:
+		return "udp", nil
+	}
+	return "", fmt.Errorf("Invalid proto %d", proto)
+}
+
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
 	strs := strings.Split(ports, ",")
