@@ -122,6 +122,7 @@ func (s *AppInstApi) UsesClusterInst(key *edgeproto.ClusterInstKey) bool {
 
 func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	var app edgeproto.App
+	var err error
 	apps := make(map[edgeproto.AppInstKey]*edgeproto.AppInst)
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting appinsts ", "cluster", key.ClusterKey.Name)
 	s.cache.Mux.Lock()
@@ -133,10 +134,28 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 		}
 	}
 	s.cache.Mux.Unlock()
+
+	//Spin in case cluster was just created and apps are still in the creation process and cannot be deleted
+	var spinTime time.Duration
+	start := time.Now()
 	for _, val := range apps {
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
-		if err := s.deleteAppInstInternal(DefCallContext(), val, cb); err != nil {
+		for {
+			err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+			if err != nil && err.Error() == "AppInst busy, cannot delete" {
+				spinTime = time.Since(start)
+				if spinTime > DeleteAppInstTimeout {
+					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", val.Key.AppKey.Name)
+					return err
+				}
+				log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", val.Key.AppKey.Name)
+				time.Sleep(500 * time.Millisecond)
+			} else { //if its anything other than an appinst busy error, break out of the spin
+				break
+			}
+		}
+		if err != nil {
 			return err
 		}
 	}
@@ -557,9 +576,11 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
+
 		if !cctx.Undo && in.State != edgeproto.TrackedState_Ready && in.State != edgeproto.TrackedState_CreateError && in.State != edgeproto.TrackedState_DeleteError && !ignoreTransient(cctx, in.State) {
 			return errors.New("AppInst busy, cannot delete")
 		}
+
 		var cloudlet edgeproto.Cloudlet
 		if !defaultCloudlet {
 			if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {
