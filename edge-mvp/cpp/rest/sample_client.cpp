@@ -27,8 +27,8 @@ class MexRestClient {
     string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
 
     unsigned long timeoutSec = 5000;
-    const string appName = "EmptyMatchEngineApp"; // Your application name
-    const string devName = "EmptyMatchEngineApp"; // Your developer name
+    const string devName = "MobiledgeX"; // Your developer name
+    const string appName = "MobiledgeX SDK Demo"; // Your application name
     const string appVersionStr = "1.0";
 
     // SSL files:
@@ -78,8 +78,8 @@ class MexRestClient {
     // A C++ GPS location provider/binding is needed here.
     json retrieveLocation() {
         json location;
-        location["latitude"] = -122.149349;
-        location["longitude"] = 37.459609;
+        location["latitude"] = 37.459609;
+        location["longitude"] = -122.149349;
         location["horizontal_accuracy"] = 5;
         location["vertical_accuracy"] = 20;
         location["altitude"] = 100;
@@ -390,11 +390,21 @@ int main() {
         string baseuri;
         json loc = mexClient->retrieveLocation();
 
+        string yn;
+        cout << "Use the demo server? [yN]" << endl;
+        cin >> yn;
+        if (yn.compare("y") == 0) {
+          baseuri = mexClient->generateBaseUri("mexdemo", mexClient->dmePort);
+        } else {
+          baseuri = mexClient->generateBaseUri(mexClient->getCarrierName(), mexClient->dmePort);
+        }
+
+
         cout << "Register MEX client." << endl;
         cout << "====================" << endl
              << endl;
 
-        baseuri = mexClient->generateBaseUri(mexClient->getCarrierName(), mexClient->dmePort);
+
         string strRegisterClientReply;
         json registerClientRequest = mexClient->createRegisterClientRequest();
         json registerClientReply = mexClient->RegisterClient(baseuri, registerClientRequest, strRegisterClientReply, httpResponse);
@@ -419,7 +429,6 @@ int main() {
         cout << "===================================" << endl
              << endl;
 
-        baseuri = mexClient->generateBaseUri(mexClient->getCarrierName(), mexClient->dmePort);
         loc = mexClient->retrieveLocation();
         string strVerifyLocationReply;
         json verifyLocationRequest = mexClient->createVerifyLocationRequest(mexClient->getCarrierName(), loc, "");
@@ -438,7 +447,6 @@ int main() {
         cout << "===========================================================" << endl
              << endl;
 
-        baseuri = mexClient->generateBaseUri(mexClient->getCarrierName(), mexClient->dmePort);
         loc = mexClient->retrieveLocation();
         string strFindCloudletReply;
         json findCloudletRequest = mexClient->createFindCloudletRequest(mexClient->getCarrierName(), loc);
