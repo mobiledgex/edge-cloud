@@ -135,22 +135,25 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 	}
 	s.cache.Mux.Unlock()
 
-	//spin until the timeout
+	//Spin in case cluster was just created and apps are still in the creation process and cannot be deleted
 	var spinTime time.Duration
 	start := time.Now()
 	for _, val := range apps {
 		log.DebugLog(log.DebugLevelApi, "Auto-deleting appinst ", "appinst", val.Key.AppKey.Name)
 		cb.Send(&edgeproto.Result{Message: "Autodeleting appinst " + val.Key.AppKey.Name})
-		err = s.deleteAppInstInternal(DefCallContext(), val, cb)
-		for err != nil && err.Error() == "AppInst busy, cannot delete" {
-			spinTime = time.Since(start)
-			if spinTime > DeleteAppInstTimeout {
-				log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", val.Key.AppKey.Name)
-				return err
-			}
-			log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", val.Key.AppKey.Name)
-			time.Sleep(500 * time.Millisecond)
+		for {
 			err = s.deleteAppInstInternal(DefCallContext(), val, cb)
+			if err != nil && err.Error() == "AppInst busy, cannot delete" {
+				spinTime = time.Since(start)
+				if spinTime > DeleteAppInstTimeout {
+					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", val.Key.AppKey.Name)
+					return err
+				}
+				log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", val.Key.AppKey.Name)
+				time.Sleep(500 * time.Millisecond)
+			} else { //if its anything other than an appinst busy error, break out of the spin
+				break
+			}
 		}
 		if err != nil {
 			return err
