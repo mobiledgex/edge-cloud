@@ -6,4 +6,4 @@ protoc:
     - ../../../gogo/protobuf/
     - ../../../grpc-ecosystem/grpc-gateway/third_party/googleapis/
 lint:
-  group: empty
+  group: google
