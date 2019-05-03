@@ -31,7 +31,7 @@ func AppPortSlicer(in *distributed_match_engine.AppPort) []string {
 	s = append(s, distributed_match_engine.LProto_name[int32(in.Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
-	s = append(s, in.PublicPath)
+	s = append(s, in.PathPrefix)
 	s = append(s, in.FQDNPrefix)
 	return s
 }
@@ -41,7 +41,7 @@ func AppPortHeaderSlicer() []string {
 	s = append(s, "Proto")
 	s = append(s, "InternalPort")
 	s = append(s, "PublicPort")
-	s = append(s, "PublicPath")
+	s = append(s, "PathPrefix")
 	s = append(s, "FQDNPrefix")
 	return s
 }
