@@ -33,6 +33,10 @@ func CreateAppInst(client pc.PlatformClient, names *KubeNames, app *edgeproto.Ap
 	if err != nil {
 		return fmt.Errorf("error deploying kubernetes app, %s, %v", out, err)
 	}
+
+	// TODO: check pod status. For example, above command may
+	// succeed but pod state may be ErrImagePull if it can't access the image.
+
 	log.DebugLog(log.DebugLevelMexos, "done kubectl create")
 	return nil
 }

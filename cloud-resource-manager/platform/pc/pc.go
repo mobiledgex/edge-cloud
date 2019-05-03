@@ -49,3 +49,12 @@ func CopyFile(client PlatformClient, src, dst string) error {
 	}
 	return err
 }
+
+func Run(client PlatformClient, cmd string) error {
+	out, err := client.Output(cmd)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cmd failed", "cmd", cmd, "err", err, "out", out)
+		return fmt.Errorf("command \"%s\" failed, %v", cmd, err)
+	}
+	return nil
+}
