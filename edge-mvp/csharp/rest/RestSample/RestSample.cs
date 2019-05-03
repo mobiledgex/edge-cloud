@@ -41,7 +41,7 @@ namespace RestSample
 
         // Await synchronously.
         var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-        Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie);
+        Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie + ", Status: " + registerClientReply.Status);
 
         // Do Verify and FindCloudlet in concurrent tasks:
         var loc = await locTask;

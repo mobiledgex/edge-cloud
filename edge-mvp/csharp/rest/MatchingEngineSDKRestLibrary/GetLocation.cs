@@ -26,8 +26,22 @@ namespace DistributedMatchEngine
     }
     [DataMember]
     public UInt32 Ver;
-    [DataMember]
-    public string Status = Loc_Status.LOC_UNKNOWN.ToString();
+
+    public Loc_Status Status = Loc_Status.LOC_UNKNOWN;
+
+    [DataMember(Name = "Status")]
+    private string LocStatusString
+    {
+      get
+      {
+        return Status.ToString();
+      }
+      set
+      {
+        Status = Enum.TryParse(value, out Loc_Status locStatus) ? locStatus : Loc_Status.LOC_UNKNOWN;
+      }
+    }
+
     [DataMember]
     public string CarrierName;
     [DataMember]
