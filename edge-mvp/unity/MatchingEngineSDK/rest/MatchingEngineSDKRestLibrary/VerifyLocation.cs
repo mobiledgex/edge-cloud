@@ -1,18 +1,24 @@
-﻿using System;
+using System;
+using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
 {
-  [Serializable]
+  [DataContract]
   public class VerifyLocationRequest
   {
+    [DataMember]
     public UInt32 Ver = 1;
+    [DataMember]
     public string SessionCookie;
+    [DataMember]
     public string CarrierName;
+    [DataMember]
     public Loc GpsLocation;
+    [DataMember]
     public string VerifyLocToken;
   };
 
-  [Serializable]
+  [DataContract]
   public class VerifyLocationReply
   {
     // Status of the reply
@@ -35,9 +41,40 @@ namespace DistributedMatchEngine
       LOC_ERROR_OTHER = 7
     }
 
+    [DataMember]
     public UInt32 ver;
-    public string tower_status = Tower_Status.TOWER_UNKNOWN.ToString();
-    public string gps_location_status = GPS_Location_Status.LOC_UNKNOWN.ToString();
+
+    public Tower_Status tower_status = Tower_Status.TOWER_UNKNOWN;
+
+    [DataMember(Name = "Tower_Status")]
+    private string Tower_Status_String
+    {
+      get
+      {
+        return tower_status.ToString();
+      }
+      set
+      {
+        tower_status = Enum.TryParse(value, out Tower_Status towerStatus) ? towerStatus : Tower_Status.TOWER_UNKNOWN;
+      }
+    }
+
+    public GPS_Location_Status gps_location_status = GPS_Location_Status.LOC_UNKNOWN;
+
+    [DataMember(Name = "gps_location_status")]
+    private string gps_location_status_string
+    {
+      get
+      {
+        return gps_location_status.ToString();
+      }
+      set
+      {
+        gps_location_status = Enum.TryParse(value, out GPS_Location_Status gpsLocation) ? gpsLocation : GPS_Location_Status.LOC_UNKNOWN;
+      }
+    }
+
+    [DataMember]
     public double GPS_Location_Accuracy_KM;
   }
 }
