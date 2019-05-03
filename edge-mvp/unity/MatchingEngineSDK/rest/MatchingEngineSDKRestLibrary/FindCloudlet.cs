@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
@@ -35,8 +35,22 @@ namespace DistributedMatchEngine
 
     [DataMember]
     public UInt32 Ver;
-    [DataMember]
-    public string status = FindStatus.FIND_UNKNOWN.ToString();
+
+    public FindStatus status = FindStatus.FIND_UNKNOWN;
+
+    [DataMember(Name = "status")]
+    private string StatusString
+    {
+      get
+      {
+        return status.ToString();
+      }
+      set
+      {
+        status = Enum.TryParse(value, out FindStatus findStatus) ? findStatus : FindStatus.FIND_UNKNOWN;
+      }
+    }
+
     [DataMember]
     public string FQDN;
     [DataMember]

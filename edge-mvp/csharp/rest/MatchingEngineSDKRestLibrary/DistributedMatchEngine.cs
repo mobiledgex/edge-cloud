@@ -474,7 +474,7 @@ namespace DistributedMatchEngine
         Ver = 1,
         SessionCookie = this.sessionCookie,
         LgId = lgId,
-        CommType = dlgCommType.ToString(), // JSON REST request needs a string, not integer-like type.
+        CommType = dlgCommType,
         UserData = userData
       };
     }
