@@ -432,6 +432,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 
 			for ii, _ := range ports {
+				if setL7Port(&ports[ii], &in.Key) {
+					log.DebugLog(log.DebugLevelApi,
+						"skip L7 port", "port", ports[ii])
+					continue
+				}
 				// Samsung enabling layer ignores port mapping.
 				// Attempt to use the internal port as the
 				// external port so port remap is not required.
@@ -447,8 +452,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					// before any apps are even present.
 					iport := ports[ii].InternalPort
 					if iport != 22 &&
-						iport != 18888 &&
-						iport != 18889 {
+						iport != cloudcommon.RootLBL7Port {
 						eport = iport
 					}
 				}
@@ -476,12 +480,24 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if isIPAllocatedPerService(in.Key.CloudletKey.OperatorKey.Name) {
 				//dedicated access in which each service gets a different ip
 				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
+				for ii, _ := range ports {
+					// No rootLB to do L7 muxing, and each
+					// service has it's own IP anyway so
+					// no muxing is needed. Treat http as tcp.
+					if ports[ii].Proto == dme.LProto_LProtoHTTP {
+						ports[ii].Proto = dme.LProto_LProtoTCP
+					}
+					ports[ii].PublicPort = ports[ii].InternalPort
+				}
 			} else {
 				//dedicated access in which IP is that of the LB
 				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.CloudletKey, clusterKey)
-			}
-			for ii, _ := range ports {
-				ports[ii].PublicPort = ports[ii].InternalPort
+				for ii, _ := range ports {
+					if setL7Port(&ports[ii], &in.Key) {
+						continue
+					}
+					ports[ii].PublicPort = ports[ii].InternalPort
+				}
 			}
 		}
 		if len(ports) > 0 {
@@ -592,6 +608,10 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if cloudletRefsApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudletRefs) {
 				// shared root load balancer
 				for ii, _ := range in.MappedPorts {
+					if in.MappedPorts[ii].Proto == dme.LProto_LProtoHTTP {
+						continue
+					}
+
 					p := in.MappedPorts[ii].PublicPort
 					protocol, err := getProtocolBitMap(in.MappedPorts[ii].Proto)
 
@@ -601,6 +621,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 					protos, _ := cloudletRefs.RootLbPorts[p]
 					if cloudletRefs.RootLbPorts != nil {
 						cloudletRefs.RootLbPorts[p] = removeProtocol(protos, protocol)
+						if cloudletRefs.RootLbPorts[p] == 0 {
+							delete(cloudletRefs.RootLbPorts, p)
+						}
 					}
 					cloudletRefsChanged = true
 				}
@@ -834,4 +857,13 @@ func setPortFQDNPrefix(port *dme.AppPort, objs []runtime.Object) {
 			}
 		}
 	}
+}
+
+func setL7Port(port *dme.AppPort, key *edgeproto.AppInstKey) bool {
+	if port.Proto != dme.LProto_LProtoHTTP {
+		return false
+	}
+	port.PublicPort = cloudcommon.RootLBL7Port
+	port.PathPrefix = cloudcommon.GetL7Path(key, port.InternalPort)
+	return true
 }

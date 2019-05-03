@@ -1128,7 +1128,7 @@ const AppInstFieldMappedPorts = "9"
 const AppInstFieldMappedPortsProto = "9.1"
 const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
-const AppInstFieldMappedPortsPublicPath = "9.4"
+const AppInstFieldMappedPortsPathPrefix = "9.4"
 const AppInstFieldMappedPortsFQDNPrefix = "9.5"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
@@ -1166,7 +1166,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsProto,
 	AppInstFieldMappedPortsInternalPort,
 	AppInstFieldMappedPortsPublicPort,
-	AppInstFieldMappedPortsPublicPath,
+	AppInstFieldMappedPortsPathPrefix,
 	AppInstFieldMappedPortsFQDNPrefix,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
@@ -1202,7 +1202,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsProto:                         struct{}{},
 	AppInstFieldMappedPortsInternalPort:                  struct{}{},
 	AppInstFieldMappedPortsPublicPort:                    struct{}{},
-	AppInstFieldMappedPortsPublicPath:                    struct{}{},
+	AppInstFieldMappedPortsPathPrefix:                    struct{}{},
 	AppInstFieldMappedPortsFQDNPrefix:                    struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
@@ -1325,8 +1325,8 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 				fields[AppInstFieldMappedPortsPublicPort] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
-			if m.MappedPorts[i0].PublicPath != o.MappedPorts[i0].PublicPath {
-				fields[AppInstFieldMappedPortsPublicPath] = struct{}{}
+			if m.MappedPorts[i0].PathPrefix != o.MappedPorts[i0].PathPrefix {
+				fields[AppInstFieldMappedPortsPathPrefix] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 			if m.MappedPorts[i0].FQDNPrefix != o.MappedPorts[i0].FQDNPrefix {
@@ -1480,7 +1480,7 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 				m.MappedPorts[i0].PublicPort = src.MappedPorts[i0].PublicPort
 			}
 			if _, set := fmap["9.4"]; set {
-				m.MappedPorts[i0].PublicPath = src.MappedPorts[i0].PublicPath
+				m.MappedPorts[i0].PathPrefix = src.MappedPorts[i0].PathPrefix
 			}
 			if _, set := fmap["9.5"]; set {
 				m.MappedPorts[i0].FQDNPrefix = src.MappedPorts[i0].FQDNPrefix
