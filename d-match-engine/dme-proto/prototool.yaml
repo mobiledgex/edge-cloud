@@ -1,0 +1,11 @@
+protoc:
+  version: 3.7.0
+  includes:
+    - ../../../../grpc-ecosystem/grpc-gateway/third_party/googleapis/
+lint:
+  group: empty
+  rules:
+    # The specific linters to add.
+    add:
+      - ENUM_NAMES_CAMEL_CASE
+      - ENUM_NAMES_CAPITALIZED

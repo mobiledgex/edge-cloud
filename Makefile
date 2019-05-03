@@ -62,6 +62,10 @@ tools:
 doc:
 	make -C edgeproto doc
 
+lint:
+	prototool lint edgeproto
+	prototool lint d-match-engine
+
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
 
