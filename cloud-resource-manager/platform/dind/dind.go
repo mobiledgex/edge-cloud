@@ -18,7 +18,7 @@ func (s *Platform) Init(key *edgeproto.CloudletKey) error {
 	if err != nil {
 		return err
 	}
-	err = nginx.InitL7Proxy(client, "")
+	err = nginx.InitL7Proxy(client, nginx.WithDockerPublishPorts())
 	if err != nil {
 		return err
 	}

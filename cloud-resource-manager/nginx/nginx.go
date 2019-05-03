@@ -30,7 +30,7 @@ func init() {
 	nginxL7ConfT = template.Must(template.New("l7app").Parse(nginxL7Conf))
 }
 
-func InitL7Proxy(client pc.PlatformClient, dindNetwork string) error {
+func InitL7Proxy(client pc.PlatformClient, ops ...Op) error {
 	out, err := client.Output("docker ps --format '{{.Names}}'")
 	if err != nil {
 		return err
@@ -41,11 +41,13 @@ func InitL7Proxy(client pc.PlatformClient, dindNetwork string) error {
 			return nil
 		}
 	}
-	return CreateNginxProxy(client, NginxL7Name, "", dindNetwork, []dme.AppPort{})
+	return CreateNginxProxy(client, NginxL7Name, "", []dme.AppPort{}, ops...)
 }
 
-func CreateNginxProxy(client pc.PlatformClient, name, originIP, dindNetwork string, ports []dme.AppPort) error {
+func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []dme.AppPort, ops ...Op) error {
 	log.DebugLog(log.DebugLevelMexos, "create nginx", "name", name, "originip", originIP, "ports", ports)
+	opts := Options{}
+	opts.Apply(ops)
 
 	out, err := client.Output("pwd")
 	if err != nil {
@@ -64,7 +66,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP, dindNetwork stri
 
 	useTLS := false
 	err = pc.Run(client, "ls cert.pem && ls key.pem")
-	if err != nil {
+	if err == nil {
 		useTLS = true
 	}
 	log.DebugLog(log.DebugLevelMexos, "nginx certs check",
@@ -74,7 +76,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP, dindNetwork stri
 	err = pc.Run(client, "touch "+errlogFile)
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos,
-			"nginx %s can't create %s", name, errlogFile)
+			"nginx %s can't create file %s", name, errlogFile)
 		return err
 	}
 	nconfName := dir + "/nginx.conf"
@@ -84,36 +86,41 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP, dindNetwork stri
 	}
 
 	cmdArgs := []string{"run", "-d", "--rm", "--name", name}
-	// Don't use host networking. Explicity set which ports are exposed.
-	// This avoids using up extra ports like port 80, which nginx listens
-	// to by default.
-	for _, p := range ports {
-		if p.Proto == dme.LProto_LProtoHTTP {
-			// L7 is handled by the L7 instance
-			continue
+	if opts.DockerPublishPorts {
+		for _, p := range ports {
+			if p.Proto == dme.LProto_LProtoHTTP {
+				// L7 is handled by the L7 instance
+				continue
+			}
+			proto := "tcp"
+			if p.Proto == dme.LProto_LProtoUDP {
+				proto = "udp"
+			}
+			pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
+			cmdArgs = append(cmdArgs, "-p", pstr)
 		}
-		proto := "tcp"
-		if p.Proto == dme.LProto_LProtoUDP {
-			proto = "udp"
+		if name == NginxL7Name {
+			// Special case. When the L7 nginx instance is created,
+			// there are no configs yet for L7. Expose the L7 port manually.
+			pstr := fmt.Sprintf("%d:%d/tcp", cloudcommon.RootLBL7Port, cloudcommon.RootLBL7Port)
+			cmdArgs = append(cmdArgs, "-p", pstr)
 		}
-		pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
-		cmdArgs = append(cmdArgs, "-p", pstr)
 	}
-	if name == NginxL7Name {
-		// Special case. When the L7 nginx instance is created,
-		// there are no configs yet for L7. Expose the L7 port manually.
-		pstr := fmt.Sprintf("%d:%d/tcp", cloudcommon.RootLBL7Port, cloudcommon.RootLBL7Port)
-		cmdArgs = append(cmdArgs, "-p", pstr)
-	}
-	if dindNetwork != "" {
-		// For dind, use the network which the dind cluster is on.
-		cmdArgs = append(cmdArgs, "--network", dindNetwork)
+	if opts.DockerNetwork != "" {
+		// For dind, we use the network which the dind cluster is on.
+		cmdArgs = append(cmdArgs, "--network", opts.DockerNetwork)
 	}
 	if useTLS {
 		cmdArgs = append(cmdArgs, "-v", pwd+"/cert.pem:/etc/ssl/certs/server.crt")
 		cmdArgs = append(cmdArgs, "-v", pwd+"/key.pem:/etc/ssl/certs/server.key")
 	}
-	cmdArgs = append(cmdArgs, []string{"-v", l7dir + ":/etc/nginx/L7", "-v", dir + ":/var/www/.cache", "-v", "/etc/ssl/certs:/etc/ssl/certs", "-v", errlogFile + ":/var/log/nginx/error.log", "-v", nconfName + ":/etc/nginx/nginx.conf", "nginx"}...)
+	cmdArgs = append(cmdArgs, []string{
+		"-v", l7dir + ":/etc/nginx/L7",
+		"-v", dir + ":/var/www/.cache",
+		"-v", "/etc/ssl/certs:/etc/ssl/certs",
+		"-v", errlogFile + ":/var/log/nginx/error.log",
+		"-v", nconfName + ":/etc/nginx/nginx.conf",
+		"nginx"}...)
 	cmd := "docker " + strings.Join(cmdArgs, " ")
 	log.DebugLog(log.DebugLevelMexos, "nginx docker command", "name", name,
 		"cmd", cmd)
@@ -262,6 +269,7 @@ http {
                       '"$http_user_agent" "$http_x_forwarded_for"';
     access_log  /var/log/nginx/access.log  main;
     keepalive_timeout  65;
+    server_tokens off;
     server {
         listen {{.L7Port}}{{if .UseTLS}} ssl{{end}};
 {{- if .UseTLS}}
@@ -320,4 +328,29 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 
 	log.DebugLog(log.DebugLevelMexos, "deleted nginx", "name", name)
 	return nil
+}
+
+type Options struct {
+	DockerPublishPorts bool
+	DockerNetwork      string
+}
+
+type Op func(opts *Options)
+
+func WithDockerNetwork(network string) Op {
+	return func(opts *Options) {
+		opts.DockerNetwork = network
+	}
+}
+
+func WithDockerPublishPorts() Op {
+	return func(opts *Options) {
+		opts.DockerPublishPorts = true
+	}
+}
+
+func (o *Options) Apply(ops []Op) {
+	for _, op := range ops {
+		op(o)
+	}
 }

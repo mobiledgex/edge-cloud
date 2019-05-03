@@ -31,7 +31,12 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 		}
 		masterIP := cluster.MasterAddr
 		network := GetDockerNetworkName(cluster)
-		err = nginx.CreateNginxProxy(client, names.AppName, masterIP, network, appInst.MappedPorts)
+		err = nginx.CreateNginxProxy(client,
+			names.AppName,
+			masterIP,
+			appInst.MappedPorts,
+			nginx.WithDockerNetwork(network),
+			nginx.WithDockerPublishPorts())
 		if err != nil {
 			log.DebugLog(log.DebugLevelMexos, "cannot add nginx proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
 			return err
