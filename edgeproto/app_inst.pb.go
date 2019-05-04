@@ -1971,7 +1971,8 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		}
 	case <-failed:
 		if c.Get(key, &info) {
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
 			// this shouldn't happen, since only way to get here
 			// is if info state is set to Error
@@ -1981,7 +1982,8 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		hasInfo := c.Get(key, &info)
 		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
