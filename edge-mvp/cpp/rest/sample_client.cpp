@@ -415,7 +415,8 @@ int main() {
             return 1;
         } else {
             cout << "REST RegisterClient Status: "
-                 << ", Dump: [" << registerClientReply.dump() << "]"
+                 << ", Version: " << registerClientReply["Ver"]
+                 << ", Client Status: " << registerClientReply["Status"]
                  << endl
                  << endl;
         }
