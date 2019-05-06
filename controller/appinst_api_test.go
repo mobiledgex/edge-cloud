@@ -59,9 +59,9 @@ func TestAppInstApi(t *testing.T) {
 		// make sure error matches responder
 		// if app-inst triggers auto-cluster, the error will be for a cluster
 		if strings.Contains(err.Error(), "cluster inst") {
-			assert.Equal(t, "Encountered failures: [crm create cluster inst failed]", err.Error())
+			assert.Equal(t, "Encountered failures: crm create cluster inst failed", err.Error())
 		} else {
-			assert.Equal(t, "Encountered failures: [crm create app inst failed]", err.Error())
+			assert.Equal(t, "Encountered failures: crm create app inst failed", err.Error())
 		}
 	}
 	responder.SetSimulateAppCreateFailure(false)
