@@ -316,6 +316,7 @@ appinstances:
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002
@@ -355,6 +356,7 @@ appinstances:
   - proto: LProtoHTTP
     internalport: 443
     publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
   - proto: LProtoUDP
     internalport: 10002
     publicport: 10002
