@@ -7,7 +7,7 @@ tests:
 - includefile: stop_cleanup.yml
 
 - name: deploy and start services 
-  actions: [deploy,start]
+  actions: [start]
 
 - name: verify services are running
   actions: [status]

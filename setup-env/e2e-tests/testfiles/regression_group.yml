@@ -8,8 +8,6 @@ tests:
     loops: 2
   - includefile: add_delete_2apps.yml
     loops: 2
-  - includefile: mc_add_delete.yml
-    loops: 2
   - includefile: get_appinstlist.yml
   - includefile: get_appinstlist.yml
     api: rest
@@ -34,7 +32,6 @@ tests:
   - includefile: default_cluster_test.yml
   - includefile: crminfo.yml
   - includefile: update_move_cloudlet1.yml 
-  - includefile: fetchlogs.yml
   - includefile: check_nodes.yml
   - includefile: add_delete_add_appinst_restartCrm_delete_add_appinst.yml
   - includefile: stop_cleanup.yml

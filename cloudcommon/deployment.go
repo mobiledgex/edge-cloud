@@ -13,13 +13,13 @@ import (
 var AppDeploymentTypeKubernetes = "kubernetes"
 var AppDeploymentTypeVM = "vm"
 var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDockerSwarm = "docker-swarm"
+var AppDeploymentTypeDocker = "docker"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
 	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
-	AppDeploymentTypeDockerSwarm,
+	AppDeploymentTypeDocker,
 }
 
 func IsValidDeploymentType(appDeploymentType string) bool {
@@ -34,7 +34,7 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
-		if deployment == AppDeploymentTypeKubernetes { // also later docker
+		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeQCOW:
@@ -49,12 +49,15 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
-func IsValidDeploymentManifest(appDeploymentType string, manifest string) error {
+func IsValidDeploymentManifest(appDeploymentType, command, manifest string) error {
 	if appDeploymentType == AppDeploymentTypeVM {
+		if command != "" {
+			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
+		}
 		if strings.HasPrefix(manifest, "#cloud-config") {
 			return nil
 		}
-		return fmt.Errorf("Only cloud-init script support, must start with '#cloud-config'")
+		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
 	}
 	return nil
 }

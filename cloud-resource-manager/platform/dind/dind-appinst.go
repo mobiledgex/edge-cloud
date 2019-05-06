@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
@@ -20,6 +21,26 @@ func (s *Platform) CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	names, err := k8smgmt.GetKubeNames(clusterInst, app, appInst)
 	if err != nil {
 		return err
+	}
+
+	if len(appInst.MappedPorts) > 0 {
+		log.DebugLog(log.DebugLevelMexos, "AddNginxProxy for dind", "ports", appInst.MappedPorts)
+		cluster, err := FindCluster(names.ClusterName)
+		if err != nil {
+			return err
+		}
+		masterIP := cluster.MasterAddr
+		network := GetDockerNetworkName(cluster)
+		err = nginx.CreateNginxProxy(client,
+			names.AppName,
+			masterIP,
+			appInst.MappedPorts,
+			nginx.WithDockerNetwork(network),
+			nginx.WithDockerPublishPorts())
+		if err != nil {
+			log.DebugLog(log.DebugLevelMexos, "cannot add nginx proxy", "appName", names.AppName, "ports", appInst.MappedPorts)
+			return err
+		}
 	}
 
 	if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes {
@@ -58,11 +79,19 @@ func (s *Platform) DeleteAppInst(clusterInst *edgeproto.ClusterInst, app *edgepr
 	if err != nil {
 		return err
 	}
+
+	if len(appInst.MappedPorts) > 0 {
+		log.DebugLog(log.DebugLevelMexos, "DeleteNginxProxy for dind")
+		if err = nginx.DeleteNginxProxy(client, names.AppName); err != nil {
+			log.DebugLog(log.DebugLevelMexos, "cannot delete nginx proxy", "name", names.AppName)
+			return err
+		}
+	}
 	return nil
 }
 
 func (s *Platform) GetAppInstRuntime(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst) (*edgeproto.AppInstRuntime, error) {
-	client, err := s.GetPlatformClient()
+	client, err := s.GetPlatformClient(clusterInst)
 	if err != nil {
 		return nil, err
 	}

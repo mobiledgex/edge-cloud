@@ -1,8 +1,0 @@
-
-cloudflare:
-  zone: mobiledgex.net
-  records:
-  - name: tdg.dme.mobiledgex.net
-    type: A
-    content: 80.187.136.18
-   

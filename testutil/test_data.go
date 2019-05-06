@@ -178,6 +178,7 @@ var AppData = []edgeproto.App{
 			Version:      "1.2.0",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
+		ImagePath:     "http://somerepo/image/path/ai/1.2.0",
 		AccessPorts:   "http:8080",
 		DefaultFlavor: FlavorData[1].Key,
 	},
@@ -188,6 +189,7 @@ var AppData = []edgeproto.App{
 			Version:      "0.0.1",
 		},
 		ImageType:     edgeproto.ImageType_ImageTypeQCOW,
+		ImagePath:     "http://somerepo/image/path/myreality/0.0.1",
 		AccessPorts:   "udp:1024",
 		DefaultFlavor: FlavorData[2].Key,
 		Cluster:       ClusterData[2].Key,
@@ -362,6 +364,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: util.K8SSanitize("AutoCluster" + AppData[1].Key.Name),
 			},
 			CloudletKey: CloudletData[1].Key,
+			Developer:   AppData[1].Key.DeveloperKey.Name,
 		},
 		Flavor:       ClusterData[0].DefaultFlavor,
 		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
@@ -375,6 +378,7 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 				Name: util.K8SSanitize("AutoCluster" + AppData[2].Key.Name),
 			},
 			CloudletKey: CloudletData[2].Key,
+			Developer:   AppData[2].Key.DeveloperKey.Name,
 		},
 		Flavor:       ClusterData[1].DefaultFlavor,
 		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
@@ -652,7 +656,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedRam:     GetCloudletUsedRam(0, 1, 0),
 		UsedVcores:  GetCloudletUsedVcores(0, 1, 0),
 		UsedDisk:    GetCloudletUsedDisk(0, 1, 0),
-		RootLbPorts: map[int32]int32{80: 1, 443: 1, 10000: 1, 10002: 3},
+		RootLbPorts: map[int32]int32{80: 1, 10002: 3},
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1]: (shared,dedicated,shared)
 	// AppInstData[4,5] -> ports[tcp:443,udp:11111;udp:2024]
@@ -667,7 +671,7 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 		UsedVcores:     GetCloudletUsedVcores(0, 2, 1),
 		UsedDisk:       GetCloudletUsedDisk(0, 2, 1),
 		UsedDynamicIps: 1,
-		RootLbPorts:    map[int32]int32{443: 1, 11111: 2, 2024: 2},
+		RootLbPorts:    map[int32]int32{10000: 1, 11111: 2, 2024: 2},
 	},
 	// ClusterInstData[6]: (no app insts on this clusterinst) (shared)
 	edgeproto.CloudletRefs{

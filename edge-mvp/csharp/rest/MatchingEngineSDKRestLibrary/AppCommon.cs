@@ -19,8 +19,21 @@ namespace DistributedMatchEngine
   public class AppPort
   {
     // TCP (L4), UDP (L4), or HTTP (L7) protocol
-    [DataMember]
-    public string proto = LProto.LProtoUnknown.ToString();
+    public LProto proto = LProto.LProtoUnknown;
+
+    [DataMember(Name = "proto")]
+    private string protoString
+    {
+      get
+      {
+        return proto.ToString();
+      }
+      set
+      {
+        proto = Enum.TryParse(value, out LProto lproto) ? lproto : LProto.LProtoUnknown;
+      }
+    }
+
     // Container port
     [DataMember]
     public Int32 internal_port;

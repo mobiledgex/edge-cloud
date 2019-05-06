@@ -1198,10 +1198,11 @@ func (s *ClusterInstStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf 
 	return true
 }
 
-func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst) {
+func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInst", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterInstStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {
@@ -1499,7 +1500,8 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		}
 	case <-failed:
 		if c.Get(key, &info) {
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
 			// this shouldn't happen, since only way to get here
 			// is if info state is set to Error
@@ -1509,7 +1511,8 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		hasInfo := c.Get(key, &info)
 		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
@@ -1875,10 +1878,11 @@ func (s *ClusterInstInfoStore) STMGet(stm concurrency.STM, key *ClusterInstKey, 
 	return true
 }
 
-func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo) {
+func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInstInfo", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *ClusterInstInfoStore) STMDel(stm concurrency.STM, key *ClusterInstKey) {

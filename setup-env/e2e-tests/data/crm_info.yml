@@ -54,6 +54,7 @@ clusterinsts:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
+    developer: AcmeAppCo
   flavor:
     name: c1.small
   liveness: LivenessDynamic
@@ -69,6 +70,7 @@ clusterinsts:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
+    developer: AcmeAppCo
   flavor:
     name: c1.small
   liveness: LivenessDynamic
@@ -304,6 +306,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
+    developer: AcmeAppCo
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTCP
@@ -342,6 +345,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
+    developer: AcmeAppCo
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTCP
@@ -380,6 +384,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
+    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -406,6 +411,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
+    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -432,6 +438,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-1
+    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -458,6 +465,7 @@ appinstances:
       operatorkey:
         name: tmus
       name: tmus-cloud-2
+    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium

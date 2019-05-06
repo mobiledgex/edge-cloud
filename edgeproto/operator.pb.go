@@ -587,10 +587,11 @@ func (s *OperatorStore) STMGet(stm concurrency.STM, key *OperatorKey, buf *Opera
 	return true
 }
 
-func (s *OperatorStore) STMPut(stm concurrency.STM, obj *Operator) {
+func (s *OperatorStore) STMPut(stm concurrency.STM, obj *Operator, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Operator", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *OperatorStore) STMDel(stm concurrency.STM, key *OperatorKey) {

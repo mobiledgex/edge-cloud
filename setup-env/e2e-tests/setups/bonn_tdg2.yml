@@ -22,116 +22,106 @@ cloudflare:
     content: "{{vm1_external_ip}}"
 
 locsims:
-- locapisimlocal:
-    name: locsim1
-    port: 8888
-    locfile: "{{datadir}}/locsim.yml"
-    geofile: "{{datadir}}/geocode.dat"
-    country: GE
+- name: locsim1
+  port: 8888
+  locfile: "{{datadir}}/locsim.yml"
+  geofile: "{{datadir}}/geocode.dat"
+  country: GE
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 toksims:
-- toksrvsimlocal:
-    name: toksim1
-    port: 9999
+- name: toksim1
+  port: 9999
   hostname: "{{vm1_external_ip}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 etcds:
-- etcdlocal:
-    name: etcd1
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
-    peeraddrs: "http://{{vm1_internal_ip}}:30011"
-    clientaddrs: "http://{{vm1_internal_ip}}:30001"
-    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: "http://{{vm1_internal_ip}}:30011"
+  clientaddrs: "http://{{vm1_internal_ip}}:30001"
+  initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
   hostname: "{{vm1_external_ip}}"
 
-- etcdlocal:
-    name: etcd2
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
-    peeraddrs: "http://{{vm1_internal_ip}}:30012"
-    clientaddrs: "http://{{vm1_internal_ip}}:30002"
-    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: "http://{{vm1_internal_ip}}:30012"
+  clientaddrs: "http://{{vm1_internal_ip}}:30002"
+  initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
   hostname: "{{vm1_external_ip}}"
 
-- etcdlocal:
-    name: etcd3
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
-    peeraddrs: "http://{{vm1_internal_ip}}:30013"
-    clientaddrs: "http://{{vm1_internal_ip}}:30003"
-    initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+  peeraddrs: "http://{{vm1_internal_ip}}:30013"
+  clientaddrs: "http://{{vm1_internal_ip}}:30003"
+  initialcluster: "etcd1=http://{{vm1_internal_ip}}:30011,etcd2=http://{{vm1_internal_ip}}:30012,etcd3=http://{{vm1_internal_ip}}:30013"
   hostname: "{{vm1_external_ip}}"
 
 controllers:
-- controllerlocal:
-    name: ctrl1
-    etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
-    apiaddr: "0.0.0.0:55001"
-    httpaddr: "0.0.0.0:36001"
-    notifyaddr: "{{vm1_internal_ip}}:37001"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: ctrl1
+  etcdaddrs: "http://{{vm1_internal_ip}}:30001,http://{{vm1_internal_ip}}:30002,http://{{vm1_internal_ip}}:30003"
+  apiaddr: "0.0.0.0:55001"
+  httpaddr: "0.0.0.0:36001"
+  notifyaddr: "{{vm1_internal_ip}}:37001"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
    
 
 dmes:
-- dmelocal:
-    name: dme1
-    apiaddr: "0.0.0.0:50051"
-    httpaddr: "0.0.0.0:38001"
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    vaultaddr: "https://vault.mobiledgex.net"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonnsdktestcloudlet"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: dme1
+  apiaddr: "0.0.0.0:50051"
+  httpaddr: "0.0.0.0:38001"
+  notifyaddrs: "{{vm1_internal_ip}}:37001"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  vaultaddr: "https://vault.mobiledgex.net"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"bonnsdktestcloudlet"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonndme}}"
   envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: seC2835!
-     VAULT_ROLE_ID: b95e3309-5964-89a2-5647-e86f745f20c7
-     VAULT_SECRET_ID: b6c6c629-c99d-25f8-b26d-1afc5bf5d654
+    LOCAPI_USER: mexserver
+    LOCAPI_PASSWD: seC2835!
+    VAULT_ROLE_ID: b95e3309-5964-89a2-5647-e86f745f20c7
+    VAULT_SECRET_ID: b6c6c629-c99d-25f8-b26d-1afc5bf5d654
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 crms:
-- crmlocal:
-    name: crm1
-    apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm1
+  apiaddr: "0.0.0.0:55091"
+  notifyaddrs: "{{vm1_internal_ip}}:37001"
+  cloudletkey: '{"operator_key":{"name":"T-Mobile"},"name":"tmocloud1"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
 ## Fake versions of the mexdemo cloudlet to give the same fqdns and allow the apps to be reached
-- crmlocal:
-    name: crm2
-    apiaddr: "0.0.0.0:55092"
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm2
+  apiaddr: "0.0.0.0:55092"
+  notifyaddrs: "{{vm1_internal_ip}}:37001"
+  cloudletkey: '{"operator_key":{"name":"TDG"},"name":"mexdemo-bonn-cloudlet"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231
 
-- crmlocal:
-    name: crm3
-    apiaddr: "0.0.0.0:55093"
-    notifyaddrs: "{{vm1_internal_ip}}:37001"
-    cloudletkey: '{"operator_key":{"name":"azure"},"name":"mexdemo-westindia-cloudlet"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm3
+  apiaddr: "0.0.0.0:55093"
+  notifyaddrs: "{{vm1_internal_ip}}:37001"
+  cloudletkey: '{"operator_key":{"name":"azure"},"name":"mexdemo-westindia-cloudlet"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "{{bonncrm}}"
   dockerimage: registry.mobiledgex.net:5000/mobiledgex/edge-cloud:jlm1231

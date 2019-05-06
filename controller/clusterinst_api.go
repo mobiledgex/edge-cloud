@@ -188,7 +188,11 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor, "Master Flavor", in.MasterFlavor)
-
+		if clusterFlavor.NumMasters == 0 {
+			if in.IpAccess != edgeproto.IpAccess_IpAccessDedicated {
+				return fmt.Errorf("NumMasters cannot be 0 except for dedicated clusters")
+			}
+		}
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(clusterFlavor.MaxNodes)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(clusterFlavor.MaxNodes)

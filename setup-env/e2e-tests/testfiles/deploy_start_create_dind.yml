@@ -3,8 +3,8 @@
 
 tests:
 
-- name: deploy and start 
-  actions: [deploy,start]
+- name: start 
+  actions: [start]
 
 - name: create provisioning
   apifile: "{{datadir}}/appdata_dind.yml"

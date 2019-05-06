@@ -24,7 +24,7 @@ message AppPort {
   // Public facing port for TCP/UDP (may be mapped on shared LB reverse proxy)
   int32 public_port = 3;
   // Public facing path for HTTP L7 access.
-  string public_path = 4;
+  string path_prefix = 4;
   // FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
   string FQDN_prefix = 5;
 }

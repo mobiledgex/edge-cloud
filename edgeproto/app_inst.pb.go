@@ -1128,7 +1128,7 @@ const AppInstFieldMappedPorts = "9"
 const AppInstFieldMappedPortsProto = "9.1"
 const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
-const AppInstFieldMappedPortsPublicPath = "9.4"
+const AppInstFieldMappedPortsPathPrefix = "9.4"
 const AppInstFieldMappedPortsFQDNPrefix = "9.5"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
@@ -1166,7 +1166,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsProto,
 	AppInstFieldMappedPortsInternalPort,
 	AppInstFieldMappedPortsPublicPort,
-	AppInstFieldMappedPortsPublicPath,
+	AppInstFieldMappedPortsPathPrefix,
 	AppInstFieldMappedPortsFQDNPrefix,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
@@ -1202,7 +1202,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsProto:                         struct{}{},
 	AppInstFieldMappedPortsInternalPort:                  struct{}{},
 	AppInstFieldMappedPortsPublicPort:                    struct{}{},
-	AppInstFieldMappedPortsPublicPath:                    struct{}{},
+	AppInstFieldMappedPortsPathPrefix:                    struct{}{},
 	AppInstFieldMappedPortsFQDNPrefix:                    struct{}{},
 	AppInstFieldFlavorName:                               struct{}{},
 	AppInstFieldState:                                    struct{}{},
@@ -1325,8 +1325,8 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 				fields[AppInstFieldMappedPortsPublicPort] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
-			if m.MappedPorts[i0].PublicPath != o.MappedPorts[i0].PublicPath {
-				fields[AppInstFieldMappedPortsPublicPath] = struct{}{}
+			if m.MappedPorts[i0].PathPrefix != o.MappedPorts[i0].PathPrefix {
+				fields[AppInstFieldMappedPortsPathPrefix] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 			if m.MappedPorts[i0].FQDNPrefix != o.MappedPorts[i0].FQDNPrefix {
@@ -1480,7 +1480,7 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 				m.MappedPorts[i0].PublicPort = src.MappedPorts[i0].PublicPort
 			}
 			if _, set := fmap["9.4"]; set {
-				m.MappedPorts[i0].PublicPath = src.MappedPorts[i0].PublicPath
+				m.MappedPorts[i0].PathPrefix = src.MappedPorts[i0].PathPrefix
 			}
 			if _, set := fmap["9.5"]; set {
 				m.MappedPorts[i0].FQDNPrefix = src.MappedPorts[i0].FQDNPrefix
@@ -1669,10 +1669,11 @@ func (s *AppInstStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *AppInst
 	return true
 }
 
-func (s *AppInstStore) STMPut(stm concurrency.STM, obj *AppInst) {
+func (s *AppInstStore) STMPut(stm concurrency.STM, obj *AppInst, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInst", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *AppInstStore) STMDel(stm concurrency.STM, key *AppInstKey) {
@@ -1970,7 +1971,8 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		}
 	case <-failed:
 		if c.Get(key, &info) {
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
 			// this shouldn't happen, since only way to get here
 			// is if info state is set to Error
@@ -1980,7 +1982,8 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		hasInfo := c.Get(key, &info)
 		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
@@ -2429,10 +2432,11 @@ func (s *AppInstInfoStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *App
 	return true
 }
 
-func (s *AppInstInfoStore) STMPut(stm concurrency.STM, obj *AppInstInfo) {
+func (s *AppInstInfoStore) STMPut(stm concurrency.STM, obj *AppInstInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstInfo", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *AppInstInfoStore) STMDel(stm concurrency.STM, key *AppInstKey) {
