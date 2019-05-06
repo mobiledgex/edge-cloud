@@ -50,13 +50,19 @@ tests:
 - name: stop ctrl2 
   actions: [stop=ctrl2]
 
+- name: verify CRMs are ready after reconnecting to ctrl1
+  actions: [status=allcrms]
+
 - name: delete provisioning
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appdata.yml"
 
 - name: start ctrl2
   actions: [start=ctrl2]
-  
+
+- name: verify CRMs are ready
+  actions: [status=allcrms]
+
 - name: show ctrl1 provisioning, verify it is empty
   actions: [ctrlapi-show=ctrl1]
   compareyaml:
