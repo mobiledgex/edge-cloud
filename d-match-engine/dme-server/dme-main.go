@@ -163,21 +163,14 @@ func getAuthPublicKey(devname string, appname string, appvers string) (string, e
 	key.DeveloperKey.Name = devname
 	key.Name = appname
 	key.Version = appvers
-	authkey := ""
-	foundApp := false
 	tbl.Lock()
 	defer tbl.Unlock()
 
 	app, ok := tbl.apps[key]
 	if ok {
-		authkey = app.authPublicKey
-		foundApp = true
+		return app.authPublicKey, nil
 	}
-
-	if !foundApp {
-		return "", grpc.Errorf(codes.InvalidArgument, "app not found")
-	}
-	return authkey, nil
+	return "", grpc.Errorf(codes.NotFound, "app not found")
 }
 
 func (s *server) RegisterClient(ctx context.Context,
