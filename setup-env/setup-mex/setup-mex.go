@@ -89,7 +89,7 @@ func WaitForProcesses(processName string, procs []process.Process) bool {
 		go util.ConnectDme(dme, c)
 	}
 	for _, crm := range util.Deployment.Crms {
-		if processName != "" && processName != crm.Name {
+		if processName != "" && processName != crm.Name && processName != "allcrms" {
 			continue
 		}
 		count++
