@@ -49,7 +49,7 @@ func TestClusterInstApi(t *testing.T) {
 		err := clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 		assert.NotNil(t, err, "Create cluster inst responder failures")
 		// make sure error matches responder
-		assert.Equal(t, "Encountered failures: [crm create cluster inst failed]", err.Error())
+		assert.Equal(t, "Encountered failures: crm create cluster inst failed", err.Error())
 	}
 	responder.SetSimulateClusterCreateFailure(false)
 	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
