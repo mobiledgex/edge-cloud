@@ -15,34 +15,12 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor: x1.tiny
-  masterflavor: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor: x1.small
-  masterflavor: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor: x1.medium
-  masterflavor: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
 
 clusters:
 - key:
     name: autoclustersomeapplication1
   defaultflavor:
-    name: c1.small
+    name: x1.small
 
 clusterinsts:
 - key:
@@ -54,7 +32,8 @@ clusterinsts:
       name: tmus-cloud-1
   flavor:
     name: x1.small
-  nodes: 3
+  numnodes: 1
+  nummasters: 1
   liveness: LivenessDynamic
 - key:
     clusterkey:
@@ -65,7 +44,8 @@ clusterinsts:
       name: tmus-cloud-2
   flavor:
     name: x1.small
-  nodes: 3
+  numnodes: 1
+  nummasters: 1
   liveness: LivenessDynamic
 
 operators:
