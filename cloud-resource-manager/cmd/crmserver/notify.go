@@ -8,7 +8,6 @@ import (
 //NewNotifyHandler instantiates new notify handler
 func InitNotify(client *notify.Client, cd *crmutil.ControllerData) {
 	client.RegisterRecvFlavorCache(&cd.FlavorCache)
-	client.RegisterRecvClusterFlavorCache(&cd.ClusterFlavorCache)
 	client.RegisterRecvAppCache(&cd.AppCache)
 	client.RegisterRecvAppInstCache(&cd.AppInstCache)
 	client.RegisterRecvCloudletCache(&cd.CloudletCache)

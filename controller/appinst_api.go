@@ -322,12 +322,11 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			"Create auto-clusterinst",
 			"key", clusterInst.Key,
 			"appinst", in)
-		clusterflavorKey, err := GetClusterFlavorForFlavor(&in.Flavor)
-		if err != nil {
-			return fmt.Errorf("error getting flavor for auto ClusterInst, %s", err.Error())
-		}
-		clusterInst.Flavor = *clusterflavorKey
-		err = clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
+
+		clusterInst.Flavor = in.Flavor
+		clusterInst.NumMasters = 1
+		clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
+		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
 		}

@@ -76,7 +76,6 @@ func TestController(t *testing.T) {
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 	clusterClient := edgeproto.NewClusterApiClient(conn)
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
@@ -86,7 +85,6 @@ func TestController(t *testing.T) {
 
 	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
-	testutil.ClientClusterFlavorTest(t, "cud", clusterFlavorClient, testutil.ClusterFlavorData)
 	testutil.ClientClusterTest(t, "cud", clusterClient, testutil.ClusterData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
@@ -96,11 +94,9 @@ func TestController(t *testing.T) {
 
 	dmeNotify.WaitForAppInsts(6)
 	crmNotify.WaitForFlavors(3)
-	crmNotify.WaitForClusterFlavors(3)
 
 	assert.Equal(t, 6, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	assert.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, 4, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
 	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
 	assert.Equal(t, 6, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
@@ -202,7 +198,6 @@ func TestEdgeCloudBug26(t *testing.T) {
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 
 	yamlData := `
 operators:
@@ -221,16 +216,6 @@ flavors:
   ram: 1024
   vcpus: 1
   disk: 1
-clusterflavors:
-- key:
-    name: x1.small
-  nodeflavor:
-    name: m1.small
-  masterflavor:
-    name: m1.small
-  numnodes: 2
-  maxnodes: 2
-  masternodes: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -281,8 +266,6 @@ cloudletinfos:
 	assert.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
 	assert.Nil(t, err, "create flavor")
-	_, err = clusterFlavorClient.CreateClusterFlavor(ctx, &data.ClusterFlavors[0])
-	assert.Nil(t, err, "create cluster flavor")
 	_, err = appClient.CreateApp(ctx, &data.Applications[0])
 	assert.Nil(t, err, "create app")
 	_, err = operClient.CreateOperator(ctx, &data.Operators[0])

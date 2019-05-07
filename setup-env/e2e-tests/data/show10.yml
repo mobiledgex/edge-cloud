@@ -10,46 +10,11 @@ flavors:
   vcpus: 2
   disk: 2
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-
 clusters:
 
 clusterinsts:
 - key:
     clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-4
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
       operatorkey:
@@ -57,27 +22,12 @@ clusterinsts:
       name: dmuus-cloud-8
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
+  auto: true
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessDedicated
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -87,117 +37,12 @@ clusterinsts:
       name: gcp-cloud-10
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
+  auto: true
   ipaccess: IpAccessDedicated
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-5
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-6
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-5
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-6
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-3
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication2
@@ -207,87 +52,27 @@ clusterinsts:
       name: dmuus-cloud-4
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-7
+      name: dmuus-cloud-5
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
+  auto: true
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-7
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-8
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessDedicated
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-    developer: AcmeAppCo
-  flavor:
-    name: c1.small
-  liveness: LivenessDynamic
-  ipaccess: IpAccessDedicated
-  nodeflavor: flavor1
-  masterflavor: flavor1
-  auto: true
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -297,12 +82,12 @@ clusterinsts:
       name: dmuus-cloud-1
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -312,12 +97,147 @@ clusterinsts:
       name: dmuus-cloud-2
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-7
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-4
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-5
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-6
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-6
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-7
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -327,20 +247,80 @@ clusterinsts:
       name: dmuus-cloud-3
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-3
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-8
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: gcp-cloud-10
+    developer: AcmeAppCo
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  auto: true
+  ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
 
 operators:
-- key:
-    name: gcp
 - key:
     name: dmuus
 - key:
     name: azure
+- key:
+    name: gcp
 
 developers:
 - key:
@@ -360,11 +340,11 @@ cloudlets:
 - key:
     operatorkey:
       name: dmuus
-    name: dmuus-cloud-4
-  accessuri: dmuus-cloud.4
+    name: dmuus-cloud-2
+  accessuri: dmuus-cloud.2
   location:
     latitude: 1
-    longitude: 4
+    longitude: 2
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -385,36 +365,6 @@ cloudlets:
   location:
     latitude: 1
     longitude: 6
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-1
-  accessuri: dmuus-cloud.1
-  location:
-    latitude: 1
-    longitude: 1
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-3
-  accessuri: dmuus-cloud.3
-  location:
-    latitude: 1
-    longitude: 3
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-8
-  accessuri: dmuus-cloud.8
-  location:
-    latitude: 1
-    longitude: 8
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -440,11 +390,31 @@ cloudlets:
 - key:
     operatorkey:
       name: dmuus
-    name: dmuus-cloud-2
-  accessuri: dmuus-cloud.2
+    name: dmuus-cloud-1
+  accessuri: dmuus-cloud.1
   location:
     latitude: 1
-    longitude: 2
+    longitude: 1
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-3
+  accessuri: dmuus-cloud.3
+  location:
+    latitude: 1
+    longitude: 3
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-4
+  accessuri: dmuus-cloud.4
+  location:
+    latitude: 1
+    longitude: 4
   ipsupport: IpSupportDynamic
   numdynamicips: 254
 - key:
@@ -457,6 +427,16 @@ cloudlets:
     longitude: 7
   ipsupport: IpSupportDynamic
   numdynamicips: 254
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-8
+  accessuri: dmuus-cloud.8
+  location:
+    latitude: 1
+    longitude: 8
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 
 apps:
 - key:
@@ -466,10 +446,10 @@ apps:
     version: "1.0"
   imagepath: dummyvalue
   imagetype: ImageTypeDocker
-  deployment: kubernetes
   accessports: tcp:64000
   defaultflavor:
     name: x1.small
+  deployment: kubernetes
 - key:
     developerkey:
       name: AcmeAppCo
@@ -477,7 +457,6 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  deployment: kubernetes
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -491,6 +470,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+  deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication1
   permitsplatformapps: true
 - key:
@@ -500,7 +480,6 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication2:1.0
   imagetype: ImageTypeDocker
-  deployment: kubernetes
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -514,6 +493,7 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+  deployment: kubernetes
   androidpackagename: com.acmeappco.someapplication2
   permitsplatformapps: true
 
@@ -527,71 +507,19 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-1
-    id: 1
+      name: dmuus-cloud-4
+    id: 4
   cloudletloc:
     latitude: 1
-    longitude: 1
-  uri: acmeappcosomeapplication110.dmuus-cloud-1.dmuus.mobiledgex.net
+    longitude: 4
+  uri: dmuus-cloud-4.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
-  cloudletloc:
-    latitude: 1
-    longitude: 1
-  uri: acmeappcosomeapplication210.dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 2
-  cloudletloc:
-    latitude: 1
-    longitude: 2
-  uri: acmeappcosomeapplication110.dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
+      name: dmuus-cloud-4
     developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
@@ -610,7 +538,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 4
-  uri: acmeappcosomeapplication210.dmuus-cloud-4.dmuus.mobiledgex.net
+  uri: dmuus-cloud-4.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication2
@@ -618,32 +546,6 @@ appinstances:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-4
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-5
-    id: 5
-  cloudletloc:
-    latitude: 1
-    longitude: 5
-  uri: acmeappcosomeapplication210.dmuus-cloud-5.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-5
     developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
@@ -662,7 +564,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: acmeappcosomeapplication110.dmuus-cloud-7.dmuus.mobiledgex.net
+  uri: dmuus-cloud-7.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -677,78 +579,15 @@ appinstances:
 - key:
     appkey:
       developerkey:
-        name: AcmeAppCo
-      name: someapplication1
+        name: platos
+      name: PlatosEnablingLayer
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: azure
-      name: azure-cloud-9
-    id: 9
-  cloudletloc:
-    latitude: 1
-    longitude: 9
-  uri: acmeappcosomeapplication110.azure-cloud-9.azure.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-    id: 9
-  cloudletloc:
-    latitude: 1
-    longitude: 9
-  uri: acmeappcosomeapplication210.azure-cloud-9.azure.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-    id: 10
-  cloudletloc:
-    latitude: 1
-    longitude: 10
-  uri: acmeappcosomeapplication110.gcp-cloud-10.gcp.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-    developer: AcmeAppCo
+        name: developer
+      name: default
+    id: 123
+  uri: default.platosenablement.platos.com
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -761,71 +600,19 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-3
-    id: 3
+      name: dmuus-cloud-1
+    id: 1
   cloudletloc:
     latitude: 1
-    longitude: 3
-  uri: acmeappcosomeapplication210.dmuus-cloud-3.dmuus.mobiledgex.net
+    longitude: 1
+  uri: dmuus-cloud-1.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication2
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-3
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-6
-    id: 6
-  cloudletloc:
-    latitude: 1
-    longitude: 6
-  uri: acmeappcosomeapplication110.dmuus-cloud-6.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-6
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-    id: 10
-  cloudletloc:
-    latitude: 1
-    longitude: 10
-  uri: acmeappcosomeapplication210.gcp-cloud-10.gcp.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
+      name: dmuus-cloud-1
     developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
@@ -844,7 +631,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 2
-  uri: acmeappcosomeapplication210.dmuus-cloud-2.dmuus.mobiledgex.net
+  uri: dmuus-cloud-2.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication2
@@ -865,12 +652,38 @@ appinstances:
     cloudletkey:
       operatorkey:
         name: dmuus
+      name: dmuus-cloud-3
+    id: 3
+  cloudletloc:
+    latitude: 1
+    longitude: 3
+  uri: dmuus-cloud-3.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-3
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
       name: dmuus-cloud-6
     id: 6
   cloudletloc:
     latitude: 1
     longitude: 6
-  uri: acmeappcosomeapplication210.dmuus-cloud-6.dmuus.mobiledgex.net
+  uri: dmuus-cloud-6.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication2
@@ -896,36 +709,10 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 8
-  uri: acmeappcosomeapplication110.dmuus-cloud-8.dmuus.mobiledgex.net
+  uri: dmuus-cloud-8.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-8
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication2
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-8
-    id: 8
-  cloudletloc:
-    latitude: 1
-    longitude: 8
-  uri: acmeappcosomeapplication210.dmuus-cloud-8.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication2
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -963,7 +750,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 3
-  uri: acmeappcosomeapplication110.dmuus-cloud-3.dmuus.mobiledgex.net
+  uri: dmuus-cloud-3.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -979,24 +766,221 @@ appinstances:
     appkey:
       developerkey:
         name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-5
+    id: 5
+  cloudletloc:
+    latitude: 1
+    longitude: 5
+  uri: dmuus-cloud-5.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-5
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
       name: someapplication1
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-4
-    id: 4
+      name: dmuus-cloud-6
+    id: 6
   cloudletloc:
     latitude: 1
-    longitude: 4
-  uri: acmeappcosomeapplication110.dmuus-cloud-4.dmuus.mobiledgex.net
+    longitude: 6
+  uri: dmuus-cloud-6.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
     cloudletkey:
       operatorkey:
         name: dmuus
-      name: dmuus-cloud-4
+      name: dmuus-cloud-6
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    id: 9
+  cloudletloc:
+    latitude: 1
+    longitude: 9
+  uri: acmeappcosomeapplication210.autoclustersomeapplication2.azure-cloud-9.azure.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: gcp-cloud-10
+    id: 10
+  cloudletloc:
+    latitude: 1
+    longitude: 10
+  uri: acmeappcosomeapplication110.autoclustersomeapplication1.gcp-cloud-10.gcp.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: gcp-cloud-10
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: gcp-cloud-10
+    id: 10
+  cloudletloc:
+    latitude: 1
+    longitude: 10
+  uri: acmeappcosomeapplication210.autoclustersomeapplication2.gcp-cloud-10.gcp.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication2
+    cloudletkey:
+      operatorkey:
+        name: gcp
+      name: gcp-cloud-10
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication2
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: developer
+      name: default
+    id: 123
+  uri: default.someapplication2.AcmeAppCo.com
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    id: 1
+  cloudletloc:
+    latitude: 1
+    longitude: 1
+  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
+    id: 2
+  cloudletloc:
+    latitude: 1
+    longitude: 2
+  uri: dmuus-cloud-2.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-2
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
+    id: 9
+  cloudletloc:
+    latitude: 1
+    longitude: 9
+  uri: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: azure
+      name: azure-cloud-9
     developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
@@ -1015,7 +999,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 5
-  uri: acmeappcosomeapplication110.dmuus-cloud-5.dmuus.mobiledgex.net
+  uri: dmuus-cloud-5.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication1
@@ -1041,7 +1025,7 @@ appinstances:
   cloudletloc:
     latitude: 1
     longitude: 7
-  uri: acmeappcosomeapplication210.dmuus-cloud-7.dmuus.mobiledgex.net
+  uri: dmuus-cloud-7.dmuus.mobiledgex.net
   clusterinstkey:
     clusterkey:
       name: autoclustersomeapplication2
@@ -1061,25 +1045,22 @@ appinstances:
       version: "1.0"
     cloudletkey:
       operatorkey:
-        name: developer
-      name: default
-    id: 123
-  uri: default.someapplication2.AcmeAppCo.com
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: platos
-      name: PlatosEnablingLayer
-      version: "1.0"
+        name: dmuus
+      name: dmuus-cloud-8
+    id: 8
+  cloudletloc:
+    latitude: 1
+    longitude: 8
+  uri: dmuus-cloud-8.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication2
     cloudletkey:
       operatorkey:
-        name: developer
-      name: default
-    id: 123
-  uri: default.platosenablement.platos.com
+        name: dmuus
+      name: dmuus-cloud-8
+    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.small
+
