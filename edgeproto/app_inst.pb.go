@@ -979,7 +979,6 @@ func (m *AppInstKey) CopyInFields(src *AppInstKey) {
 	m.AppKey.DeveloperKey.Name = src.AppKey.DeveloperKey.Name
 	m.AppKey.Name = src.AppKey.Name
 	m.AppKey.Version = src.AppKey.Version
-	m.AppKey.Unsupported = src.AppKey.Unsupported
 	m.CloudletKey.OperatorKey.Name = src.CloudletKey.OperatorKey.Name
 	m.CloudletKey.Name = src.CloudletKey.Name
 	m.Id = src.Id
@@ -1099,7 +1098,6 @@ const AppInstFieldKeyAppKeyDeveloperKey = "2.1.1"
 const AppInstFieldKeyAppKeyDeveloperKeyName = "2.1.1.2"
 const AppInstFieldKeyAppKeyName = "2.1.2"
 const AppInstFieldKeyAppKeyVersion = "2.1.3"
-const AppInstFieldKeyAppKeyUnsupported = "2.1.4"
 const AppInstFieldKeyCloudletKey = "2.2"
 const AppInstFieldKeyCloudletKeyOperatorKey = "2.2.1"
 const AppInstFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
@@ -1147,7 +1145,6 @@ var AppInstAllFields = []string{
 	AppInstFieldKeyAppKeyDeveloperKeyName,
 	AppInstFieldKeyAppKeyName,
 	AppInstFieldKeyAppKeyVersion,
-	AppInstFieldKeyAppKeyUnsupported,
 	AppInstFieldKeyCloudletKeyOperatorKeyName,
 	AppInstFieldKeyCloudletKeyName,
 	AppInstFieldKeyId,
@@ -1184,7 +1181,6 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldKeyAppKeyDeveloperKeyName:                struct{}{},
 	AppInstFieldKeyAppKeyName:                            struct{}{},
 	AppInstFieldKeyAppKeyVersion:                         struct{}{},
-	AppInstFieldKeyAppKeyUnsupported:                     struct{}{},
 	AppInstFieldKeyCloudletKeyOperatorKeyName:            struct{}{},
 	AppInstFieldKeyCloudletKeyName:                       struct{}{},
 	AppInstFieldKeyId:                                    struct{}{},
@@ -1231,11 +1227,6 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 	}
 	if m.Key.AppKey.Version != o.Key.AppKey.Version {
 		fields[AppInstFieldKeyAppKeyVersion] = struct{}{}
-		fields[AppInstFieldKeyAppKey] = struct{}{}
-		fields[AppInstFieldKey] = struct{}{}
-	}
-	if m.Key.AppKey.Unsupported != o.Key.AppKey.Unsupported {
-		fields[AppInstFieldKeyAppKeyUnsupported] = struct{}{}
 		fields[AppInstFieldKeyAppKey] = struct{}{}
 		fields[AppInstFieldKey] = struct{}{}
 	}
@@ -1400,9 +1391,6 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 			}
 			if _, set := fmap["2.1.3"]; set {
 				m.Key.AppKey.Version = src.Key.AppKey.Version
-			}
-			if _, set := fmap["2.1.4"]; set {
-				m.Key.AppKey.Unsupported = src.Key.AppKey.Unsupported
 			}
 		}
 		if _, set := fmap["2.2"]; set {
@@ -2146,7 +2134,6 @@ const AppInstInfoFieldKeyAppKeyDeveloperKey = "2.1.1"
 const AppInstInfoFieldKeyAppKeyDeveloperKeyName = "2.1.1.2"
 const AppInstInfoFieldKeyAppKeyName = "2.1.2"
 const AppInstInfoFieldKeyAppKeyVersion = "2.1.3"
-const AppInstInfoFieldKeyAppKeyUnsupported = "2.1.4"
 const AppInstInfoFieldKeyCloudletKey = "2.2"
 const AppInstInfoFieldKeyCloudletKeyOperatorKey = "2.2.1"
 const AppInstInfoFieldKeyCloudletKeyOperatorKeyName = "2.2.1.1"
@@ -2162,7 +2149,6 @@ var AppInstInfoAllFields = []string{
 	AppInstInfoFieldKeyAppKeyDeveloperKeyName,
 	AppInstInfoFieldKeyAppKeyName,
 	AppInstInfoFieldKeyAppKeyVersion,
-	AppInstInfoFieldKeyAppKeyUnsupported,
 	AppInstInfoFieldKeyCloudletKeyOperatorKeyName,
 	AppInstInfoFieldKeyCloudletKeyName,
 	AppInstInfoFieldKeyId,
@@ -2176,7 +2162,6 @@ var AppInstInfoAllFieldsMap = map[string]struct{}{
 	AppInstInfoFieldKeyAppKeyDeveloperKeyName:     struct{}{},
 	AppInstInfoFieldKeyAppKeyName:                 struct{}{},
 	AppInstInfoFieldKeyAppKeyVersion:              struct{}{},
-	AppInstInfoFieldKeyAppKeyUnsupported:          struct{}{},
 	AppInstInfoFieldKeyCloudletKeyOperatorKeyName: struct{}{},
 	AppInstInfoFieldKeyCloudletKeyName:            struct{}{},
 	AppInstInfoFieldKeyId:                         struct{}{},
@@ -2200,11 +2185,6 @@ func (m *AppInstInfo) DiffFields(o *AppInstInfo, fields map[string]struct{}) {
 	}
 	if m.Key.AppKey.Version != o.Key.AppKey.Version {
 		fields[AppInstInfoFieldKeyAppKeyVersion] = struct{}{}
-		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
-		fields[AppInstInfoFieldKey] = struct{}{}
-	}
-	if m.Key.AppKey.Unsupported != o.Key.AppKey.Unsupported {
-		fields[AppInstInfoFieldKeyAppKeyUnsupported] = struct{}{}
 		fields[AppInstInfoFieldKeyAppKey] = struct{}{}
 		fields[AppInstInfoFieldKey] = struct{}{}
 	}
@@ -2267,9 +2247,6 @@ func (m *AppInstInfo) CopyInFields(src *AppInstInfo) {
 			}
 			if _, set := fmap["2.1.3"]; set {
 				m.Key.AppKey.Version = src.Key.AppKey.Version
-			}
-			if _, set := fmap["2.1.4"]; set {
-				m.Key.AppKey.Unsupported = src.Key.AppKey.Unsupported
 			}
 		}
 		if _, set := fmap["2.2"]; set {

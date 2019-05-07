@@ -55,7 +55,6 @@ func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
 	s = append(s, in.AppKey.DeveloperKey.Name)
 	s = append(s, in.AppKey.Name)
 	s = append(s, in.AppKey.Version)
-	s = append(s, in.AppKey.Unsupported)
 	s = append(s, in.CloudletKey.OperatorKey.Name)
 	s = append(s, in.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Id), 10))
@@ -67,7 +66,6 @@ func AppInstKeyHeaderSlicer() []string {
 	s = append(s, "AppKey-DeveloperKey-Name")
 	s = append(s, "AppKey-Name")
 	s = append(s, "AppKey-Version")
-	s = append(s, "AppKey-Unsupported")
 	s = append(s, "CloudletKey-OperatorKey-Name")
 	s = append(s, "CloudletKey-Name")
 	s = append(s, "Id")
@@ -106,7 +104,6 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.AppKey.Unsupported)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
@@ -158,7 +155,6 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-AppKey-Unsupported")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Key-Id")
@@ -262,7 +258,6 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.AppKey.Unsupported)
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
@@ -285,7 +280,6 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-AppKey-Unsupported")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
 	s = append(s, "Key-CloudletKey-Name")
 	s = append(s, "Key-Id")
@@ -768,7 +762,6 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Unsupported, "key-appkey-unsupported", "", "Key.AppKey.Unsupported")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
@@ -796,7 +789,6 @@ func init() {
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Unsupported, "key-appkey-unsupported", "", "Key.AppKey.Unsupported")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
@@ -836,9 +828,6 @@ func AppInstSetFields() {
 	}
 	if AppInstFlagSet.Lookup("key-appkey-version").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.3")
-	}
-	if AppInstFlagSet.Lookup("key-appkey-unsupported").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.4")
 	}
 	if AppInstFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.1.1")
@@ -921,9 +910,6 @@ func AppInstInfoSetFields() {
 	}
 	if AppInstInfoFlagSet.Lookup("key-appkey-version").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.3")
-	}
-	if AppInstInfoFlagSet.Lookup("key-appkey-unsupported").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.4")
 	}
 	if AppInstInfoFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.1.1")

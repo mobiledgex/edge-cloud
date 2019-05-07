@@ -74,7 +74,6 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 			break
 		}
 		if f != nil {
-			log.InfoLog("to...", "version", nextVer)
 			// Call the upgrade with an appropriate callback
 			if err := runSingleUpgrade(objStore, f); err != nil {
 				return fmt.Errorf("Failed to run %v: %v\n", f, err)
@@ -108,4 +107,8 @@ func UpgradeMexSaltExample(key, val []byte) ([]byte, []byte, error) {
 func UpgradeFuncExample(key, val []byte) ([]byte, []byte, error) {
 	log.DebugLog(log.DebugLevelUpgrade, "UpgradeFuncExample", "key", string(key))
 	return key, val, nil
+}
+
+func UpgradeFuncReplaceEverything(key, val []byte) ([]byte, []byte, error) {
+	return key, val, ErrUpgradeReplaceKey
 }
