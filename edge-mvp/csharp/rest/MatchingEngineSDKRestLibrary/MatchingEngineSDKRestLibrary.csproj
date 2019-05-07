@@ -28,8 +28,4 @@
     <PackageReference Include="System.Json" Version="4.5.0" />
     <PackageReference Include="NuGet.Build.Packaging" Version="0.2.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="AppPort.cs" />
-    <Compile Remove=":Users:garnerlee:go:src:github.com:mobiledgex:edge-cloud:edge-mvp:unity:MatchingEngineSDK:MatchingEngineSDKLibrary:AppPort.cs" />
-  </ItemGroup>
 </Project>
