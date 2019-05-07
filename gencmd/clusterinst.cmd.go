@@ -85,7 +85,7 @@ func ClusterInstKeyWriteOutputOne(obj *edgeproto.ClusterInstKey) {
 	}
 }
 func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 13)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -106,14 +106,13 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
 	s = append(s, in.AllocatedIp)
 	s = append(s, in.NodeFlavor)
-	s = append(s, in.MasterFlavor)
 	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
 	s = append(s, strconv.FormatUint(uint64(in.NumNodes), 10))
 	return s
 }
 
 func ClusterInstHeaderSlicer() []string {
-	s := make([]string, 0, 14)
+	s := make([]string, 0, 13)
 	s = append(s, "Fields")
 	s = append(s, "Key-ClusterKey-Name")
 	s = append(s, "Key-CloudletKey-OperatorKey-Name")
@@ -128,7 +127,6 @@ func ClusterInstHeaderSlicer() []string {
 	s = append(s, "IpAccess")
 	s = append(s, "AllocatedIp")
 	s = append(s, "NodeFlavor")
-	s = append(s, "MasterFlavor")
 	s = append(s, "NumMasters")
 	s = append(s, "NumNodes")
 	return s
@@ -234,9 +232,6 @@ func ClusterInstHideTags(in *edgeproto.ClusterInst) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NodeFlavor = ""
-	}
-	if _, found := tags["nocmp"]; found {
-		in.MasterFlavor = ""
 	}
 }
 
@@ -560,7 +555,6 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	ClusterInstFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.NodeFlavor, "nodeflavor", "", "NodeFlavor")
-	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.MasterFlavor, "masterflavor", "", "MasterFlavor")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
 	ClusterInstInfoFlagSet.StringVar(&ClusterInstInfoIn.Key.ClusterKey.Name, "key-clusterkey-name", "", "Key.ClusterKey.Name")
@@ -624,9 +618,6 @@ func ClusterInstSetFields() {
 	}
 	if ClusterInstNoConfigFlagSet.Lookup("nodeflavor").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "11")
-	}
-	if ClusterInstNoConfigFlagSet.Lookup("masterflavor").Changed {
-		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "12")
 	}
 	if ClusterInstFlagSet.Lookup("nummasters").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "13")

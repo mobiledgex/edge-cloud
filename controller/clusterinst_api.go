@@ -175,10 +175,7 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 		if err != nil {
 			return err
 		}
-		// we use the same flavor for both master and node
-		in.MasterFlavor = in.NodeFlavor
-
-		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor, "Master Flavor", in.MasterFlavor)
+		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor)
 		if in.NumMasters == 0 {
 			if in.IpAccess != edgeproto.IpAccess_IpAccessDedicated {
 				return fmt.Errorf("NumMasters cannot be 0 except for dedicated clusters")
@@ -262,19 +259,28 @@ func (s *ClusterInstApi) UpdateClusterInst(in *edgeproto.ClusterInst, cb edgepro
 func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgeproto.ClusterInst, cb edgeproto.ClusterInstApi_DeleteClusterInstServer) error {
 	log.DebugLog(log.DebugLevelApi, "updateClusterInstInternal", "in", in)
 
-	if in.Fields != nil {
-		for _, field := range in.Fields {
-			if field == edgeproto.ClusterInstFieldNumMasters {
-				return fmt.Errorf("cannot modify num masters")
-			}
-			if field == edgeproto.ClusterInstFieldFlavorName {
-				return fmt.Errorf("cannot modify flavor")
-			}
-			if field == edgeproto.ClusterInstFieldIpAccess {
-				return fmt.Errorf("cannot modify IP access")
-			}
+	if in.Fields == nil {
+		return fmt.Errorf("nothing specified to update")
+	}
+	allowedFields := []string{}
+	badFields := []string{}
+	for _, field := range in.Fields {
+		if field == edgeproto.ClusterInstFieldCrmOverride ||
+			field == edgeproto.ClusterInstFieldKey ||
+			strings.HasPrefix(field, edgeproto.ClusterInstFieldKey+".") {
+			// ignore. TODO: generate a func to check if field is a key field.
+			continue
+		} else if field == edgeproto.ClusterInstFieldNumNodes {
+			allowedFields = append(allowedFields, field)
+		} else {
+			badFields = append(badFields, field)
 		}
 	}
+	if len(badFields) > 0 {
+		// TODO: generate func to convert field consts to string names.
+		return fmt.Errorf("some specified fields cannot be modified")
+	}
+	in.Fields = allowedFields
 
 	cctx.SetOverride(&in.CrmOverride)
 	if !ignoreCRM(cctx) {
@@ -284,8 +290,6 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	}
 
 	var inbuf edgeproto.ClusterInst
-	inbuf.NumNodes = in.NumNodes
-
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, &inbuf) {
 			return objstore.ErrKVStoreKeyNotFound
@@ -307,7 +311,7 @@ func (s *ClusterInstApi) updateClusterInstInternal(cctx *CallContext, in *edgepr
 	if ignoreCRM(cctx) {
 		return nil
 	}
-	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, CreateClusterInstTransitions, edgeproto.TrackedState_UpdateError, UpdateClusterInstTimeout, "Updated successfully", cb.Send)
+	err = clusterInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_Ready, UpdateClusterInstTransitions, edgeproto.TrackedState_UpdateError, UpdateClusterInstTimeout, "Updated successfully", cb.Send)
 	return err
 }
 
@@ -365,11 +369,6 @@ func (s *ClusterInstApi) deleteClusterInstInternal(cctx *CallContext, in *edgepr
 		if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
 			log.WarnLog("Delete cluster inst: flavor not found",
 				"flavor", in.Flavor.Name)
-		} else {
-			if !flavorApi.store.STMGet(stm, &in.Flavor, &nodeFlavor) {
-				log.WarnLog("Delete cluster inst: node flavor not found",
-					"flavor", in.Flavor)
-			}
 		}
 		cloudlet := edgeproto.Cloudlet{}
 		if !cloudletApi.store.STMGet(stm, &in.Key.CloudletKey, &cloudlet) {

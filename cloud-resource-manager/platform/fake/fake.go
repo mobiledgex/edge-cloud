@@ -33,7 +33,7 @@ func (s *Platform) GatherCloudletInfo(info *edgeproto.CloudletInfo) error {
 	return nil
 }
 func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
-	return fmt.Errorf("update not implemented")
+	return fmt.Errorf("update cluster not supported for fake cloudlets")
 }
 func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst ready")

@@ -247,83 +247,76 @@ var ClusterInstData = []edgeproto.ClusterInst{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor:       FlavorData[0].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[0].Flavors[1].Name,
-		MasterFlavor: CloudletInfoData[0].Flavors[1].Name,
-		NumMasters:   1,
-		NumNodes:     2,
+		Flavor:     FlavorData[0].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor: CloudletInfoData[0].Flavors[1].Name,
+		NumMasters: 1,
+		NumNodes:   2,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor:       FlavorData[0].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessShared,
-		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
-		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
-		NumMasters:   1,
-		NumNodes:     2,
+		Flavor:     FlavorData[0].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor: CloudletInfoData[1].Flavors[1].Name,
+		NumMasters: 1,
+		NumNodes:   2,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor:       FlavorData[0].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessDedicatedOrShared,
-		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
-		NumMasters:   1,
-		NumNodes:     2,
+		Flavor:     FlavorData[0].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessDedicatedOrShared,
+		NodeFlavor: CloudletInfoData[2].Flavors[2].Name,
+		NumMasters: 1,
+		NumNodes:   2,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[0].Key,
 		},
-		Flavor:       FlavorData[1].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[0].Flavors[3].Name,
-		MasterFlavor: CloudletInfoData[0].Flavors[3].Name,
-		NumMasters:   1,
-		NumNodes:     3,
+		Flavor:     FlavorData[1].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor: CloudletInfoData[0].Flavors[3].Name,
+		NumMasters: 1,
+		NumNodes:   3,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[1].Key,
 		},
-		Flavor:       FlavorData[1].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessShared,
-		NodeFlavor:   CloudletInfoData[1].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[1].Flavors[0].Name,
-		NumMasters:   1,
-		NumNodes:     3,
+		Flavor:     FlavorData[1].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessShared,
+		NodeFlavor: CloudletInfoData[1].Flavors[0].Name,
+		NumMasters: 1,
+		NumNodes:   3,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[2].Key,
 			CloudletKey: CloudletData[2].Key,
 		},
-		Flavor:       FlavorData[2].Key,
-		IpAccess:     edgeproto.IpAccess_IpAccessDedicated,
-		NodeFlavor:   CloudletInfoData[2].Flavors[1].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[1].Name,
-		NumMasters:   1,
-		NumNodes:     4,
+		Flavor:     FlavorData[2].Key,
+		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
+		NodeFlavor: CloudletInfoData[2].Flavors[1].Name,
+		NumMasters: 1,
+		NumNodes:   4,
 	},
 	edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[3].Key,
 			CloudletKey: CloudletData[3].Key,
 		},
-		Flavor:       FlavorData[2].Key,
-		NodeFlavor:   CloudletInfoData[3].Flavors[0].Name,
-		MasterFlavor: CloudletInfoData[3].Flavors[0].Name,
-		NumMasters:   1,
-		NumNodes:     3,
+		Flavor:     FlavorData[2].Key,
+		NodeFlavor: CloudletInfoData[3].Flavors[0].Name,
+		NumMasters: 1,
+		NumNodes:   3,
 	},
 }
 
@@ -339,13 +332,12 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[1].Key,
 			Developer:   AppData[1].Key.DeveloperKey.Name,
 		},
-		Flavor:       ClusterData[0].DefaultFlavor,
-		NodeFlavor:   CloudletInfoData[1].Flavors[1].Name,
-		MasterFlavor: CloudletInfoData[1].Flavors[1].Name,
-		NumMasters:   1,
-		NumNodes:     1,
-		State:        edgeproto.TrackedState_Ready,
-		Auto:         true,
+		Flavor:     ClusterData[0].DefaultFlavor,
+		NodeFlavor: CloudletInfoData[1].Flavors[1].Name,
+		NumMasters: 1,
+		NumNodes:   1,
+		State:      edgeproto.TrackedState_Ready,
+		Auto:       true,
 	},
 	// from AppInstData[4] -> AppData[2]
 	edgeproto.ClusterInst{
@@ -356,13 +348,12 @@ var ClusterInstAutoData = []edgeproto.ClusterInst{
 			CloudletKey: CloudletData[2].Key,
 			Developer:   AppData[2].Key.DeveloperKey.Name,
 		},
-		Flavor:       ClusterData[1].DefaultFlavor,
-		NodeFlavor:   CloudletInfoData[2].Flavors[2].Name,
-		MasterFlavor: CloudletInfoData[2].Flavors[2].Name,
-		NumMasters:   1,
-		NumNodes:     1,
-		State:        edgeproto.TrackedState_Ready,
-		Auto:         true,
+		Flavor:     ClusterData[1].DefaultFlavor,
+		NodeFlavor: CloudletInfoData[2].Flavors[2].Name,
+		NumMasters: 1,
+		NumNodes:   1,
+		State:      edgeproto.TrackedState_Ready,
+		Auto:       true,
 	},
 }
 var AppInstData = []edgeproto.AppInst{
@@ -632,9 +623,9 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 			ClusterData[1].Key,
 			ClusterInstAutoData[0].Key.ClusterKey,
 		},
-		UsedRam:     GetCloudletUsedRam(1, 4, 0),
-		UsedVcores:  GetCloudletUsedVcores(1, 4, 0),
-		UsedDisk:    GetCloudletUsedDisk(1, 4, 0),
+		UsedRam:     GetCloudletUsedRam(1, 4, -1, 0),
+		UsedVcores:  GetCloudletUsedVcores(1, 4, -1, 0),
+		UsedDisk:    GetCloudletUsedDisk(1, 4, -1, 0),
 		RootLbPorts: map[int32]int32{80: 1, 10002: 3},
 	},
 	// ClusterInstData[2,5], ClusterInstAutoData[1]: (shared,dedicated,shared)
@@ -646,9 +637,9 @@ var CloudletRefsWithAppInstsData = []edgeproto.CloudletRefs{
 			ClusterData[2].Key,
 			ClusterInstAutoData[1].Key.ClusterKey,
 		},
-		UsedRam:        GetCloudletUsedRam(2, 5, 1),
-		UsedVcores:     GetCloudletUsedVcores(2, 5, 1),
-		UsedDisk:       GetCloudletUsedDisk(2, 5, 1),
+		UsedRam:        GetCloudletUsedRam(2, 5, -1, 1),
+		UsedVcores:     GetCloudletUsedVcores(2, 5, -1, 1),
+		UsedDisk:       GetCloudletUsedDisk(2, 5, -1, 1),
 		UsedDynamicIps: 1,
 		RootLbPorts:    map[int32]int32{10000: 1, 11111: 2, 2024: 2},
 	},
@@ -675,14 +666,14 @@ func FindFlavorData(key *edgeproto.FlavorKey) *edgeproto.Flavor {
 
 func GetCloudletUsedRam(indices ...int) uint64 {
 	var ram uint64
-	for i, idx := range indices {
-		var clinst edgeproto.ClusterInst
-		if i > 1 {
-			clinst = ClusterInstAutoData[idx]
-		} else {
-			clinst = ClusterInstData[idx]
+	data := ClusterInstData
+	for _, idx := range indices {
+		if idx == -1 {
+			data = ClusterInstAutoData
+			continue
 		}
-		clflavor := clinst.Flavor
+		clinst := data[idx]
+		clflavor := data[idx].Flavor
 		flavor := FindFlavorData(&clflavor)
 		ram += flavor.Ram * uint64(clinst.NumNodes+clinst.NumMasters)
 	}
@@ -691,14 +682,14 @@ func GetCloudletUsedRam(indices ...int) uint64 {
 
 func GetCloudletUsedVcores(indices ...int) uint64 {
 	var vcores uint64
-	for i, idx := range indices {
-		var clinst edgeproto.ClusterInst
-		if i > 1 {
-			clinst = ClusterInstAutoData[idx]
-		} else {
-			clinst = ClusterInstData[idx]
+	data := ClusterInstData
+	for _, idx := range indices {
+		if idx == -1 {
+			data = ClusterInstAutoData
+			continue
 		}
-		clflavor := clinst.Flavor
+		clinst := data[idx]
+		clflavor := data[idx].Flavor
 		flavor := FindFlavorData(&clflavor)
 		vcores += flavor.Vcpus * uint64(clinst.NumNodes+clinst.NumMasters)
 	}
@@ -707,14 +698,14 @@ func GetCloudletUsedVcores(indices ...int) uint64 {
 
 func GetCloudletUsedDisk(indices ...int) uint64 {
 	var disk uint64
-	for i, idx := range indices {
-		var clinst edgeproto.ClusterInst
-		if i > 1 {
-			clinst = ClusterInstAutoData[idx]
-		} else {
-			clinst = ClusterInstData[idx]
+	data := ClusterInstData
+	for _, idx := range indices {
+		if idx == -1 {
+			data = ClusterInstAutoData
+			continue
 		}
-		clflavor := clinst.Flavor
+		clinst := data[idx]
+		clflavor := data[idx].Flavor
 		flavor := FindFlavorData(&clflavor)
 		disk += flavor.Disk * uint64(clinst.NumNodes+clinst.NumMasters)
 	}

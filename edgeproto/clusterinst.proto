@@ -51,8 +51,6 @@ message ClusterInst {
   string allocated_ip = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Cloudlet specific node flavor
   string node_flavor = 11 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
-  // Cloudlet specific master flavor
-  string master_flavor = 12 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
     // number of masters
   uint32 num_masters = 13;
   // number of nodes 

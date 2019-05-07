@@ -133,17 +133,8 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
-		flavor := edgeproto.Flavor{}
 
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
-		flavorFound := cd.FlavorCache.Get(&clusterInst.Flavor, &flavor)
-		if !flavorFound {
-			log.DebugLog(log.DebugLevelMexos, "did not find flavor", "flavor", flavor)
-			//XXX returning flavor not found error to InstInfoError?
-			cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Did not find flavor %s", clusterInst.Flavor.Name))
-			return
-		}
-		log.DebugLog(log.DebugLevelMexos, "Found flavor", "flavor", flavor)
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
 			var err error
@@ -156,16 +147,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "adding flavor", "flavor", flavor)
-			/*
-				Add Flavor never actually did anything.  TODO: implement this or decide against doing it.
-				err = mexos.MEXAddFlavorClusterInst(cd.CRMRootLB, &flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
-				if err != nil {
-					log.DebugLog(log.DebugLevelMexos, "cannot add flavor", "flavor", flavor)
-					cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
-					return
-				}
-			*/
+
 			log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
 			cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
 		}()

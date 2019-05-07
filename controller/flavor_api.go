@@ -45,7 +45,7 @@ func (s *FlavorApi) UpdateFlavor(ctx context.Context, in *edgeproto.Flavor) (*ed
 }
 
 func (s *FlavorApi) DeleteFlavor(ctx context.Context, in *edgeproto.Flavor) (*edgeproto.Result, error) {
-	if clusterApi.UsesFlavor(&in.Key) {
+	if clusterInstApi.UsesFlavor(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Flavor in use by Cluster")
 	}
 	if appApi.UsesFlavor(&in.Key) {

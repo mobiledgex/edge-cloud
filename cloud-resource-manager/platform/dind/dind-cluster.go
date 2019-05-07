@@ -36,7 +36,7 @@ func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 }
 
 func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
-	return fmt.Errorf("update not implemented for DIND")
+	return fmt.Errorf("update cluster not supported for DIND")
 }
 
 func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
