@@ -15,35 +15,6 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
-
 clusters:
 
 clusterinsts:
@@ -56,13 +27,14 @@ clusterinsts:
       name: dmuus-cloud-1
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
   state: Ready
+  ipaccess: IpAccessShared
+  nodeflavor: flavor1
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -72,13 +44,15 @@ clusterinsts:
       name: dmuus-cloud-2
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
+  auto: true
+  state: Ready
   ipaccess: IpAccessShared
   nodeflavor: flavor1
   masterflavor: flavor1
-  auto: true
-  state: Ready
+  nummasters: 1
+  numnodes: 1
 
 operators:
 - key:
@@ -195,6 +169,30 @@ apps:
 - key:
     developerkey:
       name: MobiledgeX
+    name: MEXPrometheusAppName
+    version: "1.0"
+  imagepath: stable/prometheus-operator
+  defaultflavor:
+    name: x1.medium
+  deployment: helm
+  delopt: AutoDelete
+  configs:
+  - kind: hemlCustomizationYaml
+    config: |
+      prometheus:
+        prometheusSpec:
+          scrapeInterval: "15s"
+        service:
+          type: LoadBalancer
+      kubelet:
+        serviceMonitor:
+          ## Enable scraping the kubelet over https. For requirements to enable this see
+          ## https://github.com/coreos/prometheus-operator/issues/926
+          ##
+          https: true
+- key:
+    developerkey:
+      name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
@@ -258,43 +256,19 @@ apps:
             name: mexcluster-info
             key: OperatorName
             optional: true
-- key:
-    developerkey:
-      name: MobiledgeX
-    name: MEXPrometheusAppName
-    version: "1.0"
-  imagepath: stable/prometheus-operator
-  defaultflavor:
-    name: x1.medium
-  deployment: helm
-  delopt: AutoDelete
-  configs:
-  - kind: hemlCustomizationYaml
-    config: |
-      prometheus:
-        prometheusSpec:
-          scrapeInterval: "15s"
-        service:
-          type: LoadBalancer
-      kubelet:
-        serviceMonitor:
-          ## Enable scraping the kubelet over https. For requirements to enable this see
-          ## https://github.com/coreos/prometheus-operator/issues/926
-          ##
-          https: true
 
 appinstances:
 - key:
     appkey:
       developerkey:
-        name: AcmeAppCo
-      name: someapplication1
+        name: MobiledgeX
+      name: MEXMetricsExporter
       version: "1.0"
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
-    id: 123
+    id: 1
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -308,21 +282,8 @@ appinstances:
       name: dmuus-cloud-1
     developer: AcmeAppCo
   liveness: LivenessStatic
-  mappedports:
-  - proto: LProtoTCP
-    internalport: 80
-    publicport: 80
-    fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHTTP
-    internalport: 443
-    publicport: 443
-    pathprefix: acmeappco/someapplication110/p443
-  - proto: LProtoUDP
-    internalport: 10002
-    publicport: 10002
-    fqdnprefix: someapplication1-udp.
   flavor:
-    name: x1.small
+    name: x1.medium
   state: Ready
 - key:
     appkey:
@@ -366,37 +327,10 @@ appinstances:
   state: Ready
 - key:
     appkey:
-      name: MEXMetricsExporter
-      version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
-  cloudletloc:
-    latitude: 31
-    longitude: -91
-  uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.medium
-  state: Ready
-- key:
-    appkey:
       name: MEXMetricsExporter
       version: "1.0"
-      developerkey:
-        name: MobiledgeX
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -420,10 +354,10 @@ appinstances:
   state: Ready
 - key:
     appkey:
-      name: MEXPrometheusAppName
-      version: "1.0"
       developerkey:
         name: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -447,10 +381,10 @@ appinstances:
   state: Ready
 - key:
     appkey:
-      name: MEXPrometheusAppName
-      version: "1.0"
       developerkey:
         name: MobiledgeX
+      name: MEXPrometheusAppName
+      version: "1.0"
     cloudletkey:
       operatorkey:
         name: dmuus
@@ -472,3 +406,44 @@ appinstances:
   flavor:
     name: x1.medium
   state: Ready
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    id: 123
+  cloudletloc:
+    latitude: 31
+    longitude: -91
+  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  mappedports:
+  - proto: LProtoTCP
+    internalport: 80
+    publicport: 80
+    fqdnprefix: someapplication1-tcp.
+  - proto: LProtoHTTP
+    internalport: 443
+    publicport: 443
+    pathprefix: acmeappco/someapplication110/p443
+  - proto: LProtoUDP
+    internalport: 10002
+    publicport: 10002
+    fqdnprefix: someapplication1-udp.
+  flavor:
+    name: x1.small
+  state: Ready
+

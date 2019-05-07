@@ -60,9 +60,6 @@ func (a *ApplicationData) Sort() {
 	sort.Slice(a.Flavors[:], func(i, j int) bool {
 		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
 	})
-	sort.Slice(a.ClusterFlavors[:], func(i, j int) bool {
-		return a.ClusterFlavors[i].Key.GetKeyString() < a.ClusterFlavors[j].Key.GetKeyString()
-	})
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
 	})

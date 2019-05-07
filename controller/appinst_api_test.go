@@ -39,7 +39,6 @@ func TestAppInstApi(t *testing.T) {
 	// create supporting data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)
@@ -226,7 +225,6 @@ func TestAutoClusterInst(t *testing.T) {
 	// create supporting data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)

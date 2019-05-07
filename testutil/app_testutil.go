@@ -9,7 +9,6 @@ It is generated from these files:
 	app_inst.proto
 	cloudlet.proto
 	cluster.proto
-	clusterflavor.proto
 	clusterinst.proto
 	common.proto
 	controller.proto
@@ -45,8 +44,6 @@ It has these top-level messages:
 	CloudletMetrics
 	ClusterKey
 	Cluster
-	ClusterFlavorKey
-	ClusterFlavor
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo

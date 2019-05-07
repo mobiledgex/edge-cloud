@@ -15,9 +15,11 @@ type Platform interface {
 	// This includes available resources, flavors, etc.
 	GatherCloudletInfo(info *edgeproto.CloudletInfo) error
 	// Create a Kubernetes Cluster on the cloudlet.
-	CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edgeproto.ClusterFlavor) error
+	CreateClusterInst(clusterInst *edgeproto.ClusterInst) error
 	// Delete a Kuberentes Cluster on the cloudlet.
-	DeleteCluster(clusterInst *edgeproto.ClusterInst) error
+	DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error
+	// Update the cluster
+	UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error
 	// Create an AppInst on a Cluster
 	CreateAppInst(clusterInst *edgeproto.ClusterInst, app *edgeproto.App, appInst *edgeproto.AppInst, flavor *edgeproto.Flavor) error
 	// Delete an AppInst on a Cluster

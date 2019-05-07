@@ -15,40 +15,12 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
 
 clusters:
 - key:
     name: SmallCluster
   defaultflavor:
-    name: c1.small
+    name: x1.small
 
 clusterinsts:
 - key:
@@ -59,9 +31,12 @@ clusterinsts:
         name: dmuus
       name: dmuus-cloud-1
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessStatic
   ipaccess: IpAccessDedicated
+  nummasters: 1
+  numnodes: 1
+
 - key:
     clusterkey:
       name: SmallCluster
@@ -70,9 +45,11 @@ clusterinsts:
         name: dmuus
       name: dmuus-cloud-2
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessStatic
   ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 
 operators:
 - key:

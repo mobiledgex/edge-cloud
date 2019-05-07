@@ -10,26 +10,6 @@ flavors:
   vcpus: 2
   disk: 2
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-
 clusters:
 
 clusterinsts:
@@ -42,12 +22,12 @@ clusterinsts:
       name: dmuus-cloud-1
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 - key:
     clusterkey:
       name: autoclustersomeapplication1
@@ -57,12 +37,12 @@ clusterinsts:
       name: dmuus-cloud-2
     developer: AcmeAppCo
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessDynamic
-  ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
   auto: true
+  ipaccess: IpAccessShared
+  nummasters: 1
+  numnodes: 1
 
 operators:
 - key:
@@ -110,7 +90,6 @@ apps:
     version: "1.0"
   imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  deployment: "kubernetes"
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
@@ -124,8 +103,35 @@ apps:
     QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
     /QIDAQAB
     -----END PUBLIC KEY-----
+  deployment: kubernetes
 
 appinstances:
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo
+      name: someapplication1
+      version: "1.0"
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    id: 1
+  cloudletloc:
+    latitude: 1
+    longitude: 1
+  uri: dmuus-cloud-1.dmuus.mobiledgex.net
+  clusterinstkey:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: dmuus
+      name: dmuus-cloud-1
+    developer: AcmeAppCo
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
 - key:
     appkey:
       developerkey:
@@ -167,29 +173,4 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.small
-- key:
-    appkey:
-      developerkey:
-        name: AcmeAppCo
-      name: someapplication1
-      version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
-  cloudletloc:
-    latitude: 1
-    longitude: 1
-  uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
-  liveness: LivenessStatic
-  flavor:
-    name: x1.small
+
