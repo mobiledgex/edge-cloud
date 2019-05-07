@@ -45,6 +45,7 @@ var tlsCertFile = flag.String("tls", "", "server tls cert file.  Keyfile and CA 
 var shortTimeouts = flag.Bool("shortTimeouts", false, "set CRM timeouts short for simulated cloudlet testing")
 var influxAddr = flag.String("influxAddr", "127.0.0.1:8086", "InfluxDB listener address")
 var skipVersionCheck = flag.Bool("skipVersionCheck", false, "Skip etcd version hash verification")
+var autoUpgrade = flag.Bool("autoUpgrade", false, "Automatically upgrade etcd database to the current version")
 var ControllerId = ""
 var InfluxDBName = "metrics"
 
@@ -53,6 +54,7 @@ func GetRootDir() string {
 }
 
 var ErrCtrlAlreadyInProgress = errors.New("Change already in progress")
+var ErrCtrlUpgradeRequired = errors.New("data mode upgrade required")
 
 var sigChan chan os.Signal
 
@@ -87,9 +89,16 @@ func main() {
 		log.FatalLog("Failed to connect to etcd servers", "err", err)
 	}
 
+	// We might need to ugrade the stored objects
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
-		if err = checkVersion(objStore); err != nil {
+		version, err := checkVersion(objStore)
+		if err != nil && strings.Contains(err.Error(), ErrCtrlUpgradeRequired.Error()) && *autoUpgrade {
+			err = edgeproto.UpgradeToLatest(version, objStore)
+			if err != nil {
+				log.FatalLog("Failed to ugprade data model: %v\n", err)
+			}
+		} else if err != nil {
 			log.FatalLog("Running version doesn't match the version of etcd: %v\n", err)
 		}
 	}
@@ -222,12 +231,12 @@ func main() {
 
 // Helper function to verify the compatibility of etcd version and
 // current data model version
-func checkVersion(objStore objstore.KVStore) error {
+func checkVersion(objStore objstore.KVStore) (string, error) {
 	key := objstore.DbKeyPrefixString("Version")
 	val, _, _, err := objStore.Get(key)
 	if err != nil {
 		if !strings.Contains(err.Error(), objstore.ErrKVStoreKeyNotFound.Error()) {
-			return err
+			return "", err
 		}
 	}
 	verHash := string(val)
@@ -237,15 +246,14 @@ func checkVersion(objStore objstore.KVStore) error {
 		key := objstore.DbKeyPrefixString("Version")
 		_, err = objStore.Put(key, edgeproto.GetDataModelVersion())
 		if err != nil {
-			return err
+			return "", err
 		}
-		return nil
+		return edgeproto.GetDataModelVersion(), nil
 	}
 	if edgeproto.GetDataModelVersion() != verHash {
-		return fmt.Errorf("Current: [%s], etcd version: [%s]",
-			edgeproto.GetDataModelVersion(), verHash)
+		return verHash, ErrCtrlUpgradeRequired
 	}
-	return nil
+	return verHash, nil
 }
 
 func InitApis(sync *Sync) {

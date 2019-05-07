@@ -24,6 +24,7 @@ message AppKey {
   string name = 2;
   // Version of the app
   string version = 3;
+  string unsupported = 4;
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;

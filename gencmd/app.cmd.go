@@ -115,18 +115,20 @@ var DeleteTypeStrings = []string{
 }
 
 func AppKeySlicer(in *edgeproto.AppKey) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, in.DeveloperKey.Name)
 	s = append(s, in.Name)
 	s = append(s, in.Version)
+	s = append(s, in.Unsupported)
 	return s
 }
 
 func AppKeyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 4)
 	s = append(s, "DeveloperKey-Name")
 	s = append(s, "Name")
 	s = append(s, "Version")
+	s = append(s, "Unsupported")
 	return s
 }
 
@@ -199,6 +201,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Key.DeveloperKey.Name)
 	s = append(s, in.Key.Name)
 	s = append(s, in.Key.Version)
+	s = append(s, in.Key.Unsupported)
 	s = append(s, in.ImagePath)
 	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
 	s = append(s, in.AccessPorts)
@@ -232,6 +235,7 @@ func AppHeaderSlicer() []string {
 	s = append(s, "Key-DeveloperKey-Name")
 	s = append(s, "Key-Name")
 	s = append(s, "Key-Version")
+	s = append(s, "Key-Unsupported")
 	s = append(s, "ImagePath")
 	s = append(s, "ImageType")
 	s = append(s, "AccessPorts")
@@ -504,6 +508,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Key.DeveloperKey.Name, "key-developerkey-name", "", "Key.DeveloperKey.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
+	AppFlagSet.StringVar(&AppIn.Key.Unsupported, "key-unsupported", "", "Key.Unsupported")
 	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
 	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
@@ -543,6 +548,9 @@ func AppSetFields() {
 	}
 	if AppFlagSet.Lookup("key-version").Changed {
 		AppIn.Fields = append(AppIn.Fields, "2.3")
+	}
+	if AppFlagSet.Lookup("key-unsupported").Changed {
+		AppIn.Fields = append(AppIn.Fields, "2.4")
 	}
 	if AppFlagSet.Lookup("imagepath").Changed {
 		AppIn.Fields = append(AppIn.Fields, "4")

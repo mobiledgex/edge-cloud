@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strconv"
 	"strings"
 	"text/template"
 
@@ -142,9 +141,14 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
-	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]string{")
+	m.P("type VersionUpgradeFunc func(key, val []byte) ([]byte, []byte, error)")
+	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
 	for _, e := range enum.Value {
-		m.P(e.Number, ": ", strconv.Quote(GetUpgadeFunc(e)), ",")
+		if GetUpgadeFunc(e) != "" {
+			m.P(e.Number, ": ", GetUpgadeFunc(e), ",")
+		} else {
+			m.P(e.Number, ": nil,")
+		}
 	}
 	m.P("}")
 }
@@ -1159,7 +1163,7 @@ In order to ensure a smooth upgrade for the production environment please make s
 enum VersionHash {
 	...
 	{{.CurHash}} = {{.CurHashEnumVal}};
-	{{.NewHash}} = {{.NewHashEnumVal}};  [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
+	{{.NewHash}} = {{.NewHashEnumVal}} [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
 	...
 }
 

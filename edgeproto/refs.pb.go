@@ -977,6 +977,7 @@ func (m *ClusterRefs) CopyInFields(src *ClusterRefs) {
 		m.Apps[i0].DeveloperKey.Name = src.Apps[i0].DeveloperKey.Name
 		m.Apps[i0].Name = src.Apps[i0].Name
 		m.Apps[i0].Version = src.Apps[i0].Version
+		m.Apps[i0].Unsupported = src.Apps[i0].Unsupported
 	}
 	m.UsedRam = src.UsedRam
 	m.UsedVcores = src.UsedVcores
