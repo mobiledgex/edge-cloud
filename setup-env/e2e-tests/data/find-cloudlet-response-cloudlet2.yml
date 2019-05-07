@@ -1,3 +1,4 @@
+status: FIND_FOUND
 fqdn: tmus-cloud-2.tmus.mobiledgex.net
 ports:
 - proto: LProtoTCP
@@ -12,7 +13,6 @@ ports:
   internalport: 10002
   publicport: 10002
   fqdnprefix: someapplication1-udp.
-status: FIND_FOUND
 cloudletlocation:
   latitude: 35
   longitude: -95

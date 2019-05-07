@@ -21,7 +21,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edgeproto.ClusterFlavor) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	var err error
 
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
@@ -35,7 +35,11 @@ func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edg
 	return nil
 }
 
-func (s *Platform) DeleteCluster(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+	return fmt.Errorf("update not implemented for DIND")
+}
+
+func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	return s.DeleteDINDCluster(clusterName)
 }

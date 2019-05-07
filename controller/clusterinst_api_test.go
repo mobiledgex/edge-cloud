@@ -35,7 +35,6 @@ func TestClusterInstApi(t *testing.T) {
 
 	// create support data
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
 	testutil.InternalOperatorCreate(t, &operatorApi, testutil.OperatorData)
 	testutil.InternalCloudletCreate(t, &cloudletApi, testutil.CloudletData)
 	insertCloudletInfo(testutil.CloudletInfoData)
@@ -108,7 +107,7 @@ func TestClusterInstApi(t *testing.T) {
 
 	// inavailability of matching node flavor
 	obj = testutil.ClusterInstData[0]
-	obj.Flavor = testutil.ClusterFlavorData[3].Key
+	obj.Flavor = testutil.FlavorData[0].Key
 	err = clusterInstApi.CreateClusterInst(&obj, &testutil.CudStreamoutClusterInst{})
 	assert.NotNil(t, err, "flavor not available")
 

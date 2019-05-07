@@ -90,7 +90,7 @@ func main() {
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
 		if err = checkVersion(objStore); err != nil {
-			log.FatalLog("Running version doesn't match the version of etcd: %v\n", err)
+			log.FatalLog("Running version doesn't match the version of etcd", "err", err)
 		}
 	}
 	lis, err := net.Listen("tcp", *apiAddr)
@@ -134,7 +134,6 @@ func main() {
 	edgeproto.RegisterAppApiServer(server, &appApi)
 	edgeproto.RegisterOperatorApiServer(server, &operatorApi)
 	edgeproto.RegisterFlavorApiServer(server, &flavorApi)
-	edgeproto.RegisterClusterFlavorApiServer(server, &clusterFlavorApi)
 	edgeproto.RegisterClusterApiServer(server, &clusterApi)
 	edgeproto.RegisterClusterInstApiServer(server, &clusterInstApi)
 	edgeproto.RegisterCloudletApiServer(server, &cloudletApi)
@@ -167,7 +166,6 @@ func main() {
 			edgeproto.RegisterCloudletApiHandler,
 			edgeproto.RegisterCloudletInfoApiHandler,
 			edgeproto.RegisterFlavorApiHandler,
-			edgeproto.RegisterClusterFlavorApiHandler,
 			edgeproto.RegisterClusterApiHandler,
 			edgeproto.RegisterClusterInstApiHandler,
 			edgeproto.RegisterControllerApiHandler,
@@ -255,7 +253,6 @@ func InitApis(sync *Sync) {
 	InitCloudletApi(sync)
 	InitAppInstApi(sync)
 	InitFlavorApi(sync)
-	InitClusterFlavorApi(sync)
 	InitClusterApi(sync)
 	InitClusterInstApi(sync)
 	InitCloudletInfoApi(sync)
@@ -274,7 +271,6 @@ func InitApis(sync *Sync) {
 
 func InitNotify(influxQ *influxq.InfluxQ) {
 	notify.ServerMgrOne.RegisterSendFlavorCache(&flavorApi.cache)
-	notify.ServerMgrOne.RegisterSendClusterFlavorCache(&clusterFlavorApi.cache)
 	notify.ServerMgrOne.RegisterSendCloudletCache(&cloudletApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterCache(&clusterApi.cache)
 	notify.ServerMgrOne.RegisterSendClusterInstCache(&clusterInstApi.cache)
