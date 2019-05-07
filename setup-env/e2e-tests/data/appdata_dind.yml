@@ -15,22 +15,13 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: x1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
-
 clusters:
 - key:
     name: AppCluster
   defaultflavor:
     name: x1.medium
+  nummasters: 1
+  numnodes: 3
 
 cloudlets:
 - key:
@@ -55,6 +46,8 @@ clusterinsts:
   flavor:
     name: x1.medium
   liveness: LivenessStatic
+  nummasters: 1
+  numnodes: 3
 
 
 operators:

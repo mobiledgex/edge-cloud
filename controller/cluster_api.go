@@ -29,7 +29,7 @@ func InitClusterApi(sync *Sync) {
 	sync.RegisterCache(&clusterApi.cache)
 }
 
-func (s *ClusterApi) UsesClusterFlavor(key *edgeproto.ClusterFlavorKey) bool {
+func (s *ClusterApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, cluster := range s.cache.Objs {
@@ -52,7 +52,7 @@ func (s *ClusterApi) CreateCluster(ctx context.Context, in *edgeproto.Cluster) (
 	if strings.HasPrefix(in.Key.Name, ClusterAutoPrefix) {
 		return &edgeproto.Result{}, errors.New(ClusterAutoPrefixErr)
 	}
-	if in.DefaultFlavor.Name != "" && !clusterFlavorApi.HasClusterFlavor(&in.DefaultFlavor) {
+	if in.DefaultFlavor.Name != "" && !flavorApi.HasFlavor(&in.DefaultFlavor) {
 		return &edgeproto.Result{}, fmt.Errorf("default flavor %s not found", in.DefaultFlavor.Name)
 	}
 	in.Auto = false

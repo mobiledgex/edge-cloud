@@ -329,7 +329,6 @@ func (s *DummyServer) ShowDeveloper(in *edgeproto.Developer, server edgeproto.De
 type DummyServer struct {
 	Developers       []edgeproto.Developer
 	Flavors          []edgeproto.Flavor
-	ClusterFlavors   []edgeproto.ClusterFlavor
 	Clusters         []edgeproto.Cluster
 	Apps             []edgeproto.App
 	Operators        []edgeproto.Operator
@@ -349,7 +348,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d := &DummyServer{}
 	d.Developers = make([]edgeproto.Developer, 0)
 	d.Flavors = make([]edgeproto.Flavor, 0)
-	d.ClusterFlavors = make([]edgeproto.ClusterFlavor, 0)
 	d.Clusters = make([]edgeproto.Cluster, 0)
 	d.Apps = make([]edgeproto.App, 0)
 	d.Operators = make([]edgeproto.Operator, 0)
@@ -365,7 +363,6 @@ func RegisterDummyServer(server *grpc.Server) *DummyServer {
 	d.ClusterRefss = make([]edgeproto.ClusterRefs, 0)
 	edgeproto.RegisterDeveloperApiServer(server, d)
 	edgeproto.RegisterFlavorApiServer(server, d)
-	edgeproto.RegisterClusterFlavorApiServer(server, d)
 	edgeproto.RegisterClusterApiServer(server, d)
 	edgeproto.RegisterAppApiServer(server, d)
 	edgeproto.RegisterOperatorApiServer(server, d)
