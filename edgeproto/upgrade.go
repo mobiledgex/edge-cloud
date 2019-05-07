@@ -26,11 +26,10 @@ func runSingleUpgrade(objStore objstore.KVStore, fn VersionUpgradeFunc) error {
 
 			// run the upgrade function and get an action
 			newKey, newVal, err2 := fn(key, val)
-			// nothing to do
+			// actions based on the error code returned by the fn callback
 			if err2 == nil {
 				return nil
 			}
-			// remove this key
 			if strings.Contains(err2.Error(), ErrUpgradeRemoveKey.Error()) {
 				stm.Del(string(key))
 			} else if strings.Contains(err2.Error(), ErrUpgradeAddKey.Error()) {
@@ -54,7 +53,7 @@ func runSingleUpgrade(objStore objstore.KVStore, fn VersionUpgradeFunc) error {
 	if err != nil {
 		return fmt.Errorf("Could not upgrade objects store entries, err: %v\n", err)
 	}
-	log.DebugLog(log.DebugLevelUpgrade, "Upgrade complete", "entries", upgCount)
+	log.DebugLog(log.DebugLevelUpgrade, "Upgrade complete", "entries upgraded", upgCount)
 	return nil
 }
 
@@ -66,11 +65,10 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 	if !ok {
 		return fmt.Errorf("fromVersion %s doesn't exist\n", fromVersion)
 	}
-	log.InfoLog("Upgrading...", "fromVersion", fromVersion, "verID", verID)
+	log.InfoLog("Upgrading", "fromVersion", fromVersion, "verID", verID)
 	nextVer := verID + 1
 	for {
-		f, ok = VersionHash_UpgradeFuncs[nextVer]
-		if !ok {
+		if f, ok = VersionHash_UpgradeFuncs[nextVer]; !ok {
 			break
 		}
 		if f != nil {

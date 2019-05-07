@@ -144,8 +144,8 @@ func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
 	m.P("type VersionUpgradeFunc func(key, val []byte) ([]byte, []byte, error)")
 	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
 	for _, e := range enum.Value {
-		if GetUpgadeFunc(e) != "" {
-			m.P(e.Number, ": ", GetUpgadeFunc(e), ",")
+		if GetUpgradeFunc(e) != "" {
+			m.P(e.Number, ": ", GetUpgradeFunc(e), ",")
 		} else {
 			m.P(e.Number, ": nil,")
 		}
@@ -1566,6 +1566,6 @@ func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
 }
 
-func GetUpgadeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
+func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
 	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
 }
