@@ -468,10 +468,11 @@ int main() {
             json ports = findCloudletReply["ports"];
             size_t size = ports.size();
             for(const auto &appPort : ports) {
+                cout << appPort.dump() << endl;
                 cout << ", AppPort: Protocol: " << appPort["proto"]
                      << ", AppPort: Internal Port: " << appPort["internal_port"]
                      << ", AppPort: Public Port: " << appPort["public_port"]
-                     << ", AppPort: Public Path: " << appPort["public_path"]
+                     << ", AppPort: Path Prefix: " << appPort["path_prefix"]
                      << endl;
             }
         }
