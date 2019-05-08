@@ -15,7 +15,6 @@ type DummyHandler struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
-	ClusterFlavorCache   edgeproto.ClusterFlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
@@ -31,7 +30,6 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&h.FlavorCache)
-	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	return h
 }
@@ -41,7 +39,6 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
-	mgr.RegisterSendClusterFlavorCache(&s.ClusterFlavorCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
@@ -59,8 +56,6 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterRecvCloudletCache(&s.CloudletCache)
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
-	cl.RegisterRecvClusterFlavorCache(&s.ClusterFlavorCache)
-	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 }
 
 func (s *DummyHandler) RegisterDMEClient(cl *Client) {
@@ -97,8 +92,6 @@ func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 		cache = &s.CloudletCache
 	case FlavorType:
 		cache = &s.FlavorCache
-	case ClusterFlavorType:
-		cache = &s.ClusterFlavorCache
 	case ClusterInstType:
 		cache = &s.ClusterInstCache
 	case AppInstInfoType:
@@ -149,10 +142,6 @@ func (s *DummyHandler) WaitForCloudlets(count int) {
 
 func (s *DummyHandler) WaitForFlavors(count int) {
 	WaitFor(&s.FlavorCache, count)
-}
-
-func (s *DummyHandler) WaitForClusterFlavors(count int) {
-	WaitFor(&s.ClusterFlavorCache, count)
 }
 
 func (s *DummyHandler) WaitForClusterInsts(count int) {
