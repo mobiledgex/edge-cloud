@@ -42,7 +42,6 @@ var createCmd = &cobra.Command{
 			return err
 		}
 		gencmd.CreateFlavors(data.Flavors, &err)
-		gencmd.CreateClusterFlavors(data.ClusterFlavors, &err)
 		gencmd.CreateOperators(data.Operators, &err)
 		gencmd.CreateDevelopers(data.Developers, &err)
 		gencmd.CreateCloudlets(data.Cloudlets, &err)
@@ -71,7 +70,6 @@ var deleteCmd = &cobra.Command{
 		gencmd.DeleteCloudlets(data.Cloudlets, &err)
 		gencmd.DeleteDevelopers(data.Developers, &err)
 		gencmd.DeleteOperators(data.Operators, &err)
-		gencmd.DeleteClusterFlavors(data.ClusterFlavors, &err)
 		gencmd.DeleteFlavors(data.Flavors, &err)
 		return err
 	},
