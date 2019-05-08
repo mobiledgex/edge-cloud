@@ -17,7 +17,7 @@ namespace DistributedMatchEngine
     public string DevName;
     // App FQDN
     [DataMember]
-    public string FQDN;
+    public string[] FQDNs;
     // optional android package name
     [DataMember]
     public string AndroidPackageName;

@@ -71,7 +71,7 @@ namespace RestSample
                 ", protocol: " + p.proto +
                 ", public_port: " + p.public_port +
                 ", internal_port: " + p.internal_port +
-                ", public_path: " + p.public_path);
+                ", path_prefix: " + p.path_prefix);
         }
 
 
