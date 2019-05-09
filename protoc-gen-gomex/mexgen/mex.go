@@ -1179,6 +1179,10 @@ Implementation of "sample_upgrade_function" should be added tp edge-cloud/upgrad
 
 NOTE: If no upgrade function is needed don't need to add "[(protogen.upgrade_func) = "sample_upgrade_function];" to
 the VersionHash enum.
+
+A unit test data for the automatic unit test of the upgrade function should be added to testutil/upgrade_test_data.go
+   - PreUpgradeData - what key/value objects are trying to be upgraded
+   - PostUpgradeData - what the resulting object store should look like
 ====================
 `
 
