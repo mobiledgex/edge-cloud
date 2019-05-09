@@ -108,13 +108,17 @@ func GetDataModelVersion() string {
 	return versionHashString
 }
 
-type VersionUpgradeFunc func(key, val []byte) ([]byte, []byte, error)
-
 var VersionHash_UpgradeFuncs = map[int32]VersionUpgradeFunc{
 	0: nil,
 	1: UpgradeMexSaltExample,
 	2: UpgradeFuncExample,
 	3: UpgradeFuncReplaceEverything,
+}
+var VersionHash_UpgradeFuncNames = map[int32]string{
+	0: "",
+	1: "UpgradeMexSaltExample",
+	2: "UpgradeFuncExample",
+	3: "UpgradeFuncReplaceEverything",
 }
 
 func init() { proto.RegisterFile("version.proto", fileDescriptorVersion) }

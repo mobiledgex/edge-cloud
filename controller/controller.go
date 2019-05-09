@@ -89,7 +89,7 @@ func main() {
 		log.FatalLog("Failed to connect to etcd servers", "err", err)
 	}
 
-	// We might need to ugrade the stored objects
+	// We might need to upgrade the stored objects
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
 		version, err := checkVersion(objStore)

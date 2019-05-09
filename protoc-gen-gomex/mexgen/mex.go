@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -141,7 +142,6 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 }
 
 func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
-	m.P("type VersionUpgradeFunc func(key, val []byte) ([]byte, []byte, error)")
 	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
 	for _, e := range enum.Value {
 		if GetUpgradeFunc(e) != "" {
@@ -149,6 +149,13 @@ func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
 		} else {
 			m.P(e.Number, ": nil,")
 		}
+	}
+	m.P("}")
+}
+func (m *mex) generateUpgradeFuncNames(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncNames = map[int32]string{")
+	for _, e := range enum.Value {
+		m.P(e.Number, ": ", strconv.Quote(GetUpgradeFunc(e)), ",")
 	}
 	m.P("}")
 }
@@ -184,6 +191,7 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		m.generateVersionString(hashStr)
 		// Generate an array with function names
 		m.generateUpgradeFuncs(en)
+		m.generateUpgradeFuncNames(en)
 		// Generate version check code for version message
 		validateVersionHash(en, hashStr, file)
 	}
