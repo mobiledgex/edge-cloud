@@ -44,7 +44,7 @@ namespace RestSample
         try
         {
           var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-          Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie + ", Status: " + registerClientReply.Status);
+          Console.WriteLine("RegisteClient Reply Status: " + registerClientReply.Status);
         }
         catch (System.Net.WebException we) // REST HTTP call error codes.
         {
