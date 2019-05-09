@@ -70,23 +70,8 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 	return nil
 }
 
-func UpgradeMexSaltExample(objStore objstore.KVStore, stm concurrency.STM) error {
-	log.DebugLog(log.DebugLevelUpgrade, "UpgradeMexSaltExample - don't do anything to data")
-	return nil
-}
-func UpgradeFuncExample(objStore objstore.KVStore, stm concurrency.STM) error {
-	log.DebugLog(log.DebugLevelUpgrade, "UpgradeFuncExample - duplicate last character in value and append it")
-	// Define a prefix for a walk
-	keystr := fmt.Sprintf("%s/", testDataKeyPrefix)
-	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		newVal := string(val) + string(val[len(val)-1:])
-		stm.Put(string(key), newVal)
-		return nil
-	})
-	return err
-}
-func UpgradeFuncReplaceEverything(objStore objstore.KVStore, stm concurrency.STM) error {
-	log.DebugLog(log.DebugLevelUpgrade, "UpgradeFuncReplaceEverything - reverse keys and values")
+func TestUpgradeExample(objStore objstore.KVStore, stm concurrency.STM) error {
+	log.DebugLog(log.DebugLevelUpgrade, "TestUpgradeExample - reverse keys and values")
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", testDataKeyPrefix)
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {

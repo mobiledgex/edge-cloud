@@ -12,6 +12,9 @@ import (
 
 // Walk testutils data and populate objStore
 func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
+	if _, ok := testutil.PreUpgradeData[funcName]; !ok {
+		return fmt.Errorf("No data to build from for %s", funcName)
+	}
 	for _, kv := range testutil.PreUpgradeData[funcName] {
 		if _, err := objStore.Put(kv.Key, kv.Val); err != nil {
 			return err
@@ -22,6 +25,9 @@ func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
 
 // walk testutils data and see if the entries exist in the objstore
 func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
+	if _, ok := testutil.PostUpgradeData[funcName]; !ok {
+		return fmt.Errorf("No data to check for %s", funcName)
+	}
 	for _, kv := range testutil.PostUpgradeData[funcName] {
 		val, _, _, err := objStore.Get(kv.Key)
 		if err != nil {

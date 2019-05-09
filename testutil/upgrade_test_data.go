@@ -6,27 +6,7 @@ type KVPair struct {
 }
 
 var PreUpgradeData = map[string][]KVPair{
-	"UpgradeMexSaltExample": {
-		KVPair{
-			Key: "_testdatakey/key1",
-			Val: "val1",
-		},
-		KVPair{
-			Key: "_testdatakey/key2",
-			Val: "val2",
-		},
-	},
-	"UpgradeFuncExample": {
-		KVPair{
-			Key: "_testdatakey/key3",
-			Val: "val3",
-		},
-		KVPair{
-			Key: "_testdatakey/key4",
-			Val: "val4",
-		},
-	},
-	"UpgradeFuncReplaceEverything": {
+	"TestUpgradeExample": {
 		KVPair{
 			Key: "_testdatakey/key5",
 			Val: "val5",
@@ -39,27 +19,7 @@ var PreUpgradeData = map[string][]KVPair{
 }
 
 var PostUpgradeData = map[string][]KVPair{
-	"UpgradeMexSaltExample": {
-		KVPair{
-			Key: "_testdatakey/key1",
-			Val: "val1",
-		},
-		KVPair{
-			Key: "_testdatakey/key2",
-			Val: "val2",
-		},
-	},
-	"UpgradeFuncExample": {
-		KVPair{
-			Key: "_testdatakey/key3",
-			Val: "val33",
-		},
-		KVPair{
-			Key: "_testdatakey/key4",
-			Val: "val44",
-		},
-	},
-	"UpgradeFuncReplaceEverything": {
+	"TestUpgradeExample": {
 		KVPair{
 			Key: "val5",
 			Val: "_testdatakey/key5",
