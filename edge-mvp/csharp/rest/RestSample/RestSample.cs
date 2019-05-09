@@ -44,7 +44,7 @@ namespace RestSample
         try
         {
           var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-          Console.WriteLine("RegisteClient Reply Status: " + registerClientReply.Status);
+          Console.WriteLine("RegisterClient Reply Status: " + registerClientReply.Status);
         }
         catch (System.Net.WebException we) // REST HTTP call error codes.
         {
