@@ -1,7 +1,5 @@
 apply plugin: 'com.android.application'
 
-def grpcVersion = '1.15.1'
-
 android {
     compileSdkVersion 28
     defaultConfig {

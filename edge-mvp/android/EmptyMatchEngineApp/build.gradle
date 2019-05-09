@@ -5,6 +5,7 @@ properties.load(project.rootProject.file('local.properties').newDataInputStream(
 def nexusUser = properties.getProperty("nexus.user")
 def nexusPassword = properties.getProperty("nexus.password")
 
+project.ext.set("grpcVersion", '1.20.0')
 
 buildscript {
 
@@ -14,8 +15,8 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
-        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.6"
+        classpath 'com.android.tools.build:gradle:3.4.0'
+        classpath "com.google.protobuf:protobuf-gradle-plugin:0.8.8"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
