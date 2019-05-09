@@ -42,7 +42,7 @@ namespace DistributedMatchEngine
     public Int32 public_port;
     // Public facing path for HTTP L7 access.
     [DataMember]
-    public string public_path;
+    public string path_prefix;
     // FQDN prefix to append to base FQDN in FindCloudlet response. May be empty.
     [DataMember]
     public string FQDN_prefix;

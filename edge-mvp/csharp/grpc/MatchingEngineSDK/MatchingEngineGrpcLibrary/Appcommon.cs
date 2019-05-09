@@ -27,14 +27,14 @@ namespace DistributedMatchEngine {
             "Cg9hcHBjb21tb24ucHJvdG8SGGRpc3RyaWJ1dGVkX21hdGNoX2VuZ2luZSKQ",
             "AQoHQXBwUG9ydBIvCgVwcm90bxgBIAEoDjIgLmRpc3RyaWJ1dGVkX21hdGNo",
             "X2VuZ2luZS5MUHJvdG8SFQoNaW50ZXJuYWxfcG9ydBgCIAEoBRITCgtwdWJs",
-            "aWNfcG9ydBgDIAEoBRITCgtwdWJsaWNfcGF0aBgEIAEoCRITCgtGUUROX3By",
+            "aWNfcG9ydBgDIAEoBRITCgtwYXRoX3ByZWZpeBgEIAEoCRITCgtGUUROX3By",
             "ZWZpeBgFIAEoCSpJCgZMUHJvdG8SEQoNTFByb3RvVW5rbm93bhAAEg0KCUxQ",
             "cm90b1RDUBABEg0KCUxQcm90b1VEUBACEg4KCkxQcm90b0hUVFAQA2IGcHJv",
             "dG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::DistributedMatchEngine.LProto), }, new pbr::GeneratedClrTypeInfo[] {
-            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppPort), global::DistributedMatchEngine.AppPort.Parser, new[]{ "Proto", "InternalPort", "PublicPort", "PublicPath", "FQDNPrefix" }, null, null, null)
+            new pbr::GeneratedClrTypeInfo(typeof(global::DistributedMatchEngine.AppPort), global::DistributedMatchEngine.AppPort.Parser, new[]{ "Proto", "InternalPort", "PublicPort", "PathPrefix", "FQDNPrefix" }, null, null, null)
           }));
     }
     #endregion
@@ -97,7 +97,7 @@ namespace DistributedMatchEngine {
       proto_ = other.proto_;
       internalPort_ = other.internalPort_;
       publicPort_ = other.publicPort_;
-      publicPath_ = other.publicPath_;
+      pathPrefix_ = other.pathPrefix_;
       fQDNPrefix_ = other.fQDNPrefix_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
@@ -149,17 +149,17 @@ namespace DistributedMatchEngine {
       }
     }
 
-    /// <summary>Field number for the "public_path" field.</summary>
-    public const int PublicPathFieldNumber = 4;
-    private string publicPath_ = "";
+    /// <summary>Field number for the "path_prefix" field.</summary>
+    public const int PathPrefixFieldNumber = 4;
+    private string pathPrefix_ = "";
     /// <summary>
     /// Public facing path for HTTP L7 access.
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string PublicPath {
-      get { return publicPath_; }
+    public string PathPrefix {
+      get { return pathPrefix_; }
       set {
-        publicPath_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        pathPrefix_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -193,7 +193,7 @@ namespace DistributedMatchEngine {
       if (Proto != other.Proto) return false;
       if (InternalPort != other.InternalPort) return false;
       if (PublicPort != other.PublicPort) return false;
-      if (PublicPath != other.PublicPath) return false;
+      if (PathPrefix != other.PathPrefix) return false;
       if (FQDNPrefix != other.FQDNPrefix) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
@@ -204,7 +204,7 @@ namespace DistributedMatchEngine {
       if (Proto != 0) hash ^= Proto.GetHashCode();
       if (InternalPort != 0) hash ^= InternalPort.GetHashCode();
       if (PublicPort != 0) hash ^= PublicPort.GetHashCode();
-      if (PublicPath.Length != 0) hash ^= PublicPath.GetHashCode();
+      if (PathPrefix.Length != 0) hash ^= PathPrefix.GetHashCode();
       if (FQDNPrefix.Length != 0) hash ^= FQDNPrefix.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
@@ -231,9 +231,9 @@ namespace DistributedMatchEngine {
         output.WriteRawTag(24);
         output.WriteInt32(PublicPort);
       }
-      if (PublicPath.Length != 0) {
+      if (PathPrefix.Length != 0) {
         output.WriteRawTag(34);
-        output.WriteString(PublicPath);
+        output.WriteString(PathPrefix);
       }
       if (FQDNPrefix.Length != 0) {
         output.WriteRawTag(42);
@@ -256,8 +256,8 @@ namespace DistributedMatchEngine {
       if (PublicPort != 0) {
         size += 1 + pb::CodedOutputStream.ComputeInt32Size(PublicPort);
       }
-      if (PublicPath.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(PublicPath);
+      if (PathPrefix.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(PathPrefix);
       }
       if (FQDNPrefix.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(FQDNPrefix);
@@ -282,8 +282,8 @@ namespace DistributedMatchEngine {
       if (other.PublicPort != 0) {
         PublicPort = other.PublicPort;
       }
-      if (other.PublicPath.Length != 0) {
-        PublicPath = other.PublicPath;
+      if (other.PathPrefix.Length != 0) {
+        PathPrefix = other.PathPrefix;
       }
       if (other.FQDNPrefix.Length != 0) {
         FQDNPrefix = other.FQDNPrefix;
@@ -312,7 +312,7 @@ namespace DistributedMatchEngine {
             break;
           }
           case 34: {
-            PublicPath = input.ReadString();
+            PathPrefix = input.ReadString();
             break;
           }
           case 42: {

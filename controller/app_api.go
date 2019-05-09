@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
@@ -259,34 +258,4 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
-}
-
-// GetClusterFlavorForFlavor finds the smallest cluster flavor whose
-// node flavor matches the passed in flavor.
-func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.ClusterFlavorKey, error) {
-	matching := make([]*edgeproto.ClusterFlavor, 0)
-
-	clusterFlavorApi.cache.Mux.Lock()
-	defer clusterFlavorApi.cache.Mux.Unlock()
-	for _, val := range clusterFlavorApi.cache.Objs {
-		if val.NodeFlavor.Matches(flavorKey) {
-			matching = append(matching, val)
-		}
-	}
-	if len(matching) == 0 {
-		return nil, fmt.Errorf("No cluster flavors with node flavor %s found", flavorKey.Name)
-	}
-	sort.Slice(matching, func(i, j int) bool {
-		if matching[i].MaxNodes != matching[j].MaxNodes {
-			return matching[i].MaxNodes < matching[j].MaxNodes
-		}
-		if matching[i].NumNodes != matching[j].NumNodes {
-			return matching[i].NumNodes < matching[j].NumNodes
-		}
-		if matching[i].NumMasters != matching[j].NumMasters {
-			return matching[i].NumMasters < matching[j].NumMasters
-		}
-		return matching[i].Key.Name < matching[j].Key.Name
-	})
-	return &matching[0].Key, nil
 }

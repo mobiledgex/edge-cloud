@@ -1,12 +1,12 @@
 # Makefile
 
-GRPCTOOLS_VERSION := Grpc.Tools.1.17.1
+GRPCTOOLS_VERSION := Grpc.Tools.1.20.0
 TEMP_DIR := packages/$(GRPCTOOLS_VERSION)/tmp
 CURL_URL := https://www.nuget.org/api/v2/package/Grpc.Tools
 #PROTOC := packages/$(GRPCTOOLS_VERSION)/tools/macosx_x64/protoc
 PROTOC := protoc
 # Run "brew install coreutils" to get "grealpath" for protoc's requirement of absolute paths
-ABSOLUTEPATH := $(shell grealpath ../..)
+ABSOLUTEPATH := $(shell grealpath ../../..)
 PROTOS_PATH = $(ABSOLUTEPATH)/d-match-engine/dme-proto
 THIRD_PARTY_PROTOS_PATH = $(ABSOLUTEPATH)/edge-mvp/third_party
 
@@ -60,7 +60,7 @@ build-release:
 
 publish:
 	test MEX_LIB_API_KEY
-	$(shell dotnet nuget push $(BINOUT)/Release/Mobiledgex.MatchingEngineGrpcLibrary.1.3.0.nupkg -k $(MEX_LIB_API_KEY) -s $(NUGET_RELEASE_SERVER) > $(PUBLISHLOG))
+	$(shell dotnet nuget push $(BINOUT)/Release/Mobiledgex.MatchingEngineGrpcLibrary.1.3.8.nupkg -k $(MEX_LIB_API_KEY) -s $(NUGET_RELEASE_SERVER) > $(PUBLISHLOG))
 	cat $(PUBLISHLOG)
 
 

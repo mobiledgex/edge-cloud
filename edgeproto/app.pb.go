@@ -9,7 +9,6 @@
 		app_inst.proto
 		cloudlet.proto
 		cluster.proto
-		clusterflavor.proto
 		clusterinst.proto
 		common.proto
 		controller.proto
@@ -45,8 +44,6 @@
 		CloudletMetrics
 		ClusterKey
 		Cluster
-		ClusterFlavorKey
-		ClusterFlavor
 		ClusterInstKey
 		ClusterInst
 		ClusterInstInfo
