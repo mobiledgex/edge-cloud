@@ -9,7 +9,7 @@ import "io"
 import "testing"
 import "context"
 import "time"
-import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -63,9 +63,9 @@ func (x *ShowCluster) CheckFound(obj *edgeproto.Cluster) bool {
 
 func (x *ShowCluster) AssertFound(t *testing.T, obj *edgeproto.Cluster) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find Cluster %s", obj.Key.GetKeyString())
+	require.True(t, found, "find Cluster %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "Cluster are equal")
+		require.Equal(t, *obj, check, "Cluster are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -76,7 +76,7 @@ func (x *ShowCluster) AssertFound(t *testing.T, obj *edgeproto.Cluster) {
 
 func (x *ShowCluster) AssertNotFound(t *testing.T, obj *edgeproto.Cluster) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find Cluster %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find Cluster %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundCluster(t *testing.T, api edgeproto.ClusterApiClient, obj *edgeproto.Cluster, count int, retry time.Duration) {
@@ -194,8 +194,8 @@ func basicClusterShowTest(t *testing.T, api *ClusterCommonApi, testData []edgepr
 	show.Init()
 	filterNone := edgeproto.Cluster{}
 	err = api.ShowCluster(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -210,7 +210,7 @@ func GetCluster(t *testing.T, api *ClusterCommonApi, key *edgeproto.ClusterKey, 
 	filter := edgeproto.Cluster{}
 	filter.Key = *key
 	err = api.ShowCluster(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -223,7 +223,7 @@ func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgepro
 	ctx := context.TODO()
 
 	if len(testData) < 3 {
-		assert.True(t, false, "Need at least 3 test data objects")
+		require.True(t, false, "Need at least 3 test data objects")
 		return
 	}
 
@@ -232,32 +232,32 @@ func basicClusterCudTest(t *testing.T, api *ClusterCommonApi, testData []edgepro
 
 	// test duplicate create - should fail
 	_, err = api.CreateCluster(ctx, &testData[0])
-	assert.NotNil(t, err, "Create duplicate Cluster")
+	require.NotNil(t, err, "Create duplicate Cluster")
 
 	// test show all items
 	basicClusterShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteCluster(ctx, &testData[0])
-	assert.Nil(t, err, "delete Cluster %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "delete Cluster %s", testData[0].Key.GetKeyString())
 	show := ShowCluster{}
 	show.Init()
 	filterNone := edgeproto.Cluster{}
 	err = api.ShowCluster(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateCluster(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
+	require.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateCluster(ctx, &testData[0])
-	assert.Nil(t, err, "Create Cluster %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Cluster %s", testData[0].Key.GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Cluster{}
 	_, err = api.CreateCluster(ctx, &bad)
-	assert.NotNil(t, err, "Create Cluster with no key info")
+	require.NotNil(t, err, "Create Cluster with no key info")
 
 }
 
@@ -275,7 +275,7 @@ func createClusterData(t *testing.T, api *ClusterCommonApi, testData []edgeproto
 
 	for _, obj := range testData {
 		_, err = api.CreateCluster(ctx, &obj)
-		assert.Nil(t, err, "Create Cluster %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Cluster %s", obj.Key.GetKeyString())
 	}
 }
 

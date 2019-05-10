@@ -22,7 +22,6 @@ const (
 	TypeAppInstInfo
 	TypeCloudlet
 	TypeFlavor
-	TypeClusterFlavor
 	TypeClusterInst
 	TypeClusterInstInfo
 )
