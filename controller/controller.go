@@ -21,6 +21,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	influxq "github.com/mobiledgex/edge-cloud/controller/influxq_client"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
+	"github.com/mobiledgex/edge-cloud/integration/process"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -31,6 +32,7 @@ import (
 // Command line options
 var rootDir = flag.String("r", "", "root directory; set for testing")
 var localEtcd = flag.Bool("localEtcd", false, "set to start local etcd for testing")
+var initLocalEtcd = flag.Bool("initLocalEtcd", false, "set to init local etcd database")
 var region = flag.Uint("region", 1, "Region")
 var etcdUrls = flag.String("etcdUrls", "http://127.0.0.1:2380", "etcd client listener URLs")
 var apiAddr = flag.String("apiAddr", "127.0.0.1:55001", "API listener address")
@@ -55,12 +57,36 @@ func GetRootDir() string {
 var ErrCtrlAlreadyInProgress = errors.New("Change already in progress")
 
 var sigChan chan os.Signal
+var services Services
 
-// testing hook
-var mainStarted chan struct{}
+type Services struct {
+	etcdLocal       *process.Etcd
+	sync            *Sync
+	influxQ         *influxq.InfluxQ
+	notifyServerMgr bool
+	grpcServer      *grpc.Server
+	httpServer      *http.Server
+}
 
 func main() {
 	flag.Parse()
+
+	err := startServices()
+	if err != nil {
+		stopServices()
+		log.FatalLog(err.Error())
+	}
+	defer stopServices()
+
+	sigChan = make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt)
+
+	// wait until process in killed/interrupted
+	sig := <-sigChan
+	fmt.Println(sig)
+}
+
+func startServices() error {
 	log.SetDebugLevelStrs(*debugLevels)
 
 	if *externalApiAddr == "" {
@@ -71,61 +97,64 @@ func main() {
 	objstore.InitRegion(uint32(*region))
 
 	if *localEtcd {
-		etcdServer, err := StartLocalEtcdServer()
-		if err != nil {
-			log.FatalLog("No clientIP and clientPort specified, starting local etcd server failed: %s", err)
+		opts := []process.StartOp{}
+		if *initLocalEtcd {
+			opts = append(opts, process.WithCleanStartup())
 		}
-		etcdUrls = &etcdServer.Config.ClientUrls
-		defer etcdServer.Stop()
+		etcdLocal, err := StartLocalEtcdServer(opts...)
+		if err != nil {
+			return fmt.Errorf("starting local etcd server failed: %v", err)
+		}
+		services.etcdLocal = etcdLocal
+		etcdUrls = &etcdLocal.ClientAddrs
 	}
 	objStore, err := GetEtcdClientBasic(*etcdUrls)
 	if err != nil {
-		log.FatalLog("Failed to initialize Object Store", "err", err)
+		return fmt.Errorf("Failed to initialize Object Store, %v", err)
 	}
 	err = objStore.CheckConnected(50, 20*time.Millisecond)
 	if err != nil {
-		log.FatalLog("Failed to connect to etcd servers", "err", err)
+		return fmt.Errorf("Failed to connect to etcd servers, %v", err)
 	}
 
 	if !*skipVersionCheck {
 		// First off - check version of the objectStore we are running
 		if err = checkVersion(objStore); err != nil {
-			log.FatalLog("Running version doesn't match the version of etcd", "err", err)
+			return fmt.Errorf("Running version doesn't match the version of etcd, %v", err)
 		}
 	}
 	lis, err := net.Listen("tcp", *apiAddr)
 	if err != nil {
-		log.FatalLog("Failed to listen on address", "address", *apiAddr,
-			"error", err)
+		return fmt.Errorf("Failed to listen on address %s, %v", *apiAddr, err)
 	}
 
 	sync := InitSync(objStore)
 	InitApis(sync)
 	sync.Start()
-	defer sync.Done()
+	services.sync = sync
 
 	// register controller must be called before starting Notify protocol
 	// to set up controllerAliveLease.
 	err = controllerApi.registerController()
 	if err != nil {
-		log.FatalLog("Failed to register controller", "err", err)
+		return fmt.Errorf("Failed to register controller, %v", err)
 	}
 
 	influxQ := influxq.NewInfluxQ(InfluxDBName)
 	err = influxQ.Start(*influxAddr)
 	if err != nil {
-		log.FatalLog("Failed to start influx queue",
-			"address", *influxAddr, "err", err)
+		return fmt.Errorf("Failed to start influx queue address %s, %v",
+			*influxAddr, err)
 	}
-	defer influxQ.Stop()
+	services.influxQ = influxQ
 
 	InitNotify(influxQ)
 	notify.ServerMgrOne.Start(*notifyAddr, *tlsCertFile)
-	defer notify.ServerMgrOne.Stop()
+	services.notifyServerMgr = true
 
 	creds, err := tls.GetTLSServerCreds(*tlsCertFile)
 	if err != nil {
-		log.FatalLog("get TLS Credentials", "error", err)
+		return fmt.Errorf("get TLS Credentials failed, %v", err)
 	}
 	server := grpc.NewServer(grpc.Creds(creds),
 		grpc.UnaryInterceptor(AuditUnaryInterceptor),
@@ -151,7 +180,7 @@ func main() {
 			log.FatalLog("Failed to serve", "error", err)
 		}
 	}()
-	defer server.Stop()
+	services.grpcServer = server
 
 	// REST gateway
 	mux := http.NewServeMux()
@@ -174,7 +203,7 @@ func main() {
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)
 	if err != nil {
-		log.FatalLog("Failed to create grpc gateway", "error", err)
+		return fmt.Errorf("Failed to create grpc gateway, %v", err)
 	}
 	mux.Handle("/", gw)
 	tlscfg := &ctls.Config{
@@ -203,19 +232,31 @@ func main() {
 		ErrorLog:  &nullLogger,
 	}
 	go cloudcommon.GrpcGatewayServe(gwcfg, httpServer)
-	defer httpServer.Shutdown(context.Background())
+	services.httpServer = httpServer
 
-	sigChan = make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt)
-
-	if mainStarted != nil {
-		close(mainStarted)
-	}
 	log.InfoLog("Ready")
+	return nil
+}
 
-	// wait until process in killed/interrupted
-	sig := <-sigChan
-	fmt.Println(sig)
+func stopServices() {
+	if services.httpServer != nil {
+		services.httpServer.Shutdown(context.Background())
+	}
+	if services.grpcServer != nil {
+		services.grpcServer.Stop()
+	}
+	if services.notifyServerMgr {
+		notify.ServerMgrOne.Stop()
+	}
+	if services.influxQ != nil {
+		services.influxQ.Stop()
+	}
+	if services.sync != nil {
+		services.sync.Done()
+	}
+	if services.etcdLocal != nil {
+		services.etcdLocal.StopLocal()
+	}
 }
 
 // Helper function to verify the compatibility of etcd version and

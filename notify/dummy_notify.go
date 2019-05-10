@@ -56,6 +56,7 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterRecvCloudletCache(&s.CloudletCache)
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
+	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 }
 
 func (s *DummyHandler) RegisterDMEClient(cl *Client) {
@@ -70,7 +71,6 @@ const (
 	AppInstType           = iota
 	CloudletType
 	FlavorType
-	ClusterFlavorType
 	ClusterInstType
 	AppInstInfoType
 	ClusterInstInfoType

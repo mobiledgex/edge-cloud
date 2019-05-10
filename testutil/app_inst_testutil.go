@@ -9,7 +9,7 @@ import "io"
 import "testing"
 import "context"
 import "time"
-import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -97,9 +97,9 @@ func (x *ShowAppInst) CheckFound(obj *edgeproto.AppInst) bool {
 
 func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
+	require.True(t, found, "find AppInst %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "AppInst are equal")
+		require.Equal(t, *obj, check, "AppInst are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -110,7 +110,7 @@ func (x *ShowAppInst) AssertFound(t *testing.T, obj *edgeproto.AppInst) {
 
 func (x *ShowAppInst) AssertNotFound(t *testing.T, obj *edgeproto.AppInst) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find AppInst %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find AppInst %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundAppInst(t *testing.T, api edgeproto.AppInstApiClient, obj *edgeproto.AppInst, count int, retry time.Duration) {
@@ -237,8 +237,8 @@ func basicAppInstShowTest(t *testing.T, api *AppInstCommonApi, testData []edgepr
 	show.Init()
 	filterNone := edgeproto.AppInst{}
 	err = api.ShowAppInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -253,7 +253,7 @@ func GetAppInst(t *testing.T, api *AppInstCommonApi, key *edgeproto.AppInstKey, 
 	filter := edgeproto.AppInst{}
 	filter.Key = *key
 	err = api.ShowAppInst(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -266,7 +266,7 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 	ctx := context.TODO()
 
 	if len(testData) < 3 {
-		assert.True(t, false, "Need at least 3 test data objects")
+		require.True(t, false, "Need at least 3 test data objects")
 		return
 	}
 
@@ -275,32 +275,32 @@ func basicAppInstCudTest(t *testing.T, api *AppInstCommonApi, testData []edgepro
 
 	// test duplicate create - should fail
 	_, err = api.CreateAppInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Create duplicate AppInst")
+	require.NotNil(t, err, "Create duplicate AppInst")
 
 	// test show all items
 	basicAppInstShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteAppInst(ctx, &testData[0])
-	assert.Nil(t, err, "delete AppInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "delete AppInst %s", testData[0].Key.GetKeyString())
 	show := ShowAppInst{}
 	show.Init()
 	filterNone := edgeproto.AppInst{}
 	err = api.ShowAppInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateAppInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
+	require.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateAppInst(ctx, &testData[0])
-	assert.Nil(t, err, "Create AppInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create AppInst %s", testData[0].Key.GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.AppInst{}
 	_, err = api.CreateAppInst(ctx, &bad)
-	assert.NotNil(t, err, "Create AppInst with no key info")
+	require.NotNil(t, err, "Create AppInst with no key info")
 
 }
 
@@ -318,7 +318,7 @@ func createAppInstData(t *testing.T, api *AppInstCommonApi, testData []edgeproto
 
 	for _, obj := range testData {
 		_, err = api.CreateAppInst(ctx, &obj)
-		assert.Nil(t, err, "Create AppInst %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create AppInst %s", obj.Key.GetKeyString())
 	}
 }
 
@@ -360,9 +360,9 @@ func (x *ShowAppInstInfo) CheckFound(obj *edgeproto.AppInstInfo) bool {
 
 func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
+	require.True(t, found, "find AppInstInfo %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "AppInstInfo are equal")
+		require.Equal(t, *obj, check, "AppInstInfo are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -373,7 +373,7 @@ func (x *ShowAppInstInfo) AssertFound(t *testing.T, obj *edgeproto.AppInstInfo) 
 
 func (x *ShowAppInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.AppInstInfo) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find AppInstInfo %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find AppInstInfo %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundAppInstInfo(t *testing.T, api edgeproto.AppInstInfoApiClient, obj *edgeproto.AppInstInfo, count int, retry time.Duration) {
@@ -457,8 +457,8 @@ func basicAppInstInfoShowTest(t *testing.T, api *AppInstInfoCommonApi, testData 
 	show.Init()
 	filterNone := edgeproto.AppInstInfo{}
 	err = api.ShowAppInstInfo(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -473,7 +473,7 @@ func GetAppInstInfo(t *testing.T, api *AppInstInfoCommonApi, key *edgeproto.AppI
 	filter := edgeproto.AppInstInfo{}
 	filter.Key = *key
 	err = api.ShowAppInstInfo(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
