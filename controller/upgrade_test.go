@@ -51,7 +51,7 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 	filename := upgradeTestFileLocation + "/" + funcName + upgradeTestFilePostSuffix
 	file, err := os.Open(filename)
 	if err != nil {
-		return fmt.Errorf("Unable to find preupgrade testdata file at %s", filename)
+		return fmt.Errorf("Unable to find postupgrade testdata file at %s", filename)
 	}
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
