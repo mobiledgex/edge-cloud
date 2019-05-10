@@ -1,22 +1,41 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/objstore"
-	"github.com/mobiledgex/edge-cloud/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
+var upgradeTestFileLocation = "./upgrade_testfiles"
+var upgradeTestFilePreSuffix = "_pre.etcd"
+var upgradeTestFilePostSuffix = "_post.etcd"
+
 // Walk testutils data and populate objStore
 func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
-	if _, ok := testutil.PreUpgradeData[funcName]; !ok {
-		return fmt.Errorf("No data to build from for %s", funcName)
+	var key, val string
+
+	filename := upgradeTestFileLocation + "/" + funcName + upgradeTestFilePreSuffix
+	file, err := os.Open(filename)
+	if err != nil {
+		return fmt.Errorf("Unable to find preupgrade testdata file at %s", filename)
 	}
-	for _, kv := range testutil.PreUpgradeData[funcName] {
-		if _, err := objStore.Put(kv.Key, kv.Val); err != nil {
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for {
+		if !scanner.Scan() {
+			break
+		}
+		key = scanner.Text()
+		if !scanner.Scan() {
+			return fmt.Errorf("Improper formatted preupgrade .etcd file - Unmatched key, without a value.")
+		}
+		val = scanner.Text()
+		if _, err := objStore.Put(key, val); err != nil {
 			return err
 		}
 	}
@@ -25,35 +44,47 @@ func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
 
 // walk testutils data and see if the entries exist in the objstore
 func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
-	var objCount int
-	var testKVs []testutil.KVPair
-	var ok bool
+	var dbObjCount, fileObjCount int
 
-	// TODO - rewrite the below to use the files instead of testdata
-	if testKVs, ok = testutil.PostUpgradeData[funcName]; !ok {
-		return fmt.Errorf("No data to check for %s", funcName)
+	var key, val string
+
+	filename := upgradeTestFileLocation + "/" + funcName + upgradeTestFilePostSuffix
+	file, err := os.Open(filename)
+	if err != nil {
+		return fmt.Errorf("Unable to find preupgrade testdata file at %s", filename)
 	}
-	// TODO - testdata is to be a map of maps, so check all values in this walk as well
-	err := objStore.List("", func(key, val []byte, rev int64) error {
-		objCount++
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	for {
+		if !scanner.Scan() {
+			break
+		}
+		key = scanner.Text()
+		if !scanner.Scan() {
+			return fmt.Errorf("Improper formatted postupgrade .etcd file - Unmatched key, without a value.")
+		}
+		val = scanner.Text()
+		dbVal, _, _, err := objStore.Get(key)
+		if err != nil {
+			return fmt.Errorf("Unable to get value for key[%s], %v", key, err)
+		}
+		if string(dbVal) != val {
+			return fmt.Errorf("Values don't match for the key <%s> - should be: <%s> found: <%s>",
+				key, val, string(dbVal))
+		}
+		fileObjCount++
+	}
+	// count objects in etcd
+	err = objStore.List("", func(key, val []byte, rev int64) error {
+		dbObjCount++
 		return nil
 	})
 	if err != nil {
 		return err
 	}
-	if objCount != len(testKVs) {
+	if fileObjCount != dbObjCount {
 		return fmt.Errorf("Number of objects in the etcd db[%d] doesn't match the number of expected objects[%d]\n",
-			objCount, len(testKVs))
-	}
-	for _, kv := range testKVs {
-		val, _, _, err := objStore.Get(kv.Key)
-		if err != nil {
-			return err
-		}
-		if string(val) != kv.Val {
-			return fmt.Errorf("Values don't match for the key <%s> - should be: <%s> found: <%s>",
-				kv.Key, kv.Val, string(val))
-		}
+			dbObjCount, fileObjCount)
 	}
 	return nil
 }
