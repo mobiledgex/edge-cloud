@@ -25,10 +25,27 @@ func buildDbFromTestData(objStore objstore.KVStore, funcName string) error {
 
 // walk testutils data and see if the entries exist in the objstore
 func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
-	if _, ok := testutil.PostUpgradeData[funcName]; !ok {
+	var objCount int
+	var testKVs []testutil.KVPair
+	var ok bool
+
+	// TODO - rewrite the below to use the files instead of testdata
+	if testKVs, ok = testutil.PostUpgradeData[funcName]; !ok {
 		return fmt.Errorf("No data to check for %s", funcName)
 	}
-	for _, kv := range testutil.PostUpgradeData[funcName] {
+	// TODO - testdata is to be a map of maps, so check all values in this walk as well
+	err := objStore.List("", func(key, val []byte, rev int64) error {
+		objCount++
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	if objCount != len(testKVs) {
+		return fmt.Errorf("Number of objects in the etcd db[%d] doesn't match the number of expected objects[%d]\n",
+			objCount, len(testKVs))
+	}
+	for _, kv := range testKVs {
 		val, _, _, err := objStore.Get(kv.Key)
 		if err != nil {
 			return err
