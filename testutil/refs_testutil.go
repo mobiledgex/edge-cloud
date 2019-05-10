@@ -9,7 +9,7 @@ import "io"
 import "testing"
 import "context"
 import "time"
-import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -63,9 +63,9 @@ func (x *ShowCloudletRefs) CheckFound(obj *edgeproto.CloudletRefs) bool {
 
 func (x *ShowCloudletRefs) AssertFound(t *testing.T, obj *edgeproto.CloudletRefs) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find CloudletRefs %s", obj.Key.GetKeyString())
+	require.True(t, found, "find CloudletRefs %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "CloudletRefs are equal")
+		require.Equal(t, *obj, check, "CloudletRefs are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -76,7 +76,7 @@ func (x *ShowCloudletRefs) AssertFound(t *testing.T, obj *edgeproto.CloudletRefs
 
 func (x *ShowCloudletRefs) AssertNotFound(t *testing.T, obj *edgeproto.CloudletRefs) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find CloudletRefs %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find CloudletRefs %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundCloudletRefs(t *testing.T, api edgeproto.CloudletRefsApiClient, obj *edgeproto.CloudletRefs, count int, retry time.Duration) {
@@ -160,8 +160,8 @@ func basicCloudletRefsShowTest(t *testing.T, api *CloudletRefsCommonApi, testDat
 	show.Init()
 	filterNone := edgeproto.CloudletRefs{}
 	err = api.ShowCloudletRefs(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -176,7 +176,7 @@ func GetCloudletRefs(t *testing.T, api *CloudletRefsCommonApi, key *edgeproto.Cl
 	filter := edgeproto.CloudletRefs{}
 	filter.Key = *key
 	err = api.ShowCloudletRefs(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -222,9 +222,9 @@ func (x *ShowClusterRefs) CheckFound(obj *edgeproto.ClusterRefs) bool {
 
 func (x *ShowClusterRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterRefs) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find ClusterRefs %s", obj.Key.GetKeyString())
+	require.True(t, found, "find ClusterRefs %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "ClusterRefs are equal")
+		require.Equal(t, *obj, check, "ClusterRefs are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -235,7 +235,7 @@ func (x *ShowClusterRefs) AssertFound(t *testing.T, obj *edgeproto.ClusterRefs) 
 
 func (x *ShowClusterRefs) AssertNotFound(t *testing.T, obj *edgeproto.ClusterRefs) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find ClusterRefs %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find ClusterRefs %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundClusterRefs(t *testing.T, api edgeproto.ClusterRefsApiClient, obj *edgeproto.ClusterRefs, count int, retry time.Duration) {
@@ -319,8 +319,8 @@ func basicClusterRefsShowTest(t *testing.T, api *ClusterRefsCommonApi, testData 
 	show.Init()
 	filterNone := edgeproto.ClusterRefs{}
 	err = api.ShowClusterRefs(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -335,7 +335,7 @@ func GetClusterRefs(t *testing.T, api *ClusterRefsCommonApi, key *edgeproto.Clus
 	filter := edgeproto.ClusterRefs{}
 	filter.Key = *key
 	err = api.ShowClusterRefs(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
