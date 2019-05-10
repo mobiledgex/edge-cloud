@@ -7,7 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCloudletApi(t *testing.T) {
@@ -36,11 +36,11 @@ func TestCloudletApi(t *testing.T) {
 	clbad = testutil.CloudletData[0]
 	clbad.Key.Name = "test num dyn ips"
 	err := cloudletApi.CreateCloudlet(&clbad, &testutil.CudStreamoutCloudlet{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	clbad.NumDynamicIps = 0
 	clbad.Fields = []string{edgeproto.CloudletFieldNumDynamicIps}
 	err = cloudletApi.UpdateCloudlet(&clbad, &testutil.CudStreamoutCloudlet{})
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 
 	dummy.Stop()
 }
@@ -49,7 +49,7 @@ func testBadLat(t *testing.T, clbad *edgeproto.Cloudlet, lats []float64) {
 	for _, lat := range lats {
 		clbad.Location.Latitude = lat
 		err := cloudletApi.CreateCloudlet(clbad, &testutil.CudStreamoutCloudlet{})
-		assert.NotNil(t, err, "create cloudlet bad latitude")
+		require.NotNil(t, err, "create cloudlet bad latitude")
 	}
 }
 
@@ -57,6 +57,6 @@ func testBadLong(t *testing.T, clbad *edgeproto.Cloudlet, longs []float64) {
 	for _, long := range longs {
 		clbad.Location.Longitude = long
 		err := cloudletApi.CreateCloudlet(clbad, &testutil.CudStreamoutCloudlet{})
-		assert.NotNil(t, err, "create cloudlet bad longitude")
+		require.NotNil(t, err, "create cloudlet bad longitude")
 	}
 }
