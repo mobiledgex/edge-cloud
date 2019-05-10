@@ -40,59 +40,84 @@ namespace RestSample
 
         var registerClientRequest = me.CreateRegisterClientRequest(carrierName, devName, appName, appVers, developerAuthToken);
 
-        // Await synchronously.
-        var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-        Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie + ", Status: " + registerClientReply.Status);
-
+        // APIs depend on Register client to complete successfully:
+        try
+        {
+          var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
+          Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie + ", Status: " + registerClientReply.Status);
+        }
+        catch (System.Net.WebException we) // REST HTTP call error codes.
+        {
+          Console.WriteLine("RegisterClient Exception: " + we.Message + "\nStack: " + we.StackTrace);
+        }
         // Do Verify and FindCloudlet in concurrent tasks:
         var loc = await locTask;
 
+        // Independent requests:
         var verifyLocationRequest = me.CreateVerifyLocationRequest(carrierName, loc);
         var findCloudletRequest = me.CreateFindCloudletRequest(carrierName, devName, appName, appVers, loc);
         var getLocationRequest = me.CreateGetLocationRequest(carrierName);
 
 
-        // Async:
-        var findCloudletTask = me.FindCloudlet(host, port, findCloudletRequest);
-        var getLocationTask = me.GetLocation(host, port, getLocationRequest);
+        // These are asynchronious calls, of independent REST APIs.
 
-        // Awaits:
-        var findCloudletReply = await findCloudletTask;
-        Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
-        Console.WriteLine("FindCloudlet:" +
-                " Ver: " + findCloudletReply.Ver +
-                ", FQDN: " + findCloudletReply.FQDN +
-                ", cloudlet_location: " +
-                " long: " + findCloudletReply.cloudlet_location.longitude +
-                ", lat: " + findCloudletReply.cloudlet_location.latitude);
-        // App Ports:
-        foreach (AppPort p in findCloudletReply.ports)
+        // FindCloudlet:
+        try
         {
-          Console.WriteLine("Port: FQDN_prefix: " + p.FQDN_prefix +
-                ", protocol: " + p.proto +
-                ", public_port: " + p.public_port +
-                ", internal_port: " + p.internal_port +
-                ", path_prefix: " + p.path_prefix);
+          var findCloudletReply = await me.FindCloudlet(host, port, findCloudletRequest);
+          Console.WriteLine("FindCloudlet Reply: " + findCloudletReply.status);
+          Console.WriteLine("FindCloudlet:" +
+                  " Ver: " + findCloudletReply.Ver +
+                  ", FQDN: " + findCloudletReply.FQDN +
+                  ", cloudlet_location: " +
+                  " long: " + findCloudletReply.cloudlet_location.longitude +
+                  ", lat: " + findCloudletReply.cloudlet_location.latitude);
+          // App Ports:
+          foreach (AppPort p in findCloudletReply.ports)
+          {
+            Console.WriteLine("Port: FQDN_prefix: " + p.FQDN_prefix +
+                  ", protocol: " + p.proto +
+                  ", public_port: " + p.public_port +
+                  ", internal_port: " + p.internal_port +
+                  ", path_prefix: " + p.path_prefix);
+          }
+        }
+        catch (System.Net.WebException we)
+        {
+          Console.WriteLine("FindCloudlet Exception: " + we.Message + "\nStack: " + we.StackTrace);
         }
 
+        // Get Location:
+        try
+        {
+          var getLocationReply = await me.GetLocation(host, port, getLocationRequest);
+          var location = getLocationReply.NetworkLocation;
+          Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
+        }
+        catch (System.Net.WebException we)
+        {
+          Console.WriteLine("GetLocation Exception: " + we.Message + "\nStack: " + we.StackTrace);
+        }
 
-
-        // A MobiledgeX enabled carrier is required for these two APIs:
-        var getLocationReply = await getLocationTask;
-        var location = getLocationReply.NetworkLocation;
-        Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
-
-        Console.WriteLine("VerifyLocation() may timeout, due to reachability of carrier verification servers from your network.");
-        var verifyLocationReply = await me.VerifyLocation(host, port, verifyLocationRequest);
-        Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
+        // Verify Location:
+        try
+        {
+          Console.WriteLine("VerifyLocation() may timeout, due to reachability of carrier verification servers from your network.");
+          var verifyLocationReply = await me.VerifyLocation(host, port, verifyLocationRequest);
+          Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
+        }
+        catch (System.Net.WebException we)
+        {
+          Console.WriteLine("VerifyLocation Exception: " + we.Message + "\nStack: " + we.StackTrace);
+        }
+        catch (InvalidTokenServerTokenException itste)
+        {
+          Console.WriteLine(itste.Message + "\n" + itste.StackTrace);
+        }
       }
-      catch (InvalidTokenServerTokenException itste)
+      catch (Exception e) // Catch All
       {
-        Console.WriteLine(itste.StackTrace);
-      }
-      catch (Exception e)
-      {
-        Console.WriteLine(e.StackTrace);
+        Console.WriteLine(e.Message + "\n" + e.StackTrace);
       }
 
     }

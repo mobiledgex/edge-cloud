@@ -85,7 +85,7 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 		return fmt.Errorf("create nginx.conf failed, %v", err)
 	}
 
-	cmdArgs := []string{"run", "-d", "--rm", "--name", name}
+	cmdArgs := []string{"run", "-d", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
 		for _, p := range ports {
 			if p.Proto == dme.LProto_LProtoHTTP {
@@ -310,7 +310,10 @@ location /{{.PathPrefix}}/ {
 func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	log.DebugLog(log.DebugLevelMexos, "delete nginx", "name", name)
 	out, err := client.Output("docker kill " + name)
-	if err != nil {
+	deleteContainer := false
+	if err == nil {
+		deleteContainer = true
+	} else {
 		if strings.Contains(string(out), "No such container") {
 			log.DebugLog(log.DebugLevelMexos,
 				"nginx LB container already gone", "name", name)
@@ -323,6 +326,17 @@ func DeleteNginxProxy(client pc.PlatformClient, name string) error {
 	if err != nil {
 		log.DebugLog(log.DebugLevelMexos, "delete nginx L7 conf",
 			"name", name, "l7conf", l7conf, "out", out, "err", err)
+	}
+	nginxDir := "nginx/" + name
+	out, err = client.Output("rm -rf " + nginxDir)
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "delete nginx dir", "name", name, "dir", nginxDir, "out", out, "err", err)
+	}
+	if deleteContainer {
+		out, err = client.Output("docker rm " + name)
+		if err != nil {
+			return fmt.Errorf("can't remove nginx container %s, %s, %v", name, out, err)
+		}
 	}
 	reloadNginxL7(client)
 

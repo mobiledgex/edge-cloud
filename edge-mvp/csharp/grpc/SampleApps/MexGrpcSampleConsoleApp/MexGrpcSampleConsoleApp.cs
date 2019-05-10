@@ -62,7 +62,7 @@ namespace MexGrpcSampleConsoleApp
       var registerClientRequest = CreateRegisterClientRequest(getCarrierName(), devName, appName, "1.0", "");
       var regReply = client.RegisterClient(registerClientRequest);
 
-      Console.WriteLine("RegisterClient Reply: " + regReply);
+      Console.WriteLine("RegisterClient Reply Status: " + regReply.Status);
       Console.WriteLine("RegisterClient TokenServerURI: " + regReply.TokenServerURI);
 
       // Store sessionCookie, for later use in future requests.
@@ -73,7 +73,6 @@ namespace MexGrpcSampleConsoleApp
       try
       {
         token = RetrieveToken(regReply.TokenServerURI);
-        Console.WriteLine("VerifyLocation pre-query sessionCookie: " + sessionCookie);
         Console.WriteLine("VerifyLocation pre-query TokenServer token: " + token);
       }
       catch (System.Net.WebException we)
