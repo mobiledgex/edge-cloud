@@ -9,7 +9,7 @@ import "io"
 import "testing"
 import "context"
 import "time"
-import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -62,9 +62,9 @@ func (x *ShowDeveloper) CheckFound(obj *edgeproto.Developer) bool {
 
 func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find Developer %s", obj.Key.GetKeyString())
+	require.True(t, found, "find Developer %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "Developer are equal")
+		require.Equal(t, *obj, check, "Developer are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -75,7 +75,7 @@ func (x *ShowDeveloper) AssertFound(t *testing.T, obj *edgeproto.Developer) {
 
 func (x *ShowDeveloper) AssertNotFound(t *testing.T, obj *edgeproto.Developer) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find Developer %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundDeveloper(t *testing.T, api edgeproto.DeveloperApiClient, obj *edgeproto.Developer, count int, retry time.Duration) {
@@ -193,8 +193,8 @@ func basicDeveloperShowTest(t *testing.T, api *DeveloperCommonApi, testData []ed
 	show.Init()
 	filterNone := edgeproto.Developer{}
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -209,7 +209,7 @@ func GetDeveloper(t *testing.T, api *DeveloperCommonApi, key *edgeproto.Develope
 	filter := edgeproto.Developer{}
 	filter.Key = *key
 	err = api.ShowDeveloper(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -222,7 +222,7 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	ctx := context.TODO()
 
 	if len(testData) < 3 {
-		assert.True(t, false, "Need at least 3 test data objects")
+		require.True(t, false, "Need at least 3 test data objects")
 		return
 	}
 
@@ -231,32 +231,32 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 
 	// test duplicate create - should fail
 	_, err = api.CreateDeveloper(ctx, &testData[0])
-	assert.NotNil(t, err, "Create duplicate Developer")
+	require.NotNil(t, err, "Create duplicate Developer")
 
 	// test show all items
 	basicDeveloperShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteDeveloper(ctx, &testData[0])
-	assert.Nil(t, err, "delete Developer %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "delete Developer %s", testData[0].Key.GetKeyString())
 	show := ShowDeveloper{}
 	show.Init()
 	filterNone := edgeproto.Developer{}
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateDeveloper(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
+	require.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateDeveloper(ctx, &testData[0])
-	assert.Nil(t, err, "Create Developer %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create Developer %s", testData[0].Key.GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.Developer{}
 	_, err = api.CreateDeveloper(ctx, &bad)
-	assert.NotNil(t, err, "Create Developer with no key info")
+	require.NotNil(t, err, "Create Developer with no key info")
 
 	// test update
 	updater := edgeproto.Developer{}
@@ -265,19 +265,19 @@ func basicDeveloperCudTest(t *testing.T, api *DeveloperCommonApi, testData []edg
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, edgeproto.DeveloperFieldEmail)
 	_, err = api.UpdateDeveloper(ctx, &updater)
-	assert.Nil(t, err, "Update Developer %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Update Developer %s", testData[0].Key.GetKeyString())
 
 	show.Init()
 	updater = testData[0]
 	updater.Email = "update just this"
 	err = api.ShowDeveloper(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show Developer")
+	require.Nil(t, err, "show Developer")
 	show.AssertFound(t, &updater)
 
 	// revert change
 	updater.Email = testData[0].Email
 	_, err = api.UpdateDeveloper(ctx, &updater)
-	assert.Nil(t, err, "Update back Developer")
+	require.Nil(t, err, "Update back Developer")
 }
 
 func InternalDeveloperCreate(t *testing.T, api edgeproto.DeveloperApiServer, testData []edgeproto.Developer) {
@@ -294,7 +294,7 @@ func createDeveloperData(t *testing.T, api *DeveloperCommonApi, testData []edgep
 
 	for _, obj := range testData {
 		_, err = api.CreateDeveloper(ctx, &obj)
-		assert.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create Developer %s", obj.Key.GetKeyString())
 	}
 }
 

@@ -9,7 +9,7 @@ import "io"
 import "testing"
 import "context"
 import "time"
-import "github.com/stretchr/testify/assert"
+import "github.com/stretchr/testify/require"
 import proto "github.com/gogo/protobuf/proto"
 import fmt "fmt"
 import math "math"
@@ -95,9 +95,9 @@ func (x *ShowClusterInst) CheckFound(obj *edgeproto.ClusterInst) bool {
 
 func (x *ShowClusterInst) AssertFound(t *testing.T, obj *edgeproto.ClusterInst) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find ClusterInst %s", obj.Key.GetKeyString())
+	require.True(t, found, "find ClusterInst %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "ClusterInst are equal")
+		require.Equal(t, *obj, check, "ClusterInst are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -108,7 +108,7 @@ func (x *ShowClusterInst) AssertFound(t *testing.T, obj *edgeproto.ClusterInst) 
 
 func (x *ShowClusterInst) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInst) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find ClusterInst %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find ClusterInst %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundClusterInst(t *testing.T, api edgeproto.ClusterInstApiClient, obj *edgeproto.ClusterInst, count int, retry time.Duration) {
@@ -235,8 +235,8 @@ func basicClusterInstShowTest(t *testing.T, api *ClusterInstCommonApi, testData 
 	show.Init()
 	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -251,7 +251,7 @@ func GetClusterInst(t *testing.T, api *ClusterInstCommonApi, key *edgeproto.Clus
 	filter := edgeproto.ClusterInst{}
 	filter.Key = *key
 	err = api.ShowClusterInst(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -264,7 +264,7 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 	ctx := context.TODO()
 
 	if len(testData) < 3 {
-		assert.True(t, false, "Need at least 3 test data objects")
+		require.True(t, false, "Need at least 3 test data objects")
 		return
 	}
 
@@ -273,32 +273,32 @@ func basicClusterInstCudTest(t *testing.T, api *ClusterInstCommonApi, testData [
 
 	// test duplicate create - should fail
 	_, err = api.CreateClusterInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Create duplicate ClusterInst")
+	require.NotNil(t, err, "Create duplicate ClusterInst")
 
 	// test show all items
 	basicClusterInstShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.DeleteClusterInst(ctx, &testData[0])
-	assert.Nil(t, err, "delete ClusterInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "delete ClusterInst %s", testData[0].Key.GetKeyString())
 	show := ShowClusterInst{}
 	show.Init()
 	filterNone := edgeproto.ClusterInst{}
 	err = api.ShowClusterInst(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData)-1, len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData)-1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.UpdateClusterInst(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
+	require.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.CreateClusterInst(ctx, &testData[0])
-	assert.Nil(t, err, "Create ClusterInst %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create ClusterInst %s", testData[0].Key.GetKeyString())
 
 	// test invalid keys
 	bad := edgeproto.ClusterInst{}
 	_, err = api.CreateClusterInst(ctx, &bad)
-	assert.NotNil(t, err, "Create ClusterInst with no key info")
+	require.NotNil(t, err, "Create ClusterInst with no key info")
 
 }
 
@@ -316,7 +316,7 @@ func createClusterInstData(t *testing.T, api *ClusterInstCommonApi, testData []e
 
 	for _, obj := range testData {
 		_, err = api.CreateClusterInst(ctx, &obj)
-		assert.Nil(t, err, "Create ClusterInst %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create ClusterInst %s", obj.Key.GetKeyString())
 	}
 }
 
@@ -358,9 +358,9 @@ func (x *ShowClusterInstInfo) CheckFound(obj *edgeproto.ClusterInstInfo) bool {
 
 func (x *ShowClusterInstInfo) AssertFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find ClusterInstInfo %s", obj.Key.GetKeyString())
+	require.True(t, found, "find ClusterInstInfo %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, edgeproto.MatchIgnoreBackend(), edgeproto.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "ClusterInstInfo are equal")
+		require.Equal(t, *obj, check, "ClusterInstInfo are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -371,7 +371,7 @@ func (x *ShowClusterInstInfo) AssertFound(t *testing.T, obj *edgeproto.ClusterIn
 
 func (x *ShowClusterInstInfo) AssertNotFound(t *testing.T, obj *edgeproto.ClusterInstInfo) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find ClusterInstInfo %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find ClusterInstInfo %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFoundClusterInstInfo(t *testing.T, api edgeproto.ClusterInstInfoApiClient, obj *edgeproto.ClusterInstInfo, count int, retry time.Duration) {
@@ -455,8 +455,8 @@ func basicClusterInstInfoShowTest(t *testing.T, api *ClusterInstInfoCommonApi, t
 	show.Init()
 	filterNone := edgeproto.ClusterInstInfo{}
 	err = api.ShowClusterInstInfo(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -471,7 +471,7 @@ func GetClusterInstInfo(t *testing.T, api *ClusterInstInfoCommonApi, key *edgepr
 	filter := edgeproto.ClusterInstInfo{}
 	filter.Key = *key
 	err = api.ShowClusterInstInfo(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj

@@ -25,7 +25,7 @@ type TestCud struct {
 	importTesting   bool
 	importContext   bool
 	importTime      bool
-	importAssert    bool
+	importRequire   bool
 	importGrpc      bool
 }
 
@@ -134,9 +134,9 @@ func (x *Show{{.Name}}) CheckFound(obj *{{.Pkg}}.{{.Name}}) bool {
 
 func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 	check, found := x.Data[obj.Key.GetKeyString()]
-	assert.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
+	require.True(t, found, "find {{.Name}} %s", obj.Key.GetKeyString())
 	if found && !check.Matches(obj, {{.Pkg}}.MatchIgnoreBackend(), {{.Pkg}}.MatchSortArrayedKeys()) {
-		assert.Equal(t, *obj, check, "{{.Name}} are equal")
+		require.Equal(t, *obj, check, "{{.Name}} are equal")
 	}
 	if found {
 		// remove in case there are dups in the list, so the
@@ -147,7 +147,7 @@ func (x *Show{{.Name}}) AssertFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 
 func (x *Show{{.Name}}) AssertNotFound(t *testing.T, obj *{{.Pkg}}.{{.Name}}) {
 	_, found := x.Data[obj.Key.GetKeyString()]
-	assert.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
+	require.False(t, found, "do not find {{.Name}} %s", obj.Key.GetKeyString())
 }
 
 func WaitAssertFound{{.Name}}(t *testing.T, api {{.Pkg}}.{{.Name}}ApiClient, obj *{{.Pkg}}.{{.Name}}, count int, retry time.Duration) {
@@ -264,8 +264,8 @@ func basic{{.Name}}ShowTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{
 	show.Init()
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData), len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData), len(show.Data), "Show count")
 	for _, obj := range testData {
 		show.AssertFound(t, &obj)
 	}
@@ -280,7 +280,7 @@ func Get{{.Name}}(t *testing.T, api *{{.Name}}CommonApi, key *{{.KeyName}}, out 
 	filter := {{.Pkg}}.{{.Name}}{}
 	filter.Key = *key
 	err = api.Show{{.Name}}(ctx, &filter, &show)
-	assert.Nil(t, err, "show data")
+	require.Nil(t, err, "show data")
 	obj, found := show.Data[key.GetKeyString()]
 	if found {
 		*out = obj
@@ -294,7 +294,7 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	ctx := context.TODO()
 
 	if len(testData) < 3 {
-		assert.True(t, false, "Need at least 3 test data objects")
+		require.True(t, false, "Need at least 3 test data objects")
 		return
 	}
 
@@ -303,32 +303,32 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 
 	// test duplicate create - should fail
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
-	assert.NotNil(t, err, "Create duplicate {{.Name}}")
+	require.NotNil(t, err, "Create duplicate {{.Name}}")
 
 	// test show all items
 	basic{{.Name}}ShowTest(t, api, testData)
 
 	// test delete
 	_, err = api.Delete{{.Name}}(ctx, &testData[0])
-	assert.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "delete {{.Name}} %s", testData[0].Key.GetKeyString())
 	show := Show{{.Name}}{}
 	show.Init()
 	filterNone := {{.Pkg}}.{{.Name}}{}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, len(testData) - 1, len(show.Data), "Show count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, len(testData) - 1, len(show.Data), "Show count")
 	show.AssertNotFound(t, &testData[0])
 	// test update of missing object
 	_, err = api.Update{{.Name}}(ctx, &testData[0])
-	assert.NotNil(t, err, "Update missing object")
+	require.NotNil(t, err, "Update missing object")
 	// create it back
 	_, err = api.Create{{.Name}}(ctx, &testData[0])
-	assert.Nil(t, err, "Create {{.Name}} %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Create {{.Name}} %s", testData[0].Key.GetKeyString())
 
 	// test invalid keys
 	bad := {{.Pkg}}.{{.Name}}{}
 	_, err = api.Create{{.Name}}(ctx, &bad)
-	assert.NotNil(t, err, "Create {{.Name}} with no key info")
+	require.NotNil(t, err, "Create {{.Name}} with no key info")
 
 {{if .UpdateField}}
 	// test update
@@ -338,19 +338,19 @@ func basic{{.Name}}CudTest(t *testing.T, api *{{.Name}}CommonApi, testData []{{.
 	updater.Fields = make([]string, 0)
 	updater.Fields = append(updater.Fields, {{.Pkg}}.{{.Name}}Field{{.UpdateField}})
 	_, err = api.Update{{.Name}}(ctx, &updater)
-	assert.Nil(t, err, "Update {{.Name}} %s", testData[0].Key.GetKeyString())
+	require.Nil(t, err, "Update {{.Name}} %s", testData[0].Key.GetKeyString())
 
 	show.Init()
 	updater = testData[0]
 	updater.{{.UpdateField}} = {{.UpdateValue}}
 	err = api.Show{{.Name}}(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show {{.Name}}")
+	require.Nil(t, err, "show {{.Name}}")
 	show.AssertFound(t, &updater)
 
 	// revert change
 	updater.{{.UpdateField}} = testData[0].{{.UpdateField}}
 	_, err = api.Update{{.Name}}(ctx, &updater)
-	assert.Nil(t, err, "Update back {{.Name}}")
+	require.Nil(t, err, "Update back {{.Name}}")
 {{- end}}
 }
 
@@ -368,7 +368,7 @@ func create{{.Name}}Data(t *testing.T, api *{{.Name}}CommonApi, testData []{{.Pk
 
 	for _, obj := range testData {
 		_, err = api.Create{{.Name}}(ctx, &obj)
-		assert.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "Create {{.Name}} %s", obj.Key.GetKeyString())
 	}
 }
 {{- end}}
@@ -393,8 +393,8 @@ func (t *TestCud) GenerateImports(file *generator.FileDescriptor) {
 	if t.importTime {
 		t.PrintImport("", "time")
 	}
-	if t.importAssert {
-		t.PrintImport("", "github.com/stretchr/testify/assert")
+	if t.importRequire {
+		t.PrintImport("", "github.com/stretchr/testify/require")
 	}
 }
 
@@ -405,7 +405,7 @@ func (t *TestCud) Generate(file *generator.FileDescriptor) {
 	t.importTesting = false
 	t.importContext = false
 	t.importTime = false
-	t.importAssert = false
+	t.importRequire = false
 	t.support.InitFile()
 	if !t.support.GenFile(*file.FileDescriptorProto.Name) {
 		return
@@ -504,7 +504,7 @@ func (t *TestCud) generateCudTest(message *descriptor.DescriptorProto) {
 	t.importTesting = true
 	t.importContext = true
 	t.importTime = true
-	t.importAssert = true
+	t.importRequire = true
 }
 
 type methodArgs struct {
