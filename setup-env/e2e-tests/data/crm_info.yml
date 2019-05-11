@@ -153,7 +153,7 @@ apps:
         spec:
           volumes:
           imagePullSecrets:
-          - name: mexregistrysecret
+          - name: mexgitlabsecret
           containers:
           - name: someapplication1
             image: mobiledgex_AcmeAppCo/someapplication1:1.0
@@ -195,7 +195,7 @@ apps:
       name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.medium
@@ -217,10 +217,10 @@ apps:
         spec:
           volumes:
           imagePullSecrets:
-          - name: mexregistrysecret
+          - name: mexgitlabsecret
           containers:
           - name: mexmetricsexporter
-            image: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+            image: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
             imagePullPolicy: Always
             ports:
   deploymentgenerator: kubernetes-basic

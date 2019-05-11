@@ -88,7 +88,7 @@ apps:
       name: AcmeAppCo
     name: someapplication1
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/AcmeAppCo/someapplication1:1.0
+  imagepath: docker.mobiledgex.net/mobiledgex/images/AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
   accessports: tcp:80,http:443,udp:10002
   defaultflavor:

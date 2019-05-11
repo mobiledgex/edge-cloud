@@ -5,8 +5,8 @@ build:
 
 build-docker:
 	./docker-build.sh
-	docker tag mobiledgex/metrics-exporter:${TAG} registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:${TAG}
-	docker push registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:${TAG}
+	docker tag mobiledgex/metrics-exporter:${TAG} docker.mobiledgex.net/mobiledgex/images/metrics-exporter:${TAG}
+	docker push docker.mobiledgex.net/mobiledgex/images/metrics-exporter:${TAG}
 
 install:
 	go install ./...

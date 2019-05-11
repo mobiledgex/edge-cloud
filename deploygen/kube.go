@@ -2,11 +2,13 @@ package deploygen
 
 import (
 	"bytes"
+	"github.com/mobiledgex/edge-cloud/util"
 	"strings"
 	"text/template"
-
-	"github.com/mobiledgex/edge-cloud/util"
 )
+
+var MexRegistry = "docker.mobiledgex.net"
+var MexRegistrySecret = "mexgitlabsecret"
 
 var kubeLbT *template.Template
 var kubeAppT *template.Template
@@ -130,12 +132,13 @@ func (g *kubeBasicGen) kubeApp() {
 		cs = strings.Split(g.app.Command, " ")
 	}
 	data := appData{
-		Name:      util.DNSSanitize(g.app.Name + "-deployment"),
-		DNSName:   util.DNSSanitize(g.app.Name),
-		Run:       util.K8SSanitize(g.app.Name),
-		Ports:     g.ports,
-		ImagePath: g.app.ImagePath,
-		Command:   cs,
+		Name:           util.DNSSanitize(g.app.Name + "-deployment"),
+		DNSName:        util.DNSSanitize(g.app.Name),
+		Run:            util.K8SSanitize(g.app.Name),
+		Ports:          g.ports,
+		ImagePath:      g.app.ImagePath,
+		Command:        cs,
+		RegistrySecret: MexRegistrySecret,
 	}
 	buf := bytes.Buffer{}
 	g.err = kubeAppT.Execute(&buf, &data)
@@ -146,12 +149,13 @@ func (g *kubeBasicGen) kubeApp() {
 }
 
 type appData struct {
-	Name      string
-	DNSName   string
-	Run       string
-	ImagePath string
-	Ports     []kubePort
-	Command   []string
+	Name           string
+	DNSName        string
+	Run            string
+	ImagePath      string
+	Ports          []kubePort
+	Command        []string
+	RegistrySecret string
 }
 
 var appTemplate = `apiVersion: apps/v1
@@ -170,7 +174,7 @@ spec:
     spec:
       volumes:
       imagePullSecrets:
-      - name: mexregistrysecret
+      - name: {{.RegistrySecret}}
       containers:
       - name: {{.DNSName}}
         image: {{.ImagePath}}

@@ -91,7 +91,7 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 	}
 }
 func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, in.DockerRegistry)
 	s = append(s, in.DNSZone)
 	s = append(s, in.RegistryFileServer)
@@ -99,11 +99,12 @@ func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
 	s = append(s, in.CFUser)
 	s = append(s, in.DockerRegPass)
 	s = append(s, in.NetworkScheme)
+	s = append(s, in.DockerRegistrySecret)
 	return s
 }
 
 func CloudletInfraCommonHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, "DockerRegistry")
 	s = append(s, "DNSZone")
 	s = append(s, "RegistryFileServer")
@@ -111,6 +112,7 @@ func CloudletInfraCommonHeaderSlicer() []string {
 	s = append(s, "CFUser")
 	s = append(s, "DockerRegPass")
 	s = append(s, "NetworkScheme")
+	s = append(s, "DockerRegistrySecret")
 	return s
 }
 
