@@ -62,6 +62,11 @@ tools:
 doc:
 	make -C edgeproto doc
 
+UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
+
+unit-test:
+	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
+
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
 
