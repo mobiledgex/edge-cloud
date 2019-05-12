@@ -108,15 +108,15 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = deploygen.MexRegistry + "/mobiledgex/images/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+			in.ImagePath = deploygen.MexRegistry + "/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
 		} else if in.ImageType == edgeproto.ImageType_ImageTypeQCOW {
 			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = deploygen.MexRegistry + "/mobiledgex/images/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+			in.ImagePath = deploygen.MexRegistry + "/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
 			in.ImagePath = "qcow path not determined yet"
