@@ -188,7 +188,7 @@ apps:
       name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.medium

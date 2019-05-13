@@ -554,6 +554,7 @@ func StartLocal(name, bin string, args, envs []string, logfile string) (*exec.Cm
 func StopLocal(cmd *exec.Cmd) {
 	if cmd != nil {
 		cmd.Process.Kill()
+		cmd.Process.Wait()
 	}
 }
 
