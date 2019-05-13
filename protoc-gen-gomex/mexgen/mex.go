@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -140,6 +141,25 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	m.support.PrintUsedImports(m.gen)
 }
 
+func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
+	for _, e := range enum.Value {
+		if GetUpgradeFunc(e) != "" {
+			m.P(e.Number, ": ", GetUpgradeFunc(e), ",")
+		} else {
+			m.P(e.Number, ": nil,")
+		}
+	}
+	m.P("}")
+}
+func (m *mex) generateUpgradeFuncNames(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncNames = map[int32]string{")
+	for _, e := range enum.Value {
+		m.P(e.Number, ": ", strconv.Quote(GetUpgradeFunc(e)), ",")
+	}
+	m.P("}")
+}
+
 func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumDescriptor) {
 	en := desc.EnumDescriptorProto
 	m.P("var ", en.Name, "Strings = []string{")
@@ -169,6 +189,9 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
+		// Generate an array with function names
+		m.generateUpgradeFuncs(en)
+		m.generateUpgradeFuncNames(en)
 		// Generate version check code for version message
 		validateVersionHash(en, hashStr, file)
 	}
@@ -1145,16 +1168,21 @@ Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.
 This is due to an upsupported change in the key of some objects in a .proto file.
 In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
 
-NOTE: For now replace the following: 
 enum VersionHash {
+	...
 	{{.CurHash}} = {{.CurHashEnumVal}};
-}
- with:
- enum VersionHash {
-	{{.NewHash}} = {{.CurHashEnumVal}};
+	{{.NewHash}} = {{.NewHashEnumVal}} [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
+	...
 }
 
-//TODO - Instructions for the upgrade function in the upgrade infra
+Implementation of "sample_upgrade_function" should be added tp edge-cloud/upgrade/upgrade-types.go
+
+NOTE: If no upgrade function is needed don't need to add "[(protogen.upgrade_func) = "sample_upgrade_function];" to
+the VersionHash enum.
+
+A unit test data for the automatic unit test of the upgrade function should be added to testutil/upgrade_test_data.go
+   - PreUpgradeData - what key/value objects are trying to be upgraded
+   - PostUpgradeData - what the resulting object store should look like
 ====================
 `
 
@@ -1548,4 +1576,8 @@ func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
 
 func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
+}
+
+func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
+	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
 }
