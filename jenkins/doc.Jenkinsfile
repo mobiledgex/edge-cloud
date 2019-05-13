@@ -1,6 +1,6 @@
 pipeline {
     options {
-        timeout(time: 5, unit: 'MINUTES')
+        timeout(time: 10, unit: 'MINUTES')
     }
     agent any
     environment {
@@ -23,6 +23,8 @@ pipeline {
                     sh label: 'make doc', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
 export GOPATH=$WORKSPACE/go
+export GO111MODULE=on
+go mod download
 make doc
                     '''
                 }
