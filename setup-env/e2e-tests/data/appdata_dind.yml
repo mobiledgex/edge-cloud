@@ -68,8 +68,7 @@ apps:
       name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
-  deploymentmanifest: http://35.199.188.102/apps/mexdemoapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgexsdkdemo
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
@@ -85,8 +84,7 @@ apps:
       name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
-  deploymentmanifest: http://35.199.188.102/apps/mexfaceapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/facedetection
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
