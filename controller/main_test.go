@@ -80,10 +80,10 @@ func TestController(t *testing.T) {
 	dmeNotify.WaitForAppInsts(6)
 	crmNotify.WaitForFlavors(3)
 
-	require.Equal(t, 6, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	require.Equal(t, len(testutil.AppInstData), len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	require.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
-	require.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
-	require.Equal(t, 6, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
+	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
+	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
 	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
 
