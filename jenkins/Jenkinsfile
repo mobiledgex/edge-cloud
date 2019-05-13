@@ -55,7 +55,7 @@ export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/
 export GOPATH=$WORKSPACE/go
 export GO111MODULE=on
 make test-stop
-go test ./...
+make unit-test
                             '''
                         }
                     }
