@@ -80,7 +80,7 @@ make test
             }
             steps {
                 slackSend color: 'good',
-                          channel: '#swdev',
+                          channel: '#ci-cd',
                           message: "<${env.CHANGE_URL}|Pull request PR-${env.CHANGE_ID}> ready for review: (${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\")"
             }
         }
