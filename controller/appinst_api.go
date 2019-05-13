@@ -13,7 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/util"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -269,7 +269,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				if !in.Key.CloudletKey.Matches(&cikey.CloudletKey) {
 					return errors.New("Specified ClusterInst cloudlet key does not match specified AppInst cloudlet key")
 				}
-
 			}
 			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
 			// Explicit auto-cluster requirement
@@ -324,6 +323,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			"appinst", in)
 
 		clusterInst.Flavor = in.Flavor
+		clusterInst.IpAccess = in.AutoClusterIpAccess
 		clusterInst.NumMasters = 1
 		clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
