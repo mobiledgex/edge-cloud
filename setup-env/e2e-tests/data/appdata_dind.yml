@@ -15,22 +15,13 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: x1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
-
 clusters:
 - key:
     name: AppCluster
   defaultflavor:
     name: x1.medium
+  nummasters: 1
+  numnodes: 3
 
 cloudlets:
 - key:
@@ -55,6 +46,8 @@ clusterinsts:
   flavor:
     name: x1.medium
   liveness: LivenessStatic
+  nummasters: 1
+  numnodes: 3
 
 
 operators:
@@ -75,8 +68,7 @@ apps:
       name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
-  deploymentmanifest: http://35.199.188.102/apps/mexdemoapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgexsdkdemo
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
@@ -92,8 +84,7 @@ apps:
       name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
-  deploymentmanifest: http://35.199.188.102/apps/mexfaceapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/facedetection
   imagetype: ImageTypeDocker
   deployment: "kubernetes"
   defaultflavor:
@@ -109,7 +100,11 @@ apps:
       - name: SOME_ENV1
         value: value1
       - name: SOME_ENV2
-        value: value2
+        valueFrom:
+          configMapKeyRef:
+            key: CloudletName
+            name: mexcluster-info
+            optional: true
 
 appinstances:
 - key:

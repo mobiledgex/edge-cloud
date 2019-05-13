@@ -7,11 +7,11 @@ import "google/api/annotations.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "result.proto";
-import "clusterflavor.proto";
+import "flavor.proto";
 import "cluster.proto";
 import "cloudlet.proto";
 import "common.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // ClusterInstKey uniquely identifies a Cluster Instance (ClusterInst) or Cluster Instance state (ClusterInstInfo).
 message ClusterInstKey {
@@ -33,8 +33,8 @@ message ClusterInst {
   repeated string fields = 1;
   // Unique key
   ClusterInstKey key = 2 [(gogoproto.nullable) = false];
-  // ClusterFlavor of the Cluster
-  ClusterFlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
+  // Node flavor 
+  FlavorKey flavor = 3 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 9 [(protogen.backend) = true];
   // Auto is set to true when automatically created by back-end (internal use only)
@@ -50,9 +50,11 @@ message ClusterInst {
   // allocated IP for dedicated access
   string allocated_ip = 8 [(protogen.backend) = true, (protogen.hidetag) = "nocmp"];
   // Cloudlet specific node flavor
-  string node_flavor = 11;
-  // Cloudlet specific master flavor
-  string master_flavor = 12;
+  string node_flavor = 11 [(protogen.backend) = true,(protogen.hidetag) = "nocmp"];
+    // number of masters
+  uint32 num_masters = 13;
+  // number of nodes 
+  uint32 num_nodes = 14;
   option (protogen.generate_matches) = true;
   option (protogen.generate_cud) = true;
   option (protogen.generate_cud_test) = true;
@@ -61,7 +63,7 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protocmd.noconfig) = "Nodes,Liveness,Auto";
+  option (protocmd.noconfig) = "Nodes,Liveness,Auto,MasterFlavor,NodeFlavor";
   option (protogen.generate_wait_for_state) = "TrackedState";
 }
 

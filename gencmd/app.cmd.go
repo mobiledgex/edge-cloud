@@ -9,11 +9,11 @@ It is generated from these files:
 	app_inst.proto
 	cloudlet.proto
 	cluster.proto
-	clusterflavor.proto
 	clusterinst.proto
 	common.proto
 	controller.proto
 	developer.proto
+	exec.proto
 	flavor.proto
 	metric.proto
 	node.proto
@@ -21,6 +21,7 @@ It is generated from these files:
 	operator.proto
 	refs.proto
 	result.proto
+	version.proto
 
 It has these top-level messages:
 	AppKey
@@ -28,6 +29,7 @@ It has these top-level messages:
 	App
 	AppInstKey
 	AppInst
+	AppInstRuntime
 	AppInstInfo
 	AppInstMetrics
 	CloudletKey
@@ -42,8 +44,6 @@ It has these top-level messages:
 	CloudletMetrics
 	ClusterKey
 	Cluster
-	ClusterFlavorKey
-	ClusterFlavor
 	ClusterInstKey
 	ClusterInst
 	ClusterInstInfo
@@ -51,6 +51,7 @@ It has these top-level messages:
 	Controller
 	DeveloperKey
 	Developer
+	ExecRequest
 	FlavorKey
 	Flavor
 	MetricTag

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
@@ -17,7 +17,7 @@ namespace DistributedMatchEngine
     public string DevName;
     // App FQDN
     [DataMember]
-    public string FQDN;
+    public string[] FQDNs;
     // optional android package name
     [DataMember]
     public string AndroidPackageName;
@@ -44,7 +44,20 @@ namespace DistributedMatchEngine
     }
     [DataMember]
     public AppFqdn[] AppFqdns;
-    [DataMember]
-    public string Status = FL_Status.FL_UNDEFINED.ToString();
+
+    public FL_Status Status = FL_Status.FL_UNDEFINED;
+
+    [DataMember(Name = "Status")]
+    private string FlStatusString
+    {
+      get
+      {
+        return Status.ToString();
+      }
+      set
+      {
+        Status = Enum.TryParse(value, out FL_Status flStatus) ? flStatus : FL_Status.FL_UNDEFINED;
+      }
+    }
   }
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAppApi(t *testing.T) {
@@ -26,13 +26,12 @@ func TestAppApi(t *testing.T) {
 	ctx := context.TODO()
 	for _, obj := range testutil.AppData {
 		_, err := appApi.CreateApp(ctx, &obj)
-		assert.NotNil(t, err, "Create app without developer")
+		require.NotNil(t, err, "Create app without developer")
 	}
 
 	// create support data
 	testutil.InternalDeveloperCreate(t, &developerApi, testutil.DevData)
 	testutil.InternalFlavorCreate(t, &flavorApi, testutil.FlavorData)
-	testutil.InternalClusterFlavorCreate(t, &clusterFlavorApi, testutil.ClusterFlavorData)
 	testutil.InternalClusterCreate(t, &clusterApi, testutil.ClusterData)
 
 	testutil.InternalAppTest(t, "cud", &appApi, testutil.AppData)

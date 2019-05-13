@@ -14,11 +14,14 @@ pipeline {
         stage('Build') {
             steps {
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
-                    sh label: 'make dep', script: '''#!/bin/bash
+                    sh label: 'make clean', script: '''#!/bin/bash
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin
 export GOPATH=$WORKSPACE/go
-make dep
+make clean
                     '''
+                }
+                dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
+                    sh label: 'git clean edge-cloud', script: 'git clean -f -d -x'
                 }
                 dir(path: 'go/src/github.com/mobiledgex/edge-cloud') {
                     sh label: 'make tools', script: '''#!/bin/bash
@@ -50,8 +53,9 @@ make
 export PATH=$PATH:$HOME/go/bin:$WORKSPACE/go/bin:/usr/lib/postgresql/11/bin
 export ANSIBLE_DIR=$WORKSPACE/go/src/github.com/mobiledgex/edge-cloud/setup-env/ansible
 export GOPATH=$WORKSPACE/go
+export GO111MODULE=on
 make test-stop
-go test ./...
+make unit-test
                             '''
                         }
                     }
@@ -76,7 +80,7 @@ make test
             }
             steps {
                 slackSend color: 'good',
-                          channel: '#swdev',
+                          channel: '#ci-cd',
                           message: "<${env.CHANGE_URL}|Pull request PR-${env.CHANGE_ID}> ready for review: (${env.CHANGE_AUTHOR} \"${env.CHANGE_TITLE}\")"
             }
         }

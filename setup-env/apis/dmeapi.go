@@ -16,8 +16,8 @@ import (
 
 	dmecommon "github.com/mobiledgex/edge-cloud/d-match-engine/dme-common"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 
@@ -131,7 +131,7 @@ func (c *dmeRestClient) GetAppInstList(ctx context.Context, in *dmeproto.AppInst
 }
 
 func readDMEApiFile(apifile string) {
-	err := util.ReadYamlFile(apifile, &apiRequest, "", true)
+	err := util.ReadYamlFile(apifile, &apiRequest, util.ValidateReplacedVars())
 	if err != nil {
 		if !util.IsYamlOk(err, "dmeapi") {
 			fmt.Fprintf(os.Stderr, "Error in unmarshal for file %s", apifile)
@@ -141,7 +141,7 @@ func readDMEApiFile(apifile string) {
 }
 
 func readMatchEngineStatus(filename string, mes *registration) {
-	util.ReadYamlFile(filename, &mes, "", false)
+	util.ReadYamlFile(filename, &mes)
 }
 
 func RunDmeAPI(api string, procname string, apiFile string, apiType string, outputDir string) bool {
@@ -158,14 +158,14 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	var client dmeproto.Match_Engine_ApiClient
 
 	if apiType == "rest" {
-		httpClient, err := dme.DmeLocal.GetRestClient(apiConnectTimeout)
+		httpClient, err := dme.GetRestClient(apiConnectTimeout)
 		if err != nil {
 			log.Printf("Error: unable to connect to dme addr %v\n", dme.HttpAddr)
 			return false
 		}
-		client = NewdmeRestClient(httpClient, dme.DmeLocal.HttpAddr)
+		client = NewdmeRestClient(httpClient, dme.HttpAddr)
 	} else {
-		conn, err := dme.DmeLocal.ConnectAPI(apiConnectTimeout)
+		conn, err := dme.ConnectAPI(apiConnectTimeout)
 		if err != nil {
 			log.Printf("Error: unable to connect to dme addr %v\n", dme.ApiAddr)
 			return false
@@ -290,7 +290,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		resp, err := client.GetFqdnList(ctx, &apiRequest.Fqreq)
 		if err == nil {
 			sort.Slice((*resp).AppFqdns, func(i, j int) bool {
-				return (*resp).AppFqdns[i].FQDN < (*resp).AppFqdns[j].FQDN
+				return (*resp).AppFqdns[i].FQDNs[0] < (*resp).AppFqdns[j].FQDNs[0]
 			})
 		}
 		dmereply = resp

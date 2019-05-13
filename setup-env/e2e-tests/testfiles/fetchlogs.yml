@@ -1,7 +1,0 @@
-##
-##
-description: fetches remote logs 
-
-tests:
-- name: fetch logs, stop services and cleanup
-  actions: [fetchlogs]

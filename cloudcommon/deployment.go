@@ -11,15 +11,15 @@ import (
 )
 
 var AppDeploymentTypeKubernetes = "kubernetes"
-var AppDeploymentTypeKVM = "kvm"
+var AppDeploymentTypeVM = "vm"
 var AppDeploymentTypeHelm = "helm"
-var AppDeploymentTypeDockerSwarm = "docker-swarm"
+var AppDeploymentTypeDocker = "docker"
 
 var ValidDeployments = []string{
 	AppDeploymentTypeKubernetes,
-	AppDeploymentTypeKVM,
+	AppDeploymentTypeVM,
 	AppDeploymentTypeHelm,
-	AppDeploymentTypeDockerSwarm,
+	AppDeploymentTypeDocker,
 }
 
 func IsValidDeploymentType(appDeploymentType string) bool {
@@ -34,11 +34,11 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
-		if deployment == AppDeploymentTypeKubernetes { // also later docker
+		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeQCOW:
-		if deployment == AppDeploymentTypeKVM {
+		if deployment == AppDeploymentTypeVM {
 			return true
 		}
 	case edgeproto.ImageType_ImageTypeUnknown:
@@ -49,12 +49,25 @@ func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string)
 	return false
 }
 
+func IsValidDeploymentManifest(appDeploymentType, command, manifest string) error {
+	if appDeploymentType == AppDeploymentTypeVM {
+		if command != "" {
+			return fmt.Errorf("both deploymentmanifest and command cannot be used together for VM based deployment")
+		}
+		if strings.HasPrefix(manifest, "#cloud-config") {
+			return nil
+		}
+		return fmt.Errorf("only cloud-init script support, must start with '#cloud-config'")
+	}
+	return nil
+}
+
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
 	case edgeproto.ImageType_ImageTypeDocker:
 		return AppDeploymentTypeKubernetes, nil
 	case edgeproto.ImageType_ImageTypeQCOW:
-		return AppDeploymentTypeKVM, nil
+		return AppDeploymentTypeVM, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)
 }

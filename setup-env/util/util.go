@@ -21,14 +21,12 @@ import (
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/gogo/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	dmeproto "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/mc/ormapi"
-	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/yaml"
 	"github.com/mobiledgex/edge-cloud/testutil"
+	yaml "github.com/mobiledgex/yaml/v2"
 	"google.golang.org/grpc"
 )
 
@@ -42,12 +40,13 @@ const (
 	YamlOther   yamlFileType = 1
 )
 
-type YamlReplacementVariables struct {
-	Vars []map[string]string
+type SetupVariables struct {
+	Vars     []map[string]string
+	Includes []string
 }
 
 // replacement variables taken from the setup
-var DeploymentReplacementVars string
+var DeploymentReplacementVars map[string]string
 
 type ProcessInfo struct {
 	pid   int
@@ -88,112 +87,74 @@ type K8sDeploymentStep struct {
 	CopyFiles   []K8CopyFile
 }
 
-type VaultProcess struct {
-	process.Vault
-	Hostname    string
-	DockerImage string
-	EnvVars     map[string]string
-}
-type EtcdProcess struct {
-	process.EtcdLocal
-	Hostname string
-}
-type ControllerProcess struct {
-	process.ControllerLocal
-	Hostname    string
-	DockerImage string
-}
-type DmeProcess struct {
-	process.DmeLocal
-	Hostname    string
-	DockerImage string
-	EnvVars     map[string]string
-}
-type CrmProcess struct {
-	process.CrmLocal
-	Hostname    string
-	DockerImage string
-	EnvVars     map[string]string
-}
-type MCProcess struct {
-	process.MCLocal
-	Hostname    string
-	DockerImage string
-}
-type SqlProcess struct {
-	process.SqlLocal
-	Hostname    string
-	DockerImage string
-}
-type LocSimProcess struct {
-	process.LocApiSimLocal
-	Hostname    string
-	DockerImage string
-}
-type TokSimProcess struct {
-	process.TokSrvSimLocal
-	Hostname    string
-	DockerImage string
-}
-type SampleAppProcess struct {
-	process.SampleAppLocal
-	Args         []string
-	Hostname     string
-	Command      string
-	VolumeMounts []string
-	DockerImage  string
-}
-type InfluxProcess struct {
-	process.InfluxLocal
-	Hostname string
-}
-type ClusterSvcProcess struct {
-	process.ClusterSvcLocal
-	Hostname    string
-	DockerImage string
-}
-
 type TLSCertInfo struct {
 	CommonName string
 	IPs        []string
 	DNSNames   []string
 }
 
-type DnsRecord struct {
-	Name    string
-	Type    string
-	Content string
-}
-
-//cloudflare dns records
-type CloudflareDNS struct {
-	Zone    string
-	Records []DnsRecord
-}
-
 type DeploymentData struct {
-	TLSCerts      []TLSCertInfo       `yaml:"tlscerts"`
-	Cluster       ClusterInfo         `yaml:"cluster"`
-	K8sDeployment []K8sDeploymentStep `yaml:"k8s-deployment"`
-	Locsims       []LocSimProcess     `yaml:"locsims"`
-	Toksims       []TokSimProcess     `yaml:"toksims"`
-	Vaults        []VaultProcess      `yaml:"vaults"`
-	Etcds         []EtcdProcess       `yaml:"etcds"`
-	Controllers   []ControllerProcess `yaml:"controllers"`
-	Dmes          []DmeProcess        `yaml:"dmes"`
-	Crms          []CrmProcess        `yaml:"crms"`
-	Mcs           []MCProcess         `yaml:"mcs"`
-	Sqls          []SqlProcess        `yaml:"sqls"`
-	SampleApps    []SampleAppProcess  `yaml:"sampleapps"`
-	Influxs       []InfluxProcess     `yaml:"influxs"`
-	ClusterSvcs   []ClusterSvcProcess `yaml:"clustersvcs"`
-	Cloudflare    CloudflareDNS       `yaml:"cloudflare"`
+	TLSCerts    []*TLSCertInfo        `yaml:"tlscerts"`
+	Locsims     []*process.LocApiSim  `yaml:"locsims"`
+	Toksims     []*process.TokSrvSim  `yaml:"toksims"`
+	Vaults      []*process.Vault      `yaml:"vaults"`
+	Etcds       []*process.Etcd       `yaml:"etcds"`
+	Controllers []*process.Controller `yaml:"controllers"`
+	Dmes        []*process.Dme        `yaml:"dmes"`
+	Crms        []*process.Crm        `yaml:"crms"`
+	SampleApps  []*process.SampleApp  `yaml:"sampleapps"`
+	Influxs     []*process.Influx     `yaml:"influxs"`
+	ClusterSvcs []*process.ClusterSvc `yaml:"clustersvcs"`
 }
 
 type errorReply struct {
 	Code    int
 	Message string
 	Details []string
+}
+
+func GetAllProcesses() []process.Process {
+	all := make([]process.Process, 0)
+	for _, p := range Deployment.Locsims {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Toksims {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Vaults {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Etcds {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Controllers {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Dmes {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Crms {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.SampleApps {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.Influxs {
+		all = append(all, p)
+	}
+	for _, p := range Deployment.ClusterSvcs {
+		all = append(all, p)
+	}
+	return all
+}
+
+func GetProcessByName(processName string) process.Process {
+	for _, p := range GetAllProcesses() {
+		if processName == p.GetName() {
+			return p
+		}
+	}
+	return nil
 }
 
 //these are strings which may be present in the yaml but not in the corresponding data structures.
@@ -205,10 +166,6 @@ var yamlExceptions = map[string]map[string]bool{
 	"appdata": {
 		"ip_str": true, // ansible workaround
 	},
-}
-
-func IsK8sDeployment() bool {
-	return Deployment.Cluster.MexManifest != "" //TODO Azure
 }
 
 func IsYamlOk(e error, yamltype string) bool {
@@ -269,7 +226,7 @@ func getPidsByName(processName string, processArgs string) []ProcessInfo {
 	return processes
 }
 
-func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
+func ConnectController(p *process.Controller, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
 	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
@@ -281,46 +238,33 @@ func ConnectController(p *process.ControllerLocal, c chan ReturnCodeWithText) {
 }
 
 //default is to connect to the first controller, unless we specified otherwise
-func GetController(ctrlname string) *ControllerProcess {
+func GetController(ctrlname string) *process.Controller {
 	if ctrlname == "" {
-		return &Deployment.Controllers[0]
+		return Deployment.Controllers[0]
 	}
 	for _, ctrl := range Deployment.Controllers {
 		if ctrl.Name == ctrlname {
-			return &ctrl
+			return ctrl
 		}
 	}
 	log.Fatalf("Error: could not find specified controller: %v\n", ctrlname)
 	return nil //unreachable
 }
 
-func GetDme(dmename string) *DmeProcess {
+func GetDme(dmename string) *process.Dme {
 	if dmename == "" {
-		return &Deployment.Dmes[0]
+		return Deployment.Dmes[0]
 	}
 	for _, dme := range Deployment.Dmes {
 		if dme.Name == dmename {
-			return &dme
+			return dme
 		}
 	}
 	log.Fatalf("Error: could not find specified dme: %v\n", dmename)
 	return nil //unreachable
 }
 
-func GetMC(name string) *MCProcess {
-	if name == "" {
-		return &Deployment.Mcs[0]
-	}
-	for _, mc := range Deployment.Mcs {
-		if mc.Name == name {
-			return &mc
-		}
-	}
-	log.Fatalf("Error: could not find specified MC: %s\n", name)
-	return nil //unreachable
-}
-
-func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
+func ConnectCrm(p *process.Crm, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
 	if p.ApiAddr == ApiAddrNone {
 		c <- ReturnCodeWithText{true, "skipped nonexistent addr " + p.Name}
@@ -338,7 +282,7 @@ func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
 		if err != nil {
 			c <- ReturnCodeWithText{false, "Ok connect to " + p.Name + " but " + err.Error()}
 		} else {
-			c <- ReturnCodeWithText{true, "OK connect to " + p.Name}
+			c <- ReturnCodeWithText{true, "OK connect to " + p.Name + " with CloudletInfo"}
 		}
 	} else {
 		// this is a CRM only test
@@ -346,7 +290,7 @@ func ConnectCrm(p *process.CrmLocal, c chan ReturnCodeWithText) {
 	}
 }
 
-func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
+func ConnectDme(p *process.Dme, c chan ReturnCodeWithText) {
 	log.Printf("attempt to connect to process %v at %v\n", p.Name, p.ApiAddr)
 	api, err := p.ConnectAPI(10 * time.Second)
 	if err != nil {
@@ -357,7 +301,7 @@ func ConnectDme(p *process.DmeLocal, c chan ReturnCodeWithText) {
 	}
 }
 
-func checkCloudletState(p *process.CrmLocal, timeout time.Duration) error {
+func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 	filter := edgeproto.CloudletInfo{}
 	err := json.Unmarshal([]byte(p.CloudletKey), &filter.Key)
 	if err != nil {
@@ -407,12 +351,19 @@ func checkCloudletState(p *process.CrmLocal, timeout time.Duration) error {
 
 func connectOnlineController(delay time.Duration) *grpc.ClientConn {
 	for _, ctrl := range Deployment.Controllers {
-		conn, err := ctrl.ControllerLocal.ConnectAPI(delay)
+		conn, err := ctrl.ConnectAPI(delay)
 		if err == nil {
 			return conn
 		}
 	}
 	return nil
+}
+
+func StopProcess(p process.Process, maxwait time.Duration, c chan string) {
+	// first attempt graceful stop
+	p.StopLocal()
+	// make sure process is dead or kill it
+	KillProcessesByName(p.GetExeName(), maxwait, p.LookupArgs(), c)
 }
 
 //first tries to kill process with SIGINT, then waits up to maxwait time
@@ -422,6 +373,9 @@ func KillProcessesByName(processName string, maxwait time.Duration, processArgs 
 	waitInterval := 100 * time.Millisecond
 
 	for _, p := range processes {
+		if !p.alive {
+			continue
+		}
 		process, err := os.FindProcess(p.pid)
 		if err == nil {
 			//try to kill gracefully
@@ -554,7 +508,19 @@ func CreateOutputDir(useTimestamp bool, outputDir string, logFileName string) st
 	return outputDir
 }
 
-func ReadYamlFile(filename string, iface interface{}, varlist string, validateReplacedVars bool) error {
+type ReadYamlOptions struct {
+	vars                 map[string]string
+	validateReplacedVars bool
+}
+
+type ReadYamlOp func(opts *ReadYamlOptions)
+
+func ReadYamlFile(filename string, iface interface{}, ops ...ReadYamlOp) error {
+	opts := ReadYamlOptions{}
+	for _, op := range ops {
+		op(&opts)
+	}
+
 	if strings.HasPrefix(filename, "~") {
 		filename = strings.Replace(filename, "~", os.Getenv("HOME"), 1)
 	}
@@ -562,18 +528,15 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 	if err != nil {
 		return errors.New(fmt.Sprintf("error reading yaml file: %v err: %v\n", filename, err))
 	}
-	if varlist != "" {
+	if opts.vars != nil {
 		//replace variables denoted as {{variablename}}
 		yamlstr := string(yamlFile)
-		vars := strings.Split(varlist, ",")
-		for _, va := range vars {
-			k := strings.Split(va, "=")[0]
-			v := strings.Split(va, "=")[1]
+		for k, v := range opts.vars {
 			yamlstr = strings.Replace(yamlstr, "{{"+k+"}}", v, -1)
 		}
 		yamlFile = []byte(yamlstr)
 	}
-	if validateReplacedVars {
+	if opts.validateReplacedVars {
 		//make sure there are no unreplaced variables left and inform the user if so
 		re := regexp.MustCompile("{{(\\S+)}}")
 		matches := re.FindAllStringSubmatch(string(yamlFile), 1)
@@ -582,12 +545,24 @@ func ReadYamlFile(filename string, iface interface{}, varlist string, validateRe
 		}
 	}
 
-	err = yaml.UnmarshalStrict(yamlFile, iface)
+	err = yaml.Unmarshal(yamlFile, iface)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func WithVars(vars map[string]string) ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.vars = vars
+	}
+}
+
+func ValidateReplacedVars() ReadYamlOp {
+	return func(opts *ReadYamlOptions) {
+		opts.validateReplacedVars = true
+	}
 }
 
 func removeAppinstUris(appdata *edgeproto.ApplicationData) {
@@ -619,8 +594,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var a1 edgeproto.ApplicationData
 		var a2 edgeproto.ApplicationData
 
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &a1)
+		err2 = ReadYamlFile(secondYamlFile, &a2)
 		a1.Sort()
 		a2.Sort()
 		// Appinstance URIs usually not provisioned, as they are inherited from the cloudlet. However
@@ -634,8 +609,8 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		var f1 dmeproto.FindCloudletReply
 		var f2 dmeproto.FindCloudletReply
 
-		err1 = ReadYamlFile(firstYamlFile, &f1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &f2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &f1)
+		err2 = ReadYamlFile(secondYamlFile, &f2)
 
 		//publicport is variable so we nil it out for comparison purposes.
 		for _, p := range f1.Ports {
@@ -646,40 +621,9 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 		}
 		y1 = f1
 		y2 = f2
-	} else if fileType == "mcdata" {
-		var a1 ormapi.AllData
-		var a2 ormapi.AllData
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
-
-		copts = []cmp.Option{
-			cmpopts.IgnoreTypes(time.Time{}, dmeproto.Timestamp{}),
-			cloudcommon.IgnoreAdminRole,
-			cloudcommon.IgnoreAppInstUri,
-		}
-		copts = append(copts, edgeproto.IgnoreTaggedFields("nocmp")...)
-		copts = append(copts, edgeproto.CmpSortSlices()...)
-
-		y1 = a1
-		y2 = a2
-	} else if fileType == "mcusers" {
-		// remove roles
-		var a1 []ormapi.User
-		var a2 []ormapi.User
-
-		err1 = ReadYamlFile(firstYamlFile, &a1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &a2, "", false)
-
-		copts = []cmp.Option{
-			cmpopts.IgnoreTypes(time.Time{}),
-			cloudcommon.IgnoreAdminUser,
-		}
-		y1 = a1
-		y2 = a2
 	} else {
-		err1 = ReadYamlFile(firstYamlFile, &y1, "", false)
-		err2 = ReadYamlFile(secondYamlFile, &y2, "", false)
+		err1 = ReadYamlFile(firstYamlFile, &y1)
+		err2 = ReadYamlFile(secondYamlFile, &y2)
 	}
 	if err1 != nil {
 		log.Printf("Error in reading yaml file %v -- %v\n", firstYamlFile, err1)
@@ -699,7 +643,7 @@ func CompareYamlFiles(firstYamlFile string, secondYamlFile string, fileType stri
 	return true
 }
 
-func ControllerCLI(ctrl *ControllerProcess, args ...string) ([]byte, error) {
+func ControllerCLI(ctrl *process.Controller, args ...string) ([]byte, error) {
 	cmdargs := []string{"--addr", ctrl.ApiAddr, "controller"}
 	if ctrl.TLS.ClientCert != "" {
 		cmdargs = append(cmdargs, "--tls", ctrl.TLS.ClientCert)

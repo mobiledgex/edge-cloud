@@ -15,7 +15,6 @@ type DummyHandler struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
-	ClusterFlavorCache   edgeproto.ClusterFlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
@@ -31,7 +30,6 @@ func NewDummyHandler() *DummyHandler {
 	edgeproto.InitClusterInstInfoCache(&h.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&h.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&h.FlavorCache)
-	edgeproto.InitClusterFlavorCache(&h.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&h.ClusterInstCache)
 	return h
 }
@@ -41,7 +39,6 @@ func (s *DummyHandler) RegisterServer(mgr *ServerMgr) {
 	mgr.RegisterSendAppInstCache(&s.AppInstCache)
 	mgr.RegisterSendCloudletCache(&s.CloudletCache)
 	mgr.RegisterSendFlavorCache(&s.FlavorCache)
-	mgr.RegisterSendClusterFlavorCache(&s.ClusterFlavorCache)
 	mgr.RegisterSendClusterInstCache(&s.ClusterInstCache)
 
 	mgr.RegisterRecvAppInstInfoCache(&s.AppInstInfoCache)
@@ -59,7 +56,6 @@ func (s *DummyHandler) RegisterCRMClient(cl *Client) {
 	cl.RegisterRecvAppInstCache(&s.AppInstCache)
 	cl.RegisterRecvCloudletCache(&s.CloudletCache)
 	cl.RegisterRecvFlavorCache(&s.FlavorCache)
-	cl.RegisterRecvClusterFlavorCache(&s.ClusterFlavorCache)
 	cl.RegisterRecvClusterInstCache(&s.ClusterInstCache)
 }
 
@@ -75,7 +71,6 @@ const (
 	AppInstType           = iota
 	CloudletType
 	FlavorType
-	ClusterFlavorType
 	ClusterInstType
 	AppInstInfoType
 	ClusterInstInfoType
@@ -97,8 +92,6 @@ func (s *DummyHandler) WaitFor(typ CacheType, count int) {
 		cache = &s.CloudletCache
 	case FlavorType:
 		cache = &s.FlavorCache
-	case ClusterFlavorType:
-		cache = &s.ClusterFlavorCache
 	case ClusterInstType:
 		cache = &s.ClusterInstCache
 	case AppInstInfoType:
@@ -115,11 +108,11 @@ func WaitFor(cache WaitForCache, count int) {
 	if cache == nil {
 		return
 	}
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		if cache.GetCount() == count {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 }
 
@@ -151,10 +144,6 @@ func (s *DummyHandler) WaitForFlavors(count int) {
 	WaitFor(&s.FlavorCache, count)
 }
 
-func (s *DummyHandler) WaitForClusterFlavors(count int) {
-	WaitFor(&s.ClusterFlavorCache, count)
-}
-
 func (s *DummyHandler) WaitForClusterInsts(count int) {
 	WaitFor(&s.ClusterInstCache, count)
 }
@@ -169,13 +158,13 @@ func (s *Client) WaitForConnect(connect uint64) {
 }
 
 func (mgr *ServerMgr) WaitServerCount(count int) {
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 50; i++ {
 		mgr.mux.Lock()
 		cnt := len(mgr.table)
 		mgr.mux.Unlock()
 		if cnt == count {
 			break
 		}
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(20 * time.Millisecond)
 	}
 }

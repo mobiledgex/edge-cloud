@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	dme "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/testutil"
@@ -14,7 +13,6 @@ import (
 )
 
 var AppDNSRoot = "mobiledgex.net"
-var Registry = "registry.mobiledgex.net"
 
 // special operator types
 var OperatorGCP = "gcp"
@@ -57,7 +55,7 @@ func IsPlatformApp(devname string, appname string) bool {
 
 var AllocatedIpDynamic = "dynamic"
 
-var RootLBL7Port = 443
+var RootLBL7Port int32 = 443
 
 // OperatorDeveloper is a special value used by the public cloud based cloudlet
 var operatorDeveloper = edgeproto.OperatorKey{Name: OperatorDeveloper}
@@ -74,15 +72,23 @@ func GetRootLBFQDN(key *edgeproto.CloudletKey) string {
 	return fmt.Sprintf("%s.%s.%s", loc, oper, AppDNSRoot)
 }
 
+// GetDedicatedLBFQDN gets the cluster-specific Load Balancer's Fully Qualified Domain Name
+// for clusters using "dedicated" IP access.
+func GetDedicatedLBFQDN(cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+	clust := util.DNSSanitize(clusterKey.Name)
+	loc := util.DNSSanitize(cloudletKey.Name)
+	oper := util.DNSSanitize(cloudletKey.OperatorKey.Name)
+	return fmt.Sprintf("%s.%s.%s.%s", clust, loc, oper, AppDNSRoot)
+}
+
 // GetAppFQDN gets the app-specific Load Balancer's Fully Qualified Domain Name
 // for apps using "dedicated" IP access.
-func GetAppFQDN(key *edgeproto.AppInstKey) string {
-	loc := util.DNSSanitize(key.ClusterInstKey.CloudletKey.Name)
-	oper := util.DNSSanitize(key.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
+func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, clusterKey *edgeproto.ClusterKey) string {
+	lb := GetDedicatedLBFQDN(cloudletKey, clusterKey)
 	app := util.DNSSanitize(key.AppKey.Name)
+	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s%s%s.%s.%s.%s", dev, app, ver, loc, oper, AppDNSRoot)
+	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
 }
 
 func FQDNPrefix(svcName string) string {
@@ -96,11 +102,11 @@ func ServiceFQDN(svcName, baseFQDN string) string {
 // GetL7Path gets the L7 path for L7 access behind the "shared"
 // global Load Balancer (reverse proxy). This only the path and
 // does not include the FQDN and port.
-func GetL7Path(key *edgeproto.AppInstKey, port *dme.AppPort) string {
+func GetL7Path(key *edgeproto.AppInstKey, internalPort int32) string {
 	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	app := util.DNSSanitize(key.AppKey.Name)
 	ver := util.DNSSanitize(key.AppKey.Version)
-	return fmt.Sprintf("%s/%s%s/http%d", dev, app, ver, port.InternalPort)
+	return fmt.Sprintf("%s/%s%s/p%d", dev, app, ver, internalPort)
 }
 
 // For the DME and CRM that require a cloudlet key to be specified
@@ -142,4 +148,11 @@ func SetNodeKey(hostname *string, nodeType edgeproto.NodeType, cloudletKey *edge
 	key.Name = *hostname
 	key.NodeType = nodeType
 	key.CloudletKey = *cloudletKey
+}
+
+func IsClusterInstReqd(app *edgeproto.App) bool {
+	if app.Deployment == AppDeploymentTypeVM {
+		return false
+	}
+	return true
 }

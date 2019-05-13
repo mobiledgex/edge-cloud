@@ -2,9 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <ReleaseVersion>1.3.5.7</ReleaseVersion>
+    <ReleaseVersion>1.3.8</ReleaseVersion>
     <PackOnBuild>true</PackOnBuild>
-    <PackageVersion>1.3.5.7</PackageVersion>
+    <PackageVersion>1.3.8</PackageVersion>
     <Authors>MobiledgeX, Inc.</Authors>
     <Description>MobiledgeX MatchingEngineSDK Library</Description>
     <Owners>MobiledgeX, Inc.</Owners>
@@ -12,14 +12,16 @@
     <Title>MobiledgeX MatchingEngineSDK Rest Library</Title>
     <PackageId>MobiledgeX.MatchingEngineRestSDKLibrary</PackageId>
     <PackageTags>MobiledgeX MatchingEngine</PackageTags>
-    <AssemblyVersion>1.3.5.7</AssemblyVersion>
-    <FileVersion>1.3.5.7</FileVersion>
+    <AssemblyVersion>1.3.8</AssemblyVersion>
+    <FileVersion>1.3.8</FileVersion>
+    <Copyright>Copyright 2019 MobiledgeX, Inc. All rights and licenses reserved.</Copyright>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <OutputPath>lib\Debug</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType></DebugType>
     <OutputPath>lib\Release</OutputPath>
   </PropertyGroup>
   <ItemGroup>

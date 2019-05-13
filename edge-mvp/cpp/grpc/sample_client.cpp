@@ -1,5 +1,6 @@
 #include <grpcpp/grpcpp.h>
 
+#include <sstream>
 #include <iostream>
 
 #include <curl/curl.h>
@@ -26,17 +27,28 @@ struct MutualAuthFiles {
 
 class MexGrpcClient {
   public:
+    inline static const string carrierNameDefault = "TDG";
+    inline static const string baseDmeHost = "dme.mobiledgex.net";
+    static const unsigned int defaultDmePort = 50051;
+    unsigned int dmePort = defaultDmePort;
     unsigned long timeoutSec = 5000;
-    const string appName = "EmptyMatchEngineApp"; // Your application name
-    const string devName = "EmptyMatchEngineApp"; // Your developer name
+    const string devName = "MobiledgeX"; // Your developer name
+    const string appName = "MobiledgeX SDK Demo"; // Your application name
     const string appVersionStr = "1.0";
 
     MexGrpcClient(std::shared_ptr<Channel> channel)
         : stub_(Match_Engine_Api::NewStub(channel)) {}
 
     // Retrieve the carrier name of the cellular network interface.
-    string getCarrierName() {
-        return string("TDG");
+    static string getCarrierName() {
+        return carrierNameDefault;
+    }
+
+    static string generateDmeHostPath(string carrierName) {
+        if (carrierName == "") {
+            return carrierNameDefault + "." + baseDmeHost;
+        }
+        return carrierName + "." + baseDmeHost;
     }
 
     // A C++ GPS location provider/binding is needed here.
@@ -323,7 +335,18 @@ class MexGrpcClient {
 
 int main() {
     cout << "Hello C++ MEX GRPC Lib" << endl;
-    string host = "tdg2.dme.mobiledgex.net:50051";
+    string host = "tdg.dme.mobiledgex.net:50051"; // A default, if tdg were the carrier.
+
+    // Use demo server?
+    string yn;
+    cout << "Use the demo server? [yN]" << endl;
+    cin >> yn;
+    if (yn.compare("y") == 0) {
+      host = MexGrpcClient::generateDmeHostPath("mexdemo");
+    } else {
+      host = MexGrpcClient::generateDmeHostPath(MexGrpcClient::getCarrierName());
+    }
+
 
     // Credentials, Mutual Authentication:
     unique_ptr<test_credentials> test_creds = unique_ptr<test_credentials>(
@@ -338,13 +361,17 @@ int main() {
     credentials.pem_cert_chain = test_creds->clientCrt;
     credentials.pem_private_key = test_creds->clientKey;
 
+    stringstream ssUri;
+    ssUri << host << ":" << MexGrpcClient::defaultDmePort;
     auto channel_creds = grpc::SslCredentials(grpc::SslCredentialsOptions(credentials));
-    shared_ptr<Channel> channel = grpc::CreateChannel(host, channel_creds);
+    shared_ptr<Channel> channel = grpc::CreateChannel(ssUri.str(), channel_creds);
 
+    cout << "Url to use: " << ssUri.str() << endl;
     unique_ptr<MexGrpcClient> mexClient = unique_ptr<MexGrpcClient>(new MexGrpcClient(channel));
 
     try {
         shared_ptr<Loc> loc = mexClient->retrieveLocation();
+
 
         cout << "Register MEX client." << endl;
         cout << "====================" << endl
@@ -418,7 +445,7 @@ int main() {
                 cout << ", AppPort: Protocol: " << findCloudletReply.ports().Get(i).proto()
                      << ", AppPort: Internal Port: " << findCloudletReply.ports().Get(i).internal_port()
                      << ", AppPort: Public Port: " << findCloudletReply.ports().Get(i).public_port()
-                     << ", AppPort: Public Path: " << findCloudletReply.ports().Get(i).public_path()
+                     << ", AppPort: Path prefix: " << findCloudletReply.ports().Get(i).path_prefix()
                      << endl;
             }
             cout << endl;

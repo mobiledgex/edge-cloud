@@ -32,6 +32,16 @@ extend google.protobuf.MessageOptions {
   bool notify_print_send_recv = 51022;
 }
 
+extend google.protobuf.EnumOptions {
+  // This enum has hashes of the model version
+  bool version_hash = 51023;
+  string version_hash_salt = 51024;
+}
+
+extend google.protobuf.EnumValueOptions {
+  string upgrade_func = 51025;
+}
+
 extend google.protobuf.FieldOptions {
   bool test_update = 51009;
   // backend defines a field that is filled in by the back-end,

@@ -46,15 +46,15 @@ func TestDeployment(t *testing.T) {
 	app.ImageType = edgeproto.ImageType_ImageTypeDocker
 	testValidImageDeployment(t, app, true)
 
-	// kvm with no deployment is ok
-	app.Deployment = AppDeploymentTypeKVM
+	// vm with no deployment is ok
+	app.Deployment = AppDeploymentTypeVM
 	app.DeploymentManifest = ""
 	app.DeploymentGenerator = ""
 	testAppDeployment(t, app, true)
 
 	// untested - remote generator
 
-	// QCOW image type for KVM deployment
+	// QCOW image type for VM deployment
 	app.ImageType = edgeproto.ImageType_ImageTypeQCOW
 	testValidImageDeployment(t, app, true)
 

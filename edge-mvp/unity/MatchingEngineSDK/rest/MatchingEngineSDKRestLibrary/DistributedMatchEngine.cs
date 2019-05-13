@@ -121,24 +121,24 @@ namespace DistributedMatchEngine
       return carrierName + "." + baseDmeHost;
     }
 
-    public string generateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
+    public string GenerateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
       return "https://" + generateDmeHostPath(carrierName) + ":" + port;
     }
 
-    public string createUri(string host, UInt32 port)
+    public string CreateUri(string host, UInt32 port)
     {
       if (host != null && host != "")
       {
         return "https://" + host + ":" + port;
       }
-      return generateDmeBaseUri(null, port);
+      return GenerateDmeBaseUri(null, port);
     }
 
     /*
      * This is temporary, and must be updated later.   
      */
-    private bool setCredentials(string caCert, string clientCert, string clientPrivKey)
+    private bool SetCredentials(string caCert, string clientCert, string clientPrivKey)
     {
       return false;
     }
@@ -273,7 +273,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + registerAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + registerAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -311,7 +311,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + findcloudletAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + findcloudletAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -348,7 +348,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + verifylocationAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + verifylocationAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -383,7 +383,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + getlocationAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + getlocationAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -422,7 +422,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + appinstlistAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + appinstlistAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -454,7 +454,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + getfqdnlistAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + getfqdnlistAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;
@@ -477,7 +477,7 @@ namespace DistributedMatchEngine
         Ver = 1,
         SessionCookie = this.sessionCookie,
         LgId = lgId,
-        CommType = dlgCommType.ToString(), // JSON REST request needs a string, not integer-like type.
+        CommType = dlgCommType,
         UserData = userData
       };
     }
@@ -489,7 +489,7 @@ namespace DistributedMatchEngine
       serializer.WriteObject(ms, request);
       string jsonStr = Util.StreamToString(ms);
 
-      Stream responseStream = await PostRequest(createUri(host, port) + dynamiclocgroupAPI, jsonStr);
+      Stream responseStream = await PostRequest(CreateUri(host, port) + dynamiclocgroupAPI, jsonStr);
       if (responseStream == null || !responseStream.CanRead)
       {
         return null;

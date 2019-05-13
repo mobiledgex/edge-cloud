@@ -310,7 +310,7 @@ func FindCloudletReplySlicer(in *distributed_match_engine.FindCloudletReply) []s
 	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
-	s = append(s, in.Ports[0].PublicPath)
+	s = append(s, in.Ports[0].PathPrefix)
 	s = append(s, in.Ports[0].FQDNPrefix)
 	if in.CloudletLocation == nil {
 		in.CloudletLocation = &distributed_match_engine.Loc{}
@@ -338,7 +338,7 @@ func FindCloudletReplyHeaderSlicer() []string {
 	s = append(s, "Ports-Proto")
 	s = append(s, "Ports-InternalPort")
 	s = append(s, "Ports-PublicPort")
-	s = append(s, "Ports-PublicPath")
+	s = append(s, "Ports-PathPrefix")
 	s = append(s, "Ports-FQDNPrefix")
 	s = append(s, "CloudletLocation-Latitude")
 	s = append(s, "CloudletLocation-Longitude")
@@ -662,7 +662,7 @@ func AppinstanceSlicer(in *distributed_match_engine.Appinstance) []string {
 	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
-	s = append(s, in.Ports[0].PublicPath)
+	s = append(s, in.Ports[0].PathPrefix)
 	s = append(s, in.Ports[0].FQDNPrefix)
 	return s
 }
@@ -675,7 +675,7 @@ func AppinstanceHeaderSlicer() []string {
 	s = append(s, "Ports-Proto")
 	s = append(s, "Ports-InternalPort")
 	s = append(s, "Ports-PublicPort")
-	s = append(s, "Ports-PublicPath")
+	s = append(s, "Ports-PathPrefix")
 	s = append(s, "Ports-FQDNPrefix")
 	return s
 }
@@ -741,7 +741,7 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	s = append(s, distributed_match_engine.LProto_name[int32(in.Appinstances[0].Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].PublicPort), 10))
-	s = append(s, in.Appinstances[0].Ports[0].PublicPath)
+	s = append(s, in.Appinstances[0].Ports[0].PathPrefix)
 	s = append(s, in.Appinstances[0].Ports[0].FQDNPrefix)
 	return s
 }
@@ -766,7 +766,7 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "Appinstances-Ports-Proto")
 	s = append(s, "Appinstances-Ports-InternalPort")
 	s = append(s, "Appinstances-Ports-PublicPort")
-	s = append(s, "Appinstances-Ports-PublicPath")
+	s = append(s, "Appinstances-Ports-PathPrefix")
 	s = append(s, "Appinstances-Ports-FQDNPrefix")
 	return s
 }
@@ -840,7 +840,7 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	s = append(s, distributed_match_engine.LProto_name[int32(in.Cloudlets[0].Appinstances[0].Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].PublicPort), 10))
-	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].PublicPath)
+	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].PathPrefix)
 	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].FQDNPrefix)
 	return s
 }
@@ -867,7 +867,7 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Cloudlets-Appinstances-Ports-Proto")
 	s = append(s, "Cloudlets-Appinstances-Ports-InternalPort")
 	s = append(s, "Cloudlets-Appinstances-Ports-PublicPort")
-	s = append(s, "Cloudlets-Appinstances-Ports-PublicPath")
+	s = append(s, "Cloudlets-Appinstances-Ports-PathPrefix")
 	s = append(s, "Cloudlets-Appinstances-Ports-FQDNPrefix")
 	return s
 }
@@ -937,7 +937,10 @@ func AppFqdnSlicer(in *distributed_match_engine.AppFqdn) []string {
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
 	s = append(s, in.DevName)
-	s = append(s, in.FQDN)
+	if in.FQDNs == nil {
+		in.FQDNs = make([]string, 1)
+	}
+	s = append(s, in.FQDNs[0])
 	s = append(s, in.AndroidPackageName)
 	return s
 }
@@ -947,7 +950,7 @@ func AppFqdnHeaderSlicer() []string {
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
 	s = append(s, "DevName")
-	s = append(s, "FQDN")
+	s = append(s, "FQDNs")
 	s = append(s, "AndroidPackageName")
 	return s
 }
@@ -987,7 +990,10 @@ func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
 	s = append(s, in.AppFqdns[0].AppName)
 	s = append(s, in.AppFqdns[0].AppVers)
 	s = append(s, in.AppFqdns[0].DevName)
-	s = append(s, in.AppFqdns[0].FQDN)
+	if in.AppFqdns[0].FQDNs == nil {
+		in.AppFqdns[0].FQDNs = make([]string, 1)
+	}
+	s = append(s, in.AppFqdns[0].FQDNs[0])
 	s = append(s, in.AppFqdns[0].AndroidPackageName)
 	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
 	return s
@@ -999,7 +1005,7 @@ func FqdnListReplyHeaderSlicer() []string {
 	s = append(s, "AppFqdns-AppName")
 	s = append(s, "AppFqdns-AppVers")
 	s = append(s, "AppFqdns-DevName")
-	s = append(s, "AppFqdns-FQDN")
+	s = append(s, "AppFqdns-FQDNs")
 	s = append(s, "AppFqdns-AndroidPackageName")
 	s = append(s, "Status")
 	return s

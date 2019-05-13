@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 
 namespace DistributedMatchEngine
@@ -25,8 +25,22 @@ namespace DistributedMatchEngine
   {
     [DataMember]
     public UInt32 Ver;
-    [DataMember]
-    public string Status = DistributedMatchEngine.ReplyStatus.RS_UNDEFINED.ToString();
+
+    public ReplyStatus Status = ReplyStatus.RS_UNDEFINED;
+
+    [DataMember(Name = "Status")]
+    private string ReplyStatusString
+    {
+      get
+      {
+        return Status.ToString();
+      }
+      set
+      {
+        Status = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
+      }
+    }
+
     [DataMember]
     public string SessionCookie;
     [DataMember]

@@ -26,22 +26,22 @@ const (
 // Each server node has two clients connected to it, so it is
 // a balanced binary tree.
 func TestNotifyTree(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelNotify)
+	log.SetDebugLevel(log.DebugLevelNotify | log.DebugLevelApi)
 
 	// override retry time
 	NotifyRetryTime = 10 * time.Millisecond
 	found := false
 
 	// one top node
-	top := newNode("127.0.0.1:60002", nil, none)
+	top := newNode("top", "127.0.0.1:60002", nil, none)
 	// two mid nodes
-	mid1 := newNode("127.0.0.1:60003", []string{"127.0.0.1:60002"}, dme)
-	mid2 := newNode("127.0.0.1:60004", []string{"127.0.0.1:60002"}, crm)
+	mid1 := newNode("mid1", "127.0.0.1:60003", []string{"127.0.0.1:60002"}, dme)
+	mid2 := newNode("mid2", "127.0.0.1:60004", []string{"127.0.0.1:60002"}, crm)
 	// four low nodes
-	low11 := newNode("", []string{"127.0.0.1:60003"}, dme)
-	low12 := newNode("", []string{"127.0.0.1:60003"}, dme)
-	low21 := newNode("", []string{"127.0.0.1:60004"}, crm)
-	low22 := newNode("", []string{"127.0.0.1:60004"}, crm)
+	low11 := newNode("low11", "", []string{"127.0.0.1:60003"}, dme)
+	low12 := newNode("low12", "", []string{"127.0.0.1:60003"}, dme)
+	low21 := newNode("low21", "", []string{"127.0.0.1:60004"}, crm)
+	low22 := newNode("low22", "", []string{"127.0.0.1:60004"}, crm)
 
 	// Note that data distributed to dme and crm are different.
 
@@ -70,6 +70,7 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.FlavorCache.Update(&testutil.FlavorData[0], 0)
 	top.handler.FlavorCache.Update(&testutil.FlavorData[1], 0)
 	top.handler.FlavorCache.Update(&testutil.FlavorData[2], 0)
+
 	// set ClusterInst and AppInst state to CreateRequested so they get
 	// sent to the CRM.
 	for ii, _ := range testutil.ClusterInstData {
@@ -84,7 +85,7 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.CloudletCache.Update(&testutil.CloudletData[1], 0)
 	// dmes should get all app insts but no cloudlets
 	for _, n := range dmes {
-		checkClientCache(t, n, 0, 0, 6, 0)
+		checkClientCache(t, n, 0, 0, len(testutil.AppInstData), 0)
 	}
 	// crms at all levels get all flavors
 	// mid level gets the appInsts and clusterInsts for all below it.
@@ -120,9 +121,10 @@ func TestNotifyTree(t *testing.T) {
 	fmt.Println("========== stopping client")
 	low21.stopClient()
 	mid2.handler.WaitForAppInstInfo(1)
-	mid1.handler.WaitForCloudletInfo(0)
+	mid2.handler.WaitForCloudletInfo(1)
 	require.Equal(t, 1, len(mid2.handler.AppInstInfoCache.Objs), "AppInstInfos")
 	require.Equal(t, 1, len(mid2.handler.CloudletInfoCache.Objs), "CloudletInfos")
+	require.Equal(t, 0, len(mid1.handler.CloudletInfoCache.Objs), "CloudletInfos")
 	_, found = mid2.handler.AppInstInfoCache.Objs[testutil.AppInstInfoData[2].Key]
 	require.False(t, found, "disconnected AppInstInfo")
 	_, found = mid2.handler.CloudletInfoCache.Objs[testutil.CloudletInfoData[0].Key]
@@ -172,13 +174,14 @@ type node struct {
 	listenAddr string
 }
 
-func newNode(listenAddr string, connectAddrs []string, typ nodeType) *node {
+func newNode(name, listenAddr string, connectAddrs []string, typ nodeType) *node {
 	n := &node{}
 	n.handler = NewDummyHandler()
 	n.listenAddr = listenAddr
 	if listenAddr != "" {
 		n.serverMgr = &ServerMgr{}
 		n.handler.RegisterServer(n.serverMgr)
+		n.serverMgr.name = fmt.Sprintf("server %s", name)
 	}
 	if connectAddrs != nil {
 		n.client = NewClient(connectAddrs, "")
@@ -187,6 +190,7 @@ func newNode(listenAddr string, connectAddrs []string, typ nodeType) *node {
 		} else {
 			n.handler.RegisterDMEClient(n.client)
 		}
+		n.client.sendrecv.cliserv = fmt.Sprintf("client %s", name)
 	}
 	return n
 }

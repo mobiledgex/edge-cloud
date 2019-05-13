@@ -1,7 +1,13 @@
 package mexgen
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/json"
 	"fmt"
+	"log"
+	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -36,6 +42,7 @@ type mex struct {
 	importCmp     bool
 	firstFile     string
 	support       gensupport.PluginSupport
+	keyMessages   []descriptor.DescriptorProto
 }
 
 func (m *mex) Name() string {
@@ -55,6 +62,16 @@ func (m *mex) Init(gen *generator.Generator) {
 // P forwards to g.gen.P
 func (m *mex) P(args ...interface{}) {
 	m.gen.P(args...)
+}
+
+func (m *mex) getAllKeyMessages() {
+	for _, file := range m.gen.Request.ProtoFile {
+		for _, desc := range file.MessageType {
+			if GetObjKey(desc) {
+				m.keyMessages = append(m.keyMessages, *desc)
+			}
+		}
+	}
 }
 
 func (m *mex) Generate(file *generator.FileDescriptor) {
@@ -124,6 +141,25 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	m.support.PrintUsedImports(m.gen)
 }
 
+func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
+	for _, e := range enum.Value {
+		if GetUpgradeFunc(e) != "" {
+			m.P(e.Number, ": ", GetUpgradeFunc(e), ",")
+		} else {
+			m.P(e.Number, ": nil,")
+		}
+	}
+	m.P("}")
+}
+func (m *mex) generateUpgradeFuncNames(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncNames = map[int32]string{")
+	for _, e := range enum.Value {
+		m.P(e.Number, ": ", strconv.Quote(GetUpgradeFunc(e)), ",")
+	}
+	m.P("}")
+}
+
 func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumDescriptor) {
 	en := desc.EnumDescriptorProto
 	m.P("var ", en.Name, "Strings = []string{")
@@ -145,6 +181,20 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
 	m.importStrconv = true
+
+	if GetVersionHashOpt(en) {
+		// Collect all key objects
+		m.getAllKeyMessages()
+		salt := GetVersionHashSalt(en)
+		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
+		// Generate a hash of all the key messages.
+		m.generateVersionString(hashStr)
+		// Generate an array with function names
+		m.generateUpgradeFuncs(en)
+		m.generateUpgradeFuncNames(en)
+		// Generate version check code for version message
+		validateVersionHash(en, hashStr, file)
+	}
 }
 
 type enumTempl struct {
@@ -730,10 +780,11 @@ func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.
 	return true
 }
 
-func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}) {
+func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
 	val, _ := json.Marshal(obj)
-	stm.Put(keystr, string(val))
+	v3opts := GetSTMOpts(ops...)
+	stm.Put(keystr, string(val), v3opts...)
 }
 
 func (s *{{.Name}}Store) STMDel(stm concurrency.STM, key *{{.KeyType}}) {
@@ -1069,7 +1120,8 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	case <-failed:
 		if c.Get(key, &info) {
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
 			// this shouldn't happen, since only way to get here
 			// is if info state is set to Error
@@ -1079,7 +1131,8 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		hasInfo := c.Get(key, &info)
 		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
@@ -1100,6 +1153,37 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 }
 {{- end}}
 
+`
+
+type ugpradeError struct {
+	CurHash        string
+	CurHashEnumVal int32
+	NewHash        string
+	NewHashEnumVal int32
+}
+
+var upgradeErrorTemplete = `
+======WARNING=======
+Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.CurHash}}).
+This is due to an upsupported change in the key of some objects in a .proto file.
+In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
+
+enum VersionHash {
+	...
+	{{.CurHash}} = {{.CurHashEnumVal}};
+	{{.NewHash}} = {{.NewHashEnumVal}} [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
+	...
+}
+
+Implementation of "sample_upgrade_function" should be added tp edge-cloud/upgrade/upgrade-types.go
+
+NOTE: If no upgrade function is needed don't need to add "[(protogen.upgrade_func) = "sample_upgrade_function];" to
+the VersionHash enum.
+
+A unit test data for the automatic unit test of the upgrade function should be added to testutil/upgrade_test_data.go
+   - PreUpgradeData - what key/value objects are trying to be upgraded
+   - PostUpgradeData - what the resulting object store should look like
+====================
 `
 
 func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.Descriptor) {
@@ -1182,6 +1266,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
+			m.importStrings = true
 		}
 	}
 	if GetObjKey(message) {
@@ -1223,6 +1308,112 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 	if gensupport.HasHideTags(m.gen, desc, protogen.E_Hidetag, visited) {
 		m.generateHideTags(desc)
 	}
+}
+
+func (m *mex) generateVersionString(hashStr string) {
+	m.P("// Keys being hashed:")
+	for _, v := range m.keyMessages {
+		m.P("// ", v.Name)
+	}
+	m.P("var versionHashString = \"", hashStr, "\"")
+	m.P("")
+	m.P("func GetDataModelVersion() string {")
+	m.P("return versionHashString")
+	m.P("}")
+}
+
+func validateVersionHash(en *descriptor.EnumDescriptorProto, hashStr string, file *generator.FileDescriptor) {
+	// We need to check the hash and verify that we have the correct one
+	// If we don't have a correct one fail suggesting an upgrade function
+	// Check the last one(it's the latest) and if it doesn't match fail
+	lastIndex := 0
+	for i, _ := range en.Value {
+		if i > lastIndex {
+			lastIndex = i
+		}
+	}
+	latestVer := en.Value[lastIndex]
+	// Check the substring of the value
+	if !strings.Contains(*latestVer.Name, hashStr) {
+		var upgradeTemplate *template.Template
+		upgradeTemplate = template.Must(template.New("upgrade").Parse(upgradeErrorTemplete))
+		buf := bytes.Buffer{}
+		upgErr := ugpradeError{
+			CurHash:        *latestVer.Name,
+			CurHashEnumVal: *latestVer.Number,
+			NewHash:        "HASH_" + hashStr,
+			NewHashEnumVal: *latestVer.Number + 1,
+		}
+		if err := upgradeTemplate.Execute(&buf, &upgErr); err != nil {
+			log.Fatalf("Cannot execute upgrade error template %v\n", err)
+		}
+		log.Fatalf("%s", buf.String())
+	}
+}
+
+// Subset of the FieldDescriptorProto that is used to identify whether we need to trigger an
+// incompatible upgrade or not
+type FieldDescriptorProtoHashable struct {
+	Name     *string
+	Number   *int32
+	Label    *descriptor.FieldDescriptorProto_Label
+	Type     *descriptor.FieldDescriptorProto_Type
+	TypeName *string
+	Extendee *string
+}
+
+// Unique idenitifable message object, which is used in a version hash calculation
+type HashableKey struct {
+	Name  *string
+	Field []FieldDescriptorProtoHashable
+}
+
+// This function generates an array of HashableKey[s] from an array of the DescriptorProto
+// messages. HashableKey is defined to keep track of only the specific sets of
+// fields of the DescriptorProto which make it unique
+// NOTE: There is a possiblity that some of the sub-strucutres of the key messages
+// is not an obj_key itself and we might miss it in a hash calculation.
+// If this ever becomes a problem we should make sure to track all the sub-structs that
+// are not key_obj
+func getHashObjsFromMsgs(msgs []descriptor.DescriptorProto) []HashableKey {
+	objs := make([]HashableKey, 0)
+	for _, m := range msgs {
+		o := HashableKey{
+			Name: m.Name,
+		}
+		for _, dp := range m.Field {
+			dpHash := FieldDescriptorProtoHashable{
+				Name:     dp.Name,
+				Number:   dp.Number,
+				Label:    dp.Label,
+				Type:     dp.Type,
+				TypeName: dp.TypeName,
+				Extendee: dp.Extendee,
+			}
+			o.Field = append(o.Field, dpHash)
+		}
+		objs = append(objs, o)
+	}
+	return objs
+}
+
+// Hash function for the Data Model Version
+func getKeyVersionHash(msgs []descriptor.DescriptorProto, salt string) [16]byte {
+	// Sort the messages to make sure we are generate repeatable hash
+	sort.Slice(msgs, func(i, j int) bool {
+		return *msgs[i].Name < *msgs[j].Name
+	})
+	// Need to build an array of HashableKeys from msgs
+	hashObjs := getHashObjsFromMsgs(msgs)
+	arrBytes := []byte{}
+	for _, o := range hashObjs {
+		jsonBytes, _ := json.Marshal(o)
+		arrBytes = append(arrBytes, jsonBytes...)
+	}
+	// add salt
+	arrBytes = append(arrBytes, []byte(salt)...)
+	return md5.Sum(arrBytes)
+
 }
 
 // Generate a single check for an enum
@@ -1377,4 +1568,16 @@ func GetBackend(field *descriptor.FieldDescriptorProto) bool {
 
 func GetHideTag(field *descriptor.FieldDescriptorProto) string {
 	return gensupport.GetStringExtension(field.Options, protogen.E_Hidetag, "")
+}
+
+func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
+	return proto.GetBoolExtension(enum.Options, protogen.E_VersionHash, false)
+}
+
+func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
+	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
+}
+
+func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
+	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
 }

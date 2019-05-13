@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	yaml "github.com/ghodss/yaml"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
-	yaml "gopkg.in/yaml.v2"
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/api/core/v1"
 	"k8s.io/cli-runtime/pkg/printers"
@@ -16,14 +16,12 @@ import (
 
 const AppConfigEnvYaml = "envVarsYaml"
 
+const MexAppLabel = "mex-app"
+
 // Merge in all the environment variables into
 func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string, error) {
 	var envVars []v1.EnvVar
 	var files []string
-	//quick bail, if nothing to do
-	if len(configs) == 0 {
-		return kubeManifest, nil
-	}
 
 	// Walk the Configs in the App and get all the environment variables together
 	for _, v := range configs {
@@ -36,10 +34,6 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 				envVars = append(envVars, curVars...)
 			}
 		}
-	}
-	//nothing to do if no variables to merge
-	if len(envVars) == 0 {
-		return kubeManifest, nil
 	}
 	log.DebugLog(log.DebugLevelMexos, "Merging environment variables", "envVars", envVars)
 	mf, err := cloudcommon.GetDeploymentManifest(kubeManifest)
@@ -60,12 +54,14 @@ func MergeEnvVars(kubeManifest string, configs []*edgeproto.ConfigFile) (string,
 			continue
 		}
 		//walk the containers and append environment variables to each
-		for i, _ := range deployment.Spec.Template.Spec.Containers {
-			deployment.Spec.Template.Spec.Containers[i].Env =
-				append(deployment.Spec.Template.Spec.Containers[i].Env, envVars...)
+		for j, _ := range deployment.Spec.Template.Spec.Containers {
+			deployment.Spec.Template.Spec.Containers[j].Env =
+				append(deployment.Spec.Template.Spec.Containers[j].Env, envVars...)
 		}
-		//there should only be one deployment object, so break out of the loop
-		break
+		// Add a label so we can lookup the pods created by this
+		// deployment. Pods names are used for shell access.
+		deployment.Spec.Template.ObjectMeta.Labels[MexAppLabel] =
+			deployment.ObjectMeta.Name
 	}
 	//marshal the objects back together and return as one string
 	printer := &printers.YAMLPrinter{}

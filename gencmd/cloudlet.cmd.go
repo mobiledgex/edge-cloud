@@ -91,7 +91,7 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 	}
 }
 func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, in.DockerRegistry)
 	s = append(s, in.DNSZone)
 	s = append(s, in.RegistryFileServer)
@@ -99,11 +99,12 @@ func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
 	s = append(s, in.CFUser)
 	s = append(s, in.DockerRegPass)
 	s = append(s, in.NetworkScheme)
+	s = append(s, in.DockerRegistrySecret)
 	return s
 }
 
 func CloudletInfraCommonHeaderSlicer() []string {
-	s := make([]string, 0, 7)
+	s := make([]string, 0, 8)
 	s = append(s, "DockerRegistry")
 	s = append(s, "DNSZone")
 	s = append(s, "RegistryFileServer")
@@ -111,6 +112,7 @@ func CloudletInfraCommonHeaderSlicer() []string {
 	s = append(s, "CFUser")
 	s = append(s, "DockerRegPass")
 	s = append(s, "NetworkScheme")
+	s = append(s, "DockerRegistrySecret")
 	return s
 }
 
@@ -179,16 +181,20 @@ func AzurePropertiesWriteOutputOne(obj *edgeproto.AzureProperties) {
 	}
 }
 func GcpPropertiesSlicer(in *edgeproto.GcpProperties) []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, in.Project)
 	s = append(s, in.Zone)
+	s = append(s, in.ServiceAccount)
+	s = append(s, in.GCPAuthKeyUrl)
 	return s
 }
 
 func GcpPropertiesHeaderSlicer() []string {
-	s := make([]string, 0, 2)
+	s := make([]string, 0, 4)
 	s = append(s, "Project")
 	s = append(s, "Zone")
+	s = append(s, "ServiceAccount")
+	s = append(s, "GCPAuthKeyUrl")
 	return s
 }
 
@@ -279,6 +285,8 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	}
 	s = append(s, in.GcpProperties.Project)
 	s = append(s, in.GcpProperties.Zone)
+	s = append(s, in.GcpProperties.ServiceAccount)
+	s = append(s, in.GcpProperties.GCPAuthKeyUrl)
 	return s
 }
 
@@ -296,6 +304,8 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s = append(s, "AzureProperties-Password")
 	s = append(s, "GcpProperties-Project")
 	s = append(s, "GcpProperties-Zone")
+	s = append(s, "GcpProperties-ServiceAccount")
+	s = append(s, "GcpProperties-GCPAuthKeyUrl")
 	return s
 }
 

@@ -42,6 +42,7 @@ var AppInstInLiveness string
 var AppInstInMappedPortsProto string
 var AppInstInState string
 var AppInstInCrmOverride string
+var AppInstInAutoClusterIpAccess string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
@@ -98,7 +99,7 @@ func AppInstKeyWriteOutputOne(obj *edgeproto.AppInstKey) {
 	}
 }
 func AppInstSlicer(in *edgeproto.AppInst) []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 13)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -130,7 +131,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, distributed_match_engine.LProto_name[int32(in.MappedPorts[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
-	s = append(s, in.MappedPorts[0].PublicPath)
+	s = append(s, in.MappedPorts[0].PathPrefix)
 	s = append(s, in.MappedPorts[0].FQDNPrefix)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
@@ -139,14 +140,18 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	}
 	s = append(s, in.Errors[0])
 	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
+	if in.RuntimeInfo.ContainerIds == nil {
+		in.RuntimeInfo.ContainerIds = make([]string, 1)
+	}
+	s = append(s, in.RuntimeInfo.ContainerIds[0])
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
-	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
+	s = append(s, edgeproto.IpAccess_name[int32(in.AutoClusterIpAccess)])
 	return s
 }
 
 func AppInstHeaderSlicer() []string {
-	s := make([]string, 0, 12)
+	s := make([]string, 0, 13)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -169,15 +174,16 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-Proto")
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
-	s = append(s, "MappedPorts-PublicPath")
+	s = append(s, "MappedPorts-PathPrefix")
 	s = append(s, "MappedPorts-FQDNPrefix")
 	s = append(s, "Flavor-Name")
 	s = append(s, "State")
 	s = append(s, "Errors")
 	s = append(s, "CrmOverride")
+	s = append(s, "RuntimeInfo-ContainerIds")
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
-	s = append(s, "Version")
+	s = append(s, "AutoClusterIpAccess")
 	return s
 }
 
@@ -204,8 +210,46 @@ func AppInstWriteOutputOne(obj *edgeproto.AppInst) {
 		cmdsup.WriteOutputGeneric(obj)
 	}
 }
+func AppInstRuntimeSlicer(in *edgeproto.AppInstRuntime) []string {
+	s := make([]string, 0, 1)
+	if in.ContainerIds == nil {
+		in.ContainerIds = make([]string, 1)
+	}
+	s = append(s, in.ContainerIds[0])
+	return s
+}
+
+func AppInstRuntimeHeaderSlicer() []string {
+	s := make([]string, 0, 1)
+	s = append(s, "ContainerIds")
+	return s
+}
+
+func AppInstRuntimeWriteOutputArray(objs []*edgeproto.AppInstRuntime) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstRuntimeHeaderSlicer(), "\t"))
+		for _, obj := range objs {
+			fmt.Fprintln(output, strings.Join(AppInstRuntimeSlicer(obj), "\t"))
+		}
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(objs)
+	}
+}
+
+func AppInstRuntimeWriteOutputOne(obj *edgeproto.AppInstRuntime) {
+	if cmdsup.OutputFormat == cmdsup.OutputFormatTable {
+		output := tabwriter.NewWriter(os.Stdout, 0, 0, 1, ' ', 0)
+		fmt.Fprintln(output, strings.Join(AppInstRuntimeHeaderSlicer(), "\t"))
+		fmt.Fprintln(output, strings.Join(AppInstRuntimeSlicer(obj), "\t"))
+		output.Flush()
+	} else {
+		cmdsup.WriteOutputGeneric(obj)
+	}
+}
 func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	if in.Fields == nil {
 		in.Fields = make([]string, 1)
 	}
@@ -223,11 +267,15 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
+	if in.RuntimeInfo.ContainerIds == nil {
+		in.RuntimeInfo.ContainerIds = make([]string, 1)
+	}
+	s = append(s, in.RuntimeInfo.ContainerIds[0])
 	return s
 }
 
 func AppInstInfoHeaderSlicer() []string {
-	s := make([]string, 0, 5)
+	s := make([]string, 0, 6)
 	s = append(s, "Fields")
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
@@ -239,6 +287,7 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "NotifyId")
 	s = append(s, "State")
 	s = append(s, "Errors")
+	s = append(s, "RuntimeInfo-ContainerIds")
 	return s
 }
 
@@ -320,11 +369,24 @@ func AppInstHideTags(in *edgeproto.AppInst) {
 	if _, found := tags["nocmp"]; found {
 		in.CrmOverride = 0
 	}
+	if _, found := tags["nocmp"]; found {
+		in.RuntimeInfo.ContainerIds = nil
+	}
 	if _, found := tags["timestamp"]; found {
 		in.CreatedAt = distributed_match_engine.Timestamp{}
 	}
+}
+
+func AppInstRuntimeHideTags(in *edgeproto.AppInstRuntime) {
+	if cmdsup.HideTags == "" {
+		return
+	}
+	tags := make(map[string]struct{})
+	for _, tag := range strings.Split(cmdsup.HideTags, ",") {
+		tags[tag] = struct{}{}
+	}
 	if _, found := tags["nocmp"]; found {
-		in.Version = 0
+		in.ContainerIds = nil
 	}
 }
 
@@ -338,6 +400,9 @@ func AppInstInfoHideTags(in *edgeproto.AppInstInfo) {
 	}
 	if _, found := tags["nocmp"]; found {
 		in.NotifyId = 0
+	}
+	if _, found := tags["nocmp"]; found {
+		in.RuntimeInfo.ContainerIds = nil
 	}
 }
 
@@ -719,7 +784,7 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
-	AppInstFlagSet.Uint32Var(&AppInstIn.Version, "version", 0, "Version")
+	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
@@ -824,8 +889,8 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("createdat-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
 	}
-	if AppInstFlagSet.Lookup("version").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "99")
+	if AppInstFlagSet.Lookup("autoclusteripaccess").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "22")
 	}
 }
 
@@ -933,6 +998,20 @@ func parseAppInstEnums() error {
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for AppInstInCrmOverride")
+		}
+	}
+	if AppInstInAutoClusterIpAccess != "" {
+		switch AppInstInAutoClusterIpAccess {
+		case "IpAccessUnknown":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(0)
+		case "IpAccessDedicated":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(1)
+		case "IpAccessDedicatedOrShared":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(2)
+		case "IpAccessShared":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(3)
+		default:
+			return errors.New("Invalid value for AppInstInAutoClusterIpAccess")
 		}
 	}
 	return nil

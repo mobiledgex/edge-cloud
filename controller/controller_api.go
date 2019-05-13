@@ -21,6 +21,7 @@ type ControllerApi struct {
 var controllerApi = ControllerApi{}
 
 var leaseTimeoutSec int64 = 20
+var controllerAliveLease int64
 
 func InitControllerApi(sync *Sync) {
 	controllerApi.sync = sync
@@ -39,6 +40,7 @@ func (s *ControllerApi) registerController() error {
 	if err != nil {
 		return err
 	}
+	controllerAliveLease = lease
 
 	ctrl := edgeproto.Controller{}
 	ctrl.Key.Addr = *externalApiAddr

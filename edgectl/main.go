@@ -66,7 +66,6 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.AppApiCmd = edgeproto.NewAppApiClient(conn)
 	gencmd.OperatorApiCmd = edgeproto.NewOperatorApiClient(conn)
 	gencmd.FlavorApiCmd = edgeproto.NewFlavorApiClient(conn)
-	gencmd.ClusterFlavorApiCmd = edgeproto.NewClusterFlavorApiClient(conn)
 	gencmd.ClusterApiCmd = edgeproto.NewClusterApiClient(conn)
 	gencmd.ClusterInstApiCmd = edgeproto.NewClusterInstApiClient(conn)
 	gencmd.CloudletApiCmd = edgeproto.NewCloudletApiClient(conn)
@@ -78,6 +77,7 @@ func connect(cmd *cobra.Command, args []string) error {
 	gencmd.DebugApiCmd = log.NewDebugApiClient(conn)
 	gencmd.ControllerApiCmd = edgeproto.NewControllerApiClient(conn)
 	gencmd.NodeApiCmd = edgeproto.NewNodeApiClient(conn)
+	execApiCmd = edgeproto.NewExecApiClient(conn)
 	return nil
 }
 
@@ -108,7 +108,6 @@ func main() {
 	controllerCmd.AddCommand(gencmd.AppApiCmds...)
 	controllerCmd.AddCommand(gencmd.OperatorApiCmds...)
 	controllerCmd.AddCommand(gencmd.FlavorApiCmds...)
-	controllerCmd.AddCommand(gencmd.ClusterFlavorApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterApiCmds...)
 	controllerCmd.AddCommand(gencmd.ClusterInstApiCmds...)
 	controllerCmd.AddCommand(gencmd.CloudletApiCmds...)
@@ -120,6 +119,7 @@ func main() {
 
 	controllerCmd.AddCommand(createCmd)
 	controllerCmd.AddCommand(deleteCmd)
+	controllerCmd.AddCommand(NewExecRequestCmd())
 
 	dmeCmd.AddCommand(gencmd.Match_Engine_ApiCmds...)
 	dmeCmd.AddCommand(gencmd.DebugApiCmds...)

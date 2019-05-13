@@ -55,6 +55,17 @@ func (s *AppInstInfoCache) SetState(key *AppInstKey, state TrackedState) {
 	s.Update(&info, 0)
 }
 
+func (s *AppInstInfoCache) SetStateRuntime(key *AppInstKey, state TrackedState, rt *AppInstRuntime) {
+	info := AppInstInfo{}
+	if !s.Get(key, &info) {
+		info.Key = *key
+	}
+	info.Errors = nil
+	info.State = state
+	info.RuntimeInfo = *rt
+	s.Update(&info, 0)
+}
+
 func (s *AppInstInfoCache) SetError(key *AppInstKey, errState TrackedState, err string) {
 	info := AppInstInfo{}
 	if !s.Get(key, &info) {

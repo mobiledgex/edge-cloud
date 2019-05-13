@@ -10,7 +10,7 @@ import "operator.proto";
 import "result.proto";
 import "common.proto";
 import "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto/loc.proto";
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "gogoproto/gogo.proto";
 
 // CloudletKey uniquely identifies a Cloudlet.
 message CloudletKey {
@@ -39,6 +39,8 @@ message CloudletInfraCommon{
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
      // network scheme
     string network_scheme = 7;
+     // the name of the docker registry secret, e.g. mexgitlabsecret
+    string docker_registry_secret = 8;
 }
 
 message AzureProperties{
@@ -57,6 +59,10 @@ message GcpProperties{
   string project = 1;
   // availability zone
   string zone = 2;
+  // service account to login with
+  string service_account = 3;
+  // vault credentials link
+  string GCP_auth_key_url = 4;
 }
 
 message OpenStackProperties{

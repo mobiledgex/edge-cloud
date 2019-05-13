@@ -3,10 +3,11 @@ package crmutil
 import (
 	"fmt"
 
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform"
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
+	"github.com/mobiledgex/edge-cloud/notify"
 )
 
 //ControllerData contains cache data for controller
@@ -16,12 +17,13 @@ type ControllerData struct {
 	AppInstCache         edgeproto.AppInstCache
 	CloudletCache        edgeproto.CloudletCache
 	FlavorCache          edgeproto.FlavorCache
-	ClusterFlavorCache   edgeproto.ClusterFlavorCache
 	ClusterInstCache     edgeproto.ClusterInstCache
 	AppInstInfoCache     edgeproto.AppInstInfoCache
 	CloudletInfoCache    edgeproto.CloudletInfoCache
 	ClusterInstInfoCache edgeproto.ClusterInstInfoCache
 	NodeCache            edgeproto.NodeCache
+	ExecReqHandler       *ExecReqHandler
+	ExecReqSend          *notify.ExecRequestSend
 }
 
 // NewControllerData creates a new instance to track data from the controller
@@ -35,14 +37,14 @@ func NewControllerData(pf platform.Platform) *ControllerData {
 	edgeproto.InitClusterInstInfoCache(&cd.ClusterInstInfoCache)
 	edgeproto.InitCloudletInfoCache(&cd.CloudletInfoCache)
 	edgeproto.InitFlavorCache(&cd.FlavorCache)
-	edgeproto.InitClusterFlavorCache(&cd.ClusterFlavorCache)
 	edgeproto.InitClusterInstCache(&cd.ClusterInstCache)
 	edgeproto.InitNodeCache(&cd.NodeCache)
+	cd.ExecReqHandler = NewExecReqHandler(cd)
+	cd.ExecReqSend = notify.NewExecRequestSend()
 	// set callbacks to trigger changes
 	cd.ClusterInstCache.SetNotifyCb(cd.clusterInstChanged)
 	cd.AppInstCache.SetNotifyCb(cd.appInstChanged)
 	cd.FlavorCache.SetNotifyCb(cd.flavorChanged)
-	cd.ClusterFlavorCache.SetNotifyCb(cd.clusterFlavorChanged)
 	return cd
 }
 
@@ -102,25 +104,14 @@ func (cd *ControllerData) flavorChanged(key *edgeproto.FlavorKey, old *edgeproto
 	}
 }
 
-func (cd *ControllerData) clusterFlavorChanged(key *edgeproto.ClusterFlavorKey, old *edgeproto.ClusterFlavor) {
-	flavor := edgeproto.ClusterFlavor{}
-	found := cd.ClusterFlavorCache.Get(key, &flavor)
-	if found {
-		// create (no updates allowed)
-		// CRM TODO: register cluster flavor?
-	} else {
-		// CRM TODO: delete cluster flavor?
-	}
-}
-
 func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old *edgeproto.ClusterInst) {
-	log.DebugLog(log.DebugLevelMexos, "clusterInstChange", "key", key)
+	log.DebugLog(log.DebugLevelMexos, "clusterInstChange", "key", key, "old", old)
 	clusterInst := edgeproto.ClusterInst{}
 	found := cd.ClusterInstCache.Get(key, &clusterInst)
 	if !found {
 		return
 	}
-	log.DebugLog(log.DebugLevelMexos, "clusterInst state", "state", clusterInst.State)
+	log.DebugLog(log.DebugLevelMexos, "clusterInst state", "state", clusterInst.State, "new", clusterInst)
 
 	// If CRM crashes or reconnects to controller, controller will resend
 	// current state. This is needed to:
@@ -142,44 +133,41 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
-		flavor := edgeproto.ClusterFlavor{}
 
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
-		flavorFound := cd.ClusterFlavorCache.Get(&clusterInst.Flavor, &flavor)
-		if !flavorFound {
-			log.DebugLog(log.DebugLevelMexos, "did not find flavor", "flavor", flavor)
-			//XXX returning flavor not found error to InstInfoError?
-			cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Did not find flavor %s", clusterInst.Flavor.Name))
-			return
-		}
-		log.DebugLog(log.DebugLevelMexos, "Found flavor", "flavor", flavor)
 		cd.clusterInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
 
-			err = cd.platform.CreateCluster(&clusterInst, &flavor)
+			err = cd.platform.CreateClusterInst(&clusterInst)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "adding flavor", "flavor", flavor)
-			/*
-				Add Flavor never actually did anything.  TODO: implement this or decide against doing it.
-				err = mexos.MEXAddFlavorClusterInst(cd.CRMRootLB, &flavor) //Flavor is inside ClusterInst even though it comes from FlavorCache
-				if err != nil {
-					log.DebugLog(log.DebugLevelMexos, "cannot add flavor", "flavor", flavor)
-					cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Can't add flavor %s, %v", flavor.Key.Name, err))
-					return
-				}
-			*/
+
 			log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
 			cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
 		}()
 	} else if clusterInst.State == edgeproto.TrackedState_UpdateRequested {
-		// update (TODO)
+		log.DebugLog(log.DebugLevelMexos, "cluster inst update", "clusterinst", clusterInst)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_Updating)
+
+		var err error
+		log.DebugLog(log.DebugLevelMexos, "update cluster inst", "clusterinst", clusterInst)
+
+		err = cd.platform.UpdateClusterInst(&clusterInst)
+		if err != nil {
+			str := fmt.Sprintf("update failed: %s", err)
+			cd.clusterInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+			return
+		}
+
+		log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
+
 	} else if clusterInst.State == edgeproto.TrackedState_DeleteRequested {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst delete", "clusterinst", clusterInst)
 		// clusterInst was deleted
@@ -187,7 +175,7 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "delete cluster inst", "clusterinst", clusterInst)
-			err = cd.platform.DeleteCluster(&clusterInst)
+			err = cd.platform.DeleteClusterInst(&clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
 				cd.clusterInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
@@ -248,70 +236,68 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
-		if !clusterInstFound {
-			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.Key.ClusterInstKey.ClusterKey.Name)
-			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
-			return
+		if cloudcommon.IsClusterInstReqd(&app) {
+			clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+			if !clusterInstFound {
+				str := fmt.Sprintf("Cluster instance %s not found",
+					appInst.ClusterInstKey.ClusterKey.Name)
+				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
+				return
+			}
 		}
 
 		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
-			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
-			if err != nil {
-				errstr := fmt.Sprintf("get kube names failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
-				log.DebugLog(log.DebugLevelMexos, "can't create app inst", "error", errstr, "key", key)
-				return
-			}
-			err = cd.platform.CreateAppInst(&clusterInst, &app, &appInst, names)
+			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
 				log.InfoLog("can't create app inst", "error", errstr, "key", key)
 				log.DebugLog(log.DebugLevelMexos, "cleaning up failed appinst", "key", key)
-				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst, names)
+				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
 				if derr != nil {
 					log.InfoLog("can't cleanup app inst", "error", errstr, "key", key)
 				}
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "created docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
-			cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
+			log.DebugLog(log.DebugLevelMexos, "created app inst", "appisnt", appInst, "clusterinst", clusterInst)
+
+			rt, err := cd.platform.GetAppInstRuntime(&clusterInst, &app, &appInst)
+			if err != nil {
+				log.InfoLog("unable to get AppInstRuntime", "key", key, "err", err)
+				cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
+			} else {
+				cd.appInstInfoRuntime(key, edgeproto.TrackedState_Ready, rt)
+			}
 		}()
 	} else if appInst.State == edgeproto.TrackedState_UpdateRequested {
 		// update (TODO)
 	} else if appInst.State == edgeproto.TrackedState_DeleteRequested {
 		clusterInst := edgeproto.ClusterInst{}
-		clusterInstFound := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
-		if !clusterInstFound {
-			str := fmt.Sprintf("Cluster instance %s not found",
-				appInst.Key.ClusterInstKey.ClusterKey.Name)
-			cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
-			return
+		if cloudcommon.IsClusterInstReqd(&app) {
+			clusterInstFound := cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+			if !clusterInstFound {
+				str := fmt.Sprintf("Cluster instance %s not found",
+					appInst.ClusterInstKey.ClusterKey.Name)
+				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+				return
+			}
 		}
 		// appInst was deleted
 		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "appinst", appInst, "clusterinst", clusterInst)
-			names, err := k8smgmt.GetKubeNames(&clusterInst, &app, &appInst)
-			if err != nil {
-				errstr := fmt.Sprintf("get kube names failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
-				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
-				return
-			}
-			err = cd.platform.DeleteAppInst(&clusterInst, &app, &appInst, names)
+
+			err := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
 				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)
 				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
 				return
 			}
-			log.DebugLog(log.DebugLevelMexos, "deleted docker app inst", "appisnt", appInst, "clusterinst", clusterInst)
+			log.DebugLog(log.DebugLevelMexos, "deleted app inst", "appisnt", appInst, "clusterinst", clusterInst)
 			// Deleting local info signals to controller that
 			// delete was successful.
 			info := edgeproto.AppInstInfo{Key: *key}
@@ -351,6 +337,10 @@ func (cd *ControllerData) appInstInfoError(key *edgeproto.AppInstKey, errState e
 
 func (cd *ControllerData) appInstInfoState(key *edgeproto.AppInstKey, state edgeproto.TrackedState) {
 	cd.AppInstInfoCache.SetState(key, state)
+}
+
+func (cd *ControllerData) appInstInfoRuntime(key *edgeproto.AppInstKey, state edgeproto.TrackedState, rt *edgeproto.AppInstRuntime) {
+	cd.AppInstInfoCache.SetStateRuntime(key, state, rt)
 }
 
 // CheckState checks that the info is either in the transState or finalState.

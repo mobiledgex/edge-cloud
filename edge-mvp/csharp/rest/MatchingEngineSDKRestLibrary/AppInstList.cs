@@ -57,8 +57,22 @@ namespace DistributedMatchEngine
   {
     [DataMember]
     public UInt32 Ver;
-    [DataMember]
-    public string ReplyStatus;
+
+    public ReplyStatus ReplyStatus;
+
+    [DataMember(Name = "ReplyStatus")]
+    private string ReplyStatusString
+    {
+      get
+      {
+        return ReplyStatus.ToString();
+      }
+      set
+      {
+        ReplyStatus = Enum.TryParse(value, out ReplyStatus rStatus) ? rStatus : ReplyStatus.RS_UNDEFINED;
+      }
+    }
+
     [DataMember]
     public string SessionCookie;
     [DataMember]

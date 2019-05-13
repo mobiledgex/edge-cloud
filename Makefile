@@ -1,20 +1,26 @@
 # Makefile
 include Makedefs
 
+GOVERS = $(shell go version | awk '{print $$3}' | cut -d. -f1,2)
+
+export GO111MODULE=on
+
 all: build install 
 
 linux: build-linux install-linux
 
-dep:
-	dep ensure -update github.com/mobiledgex/edge-cloud-infra
-	dep ensure -vendor-only
+check-vers:
+	@if test $(GOVERS) != go1.12; then \
+		echo "Go version is $(GOVERS)"; \
+		echo "See https://mobiledgex.atlassian.net/wiki/spaces/SWDEV/pages/307986555/Upgrade+to+go+1.12"; \
+		exit 2; \
+	fi
 
-build:
+build: check-vers
 	make -C protogen
 	make -C ./protoc-gen-gomex
 	go install ./protoc-gen-test
 	go install ./protoc-gen-notify
-	go install ./protoc-gen-mc2
 	make -C ./protoc-gen-cmd
 	make -C ./log
 	make -C edgeproto
@@ -28,7 +34,8 @@ build-linux:
 	make -C d-match-engine linux
 
 build-docker:
-	docker build -t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud .
+	docker build --build-arg BUILD_TAG="$(shell git describe --always --dirty=+), $(shell date +'%Y-%m-%d')" \
+		-t mobiledgex/edge-cloud:${TAG} -f docker/Dockerfile.edge-cloud ..
 	docker tag mobiledgex/edge-cloud:${TAG} registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	docker push registry.mobiledgex.net:5000/mobiledgex/edge-cloud:${TAG}
 	for ADDLTAG in ${ADDLTAGS}; do \
@@ -42,14 +49,23 @@ install:
 install-linux:
 	${LINUX_XCOMPILE_ENV} go install ./...
 
+PROTOBUF	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/golang/protobuf)
+GOGOPROTO	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/gogo/protobuf)
+GRPCGATEWAY	= $(shell GO111MODULE=on go list -f '{{ .Dir }}' -m github.com/grpc-ecosystem/grpc-gateway)
+
 tools:
-	go install ./vendor/github.com/golang/protobuf/protoc-gen-go
-	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogo
-	go install ./vendor/github.com/gogo/protobuf/protoc-gen-gogofast
-	go install ./vendor/github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	go install ${PROTOBUF}/protoc-gen-go
+	go install ${GOGOPROTO}/protoc-gen-gogo
+	go install ${GOGOPROTO}/protoc-gen-gogofast
+	go install ${GRPCGATEWAY}/protoc-gen-grpc-gateway
 
 doc:
 	make -C edgeproto doc
+
+UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
+
+unit-test:
+	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
 
 test:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/regression_group.yml -setupfile ./setup-env/e2e-tests/setups/local_multi.yml
@@ -71,14 +87,10 @@ test-stop:
 test-sdk:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/sdk_test/stop_start_create_sdk.yml -setupfile ./setup-env/e2e-tests/setups/local_sdk.yml
 
-# QA testing - manual
-test-robot-start:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_automation.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
+## note: DIND requires make install-dind to be run once
+install-dind:
+	./install-dind.sh
 
-test-robot-stop:
-	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/stop_cleanup.yml -setupfile ./setup-env/e2e-tests/setups/local_multi_automation.yml -stop -notimestamp
-
-## note: DIND requires make from edge-cloud-infra to install dependencies
 test-dind-start:
 	e2e-tests -testfile ./setup-env/e2e-tests/testfiles/deploy_start_create_dind.yml -setupfile ./setup-env/e2e-tests/setups/local_dind.yml -notimestamp -stop
 

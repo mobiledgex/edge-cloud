@@ -5,7 +5,7 @@
 CXX = g++
 CPPFLAGS += -I.
 CPPFLAGS += -I../common
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++17
 LDFLAGS += -L/usr/local/lib \
            -ldl\
            -lcurl

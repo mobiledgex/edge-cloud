@@ -65,22 +65,20 @@ k8s-deployment:
      description: create a load balancer for dmes
 
 controllers:
-- controllerlocal:
-    name: ctrl-pool
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-    apiaddr: "0.0.0.0:55001"
+- name: ctrl-pool
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
+  apiaddr: "0.0.0.0:55001"
   hostname: "mextest.ctrl.mobiledgex.net"
 
 
 dmes:
-- dmelocal:
-    name: dme-pool
-    carrier: tdg
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-    apiaddr: "0.0.0.0:50051"
+- name: dme-pool
+  carrier: tdg
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
+  apiaddr: "0.0.0.0:50051"
   hostname: "mextest.dme.mobiledgex.net"
 

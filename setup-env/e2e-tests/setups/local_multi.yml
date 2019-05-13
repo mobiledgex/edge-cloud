@@ -9,267 +9,220 @@ tlscerts:
     - 0.0.0.0
 
 locsims:
-- locapisimlocal:
-    name: locsim1
-    port: 8888
-    locfile: "{{datadir}}/locsim.yml"
-    geofile: "{{datadir}}/geocode.dat"
-    country: US
+- name: locsim1
+  port: 8888
+  locfile: "{{datadir}}/locsim.yml"
+  geofile: "{{datadir}}/geocode.dat"
+  country: US
   hostname: "127.0.0.1"
 
 toksims:
-- toksrvsimlocal:
-    name: toksim1
-    port: 9999
+- name: toksim1
+  port: 9999
   hostname: "127.0.0.1"
 
 vaults:
-- vault:
-    name: vault
+- name: vault
   hostname: "127.0.0.1"
 
 influxs:
-- influxlocal:
-    name: influx1
-    datadir: /var/tmp/edge-cloud-local-influx/influx1
-    httpaddr: "127.0.0.1:8086"
+- name: influx1
+  datadir: /var/tmp/edge-cloud-local-influx/influx1
+  httpaddr: "127.0.0.1:8086"
   hostname: "127.0.0.1"
 
 etcds:
-- etcdlocal:
-    name: etcd1
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd1
-    peeraddrs: "http://127.0.0.1:30011"
-    clientaddrs: "http://127.0.0.1:30001"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd1
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd1
+  peeraddrs: "http://127.0.0.1:30011"
+  clientaddrs: "http://127.0.0.1:30001"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd2
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd2
-    peeraddrs: "http://127.0.0.1:30012"
-    clientaddrs: "http://127.0.0.1:30002"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd2
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd2
+  peeraddrs: "http://127.0.0.1:30012"
+  clientaddrs: "http://127.0.0.1:30002"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
-- etcdlocal:
-    name: etcd3
-    datadir: /var/tmp/edge-cloud-local-etcd/etcd3
-    peeraddrs: "http://127.0.0.1:30013"
-    clientaddrs: "http://127.0.0.1:30003"
-    initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
+- name: etcd3
+  datadir: /var/tmp/edge-cloud-local-etcd/etcd3
+  peeraddrs: "http://127.0.0.1:30013"
+  clientaddrs: "http://127.0.0.1:30003"
+  initialcluster: "etcd1=http://127.0.0.1:30011,etcd2=http://127.0.0.1:30012,etcd3=http://127.0.0.1:30013"
   hostname: "127.0.0.1"
 
 controllers:
-- controllerlocal:
-    name: ctrl1
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55001"
-    httpaddr: "0.0.0.0:36001"
-    notifyaddr: "127.0.0.1:37001"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-    shorttimeouts: true
+- name: ctrl1
+  etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+  apiaddr: "0.0.0.0:55001"
+  httpaddr: "0.0.0.0:36001"
+  notifyaddr: "127.0.0.1:37001"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
+  shorttimeouts: true
   hostname: "127.0.0.1"
 
-- controllerlocal:
-    name: ctrl2
-    etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
-    apiaddr: "0.0.0.0:55002"
-    httpaddr: "0.0.0.0:36002"
-    notifyaddr: "127.0.0.1:37002"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-    shorttimeouts: true
+- name: ctrl2
+  etcdaddrs: "http://127.0.0.1:30001,http://127.0.0.1:30002,http://127.0.0.1:30003"
+  apiaddr: "0.0.0.0:55002"
+  httpaddr: "0.0.0.0:36002"
+  notifyaddr: "127.0.0.1:37002"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
+  shorttimeouts: true
   hostname: "127.0.0.1"
 
 clustersvcs:
-- clustersvclocal:
-    name: cluster-svc1
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    ctrladdrs: "127.0.0.1:55001"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: cluster-svc1
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  ctrladdrs: "127.0.0.1:55001"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- clustersvclocal:
-    name: cluster-svc2
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    ctrladdrs: "127.0.0.1:55002"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: cluster-svc2
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  ctrladdrs: "127.0.0.1:55002"
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
 dmes:
-- dmelocal:
-    name: dme1
-    apiaddr: "0.0.0.0:50051"
-    httpaddr: "0.0.0.0:38001"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: dme1
+  apiaddr: "0.0.0.0:50051"
+  httpaddr: "0.0.0.0:38001"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
+    LOCAPI_USER: mexserver
+    LOCAPI_PASSWD: eC2835!
 
-- dmelocal:
-    name: dme2
-    apiaddr: "0.0.0.0:50052"
-    httpaddr: "0.0.0.0:38002"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    locverurl: "{{locverurl}}"
-    toksrvurl: "{{toksrvurl}}"
-    carrier: TDG
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: dme2
+  apiaddr: "0.0.0.0:50052"
+  httpaddr: "0.0.0.0:38002"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  locverurl: "{{locverurl}}"
+  toksrvurl: "{{toksrvurl}}"
+  carrier: TDG
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
   envvars:
-     LOCAPI_USER: mexserver
-     LOCAPI_PASSWD: eC2835!
+    LOCAPI_USER: mexserver
+    LOCAPI_PASSWD: eC2835!
   
 crms:
-- crmlocal:
-    name: crm1
-    apiaddr: "0.0.0.0:55091"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm1
+  apiaddr: "0.0.0.0:55091"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-1"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm2
-    apiaddr: "0.0.0.0:55092"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm2
+  apiaddr: "0.0.0.0:55092"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-2"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm3
-    apiaddr: "0.0.0.0:55093"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-3"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm3
+  apiaddr: "0.0.0.0:55093"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-3"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm4
-    apiaddr: "0.0.0.0:55094"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-4"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm4
+  apiaddr: "0.0.0.0:55094"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-4"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm5
-    apiaddr: "0.0.0.0:55095"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-5"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm5
+  apiaddr: "0.0.0.0:55095"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-5"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm6
-    apiaddr: "0.0.0.0:55096"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-6"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm6
+  apiaddr: "0.0.0.0:55096"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-6"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm7
-    apiaddr: "0.0.0.0:55097"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-7"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm7
+  apiaddr: "0.0.0.0:55097"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-7"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm8
-    apiaddr: "0.0.0.0:55098"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-8"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm8
+  apiaddr: "0.0.0.0:55098"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"tmus"},"name":"tmus-cloud-8"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm9
-    apiaddr: "0.0.0.0:55099"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"azure"},"name":"azure-cloud-9"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
+- name: crm9
+  apiaddr: "0.0.0.0:55099"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"azure"},"name":"azure-cloud-9"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"
 
-- crmlocal:
-    name: crm10
-    apiaddr: "0.0.0.0:55100"
-    notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
-    cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcp-cloud-10"}'
-    platform: fakecloudlet
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-
-mcs:
-- mclocal:
-    name: mc1
-    addr: "127.0.0.1:9900"
-    sqladdr: "127.0.0.1:5432"
-    vaultaddr: "http://127.0.0.1:8200"
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       serverkey: "{{tlsoutdir}}/mex-server.key"
-       clientcert: "{{tlsoutdir}}/mex-client.crt"
-  hostname: "127.0.0.1"
-
-sqls:
-- sqllocal:
-    name: sql1
-    datadir: /var/tmp/edge-cloud-local-sql/sql1
-    httpaddr: "127.0.0.1:5432"
-    username: mcuser
-    dbname: mcdb
-    tls:
-       servercert: "{{tlsoutdir}}/mex-server.crt"
-       serverkey: "{{tlsoutdir}}/mex-server.key"
+- name: crm10
+  apiaddr: "0.0.0.0:55100"
+  notifyaddrs: "127.0.0.1:37001,127.0.0.1:37002"
+  cloudletkey: '{"operator_key":{"name":"gcp"},"name":"gcp-cloud-10"}'
+  platform: fakecloudlet
+  tls:
+    servercert: "{{tlsoutdir}}/mex-server.crt"
+    clientcert: "{{tlsoutdir}}/mex-client.crt"
   hostname: "127.0.0.1"

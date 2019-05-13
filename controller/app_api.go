@@ -6,10 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -108,13 +108,15 @@ func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
 		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
-			in.ImagePath = cloudcommon.Registry + ":5000/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+			in.ImagePath = deploygen.MexRegistry + "/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
+		} else if in.ImageType == edgeproto.ImageType_ImageTypeQCOW {
+			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
-			in.ImagePath = cloudcommon.Registry + ":5000/" +
-				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/" +
+			in.ImagePath = deploygen.MexRegistry + "/" +
+				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name)
 		} else {
 			in.ImagePath = "qcow path not determined yet"
@@ -172,6 +174,12 @@ func (s *AppApi) CreateApp(ctx context.Context, in *edgeproto.App) (*edgeproto.R
 	err = updateAppFields(in)
 	if err != nil {
 		return &edgeproto.Result{}, err
+	}
+	if in.DeploymentManifest != "" {
+		err = cloudcommon.IsValidDeploymentManifest(in.Deployment, in.Command, in.DeploymentManifest)
+		if err != nil {
+			return &edgeproto.Result{}, fmt.Errorf("invalid deploymentment manifest %v", err)
+		}
 	}
 
 	if s.AndroidPackageConflicts(in) {
@@ -251,34 +259,4 @@ func (s *AppApi) ShowApp(in *edgeproto.App, cb edgeproto.AppApi_ShowAppServer) e
 		return err
 	})
 	return err
-}
-
-// GetClusterFlavorForFlavor finds the smallest cluster flavor whose
-// node flavor matches the passed in flavor.
-func GetClusterFlavorForFlavor(flavorKey *edgeproto.FlavorKey) (*edgeproto.ClusterFlavorKey, error) {
-	matching := make([]*edgeproto.ClusterFlavor, 0)
-
-	clusterFlavorApi.cache.Mux.Lock()
-	defer clusterFlavorApi.cache.Mux.Unlock()
-	for _, val := range clusterFlavorApi.cache.Objs {
-		if val.NodeFlavor.Matches(flavorKey) {
-			matching = append(matching, val)
-		}
-	}
-	if len(matching) == 0 {
-		return nil, fmt.Errorf("No cluster flavors with node flavor %s found", flavorKey.Name)
-	}
-	sort.Slice(matching, func(i, j int) bool {
-		if matching[i].MaxNodes != matching[j].MaxNodes {
-			return matching[i].MaxNodes < matching[j].MaxNodes
-		}
-		if matching[i].NumNodes != matching[j].NumNodes {
-			return matching[i].NumNodes < matching[j].NumNodes
-		}
-		if matching[i].NumMasters != matching[j].NumMasters {
-			return matching[i].NumMasters < matching[j].NumMasters
-		}
-		return matching[i].Key.Name < matching[j].Key.Name
-	})
-	return &matching[0].Key, nil
 }

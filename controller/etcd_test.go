@@ -6,13 +6,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
-	etcd_client "github.com/mobiledgex/edge-cloud/controller/etcd_client"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/stretchr/testify/assert"
@@ -313,33 +311,6 @@ func TestEtcdDummy(t *testing.T) {
 	dummy.Start()
 	testCalls(t, &dummy)
 	dummy.Stop()
-}
-
-func TestEtcdReal(t *testing.T) {
-	log.SetDebugLevel(log.DebugLevelEtcd)
-	etcd, err := StartLocalEtcdServer()
-	assert.Nil(t, err, "Etcd start")
-	if err != nil {
-		return
-	}
-	_, err = os.Stat(etcd.Config.LogFile)
-	assert.Nil(t, err, "Stat log file %s", etcd.Config.LogFile)
-
-	objStore, err := etcd_client.GetEtcdClientBasic(etcd.Config.ClientUrls)
-	assert.Nil(t, err, "Etcd client")
-	if err != nil {
-		return
-	}
-	testCalls(t, objStore)
-
-	etcd.Stop()
-	if _, err := os.Stat(etcd.Config.LogFile); !os.IsNotExist(err) {
-		t.Errorf("Etcd logfile still present after cleanup: %s", err)
-	}
-	if _, err := os.Stat(etcd.Config.DataDir); !os.IsNotExist(err) {
-		// this indicates etcd process is probably still running
-		t.Errorf("testdir still present after cleanup: %s", err)
-	}
 }
 
 type SyncCheck struct {
