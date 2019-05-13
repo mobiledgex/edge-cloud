@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	port        = flag.Int("port", 8080, "listen port")
+	port        = flag.Int("port", 7777, "listen port")
 	indexpath   = "/"
 	getdatapath = "/getdata"
 	getfilepath = "/getfile"

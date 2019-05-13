@@ -13,7 +13,6 @@ import (
 )
 
 var AppDNSRoot = "mobiledgex.net"
-var Registry = "registry.mobiledgex.net"
 
 // special operator types
 var OperatorGCP = "gcp"
