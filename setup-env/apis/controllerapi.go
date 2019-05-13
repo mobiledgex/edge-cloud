@@ -391,11 +391,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in cloudlet API %v\n", err)
 				rc = false
 			}
-			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
-				rc = false
-			}
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
@@ -404,11 +399,21 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
+				rc = false
+			}
+			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
 		case "create":
 			fallthrough
 		case "update":
+			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
+			if err != nil {
+				log.Printf("Error in developer API %v\n", err)
+				rc = false
+			}
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
@@ -417,11 +422,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in operator API %v\n", err)
-				rc = false
-			}
-			err = runDeveloperApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in developer API %v\n", err)
 				rc = false
 			}
 			err = runCloudletApi(ctrlapi, ctx, &appData, api)
