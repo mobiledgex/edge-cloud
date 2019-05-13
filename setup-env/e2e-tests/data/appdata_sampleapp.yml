@@ -82,7 +82,7 @@ apps:
       name: MEX
     name: sampleApplication
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/mexexample
+  imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgex/mexexample
   imagetype: ImageTypeDocker
   accesslayer: AccessLayerL7
   flavor:
