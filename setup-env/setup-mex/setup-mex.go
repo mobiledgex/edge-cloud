@@ -4,6 +4,12 @@ package setupmex
 
 import (
 	"fmt"
+	sh "github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/setup-env/apis"
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,12 +19,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/setup-env/apis"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	yaml "gopkg.in/yaml.v2"
 )
 
 type TestSpec struct {
@@ -250,6 +250,16 @@ func CleanupDIND() error {
 				return fmt.Errorf("ERROR in cleanup Dind Cluster: %s", clusterName)
 			}
 			log.Printf("done dind-cluster-v1.13.sh clean for: %s out: %s\n", clusterName, out)
+		}
+	}
+	// cleanup nginxL7.
+	nginxCmds := []string{"kill", "rm"}
+	for _, cmd := range nginxCmds {
+		killcmd := exec.Command("docker", cmd, nginx.NginxL7Name)
+		output, err = killcmd.CombinedOutput()
+		if err != nil {
+			// not fatal as it may not have been running
+			log.Printf("Error running command: %s on nginx L7 container: %s - %v - %v\n", cmd, nginx.NginxL7Name, string(output), err)
 		}
 	}
 	log.Println("done CleanupDIND")
