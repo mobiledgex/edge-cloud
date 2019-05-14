@@ -49,10 +49,10 @@ func (cd *ControllerData) ProcessExecReq(req *edgeproto.ExecRequest) error {
 			req.AppInstKey.AppKey.GetKeyString())
 	}
 	clusterInst := edgeproto.ClusterInst{}
-	found = cd.ClusterInstCache.Get(&appInst.ClusterInstKey, &clusterInst)
+	found = cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 	if !found {
 		return fmt.Errorf("cluster inst %s not found",
-			appInst.ClusterInstKey.GetKeyString())
+			appInst.Key.ClusterInstKey.GetKeyString())
 	}
 
 	run := &WebrtcExec{

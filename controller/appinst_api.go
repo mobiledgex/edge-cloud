@@ -266,11 +266,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				// Make sure ClusterInst cloudlet key matches
 				// AppInst's cloudlet key to prevent confusion
 				// if user specifies both.
-				if !in.Key.CloudletKey.Matches(&cikey.CloudletKey) {
+				if !in.Key.ClusterInstKey.CloudletKey.Matches(&cikey.CloudletKey) {
 					return errors.New("Specified ClusterInst cloudlet key does not match specified AppInst cloudlet key")
 				}
 			}
-			in.ClusterInstKey.CloudletKey = in.Key.CloudletKey
 			// Explicit auto-cluster requirement
 			if cikey.ClusterKey.Name == "" {
 				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
@@ -476,9 +475,9 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				cloudletRefsChanged = true
 			}
 		} else {
-			if isIPAllocatedPerService(in.Key.CloudletKey.OperatorKey.Name) {
+			if isIPAllocatedPerService(in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name) {
 				//dedicated access in which each service gets a different ip
-				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetAppFQDN(&in.Key, &in.Key.ClusterInstKey.CloudletKey, clusterKey)
 				for ii, _ := range ports {
 					// No rootLB to do L7 muxing, and each
 					// service has it's own IP anyway so
@@ -490,7 +489,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				}
 			} else {
 				//dedicated access in which IP is that of the LB
-				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.CloudletKey, clusterKey)
+				in.Uri = cloudcommon.GetDedicatedLBFQDN(&in.Key.ClusterInstKey.CloudletKey, clusterKey)
 				for ii, _ := range ports {
 					if setL7Port(&ports[ii], &in.Key) {
 						continue

@@ -63,7 +63,6 @@ var appInstV1 = edgeproto.AppInst{
 		ClusterInstKey: testClusterInstKey,
 	},
 	CloudletLoc: testCloudlet.Location,
-	Version:     1,
 }
 
 func TestAppInstV0toV1Upgrade(t *testing.T) {
@@ -92,12 +91,10 @@ func TestAppInstV0toV1Upgrade(t *testing.T) {
 func TestAppInstV1toV0Downgrade(t *testing.T) {
 	testAppInst := appInstV1
 	// test unsupported downgrade
-	testAppInst.Version = 2
 	res, err := DowngradeAppInstV1toV0(&testAppInst)
 	assert.Nil(t, res, "downgrade of an incorrect version")
 	assert.EqualError(t, err, ErrUpgradeNotSupported.Error(), "incorrect error returned")
 	// test supported upgrade
-	testAppInst.Version = 1
 	res, err = DowngradeAppInstV1toV0(&testAppInst)
 	assert.Nil(t, err, "Unable to check correct version")
 	assert.NotNil(t, res, "didn't get a new app back")

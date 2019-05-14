@@ -8,7 +8,6 @@ type ApplicationData_AppInstV0 struct {
 	Operators        []edgeproto.Operator        `yaml:"operators"`
 	Cloudlets        []edgeproto.Cloudlet        `yaml:"cloudlets"`
 	Flavors          []edgeproto.Flavor          `yaml:"flavors"`
-	ClusterFlavors   []edgeproto.ClusterFlavor   `yaml:"clusterflavors"`
 	Clusters         []edgeproto.Cluster         `yaml:"clusters"`
 	ClusterInsts     []edgeproto.ClusterInst     `yaml:"clusterinsts"`
 	Developers       []edgeproto.Developer       `yaml:"developers"`

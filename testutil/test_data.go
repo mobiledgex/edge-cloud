@@ -438,17 +438,14 @@ var AppInstData = []edgeproto.AppInst{
 	},
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      AppData[6].Key,
-			CloudletKey: CloudletData[2].Key,
-			Id:          1,
-		},
-		CloudletLoc: CloudletData[2].Location,
-		// ClusterInst is ClusterInstAutoData[2]
-		ClusterInstKey: edgeproto.ClusterInstKey{
-			ClusterKey: edgeproto.ClusterKey{
-				Name: "autocluster",
+			AppKey: AppData[6].Key,
+			ClusterInstKey: edgeproto.ClusterInstKey{
+				ClusterKey: edgeproto.ClusterKey{
+					Name: "autocluster",
+				},
 			},
 		},
+		CloudletLoc:         CloudletData[2].Location,
 		AutoClusterIpAccess: edgeproto.IpAccess_IpAccessDedicated,
 	},
 }
