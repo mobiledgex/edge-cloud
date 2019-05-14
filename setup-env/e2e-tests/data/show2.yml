@@ -112,23 +112,18 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -138,23 +133,18 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    id: 2
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
   uri: tmus-cloud-2.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -164,11 +154,13 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.someapplication1.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
