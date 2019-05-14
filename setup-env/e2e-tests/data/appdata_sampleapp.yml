@@ -97,21 +97,16 @@ appinstances:
         name: MEX
       name: sampleApplication
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: tdgcloud1
   cloudletloc:
     latitude: 31
     longitude: -91
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud1
   liveness: LivenessStatic
   imagepath: mobiledgex_MEX/sampleApplication:1.0
   imagetype: ImageTypeDocker
@@ -126,21 +121,16 @@ appinstances:
         name: MEX
       name: sampleApplication
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud2
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: tdgcloud2
   cloudletloc:
     latitude: 35
     longitude: -95
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: tdgcloud2
   liveness: LivenessStatic
   imagepath: mobiledgex_MEX/sampleApplication:1.0
   imagetype: ImageTypeDocker

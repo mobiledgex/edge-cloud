@@ -12,3 +12,4 @@ appinstances:
         operatorkey:
           name: azure
         name: azure-cloud-9
+      developer: AcmeAppCo

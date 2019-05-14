@@ -584,6 +584,13 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
+	// check if we are deleting an autocluster instance we need to set the key correctly
+	if in.Key.ClusterInstKey.ClusterKey.Name == ClusterAutoPrefix {
+		in.Key.ClusterInstKey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
+		if in.Key.ClusterInstKey.Developer == "" {
+			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		}
+	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {

@@ -44,18 +44,13 @@ appinstances:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonn3cloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: bonn3cloudlet
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: bonn3cloudlet
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
