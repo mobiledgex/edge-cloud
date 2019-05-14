@@ -47,8 +47,8 @@ func (s *AppApi) Get(key *edgeproto.AppKey, buf *edgeproto.App) bool {
 func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
-	for key, _ := range s.cache.Objs {
-		if key.DeveloperKey.Matches(in) {
+	for key, app := range s.cache.Objs {
+		if key.DeveloperKey.Matches(in) && app.DelOpt != edgeproto.DeleteType_AutoDelete {
 			return true
 		}
 	}
@@ -64,6 +64,24 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 		}
 	}
 	return false
+}
+
+func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.DeveloperKey) {
+	apps := make(map[edgeproto.AppKey]*edgeproto.App)
+	log.DebugLog(log.DebugLevelApi, "Auto-deleting apps ", "developer", key)
+	s.cache.Mux.Lock()
+	for k, app := range s.cache.Objs {
+		if app.Key.DeveloperKey.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
+			apps[k] = app
+		}
+	}
+	s.cache.Mux.Unlock()
+	for _, val := range apps {
+		log.DebugLog(log.DebugLevelApi, "Auto-deleting app ", "app", val.Key.Name)
+		if _, err := s.DeleteApp(ctx, val); err != nil {
+			log.DebugLog(log.DebugLevelApi, "unable to auto-delete app", "app", val, "err", err)
+		}
+	}
 }
 
 func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.FlavorKey) {
