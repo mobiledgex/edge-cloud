@@ -401,6 +401,8 @@ func RunMain(pkg, fileSuffix string, p generator.Plugin, support *PluginSupport)
 			switch kv[0] {
 			case "suffix":
 				fileSuffix = kv[1]
+			case "pkg":
+				pkg = kv[1]
 			}
 		}
 	}
