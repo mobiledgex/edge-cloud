@@ -320,7 +320,17 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 	return nil
 }
 
-func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
+func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
+	runCLI := false
+	for _, mod := range mods {
+		if mod == "cli" {
+			runCLI = true
+		}
+	}
+	if runCLI {
+		return RunControllerCLI(api, ctrlname, apiFile, outputDir, mods)
+	}
+
 	log.Printf("Applying data via APIs for %s\n", apiFile)
 	apiConnectTimeout := 5 * time.Second
 	apiTimeout := 30 * time.Minute
@@ -464,7 +474,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	return rc
 }
 
-func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string) bool {
+func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
 	log.Printf("Applying data via CLI for %s\n", apiFile)
 
 	ctrl := util.GetController(ctrlname)
