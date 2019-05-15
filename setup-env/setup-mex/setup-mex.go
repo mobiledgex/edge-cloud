@@ -4,12 +4,6 @@ package setupmex
 
 import (
 	"fmt"
-	sh "github.com/codeskyblue/go-sh"
-	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
-	"github.com/mobiledgex/edge-cloud/integration/process"
-	"github.com/mobiledgex/edge-cloud/setup-env/apis"
-	"github.com/mobiledgex/edge-cloud/setup-env/util"
-	yaml "gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"os"
@@ -19,6 +13,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	sh "github.com/codeskyblue/go-sh"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
+	"github.com/mobiledgex/edge-cloud/integration/process"
+	"github.com/mobiledgex/edge-cloud/setup-env/apis"
+	"github.com/mobiledgex/edge-cloud/setup-env/util"
+	yaml "gopkg.in/yaml.v2"
 )
 
 type TestSpec struct {
@@ -513,7 +514,7 @@ func Cleanup() error {
 	return CleanupDIND()
 }
 
-func RunAction(actionSpec, outputDir string, spec *TestSpec) []string {
+func RunAction(actionSpec, outputDir string, spec *TestSpec, mods []string) []string {
 	act, actionParam := GetActionParam(actionSpec)
 	action, actionSubtype := GetActionSubtype(act)
 
@@ -556,14 +557,9 @@ func RunAction(actionSpec, outputDir string, spec *TestSpec) []string {
 			errors = append(errors, "stop failed")
 		}
 	case "ctrlapi":
-		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
-			log.Printf("Unable to run api for %s\n", action)
+		if !apis.RunControllerAPI(actionSubtype, actionParam, spec.ApiFile, outputDir, mods) {
+			log.Printf("Unable to run api for %s, %v\n", action, mods)
 			errors = append(errors, "controller api failed")
-		}
-	case "ctrlcli":
-		if !apis.RunControllerCLI(actionSubtype, actionParam, spec.ApiFile, outputDir) {
-			log.Printf("Unable to run edgectl for %s\n", action)
-			errors = append(errors, "controller cli failed")
 		}
 	case "dmeapi":
 		if !apis.RunDmeAPI(actionSubtype, actionParam, spec.ApiFile, spec.ApiType, outputDir) {
