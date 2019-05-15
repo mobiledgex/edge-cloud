@@ -1,6 +1,6 @@
 // Start etcd
 
-package etcd
+package main
 
 import (
 	"context"
