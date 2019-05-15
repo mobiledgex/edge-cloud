@@ -44,11 +44,12 @@ namespace RestSample
         try
         {
           var registerClientReply = await me.RegisterClient(host, port, registerClientRequest);
-          Console.WriteLine("Reply: Session Cookie: " + registerClientReply.SessionCookie + ", Status: " + registerClientReply.Status);
+          Console.WriteLine("RegisterClient Reply Status: " + registerClientReply.Status);
         }
-        catch (System.Net.WebException we) // REST HTTP call error codes.
+        catch (HttpException httpe) // HTTP status, and REST API call error codes.
         {
-          Console.WriteLine("RegisterClient Exception: " + we.Message + "\nStack: " + we.StackTrace);
+          // server error code, and human readable message:
+          Console.WriteLine("RegisterClient Exception: " + httpe.Message + ", WebException StatusCode: " + httpe.WebExceptionStatus + ", API ErrorCode: " + httpe.ErrorCode + "\nStack: " + httpe.StackTrace);
         }
         // Do Verify and FindCloudlet in concurrent tasks:
         var loc = await locTask;
@@ -82,9 +83,9 @@ namespace RestSample
                   ", path_prefix: " + p.path_prefix);
           }
         }
-        catch (System.Net.WebException we)
+        catch (HttpException httpe)
         {
-          Console.WriteLine("FindCloudlet Exception: " + we.Message + "\nStack: " + we.StackTrace);
+          Console.WriteLine("FindCloudlet Exception: " + httpe.Message + ", WebException StatusCode: " + httpe.WebExceptionStatus + ", API ErrorCode: " + httpe.ErrorCode + "\nStack: " + httpe.StackTrace);
         }
 
         // Get Location:
@@ -94,9 +95,9 @@ namespace RestSample
           var location = getLocationReply.NetworkLocation;
           Console.WriteLine("GetLocationReply: longitude: " + location.longitude + ", latitude: " + location.latitude);
         }
-        catch (System.Net.WebException we)
+        catch (HttpException httpe)
         {
-          Console.WriteLine("GetLocation Exception: " + we.Message + "\nStack: " + we.StackTrace);
+          Console.WriteLine("GetLocation Exception: " + httpe.Message + ", WebException StatusCode: " + httpe.WebExceptionStatus + ", API ErrorCode: " + httpe.ErrorCode + "\nStack: " + httpe.StackTrace);
         }
 
         // Verify Location:
@@ -106,9 +107,9 @@ namespace RestSample
           var verifyLocationReply = await me.VerifyLocation(host, port, verifyLocationRequest);
           Console.WriteLine("VerifyLocation Reply: " + verifyLocationReply.gps_location_status);
         }
-        catch (System.Net.WebException we)
+        catch (HttpException httpe)
         {
-          Console.WriteLine("VerifyLocation Exception: " + we.Message + "\nStack: " + we.StackTrace);
+          Console.WriteLine("VerifyLocation Exception: " + httpe.Message + ", WebException StatusCode: " + httpe.WebExceptionStatus + ", API ErrorCode: " + httpe.ErrorCode + "\nStack: " + httpe.StackTrace);
         }
         catch (InvalidTokenServerTokenException itste)
         {

@@ -146,10 +146,10 @@ func (s *AppInstApi) AutoDeleteAppInsts(key *edgeproto.ClusterInstKey, cb edgepr
 			if err != nil && err.Error() == "AppInst busy, cannot delete" {
 				spinTime = time.Since(start)
 				if spinTime > DeleteAppInstTimeout {
-					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", val.Key.AppKey.Name)
+					log.DebugLog(log.DebugLevelApi, "Timeout while waiting for app", "appName", val.Key.AppKey.Name)
 					return err
 				}
-				log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", val.Key.AppKey.Name)
+				log.DebugLog(log.DebugLevelApi, "Appinst busy, retrying in 0.5s...", "appName", val.Key.AppKey.Name)
 				time.Sleep(500 * time.Millisecond)
 			} else { //if its anything other than an appinst busy error, break out of the spin
 				break
