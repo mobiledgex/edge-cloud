@@ -134,7 +134,7 @@ sub printAppinst{
       version: \"1.0\"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autocluster$app
       cloudletkey:
         operatorkey:
           name: $operator

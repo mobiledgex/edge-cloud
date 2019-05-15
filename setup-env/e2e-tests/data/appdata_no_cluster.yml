@@ -71,7 +71,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -90,7 +90,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus

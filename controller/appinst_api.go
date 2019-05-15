@@ -262,14 +262,6 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 
 			cikey := &in.Key.ClusterInstKey
-			if cikey.CloudletKey.Name != "" || cikey.CloudletKey.OperatorKey.Name != "" {
-				// Make sure ClusterInst cloudlet key matches
-				// AppInst's cloudlet key to prevent confusion
-				// if user specifies both.
-				if !in.Key.ClusterInstKey.CloudletKey.Matches(&cikey.CloudletKey) {
-					return errors.New("Specified ClusterInst cloudlet key does not match specified AppInst cloudlet key")
-				}
-			}
 			// Explicit auto-cluster requirement
 			if cikey.ClusterKey.Name == "" {
 				return fmt.Errorf("No cluster name specified. Create one first or use \"%s\" as the name to automatically create a ClusterInst", ClusterAutoPrefix)
@@ -279,7 +271,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 				return edgeproto.ErrEdgeApiAppNotFound
 			}
 			// Check if specified ClusterInst exists
-			if cikey.ClusterKey.Name != ClusterAutoPrefix && cloudcommon.IsClusterInstReqd(&app) {
+			if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
 				if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
 					// developer may or may not be specified
 					// in clusterinst.
@@ -293,7 +285,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			}
 			if cloudcommon.IsClusterInstReqd(&app) {
 				// Auto-cluster
-				cikey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
+				if clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
+					// if it already exists, this means we just want to spawn more apps into it
+					return nil
+				}
 				cikey.ClusterKey.Name = util.K8SSanitize(cikey.ClusterKey.Name)
 				if cikey.Developer == "" {
 					cikey.Developer = in.Key.AppKey.DeveloperKey.Name
@@ -585,11 +580,8 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 	}
 	// check if we are deleting an autocluster instance we need to set the key correctly
-	if in.Key.ClusterInstKey.ClusterKey.Name == ClusterAutoPrefix {
-		in.Key.ClusterInstKey.ClusterKey.Name = fmt.Sprintf("%s%s", ClusterAutoPrefix, in.Key.AppKey.Name)
-		if in.Key.ClusterInstKey.Developer == "" {
-			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-		}
+	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
+		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 	}
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
@@ -671,16 +663,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			log.InfoLog("Undo delete appinst", "undoErr", undoErr)
 		}
 		return err
-	} else {
-		// delete clusterinst afterwards if it was auto-created
-		clusterInst := edgeproto.ClusterInst{}
-		if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto {
-			cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
-			autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
-			if autoerr != nil {
-				log.InfoLog("Failed to delete auto cluster inst",
-					"clusterInst", clusterInst, "err", err)
-			}
+	}
+	// delete clusterinst afterwards if it was auto-created
+	clusterInst := edgeproto.ClusterInst{}
+	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto {
+		cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
+		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
+		if autoerr != nil {
+			log.InfoLog("Failed to delete auto cluster inst",
+				"clusterInst", clusterInst, "err", err)
 		}
 	}
 	return err

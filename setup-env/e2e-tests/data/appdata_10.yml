@@ -213,7 +213,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -231,7 +231,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -249,7 +249,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -267,7 +267,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -285,7 +285,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -303,7 +303,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -321,7 +321,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -339,7 +339,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -357,7 +357,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -375,7 +375,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -393,7 +393,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -411,7 +411,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -429,7 +429,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -447,7 +447,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -465,7 +465,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: tmus
@@ -483,7 +483,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: tmus
@@ -501,7 +501,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: azure
@@ -519,7 +519,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: azure
@@ -537,7 +537,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication1
       cloudletkey:
         operatorkey:
           name: gcp
@@ -555,7 +555,7 @@ appinstances:
       version: "1.0"
     clusterinstkey:
       clusterkey:
-        name: autocluster
+        name: autoclustersomeapplication2
       cloudletkey:
         operatorkey:
           name: gcp

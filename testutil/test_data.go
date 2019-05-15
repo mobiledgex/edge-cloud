@@ -394,7 +394,7 @@ var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey:         AppData[0].Key,
-			ClusterInstKey: ClusterInstData[0].Key,
+			ClusterInstKey: ClusterInstData[3].Key,
 		},
 		CloudletLoc: CloudletData[0].Location,
 	},
@@ -409,11 +409,7 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[1].Key,
 			// ClusterInst is ClusterInstAutoData[0]
-			ClusterInstKey: edgeproto.ClusterInstKey{
-				ClusterKey: edgeproto.ClusterKey{
-					Name: "autocluster",
-				},
-			},
+			ClusterInstKey: ClusterInstAutoData[0].Key,
 		},
 		CloudletLoc: CloudletData[1].Location,
 	},
@@ -421,11 +417,7 @@ var AppInstData = []edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[2].Key,
 			// ClusterInst is ClusterInstAutoData[1]
-			ClusterInstKey: edgeproto.ClusterInstKey{
-				ClusterKey: edgeproto.ClusterKey{
-					Name: "autocluster",
-				},
-			},
+			ClusterInstKey: ClusterInstAutoData[1].Key,
 		},
 		CloudletLoc: CloudletData[2].Location,
 	},
@@ -439,11 +431,8 @@ var AppInstData = []edgeproto.AppInst{
 	edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
 			AppKey: AppData[6].Key,
-			ClusterInstKey: edgeproto.ClusterInstKey{
-				ClusterKey: edgeproto.ClusterKey{
-					Name: "autocluster",
-				},
-			},
+			// ClusterInst is ClusterInstAutoData[2]
+			ClusterInstKey: ClusterInstAutoData[2].Key,
 		},
 		CloudletLoc:         CloudletData[2].Location,
 		AutoClusterIpAccess: edgeproto.IpAccess_IpAccessDedicated,
