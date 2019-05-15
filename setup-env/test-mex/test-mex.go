@@ -22,6 +22,7 @@ var (
 	commandName = "test-mex"
 	configStr   *string
 	specStr     *string
+	modsStr     *string
 	outputDir   string
 )
 
@@ -31,6 +32,7 @@ func init() {
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	configStr = flag.String("testConfig", "", "json formatted TestConfig")
 	specStr = flag.String("testSpec", "", "json formatted TestSpec")
+	modsStr = flag.String("mods", "", "json formatted mods")
 }
 
 //this is possible actions and optional parameters
@@ -39,7 +41,6 @@ var actionChoices = map[string]string{
 	"stop":       "procname",
 	"status":     "procname",
 	"ctrlapi":    "procname",
-	"ctrlcli":    "procname",
 	"ctrlinfo":   "procname",
 	"dmeapi":     "procname",
 	"cleanup":    "",
@@ -106,6 +107,7 @@ func main() {
 	flag.Parse()
 	config := e2eapi.TestConfig{}
 	spec := setupmex.TestSpec{}
+	mods := []string{}
 
 	err := json.Unmarshal([]byte(*configStr), &config)
 	if err != nil {
@@ -115,6 +117,11 @@ func main() {
 	err = json.Unmarshal([]byte(*specStr), &spec)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERROR: unmarshaling TestSpec: %v", err)
+		os.Exit(1)
+	}
+	err = json.Unmarshal([]byte(*modsStr), &mods)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: unmarshaling mods: %v", err)
 		os.Exit(1)
 	}
 	validateArgs(&config, &spec)
@@ -134,7 +141,7 @@ func main() {
 	ranTest := false
 	for _, a := range spec.Actions {
 		util.PrintStepBanner("running action: " + a)
-		errs := setupmex.RunAction(a, outputDir, &spec)
+		errs := setupmex.RunAction(a, outputDir, &spec, mods)
 		errors = append(errors, errs...)
 		ranTest = true
 	}
