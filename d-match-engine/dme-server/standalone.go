@@ -69,7 +69,7 @@ func (s *standaloneServer) ShowAppInst(in *edgeproto.AppInst, cb edgeproto.AppIn
 		for _, c := range a.carriers {
 			for _, i := range c.insts {
 				appInst.Key.AppKey = a.appKey
-				appInst.Key.CloudletKey = i.cloudletKey
+				appInst.Key.ClusterInstKey = i.clusterInstKey
 				appInst.Uri = i.uri
 				appInst.CloudletLoc = i.location
 				err := cb.Send(&appInst)

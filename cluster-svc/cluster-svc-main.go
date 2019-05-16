@@ -213,11 +213,9 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      app.Key,
-			CloudletKey: instKey.CloudletKey,
-			Id:          1,
+			AppKey:         app.Key,
+			ClusterInstKey: instKey,
 		},
-		ClusterInstKey: instKey,
 	}
 
 	res, err := appInstCreateApi(apiClient, appInst)

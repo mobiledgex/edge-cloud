@@ -7,7 +7,7 @@ func (s *AppInstCache) GetForCloudlet(key *CloudletKey, appInsts map[AppInstKey]
 	s.Mux.Lock()
 	defer s.Mux.Unlock()
 	for k, v := range s.Objs {
-		if v.Key.CloudletKey == *key {
+		if v.Key.ClusterInstKey.CloudletKey == *key {
 			appInsts[k] = struct{}{}
 		}
 	}

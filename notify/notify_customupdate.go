@@ -22,7 +22,7 @@ func (s *AppSend) UpdateOk(key *edgeproto.AppKey) bool {
 
 func (s *AppInstSend) UpdateOk(key *edgeproto.AppInstKey) bool {
 	if s.sendrecv.filterCloudletKeys {
-		if !s.sendrecv.hasCloudletKey(&key.CloudletKey) {
+		if !s.sendrecv.hasCloudletKey(&key.ClusterInstKey.CloudletKey) {
 			return false
 		}
 		// also trigger sending app

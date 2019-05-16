@@ -222,7 +222,7 @@ func (key *AppInstKey) Validate() error {
 	if err := key.AppKey.Validate(); err != nil {
 		return err
 	}
-	if err := key.CloudletKey.Validate(); err != nil {
+	if err := key.ClusterInstKey.Validate(); err != nil {
 		return err
 	}
 	return nil

@@ -231,9 +231,10 @@ func (m *ExecRequest) CopyInFields(src *ExecRequest) {
 		m.AppInstKey.AppKey.DeveloperKey.Name = src.AppInstKey.AppKey.DeveloperKey.Name
 		m.AppInstKey.AppKey.Name = src.AppInstKey.AppKey.Name
 		m.AppInstKey.AppKey.Version = src.AppInstKey.AppKey.Version
-		m.AppInstKey.CloudletKey.OperatorKey.Name = src.AppInstKey.CloudletKey.OperatorKey.Name
-		m.AppInstKey.CloudletKey.Name = src.AppInstKey.CloudletKey.Name
-		m.AppInstKey.Id = src.AppInstKey.Id
+		m.AppInstKey.ClusterInstKey.ClusterKey.Name = src.AppInstKey.ClusterInstKey.ClusterKey.Name
+		m.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name
+		m.AppInstKey.ClusterInstKey.CloudletKey.Name = src.AppInstKey.ClusterInstKey.CloudletKey.Name
+		m.AppInstKey.ClusterInstKey.Developer = src.AppInstKey.ClusterInstKey.Developer
 	}
 	m.Command = src.Command
 	m.ContainerId = src.ContainerId

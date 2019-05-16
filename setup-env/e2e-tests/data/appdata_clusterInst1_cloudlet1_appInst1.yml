@@ -82,21 +82,16 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.small
