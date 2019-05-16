@@ -163,7 +163,7 @@ func (s *CloudletApi) UpdateAppInstLocations(in *edgeproto.Cloudlet) {
 	keys := make([]edgeproto.AppInstKey, 0)
 	appInstApi.cache.Mux.Lock()
 	for _, inst := range appInstApi.cache.Objs {
-		if inst.Key.CloudletKey.Matches(&in.Key) {
+		if inst.Key.ClusterInstKey.CloudletKey.Matches(&in.Key) {
 			keys = append(keys, inst.Key)
 		}
 	}
