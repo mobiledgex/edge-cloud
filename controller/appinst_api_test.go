@@ -184,7 +184,7 @@ func appInstCachedFieldsTest(t *testing.T, cAppApi *testutil.AppCommonApi, cClou
 
 	show.Init()
 	filter = edgeproto.AppInst{}
-	filter.Key.CloudletKey = testutil.CloudletData[0].Key
+	filter.Key.ClusterInstKey.CloudletKey = testutil.CloudletData[0].Key
 	err = cAppInstApi.ShowAppInst(ctx, &filter, &show)
 	require.Nil(t, err, "show app inst data")
 	for _, inst := range show.Data {
@@ -233,17 +233,17 @@ func TestAutoClusterInst(t *testing.T) {
 
 	// since cluster inst does not exist, it will be auto-created
 	copy := testutil.AppInstData[0]
-	copy.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
+	copy.Key.ClusterInstKey.ClusterKey.Name = ClusterAutoPrefix
 	err := appInstApi.CreateAppInst(&copy, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "create app inst")
 	clusterInst := edgeproto.ClusterInst{}
-	found := clusterInstApi.Get(&copy.ClusterInstKey, &clusterInst)
+	found := clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.True(t, found, "get auto-clusterinst")
 	require.True(t, clusterInst.Auto, "clusterinst is auto")
 	// delete appinst should also delete clusterinst
 	err = appInstApi.DeleteAppInst(&copy, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "delete app inst")
-	found = clusterInstApi.Get(&copy.ClusterInstKey, &clusterInst)
+	found = clusterInstApi.Get(&copy.Key.ClusterInstKey, &clusterInst)
 	require.False(t, found, "get auto-clusterinst")
 
 	dummy.Stop()

@@ -5,7 +5,6 @@ package gencmd
 
 import edgeproto "github.com/mobiledgex/edge-cloud/edgeproto"
 import "strings"
-import "strconv"
 import "github.com/spf13/cobra"
 import "context"
 import "os"
@@ -40,9 +39,10 @@ func ExecRequestSlicer(in *edgeproto.ExecRequest) []string {
 	s = append(s, in.AppInstKey.AppKey.DeveloperKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Name)
 	s = append(s, in.AppInstKey.AppKey.Version)
-	s = append(s, in.AppInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.AppInstKey.CloudletKey.Name)
-	s = append(s, strconv.FormatUint(uint64(in.AppInstKey.Id), 10))
+	s = append(s, in.AppInstKey.ClusterInstKey.ClusterKey.Name)
+	s = append(s, in.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	s = append(s, in.AppInstKey.ClusterInstKey.CloudletKey.Name)
+	s = append(s, in.AppInstKey.ClusterInstKey.Developer)
 	s = append(s, in.Command)
 	s = append(s, in.ContainerId)
 	s = append(s, in.Offer)
@@ -56,9 +56,10 @@ func ExecRequestHeaderSlicer() []string {
 	s = append(s, "AppInstKey-AppKey-DeveloperKey-Name")
 	s = append(s, "AppInstKey-AppKey-Name")
 	s = append(s, "AppInstKey-AppKey-Version")
-	s = append(s, "AppInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "AppInstKey-CloudletKey-Name")
-	s = append(s, "AppInstKey-Id")
+	s = append(s, "AppInstKey-ClusterInstKey-ClusterKey-Name")
+	s = append(s, "AppInstKey-ClusterInstKey-CloudletKey-OperatorKey-Name")
+	s = append(s, "AppInstKey-ClusterInstKey-CloudletKey-Name")
+	s = append(s, "AppInstKey-ClusterInstKey-Developer")
 	s = append(s, "Command")
 	s = append(s, "ContainerId")
 	s = append(s, "Offer")
@@ -200,9 +201,10 @@ func init() {
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.DeveloperKey.Name, "appinstkey-appkey-developerkey-name", "", "AppInstKey.AppKey.DeveloperKey.Name")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Name, "appinstkey-appkey-name", "", "AppInstKey.AppKey.Name")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.AppKey.Version, "appinstkey-appkey-version", "", "AppInstKey.AppKey.Version")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.CloudletKey.OperatorKey.Name, "appinstkey-cloudletkey-operatorkey-name", "", "AppInstKey.CloudletKey.OperatorKey.Name")
-	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.CloudletKey.Name, "appinstkey-cloudletkey-name", "", "AppInstKey.CloudletKey.Name")
-	ExecRequestFlagSet.Uint64Var(&ExecRequestIn.AppInstKey.Id, "appinstkey-id", 0, "AppInstKey.Id")
+	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.ClusterKey.Name, "appinstkey-clusterinstkey-clusterkey-name", "", "AppInstKey.ClusterInstKey.ClusterKey.Name")
+	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name, "appinstkey-clusterinstkey-cloudletkey-operatorkey-name", "", "AppInstKey.ClusterInstKey.CloudletKey.OperatorKey.Name")
+	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.CloudletKey.Name, "appinstkey-clusterinstkey-cloudletkey-name", "", "AppInstKey.ClusterInstKey.CloudletKey.Name")
+	ExecRequestFlagSet.StringVar(&ExecRequestIn.AppInstKey.ClusterInstKey.Developer, "appinstkey-clusterinstkey-developer", "", "AppInstKey.ClusterInstKey.Developer")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.Command, "command", "", "Command")
 	ExecRequestFlagSet.StringVar(&ExecRequestIn.ContainerId, "containerid", "", "ContainerId")
 	ExecRequestNoConfigFlagSet.StringVar(&ExecRequestIn.Offer, "offer", "", "Offer")

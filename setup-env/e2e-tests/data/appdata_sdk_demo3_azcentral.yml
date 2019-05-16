@@ -30,18 +30,13 @@ appinstances:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azcentraluscloudlet
+    clusterinstkey:
+      clusterkey:
+        name: jlmappcluster
+      cloudletkey:
+        operatorkey:
+          name: azure
+        name: azcentraluscloudlet
   liveness: LivenessStatic
   flavor:
     name: x1.small

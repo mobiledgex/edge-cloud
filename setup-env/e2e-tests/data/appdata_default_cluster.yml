@@ -1,65 +1,6 @@
-flavors:
-- key:
-    name: x1.tiny
-  ram: 1024
-  vcpus: 1
-  disk: 1
-- key:
-    name: x1.small
-  ram: 2048
-  vcpus: 2
-  disk: 2
-- key:
-    name: x1.medium
-  ram: 4096
-  vcpus: 4
-  disk: 4
-
-
-clusters:
-- key:
-    name: autoclustersomeapplication1
-  defaultflavor:
-    name: x1.small
-
-clusterinsts:
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-  flavor:
-    name: x1.small
-  numnodes: 1
-  nummasters: 1
-  liveness: LivenessDynamic
-- key:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-  flavor:
-    name: x1.small
-  numnodes: 1
-  nummasters: 1
-  liveness: LivenessDynamic
-
 operators:
 - key:
     name: tmus
-
-developers:
-- key:
-    name: AcmeAppCo
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-
 cloudlets:
 - key:
     operatorkey:
@@ -77,7 +18,59 @@ cloudlets:
   location:
     latitude: 35
     longitude: -95
-
+flavors:
+- key:
+    name: x1.tiny
+  ram: 1024
+  vcpus: 1
+  disk: 1
+- key:
+    name: x1.small
+  ram: 2048
+  vcpus: 2
+  disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+clusters:
+- key:
+    name: autoclustersomeapplication1
+  defaultflavor:
+    name: x1.small
+clusterinsts:
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-1
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  nummasters: 1
+  numnodes: 1
+- key:
+    clusterkey:
+      name: autoclustersomeapplication1
+    cloudletkey:
+      operatorkey:
+        name: tmus
+      name: tmus-cloud-2
+  flavor:
+    name: x1.small
+  liveness: LivenessDynamic
+  nummasters: 1
+  numnodes: 1
+developers:
+- key:
+    name: AcmeAppCo
+  username: acmeapp
+  passhash: 8136f09c17354891c642b9b9f1722c34
+  address: 123 Maple Street, Gainesville, FL 32604
+  email: acmeapp@xxxx.com
 apps:
 - key:
     developerkey:
@@ -86,12 +79,10 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  accesslayer: AccessLayerL7
   defaultflavor:
     name: x1.small
   cluster:
     name: autoclustersomeapplication1
-
 appinstances:
 - key:
     appkey:
@@ -99,55 +90,37 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: someapplication1.tmus-cloud-1.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
-  mappedpath: someapplication1
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: someapplication1.tmus-cloud-2.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
   liveness: LivenessStatic
-  imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
-  imagetype: ImageTypeDocker
-  mappedpath: someapplication1
   flavor:
     name: x1.small
-  accesslayer: AccessLayerL7

@@ -254,22 +254,17 @@ appinstances:
         name: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -279,22 +274,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -304,22 +294,17 @@ appinstances:
         name: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: smallcluster.tmus-cloud-2.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -329,11 +314,13 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: someapp1.acmeappco.com
   liveness: LivenessStatic
   flavor:
@@ -344,22 +331,17 @@ appinstances:
         name: MobiledgeX
       name: MEXMetricsExporter
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: smallcluster.tmus-cloud-2.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -369,11 +351,13 @@ appinstances:
         name: Samsung
       name: SamsungEnablingLayer
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   flavor:
@@ -384,22 +368,17 @@ appinstances:
         name: MobiledgeX
       name: MEXMetricsExporter
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -409,22 +388,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: smallcluster.tmus-cloud-2.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
   liveness: LivenessStatic
   flavor:
     name: x1.small
@@ -434,19 +408,17 @@ appinstances:
         name: AcmeAppCo
       name: helmApplication
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+  cloudletloc:
+    latitude: 31
+    longitude: -91
   uri: helmAppication.acmeappco.com
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.small

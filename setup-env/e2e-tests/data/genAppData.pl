@@ -132,18 +132,17 @@ sub printAppinst{
         name: $Developer
       name: $app
       version: \"1.0\"
-    cloudletkey:
-      operatorkey:
-        name: $operator
-      name: $operator-$cloudlet-$cid
-
-    id: $cid
+    clusterinstkey:
+      clusterkey:
+        name: autocluster$app
+      cloudletkey:
+        operatorkey:
+          name: $operator
+        name: $operator-$cloudlet-$cid
+      developer: $Developer
   cloudletloc:
     latitude: $lat
     longitude: $long
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 ");
 
 }
@@ -271,11 +270,13 @@ sub genDefaultAppInst{
         name: $Developer
       name: $app
       version: \"1.0\"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.$app.$Developer.com
 \n")
 }
@@ -288,11 +289,13 @@ sub genSamsungAppInst{
         name: Samsung
       name: SamsungEnablingLayer
       version: \"1.0\"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.samsungenablement.samsung.com
 \n")
 }
