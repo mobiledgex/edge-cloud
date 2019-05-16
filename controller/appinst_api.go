@@ -664,9 +664,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		return err
 	}
-	// delete clusterinst afterwards if it was auto-created
+	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	clusterInst := edgeproto.ClusterInst{}
-	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto {
+	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) {
 		cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
