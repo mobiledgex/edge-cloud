@@ -225,22 +225,17 @@ appinstances:
       version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -250,22 +245,17 @@ appinstances:
       version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -275,22 +265,17 @@ appinstances:
       version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -300,22 +285,17 @@ appinstances:
       version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
   liveness: LivenessStatic
   flavor:
     name: x1.medium

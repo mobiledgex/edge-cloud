@@ -93,6 +93,7 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 // Verify that the resulting content in etcd matches expected
 func TestAllUpgradeFuncs(t *testing.T) {
 	objStore := dummyEtcd{}
+	objstore.InitRegion(1)
 	for ii, fn := range edgeproto.VersionHash_UpgradeFuncs {
 		if fn == nil {
 			continue

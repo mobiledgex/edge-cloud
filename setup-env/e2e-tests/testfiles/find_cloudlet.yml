@@ -98,6 +98,10 @@ tests:
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appinst_azure.yml"
 
+- name: delete appinst2 
+  actions: [ctrlapi-delete]
+  apifile: "{{datadir}}/appinst2.yml"
+
 - name: delete rest of provisioning
   actions: [ctrlapi-delete]
   apifile: "{{datadir}}/appdata.yml"

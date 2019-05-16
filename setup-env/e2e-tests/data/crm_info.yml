@@ -1,3 +1,27 @@
+operators:
+- key:
+    name: dmuus
+cloudlets:
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-1
+  accessuri: cloud1.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
+- key:
+    operatorkey:
+      name: dmuus
+    name: dmuus-cloud-2
+  accessuri: cloud2.tmo
+  location:
+    latitude: 35
+    longitude: -95
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 flavors:
 - key:
     name: x1.tiny
@@ -14,9 +38,6 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-clusters:
-
 clusterinsts:
 - key:
     clusterkey:
@@ -50,14 +71,8 @@ clusterinsts:
   state: Ready
   ipaccess: IpAccessShared
   nodeflavor: flavor1
-  masterflavor: flavor1
   nummasters: 1
   numnodes: 1
-
-operators:
-- key:
-    name: dmuus
-
 developers:
 - key:
     name: AcmeAppCo
@@ -65,29 +80,6 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
-
-cloudlets:
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-1
-  accessuri: cloud1.tmo
-  location:
-    latitude: 31
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-- key:
-    operatorkey:
-      name: dmuus
-    name: dmuus-cloud-2
-  accessuri: cloud2.tmo
-  location:
-    latitude: 35
-    longitude: -95
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
 apps:
 - key:
     developerkey:
@@ -256,7 +248,6 @@ apps:
             name: mexcluster-info
             key: OperatorName
             optional: true
-
 appinstances:
 - key:
     appkey:
@@ -264,23 +255,18 @@ appinstances:
         name: MobiledgeX
       name: MEXMetricsExporter
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -291,23 +277,18 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    developer: AcmeAppCo
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTCP
@@ -331,23 +312,18 @@ appinstances:
         name: MobiledgeX
       name: MEXMetricsExporter
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -358,23 +334,18 @@ appinstances:
         name: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -385,23 +356,18 @@ appinstances:
         name: MobiledgeX
       name: MEXPrometheusAppName
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
   uri: dmuus-cloud-2.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-2
-    developer: AcmeAppCo
   liveness: LivenessStatic
   flavor:
     name: x1.medium
@@ -412,23 +378,18 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: dmuus
+        name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: dmuus-cloud-1.dmuus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: autoclustersomeapplication1
-    cloudletkey:
-      operatorkey:
-        name: dmuus
-      name: dmuus-cloud-1
-    developer: AcmeAppCo
   liveness: LivenessStatic
   mappedports:
   - proto: LProtoTCP
@@ -446,4 +407,3 @@ appinstances:
   flavor:
     name: x1.small
   state: Ready
-

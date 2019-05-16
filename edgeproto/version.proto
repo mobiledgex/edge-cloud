@@ -12,6 +12,7 @@ enum VersionHash {
   HASH_d41d8cd98f00b204e9800998ecf8427e = 0;
   HASH_b35326df0fcd1550b7c0cf6460c4bca2 = 1 [(protogen.upgrade_func) = "TestUpgradeExample"];
   HASH_52e6980599cd59bbbd0de8d5f4d53d4b = 2;
+  HASH_00bdcfa956ca4ee42be87abcd8fcaf1c = 3 [(protogen.upgrade_func) = "AddClusterInstKeyToAppInstKey"];
   option (protogen.version_hash) = true;
   option (protogen.version_hash_salt) = "";
 }

@@ -8,7 +8,6 @@ import "result.proto";
 import "github.com/mobiledgex/edge-cloud/protogen/protogen.proto";
 import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto";
 import "app.proto";
-import "cloudlet.proto";
 import "flavor.proto";
 import "clusterinst.proto";
 import "common.proto";
@@ -20,17 +19,15 @@ import "gogoproto/gogo.proto";
 message AppInstKey {
   // App key
   AppKey app_key = 1 [(gogoproto.nullable) = false];
-  // Cloudlet on which the App is instantiated
-  CloudletKey cloudlet_key = 2 [(gogoproto.nullable) = false];
-  // Instance id for defining multiple instances of the same App on the same Cloudlet (not supported yet)
-  fixed64 id = 3;
+  // Cluster instance on which this is instantiated
+  ClusterInstKey cluster_inst_key = 4 [(gogoproto.nullable) = false, (protogen.backend) = true];
   option (protogen.generate_matches) = true;
   option (protogen.obj_key) = true;
   option (gogoproto.gostring) = true;
 }
 
 // AppInst is an instance of an App (application) on a Cloudlet. It is defined by an App plus a Cloudlet key. This separation of the definition of the App versus its instantiation is unique to Mobiledgex, and allows the Developer to provide the App defintion, while either the Developer may statically define the instances, or the Mobiledgex platform may dynamically create and destroy instances in response to demand.
-//When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
+// When an application is instantiated on a Cloudlet, the user may override the default Flavor of the application. This allows for an instance in one location to be provided more resources than an instance in other locations, in expectation of different demands in different locations.
 // Many of the fields here are inherited from the App definition. Some are derived, like the mapped ports field, depending upon if the AppInst accessibility is via a shared or dedicated load balancer.
 message AppInst {
   // Fields are used for the Update API to specify which fields to apply
@@ -41,8 +38,6 @@ message AppInst {
   distributed_match_engine.Loc cloudlet_loc = 3 [(gogoproto.nullable) = false];
   // Base FQDN (not really URI) for the App. See Service FQDN for endpoint access.
   string uri = 4 [(protogen.backend) = true];
-  // Cluster instance on which this is instantiated
-  ClusterInstKey cluster_inst_key = 5 [(gogoproto.nullable) = false, (protogen.backend) = true];
   // Liveness of instance (see Liveness)
   Liveness liveness = 6 [(protogen.backend) = true];
   // For instances accessible via a shared load balancer, defines the external

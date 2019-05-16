@@ -105,8 +105,9 @@ func MakeAppInst(a *App, c *Cloudlet) *edgeproto.AppInst {
 	inst.Key.AppKey.DeveloperKey.Name = a.Developer
 	inst.Key.AppKey.Name = a.Name
 	inst.Key.AppKey.Version = a.Vers
-	inst.Key.CloudletKey.OperatorKey.Name = c.CarrierName
-	inst.Key.CloudletKey.Name = c.Name
+	inst.Key.ClusterInstKey.CloudletKey.OperatorKey.Name = c.CarrierName
+	inst.Key.ClusterInstKey.CloudletKey.Name = c.Name
+	inst.Key.ClusterInstKey.ClusterKey.Name = "testcluster" //TODO - change the testdata to also have clusterInst information
 	inst.CloudletLoc = c.Location
 	inst.Uri = c.Uri
 	return &inst

@@ -567,7 +567,7 @@ func ValidateReplacedVars() ReadYamlOp {
 
 func removeAppinstUris(appdata *edgeproto.ApplicationData) {
 	for i, ai := range appdata.AppInstances {
-		if ai.Key.CloudletKey != cloudcommon.DefaultCloudletKey {
+		if ai.Key.ClusterInstKey.CloudletKey != cloudcommon.DefaultCloudletKey {
 			appdata.AppInstances[i].Uri = ""
 		}
 	}
