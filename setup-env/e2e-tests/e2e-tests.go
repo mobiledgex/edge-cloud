@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"strings"
 
 	"github.com/mobiledgex/edge-cloud/setup-env/e2e-tests/e2eapi"
 	"github.com/mobiledgex/edge-cloud/setup-env/util"
@@ -44,9 +45,10 @@ func init() {
 // a list of tests, which may include another file which has tests.  Looping can
 //be done at either test level or the included file level.
 type e2e_test struct {
-	Name        string `yaml:"name"`
-	IncludeFile string `yaml:"includefile"`
-	Loops       int    `yaml:"loops"`
+	Name        string   `yaml:"name"`
+	IncludeFile string   `yaml:"includefile"`
+	Mods        []string `yaml:"mods"`
+	Loops       int      `yaml:"loops"`
 }
 
 type e2e_tests struct {
@@ -136,7 +138,7 @@ func parseTest(testinfo map[string]interface{}, test *e2e_test) error {
 	return json.Unmarshal(spec, test)
 }
 
-func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
+func runTests(dirName, fileName, progName string, depth int, mods []string) (int, int, int) {
 	numPassed := 0
 	numFailed := 0
 	numTestsRun := 0
@@ -198,6 +200,9 @@ func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
 				}
 			}
 			f := indentstr + fileName
+			if len(mods) > 0 {
+				f += " " + strings.Join(mods, ",")
+			}
 			if len(f) > 30 {
 				f = f[0:27] + "..."
 			}
@@ -208,7 +213,7 @@ func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
 					log.Fatalf("excessive include depth %d, possible loop: %s", depth, fileName)
 				}
 				fmt.Println()
-				nr, np, nf := runTests(dirName, t.IncludeFile, progName, depth+1)
+				nr, np, nf := runTests(dirName, t.IncludeFile, progName, depth+1, append(mods, t.Mods...))
 				numTestsRun += nr
 				numPassed += np
 				numFailed += nf
@@ -227,7 +232,17 @@ func runTests(dirName, fileName, progName string, depth int) (int, int, int) {
 				}
 				continue
 			}
-			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s'", progName, configStr, string(testSpec))
+			modsSpec, err := json.Marshal(mods)
+			if err != nil {
+				fmt.Printf("FAIL: cannot marshal mods %v, %v\n", err, mods)
+				numTestsRun++
+				numFailed++
+				if *stopOnFail {
+					return numTestsRun, numPassed, numFailed
+				}
+				continue
+			}
+			cmdstr := fmt.Sprintf("%s -testConfig '%s' -testSpec '%s' -mods '%s'", progName, configStr, string(testSpec), string(modsSpec))
 			cmd := exec.Command("sh", "-c", cmdstr)
 			var out bytes.Buffer
 			var stderr bytes.Buffer
@@ -272,7 +287,7 @@ func main() {
 	if *testFile != "" {
 		dirName := path.Dir(*testFile)
 		fileName := path.Base(*testFile)
-		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, defaultProgram, 0)
+		totalRun, totalPassed, totalFailed := runTests(dirName, fileName, defaultProgram, 0, []string{})
 		fmt.Printf("\nTotal Run: %d passed: %d failed: %d\n", totalRun, totalPassed, totalFailed)
 		if totalFailed > 0 {
 			fmt.Printf("Failed Tests: ")
