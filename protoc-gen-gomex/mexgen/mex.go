@@ -40,6 +40,7 @@ type mex struct {
 	importSort    bool
 	importTime    bool
 	importCmp     bool
+	importReflect bool
 	firstFile     string
 	support       gensupport.PluginSupport
 	keyMessages   []descriptor.DescriptorProto
@@ -84,6 +85,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importSort = false
 	m.importTime = false
 	m.importCmp = false
+	m.importReflect = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -98,6 +100,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 
 	if m.firstFile == *file.FileDescriptorProto.Name {
 		m.P(matchOptions)
+		m.generateEnumDecodeHook()
 	}
 }
 
@@ -133,6 +136,9 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importTime {
 		m.gen.PrintImport("", "time")
+	}
+	if m.importReflect {
+		m.gen.PrintImport("reflect", "reflect")
 	}
 	if m.importCmp {
 		m.gen.PrintImport("", "github.com/google/go-cmp/cmp")
@@ -1520,6 +1526,31 @@ func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor
 				subDesc, append(visited, desc))
 		}
 	}
+}
+
+func (m *mex) generateEnumDecodeHook() {
+	m.P("// DecodeHook for use with the mapstructure package.")
+	m.P("// Allows decoding to handle protobuf enums that are")
+	m.P("// represented as strings.")
+	m.P("func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {")
+	m.P("if from.Kind() != reflect.String { return data, nil }")
+	m.P("switch to {")
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		for _, en := range file.EnumType {
+			m.P("case reflect.TypeOf(", en.Name, "(0)):")
+			m.P("if en, ok := ", en.Name, "_value[data.(string)]; ok {")
+			m.P("return en, nil")
+			m.P("}")
+		}
+	}
+	m.P("}")
+	m.P("return data, nil")
+	m.P("}")
+	m.P()
+	m.importReflect = true
 }
 
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {

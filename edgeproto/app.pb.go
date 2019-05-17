@@ -1701,6 +1701,62 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 	}
 }
 
+// DecodeHook for use with the mapstructure package.
+// Allows decoding to handle protobuf enums that are
+// represented as strings.
+func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
+	if from.Kind() != reflect.String {
+		return data, nil
+	}
+	switch to {
+	case reflect.TypeOf(ImageType(0)):
+		if en, ok := ImageType_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(DeleteType(0)):
+		if en, ok := DeleteType_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(Liveness(0)):
+		if en, ok := Liveness_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(IpSupport(0)):
+		if en, ok := IpSupport_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(IpAccess(0)):
+		if en, ok := IpAccess_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(TrackedState(0)):
+		if en, ok := TrackedState_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(CRMOverride(0)):
+		if en, ok := CRMOverride_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(CloudletState(0)):
+		if en, ok := CloudletState_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(NodeType(0)):
+		if en, ok := NodeType_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(NoticeAction(0)):
+		if en, ok := NoticeAction_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(VersionHash(0)):
+		if en, ok := VersionHash_value[data.(string)]; ok {
+			return en, nil
+		}
+	}
+	return data, nil
+}
+
 func (m *AppKey) Size() (n int) {
 	var l int
 	_ = l
