@@ -3,6 +3,7 @@ package dind
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -157,17 +158,18 @@ func GetClusters() ([]DindCluster, error) {
 		return nil, err
 	}
 	clusters := []DindCluster{}
+	r, _ := regexp.Compile("kube-master-(\\S+)-(\\d+)")
 	for _, line := range strings.Split(string(out), "\n") {
 		line = strings.TrimSpace(line)
-		parts := strings.Split(line, "-")
-		if len(parts) != 4 || parts[0] != "kube" || parts[1] != "master" {
-			continue
+		if r.MatchString(line) {
+			matches := r.FindStringSubmatch(line)
+			cname := matches[1]
+			cid, err := strconv.Atoi(matches[2])
+			if err != nil {
+				return nil, fmt.Errorf("Could not parse kube-master id: %s", line)
+			}
+			clusters = append(clusters, NewClusterFor(cname, cid))
 		}
-		id, err := strconv.Atoi(parts[3])
-		if err != nil {
-			return nil, err
-		}
-		clusters = append(clusters, NewClusterFor(parts[2], id))
 	}
 	return clusters, nil
 }
