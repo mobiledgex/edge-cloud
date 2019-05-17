@@ -29,6 +29,7 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
+import reflect "reflect"
 
 import io "io"
 
@@ -2362,6 +2363,22 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 	for _, f := range args {
 		f(opts)
 	}
+}
+
+// DecodeHook for use with the mapstructure package.
+// Allows decoding to handle protobuf enums that are
+// represented as strings.
+func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
+	if from.Kind() != reflect.String {
+		return data, nil
+	}
+	switch to {
+	case reflect.TypeOf(OuterEnum(0)):
+		if en, ok := OuterEnum_value[data.(string)]; ok {
+			return en, nil
+		}
+	}
+	return data, nil
 }
 
 func (m *NestedMessage) Size() (n int) {
