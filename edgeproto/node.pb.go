@@ -1033,6 +1033,21 @@ func (e NodeType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *NodeType) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := NodeType_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NodeType(val)
+	return nil
+}
+
+func (e NodeType) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 func (m *NodeKey) Size() (n int) {
 	var l int
 	_ = l

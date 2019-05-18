@@ -2913,6 +2913,21 @@ func (e CloudletState) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *CloudletState) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := CloudletState_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CloudletState(val)
+	return nil
+}
+
+func (e CloudletState) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 func (m *CloudletKey) Size() (n int) {
 	var l int
 	_ = l

@@ -315,6 +315,21 @@ func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *DlgMessage_DlgAck) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := DlgMessage_DlgAck_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = DlgMessage_DlgAck(val)
+	return nil
+}
+
+func (e DlgMessage_DlgAck) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 func (m *DlgMessage) Size() (n int) {
 	var l int
 	_ = l

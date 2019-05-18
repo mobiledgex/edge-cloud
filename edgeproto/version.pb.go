@@ -90,6 +90,21 @@ func (e VersionHash) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *VersionHash) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := VersionHash_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = VersionHash(val)
+	return nil
+}
+
+func (e VersionHash) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 // Keys being hashed:
 // AppInstKey
 // AppKey

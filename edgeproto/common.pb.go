@@ -258,6 +258,21 @@ func (e Liveness) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *Liveness) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := Liveness_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = Liveness(val)
+	return nil
+}
+
+func (e Liveness) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 var IpSupportStrings = []string{
 	"IpSupportUnknown",
 	"IpSupportStatic",
@@ -294,6 +309,21 @@ func (e *IpSupport) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e IpSupport) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *IpSupport) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := IpSupport_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = IpSupport(val)
+	return nil
+}
+
+func (e IpSupport) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
 }
 
 var IpAccessStrings = []string{
@@ -334,6 +364,21 @@ func (e *IpAccess) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e IpAccess) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *IpAccess) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := IpAccess_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = IpAccess(val)
+	return nil
+}
+
+func (e IpAccess) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
 }
 
 var TrackedStateStrings = []string{
@@ -394,6 +439,21 @@ func (e TrackedState) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *TrackedState) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := TrackedState_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = TrackedState(val)
+	return nil
+}
+
+func (e TrackedState) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 var CRMOverrideStrings = []string{
 	"NoOverride",
 	"IgnoreCRMErrors",
@@ -434,6 +494,21 @@ func (e *CRMOverride) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e CRMOverride) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *CRMOverride) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := CRMOverride_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = CRMOverride(val)
+	return nil
+}
+
+func (e CRMOverride) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
 }
 
 func init() { proto.RegisterFile("common.proto", fileDescriptorCommon) }

@@ -1629,6 +1629,21 @@ func (e ImageType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *ImageType) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := ImageType_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = ImageType(val)
+	return nil
+}
+
+func (e ImageType) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 var DeleteTypeStrings = []string{
 	"NoAutoDelete",
 	"AutoDelete",
@@ -1663,6 +1678,21 @@ func (e *DeleteType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e DeleteType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *DeleteType) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := DeleteType_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = DeleteType(val)
+	return nil
+}
+
+func (e DeleteType) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
 }
 
 type MatchOptions struct {

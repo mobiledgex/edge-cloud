@@ -393,6 +393,21 @@ func (e DebugLevel) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *DebugLevel) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := DebugLevel_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = DebugLevel(val)
+	return nil
+}
+
+func (e DebugLevel) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 type MatchOptions struct {
 	// Filter will ignore 0 or nil fields on the passed in object
 	Filter bool

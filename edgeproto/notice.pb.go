@@ -324,6 +324,21 @@ func (e NoticeAction) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *NoticeAction) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := NoticeAction_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = NoticeAction(val)
+	return nil
+}
+
+func (e NoticeAction) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 func (m *Notice) Size() (n int) {
 	var l int
 	_ = l

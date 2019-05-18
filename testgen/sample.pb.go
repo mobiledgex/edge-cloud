@@ -2289,6 +2289,21 @@ func (e OuterEnum) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *OuterEnum) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := OuterEnum_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = OuterEnum(val)
+	return nil
+}
+
+func (e OuterEnum) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 var InnerEnumStrings = []string{
 	"INNER0",
 	"INNER1",
@@ -2327,6 +2342,21 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *TestGen_InnerEnum) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := TestGen_InnerEnum_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = TestGen_InnerEnum(val)
+	return nil
+}
+
+func (e TestGen_InnerEnum) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
 }
 
 type MatchOptions struct {

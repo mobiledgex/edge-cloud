@@ -232,6 +232,21 @@ func (e {{.Name}}) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *{{.Name}}) UnmarshalText(text []byte) error {
+	str := string(text)
+	val, ok := {{.Name}}_value[str]
+	if !ok {
+		return errors.New(fmt.Sprintf("No enum value for %s", str))
+	}
+	*e = {{.Name}}(val)
+	return nil
+}
+
+func (e {{.Name}}) MarshalText() ([]byte, error) {
+	return []byte(e.String()), nil
+}
+
 `
 
 type MatchType int
