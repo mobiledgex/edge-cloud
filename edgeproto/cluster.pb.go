@@ -646,7 +646,10 @@ func (s *ClusterStore) STMGet(stm concurrency.STM, key *ClusterKey, buf *Cluster
 
 func (s *ClusterStore) STMPut(stm concurrency.STM, obj *Cluster, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Cluster", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("Cluster json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

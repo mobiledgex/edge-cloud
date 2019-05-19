@@ -12,6 +12,7 @@ import _ "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -91,18 +92,36 @@ func (e VersionHash) MarshalYAML() (interface{}, error) {
 }
 
 // custom JSON encoding/decoding
-func (e *VersionHash) UnmarshalText(text []byte) error {
-	str := string(text)
-	val, ok := VersionHash_value[str]
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+func (e *VersionHash) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := VersionHash_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = VersionHash_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = VersionHash(val)
+		return nil
 	}
-	*e = VersionHash(val)
-	return nil
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = VersionHash(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e VersionHash) MarshalText() ([]byte, error) {
-	return []byte(e.String()), nil
+func (e VersionHash) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 // Keys being hashed:

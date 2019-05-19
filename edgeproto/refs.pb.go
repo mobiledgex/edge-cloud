@@ -636,7 +636,10 @@ func (s *CloudletRefsStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *C
 
 func (s *CloudletRefsStore) STMPut(stm concurrency.STM, obj *CloudletRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletRefs", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("CloudletRefs json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -1104,7 +1107,10 @@ func (s *ClusterRefsStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf 
 
 func (s *ClusterRefsStore) STMPut(stm concurrency.STM, obj *ClusterRefs, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterRefs", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("ClusterRefs json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

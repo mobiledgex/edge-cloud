@@ -1887,7 +1887,10 @@ func (s *CloudletStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *Cloud
 
 func (s *CloudletStore) STMPut(stm concurrency.STM, obj *Cloudlet, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Cloudlet", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("Cloudlet json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -2563,7 +2566,10 @@ func (s *CloudletInfoStore) STMGet(stm concurrency.STM, key *CloudletKey, buf *C
 
 func (s *CloudletInfoStore) STMPut(stm concurrency.STM, obj *CloudletInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("CloudletInfo", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("CloudletInfo json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -2914,18 +2920,36 @@ func (e CloudletState) MarshalYAML() (interface{}, error) {
 }
 
 // custom JSON encoding/decoding
-func (e *CloudletState) UnmarshalText(text []byte) error {
-	str := string(text)
-	val, ok := CloudletState_value[str]
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+func (e *CloudletState) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := CloudletState_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = CloudletState_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = CloudletState(val)
+		return nil
 	}
-	*e = CloudletState(val)
-	return nil
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = CloudletState(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e CloudletState) MarshalText() ([]byte, error) {
-	return []byte(e.String()), nil
+func (e CloudletState) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 func (m *CloudletKey) Size() (n int) {

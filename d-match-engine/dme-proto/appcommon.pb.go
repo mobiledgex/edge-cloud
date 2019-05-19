@@ -9,6 +9,7 @@ import math "math"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 
 import io "io"
 
@@ -183,18 +184,36 @@ func (e LProto) MarshalYAML() (interface{}, error) {
 }
 
 // custom JSON encoding/decoding
-func (e *LProto) UnmarshalText(text []byte) error {
-	str := string(text)
-	val, ok := LProto_value[str]
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+func (e *LProto) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := LProto_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = LProto_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = LProto(val)
+		return nil
 	}
-	*e = LProto(val)
-	return nil
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = LProto(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e LProto) MarshalText() ([]byte, error) {
-	return []byte(e.String()), nil
+func (e LProto) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 func (m *AppPort) Size() (n int) {

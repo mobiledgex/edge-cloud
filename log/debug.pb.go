@@ -22,6 +22,7 @@ import grpc "google.golang.org/grpc"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 import reflect "reflect"
 
 import io "io"
@@ -394,18 +395,36 @@ func (e DebugLevel) MarshalYAML() (interface{}, error) {
 }
 
 // custom JSON encoding/decoding
-func (e *DebugLevel) UnmarshalText(text []byte) error {
-	str := string(text)
-	val, ok := DebugLevel_value[str]
-	if !ok {
-		return errors.New(fmt.Sprintf("No enum value for %s", str))
+func (e *DebugLevel) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := DebugLevel_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = DebugLevel_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = DebugLevel(val)
+		return nil
 	}
-	*e = DebugLevel(val)
-	return nil
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = DebugLevel(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e DebugLevel) MarshalText() ([]byte, error) {
-	return []byte(e.String()), nil
+func (e DebugLevel) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 type MatchOptions struct {
