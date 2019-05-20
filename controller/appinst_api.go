@@ -572,6 +572,11 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
 		defaultCloudlet = true
+	} else {
+		// check if we are deleting an autocluster instance we need to set the key correctly.  This is not applicable to default cloudlets
+		if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
+			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		}
 	}
 
 	if !ignoreCRM(cctx) {
@@ -579,10 +584,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
-	// check if we are deleting an autocluster instance we need to set the key correctly
-	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
-		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-	}
+
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
