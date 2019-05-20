@@ -49,7 +49,6 @@ service ClusterApi {
       post: "/create/cluster"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusters,ActionManage,skipenforce";
   }
   // Delete a Cluster
   rpc DeleteCluster(Cluster) returns (Result) {
@@ -57,7 +56,6 @@ service ClusterApi {
       post: "/delete/cluster"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusters,ActionManage,skipenforce";
   }
   // Update a Cluster
   rpc UpdateCluster(Cluster) returns (Result) {
@@ -65,7 +63,6 @@ service ClusterApi {
       post: "/update/cluster"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusters,ActionManage,skipenforce";
   }
   // Show Clusters
   rpc ShowCluster(Cluster) returns (stream Cluster) {
@@ -73,6 +70,5 @@ service ClusterApi {
       post: "/show/cluster"
       body: "*"
     };
-    option (protogen.mc2_api) = "ResourceClusters,ActionView,skipenforce";
   }
 }

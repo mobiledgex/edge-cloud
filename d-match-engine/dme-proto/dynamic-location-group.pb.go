@@ -12,6 +12,7 @@ import grpc "google.golang.org/grpc"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 
 import io "io"
 
@@ -313,6 +314,39 @@ func (e *DlgMessage_DlgAck) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 func (e DlgMessage_DlgAck) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *DlgMessage_DlgAck) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := DlgMessage_DlgAck_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = DlgMessage_DlgAck_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = DlgMessage_DlgAck(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = DlgMessage_DlgAck(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e DlgMessage_DlgAck) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 func (m *DlgMessage) Size() (n int) {

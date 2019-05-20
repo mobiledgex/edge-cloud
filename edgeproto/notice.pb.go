@@ -16,6 +16,7 @@ import grpc "google.golang.org/grpc"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 
 import io "io"
 
@@ -322,6 +323,39 @@ func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e NoticeAction) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *NoticeAction) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := NoticeAction_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = NoticeAction_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = NoticeAction(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = NoticeAction(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e NoticeAction) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 func (m *Notice) Size() (n int) {

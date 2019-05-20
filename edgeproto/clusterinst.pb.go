@@ -1222,7 +1222,10 @@ func (s *ClusterInstStore) STMGet(stm concurrency.STM, key *ClusterInstKey, buf 
 
 func (s *ClusterInstStore) STMPut(stm concurrency.STM, obj *ClusterInst, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInst", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("ClusterInst json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -1905,7 +1908,10 @@ func (s *ClusterInstInfoStore) STMGet(stm concurrency.STM, key *ClusterInstKey, 
 
 func (s *ClusterInstInfoStore) STMPut(stm concurrency.STM, obj *ClusterInstInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("ClusterInstInfo", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("ClusterInstInfo json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
