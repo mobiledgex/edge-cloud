@@ -72,8 +72,7 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 			fmt.Printf("values don't match for the key: %s\n", key)
 			fmt.Printf("expected: \n%s\n", val)
 			fmt.Printf("actual: \n%s\n", string(dbVal))
-			return fmt.Errorf("Values don't match for the key <%s> - should be: <%s> found: <%s>",
-				key, val, string(dbVal))
+			return fmt.Errorf("Values don't match for the key")
 		}
 		fileObjCount++
 	}
