@@ -7,3 +7,7 @@ protoc:
     - ../../../grpc-ecosystem/grpc-gateway/third_party/googleapis/
 lint:
   group: google
+  ignores:
+    - id: ENUM_FIELD_NAMES_UPPER_SNAKE_CASE
+      files:
+        - ./version.proto
