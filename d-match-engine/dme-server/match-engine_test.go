@@ -87,7 +87,7 @@ func checkAllData(t *testing.T, appInsts []*edgeproto.AppInst) {
 			app.insts = make(map[edgeproto.CloudletKey]struct{})
 			appsCheck[inst.Key.AppKey] = app
 		}
-		app.insts[inst.Key.CloudletKey] = struct{}{}
+		app.insts[inst.Key.ClusterInstKey.CloudletKey] = struct{}{}
 	}
 	assert.Equal(t, len(appsCheck), len(tbl.apps), "Number of apps")
 	totalInstances := 0

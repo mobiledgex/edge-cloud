@@ -2,17 +2,37 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Json;
 using System.Text;
 
 using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
-using System.Security.Authentication;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
 
 
 namespace DistributedMatchEngine
 {
+
+  public class HttpException : Exception
+  {
+    public HttpStatusCode HttpStatusCode { get; set; }
+    public int ErrorCode { get; set; }
+    public HttpException(string message, HttpStatusCode statusCode, int errorCode)
+        : base(message)
+    {
+      this.HttpStatusCode = statusCode;
+      this.ErrorCode = errorCode;
+    }
+
+    public HttpException(string message, HttpStatusCode statusCode, int errorCode, Exception innerException)
+        : base(message, innerException)
+    {
+      this.HttpStatusCode = statusCode;
+      this.ErrorCode = errorCode;
+    }
+  }
+
   public class TokenException : Exception
   {
     public TokenException(string message)
@@ -27,7 +47,8 @@ namespace DistributedMatchEngine
   }
 
   // Minimal logger without log levels:
-  static class Log {
+  static class Log
+  {
     // Stdout:
     public static void S(string msg)
     {
@@ -69,10 +90,6 @@ namespace DistributedMatchEngine
     private string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
     private string getfqdnlistAPI = "/v1/getfqdnlist";
 
-    UInt32 timeoutSec = 5000;
-    string appName;
-    string devName;
-
     public string sessionCookie { get; set; }
     string tokenServerURI;
     string authToken { get; set; }
@@ -113,7 +130,7 @@ namespace DistributedMatchEngine
       return carrierNameDefault;
     }
 
-    string generateDmeHostPath(string carrierName)
+    string GenerateDmeHostPath(string carrierName)
     {
       if (carrierName == null || carrierName == "")
       {
@@ -124,7 +141,7 @@ namespace DistributedMatchEngine
 
     public string GenerateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
-      return "https://" + generateDmeHostPath(carrierName) + ":" + port;
+      return "https://" + GenerateDmeHostPath(carrierName) + ":" + port;
     }
 
     public string CreateUri(string host, UInt32 port)
@@ -139,7 +156,7 @@ namespace DistributedMatchEngine
     /*
      * This is temporary, and must be updated later.
      */
-    private bool setCredentials(string caCert, string clientCert, string clientPrivKey)
+    private bool SetCredentials(string caCert, string clientCert, string clientPrivKey)
     {
       return false;
     }
@@ -153,13 +170,51 @@ namespace DistributedMatchEngine
       Log.D("Post Body: " + jsonStr);
       var response = await httpClient.PostAsync(uri, stringContent);
 
-      response.EnsureSuccessStatusCode();
 
+      if (response == null)
+      {
+        throw new Exception("Null http response object!");
+      }
+
+      if (response.StatusCode != HttpStatusCode.OK)
+      {
+        string responseBodyStr = response.Content.ReadAsStringAsync().Result;
+        JsonObject jsObj = (JsonObject)JsonValue.Parse(responseBodyStr);
+        string extendedErrorStr;
+        int errorCode;
+        if (jsObj.ContainsKey("message") && jsObj.ContainsKey("code"))
+        {
+          extendedErrorStr = jsObj["message"];
+          try
+          {
+            errorCode = jsObj["code"];
+          }
+          catch (FormatException)
+          {
+            errorCode = -1; // Bad code number format
+          }
+          throw new HttpException(extendedErrorStr, response.StatusCode, errorCode);
+        }
+        else
+        {
+          // Unknown error message format, throw exception with inner:
+          try
+          {
+            response.EnsureSuccessStatusCode();
+          }
+          catch (Exception e)
+          {
+            throw new HttpException(e.Message, response.StatusCode, -1, e);
+          }
+        }
+      }
+
+      // Normal path:
       Stream replyStream = await response.Content.ReadAsStreamAsync();
       return replyStream;
     }
 
-    private static String parseToken(String uri)
+    private static String ParseToken(String uri)
     {
       string[] uriandparams = uri.Split('?');
       if (uriandparams.Length < 1)
@@ -235,7 +290,7 @@ namespace DistributedMatchEngine
       if (uriLocation != null)
       {
         Log.D("uriLocation: " + uriLocation);
-        token = parseToken(uriLocation);
+        token = ParseToken(uriLocation);
       }
 
       if (token == null)
@@ -474,7 +529,7 @@ namespace DistributedMatchEngine
         Ver = 1,
         SessionCookie = this.sessionCookie,
         LgId = lgId,
-        CommType = dlgCommType.ToString(), // JSON REST request needs a string, not integer-like type.
+        CommType = dlgCommType,
         UserData = userData
       };
     }

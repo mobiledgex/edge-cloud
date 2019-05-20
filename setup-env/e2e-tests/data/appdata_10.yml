@@ -14,27 +14,6 @@ flavors:
   disk: 2
 
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-
-
 operators:
 - key:
     name: tmus
@@ -232,18 +211,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -251,18 +229,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-
-    id: 1
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 1
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -270,18 +247,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-
-    id: 2
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -289,18 +265,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-2
-
-    id: 2
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 2
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -308,18 +283,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-3
-
-    id: 3
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-3
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -327,18 +301,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-3
-
-    id: 3
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-3
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 3
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -346,18 +319,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-4
-
-    id: 4
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-4
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -365,18 +337,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-4
-
-    id: 4
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-4
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 4
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -384,18 +355,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-5
-
-    id: 5
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-5
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -403,18 +373,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-5
-
-    id: 5
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-5
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 5
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -422,18 +391,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-6
-
-    id: 6
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-6
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -441,18 +409,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-6
-
-    id: 6
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-6
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 6
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -460,18 +427,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-7
-
-    id: 7
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-7
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -479,18 +445,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-7
-
-    id: 7
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-7
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 7
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -498,18 +463,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-8
-
-    id: 8
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-8
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -517,18 +481,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-8
-
-    id: 8
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-8
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 8
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -536,18 +499,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-
-    id: 9
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: azure
+        name: azure-cloud-9
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -555,18 +517,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: azure
-      name: azure-cloud-9
-
-    id: 9
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: azure
+        name: azure-cloud-9
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 9
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -574,18 +535,17 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-
-    id: 10
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication1
+      cloudletkey:
+        operatorkey:
+          name: gcp
+        name: gcp-cloud-10
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 
 - key:
     appkey:
@@ -593,29 +553,30 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: gcp
-      name: gcp-cloud-10
-
-    id: 10
+    clusterinstkey:
+      clusterkey:
+        name: autoclustersomeapplication2
+      cloudletkey:
+        operatorkey:
+          name: gcp
+        name: gcp-cloud-10
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 1
     longitude: 10
-  clusterinstkey:
-    clusterkey:
-      name: autocluster
 - key:
     appkey:
       developerkey:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.someapplication1.AcmeAppCo.com
 
 - key:
@@ -624,11 +585,13 @@ appinstances:
         name: AcmeAppCo
       name: someapplication2
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.someapplication2.AcmeAppCo.com
 
 - key:
@@ -637,10 +600,12 @@ appinstances:
         name: Samsung
       name: SamsungEnablingLayer
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   uri: default.samsungenablement.samsung.com
 

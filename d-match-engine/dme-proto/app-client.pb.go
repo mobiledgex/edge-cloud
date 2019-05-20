@@ -48,6 +48,7 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
+import reflect "reflect"
 
 import io "io"
 
@@ -1760,7 +1761,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 			m.Ports[i0].Proto = src.Ports[i0].Proto
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
 			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
@@ -1931,7 +1932,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) {
 			m.Ports[i0].Proto = src.Ports[i0].Proto
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
-			m.Ports[i0].PublicPath = src.Ports[i0].PublicPath
+			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
 			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
 		}
 	}
@@ -1984,7 +1985,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 					m.Appinstances[i0].Ports[i1].Proto = src.Appinstances[i0].Ports[i1].Proto
 					m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
 					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
-					m.Appinstances[i0].Ports[i1].PublicPath = src.Appinstances[i0].Ports[i1].PublicPath
+					m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
 					m.Appinstances[i0].Ports[i1].FQDNPrefix = src.Appinstances[i0].Ports[i1].FQDNPrefix
 				}
 			}
@@ -2050,7 +2051,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto = src.Cloudlets[i0].Appinstances[i1].Ports[i2].Proto
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPath
+							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix
 						}
 					}
@@ -2552,6 +2553,30 @@ func applyMatchOptions(opts *MatchOptions, args ...MatchOpt) {
 	for _, f := range args {
 		f(opts)
 	}
+}
+
+// DecodeHook for use with the mapstructure package.
+// Allows decoding to handle protobuf enums that are
+// represented as strings.
+func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {
+	if from.Kind() != reflect.String {
+		return data, nil
+	}
+	switch to {
+	case reflect.TypeOf(LProto(0)):
+		if en, ok := LProto_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(IDTypes(0)):
+		if en, ok := IDTypes_value[data.(string)]; ok {
+			return en, nil
+		}
+	case reflect.TypeOf(ReplyStatus(0)):
+		if en, ok := ReplyStatus_value[data.(string)]; ok {
+			return en, nil
+		}
+	}
+	return data, nil
 }
 
 func (m *RegisterClientRequest) Size() (n int) {

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"os"
 	"testing"
 	"time"
@@ -11,45 +12,29 @@ import (
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
 	"github.com/mobiledgex/edge-cloud/testutil"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	yaml "gopkg.in/yaml.v2"
 )
 
-func startMain(t *testing.T) (*grpc.ClientConn, chan struct{}, error) {
-	// these vars are defined in main()
-	mainStarted = make(chan struct{})
-	// channel to wait for main to finish
-	mainDone := make(chan struct{})
-	go func() {
-		main()
-		close(mainDone)
-	}()
-	// wait unil main is ready
-	<-mainStarted
-	assert.True(t, true, "Main Started")
-
+func getGrpcClient(t *testing.T) (*grpc.ClientConn, error) {
 	// grpc client
-	conn, err := grpc.Dial("127.0.0.1:55001", grpc.WithInsecure())
-	assert.Nil(t, err, "grpc Dial")
-	if err != nil {
-		return nil, nil, err
-	}
 	reduceInfoTimeouts()
-	return conn, mainDone, nil
+	return grpc.Dial("127.0.0.1:55001", grpc.WithInsecure())
 }
 
 func TestController(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify | log.DebugLevelApi)
+	flag.Parse() // set defaults
+	*localEtcd = true
+	*initLocalEtcd = true
 
-	os.Args = append(os.Args, "-localEtcd")
+	err := startServices()
+	require.Nil(t, err, "start")
+	defer stopServices()
 
-	conn, mainDone, err := startMain(t)
-	if err != nil {
-		close(sigChan)
-		return
-	}
+	conn, err := getGrpcClient(t)
+	require.Nil(t, err, "grpc client")
 	defer conn.Close()
 
 	// test notify clients
@@ -76,7 +61,6 @@ func TestController(t *testing.T) {
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 	clusterClient := edgeproto.NewClusterApiClient(conn)
 	clusterInstClient := edgeproto.NewClusterInstApiClient(conn)
 	cloudletInfoClient := edgeproto.NewCloudletInfoApiClient(conn)
@@ -86,7 +70,6 @@ func TestController(t *testing.T) {
 
 	testutil.ClientDeveloperTest(t, "cud", devClient, testutil.DevData)
 	testutil.ClientFlavorTest(t, "cud", flavorClient, testutil.FlavorData)
-	testutil.ClientClusterFlavorTest(t, "cud", clusterFlavorClient, testutil.ClusterFlavorData)
 	testutil.ClientClusterTest(t, "cud", clusterClient, testutil.ClusterData)
 	testutil.ClientAppTest(t, "cud", appClient, testutil.AppData)
 	testutil.ClientOperatorTest(t, "cud", operClient, testutil.OperatorData)
@@ -96,19 +79,17 @@ func TestController(t *testing.T) {
 
 	dmeNotify.WaitForAppInsts(6)
 	crmNotify.WaitForFlavors(3)
-	crmNotify.WaitForClusterFlavors(3)
 
-	assert.Equal(t, 6, len(dmeNotify.AppInstCache.Objs), "num appinsts")
-	assert.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
-	assert.Equal(t, 4, len(crmNotify.ClusterFlavorCache.Objs), "num cluster flavors")
-	assert.Equal(t, 9, len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
-	assert.Equal(t, 6, len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
+	require.Equal(t, len(testutil.AppInstData), len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	require.Equal(t, 4, len(crmNotify.FlavorCache.Objs), "num flavors")
+	require.Equal(t, len(testutil.ClusterInstData)+len(testutil.ClusterInstAutoData), len(crmNotify.ClusterInstInfoCache.Objs), "crm cluster inst infos")
+	require.Equal(t, len(testutil.AppInstData), len(crmNotify.AppInstInfoCache.Objs), "crm cluster inst infos")
 
 	ClientAppInstCachedFieldsTest(t, appClient, cloudletClient, appInstClient)
 
 	WaitForCloudletInfo(len(testutil.CloudletInfoData))
-	assert.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
-	assert.Equal(t, len(crmNotify.CloudletInfoCache.Objs), len(cloudletInfoApi.cache.Objs))
+	require.Equal(t, len(testutil.CloudletInfoData), len(cloudletInfoApi.cache.Objs))
+	require.Equal(t, len(crmNotify.CloudletInfoCache.Objs), len(cloudletInfoApi.cache.Objs))
 
 	// test show api for info structs
 	// XXX These checks won't work until we move notifyId out of struct
@@ -120,64 +101,59 @@ func TestController(t *testing.T) {
 	// test that delete checks disallow deletes of dependent objects
 	ctx := context.TODO()
 	_, err = devClient.DeleteDeveloper(ctx, &testutil.DevData[0])
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	_, err = operClient.DeleteOperator(ctx, &testutil.OperatorData[0])
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	stream, err := cloudletClient.DeleteCloudlet(ctx, &testutil.CloudletData[0])
 	err = testutil.CloudletReadResultStream(stream, err)
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	_, err = appClient.DeleteApp(ctx, &testutil.AppData[0])
-	assert.NotNil(t, err)
+	require.NotNil(t, err)
 	// test that delete works after removing dependencies
 	for _, inst := range testutil.AppInstData {
 		stream, err := appInstClient.DeleteAppInst(ctx, &inst)
 		err = testutil.AppInstReadResultStream(stream, err)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	for _, inst := range testutil.ClusterInstData {
 		stream, err := clusterInstClient.DeleteClusterInst(ctx, &inst)
 		err = testutil.ClusterInstReadResultStream(stream, err)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	for _, obj := range testutil.AppData {
 		_, err = appClient.DeleteApp(ctx, &obj)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	for _, obj := range testutil.CloudletData {
 		_, err = cloudletClient.DeleteCloudlet(ctx, &obj)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	for _, obj := range testutil.DevData {
 		_, err = devClient.DeleteDeveloper(ctx, &obj)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	for _, obj := range testutil.OperatorData {
 		_, err = operClient.DeleteOperator(ctx, &obj)
-		assert.Nil(t, err)
+		require.Nil(t, err)
 	}
 	// make sure dynamic app insts were deleted along with Apps
 	dmeNotify.WaitForAppInsts(0)
-	assert.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
+	require.Equal(t, 0, len(dmeNotify.AppInstCache.Objs), "num appinsts")
 	// deleting appinsts/cloudlets should also delete associated info
-	assert.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
-	assert.Equal(t, 0, len(clusterInstApi.cache.Objs))
-	assert.Equal(t, 0, len(appInstApi.cache.Objs))
-
-	// closing the signal channel triggers main to exit
-	close(sigChan)
-	// wait until main is done so it can clean up properly
-	<-mainDone
+	require.Equal(t, 4, len(cloudletInfoApi.cache.Objs))
+	require.Equal(t, 0, len(clusterInstApi.cache.Objs))
+	require.Equal(t, 0, len(appInstApi.cache.Objs))
 }
 
 func TestDataGen(t *testing.T) {
 	out, err := os.Create("data_test.json")
 	if err != nil {
-		assert.Nil(t, err, "open file")
+		require.Nil(t, err, "open file")
 		return
 	}
 	for _, obj := range testutil.DevData {
 		val, err := json.Marshal(&obj)
-		assert.Nil(t, err, "marshal %s", obj.Key.GetKeyString())
+		require.Nil(t, err, "marshal %s", obj.Key.GetKeyString())
 		out.Write(val)
 		out.WriteString("\n")
 	}
@@ -186,14 +162,16 @@ func TestDataGen(t *testing.T) {
 
 func TestEdgeCloudBug26(t *testing.T) {
 	log.SetDebugLevel(log.DebugLevelEtcd | log.DebugLevelNotify)
+	flag.Parse()
+	*localEtcd = true
+	*initLocalEtcd = true
 
-	os.Args = append(os.Args, "-localEtcd")
+	err := startServices()
+	require.Nil(t, err, "start")
+	defer stopServices()
 
-	conn, mainDone, err := startMain(t)
-	if err != nil {
-		close(sigChan)
-		return
-	}
+	conn, err := getGrpcClient(t)
+	require.Nil(t, err, "grcp client")
 	defer conn.Close()
 
 	devClient := edgeproto.NewDeveloperApiClient(conn)
@@ -202,7 +180,6 @@ func TestEdgeCloudBug26(t *testing.T) {
 	cloudletClient := edgeproto.NewCloudletApiClient(conn)
 	appInstClient := edgeproto.NewAppInstApiClient(conn)
 	flavorClient := edgeproto.NewFlavorApiClient(conn)
-	clusterFlavorClient := edgeproto.NewClusterFlavorApiClient(conn)
 
 	yamlData := `
 operators:
@@ -221,16 +198,6 @@ flavors:
   ram: 1024
   vcpus: 1
   disk: 1
-clusterflavors:
-- key:
-    name: x1.small
-  nodeflavor:
-    name: m1.small
-  masterflavor:
-    name: m1.small
-  numnodes: 2
-  maxnodes: 2
-  masternodes: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -278,17 +245,15 @@ cloudletinfos:
 
 	ctx := context.TODO()
 	_, err = devClient.CreateDeveloper(ctx, &data.Developers[0])
-	assert.Nil(t, err, "create dev")
+	require.Nil(t, err, "create dev")
 	_, err = flavorClient.CreateFlavor(ctx, &data.Flavors[0])
-	assert.Nil(t, err, "create flavor")
-	_, err = clusterFlavorClient.CreateClusterFlavor(ctx, &data.ClusterFlavors[0])
-	assert.Nil(t, err, "create cluster flavor")
+	require.Nil(t, err, "create flavor")
 	_, err = appClient.CreateApp(ctx, &data.Applications[0])
-	assert.Nil(t, err, "create app")
+	require.Nil(t, err, "create app")
 	_, err = operClient.CreateOperator(ctx, &data.Operators[0])
-	assert.Nil(t, err, "create operator")
+	require.Nil(t, err, "create operator")
 	_, err = cloudletClient.CreateCloudlet(ctx, &data.Cloudlets[0])
-	assert.Nil(t, err, "create cloudlet")
+	require.Nil(t, err, "create cloudlet")
 	insertCloudletInfo(data.CloudletInfos)
 
 	show := testutil.ShowApp{}
@@ -296,22 +261,17 @@ cloudletinfos:
 	filterNone := edgeproto.App{}
 	stream, err := appClient.ShowApp(ctx, &filterNone)
 	show.ReadStream(stream, err)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, 1, len(show.Data), "show app count")
+	require.Nil(t, err, "show data")
+	require.Equal(t, 1, len(show.Data), "show app count")
 
 	_, err = appInstClient.CreateAppInst(ctx, &data.AppInstances[0])
-	assert.Nil(t, err, "create app inst")
+	require.Nil(t, err, "create app inst")
 
 	show.Init()
 	stream, err = appClient.ShowApp(ctx, &filterNone)
 	show.ReadStream(stream, err)
-	assert.Nil(t, err, "show data")
-	assert.Equal(t, 1, len(show.Data), "show app count after creating app inst")
-
-	// closing the signal channel triggers main to exit
-	close(sigChan)
-	// wait until main is done so it can clean up properly
-	<-mainDone
+	require.Nil(t, err, "show data")
+	require.Equal(t, 1, len(show.Data), "show app count after creating app inst")
 }
 
 func WaitForCloudletInfo(count int) {
@@ -331,9 +291,9 @@ func CheckCloudletInfo(t *testing.T, client edgeproto.CloudletInfoApiClient, dat
 	show.Init()
 	filterNone := edgeproto.CloudletInfo{}
 	err := api.ShowCloudletInfo(ctx, &filterNone, &show)
-	assert.Nil(t, err, "show cloudlet info")
+	require.Nil(t, err, "show cloudlet info")
 	for _, obj := range data {
 		show.AssertFound(t, &obj)
 	}
-	assert.Equal(t, len(data), len(show.Data), "show count")
+	require.Equal(t, len(data), len(show.Data), "show count")
 }

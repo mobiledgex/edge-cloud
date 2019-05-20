@@ -67,7 +67,6 @@ func runShow(ctrl *process.Controller, showCmds []string, outputDir string, cmp 
 func runShowCommands(ctrl *process.Controller, outputDir string, cmp bool) bool {
 	var showCmds = []string{
 		"flavors: ShowFlavor",
-		"clusterflavors: ShowClusterFlavor",
 		"clusters: ShowCluster",
 		"clusterinsts: ShowClusterInst",
 		"operators: ShowOperator",
@@ -137,27 +136,6 @@ func runFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto
 		err = ignoreExpectedErrors(mode, err)
 		if err != nil {
 			return fmt.Errorf("API %s failed for %v -- err %v", mode, f.Key, err)
-		}
-	}
-	return nil
-}
-
-func runClusterFlavorApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeproto.ApplicationData, mode string) error {
-	opAPI := edgeproto.NewClusterFlavorApiClient(conn)
-	var err error = nil
-	for _, c := range appdata.ClusterFlavors {
-		log.Printf("API %v for cluster flavor: %v", mode, c.Key)
-		switch mode {
-		case "create":
-			_, err = opAPI.CreateClusterFlavor(ctx, &c)
-		case "update":
-			_, err = opAPI.UpdateClusterFlavor(ctx, &c)
-		case "delete":
-			_, err = opAPI.DeleteClusterFlavor(ctx, &c)
-		}
-		err = ignoreExpectedErrors(mode, err)
-		if err != nil {
-			return fmt.Errorf("API %s failed for %v -- err %v", mode, c.Key, err)
 		}
 	}
 	return nil
@@ -342,7 +320,17 @@ func runAppinstApi(conn *grpc.ClientConn, ctx context.Context, appdata *edgeprot
 	return nil
 }
 
-func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string) bool {
+func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
+	runCLI := false
+	for _, mod := range mods {
+		if mod == "cli" {
+			runCLI = true
+		}
+	}
+	if runCLI {
+		return RunControllerCLI(api, ctrlname, apiFile, outputDir, mods)
+	}
+
 	log.Printf("Applying data via APIs for %s\n", apiFile)
 	apiConnectTimeout := 5 * time.Second
 	apiTimeout := 30 * time.Minute
@@ -423,11 +411,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 				log.Printf("Error in operator API %v\n", err)
 				rc = false
 			}
-			err = runClusterFlavorApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in cluster flavor API %v\n", err)
-				rc = false
-			}
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
@@ -439,11 +422,6 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 			err = runFlavorApi(ctrlapi, ctx, &appData, api)
 			if err != nil {
 				log.Printf("Error in flavor API %v\n", err)
-				rc = false
-			}
-			err = runClusterFlavorApi(ctrlapi, ctx, &appData, api)
-			if err != nil {
-				log.Printf("Error in cluster flavor API %v\n", err)
 				rc = false
 			}
 			err = runOperatorApi(ctrlapi, ctx, &appData, api)
@@ -496,7 +474,7 @@ func RunControllerAPI(api string, ctrlname string, apiFile string, outputDir str
 	return rc
 }
 
-func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string) bool {
+func RunControllerCLI(api string, ctrlname string, apiFile string, outputDir string, mods []string) bool {
 	log.Printf("Applying data via CLI for %s\n", apiFile)
 
 	ctrl := util.GetController(ctrlname)

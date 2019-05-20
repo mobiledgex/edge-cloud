@@ -34,6 +34,8 @@ func (s *DeveloperApi) DeleteDeveloper(ctx context.Context, in *edgeproto.Develo
 	if appApi.UsesDeveloper(&in.Key) {
 		return &edgeproto.Result{}, errors.New("Developer in use by Application")
 	}
+	// clean up auto-apps using developer
+	appApi.AutoDeleteAppsForDeveloper(ctx, &in.Key)
 	return s.store.Delete(in, s.sync.syncWait)
 }
 

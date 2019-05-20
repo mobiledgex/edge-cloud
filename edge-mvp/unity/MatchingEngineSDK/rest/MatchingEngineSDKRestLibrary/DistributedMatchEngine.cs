@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Json;
 using System.Text;
 
 using System.Net.Http;
@@ -12,6 +13,26 @@ using System.Threading.Tasks;
 
 namespace DistributedMatchEngine
 {
+
+  public class HttpException : Exception
+  {
+    public WebExceptionStatus WebExceptionStatus { get; set; }
+    public int ErrorCode { get; set; }
+    public HttpException(string message, WebExceptionStatus statusCode, int errorCode)
+        : base(message)
+    {
+      this.WebExceptionStatus = statusCode;
+      this.ErrorCode = errorCode;
+    }
+
+    public HttpException(string message, WebExceptionStatus statusCode, int errorCode, Exception innerException)
+        : base(message, innerException)
+    {
+      this.WebExceptionStatus = statusCode;
+      this.ErrorCode = errorCode;
+    }
+  }
+
   public class TokenException : Exception
   {
     public TokenException(string message)
@@ -66,11 +87,6 @@ namespace DistributedMatchEngine
     private string dynamiclocgroupAPI = "/v1/dynamiclocgroup";
     private string getfqdnlistAPI = "/v1/getfqdnlist";
 
-    UInt32 timeoutSec = 5000;
-    string appName;
-    string devName;
-    string appVersionStr = "1.0";
-
     public string sessionCookie { get; set; }
     string tokenServerURI;
     string authToken { get; set; }
@@ -79,7 +95,7 @@ namespace DistributedMatchEngine
     {
     }
 
-    private HttpWebRequest createWebRequest(string uri)
+    private HttpWebRequest CreateWebRequest(string uri)
     {
       HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(uri);
       // FIXME: This should not be here.
@@ -107,12 +123,12 @@ namespace DistributedMatchEngine
       return httpWebRequest;
     }
 
-    public string getCarrierName()
+    public string GetCarrierName()
     {
       return carrierNameDefault;
     }
 
-    string generateDmeHostPath(string carrierName)
+    string GenerateDmeHostPath(string carrierName)
     {
       if (carrierName == null || carrierName == "")
       {
@@ -123,7 +139,7 @@ namespace DistributedMatchEngine
 
     public string GenerateDmeBaseUri(string carrierName, UInt32 port = defaultDmeRestPort)
     {
-      return "https://" + generateDmeHostPath(carrierName) + ":" + port;
+      return "https://" + GenerateDmeHostPath(carrierName) + ":" + port;
     }
 
     public string CreateUri(string host, UInt32 port)
@@ -136,7 +152,7 @@ namespace DistributedMatchEngine
     }
 
     /*
-     * This is temporary, and must be updated later.   
+     * This is temporary, and must be updated later.
      */
     private bool SetCredentials(string caCert, string clientCert, string clientPrivKey)
     {
@@ -147,7 +163,7 @@ namespace DistributedMatchEngine
     {
       return await Task.Run(() =>
       {
-        var webRequest = createWebRequest(uri);
+        var webRequest = CreateWebRequest(uri);
         // Choose network TBD (async)
 
         webRequest.Method = "POST";
@@ -163,12 +179,28 @@ namespace DistributedMatchEngine
           }
         }
 
-        Stream replyStream = webRequest.GetResponse().GetResponseStream();
+        // try to get extended server repsonse if there's an error:
+        HttpWebResponse response;
+
+        try
+        {
+          response = (HttpWebResponse)webRequest.GetResponse();
+        }
+        catch (WebException we)
+        {
+          // ContentLength is -1?
+          Log.D("Exception: " + we.Message);
+
+          throw new HttpException(we.Message, we.Status, -1);
+        }
+
+        // Normal:
+        Stream replyStream = response.GetResponseStream();
         return replyStream;
       });
     }
 
-    private static String parseToken(String uri)
+    private static String ParseToken(String uri)
     {
       string[] uriandparams = uri.Split('?');
       if (uriandparams.Length < 1)
@@ -244,7 +276,7 @@ namespace DistributedMatchEngine
       if (uriLocation != null)
       {
         Log.D("uriLocation: " + uriLocation);
-        token = parseToken(uriLocation);
+        token = ParseToken(uriLocation);
       }
 
       if (token == null)
@@ -257,13 +289,15 @@ namespace DistributedMatchEngine
 
     public RegisterClientRequest CreateRegisterClientRequest(string carrierName, string developerName, string appName, string appVersion, string authToken)
     {
-      return new RegisterClientRequest {
+      return new RegisterClientRequest
+      {
         Ver = 1,
         CarrierName = carrierName,
+        DevName = developerName,
         AppName = appName,
-        AuthToken = authToken,
-        AppVers = appVersionStr,
-        DevName = developerName };
+        AppVers = appVersion,
+        AuthToken = authToken
+      };
     }
 
     public async Task<RegisterClientReply> RegisterClient(string host, uint port, RegisterClientRequest request)
@@ -317,7 +351,7 @@ namespace DistributedMatchEngine
         return null;
       }
 
-      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(FindCloudletReply));      
+      DataContractJsonSerializer deserializer = new DataContractJsonSerializer(typeof(FindCloudletReply));
       FindCloudletReply reply = (FindCloudletReply)deserializer.ReadObject(responseStream);
       return reply;
     }
@@ -477,7 +511,7 @@ namespace DistributedMatchEngine
         Ver = 1,
         SessionCookie = this.sessionCookie,
         LgId = lgId,
-        CommType = dlgCommType.ToString(), // JSON REST request needs a string, not integer-like type.
+        CommType = dlgCommType,
         UserData = userData
       };
     }

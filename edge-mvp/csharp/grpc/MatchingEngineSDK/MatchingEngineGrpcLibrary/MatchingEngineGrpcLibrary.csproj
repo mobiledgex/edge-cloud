@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <PackageId>MobiledgeX.MatchingEngineGrpcLibrary</PackageId>
+    <Version>1.3.8</Version>
+    <Authors>MobiledgeX, Inc</Authors>
+    <Company>MobiledgeX, Inc.</Company>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <ReleaseVersion>1.3.1</ReleaseVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="google\api\Annotations.cs" />
+    <Compile Remove="google\api\Http.cs" />
+    <Compile Remove="google\api\Annotations.cs" />
+    <Compile Remove="google\api\Http.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc" Version="1.20.1" />
+    <PackageReference Include="Google.Protobuf" Version="3.7.0" />
+    <PackageReference Include="Google.Api.Gax.Grpc" Version="2.7.0" />
+  </ItemGroup>
+</Project>

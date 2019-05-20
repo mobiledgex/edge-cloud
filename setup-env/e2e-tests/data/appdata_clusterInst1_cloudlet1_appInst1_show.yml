@@ -1,3 +1,17 @@
+operators:
+- key:
+    name: tmus
+cloudlets:
+- key:
+    operatorkey:
+      name: tmus
+    name: tmus-cloud-1
+  accessuri: cloud1.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 flavors:
 - key:
     name: x1.tiny
@@ -14,42 +28,11 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
-
 clusters:
 - key:
     name: SmallCluster
   defaultflavor:
-    name: c1.small
-
+    name: x1.small
 clusterinsts:
 - key:
     clusterkey:
@@ -59,16 +42,11 @@ clusterinsts:
         name: tmus
       name: tmus-cloud-1
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessStatic
   ipaccess: IpAccessShared
-  nodeflavor: flavor1
-  masterflavor: flavor1
-
-operators:
-- key:
-    name: tmus
-
+  nummasters: 1
+  numnodes: 1
 developers:
 - key:
     name: AcmeAppCo
@@ -76,25 +54,6 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
-- key:
-    name: AcmeAppCo1
-  username: acmeapp
-  passhash: 8136f09c17354891c642b9b9f1722c34
-  address: 123 Maple Street, Gainesville, FL 32604
-  email: acmeapp@xxxx.com
-
-cloudlets:
-- key:
-    operatorkey:
-      name: tmus
-    name: tmus-cloud-1
-  accessuri: cloud1.tmo
-  location:
-    latitude: 31
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
 apps:
 - key:
     developerkey:
@@ -103,18 +62,18 @@ apps:
     version: "1.0"
   imagepath: mobiledgex_AcmeAppCo/someapplication1:1.0
   imagetype: ImageTypeDocker
-  deployment: kubernetes
+  accessports: tcp:80,http:443,udp:10002
   defaultflavor:
     name: x1.small
   cluster:
     name: SmallCluster
-  accessports: "tcp:80,http:443,udp:10002"
+  deployment: kubernetes
 - key:
     developerkey:
       name: MobiledgeX
     name: MEXMetricsExporter
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest
+  imagepath: docker.mobiledgex.net/mobiledgex/images/metrics-exporter:latest
   imagetype: ImageTypeDocker
   defaultflavor:
     name: x1.medium
@@ -173,7 +132,6 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
-
 appinstances:
 - key:
     appkey:
@@ -181,72 +139,56 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.small
 - key:
     appkey:
-      name: MEXMetricsExporter
-      version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 1
+      name: MEXMetricsExporter
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
 - key:
     appkey:
-      name: MEXPrometheusAppName
-      version: "1.0"
       developerkey:
         name: MobiledgeX
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
-    id: 1
+      name: MEXPrometheusAppName
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
   cloudletloc:
     latitude: 31
     longitude: -91
   uri: tmus-cloud-1.tmus.mobiledgex.net
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: tmus
-      name: tmus-cloud-1
   liveness: LivenessStatic
   flavor:
     name: x1.medium
-  

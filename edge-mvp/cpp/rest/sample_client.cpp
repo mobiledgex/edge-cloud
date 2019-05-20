@@ -187,7 +187,6 @@ class MexRestClient {
 
     json RegisterClient(const string &baseuri, const json &request, string &reply, long &httpResponse) {
         json jreply = postRequest(baseuri + registerAPI, request.dump(), httpResponse, reply, getReplyCallback);
-        cout << "RegClient jreply: " << jreply.dump() << endl;
         if (httpResponse != 200) {
             return jreply;
         }
@@ -216,7 +215,6 @@ class MexRestClient {
         tokenizedRequest["GpsLocation"] = request["GpsLocation"];
         tokenizedRequest["VerifyLocToken"] = token;
 
-        cout << "Posting JSON: " << tokenizedRequest.dump() << endl;
         json jreply = postRequest(baseuri + verifylocationAPI, tokenizedRequest.dump(), httpResponse, reply, getReplyCallback);
         return jreply;
     }
@@ -415,7 +413,8 @@ int main() {
             return 1;
         } else {
             cout << "REST RegisterClient Status: "
-                 << ", Dump: [" << registerClientReply.dump() << "]"
+                 << ", Version: " << registerClientReply["Ver"]
+                 << ", Client Status: " << registerClientReply["Status"]
                  << endl
                  << endl;
         }
@@ -467,10 +466,11 @@ int main() {
             json ports = findCloudletReply["ports"];
             size_t size = ports.size();
             for(const auto &appPort : ports) {
+                cout << appPort.dump() << endl;
                 cout << ", AppPort: Protocol: " << appPort["proto"]
                      << ", AppPort: Internal Port: " << appPort["internal_port"]
                      << ", AppPort: Public Port: " << appPort["public_port"]
-                     << ", AppPort: Public Path: " << appPort["public_path"]
+                     << ", AppPort: Path Prefix: " << appPort["path_prefix"]
                      << endl;
             }
         }

@@ -156,18 +156,13 @@ appinstances:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: centraluscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: centraluscloudlet
+    clusterinstkey:
+      clusterkey:
+        name: jlmappcluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: centraluscloudlet
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
@@ -182,18 +177,13 @@ appinstances:
         name: MobiledgeX SDK Demo
       name: MobiledgeX SDK Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: westuscloudlet
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: jlmappcluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: westuscloudlet
+    clusterinstkey:
+      clusterkey:
+        name: jlmappcluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: westuscloudlet
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker

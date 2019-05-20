@@ -257,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     boolean mexAllowed = prefs.getBoolean(getResources().getString(R.string.preference_mex_location_verification), false);
 
                     //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
-                    String carrierName = "TDG";                                             // Override carrierName
+                    String carrierName = "mexdemo";                                         // Override carrierName
                     //String host = mMatchingEngine.generateDmeHostAddress(carrierName);    // Regular use case
                     String host = mMatchingEngine.generateDmeHostAddress(carrierName);      // Override carrier specific host name
                     int port = mMatchingEngine.getPort(); // Keep same port.
@@ -300,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         List<distributed_match_engine.Appcommon.AppPort> ports = closestCloudlet.getPortsList();
                         String portListStr = "";
                         boolean first = true;
-                        String appPortFormat = "{Protocol: %d, Container Port: %d, External Port: %d, Public Path: '%s'}";
+                        String appPortFormat = "{Protocol: %d, Container Port: %d, External Port: %d, Path Prefix: '%s'}";
                         for (Appcommon.AppPort aPort : ports) {
                             if (!first) {
                                 portListStr += ", ";
@@ -310,7 +310,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                                 aPort.getProto().getNumber(),
                                 aPort.getInternalPort(),
                                 aPort.getPublicPort(),
-                                aPort.getPublicPath());
+                                aPort.getPathPrefix());
                         }
 
                         someText += "[Cloudlet App Ports: [" + portListStr + "]\n";

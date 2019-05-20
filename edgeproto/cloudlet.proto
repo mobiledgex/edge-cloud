@@ -39,6 +39,8 @@ message CloudletInfraCommon{
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
      // network scheme
     string network_scheme = 7;
+     // the name of the docker registry secret, e.g. mexgitlabsecret
+    string docker_registry_secret = 8;
 }
 
 message AzureProperties{

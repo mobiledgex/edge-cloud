@@ -3,11 +3,14 @@ package dind
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
+	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/nginx"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 )
@@ -19,7 +22,7 @@ type DindCluster struct {
 	KContext    string
 }
 
-func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edgeproto.ClusterFlavor) error {
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	var err error
 
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
@@ -33,27 +36,38 @@ func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edg
 	return nil
 }
 
-func (s *Platform) DeleteCluster(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+	return fmt.Errorf("update cluster not supported for DIND")
+}
+
+func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	clusterName := k8smgmt.NormalizeName(clusterInst.Key.ClusterKey.Name + clusterInst.Key.Developer)
 	return s.DeleteDINDCluster(clusterName)
 }
 
 //CreateDINDCluster creates kubernetes cluster on local mac
 func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
-	cluster, found := s.Clusters[clusterName]
-	if found {
-		return fmt.Errorf("ERROR - Cluster %s already exists (%v)", clusterName, *cluster)
+	clusters, err := GetClusters()
+	if err != nil {
+		return err
 	}
-	s.nextClusterID++
-	clusterID := s.nextClusterID
+	ids := make(map[int]struct{})
+	for _, clust := range clusters {
+		if clust.ClusterName == clusterName {
+			return fmt.Errorf("ERROR - Cluster %s already exists (%v)", clusterName, clust)
+		}
+		ids[clust.ClusterID] = struct{}{}
+	}
+	clusterID := 1
+	for {
+		if _, found := ids[clusterID]; !found {
+			break
+		}
+		clusterID++
+	}
 	os.Setenv("DIND_LABEL", clusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(clusterID))
-	cluster = &DindCluster{
-		ClusterName: clusterName,
-		ClusterID:   clusterID,
-		KContext:    "dind-" + clusterName + "-" + GetClusterID(clusterID),
-		MasterAddr:  "10.192." + GetClusterID(clusterID) + ".2",
-	}
+	cluster := NewClusterFor(clusterName, clusterID)
 	log.DebugLog(log.DebugLevelMexos, "CreateDINDCluster via dind-cluster-v1.13.sh", "name", clusterName, "clusterid", clusterID)
 
 	out, err := sh.Command("dind-cluster-v1.13.sh", "up").Command("tee", "/tmp/dind.log").CombinedOutput()
@@ -76,41 +90,99 @@ func (s *Platform) CreateDINDCluster(clusterName, kconfName string) error {
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
-	// add cluster to cluster map
-	s.Clusters[clusterName] = cluster
+
+	// bridge nginxL7 network to this cluster's network
+	out, err = sh.Command("docker", "network", "connect",
+		GetDockerNetworkName(&cluster), nginx.NginxL7Name).CombinedOutput()
+	if err != nil && strings.Contains(string(out), "already exists") {
+		err = nil
+	}
+	if err != nil {
+		log.DebugLog(log.DebugLevelMexos, "cannot connect nginx network",
+			"cluster", cluster, "out", out, "err", err)
+		return fmt.Errorf("failed to connect nginxL7 network, %s, %v", out, err)
+	}
 	return nil
 }
 
 //DeleteDINDCluster creates kubernetes cluster on local mac
 func (s *Platform) DeleteDINDCluster(name string) error {
-	cluster, found := s.Clusters[name]
-	if !found {
-		return fmt.Errorf("ERROR - Cluster %s doesn't exists", name)
+	cluster, err := FindCluster(name)
+	if err != nil {
+		return fmt.Errorf("ERROR - Cluster %s not found, %v", name, err)
 	}
+
+	// disconnect nginxL7 network
+	out, err := sh.Command("docker", "network", "disconnect",
+		GetDockerNetworkName(cluster), nginx.NginxL7Name).CombinedOutput()
+	if err != nil && strings.Contains(string(out), "is not connected") {
+		err = nil
+	}
+	if err != nil {
+		return fmt.Errorf("docker network disconnect failed, %s, %v",
+			out, err)
+	}
+
 	os.Setenv("DIND_LABEL", cluster.ClusterName)
 	os.Setenv("CLUSTER_ID", GetClusterID(cluster.ClusterID))
 	log.DebugLog(log.DebugLevelMexos, "DeleteDINDCluster", "name", name)
 
-	out, err := sh.Command("dind-cluster-v1.13.sh", "clean").CombinedOutput()
+	out, err = sh.Command("dind-cluster-v1.13.sh", "clean").CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("%s %v", out, err)
 	}
 	log.DebugLog(log.DebugLevelMexos, "Finished dind-cluster-v1.13.sh clean", "name", name, "out", out)
-	// Delete the entry from the dindClusters
-	delete(s.Clusters, name)
-
-	/* network is already deleted by the clean
-	netname := GetDockerNetworkName(name)
-	log.DebugLog(log.DebugLevelMexos, "removing docker network", "netname", netname, "out", out)
-	out, err = sh.Command("docker", "network", "rm", netname).CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("%s %v", out, err)
-	}
-	fmt.Printf("ran command docker network rm for network: %s.  Result: %s", netname, out)
-	*/
 	return nil
 }
 
 func GetClusterID(id int) string {
 	return strconv.Itoa(id)
+}
+
+func FindCluster(clusterName string) (*DindCluster, error) {
+	clusters, err := GetClusters()
+	if err != nil {
+		return nil, err
+	}
+	for ii, _ := range clusters {
+		if clusters[ii].ClusterName == clusterName {
+			return &clusters[ii], nil
+		}
+	}
+	return nil, fmt.Errorf("dind cluster %s not found", clusterName)
+}
+
+func GetClusters() ([]DindCluster, error) {
+	out, err := sh.Command("docker", "ps", "--format", "{{.Names}}").CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	clusters := []DindCluster{}
+	r, _ := regexp.Compile("kube-master-(\\S+)-(\\d+)")
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if r.MatchString(line) {
+			matches := r.FindStringSubmatch(line)
+			cname := matches[1]
+			cid, err := strconv.Atoi(matches[2])
+			if err != nil {
+				return nil, fmt.Errorf("Could not parse kube-master id: %s", line)
+			}
+			clusters = append(clusters, NewClusterFor(cname, cid))
+		}
+	}
+	return clusters, nil
+}
+
+func NewClusterFor(clusterName string, id int) DindCluster {
+	return DindCluster{
+		ClusterName: clusterName,
+		ClusterID:   id,
+		KContext:    "dind-" + clusterName + "-" + GetClusterID(id),
+		MasterAddr:  "10.192." + GetClusterID(id) + ".2",
+	}
+}
+
+func GetDockerNetworkName(cluster *DindCluster) string {
+	return "kubeadm-dind-net-" + cluster.ClusterName + "-" + GetClusterID(cluster.ClusterID)
 }

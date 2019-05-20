@@ -15,22 +15,11 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-
 clusters:
 - key:
     name: SmallCluster
   defaultflavor:
-    name: c1.small
+    name: x1.small
 
 developers:
 - key:
@@ -62,11 +51,13 @@ appinstances:
         name: AcmeAppCo
       name: someapplication1
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: developer
-      name: default
-    id: 123
+    clusterinstkey:
+      clusterkey:
+        name: default
+      cloudletkey:
+        operatorkey:
+          name: developer
+        name: default
   liveness: LivenessStatic
   flavor:
     name: x1.small

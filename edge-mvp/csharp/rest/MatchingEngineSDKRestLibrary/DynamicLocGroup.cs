@@ -20,8 +20,22 @@ namespace DistributedMatchEngine
     public string SessionCookie;
     [DataMember]
     public UInt64 LgId;
-    [DataMember]
-    public string CommType = DlgCommType.DlgUndefined.ToString();
+
+    public DlgCommType CommType = DlgCommType.DlgUndefined;
+
+    [DataMember(Name = "CommType")]
+    private string CommTypeString
+    {
+      get
+      {
+        return CommType.ToString();
+      }
+      set
+      {
+        CommType = Enum.TryParse(value, out DlgCommType commType) ? commType : DlgCommType.DlgUndefined;
+      }
+    }
+
     [DataMember]
     public string UserData;
   }
@@ -32,8 +46,22 @@ namespace DistributedMatchEngine
     [DataMember]
     public UInt32 Ver;
     // Status of the reply
-    [DataMember]
-    public string ReplyStatus = DistributedMatchEngine.ReplyStatus.RS_UNDEFINED.ToString();
+
+    public ReplyStatus ReplyStatus = ReplyStatus.RS_UNDEFINED;
+
+    [DataMember(Name = "Status")]
+    private string ReplyStatusString
+    {
+      get
+      {
+        return ReplyStatus.ToString();
+      }
+      set
+      {
+        ReplyStatus = Enum.TryParse(value, out ReplyStatus replyStatus) ? replyStatus : ReplyStatus.RS_UNDEFINED;
+      }
+    }
+
     // Status of the reply
     [DataMember]
     public UInt32 ErrorCode;

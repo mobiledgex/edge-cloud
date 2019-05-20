@@ -42,6 +42,7 @@ var AppInstInLiveness string
 var AppInstInMappedPortsProto string
 var AppInstInState string
 var AppInstInCrmOverride string
+var AppInstInAutoClusterIpAccess string
 var AppInstInfoIn edgeproto.AppInstInfo
 var AppInstInfoFlagSet = pflag.NewFlagSet("AppInstInfo", pflag.ExitOnError)
 var AppInstInfoNoConfigFlagSet = pflag.NewFlagSet("AppInstInfoNoConfig", pflag.ExitOnError)
@@ -51,24 +52,26 @@ var AppInstMetricsFlagSet = pflag.NewFlagSet("AppInstMetrics", pflag.ExitOnError
 var AppInstMetricsNoConfigFlagSet = pflag.NewFlagSet("AppInstMetricsNoConfig", pflag.ExitOnError)
 
 func AppInstKeySlicer(in *edgeproto.AppInstKey) []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 2)
 	s = append(s, in.AppKey.DeveloperKey.Name)
 	s = append(s, in.AppKey.Name)
 	s = append(s, in.AppKey.Version)
-	s = append(s, in.CloudletKey.OperatorKey.Name)
-	s = append(s, in.CloudletKey.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Id), 10))
+	s = append(s, in.ClusterInstKey.ClusterKey.Name)
+	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	s = append(s, in.ClusterInstKey.CloudletKey.Name)
+	s = append(s, in.ClusterInstKey.Developer)
 	return s
 }
 
 func AppInstKeyHeaderSlicer() []string {
-	s := make([]string, 0, 3)
+	s := make([]string, 0, 2)
 	s = append(s, "AppKey-DeveloperKey-Name")
 	s = append(s, "AppKey-Name")
 	s = append(s, "AppKey-Version")
-	s = append(s, "CloudletKey-OperatorKey-Name")
-	s = append(s, "CloudletKey-Name")
-	s = append(s, "Id")
+	s = append(s, "ClusterInstKey-ClusterKey-Name")
+	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
+	s = append(s, "ClusterInstKey-CloudletKey-Name")
+	s = append(s, "ClusterInstKey-Developer")
 	return s
 }
 
@@ -104,9 +107,10 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
+	s = append(s, in.Key.ClusterInstKey.ClusterKey.Name)
+	s = append(s, in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	s = append(s, in.Key.ClusterInstKey.CloudletKey.Name)
+	s = append(s, in.Key.ClusterInstKey.Developer)
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Latitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.Longitude), 'e', -1, 32))
 	s = append(s, strconv.FormatFloat(float64(in.CloudletLoc.HorizontalAccuracy), 'e', -1, 32))
@@ -120,10 +124,6 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Nanos), 10))
 	s = append(s, in.Uri)
-	s = append(s, in.ClusterInstKey.ClusterKey.Name)
-	s = append(s, in.ClusterInstKey.CloudletKey.OperatorKey.Name)
-	s = append(s, in.ClusterInstKey.CloudletKey.Name)
-	s = append(s, in.ClusterInstKey.Developer)
 	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
 	if in.MappedPorts == nil {
 		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
@@ -131,7 +131,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, distributed_match_engine.LProto_name[int32(in.MappedPorts[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
-	s = append(s, in.MappedPorts[0].PublicPath)
+	s = append(s, in.MappedPorts[0].PathPrefix)
 	s = append(s, in.MappedPorts[0].FQDNPrefix)
 	s = append(s, in.Flavor.Name)
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
@@ -146,6 +146,7 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
+	s = append(s, edgeproto.IpAccess_name[int32(in.AutoClusterIpAccess)])
 	return s
 }
 
@@ -155,9 +156,10 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "Key-Id")
+	s = append(s, "Key-ClusterInstKey-ClusterKey-Name")
+	s = append(s, "Key-ClusterInstKey-CloudletKey-OperatorKey-Name")
+	s = append(s, "Key-ClusterInstKey-CloudletKey-Name")
+	s = append(s, "Key-ClusterInstKey-Developer")
 	s = append(s, "CloudletLoc-Latitude")
 	s = append(s, "CloudletLoc-Longitude")
 	s = append(s, "CloudletLoc-HorizontalAccuracy")
@@ -168,15 +170,11 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "CloudletLoc-Timestamp-Seconds")
 	s = append(s, "CloudletLoc-Timestamp-Nanos")
 	s = append(s, "Uri")
-	s = append(s, "ClusterInstKey-ClusterKey-Name")
-	s = append(s, "ClusterInstKey-CloudletKey-OperatorKey-Name")
-	s = append(s, "ClusterInstKey-CloudletKey-Name")
-	s = append(s, "ClusterInstKey-Developer")
 	s = append(s, "Liveness")
 	s = append(s, "MappedPorts-Proto")
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
-	s = append(s, "MappedPorts-PublicPath")
+	s = append(s, "MappedPorts-PathPrefix")
 	s = append(s, "MappedPorts-FQDNPrefix")
 	s = append(s, "Flavor-Name")
 	s = append(s, "State")
@@ -185,6 +183,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "RuntimeInfo-ContainerIds")
 	s = append(s, "CreatedAt-Seconds")
 	s = append(s, "CreatedAt-Nanos")
+	s = append(s, "AutoClusterIpAccess")
 	return s
 }
 
@@ -258,9 +257,10 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.AppKey.DeveloperKey.Name)
 	s = append(s, in.Key.AppKey.Name)
 	s = append(s, in.Key.AppKey.Version)
-	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
-	s = append(s, in.Key.CloudletKey.Name)
-	s = append(s, strconv.FormatUint(uint64(in.Key.Id), 10))
+	s = append(s, in.Key.ClusterInstKey.ClusterKey.Name)
+	s = append(s, in.Key.ClusterInstKey.CloudletKey.OperatorKey.Name)
+	s = append(s, in.Key.ClusterInstKey.CloudletKey.Name)
+	s = append(s, in.Key.ClusterInstKey.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
 	if in.Errors == nil {
@@ -280,9 +280,10 @@ func AppInstInfoHeaderSlicer() []string {
 	s = append(s, "Key-AppKey-DeveloperKey-Name")
 	s = append(s, "Key-AppKey-Name")
 	s = append(s, "Key-AppKey-Version")
-	s = append(s, "Key-CloudletKey-OperatorKey-Name")
-	s = append(s, "Key-CloudletKey-Name")
-	s = append(s, "Key-Id")
+	s = append(s, "Key-ClusterInstKey-ClusterKey-Name")
+	s = append(s, "Key-ClusterInstKey-CloudletKey-OperatorKey-Name")
+	s = append(s, "Key-ClusterInstKey-CloudletKey-Name")
+	s = append(s, "Key-ClusterInstKey-Developer")
 	s = append(s, "NotifyId")
 	s = append(s, "State")
 	s = append(s, "Errors")
@@ -762,9 +763,10 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstFlagSet.StringVar(&AppInstIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	AppInstFlagSet.Uint64Var(&AppInstIn.Key.Id, "key-id", 0, "Key.Id")
+	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.ClusterKey.Name, "key-clusterinstkey-clusterkey-name", "", "Key.ClusterInstKey.ClusterKey.Name")
+	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.CloudletKey.OperatorKey.Name, "key-clusterinstkey-cloudletkey-operatorkey-name", "", "Key.ClusterInstKey.CloudletKey.OperatorKey.Name")
+	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.CloudletKey.Name, "key-clusterinstkey-cloudletkey-name", "", "Key.ClusterInstKey.CloudletKey.Name")
+	AppInstFlagSet.StringVar(&AppInstIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Latitude, "cloudletloc-latitude", 0, "CloudletLoc.Latitude")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.Longitude, "cloudletloc-longitude", 0, "CloudletLoc.Longitude")
 	AppInstNoConfigFlagSet.Float64Var(&AppInstIn.CloudletLoc.HorizontalAccuracy, "cloudletloc-horizontalaccuracy", 0, "CloudletLoc.HorizontalAccuracy")
@@ -776,22 +778,20 @@ func init() {
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CloudletLoc.Timestamp.Seconds, "cloudletloc-timestamp-seconds", 0, "CloudletLoc.Timestamp.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CloudletLoc.Timestamp.Nanos, "cloudletloc-timestamp-nanos", 0, "CloudletLoc.Timestamp.Nanos")
 	AppInstFlagSet.StringVar(&AppInstIn.Uri, "uri", "", "Uri")
-	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.ClusterKey.Name, "clusterinstkey-clusterkey-name", "", "ClusterInstKey.ClusterKey.Name")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.OperatorKey.Name, "clusterinstkey-cloudletkey-operatorkey-name", "", "ClusterInstKey.CloudletKey.OperatorKey.Name")
-	AppInstNoConfigFlagSet.StringVar(&AppInstIn.ClusterInstKey.CloudletKey.Name, "clusterinstkey-cloudletkey-name", "", "ClusterInstKey.CloudletKey.Name")
-	AppInstFlagSet.StringVar(&AppInstIn.ClusterInstKey.Developer, "clusterinstkey-developer", "", "ClusterInstKey.Developer")
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
+	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Version, "key-appkey-version", "", "Key.AppKey.Version")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
-	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
-	AppInstInfoFlagSet.Uint64Var(&AppInstInfoIn.Key.Id, "key-id", 0, "Key.Id")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.ClusterKey.Name, "key-clusterinstkey-clusterkey-name", "", "Key.ClusterInstKey.ClusterKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.CloudletKey.OperatorKey.Name, "key-clusterinstkey-cloudletkey-operatorkey-name", "", "Key.ClusterInstKey.CloudletKey.OperatorKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.CloudletKey.Name, "key-clusterinstkey-cloudletkey-name", "", "Key.ClusterInstKey.CloudletKey.Name")
+	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.ClusterInstKey.Developer, "key-clusterinstkey-developer", "", "Key.ClusterInstKey.Developer")
 	AppInstInfoFlagSet.Int64Var(&AppInstInfoIn.NotifyId, "notifyid", 0, "NotifyId")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstMetricsFlagSet.Uint64Var(&AppInstMetricsIn.Something, "something", 0, "Something")
@@ -829,14 +829,17 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("key-appkey-version").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "2.1.3")
 	}
-	if AppInstFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.1.1")
+	if AppInstFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.1.1")
 	}
-	if AppInstFlagSet.Lookup("key-cloudletkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.2.2")
+	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.1.1")
 	}
-	if AppInstFlagSet.Lookup("key-id").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "2.3")
+	if AppInstFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.2.2")
+	}
+	if AppInstFlagSet.Lookup("key-clusterinstkey-developer").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "2.4.3")
 	}
 	if AppInstNoConfigFlagSet.Lookup("cloudletloc-latitude").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "3.1")
@@ -868,18 +871,6 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("uri").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "4")
 	}
-	if AppInstFlagSet.Lookup("clusterinstkey-clusterkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "5.1.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-operatorkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.1.1")
-	}
-	if AppInstNoConfigFlagSet.Lookup("clusterinstkey-cloudletkey-name").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "5.2.2")
-	}
-	if AppInstFlagSet.Lookup("clusterinstkey-developer").Changed {
-		AppInstIn.Fields = append(AppInstIn.Fields, "5.3")
-	}
 	if AppInstNoConfigFlagSet.Lookup("liveness").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "6")
 	}
@@ -898,6 +889,9 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("createdat-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
 	}
+	if AppInstFlagSet.Lookup("autoclusteripaccess").Changed {
+		AppInstIn.Fields = append(AppInstIn.Fields, "22")
+	}
 }
 
 func AppInstInfoSetFields() {
@@ -911,14 +905,17 @@ func AppInstInfoSetFields() {
 	if AppInstInfoFlagSet.Lookup("key-appkey-version").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.1.3")
 	}
-	if AppInstInfoFlagSet.Lookup("key-cloudletkey-operatorkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.1.1")
+	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-clusterkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.1.1")
 	}
-	if AppInstInfoFlagSet.Lookup("key-cloudletkey-name").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.2.2")
+	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-operatorkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.1.1")
 	}
-	if AppInstInfoFlagSet.Lookup("key-id").Changed {
-		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.3")
+	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-cloudletkey-name").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.2.2")
+	}
+	if AppInstInfoFlagSet.Lookup("key-clusterinstkey-developer").Changed {
+		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "2.4.3")
 	}
 	if AppInstInfoFlagSet.Lookup("notifyid").Changed {
 		AppInstInfoIn.Fields = append(AppInstInfoIn.Fields, "3")
@@ -1001,6 +998,20 @@ func parseAppInstEnums() error {
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for AppInstInCrmOverride")
+		}
+	}
+	if AppInstInAutoClusterIpAccess != "" {
+		switch AppInstInAutoClusterIpAccess {
+		case "IpAccessUnknown":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(0)
+		case "IpAccessDedicated":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(1)
+		case "IpAccessDedicatedOrShared":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(2)
+		case "IpAccessShared":
+			AppInstIn.AutoClusterIpAccess = edgeproto.IpAccess(3)
+		default:
+			return errors.New("Invalid value for AppInstInAutoClusterIpAccess")
 		}
 	}
 	return nil

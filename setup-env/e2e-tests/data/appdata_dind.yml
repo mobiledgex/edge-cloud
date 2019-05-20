@@ -1,3 +1,17 @@
+operators:
+- key:
+    name: mexdev
+cloudlets:
+- key:
+    operatorkey:
+      name: mexdev
+    name: localtest
+  accessuri: localtest.tmo
+  location:
+    latitude: 31
+    longitude: -91
+  ipsupport: IpSupportDynamic
+  numdynamicips: 254
 flavors:
 - key:
     name: x1.tiny
@@ -14,36 +28,11 @@ flavors:
   ram: 4096
   vcpus: 4
   disk: 4
-
-clusterflavors:
-- key:
-    name: x1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
-
 clusters:
 - key:
     name: AppCluster
   defaultflavor:
     name: x1.medium
-
-cloudlets:
-- key:
-    operatorkey:
-      name: mexdev
-    name: localtest
-  accessuri: localtest.tmo
-  location:
-    latitude: 31
-    longitude: -91
-  ipsupport: IpSupportDynamic
-  numdynamicips: 254
-
 clusterinsts:
 - key:
     clusterkey:
@@ -55,12 +44,8 @@ clusterinsts:
   flavor:
     name: x1.medium
   liveness: LivenessStatic
-
-
-operators:
-- key:
-    name: mexdev
-
+  nummasters: 1
+  numnodes: 3
 developers:
 - key:
     name: MobiledgeX
@@ -68,39 +53,35 @@ developers:
   passhash: 8136f09c17354891c642b9b9f1722c34
   address: 123 Maple Street, Gainesville, FL 32604
   email: acmeapp@xxxx.com
-
 apps:
 - key:
     developerkey:
       name: MobiledgeX
     name: MobiledgeX SDK Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/simapp
-  deploymentmanifest: http://35.199.188.102/apps/mexdemoapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/mobiledgexsdkdemo
   imagetype: ImageTypeDocker
-  deployment: "kubernetes"
+  accessports: tcp:7777
   defaultflavor:
     name: x1.small
   cluster:
     name: AppCluster
-  accessports: "tcp:7777"
+  deployment: kubernetes
   androidpackagename: com.mobiledgex.sdkdemo
   permitsplatformapps: true
-
 - key:
     developerkey:
       name: MobiledgeX
     name: Face Detection Demo
     version: "1.0"
-  imagepath: registry.mobiledgex.net:5000/mobiledgex/facedetection
-  deploymentmanifest: http://35.199.188.102/apps/mexfaceapp.yml
+  imagepath: docker.mobiledgex.net/mobiledgex/images/facedetection
   imagetype: ImageTypeDocker
-  deployment: "kubernetes"
+  accessports: tcp:8008
   defaultflavor:
     name: x1.small
   cluster:
     name: AppCluster
-  accessports: "tcp:8008"
+  deployment: kubernetes
   androidpackagename: com.mobiledgex.facedemo
   permitsplatformapps: true
   configs:
@@ -114,7 +95,6 @@ apps:
             key: CloudletName
             name: mexcluster-info
             optional: true
-
 appinstances:
 - key:
     appkey:
@@ -122,34 +102,23 @@ appinstances:
         name: MobiledgeX
       name: MobiledgeX SDK Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: mexdev
-      name: localtest
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: AppCluster
-    cloudletkey:
-      operatorkey:
-        name: mexdev
-      name: localtest
-
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        operatorkey:
+          name: mexdev
+        name: localtest
 - key:
     appkey:
       developerkey:
         name: MobiledgeX
       name: Face Detection Demo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: mexdev
-      name: localtest
-    id: 123
-  clusterinstkey:
-    clusterkey:
-      name: AppCluster
-    cloudletkey:
-      operatorkey:
-        name: mexdev
-      name: localtest
+    clusterinstkey:
+      clusterkey:
+        name: AppCluster
+      cloudletkey:
+        operatorkey:
+          name: mexdev
+        name: localtest

@@ -15,6 +15,7 @@ import (
 
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/k8smgmt"
 	"github.com/mobiledgex/edge-cloud/cloudcommon"
+	"github.com/mobiledgex/edge-cloud/deploygen"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/notify"
@@ -93,7 +94,7 @@ var MEXMetricsExporterApp = edgeproto.App{
 			Name: cloudcommon.DeveloperMobiledgeX,
 		},
 	},
-	ImagePath:     "registry.mobiledgex.net:5000/mobiledgex/metrics-exporter:latest",
+	ImagePath:     deploygen.MexRegistry + "/mobiledgex/images/metrics-exporter:latest",
 	ImageType:     edgeproto.ImageType_ImageTypeDocker,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
 	DelOpt:        edgeproto.DeleteType_AutoDelete,
@@ -212,11 +213,9 @@ func createAppInstCommon(dialOpts grpc.DialOption, instKey edgeproto.ClusterInst
 
 	appInst := edgeproto.AppInst{
 		Key: edgeproto.AppInstKey{
-			AppKey:      app.Key,
-			CloudletKey: instKey.CloudletKey,
-			Id:          1,
+			AppKey:         app.Key,
+			ClusterInstKey: instKey,
 		},
-		ClusterInstKey: instKey,
 	}
 
 	res, err := appInstCreateApi(apiClient, appInst)

@@ -85,7 +85,7 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.CloudletCache.Update(&testutil.CloudletData[1], 0)
 	// dmes should get all app insts but no cloudlets
 	for _, n := range dmes {
-		checkClientCache(t, n, 0, 0, 6, 0)
+		checkClientCache(t, n, 0, 0, len(testutil.AppInstData), 0)
 	}
 	// crms at all levels get all flavors
 	// mid level gets the appInsts and clusterInsts for all below it.

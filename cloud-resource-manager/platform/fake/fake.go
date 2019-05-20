@@ -1,6 +1,7 @@
 package fake
 
 import (
+	"fmt"
 	"github.com/mobiledgex/edge-cloud/cloud-resource-manager/platform/pc"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/log"
@@ -31,13 +32,15 @@ func (s *Platform) GatherCloudletInfo(info *edgeproto.CloudletInfo) error {
 	}
 	return nil
 }
-
-func (s *Platform) CreateCluster(clusterInst *edgeproto.ClusterInst, flavor *edgeproto.ClusterFlavor) error {
+func (s *Platform) UpdateClusterInst(clusterInst *edgeproto.ClusterInst) error {
+	return fmt.Errorf("update cluster not supported for fake cloudlets")
+}
+func (s *Platform) CreateClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst ready")
 	return nil
 }
 
-func (s *Platform) DeleteCluster(clusterInst *edgeproto.ClusterInst) error {
+func (s *Platform) DeleteClusterInst(clusterInst *edgeproto.ClusterInst) error {
 	log.DebugLog(log.DebugLevelMexos, "fake ClusterInst deleted")
 	return nil
 }

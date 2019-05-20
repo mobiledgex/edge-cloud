@@ -15,40 +15,12 @@ flavors:
   vcpus: 4
   disk: 4
 
-clusterflavors:
-- key:
-    name: c1.tiny
-  nodeflavor:
-    name: x1.tiny
-  masterflavor:
-    name: x1.tiny
-  numnodes: 2
-  maxnodes: 2
-  nummasters: 1
-- key:
-    name: c1.small
-  nodeflavor:
-    name: x1.small
-  masterflavor:
-    name: x1.small
-  numnodes: 3
-  maxnodes: 3
-  nummasters: 1
-- key:
-    name: c1.medium
-  nodeflavor:
-    name: x1.medium
-  masterflavor:
-    name: x1.medium
-  numnodes: 3
-  maxnodes: 4
-  nummasters: 1
 
 clusters:
 - key:
     name: SmallCluster
   defaultflavor:
-    name: c1.small
+    name: x1.small
 
 clusterinsts:
 - key:
@@ -59,7 +31,7 @@ clusterinsts:
         name: TDG
       name: Saginaw1
   flavor:
-    name: c1.small
+    name: x1.small
   liveness: LivenessStatic
 
 operators:
@@ -137,18 +109,13 @@ appinstances:
         name: MobiledgeXSDKDemo
       name: MobiledgeXSDKDemo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Saginaw1
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Saginaw1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: Saginaw1
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
@@ -163,18 +130,13 @@ appinstances:
         name: MobiledgeXSDKDemo
       name: MobiledgeXSDKDemo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Houston1
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Saginaw1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: Saginaw1
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
@@ -189,18 +151,13 @@ appinstances:
         name: MobiledgeXSDKDemo
       name: MobiledgeXSDKDemo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Austin1
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Saginaw1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: Saginaw1
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker
@@ -215,18 +172,13 @@ appinstances:
         name: MobiledgeXSDKDemo
       name: MobiledgeXSDKDemo
       version: "1.0"
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: Nacogdoches1
-    id: 5011
-  clusterinstkey:
-    clusterkey:
-      name: SmallCluster
-    cloudletkey:
-      operatorkey:
-        name: TDG
-      name: 1
+    clusterinstkey:
+      clusterkey:
+        name: SmallCluster
+      cloudletkey:
+        operatorkey:
+          name: TDG
+        name: 1
   liveness: LivenessStatic
   imagepath: mobiledgex_MobiledgeXSDKDemo/MobiledgeXSDKDemo:1
   imagetype: ImageTypeDocker

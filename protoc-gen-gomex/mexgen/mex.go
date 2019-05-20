@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"sort"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -39,6 +40,7 @@ type mex struct {
 	importSort    bool
 	importTime    bool
 	importCmp     bool
+	importReflect bool
 	firstFile     string
 	support       gensupport.PluginSupport
 	keyMessages   []descriptor.DescriptorProto
@@ -83,6 +85,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importSort = false
 	m.importTime = false
 	m.importCmp = false
+	m.importReflect = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -97,6 +100,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 
 	if m.firstFile == *file.FileDescriptorProto.Name {
 		m.P(matchOptions)
+		m.generateEnumDecodeHook()
 	}
 }
 
@@ -133,11 +137,33 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	if m.importTime {
 		m.gen.PrintImport("", "time")
 	}
+	if m.importReflect {
+		m.gen.PrintImport("reflect", "reflect")
+	}
 	if m.importCmp {
 		m.gen.PrintImport("", "github.com/google/go-cmp/cmp")
 		m.gen.PrintImport("", "github.com/google/go-cmp/cmp/cmpopts")
 	}
 	m.support.PrintUsedImports(m.gen)
+}
+
+func (m *mex) generateUpgradeFuncs(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncs = map[int32]VersionUpgradeFunc{")
+	for _, e := range enum.Value {
+		if GetUpgradeFunc(e) != "" {
+			m.P(e.Number, ": ", GetUpgradeFunc(e), ",")
+		} else {
+			m.P(e.Number, ": nil,")
+		}
+	}
+	m.P("}")
+}
+func (m *mex) generateUpgradeFuncNames(enum *descriptor.EnumDescriptorProto) {
+	m.P("var ", enum.Name, "_UpgradeFuncNames = map[int32]string{")
+	for _, e := range enum.Value {
+		m.P(e.Number, ": ", strconv.Quote(GetUpgradeFunc(e)), ",")
+	}
+	m.P("}")
 }
 
 func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumDescriptor) {
@@ -169,6 +195,9 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		hashStr := fmt.Sprintf("%x", getKeyVersionHash(m.keyMessages, salt))
 		// Generate a hash of all the key messages.
 		m.generateVersionString(hashStr)
+		// Generate an array with function names
+		m.generateUpgradeFuncs(en)
+		m.generateUpgradeFuncNames(en)
 		// Generate version check code for version message
 		validateVersionHash(en, hashStr, file)
 	}
@@ -1097,7 +1126,8 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		}
 	case <-failed:
 		if c.Get(key, &info) {
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else {
 			// this shouldn't happen, since only way to get here
 			// is if info state is set to Error
@@ -1107,7 +1137,8 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		hasInfo := c.Get(key, &info)
 		if hasInfo && info.State == errorState {
 			// error may have been sent back before watch started
-			err = fmt.Errorf("Encountered failures: %v", info.Errors)
+			errs := strings.Join(info.Errors, ", ")
+			err = fmt.Errorf("Encountered failures: %s", errs)
 		} else if _, found := transitionStates[info.State]; hasInfo && found {
 			// no success response, but state is a valid transition
 			// state. That means work is still in progress.
@@ -1143,16 +1174,21 @@ Current data model hash({{.NewHash}}) doesn't match the latest supported one({{.
 This is due to an upsupported change in the key of some objects in a .proto file.
 In order to ensure a smooth upgrade for the production environment please make sure to add the following to version.proto file:
 
-NOTE: For now replace the following: 
 enum VersionHash {
+	...
 	{{.CurHash}} = {{.CurHashEnumVal}};
-}
- with:
- enum VersionHash {
-	{{.NewHash}} = {{.CurHashEnumVal}};
+	{{.NewHash}} = {{.NewHashEnumVal}} [(protogen.upgrade_func) = "sample_upgrade_function"]; <<<===== Add this line
+	...
 }
 
-//TODO - Instructions for the upgrade function in the upgrade infra
+Implementation of "sample_upgrade_function" should be added tp edge-cloud/upgrade/upgrade-types.go
+
+NOTE: If no upgrade function is needed don't need to add "[(protogen.upgrade_func) = "sample_upgrade_function];" to
+the VersionHash enum.
+
+A unit test data for the automatic unit test of the upgrade function should be added to testutil/upgrade_test_data.go
+   - PreUpgradeData - what key/value objects are trying to be upgraded
+   - PostUpgradeData - what the resulting object store should look like
 ====================
 `
 
@@ -1236,6 +1272,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
+			m.importStrings = true
 		}
 	}
 	if GetObjKey(message) {
@@ -1491,6 +1528,31 @@ func (m *mex) generateHideTagFields(parents []string, desc *generator.Descriptor
 	}
 }
 
+func (m *mex) generateEnumDecodeHook() {
+	m.P("// DecodeHook for use with the mapstructure package.")
+	m.P("// Allows decoding to handle protobuf enums that are")
+	m.P("// represented as strings.")
+	m.P("func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error) {")
+	m.P("if from.Kind() != reflect.String { return data, nil }")
+	m.P("switch to {")
+	for _, file := range m.gen.Request.ProtoFile {
+		if !m.support.GenFile(*file.Name) {
+			continue
+		}
+		for _, en := range file.EnumType {
+			m.P("case reflect.TypeOf(", en.Name, "(0)):")
+			m.P("if en, ok := ", en.Name, "_value[data.(string)]; ok {")
+			m.P("return en, nil")
+			m.P("}")
+		}
+	}
+	m.P("}")
+	m.P("return data, nil")
+	m.P("}")
+	m.P()
+	m.importReflect = true
+}
+
 func (m *mex) generateService(file *generator.FileDescriptor, service *descriptor.ServiceDescriptorProto) {
 	if len(service.Method) != 0 {
 		for _, method := range service.Method {
@@ -1545,4 +1607,8 @@ func GetVersionHashOpt(enum *descriptor.EnumDescriptorProto) bool {
 
 func GetVersionHashSalt(enum *descriptor.EnumDescriptorProto) string {
 	return gensupport.GetStringExtension(enum.Options, protogen.E_VersionHashSalt, "")
+}
+
+func GetUpgradeFunc(enumVal *descriptor.EnumValueDescriptorProto) string {
+	return gensupport.GetStringExtension(enumVal.Options, protogen.E_UpgradeFunc, "")
 }

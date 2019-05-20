@@ -22,7 +22,6 @@ type ApplicationData struct {
 	Operators        []Operator        `yaml:"operators"`
 	Cloudlets        []Cloudlet        `yaml:"cloudlets"`
 	Flavors          []Flavor          `yaml:"flavors"`
-	ClusterFlavors   []ClusterFlavor   `yaml:"clusterflavors"`
 	Clusters         []Cluster         `yaml:"clusters"`
 	ClusterInsts     []ClusterInst     `yaml:"clusterinsts"`
 	Developers       []Developer       `yaml:"developers"`
@@ -59,9 +58,6 @@ func (a *ApplicationData) Sort() {
 	})
 	sort.Slice(a.Flavors[:], func(i, j int) bool {
 		return a.Flavors[i].Key.GetKeyString() < a.Flavors[j].Key.GetKeyString()
-	})
-	sort.Slice(a.ClusterFlavors[:], func(i, j int) bool {
-		return a.ClusterFlavors[i].Key.GetKeyString() < a.ClusterFlavors[j].Key.GetKeyString()
 	})
 	sort.Slice(a.CloudletInfos[:], func(i, j int) bool {
 		return a.CloudletInfos[i].Key.GetKeyString() < a.CloudletInfos[j].Key.GetKeyString()
@@ -150,36 +146,6 @@ func (s *Flavor) Validate(fields map[string]struct{}) error {
 	return nil
 }
 
-func (key *ClusterFlavorKey) Validate() error {
-	if !util.ValidName(key.Name) {
-		return errors.New("Invalid cluster flavor name")
-	}
-	return nil
-}
-
-func (s *ClusterFlavor) Validate(fields map[string]struct{}) error {
-	err := s.GetKey().Validate()
-	if err != nil {
-		return err
-	}
-	if _, found := fields[ClusterFlavorFieldNodeFlavor]; found && s.NodeFlavor.Name == "" {
-		return errors.New("Invalid empty string for Node Flavor")
-	}
-	if _, found := fields[ClusterFlavorFieldMasterFlavor]; found && s.MasterFlavor.Name == "" {
-		return errors.New("Invalid empty string for Master Flavor")
-	}
-	if _, found := fields[ClusterFlavorFieldNumNodes]; found && s.NumNodes == 0 {
-		return errors.New("Number of nodes cannot be 0")
-	}
-	if _, found := fields[ClusterFlavorFieldMaxNodes]; found && s.MaxNodes == 0 {
-		return errors.New("Number of maximum nodes cannot be 0")
-	}
-	if _, found := fields[ClusterFlavorFieldNumMasters]; found && s.NumMasters == 0 {
-		return errors.New("Number of master nodes cannot be 0")
-	}
-	return nil
-}
-
 func (key *AppKey) Validate() error {
 	if !util.ValidName(key.Name) {
 		return errors.New("Invalid app name")
@@ -256,7 +222,7 @@ func (key *AppInstKey) Validate() error {
 	if err := key.AppKey.Validate(); err != nil {
 		return err
 	}
-	if err := key.CloudletKey.Validate(); err != nil {
+	if err := key.ClusterInstKey.Validate(); err != nil {
 		return err
 	}
 	return nil
@@ -372,6 +338,18 @@ func LProtoStr(proto dme.LProto) (string, error) {
 	return "", fmt.Errorf("Invalid proto %d", proto)
 }
 
+func L4ProtoStr(proto dme.LProto) (string, error) {
+	switch proto {
+	case dme.LProto_LProtoHTTP:
+		fallthrough
+	case dme.LProto_LProtoTCP:
+		return "tcp", nil
+	case dme.LProto_LProtoUDP:
+		return "udp", nil
+	}
+	return "", fmt.Errorf("Invalid proto %d", proto)
+}
+
 func ParseAppPorts(ports string) ([]dme.AppPort, error) {
 	appports := make([]dme.AppPort, 0)
 	strs := strings.Split(ports, ",")
@@ -420,7 +398,6 @@ func CmpSortSlices() []cmp.Option {
 	opts = append(opts, cmpopts.SortSlices(CmpSortCluster))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInst))
 	opts = append(opts, cmpopts.SortSlices(CmpSortFlavor))
-	opts = append(opts, cmpopts.SortSlices(CmpSortClusterFlavor))
 	opts = append(opts, cmpopts.SortSlices(CmpSortCloudletInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortAppInstInfo))
 	opts = append(opts, cmpopts.SortSlices(CmpSortClusterInstInfo))
