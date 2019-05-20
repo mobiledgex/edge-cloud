@@ -1283,7 +1283,10 @@ func (s *AppStore) STMGet(stm concurrency.STM, key *AppKey, buf *App) bool {
 
 func (s *AppStore) STMPut(stm concurrency.STM, obj *App, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("App", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("App json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -1629,6 +1632,39 @@ func (e ImageType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *ImageType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := ImageType_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = ImageType_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = ImageType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = ImageType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ImageType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var DeleteTypeStrings = []string{
 	"NoAutoDelete",
 	"AutoDelete",
@@ -1663,6 +1699,39 @@ func (e *DeleteType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e DeleteType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *DeleteType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := DeleteType_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = DeleteType_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = DeleteType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = DeleteType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e DeleteType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 type MatchOptions struct {

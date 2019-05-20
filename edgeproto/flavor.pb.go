@@ -652,7 +652,10 @@ func (s *FlavorStore) STMGet(stm concurrency.STM, key *FlavorKey, buf *Flavor) b
 
 func (s *FlavorStore) STMPut(stm concurrency.STM, obj *Flavor, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Flavor", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("Flavor json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

@@ -689,7 +689,10 @@ func (s *NodeStore) STMGet(stm concurrency.STM, key *NodeKey, buf *Node) bool {
 
 func (s *NodeStore) STMPut(stm concurrency.STM, obj *Node, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Node", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("Node json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -1031,6 +1034,39 @@ func (e *NodeType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e NodeType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *NodeType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := NodeType_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = NodeType_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = NodeType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = NodeType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e NodeType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 func (m *NodeKey) Size() (n int) {
