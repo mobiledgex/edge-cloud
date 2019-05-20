@@ -29,6 +29,7 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 import reflect "reflect"
 
 import io "io"
@@ -2289,6 +2290,39 @@ func (e OuterEnum) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *OuterEnum) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := OuterEnum_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = OuterEnum_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = OuterEnum(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = OuterEnum(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e OuterEnum) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var InnerEnumStrings = []string{
 	"INNER0",
 	"INNER1",
@@ -2327,6 +2361,39 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 
 func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := TestGen_InnerEnum_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = TestGen_InnerEnum_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = TestGen_InnerEnum(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = TestGen_InnerEnum(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 type MatchOptions struct {

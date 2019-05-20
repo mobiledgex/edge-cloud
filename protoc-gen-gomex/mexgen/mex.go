@@ -41,6 +41,7 @@ type mex struct {
 	importTime    bool
 	importCmp     bool
 	importReflect bool
+	importJson    bool
 	firstFile     string
 	support       gensupport.PluginSupport
 	keyMessages   []descriptor.DescriptorProto
@@ -86,6 +87,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.importTime = false
 	m.importCmp = false
 	m.importReflect = false
+	m.importJson = false
 	for _, desc := range file.Messages() {
 		m.generateMessage(file, desc)
 	}
@@ -130,6 +132,9 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importStrconv {
 		m.gen.PrintImport("", "strconv")
+	}
+	if m.importJson {
+		m.gen.PrintImport("", "encoding/json")
 	}
 	if m.importSort {
 		m.gen.PrintImport("", "sort")
@@ -187,6 +192,7 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
 	m.importStrconv = true
+	m.importJson = true
 
 	if GetVersionHashOpt(en) {
 		// Collect all key objects
@@ -230,6 +236,39 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e {{.Name}}) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := {{.Name}}_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = {{.Name}}_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = {{.Name}}(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = {{.Name}}(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e {{.Name}}) MarshalJSON() ([]byte, error) {
+	return []byte("\""+e.String()+"\""), nil
 }
 
 `
@@ -788,7 +827,10 @@ func (s *{{.Name}}Store) STMGet(stm concurrency.STM, key *{{.KeyType}}, buf *{{.
 
 func (s *{{.Name}}Store) STMPut(stm concurrency.STM, obj *{{.Name}}, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("{{.Name}}", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("{{.Name}} json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

@@ -48,6 +48,7 @@ import binary "encoding/binary"
 
 import "errors"
 import "strconv"
+import "encoding/json"
 import reflect "reflect"
 
 import io "io"
@@ -2205,6 +2206,39 @@ func (e IDTypes) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *IDTypes) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := IDTypes_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = IDTypes_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = IDTypes(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = IDTypes(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e IDTypes) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var ReplyStatusStrings = []string{
 	"RS_UNDEFINED",
 	"RS_SUCCESS",
@@ -2241,6 +2275,39 @@ func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 func (e ReplyStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := ReplyStatus_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = ReplyStatus_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = ReplyStatus(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = ReplyStatus(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e ReplyStatus) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 var FindStatusStrings = []string{
@@ -2281,6 +2348,39 @@ func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := FindCloudletReply_FindStatus_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = FindCloudletReply_FindStatus_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = FindCloudletReply_FindStatus(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = FindCloudletReply_FindStatus(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var Tower_StatusStrings = []string{
 	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
@@ -2317,6 +2417,39 @@ func (e *VerifyLocationReply_Tower_Status) UnmarshalYAML(unmarshal func(interfac
 
 func (e VerifyLocationReply_Tower_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *VerifyLocationReply_Tower_Status) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := VerifyLocationReply_Tower_Status_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = VerifyLocationReply_Tower_Status_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = VerifyLocationReply_Tower_Status(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = VerifyLocationReply_Tower_Status(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e VerifyLocationReply_Tower_Status) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 var GPS_Location_StatusStrings = []string{
@@ -2367,6 +2500,39 @@ func (e VerifyLocationReply_GPS_Location_Status) MarshalYAML() (interface{}, err
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *VerifyLocationReply_GPS_Location_Status) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := VerifyLocationReply_GPS_Location_Status_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = VerifyLocationReply_GPS_Location_Status_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = VerifyLocationReply_GPS_Location_Status(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = VerifyLocationReply_GPS_Location_Status(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e VerifyLocationReply_GPS_Location_Status) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var Loc_StatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_FOUND",
@@ -2403,6 +2569,39 @@ func (e *GetLocationReply_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) 
 
 func (e GetLocationReply_Loc_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *GetLocationReply_Loc_Status) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := GetLocationReply_Loc_Status_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = GetLocationReply_Loc_Status_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = GetLocationReply_Loc_Status(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = GetLocationReply_Loc_Status(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e GetLocationReply_Loc_Status) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 var AI_StatusStrings = []string{
@@ -2443,6 +2642,39 @@ func (e AppInstListReply_AI_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *AppInstListReply_AI_Status) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := AppInstListReply_AI_Status_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = AppInstListReply_AI_Status_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = AppInstListReply_AI_Status(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = AppInstListReply_AI_Status(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e AppInstListReply_AI_Status) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var FL_StatusStrings = []string{
 	"FL_UNDEFINED",
 	"FL_SUCCESS",
@@ -2481,6 +2713,39 @@ func (e FqdnListReply_FL_Status) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
 }
 
+// custom JSON encoding/decoding
+func (e *FqdnListReply_FL_Status) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := FqdnListReply_FL_Status_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = FqdnListReply_FL_Status_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = FqdnListReply_FL_Status(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = FqdnListReply_FL_Status(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e FqdnListReply_FL_Status) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
+}
+
 var DlgCommTypeStrings = []string{
 	"DlgUndefined",
 	"DlgSecure",
@@ -2517,6 +2782,39 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
 	return e.String(), nil
+}
+
+// custom JSON encoding/decoding
+func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err == nil {
+		val, ok := DynamicLocGroupRequest_DlgCommType_value[str]
+		if !ok {
+			// may be int value instead of enum name
+			ival, err := strconv.Atoi(str)
+			val = int32(ival)
+			if err == nil {
+				_, ok = DynamicLocGroupRequest_DlgCommType_name[val]
+			}
+		}
+		if !ok {
+			return errors.New(fmt.Sprintf("No enum value for %s", str))
+		}
+		*e = DynamicLocGroupRequest_DlgCommType(val)
+		return nil
+	}
+	var val int32
+	err = json.Unmarshal(b, &val)
+	if err == nil {
+		*e = DynamicLocGroupRequest_DlgCommType(val)
+		return nil
+	}
+	return fmt.Errorf("No enum value for %v", b)
+}
+
+func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
+	return []byte("\"" + e.String() + "\""), nil
 }
 
 type MatchOptions struct {
