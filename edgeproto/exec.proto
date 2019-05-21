@@ -28,7 +28,9 @@ message ExecRequest {
 
 service ExecApi {
   // Run a Command or Shell on a container or VM
-  rpc RunCommand(ExecRequest) returns (ExecRequest) {}
+  rpc RunCommand(ExecRequest) returns (ExecRequest) {
+    option (protogen.mc2_api) = "ResourceAppInsts,ActionManage,AppInstKey.AppKey.DeveloperKey.Name";
+  }
   // This is used internally to forward requests to other Controllers.
   rpc SendLocalRequest(ExecRequest) returns (ExecRequest) {}
 }
