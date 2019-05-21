@@ -15,8 +15,10 @@ func RunWebrtcShell(exchangeFunc func(offer webrtc.SessionDescription) (*webrtc.
 	config := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:stun.mobiledgex.net:19302"},
-				URLs: []string{"turn:stun.mobiledgex.net:19302"},
+				URLs: []string{
+					"stun:stun.mobiledgex.net:19302",
+					"turn:stun.mobiledgex.net:19302",
+				},
 			},
 		},
 	}
