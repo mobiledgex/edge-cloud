@@ -5,6 +5,7 @@ import android.content.Context;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 import android.telephony.TelephonyManager;
@@ -35,16 +36,22 @@ public class LimitsTest {
     public static final String TAG = "LimitsTest";
     public static final long GRPC_TIMEOUT_MS = 10000;
 
-    public static final String developerName = "EmptyMatchEngineApp";
-    public static final String applicationName = "EmptyMatchEngineApp";
+    public static final String developerName = "MobiledgeX";
+    public static final String applicationName = "MobiledgeX SDK Demo";
 
     FusedLocationProviderClient fusedLocationClient;
 
-    public static String hostOverride = "tdg2.dme.mobiledgex.net";
+    public static String hostOverride = "mexdemo.dme.mobiledgex.net";
     public static int portOverride = 50051;
 
     public boolean useHostOverride = true;
 
+    @Before
+    public void LooperEnsure() {
+        // SubscriberManager needs a thread. Start one:
+        if (Looper.myLooper()==null)
+            Looper.prepare();
+    }
 
     @Before
     public void grantPermissions() {
@@ -145,6 +152,7 @@ public class LimitsTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context, Executors.newFixedThreadPool(20));
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -233,6 +241,7 @@ public class LimitsTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -345,6 +354,7 @@ public class LimitsTest {
      */
     @Test
     public void parameterizedLatencyTest1() {
+
         parameterizedLatencyTestConcurrent("parameterizedLatencyTest1", 10, 1100, 180 * 1000);
     }
 
@@ -360,6 +370,7 @@ public class LimitsTest {
 
         final long start = System.currentTimeMillis();
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;

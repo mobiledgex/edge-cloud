@@ -258,7 +258,10 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
                     //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
                     String carrierName = "mexdemo";                                         // Override carrierName
-                    //String host = mMatchingEngine.generateDmeHostAddress(carrierName);    // Regular use case
+                    //String carrierName = mMatchingEngine.retrieveNetworkCarrierName(ctx); // Regular use case
+                    if (carrierName == null) {
+                        someText = "No carrier Info!";
+                    }
                     String host = mMatchingEngine.generateDmeHostAddress(carrierName);      // Override carrier specific host name
                     int port = mMatchingEngine.getPort(); // Keep same port.
 

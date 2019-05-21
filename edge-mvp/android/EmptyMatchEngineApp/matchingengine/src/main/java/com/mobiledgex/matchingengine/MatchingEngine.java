@@ -8,6 +8,7 @@ import android.net.wifi.WifiManager;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
 import java.io.IOException;
@@ -18,7 +19,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -55,6 +55,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import static android.content.Context.TELEPHONY_SUBSCRIPTION_SERVICE;
+
 
 // TODO: GRPC (which needs http/2).
 public class MatchingEngine {
@@ -88,13 +90,13 @@ public class MatchingEngine {
     public MatchingEngine(Context context) {
         threadpool = Executors.newSingleThreadExecutor();
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = NetworkManager.getInstance(connectivityManager);
+        mNetworkManager = NetworkManager.getInstance(connectivityManager, getSubscriptionManager(context));
         mContext = context;
     }
     public MatchingEngine(Context context, ExecutorService executorService) {
         threadpool = executorService;
         ConnectivityManager connectivityManager = context.getSystemService(ConnectivityManager.class);
-        mNetworkManager = NetworkManager.getInstance(connectivityManager, threadpool);
+        mNetworkManager = NetworkManager.getInstance(connectivityManager, getSubscriptionManager(context), threadpool);
         mContext = context;
     }
 
@@ -110,12 +112,24 @@ public class MatchingEngine {
         mMexLocationAllowed = allowMexLocation;
     }
 
+    private SubscriptionManager getSubscriptionManager(Context context) {
+        return (SubscriptionManager)context.getSystemService(TELEPHONY_SUBSCRIPTION_SERVICE);
+    }
+
     public boolean isNetworkSwitchingEnabled() {
         return this.getNetworkManager().isNetworkSwitchingEnabled();
     }
 
     public void setNetworkSwitchingEnabled(boolean networkSwitchingEnabled) {
         this.getNetworkManager().setNetworkSwitchingEnabled(networkSwitchingEnabled);
+    }
+
+    public boolean isAllowSwitchIfNoSubscriberInfo() {
+        return mNetworkManager.isAllowSwitchIfNoSubscriberInfo();
+    }
+
+    public void setAllowSwitchIfNoSubscriberInfo(boolean allowSwitchIfNoSubscriberInfo) {
+        this.mNetworkManager.setAllowSwitchIfNoSubscriberInfo(allowSwitchIfNoSubscriberInfo);
     }
 
     /**
@@ -165,6 +179,7 @@ public class MatchingEngine {
     void setDynamicLocGroupReply(DynamicLocGroupReply reply) {
         mDynamicLocGroupReply = reply;
     }
+
     /**
      * Utility method retrieves current network CarrierName from system service.
      * @param context
