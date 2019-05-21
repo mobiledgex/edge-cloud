@@ -236,6 +236,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 		}
 	}
+	if in.Key.AppKey.DeveloperKey.Name == "" {
+		// we still allow this to deal with existing clusters, but eventually will be disallowed
+		log.DebugLog(log.DebugLevelApi, "Notice: empty appinst developer name is deprecated")
+	} else if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
+		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
+		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
+	}
 
 	if !defaultCloudlet {
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {

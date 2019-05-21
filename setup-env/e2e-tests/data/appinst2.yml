@@ -12,3 +12,4 @@ appinstances:
         operatorkey:
           name: tmus
         name: tmus-cloud-2
+      developer: AcmeAppCo
