@@ -145,10 +145,10 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 			log.DebugLog(log.DebugLevelMexos, "Prometheus-operator inst create failed", "cluster", in.Key.ClusterKey.Name,
 				"error", err.Error())
 		}
-		if err = createMEXMetricsExporterInst(dialOpts, in.Key); err != nil {
-			log.DebugLog(log.DebugLevelMexos, "Metrics-exporter inst create failed", "cluster", in.Key.ClusterKey.Name,
-				"error", err.Error())
-		}
+		// if err = createMEXMetricsExporterInst(dialOpts, in.Key); err != nil {
+		// 	log.DebugLog(log.DebugLevelMexos, "Metrics-exporter inst create failed", "cluster", in.Key.ClusterKey.Name,
+		// 		"error", err.Error())
+		// }
 	}
 }
 
@@ -170,7 +170,7 @@ func (c *ClusterInstHandler) Prune(keys map[edgeproto.ClusterInstKey]struct{}) {
 func (c *ClusterInstHandler) Flush(notifyId int64) {}
 
 func init() {
-	exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterEnvTempl))
+	//exporterT = template.Must(template.New("exporter").Parse(MEXMetricsExporterEnvTempl))
 	prometheusT = template.Must(template.New("prometheus").Parse(MEXPrometheusAppHelmTemplate))
 }
 
