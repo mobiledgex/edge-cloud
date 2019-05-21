@@ -232,6 +232,16 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special default public cloud case", "appinst", in)
 		defaultCloudlet = true
+		if in.Key.ClusterInstKey.Developer == "" {
+			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		}
+	}
+	if in.Key.AppKey.DeveloperKey.Name == "" {
+		// we still allow this to deal with existing clusters, but eventually will be disallowed
+		log.DebugLog(log.DebugLevelApi, "Notice: empty appinst developer name is deprecated")
+	} else if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
+		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
+		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
 	}
 
 	if !defaultCloudlet {
@@ -572,6 +582,9 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
 		defaultCloudlet = true
+		if in.Key.ClusterInstKey.Developer == "" {
+			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
+		}
 	}
 
 	if !ignoreCRM(cctx) {
@@ -579,7 +592,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			return err
 		}
 	}
-	// check if we are deleting an autocluster instance we need to set the key correctly
+	// check if we are deleting an autocluster instance we need to set the key correctly.
 	if strings.HasPrefix(in.Key.ClusterInstKey.ClusterKey.Name, ClusterAutoPrefix) && in.Key.ClusterInstKey.Developer == "" {
 		in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 	}

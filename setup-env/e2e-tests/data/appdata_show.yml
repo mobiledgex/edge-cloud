@@ -29,6 +29,7 @@ clusterinsts:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
+    developer: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -42,6 +43,7 @@ clusterinsts:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
+    developer: AcmeAppCo
   flavor:
     name: x1.small
   liveness: LivenessStatic
@@ -261,6 +263,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -281,6 +284,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -301,6 +305,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -321,6 +326,7 @@ appinstances:
         operatorkey:
           name: developer
         name: default
+      developer: AcmeAppCo
   uri: someapp1.acmeappco.com
   liveness: LivenessStatic
   flavor:
@@ -338,6 +344,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -358,6 +365,7 @@ appinstances:
         operatorkey:
           name: developer
         name: default
+      developer: platos
   uri: default.platosenablement.platos.com
   liveness: LivenessStatic
   flavor:
@@ -375,6 +383,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -395,6 +404,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
@@ -415,6 +425,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91

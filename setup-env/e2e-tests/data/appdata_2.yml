@@ -12,6 +12,12 @@ flavors:
   ram: 2048
   vcpus: 2
   disk: 2
+- key:
+    name: x1.medium
+  ram: 4096
+  vcpus: 4
+  disk: 4
+
 
 
 operators:

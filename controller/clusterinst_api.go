@@ -114,6 +114,18 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 	}
+	if in.Key.Developer == "" {
+		return fmt.Errorf("Developer cannot be empty")
+	}
+	if in.Key.CloudletKey.Name == "" {
+		return fmt.Errorf("Cloudlet name cannot be empty")
+	}
+	if in.Key.CloudletKey.OperatorKey.Name == "" {
+		return fmt.Errorf("Operator name cannot be empty")
+	}
+	if in.Key.ClusterKey.Name == "" {
+		return fmt.Errorf("Cluster name cannot be empty")
+	}
 	if in.IpAccess == edgeproto.IpAccess_IpAccessUnknown {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IpAccessShared

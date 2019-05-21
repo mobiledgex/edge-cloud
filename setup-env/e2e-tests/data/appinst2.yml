@@ -12,3 +12,4 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-2
+      developer: AcmeAppCo
