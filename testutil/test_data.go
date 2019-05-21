@@ -256,6 +256,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[0].Key,
+			Developer:   DevData[0].Key.Name,
 		},
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
@@ -267,6 +268,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[1].Key,
+			Developer:   DevData[0].Key.Name,
 		},
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessShared,
@@ -278,6 +280,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[0].Key,
 			CloudletKey: CloudletData[2].Key,
+			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:     FlavorData[0].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessDedicatedOrShared,
@@ -289,6 +292,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[0].Key,
+			Developer:   DevData[0].Key.Name,
 		},
 		Flavor:     FlavorData[1].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
@@ -300,6 +304,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[1].Key,
 			CloudletKey: CloudletData[1].Key,
+			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:     FlavorData[1].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessShared,
@@ -311,6 +316,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[2].Key,
 			CloudletKey: CloudletData[2].Key,
+			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:     FlavorData[2].Key,
 		IpAccess:   edgeproto.IpAccess_IpAccessDedicated,
@@ -322,6 +328,7 @@ var ClusterInstData = []edgeproto.ClusterInst{
 		Key: edgeproto.ClusterInstKey{
 			ClusterKey:  ClusterData[3].Key,
 			CloudletKey: CloudletData[3].Key,
+			Developer:   DevData[3].Key.Name,
 		},
 		Flavor:     FlavorData[2].Key,
 		NodeFlavor: CloudletInfoData[3].Flavors[0].Name,
