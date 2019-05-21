@@ -76,6 +76,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-1
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 31
     longitude: -91
@@ -95,6 +96,7 @@ appinstances:
         operatorkey:
           name: dmuus
         name: dmuus-cloud-2
+      developer: AcmeAppCo
   cloudletloc:
     latitude: 35
     longitude: -95
