@@ -574,6 +574,7 @@ appinstances:
         operatorkey:
           name: developer
         name: default
+      developer: Samsung
   uri: default.samsungenablement.samsung.com
   liveness: LivenessStatic
   flavor:
@@ -696,6 +697,7 @@ appinstances:
         operatorkey:
           name: developer
         name: default
+      developer: AcmeAppCo
   uri: default.someapplication1.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
@@ -839,6 +841,7 @@ appinstances:
         operatorkey:
           name: developer
         name: default
+      developer: AcmeAppCo
   uri: default.someapplication2.AcmeAppCo.com
   liveness: LivenessStatic
   flavor:
