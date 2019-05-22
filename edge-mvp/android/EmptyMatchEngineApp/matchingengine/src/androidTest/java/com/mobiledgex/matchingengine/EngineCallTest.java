@@ -3,6 +3,7 @@ package com.mobiledgex.matchingengine;
 import android.app.UiAutomation;
 import android.content.Context;
 import android.os.Environment;
+import android.os.Looper;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -40,15 +41,22 @@ public class EngineCallTest {
 
     // There's no clear way to get this programmatically outside the app signing certificate, and may
     // not be required in the future.
-    public static final String developerName = "EmptyMatchEngineApp";
-    public static final String applicationName = "EmptyMatchEngineApp";
+    public static final String developerName = "MobiledgeX";
+    public static final String applicationName = "MobiledgeX SDK Demo";
 
     FusedLocationProviderClient fusedLocationClient;
 
-    public static String hostOverride = "tdg2.dme.mobiledgex.net";
+    public static String hostOverride = "mexdemo.dme.mobiledgex.net";
     public static int portOverride = 50051;
 
     public boolean useHostOverride = true;
+
+    @Before
+    public void LooperEnsure() {
+        // SubscriberManager needs a thread. Start one:
+        if (Looper.myLooper()==null)
+            Looper.prepare();
+    }
 
     @Before
     public void grantPermissions() {
@@ -185,6 +193,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -232,6 +241,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -276,6 +286,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(false);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = MockUtils.createLocation("mexDisabledTest", 122.3321, 47.6062);
@@ -380,6 +391,7 @@ public class EngineCallTest {
         MatchingEngine me = new MatchingEngine(context);
         me.setNetworkSwitchingEnabled(false);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = MockUtils.createLocation("mexNetworkingDisabledTest", 122.3321, 47.6062);
@@ -421,6 +433,7 @@ public class EngineCallTest {
         AppClient.FindCloudletReply findCloudletReply = null;
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = MockUtils.createLocation("findCloudletTest", 122.3321, 47.6062);
@@ -457,7 +470,7 @@ public class EngineCallTest {
 
         if (findCloudletReply != null) {
             // Temporary.
-            assertEquals("App's expected test cloudlet FQDN doesn't match.", "tmocloud1.t-mobile.mobiledgex.net", findCloudletReply.getFQDN());
+            assertEquals("App's expected test cloudlet FQDN doesn't match.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", findCloudletReply.getFQDN());
         } else {
             assertFalse("No findCloudlet response!", false);
         }
@@ -470,6 +483,7 @@ public class EngineCallTest {
         AppClient.FindCloudletReply result = null;
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
 
         Location loc = MockUtils.createLocation("findCloudletTest", 122.3321, 47.6062);
@@ -500,7 +514,7 @@ public class EngineCallTest {
         }
 
         // Temporary.
-        assertEquals("Fully qualified domain name not epected.", "tmocloud1.t-mobile.mobiledgex.net", result.getFQDN());
+        assertEquals("Fully qualified domain name not epected.", "mobiledgexmobiledgexsdkdemo10.westindia-mexdemo.azure.mobiledgex.net", result.getFQDN());
 
     }
 
@@ -510,6 +524,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.VerifyLocationReply verifyLocationReply = null;
 
@@ -559,6 +574,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
         AppClient.VerifyLocationReply verifyLocationReply = null;
         Future<AppClient.VerifyLocationReply> verifyLocationReplyFuture = null;
@@ -612,6 +628,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
 
         AppClient.VerifyLocationReply verifyLocationReply = null;
@@ -646,7 +663,7 @@ public class EngineCallTest {
         // Temporary.
         assertEquals(0, verifyLocationReply.getVer());
         assertEquals(AppClient.VerifyLocationReply.Tower_Status.TOWER_UNKNOWN, verifyLocationReply.getTowerStatus());
-        assertEquals(AppClient.VerifyLocationReply.GPS_Location_Status.LOC_ROAMING_COUNTRY_MISMATCH, verifyLocationReply.getGpsLocationStatus()); // Based on test data.
+        assertEquals(AppClient.VerifyLocationReply.GPS_Location_Status.LOC_ROAMING_COUNTRY_MATCH, verifyLocationReply.getGpsLocationStatus()); // Based on test data.
 
     }
 
@@ -655,6 +672,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
         MexLocation mexLoc = new MexLocation(me);
         Location location;
         AppClient.GetLocationReply getLocationReply = null;
@@ -709,6 +727,7 @@ public class EngineCallTest {
         Context context = InstrumentationRegistry.getTargetContext();
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         MexLocation mexLoc = new MexLocation(me);
         Location location;
@@ -767,6 +786,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.DynamicLocGroupReply dynamicLocGroupReply = null;
 
@@ -816,6 +836,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.DynamicLocGroupReply dynamicLocGroupReply = null;
 
@@ -867,6 +888,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         AppClient.AppInstListReply appInstListReply = null;
 
@@ -891,7 +913,7 @@ public class EngineCallTest {
 
             assertEquals(0, list.getVer());
             assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
-            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(3, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
@@ -917,6 +939,7 @@ public class EngineCallTest {
 
         MatchingEngine me = new MatchingEngine(context);
         me.setMexLocationAllowed(true);
+        me.setAllowSwitchIfNoSubscriberInfo(true);
 
         enableMockLocation(context,true);
         Location location = MockUtils.createLocation("getAppInstListFutureTest", 122.3321, 47.6062);
@@ -940,7 +963,7 @@ public class EngineCallTest {
 
             assertEquals(0, list.getVer());
             assertEquals(AppClient.AppInstListReply.AI_Status.AI_SUCCESS, list.getStatus());
-            assertEquals(1, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
+            assertEquals(3, list.getCloudletsCount()); // NOTE: This is entirely test server dependent.
             for (int i = 0; i < list.getCloudletsCount(); i++) {
                 Log.v(TAG, "Cloudlet: " + list.getCloudlets(i).toString());
             }
