@@ -41,6 +41,7 @@ clusterinsts:
       operatorkey:
         name: mexdev
       name: localtest
+    developer: MobiledgeX
   flavor:
     name: x1.medium
   liveness: LivenessStatic
@@ -109,6 +110,7 @@ appinstances:
         operatorkey:
           name: mexdev
         name: localtest
+      developer: MobiledgeX
 - key:
     appkey:
       developerkey:
@@ -122,3 +124,4 @@ appinstances:
         operatorkey:
           name: mexdev
         name: localtest
+      developer: MobiledgeX

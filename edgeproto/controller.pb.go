@@ -484,7 +484,10 @@ func (s *ControllerStore) STMGet(stm concurrency.STM, key *ControllerKey, buf *C
 
 func (s *ControllerStore) STMPut(stm concurrency.STM, obj *Controller, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("Controller", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("Controller json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

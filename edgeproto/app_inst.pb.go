@@ -1633,7 +1633,10 @@ func (s *AppInstStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *AppInst
 
 func (s *AppInstStore) STMPut(stm concurrency.STM, obj *AppInst, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInst", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("AppInst json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }
@@ -2417,7 +2420,10 @@ func (s *AppInstInfoStore) STMGet(stm concurrency.STM, key *AppInstKey, buf *App
 
 func (s *AppInstInfoStore) STMPut(stm concurrency.STM, obj *AppInstInfo, ops ...objstore.KVOp) {
 	keystr := objstore.DbKeyString("AppInstInfo", obj.GetKey())
-	val, _ := json.Marshal(obj)
+	val, err := json.Marshal(obj)
+	if err != nil {
+		log.InfoLog("AppInstInfo json marsahal failed", "obj", obj, "err", err)
+	}
 	v3opts := GetSTMOpts(ops...)
 	stm.Put(keystr, string(val), v3opts...)
 }

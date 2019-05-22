@@ -8,8 +8,11 @@ import android.net.NetworkRequest;
 import android.os.PersistableBundle;
 import android.support.annotation.RequiresApi;
 import android.telephony.CarrierConfigManager;
+import android.telephony.SubscriptionInfo;
+import android.telephony.SubscriptionManager;
 import android.util.Log;
 
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -18,11 +21,15 @@ import java.util.concurrent.Future;
 
 import static android.telephony.CarrierConfigManager.KEY_CARRIER_WFC_IMS_AVAILABLE_BOOL;
 
-public class NetworkManager {
+public class NetworkManager extends SubscriptionManager.OnSubscriptionsChangedListener {
+
     public static final String TAG = "NetworkManager";
     public static NetworkManager mNetworkManager;
 
     private ConnectivityManager mConnectivityManager;
+    private SubscriptionManager mSubscriptionManager;
+    private List<SubscriptionInfo> mActiveSubscriptionInfoList;
+
     private boolean mWaitingForLink = false;
     private final Object mWaitForActiveNetwork = new Object();
     private long mNetworkActiveTimeoutMilliseconds = 5000;
@@ -35,6 +42,7 @@ public class NetworkManager {
     private ExecutorService mThreadPool;
     private boolean mNetworkSwitchingEnabled = true;
     private boolean mSSLEnabled = true;
+    private boolean mAllowSwitchIfNoSubscriberInfo = false;
 
     public boolean isNetworkSwitchingEnabled() {
         return mNetworkSwitchingEnabled;
@@ -57,35 +65,54 @@ public class NetworkManager {
             Log.e(TAG, "NetworkManager is disabled.");
             return;
         }
+
         switchToNetworkBlocking(networkRequest);
         Future<Callable> future = mThreadPool.submit(callable);
         future.get();
         resetNetworkToDefault();
     }
 
-    public static NetworkManager getInstance(ConnectivityManager connectivityManager) {
+    public static NetworkManager getInstance(ConnectivityManager connectivityManager, SubscriptionManager subscriptionManager) {
         if (mNetworkManager == null) {
-            mNetworkManager = new NetworkManager(connectivityManager);
+            mNetworkManager = new NetworkManager(connectivityManager, subscriptionManager);
         }
         return mNetworkManager;
     }
 
-    public static NetworkManager getInstance(ConnectivityManager connectivityManager, ExecutorService executorService) {
+    public static NetworkManager getInstance(ConnectivityManager connectivityManager, SubscriptionManager subscriptionManager, ExecutorService executorService) {
         if (mNetworkManager == null) {
-            mNetworkManager = new NetworkManager(connectivityManager, executorService);
+            mNetworkManager = new NetworkManager(connectivityManager, subscriptionManager, executorService);
         }
         return mNetworkManager;
     }
 
-    private NetworkManager(ConnectivityManager connectivityManager) {
+    private NetworkManager(ConnectivityManager connectivityManager, SubscriptionManager subscriptionManager) {
 
         this.mConnectivityManager = connectivityManager;
+        mSubscriptionManager = subscriptionManager;
+        mSubscriptionManager.addOnSubscriptionsChangedListener(this);
         mThreadPool = Executors.newSingleThreadExecutor();
     }
 
-    private NetworkManager(ConnectivityManager connectivityManager, ExecutorService executorService) {
+    private NetworkManager(ConnectivityManager connectivityManager, SubscriptionManager subscriptionManager, ExecutorService executorService) {
         this.mConnectivityManager = connectivityManager;
+        mSubscriptionManager = subscriptionManager;
+        mSubscriptionManager.addOnSubscriptionsChangedListener(this);
         mThreadPool = executorService;
+    }
+
+    /**
+     * Listener that gets the current SubscriptionInfo list.
+     *
+     * throws security exception if the revocable READ_PHONE_STATE (or hasCarrierPrivilages)
+     * is missing.
+     *
+     * @throws SecurityException
+     */
+    @Override
+    public void onSubscriptionsChanged() throws SecurityException {
+        // Store it for inspection later.
+        mActiveSubscriptionInfoList = mSubscriptionManager.getActiveSubscriptionInfoList();
     }
 
     public void setTimeout(long timeoutInMilliseconds) {
@@ -197,6 +224,18 @@ public class NetworkManager {
         return mSSLEnabled;
     }
 
+    public List<SubscriptionInfo> getActiveSubscriptionInfoList() {
+        return mActiveSubscriptionInfoList;
+    }
+
+    public boolean isAllowSwitchIfNoSubscriberInfo() {
+        return mAllowSwitchIfNoSubscriberInfo;
+    }
+
+    public void setAllowSwitchIfNoSubscriberInfo(boolean allowSwitchIfNoSubscriberInfo) {
+        this.mAllowSwitchIfNoSubscriberInfo = allowSwitchIfNoSubscriberInfo;
+    }
+
     class NetworkSwitcherCallable implements Callable {
         NetworkRequest mNetworkRequest;
         boolean activeListenerAdded = false;
@@ -206,10 +245,27 @@ public class NetworkManager {
             mNetworkRequest = networkRequest;
         }
         @Override
-        public Network call() throws InterruptedException, NetworkRequestTimeoutException {
+        public Network call() throws InterruptedException, NetworkRequestTimeoutException, NetworkRequestNoSubscriptionInfoException {
             if (mNetworkSwitchingEnabled == false) {
                 Log.e(TAG, "NetworkManager is disabled.");
                 return null;
+            }
+
+            // If the target is cellular, and there's no subscriptions, just return.
+            // On API < 28, one cannot check at this point in the code. Before making the cellular
+            // Request, inspect the activeSubscriptionInfoList for available subscription networks.
+            // If there are none, the requested network will very likely not succeed.
+            // Early exit if API >= 28.
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                mActiveSubscriptionInfoList = getActiveSubscriptionInfoList();
+                if (mNetworkRequest.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) &&
+                    mAllowSwitchIfNoSubscriberInfo == false &&
+                    (mActiveSubscriptionInfoList == null || mActiveSubscriptionInfoList.size() == 0)) {
+
+                    String msg = "There are no data subscriptions for the requested network switch.";
+                    Log.e(TAG, msg);
+                    throw new NetworkRequestNoSubscriptionInfoException(msg);
+                }
             }
 
             final ConnectivityManager.OnNetworkActiveListener activeListener = new ConnectivityManager.OnNetworkActiveListener() {
@@ -284,6 +340,13 @@ public class NetworkManager {
                         mNetworkRequest = null;
 
                         logTransportCapabilities(networkCapabilities);
+
+                        // It is possible to start the switch, and find that there are no current networks during the switch.
+                        if (mActiveSubscriptionInfoList == null || mActiveSubscriptionInfoList.size() == 0) {
+                            String msg = "There are no data subscriptions for the requested network switch.";
+                            Log.e(TAG, msg);
+                            throw new NetworkRequestNoSubscriptionInfoException(msg);
+                        }
                         throw new NetworkRequestTimeoutException("NetworkRequest timed out with no availability.");
                     }
                     elapsed = System.currentTimeMillis() - timeStart;
@@ -318,13 +381,9 @@ public class NetworkManager {
             return;
         }
         Log.d(TAG, " -- networkCapabilities: TRANSPORT_CELLULAR: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_CELLULAR));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_WIFI: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_BLUETOOTH: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_BLUETOOTH));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_ETHERNET: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_ETHERNET));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_VPN: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_VPN));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_WIFI_AWARE: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_WIFI_AWARE));
-        Log.d(TAG, " -- networkCapabilities: TRANSPORT_LOWPAN: " + networkCapabilities.hasCapability(NetworkCapabilities.TRANSPORT_LOWPAN));
 
+        Log.d(TAG, " -- networkCapabilities: NET_CAPABILITY_TRUSTED: " + networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_TRUSTED));
+        Log.d(TAG, " -- networkCapabilities: NET_CAPABILITY_VALIDATED: " + networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED));
         Log.d(TAG, " -- networkCapabilities: NET_CAPABILITY_INTERNET: " + networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET));
         if (android.os.Build.VERSION.SDK_INT >= 28) {
             Log.i(TAG, " -- is Roaming Data: " + isRoamingData());
