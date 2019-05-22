@@ -17,6 +17,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func RegisterMex() {
@@ -188,6 +189,21 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		m.P(")")
 		m.P()
 	}
+	// generate camel case maps
+	fqname := m.support.FQTypeName(m.gen, desc)
+	m.P("var ", fqname, "_CamelName = map[int32]string{")
+	for _, val := range en.Value {
+		m.P("// ", val.Name, " -> ", util.CamelCase(*val.Name))
+		m.P(val.Number, ": \"", util.CamelCase(*val.Name), "\",")
+	}
+	m.P("}")
+	m.P("var ", fqname, "_CamelValue = map[string]int32{")
+	for _, val := range en.Value {
+		m.P("\"", util.CamelCase(*val.Name), "\": ", val.Number, ",")
+	}
+	m.P("}")
+	m.P()
+
 	args := enumTempl{Name: m.support.FQTypeName(m.gen, desc)}
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
@@ -218,13 +234,13 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil { return err }
-	val, ok := {{.Name}}_value[str]
+	val, ok := {{.Name}}_CamelValue[str]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = {{.Name}}_name[val]
+			_, ok = {{.Name}}_CamelName[val]
 		}
 	}
 	if !ok {
@@ -235,7 +251,7 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e {{.Name}}) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName({{.Name}}_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -243,13 +259,13 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := {{.Name}}_value[str]
+		val, ok := {{.Name}}_CamelValue[str]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = {{.Name}}_name[val]
+				_, ok = {{.Name}}_CamelName[val]
 			}
 		}
 		if !ok {
@@ -268,7 +284,8 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 }
 
 func (e {{.Name}}) MarshalJSON() ([]byte, error) {
-	return []byte("\""+e.String()+"\""), nil
+	str := proto.EnumName({{.Name}}_CamelName, int32(e))
+	return []byte("\""+str+"\""), nil
 }
 
 `
@@ -1125,7 +1142,7 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 
 {{if ne (.WaitForState) ("")}}
 func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
-	curState := {{.WaitForState}}_{{.WaitForState}}Unknown
+	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	var err error
@@ -1135,7 +1152,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		if c.Get(key, &info) {
 			curState = info.State
 		} else {
-			curState = {{.WaitForState}}_NotPresent
+			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
 			msg := {{.WaitForState}}_name[int32(curState)]
@@ -1154,7 +1171,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	if c.Get(key, &info) {
 		curState = info.State
 	} else {
-		curState = {{.WaitForState}}_NotPresent
+		curState = {{.WaitForState}}_NOT_PRESENT
 	}
 	if curState == targetState {
 		done <- true
@@ -1583,7 +1600,7 @@ func (m *mex) generateEnumDecodeHook() {
 		}
 		for _, en := range file.EnumType {
 			m.P("case reflect.TypeOf(", en.Name, "(0)):")
-			m.P("if en, ok := ", en.Name, "_value[data.(string)]; ok {")
+			m.P("if en, ok := ", en.Name, "_CamelValue[data.(string)]; ok {")
 			m.P("return en, nil")
 			m.P("}")
 		}
