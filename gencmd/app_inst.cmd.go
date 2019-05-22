@@ -782,8 +782,8 @@ func init() {
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
-	AppInstFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
-	AppInstFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
+	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
+	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.DeveloperKey.Name, "key-appkey-developerkey-name", "", "Key.AppKey.DeveloperKey.Name")
 	AppInstInfoFlagSet.StringVar(&AppInstInfoIn.Key.AppKey.Name, "key-appkey-name", "", "Key.AppKey.Name")
@@ -883,10 +883,10 @@ func AppInstSetFields() {
 	if AppInstFlagSet.Lookup("crmoverride").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "16")
 	}
-	if AppInstFlagSet.Lookup("createdat-seconds").Changed {
+	if AppInstNoConfigFlagSet.Lookup("createdat-seconds").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.1")
 	}
-	if AppInstFlagSet.Lookup("createdat-nanos").Changed {
+	if AppInstNoConfigFlagSet.Lookup("createdat-nanos").Changed {
 		AppInstIn.Fields = append(AppInstIn.Fields, "21.2")
 	}
 	if AppInstFlagSet.Lookup("autoclusteripaccess").Changed {

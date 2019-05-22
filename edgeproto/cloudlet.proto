@@ -118,6 +118,7 @@ message Cloudlet {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protocmd.noconfig) = "Location.HorizontalAccuracy,Location.VerticalAccuracy,Location.Course,Location.Speed,Location.Timestamp";
+  option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
 service CloudletApi {
@@ -211,6 +212,7 @@ message CloudletInfo {
   option (protogen.notify_cache) = true;
   option (protogen.notify_flush) = true;
   option (protogen.notify_recv_hook) = true;
+  option (protocmd.alias) = "name=Key.Name,operator=Key.OperatorKey.Name";
 }
 
 service CloudletInfoApi {
