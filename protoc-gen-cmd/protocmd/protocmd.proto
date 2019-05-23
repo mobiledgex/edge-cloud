@@ -11,6 +11,8 @@ extend google.protobuf.MessageOptions {
   // comma separated list of hierarchical paths for fields to
   // not generate argument flags for Create/Delete/Update commands.
   string noconfig = 52001;
+  string alias = 52002;
+  string notreq = 52005; // override required key values
 }
 
 extend google.protobuf.MethodOptions {
