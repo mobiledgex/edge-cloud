@@ -63,8 +63,9 @@ message ClusterInst {
   option (protogen.notify_cache) = true;
   option (protogen.notify_custom_update) = true;
   option (protogen.notify_filter_cloudlet_key) = true;
-  option (protocmd.noconfig) = "Nodes,Liveness,Auto,MasterFlavor,NodeFlavor";
+  option (protocmd.noconfig) = "Liveness,Auto,MasterFlavor,NodeFlavor,AllocatedIp";
   option (protogen.generate_wait_for_state) = "TrackedState";
+  option (protocmd.alias) = "cluster=Key.ClusterKey.Name,cloudlet=Key.CloudletKey.Name,operator=Key.CloudletKey.OperatorKey.Name";
 }
 
 service ClusterInstApi {
