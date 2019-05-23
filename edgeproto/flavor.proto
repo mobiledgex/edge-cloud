@@ -36,6 +36,7 @@ message Flavor {
   option (protogen.generate_cud_test) = true;
   option (protogen.generate_cache) = true;
   option (protogen.notify_cache) = true;
+  option (protocmd.alias) = "name=Key.Name";
 }
 
 service FlavorApi {
