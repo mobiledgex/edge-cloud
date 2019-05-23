@@ -243,6 +243,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
 		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
 	}
+	appDeploymentType := ""
 
 	if !defaultCloudlet {
 		err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
@@ -280,6 +281,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if !appApi.store.STMGet(stm, &in.Key.AppKey, &app) {
 				return edgeproto.ErrEdgeApiAppNotFound
 			}
+			appDeploymentType = app.Deployment
 			// Check if specified ClusterInst exists
 			if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
 				if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
@@ -328,8 +330,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 
 		clusterInst.Flavor = in.Flavor
 		clusterInst.IpAccess = in.AutoClusterIpAccess
-		clusterInst.NumMasters = 1
-		clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
+		clusterInst.Deployment = appDeploymentType
+		if appDeploymentType == cloudcommon.AppDeploymentTypeKubernetes ||
+			appDeploymentType == cloudcommon.AppDeploymentTypeHelm {
+			clusterInst.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+			clusterInst.NumMasters = 1
+			clusterInst.NumNodes = 1 // TODO support 1 master, zero nodes
+		}
 		err := clusterInstApi.createClusterInstInternal(cctx, &clusterInst, cb)
 		if err != nil {
 			return err
@@ -414,7 +421,13 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			if clusterInst.State != edgeproto.TrackedState_Ready {
 				return fmt.Errorf("ClusterInst %s not ready", clusterInst.Key.GetKeyString())
 			}
-
+			needDeployment := app.Deployment
+			if app.Deployment == cloudcommon.AppDeploymentTypeHelm {
+				needDeployment = cloudcommon.AppDeploymentTypeKubernetes
+			}
+			if clusterInst.Deployment != needDeployment {
+				return fmt.Errorf("Cannot deploy %s App into %s ClusterInst", app.Deployment, clusterInst.Deployment)
+			}
 			ipaccess = clusterInst.IpAccess
 			clusterKey = &clusterInst.Key.ClusterKey
 		}
