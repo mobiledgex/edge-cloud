@@ -553,7 +553,7 @@ func init() {
 	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
 	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
 	ClusterInstFlagSet.StringVar(&ClusterInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
-	ClusterInstFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
+	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.NodeFlavor, "nodeflavor", "", "NodeFlavor")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumMasters, "nummasters", 0, "NumMasters")
 	ClusterInstFlagSet.Uint32Var(&ClusterInstIn.NumNodes, "numnodes", 0, "NumNodes")
@@ -613,7 +613,7 @@ func ClusterInstSetFields() {
 	if ClusterInstFlagSet.Lookup("ipaccess").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "7")
 	}
-	if ClusterInstFlagSet.Lookup("allocatedip").Changed {
+	if ClusterInstNoConfigFlagSet.Lookup("allocatedip").Changed {
 		ClusterInstIn.Fields = append(ClusterInstIn.Fields, "8")
 	}
 	if ClusterInstNoConfigFlagSet.Lookup("nodeflavor").Changed {
