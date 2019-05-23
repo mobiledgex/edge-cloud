@@ -35,6 +35,7 @@ type mex struct {
 	enumTemplate  *template.Template
 	cacheTemplate *template.Template
 	importUtil    bool
+	importLog     bool
 	importStrings bool
 	importErrors  bool
 	importStrconv bool
@@ -81,6 +82,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.support.InitFile()
 	m.support.SetPbGoPackage(file.GetPackage())
 	m.importUtil = false
+	m.importLog = false
 	m.importStrings = false
 	m.importErrors = false
 	m.importStrconv = false
@@ -123,6 +125,8 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importUtil {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
+	}
+	if m.importLog {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
 	if m.importStrings {
@@ -209,6 +213,7 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 	m.importErrors = true
 	m.importStrconv = true
 	m.importJson = true
+	m.importUtil = true
 
 	if GetVersionHashOpt(en) {
 		// Collect all key objects
@@ -234,7 +239,7 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil { return err }
-	val, ok := {{.Name}}_CamelValue[str]
+	val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
@@ -259,7 +264,7 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := {{.Name}}_CamelValue[str]
+		val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
@@ -1328,6 +1333,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
+		m.importLog = true
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
@@ -1352,6 +1358,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 		m.importUtil = true
+		m.importLog = true
 	}
 	if field := gensupport.GetMessageKey(message); field != nil {
 		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
@@ -1600,7 +1607,7 @@ func (m *mex) generateEnumDecodeHook() {
 		}
 		for _, en := range file.EnumType {
 			m.P("case reflect.TypeOf(", en.Name, "(0)):")
-			m.P("if en, ok := ", en.Name, "_CamelValue[data.(string)]; ok {")
+			m.P("if en, ok := ", en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
 			m.P("return en, nil")
 			m.P("}")
 		}
