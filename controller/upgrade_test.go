@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/mobiledgex/edge-cloud/edgeproto"
 	"github.com/mobiledgex/edge-cloud/objstore"
 	"github.com/stretchr/testify/assert"
@@ -68,11 +70,13 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 		if err != nil {
 			return fmt.Errorf("Unable to get value for key[%s], %v", key, err)
 		}
-		if string(dbVal) != val {
-			fmt.Printf("[%s] values don't match for the key: %s\n", funcName, key)
-			fmt.Printf("[%s] expected: \n%s\n", funcName, val)
-			fmt.Printf("[%s] actual: \n%s\n", funcName, string(dbVal))
-			return fmt.Errorf("Values don't match for the key, upgradeFunc: %s", funcName)
+		// data may be in json format or non-json string
+		compareDone, err := compareJson(funcName, key, val, string(dbVal))
+		if !compareDone {
+			err = compareString(funcName, key, val, string(dbVal))
+		}
+		if err != nil {
+			return err
 		}
 		fileObjCount++
 	}
@@ -87,6 +91,36 @@ func compareDbToExpected(objStore objstore.KVStore, funcName string) error {
 	if fileObjCount != dbObjCount {
 		return fmt.Errorf("Number of objects in the etcd db[%d] doesn't match the number of expected objects[%d]\n",
 			dbObjCount, fileObjCount)
+	}
+	return nil
+}
+
+func compareJson(funcName, key, expected, actual string) (bool, error) {
+	expectedMap := make(map[string]interface{})
+	actualMap := make(map[string]interface{})
+	err := json.Unmarshal([]byte(expected), &expectedMap)
+	if err != nil {
+		return false, fmt.Errorf("Unmarshal failed, %v, %s\n", err, expected)
+	}
+	err = json.Unmarshal([]byte(actual), &actualMap)
+	if err != nil {
+		return false, fmt.Errorf("Unmarshal failed, %v, %s\n", err, actual)
+	}
+	if !cmp.Equal(expectedMap, actualMap) {
+		fmt.Printf("[%s] comparsion fail for key: %s\n", funcName, key)
+		fmt.Printf("expected vs actual:\n")
+		fmt.Printf(cmp.Diff(expectedMap, actualMap))
+		return true, fmt.Errorf("Values don't match for the key, upgradeFunc: %s", funcName)
+	}
+	return true, nil
+}
+
+func compareString(funcName, key, expected, actual string) error {
+	if expected != actual {
+		fmt.Printf("[%s] values don't match for the key: %s\n", funcName, key)
+		fmt.Printf("[%s] expected: \n%s\n", funcName, expected)
+		fmt.Printf("[%s] actual: \n%s\n", funcName, actual)
+		return fmt.Errorf("Values don't match for the key, upgradeFunc: %s", funcName)
 	}
 	return nil
 }

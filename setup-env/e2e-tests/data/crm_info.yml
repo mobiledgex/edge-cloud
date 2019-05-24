@@ -54,6 +54,7 @@ clusterinsts:
   state: Ready
   ipaccess: IpAccessShared
   nodeflavor: flavor1
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -71,6 +72,7 @@ clusterinsts:
   state: Ready
   ipaccess: IpAccessShared
   nodeflavor: flavor1
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 developers:

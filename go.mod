@@ -152,7 +152,7 @@ require (
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect
 	gopkg.in/yaml.v2 v2.2.2
-	gotest.tools v2.2.0+incompatible // indirect
+	gotest.tools v2.2.0+incompatible
 	honnef.co/go/tools v0.0.0-20190106161140-3f1c8253044a // indirect
 	//	k8s.io/api v0.0.0-20180516102522-184e700b32b7
 	k8s.io/api v0.0.0-20190222213804-5cb15d344471

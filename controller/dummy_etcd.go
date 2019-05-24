@@ -138,17 +138,24 @@ func (e *dummyEtcd) Get(key string) ([]byte, int64, int64, error) {
 }
 
 func (e *dummyEtcd) List(key string, cb objstore.ListCb) error {
+	kvs := make(map[string]string)
 	e.mux.Lock()
-	defer e.mux.Unlock()
 	if e.db == nil {
+		e.mux.Unlock()
 		return objstore.ErrKVStoreNotInitialized
 	}
 	for k, v := range e.db {
 		if !strings.HasPrefix(k, key) {
 			continue
 		}
-		log.DebugLog(log.DebugLevelEtcd, "List", "key", k, "val", v, "rev", e.rev)
-		err := cb([]byte(k), []byte(v), e.rev)
+		kvs[k] = v
+	}
+	rev := e.rev
+	e.mux.Unlock()
+
+	for k, v := range kvs {
+		log.DebugLog(log.DebugLevelEtcd, "List", "key", k, "val", v, "rev", rev)
+		err := cb([]byte(k), []byte(v), rev)
 		if err != nil {
 			break
 		}
