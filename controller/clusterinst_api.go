@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mobiledgex/edge-cloud/cloudcommon"
 	flavor "github.com/mobiledgex/edge-cloud/flavor"
 
 	"github.com/coreos/etcd/clientv3/concurrency"
@@ -126,6 +127,49 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 	if in.Key.ClusterKey.Name == "" {
 		return fmt.Errorf("Cluster name cannot be empty")
 	}
+	// validate deployment
+	if in.Deployment == "" {
+		// assume kubernetes, because that's what we've been doing
+		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+	}
+	if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
+		// helm runs on kubernetes
+		in.Deployment = cloudcommon.AppDeploymentTypeKubernetes
+	}
+	if in.Deployment == cloudcommon.AppDeploymentTypeVM {
+		// friendly error message if they try to specify VM
+		return fmt.Errorf("ClusterInst is not needed for deployment type %s, just create an AppInst directly", cloudcommon.AppDeploymentTypeVM)
+	}
+
+	// validate other parameters based on deployment type
+	if in.Deployment == cloudcommon.AppDeploymentTypeKubernetes {
+		// must have at least one master, but currently don't support
+		// more than one.
+		if in.NumMasters == 0 {
+			// just set it to 1
+			in.NumMasters = 1
+		}
+		if in.NumMasters > 1 {
+			return fmt.Errorf("NumMasters cannot be greater than 1")
+		}
+		// TODO: support zero nodes
+		if in.NumNodes == 0 {
+			return fmt.Errorf("Zero NumNodes not supported yet")
+		}
+	} else if in.Deployment == cloudcommon.AppDeploymentTypeDocker {
+		if in.NumMasters != 0 || in.NumNodes != 0 {
+			return fmt.Errorf("NumMasters and NumNodes not applicable for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+		}
+		if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
+			// must be dedicated for docker
+			in.IpAccess = edgeproto.IpAccess_IP_ACCESS_DEDICATED
+		} else if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
+			return fmt.Errorf("IpAccess must be dedicated for deployment type %s", cloudcommon.AppDeploymentTypeDocker)
+		}
+	} else {
+		return fmt.Errorf("Invalid deployment type %s for ClusterInst", in.Deployment)
+	}
+
 	if in.IpAccess == edgeproto.IpAccess_IP_ACCESS_UNKNOWN {
 		// default to shared
 		in.IpAccess = edgeproto.IpAccess_IP_ACCESS_SHARED
@@ -188,14 +232,6 @@ func (s *ClusterInstApi) createClusterInstInternal(cctx *CallContext, in *edgepr
 			return err
 		}
 		log.InfoLog("Selected Cloudlet Flavor", "Node Flavor", in.NodeFlavor)
-		if in.NumMasters == 0 {
-			if in.IpAccess != edgeproto.IpAccess_IP_ACCESS_DEDICATED {
-				return fmt.Errorf("NumMasters cannot be 0 except for dedicated clusters")
-			}
-		}
-		if in.NumMasters > 1 {
-			return fmt.Errorf("NumMasters cannot be greater than 1")
-		}
 		// Do we allocate resources based on max nodes (no over-provisioning)?
 		refs.UsedRam += nodeFlavor.Ram * uint64(in.NumNodes+in.NumMasters)
 		refs.UsedVcores += nodeFlavor.Vcpus * uint64(in.NumNodes+in.NumMasters)
