@@ -41,7 +41,7 @@ func DlgMessageSlicer(in *distributed_match_engine.DlgMessage) []string {
 	s = append(s, strconv.FormatUint(uint64(in.LgId), 10))
 	s = append(s, in.GroupCookie)
 	s = append(s, strconv.FormatUint(uint64(in.MessageId), 10))
-	s = append(s, distributed_match_engine.DlgMessage_DlgAck_name[int32(in.AckType)])
+	s = append(s, distributed_match_engine.DlgMessage_DlgAck_CamelName[int32(in.AckType)])
 	s = append(s, in.Message)
 	return s
 }

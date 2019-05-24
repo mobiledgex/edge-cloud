@@ -26,7 +26,7 @@ var InfiniteDistance float64 = 100000
 
 type LocationResult struct {
 	DistanceRange        float64
-	MatchEngineLocStatus dme.VerifyLocationReply_GPS_Location_Status
+	MatchEngineLocStatus dme.VerifyLocationReply_GPSLocationStatus
 }
 
 // it has been agreed that mappings between location result integer and distances

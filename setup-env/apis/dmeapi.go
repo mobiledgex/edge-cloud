@@ -44,13 +44,13 @@ type RegisterReplyWithError struct {
 
 var apiRequest dmeApiRequest
 
-// REST client implementation of Match_Engine_ApiClient interface
+// REST client implementation of MatchEngineApiClient interface
 type dmeRestClient struct {
 	client *http.Client
 	addr   string
 }
 
-func NewdmeRestClient(client *http.Client, httpAddr string) dmeproto.Match_Engine_ApiClient {
+func NewdmeRestClient(client *http.Client, httpAddr string) dmeproto.MatchEngineApiClient {
 	return &dmeRestClient{client, httpAddr}
 }
 
@@ -155,7 +155,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 	readDMEApiFile(apiFile)
 
 	dme := util.GetDme(procname)
-	var client dmeproto.Match_Engine_ApiClient
+	var client dmeproto.MatchEngineApiClient
 
 	if apiType == "rest" {
 		httpClient, err := dme.GetRestClient(apiConnectTimeout)
@@ -171,7 +171,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 			return false
 		}
 		defer conn.Close()
-		client = dmeproto.NewMatch_Engine_ApiClient(conn)
+		client = dmeproto.NewMatchEngineApiClient(conn)
 
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
@@ -238,7 +238,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		}
 
 	case "verifylocation":
-		tokSrvUrl := registerStatus.Reply.TokenServerURI
+		tokSrvUrl := registerStatus.Reply.TokenServerUri
 		log.Printf("found token server url from register response %s\n", tokSrvUrl)
 
 		if tokSrvUrl == "" {
@@ -290,7 +290,7 @@ func RunDmeAPI(api string, procname string, apiFile string, apiType string, outp
 		resp, err := client.GetFqdnList(ctx, &apiRequest.Fqreq)
 		if err == nil {
 			sort.Slice((*resp).AppFqdns, func(i, j int) bool {
-				return (*resp).AppFqdns[i].FQDNs[0] < (*resp).AppFqdns[j].FQDNs[0]
+				return (*resp).AppFqdns[i].Fqdns[0] < (*resp).AppFqdns[j].Fqdns[0]
 			})
 		}
 		dmereply = resp

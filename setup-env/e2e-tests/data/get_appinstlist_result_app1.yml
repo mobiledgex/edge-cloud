@@ -1,4 +1,4 @@
-status: AI_SUCCESS
+status: AiSuccess
 cloudlets:
 - carriername: azure
   cloudletname: azure-cloud-9
@@ -11,15 +11,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 443
       publicport: 443
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -34,15 +34,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.gcp-cloud-10.gcp.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 443
       publicport: 443
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -57,15 +57,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-1.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -80,15 +80,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-2.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -103,15 +103,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-3.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -126,15 +126,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-4.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -149,15 +149,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-5.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -172,15 +172,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-6.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -195,15 +195,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-7.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.
@@ -218,15 +218,15 @@ cloudlets:
     appvers: "1.0"
     fqdn: tmus-cloud-8.tmus.mobiledgex.net
     ports:
-    - proto: LProtoTCP
+    - proto: LProtoTcp
       internalport: 80
       publicport: 80
       fqdnprefix: someapplication1-tcp.
-    - proto: LProtoHTTP
+    - proto: LProtoHttp
       internalport: 443
       publicport: 443
       pathprefix: acmeappco/someapplication110/p443
-    - proto: LProtoUDP
+    - proto: LProtoUdp
       internalport: 10002
       publicport: 10002
       fqdnprefix: someapplication1-udp.

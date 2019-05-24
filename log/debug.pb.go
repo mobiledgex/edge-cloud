@@ -20,6 +20,7 @@ import math "math"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "github.com/mobiledgex/edge-cloud/util"
 import "errors"
 import "strconv"
 import "encoding/json"
@@ -368,19 +369,51 @@ const (
 	DebugLevelUpgrade uint64 = 1 << 8
 )
 
+var DebugLevel_CamelName = map[int32]string{
+	// etcd -> Etcd
+	0: "Etcd",
+	// api -> Api
+	1: "Api",
+	// notify -> Notify
+	2: "Notify",
+	// dmedb -> Dmedb
+	3: "Dmedb",
+	// dmereq -> Dmereq
+	4: "Dmereq",
+	// locapi -> Locapi
+	5: "Locapi",
+	// mexos -> Mexos
+	6: "Mexos",
+	// metrics -> Metrics
+	7: "Metrics",
+	// upgrade -> Upgrade
+	8: "Upgrade",
+}
+var DebugLevel_CamelValue = map[string]int32{
+	"Etcd":    0,
+	"Api":     1,
+	"Notify":  2,
+	"Dmedb":   3,
+	"Dmereq":  4,
+	"Locapi":  5,
+	"Mexos":   6,
+	"Metrics": 7,
+	"Upgrade": 8,
+}
+
 func (e *DebugLevel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := DebugLevel_value[str]
+	val, ok := DebugLevel_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = DebugLevel_name[val]
+			_, ok = DebugLevel_CamelName[val]
 		}
 	}
 	if !ok {
@@ -391,7 +424,7 @@ func (e *DebugLevel) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e DebugLevel) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(DebugLevel_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -399,13 +432,13 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := DebugLevel_value[str]
+		val, ok := DebugLevel_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = DebugLevel_name[val]
+				_, ok = DebugLevel_CamelName[val]
 			}
 		}
 		if !ok {
@@ -424,7 +457,8 @@ func (e *DebugLevel) UnmarshalJSON(b []byte) error {
 }
 
 func (e DebugLevel) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(DebugLevel_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 type MatchOptions struct {
@@ -472,7 +506,7 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 	}
 	switch to {
 	case reflect.TypeOf(DebugLevel(0)):
-		if en, ok := DebugLevel_value[data.(string)]; ok {
+		if en, ok := DebugLevel_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}

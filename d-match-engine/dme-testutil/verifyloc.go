@@ -30,7 +30,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
-			GPS_Location_Accuracy_KM: 2,
+			GpsLocationAccuracyKm: 2,
 		},
 	},
 	VerifyLocRR{
@@ -45,7 +45,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
-			GPS_Location_Accuracy_KM: 100,
+			GpsLocationAccuracyKm: 100,
 		},
 	},
 	VerifyLocRR{
@@ -73,7 +73,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
-			GPS_Location_Accuracy_KM: 100,
+			GpsLocationAccuracyKm: 100,
 		},
 	},
 	VerifyLocRR{
@@ -88,7 +88,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
-			GPS_Location_Accuracy_KM: 100,
+			GpsLocationAccuracyKm: 100,
 		},
 	},
 	VerifyLocRR{
@@ -103,7 +103,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Mismatch,
-			GPS_Location_Accuracy_KM: -1,
+			GpsLocationAccuracyKm: -1,
 		},
 	},
 	VerifyLocRR{
@@ -118,7 +118,7 @@ var VerifyLocData = []VerifyLocRR{
 		},
 		Reply: dme.VerifyLocationReply{
 			GpsLocationStatus:        Verified,
-			GPS_Location_Accuracy_KM: 100,
+			GpsLocationAccuracyKm: 100,
 		},
 	},
 }

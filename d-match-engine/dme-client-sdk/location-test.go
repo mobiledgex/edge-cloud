@@ -10,7 +10,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func TestLocations(client dme.Match_Engine_ApiClient) {
+func TestLocations(client dme.MatchEngineApiClient) {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second)
 
 	fmt.Println(">>>>>>>Finding Right Locations<<<<<<<<<")

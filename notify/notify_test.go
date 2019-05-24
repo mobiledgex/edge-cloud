@@ -135,13 +135,13 @@ func TestNotifyBasic(t *testing.T) {
 	stats = serverMgr.GetStats(clientDME.GetLocalAddr())
 	require.Equal(t, uint64(2), stats.ObjSend["AppInst"])
 
-	// set ClusterInst and AppInst state to CreateRequested so they get
+	// set ClusterInst and AppInst state to CREATE_REQUESTED so they get
 	// sent to the CRM.
 	for i, _ := range testutil.ClusterInstData {
-		testutil.ClusterInstData[i].State = edgeproto.TrackedState_CreateRequested
+		testutil.ClusterInstData[i].State = edgeproto.TrackedState_CREATE_REQUESTED
 	}
 	for i, _ := range testutil.AppInstData {
-		testutil.AppInstData[i].State = edgeproto.TrackedState_CreateRequested
+		testutil.AppInstData[i].State = edgeproto.TrackedState_CREATE_REQUESTED
 	}
 
 	// Now test CRM

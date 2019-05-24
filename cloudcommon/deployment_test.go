@@ -43,7 +43,7 @@ func TestDeployment(t *testing.T) {
 	testAppDeployment(t, app, true)
 
 	// Docker image type for Kubernetes deployment
-	app.ImageType = edgeproto.ImageType_ImageTypeDocker
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
 	testValidImageDeployment(t, app, true)
 
 	// vm with no deployment is ok
@@ -55,7 +55,7 @@ func TestDeployment(t *testing.T) {
 	// untested - remote generator
 
 	// QCOW image type for VM deployment
-	app.ImageType = edgeproto.ImageType_ImageTypeQCOW
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_QCOW
 	testValidImageDeployment(t, app, true)
 
 	// helm with no manifest
@@ -65,11 +65,11 @@ func TestDeployment(t *testing.T) {
 	testAppDeployment(t, app, true)
 
 	// No image type for Helm deployment
-	app.ImageType = edgeproto.ImageType_ImageTypeUnknown
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_UNKNOWN
 	testValidImageDeployment(t, app, true)
 
 	// negative test - invalid image type for helm deployment
-	app.ImageType = edgeproto.ImageType_ImageTypeDocker
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_DOCKER
 	testValidImageDeployment(t, app, false)
 
 	// negative test - invalid generator
@@ -79,7 +79,7 @@ func TestDeployment(t *testing.T) {
 	testAppDeployment(t, app, false)
 
 	// negative test - invalid image type
-	app.ImageType = edgeproto.ImageType_ImageTypeQCOW
+	app.ImageType = edgeproto.ImageType_IMAGE_TYPE_QCOW
 	testValidImageDeployment(t, app, false)
 }
 

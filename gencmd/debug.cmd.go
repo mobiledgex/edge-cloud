@@ -40,15 +40,15 @@ var DebugLevelsFlagSet = pflag.NewFlagSet("DebugLevels", pflag.ExitOnError)
 var DebugLevelsNoConfigFlagSet = pflag.NewFlagSet("DebugLevelsNoConfig", pflag.ExitOnError)
 var DebugLevelsInLevels string
 var DebugLevelStrings = []string{
-	"etcd",
-	"api",
-	"notify",
-	"dmedb",
-	"dmereq",
-	"locapi",
-	"mexos",
-	"metrics",
-	"upgrade",
+	"Etcd",
+	"Api",
+	"Notify",
+	"Dmedb",
+	"Dmereq",
+	"Locapi",
+	"Mexos",
+	"Metrics",
+	"Upgrade",
 }
 
 func DebugLevelsSlicer(in *log.DebugLevels) []string {
@@ -56,7 +56,7 @@ func DebugLevelsSlicer(in *log.DebugLevels) []string {
 	if in.Levels == nil {
 		in.Levels = make([]log.DebugLevel, 1)
 	}
-	s = append(s, log.DebugLevel_name[int32(in.Levels[0])])
+	s = append(s, log.DebugLevel_CamelName[int32(in.Levels[0])])
 	return s
 }
 
@@ -284,23 +284,23 @@ func parseDebugLevelsEnums() error {
 	if DebugLevelsInLevels != "" {
 		for _, str := range strings.Split(DebugLevelsInLevels, ",") {
 			switch str {
-			case "etcd":
+			case "Etcd":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(0))
-			case "api":
+			case "Api":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(1))
-			case "notify":
+			case "Notify":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(2))
-			case "dmedb":
+			case "Dmedb":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(3))
-			case "dmereq":
+			case "Dmereq":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(4))
-			case "locapi":
+			case "Locapi":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(5))
-			case "mexos":
+			case "Mexos":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(6))
-			case "metrics":
+			case "Metrics":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(7))
-			case "upgrade":
+			case "Upgrade":
 				DebugLevelsIn.Levels = append(DebugLevelsIn.Levels, log.DebugLevel(8))
 			default:
 				return errors.New("Invalid value for DebugLevelsInLevels")
