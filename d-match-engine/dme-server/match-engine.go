@@ -110,7 +110,7 @@ func addAppInst(appInst *edgeproto.AppInst) {
 		cl.uri = appInst.Uri
 		cl.location = appInst.CloudletLoc
 		cl.ports = appInst.MappedPorts
-		log.DebugLog(log.DebugLevelDmedb, "UPDATING app inst",
+		log.DebugLog(log.DebugLevelDmedb, "Updating app inst",
 			"appName", app.appKey.Name,
 			"appVersion", app.appKey.Version,
 			"latitude", appInst.CloudletLoc.Latitude,
