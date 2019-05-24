@@ -46,6 +46,7 @@ import grpc "google.golang.org/grpc"
 
 import binary "encoding/binary"
 
+import "github.com/mobiledgex/edge-cloud/util"
 import "errors"
 import "strconv"
 import "encoding/json"
@@ -142,46 +143,46 @@ func (FindCloudletReply_FindStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // Status of the reply
-type VerifyLocationReply_Tower_Status int32
+type VerifyLocationReply_TowerStatus int32
 
 const (
-	VerifyLocationReply_TOWER_UNKNOWN                    VerifyLocationReply_Tower_Status = 0
-	VerifyLocationReply_CONNECTED_TO_SPECIFIED_TOWER     VerifyLocationReply_Tower_Status = 1
-	VerifyLocationReply_NOT_CONNECTED_TO_SPECIFIED_TOWER VerifyLocationReply_Tower_Status = 2
+	VerifyLocationReply_TOWER_UNKNOWN                    VerifyLocationReply_TowerStatus = 0
+	VerifyLocationReply_CONNECTED_TO_SPECIFIED_TOWER     VerifyLocationReply_TowerStatus = 1
+	VerifyLocationReply_NOT_CONNECTED_TO_SPECIFIED_TOWER VerifyLocationReply_TowerStatus = 2
 )
 
-var VerifyLocationReply_Tower_Status_name = map[int32]string{
+var VerifyLocationReply_TowerStatus_name = map[int32]string{
 	0: "TOWER_UNKNOWN",
 	1: "CONNECTED_TO_SPECIFIED_TOWER",
 	2: "NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
-var VerifyLocationReply_Tower_Status_value = map[string]int32{
+var VerifyLocationReply_TowerStatus_value = map[string]int32{
 	"TOWER_UNKNOWN":                    0,
 	"CONNECTED_TO_SPECIFIED_TOWER":     1,
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER": 2,
 }
 
-func (x VerifyLocationReply_Tower_Status) String() string {
-	return proto.EnumName(VerifyLocationReply_Tower_Status_name, int32(x))
+func (x VerifyLocationReply_TowerStatus) String() string {
+	return proto.EnumName(VerifyLocationReply_TowerStatus_name, int32(x))
 }
-func (VerifyLocationReply_Tower_Status) EnumDescriptor() ([]byte, []int) {
+func (VerifyLocationReply_TowerStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{5, 0}
 }
 
-type VerifyLocationReply_GPS_Location_Status int32
+type VerifyLocationReply_GPSLocationStatus int32
 
 const (
-	VerifyLocationReply_LOC_UNKNOWN                  VerifyLocationReply_GPS_Location_Status = 0
-	VerifyLocationReply_LOC_VERIFIED                 VerifyLocationReply_GPS_Location_Status = 1
-	VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY    VerifyLocationReply_GPS_Location_Status = 2
-	VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY   VerifyLocationReply_GPS_Location_Status = 3
-	VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH    VerifyLocationReply_GPS_Location_Status = 4
-	VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH VerifyLocationReply_GPS_Location_Status = 5
-	VerifyLocationReply_LOC_ERROR_UNAUTHORIZED       VerifyLocationReply_GPS_Location_Status = 6
-	VerifyLocationReply_LOC_ERROR_OTHER              VerifyLocationReply_GPS_Location_Status = 7
+	VerifyLocationReply_LOC_UNKNOWN                  VerifyLocationReply_GPSLocationStatus = 0
+	VerifyLocationReply_LOC_VERIFIED                 VerifyLocationReply_GPSLocationStatus = 1
+	VerifyLocationReply_LOC_MISMATCH_SAME_COUNTRY    VerifyLocationReply_GPSLocationStatus = 2
+	VerifyLocationReply_LOC_MISMATCH_OTHER_COUNTRY   VerifyLocationReply_GPSLocationStatus = 3
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MATCH    VerifyLocationReply_GPSLocationStatus = 4
+	VerifyLocationReply_LOC_ROAMING_COUNTRY_MISMATCH VerifyLocationReply_GPSLocationStatus = 5
+	VerifyLocationReply_LOC_ERROR_UNAUTHORIZED       VerifyLocationReply_GPSLocationStatus = 6
+	VerifyLocationReply_LOC_ERROR_OTHER              VerifyLocationReply_GPSLocationStatus = 7
 )
 
-var VerifyLocationReply_GPS_Location_Status_name = map[int32]string{
+var VerifyLocationReply_GPSLocationStatus_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_VERIFIED",
 	2: "LOC_MISMATCH_SAME_COUNTRY",
@@ -191,7 +192,7 @@ var VerifyLocationReply_GPS_Location_Status_name = map[int32]string{
 	6: "LOC_ERROR_UNAUTHORIZED",
 	7: "LOC_ERROR_OTHER",
 }
-var VerifyLocationReply_GPS_Location_Status_value = map[string]int32{
+var VerifyLocationReply_GPSLocationStatus_value = map[string]int32{
 	"LOC_UNKNOWN":                  0,
 	"LOC_VERIFIED":                 1,
 	"LOC_MISMATCH_SAME_COUNTRY":    2,
@@ -202,92 +203,92 @@ var VerifyLocationReply_GPS_Location_Status_value = map[string]int32{
 	"LOC_ERROR_OTHER":              7,
 }
 
-func (x VerifyLocationReply_GPS_Location_Status) String() string {
-	return proto.EnumName(VerifyLocationReply_GPS_Location_Status_name, int32(x))
+func (x VerifyLocationReply_GPSLocationStatus) String() string {
+	return proto.EnumName(VerifyLocationReply_GPSLocationStatus_name, int32(x))
 }
-func (VerifyLocationReply_GPS_Location_Status) EnumDescriptor() ([]byte, []int) {
+func (VerifyLocationReply_GPSLocationStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{5, 1}
 }
 
 // Status of the reply
-type GetLocationReply_Loc_Status int32
+type GetLocationReply_LocStatus int32
 
 const (
-	GetLocationReply_LOC_UNKNOWN GetLocationReply_Loc_Status = 0
-	GetLocationReply_LOC_FOUND   GetLocationReply_Loc_Status = 1
+	GetLocationReply_LOC_UNKNOWN GetLocationReply_LocStatus = 0
+	GetLocationReply_LOC_FOUND   GetLocationReply_LocStatus = 1
 	// The user does not allow his location to be tracked
-	GetLocationReply_LOC_DENIED GetLocationReply_Loc_Status = 2
+	GetLocationReply_LOC_DENIED GetLocationReply_LocStatus = 2
 )
 
-var GetLocationReply_Loc_Status_name = map[int32]string{
+var GetLocationReply_LocStatus_name = map[int32]string{
 	0: "LOC_UNKNOWN",
 	1: "LOC_FOUND",
 	2: "LOC_DENIED",
 }
-var GetLocationReply_Loc_Status_value = map[string]int32{
+var GetLocationReply_LocStatus_value = map[string]int32{
 	"LOC_UNKNOWN": 0,
 	"LOC_FOUND":   1,
 	"LOC_DENIED":  2,
 }
 
-func (x GetLocationReply_Loc_Status) String() string {
-	return proto.EnumName(GetLocationReply_Loc_Status_name, int32(x))
+func (x GetLocationReply_LocStatus) String() string {
+	return proto.EnumName(GetLocationReply_LocStatus_name, int32(x))
 }
-func (GetLocationReply_Loc_Status) EnumDescriptor() ([]byte, []int) {
+func (GetLocationReply_LocStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{7, 0}
 }
 
 // Status of the reply
-type AppInstListReply_AI_Status int32
+type AppInstListReply_AIStatus int32
 
 const (
-	AppInstListReply_AI_UNDEFINED AppInstListReply_AI_Status = 0
-	AppInstListReply_AI_SUCCESS   AppInstListReply_AI_Status = 1
-	AppInstListReply_AI_FAIL      AppInstListReply_AI_Status = 2
+	AppInstListReply_AI_UNDEFINED AppInstListReply_AIStatus = 0
+	AppInstListReply_AI_SUCCESS   AppInstListReply_AIStatus = 1
+	AppInstListReply_AI_FAIL      AppInstListReply_AIStatus = 2
 )
 
-var AppInstListReply_AI_Status_name = map[int32]string{
+var AppInstListReply_AIStatus_name = map[int32]string{
 	0: "AI_UNDEFINED",
 	1: "AI_SUCCESS",
 	2: "AI_FAIL",
 }
-var AppInstListReply_AI_Status_value = map[string]int32{
+var AppInstListReply_AIStatus_value = map[string]int32{
 	"AI_UNDEFINED": 0,
 	"AI_SUCCESS":   1,
 	"AI_FAIL":      2,
 }
 
-func (x AppInstListReply_AI_Status) String() string {
-	return proto.EnumName(AppInstListReply_AI_Status_name, int32(x))
+func (x AppInstListReply_AIStatus) String() string {
+	return proto.EnumName(AppInstListReply_AIStatus_name, int32(x))
 }
-func (AppInstListReply_AI_Status) EnumDescriptor() ([]byte, []int) {
+func (AppInstListReply_AIStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{11, 0}
 }
 
 // Status of the reply
-type FqdnListReply_FL_Status int32
+type FqdnListReply_FLStatus int32
 
 const (
-	FqdnListReply_FL_UNDEFINED FqdnListReply_FL_Status = 0
-	FqdnListReply_FL_SUCCESS   FqdnListReply_FL_Status = 1
-	FqdnListReply_FL_FAIL      FqdnListReply_FL_Status = 2
+	FqdnListReply_FL_UNDEFINED FqdnListReply_FLStatus = 0
+	FqdnListReply_FL_SUCCESS   FqdnListReply_FLStatus = 1
+	FqdnListReply_FL_FAIL      FqdnListReply_FLStatus = 2
 )
 
-var FqdnListReply_FL_Status_name = map[int32]string{
+var FqdnListReply_FLStatus_name = map[int32]string{
 	0: "FL_UNDEFINED",
 	1: "FL_SUCCESS",
 	2: "FL_FAIL",
 }
-var FqdnListReply_FL_Status_value = map[string]int32{
+var FqdnListReply_FLStatus_value = map[string]int32{
 	"FL_UNDEFINED": 0,
 	"FL_SUCCESS":   1,
 	"FL_FAIL":      2,
 }
 
-func (x FqdnListReply_FL_Status) String() string {
-	return proto.EnumName(FqdnListReply_FL_Status_name, int32(x))
+func (x FqdnListReply_FLStatus) String() string {
+	return proto.EnumName(FqdnListReply_FLStatus_name, int32(x))
 }
-func (FqdnListReply_FL_Status) EnumDescriptor() ([]byte, []int) {
+func (FqdnListReply_FLStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptorAppClient, []int{14, 0}
 }
 
@@ -295,20 +296,20 @@ func (FqdnListReply_FL_Status) EnumDescriptor() ([]byte, []int) {
 type DynamicLocGroupRequest_DlgCommType int32
 
 const (
-	DynamicLocGroupRequest_DlgUndefined DynamicLocGroupRequest_DlgCommType = 0
-	DynamicLocGroupRequest_DlgSecure    DynamicLocGroupRequest_DlgCommType = 1
-	DynamicLocGroupRequest_DlgOpen      DynamicLocGroupRequest_DlgCommType = 2
+	DynamicLocGroupRequest_DLG_UNDEFINED DynamicLocGroupRequest_DlgCommType = 0
+	DynamicLocGroupRequest_DLG_SECURE    DynamicLocGroupRequest_DlgCommType = 1
+	DynamicLocGroupRequest_DLG_OPEN      DynamicLocGroupRequest_DlgCommType = 2
 )
 
 var DynamicLocGroupRequest_DlgCommType_name = map[int32]string{
-	0: "DlgUndefined",
-	1: "DlgSecure",
-	2: "DlgOpen",
+	0: "DLG_UNDEFINED",
+	1: "DLG_SECURE",
+	2: "DLG_OPEN",
 }
 var DynamicLocGroupRequest_DlgCommType_value = map[string]int32{
-	"DlgUndefined": 0,
-	"DlgSecure":    1,
-	"DlgOpen":      2,
+	"DLG_UNDEFINED": 0,
+	"DLG_SECURE":    1,
+	"DLG_OPEN":      2,
 }
 
 func (x DynamicLocGroupRequest_DlgCommType) String() string {
@@ -320,17 +321,17 @@ func (DynamicLocGroupRequest_DlgCommType) EnumDescriptor() ([]byte, []int) {
 
 type RegisterClientRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// App Developer Name
-	DevName string `protobuf:"bytes,2,opt,name=DevName,proto3" json:"DevName,omitempty"`
+	DevName string `protobuf:"bytes,2,opt,name=dev_name,json=devName,proto3" json:"dev_name,omitempty"`
 	// App Name
-	AppName string `protobuf:"bytes,3,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,3,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
 	// App Version
-	AppVers string `protobuf:"bytes,4,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	AppVers string `protobuf:"bytes,4,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
 	// carrier name, not currently used
-	CarrierName string `protobuf:"bytes,5,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,5,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// authentication token
-	AuthToken string `protobuf:"bytes,6,opt,name=AuthToken,proto3" json:"AuthToken,omitempty"`
+	AuthToken string `protobuf:"bytes,6,opt,name=auth_token,json=authToken,proto3" json:"auth_token,omitempty"`
 }
 
 func (m *RegisterClientRequest) Reset()                    { *m = RegisterClientRequest{} }
@@ -340,13 +341,13 @@ func (*RegisterClientRequest) Descriptor() ([]byte, []int) { return fileDescript
 
 type RegisterClientReply struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Status of the reply
-	Status ReplyStatus `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.ReplyStatus" json:"Status,omitempty"`
+	Status ReplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.ReplyStatus" json:"status,omitempty"`
 	// Session Cookie to be used in later API calls
-	SessionCookie string `protobuf:"bytes,3,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,3,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// URI for Token Server
-	TokenServerURI string `protobuf:"bytes,4,opt,name=TokenServerURI,proto3" json:"TokenServerURI,omitempty"`
+	TokenServerUri string `protobuf:"bytes,4,opt,name=token_server_uri,json=tokenServerUri,proto3" json:"token_server_uri,omitempty"`
 }
 
 func (m *RegisterClientReply) Reset()                    { *m = RegisterClientReply{} }
@@ -356,19 +357,19 @@ func (*RegisterClientReply) Descriptor() ([]byte, []int) { return fileDescriptor
 
 type FindCloudletRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
 	// DevName is applicable to Platform apps only
-	DevName string `protobuf:"bytes,5,opt,name=DevName,proto3" json:"DevName,omitempty"`
+	DevName string `protobuf:"bytes,5,opt,name=dev_name,json=devName,proto3" json:"dev_name,omitempty"`
 	// App Name is applicable to Platform apps only
-	AppName string `protobuf:"bytes,6,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,6,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
 	// App Version is applicable to Platform apps only
-	AppVers string `protobuf:"bytes,7,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	AppVers string `protobuf:"bytes,7,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
 }
 
 func (m *FindCloudletRequest) Reset()                    { *m = FindCloudletRequest{} }
@@ -378,11 +379,11 @@ func (*FindCloudletRequest) Descriptor() ([]byte, []int) { return fileDescriptor
 
 type FindCloudletReply struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Status return
 	Status FindCloudletReply_FindStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.FindCloudletReply_FindStatus" json:"status,omitempty"`
 	// Full Qualified Domain Name of Closest App instance
-	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
+	Fqdn string `protobuf:"bytes,3,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
 	// List of Service Endpoints for AppInst
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
 	// Location of the cloudlet
@@ -396,15 +397,15 @@ func (*FindCloudletReply) Descriptor() ([]byte, []int) { return fileDescriptorAp
 
 type VerifyLocationRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location to verify
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
 	// token used for location verification, app must retrieve from TokenServerURI
-	VerifyLocToken string `protobuf:"bytes,5,opt,name=VerifyLocToken,proto3" json:"VerifyLocToken,omitempty"`
+	VerifyLocToken string `protobuf:"bytes,5,opt,name=verify_loc_token,json=verifyLocToken,proto3" json:"verify_loc_token,omitempty"`
 }
 
 func (m *VerifyLocationRequest) Reset()                    { *m = VerifyLocationRequest{} }
@@ -414,13 +415,13 @@ func (*VerifyLocationRequest) Descriptor() ([]byte, []int) { return fileDescript
 
 type VerifyLocationReply struct {
 	// API version
-	Ver               uint32                                  `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	TowerStatus       VerifyLocationReply_Tower_Status        `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_Tower_Status" json:"tower_status,omitempty"`
-	GpsLocationStatus VerifyLocationReply_GPS_Location_Status `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPS_Location_Status" json:"gps_location_status,omitempty"`
+	Ver               uint32                                `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	TowerStatus       VerifyLocationReply_TowerStatus       `protobuf:"varint,2,opt,name=tower_status,json=towerStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_TowerStatus" json:"tower_status,omitempty"`
+	GpsLocationStatus VerifyLocationReply_GPSLocationStatus `protobuf:"varint,3,opt,name=gps_location_status,json=gpsLocationStatus,proto3,enum=distributed_match_engine.VerifyLocationReply_GPSLocationStatus" json:"gps_location_status,omitempty"`
 	// location accuracy, the location is verified to
 	// be within this number of kilometers.  Negative value
 	// means no verification was done
-	GPS_Location_Accuracy_KM float64 `protobuf:"fixed64,4,opt,name=GPS_Location_Accuracy_KM,json=GPSLocationAccuracyKM,proto3" json:"GPS_Location_Accuracy_KM,omitempty"`
+	GpsLocationAccuracyKm float64 `protobuf:"fixed64,4,opt,name=gps_location_accuracy_km,json=gpsLocationAccuracyKm,proto3" json:"gps_location_accuracy_km,omitempty"`
 }
 
 func (m *VerifyLocationReply) Reset()                    { *m = VerifyLocationReply{} }
@@ -430,11 +431,11 @@ func (*VerifyLocationReply) Descriptor() ([]byte, []int) { return fileDescriptor
 
 type GetLocationRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 }
 
 func (m *GetLocationRequest) Reset()                    { *m = GetLocationRequest{} }
@@ -443,14 +444,14 @@ func (*GetLocationRequest) ProtoMessage()               {}
 func (*GetLocationRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{6} }
 
 type GetLocationReply struct {
-	Ver    uint32                      `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
-	Status GetLocationReply_Loc_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.GetLocationReply_Loc_Status" json:"Status,omitempty"`
+	Ver    uint32                     `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	Status GetLocationReply_LocStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.GetLocationReply_LocStatus" json:"status,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The tower that user is currently connected to
-	Tower uint64 `protobuf:"varint,4,opt,name=Tower,proto3" json:"Tower,omitempty"`
+	Tower uint64 `protobuf:"varint,4,opt,name=tower,proto3" json:"tower,omitempty"`
 	// The GPS location of the user
-	NetworkLocation *Loc `protobuf:"bytes,5,opt,name=NetworkLocation" json:"NetworkLocation,omitempty"`
+	NetworkLocation *Loc `protobuf:"bytes,5,opt,name=network_location,json=networkLocation" json:"network_location,omitempty"`
 }
 
 func (m *GetLocationReply) Reset()                    { *m = GetLocationReply{} }
@@ -460,13 +461,13 @@ func (*GetLocationReply) Descriptor() ([]byte, []int) { return fileDescriptorApp
 
 type AppInstListRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,3,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,3,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// The GPS location of the user
-	GpsLocation *Loc `protobuf:"bytes,4,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GpsLocation *Loc `protobuf:"bytes,4,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
 }
 
 func (m *AppInstListRequest) Reset()                    { *m = AppInstListRequest{} }
@@ -476,11 +477,11 @@ func (*AppInstListRequest) Descriptor() ([]byte, []int) { return fileDescriptorA
 
 type Appinstance struct {
 	// App Instance Name
-	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
 	// App Instance Version
-	AppVers string `protobuf:"bytes,2,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	AppVers string `protobuf:"bytes,2,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
 	// App Instance FQDN
-	FQDN string `protobuf:"bytes,3,opt,name=FQDN,proto3" json:"FQDN,omitempty"`
+	Fqdn string `protobuf:"bytes,3,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
 	// ports to access app
 	Ports []*AppPort `protobuf:"bytes,4,rep,name=ports" json:"ports,omitempty"`
 }
@@ -492,15 +493,15 @@ func (*Appinstance) Descriptor() ([]byte, []int) { return fileDescriptorAppClien
 
 type CloudletLocation struct {
 	// The carrier name that user is connected to ("Cellular Carrier Name")
-	CarrierName string `protobuf:"bytes,1,opt,name=CarrierName,proto3" json:"CarrierName,omitempty"`
+	CarrierName string `protobuf:"bytes,1,opt,name=carrier_name,json=carrierName,proto3" json:"carrier_name,omitempty"`
 	// Cloudlet Name
-	CloudletName string `protobuf:"bytes,2,opt,name=CloudletName,proto3" json:"CloudletName,omitempty"`
+	CloudletName string `protobuf:"bytes,2,opt,name=cloudlet_name,json=cloudletName,proto3" json:"cloudlet_name,omitempty"`
 	// The GPS Location of the user
-	GpsLocation *Loc `protobuf:"bytes,3,opt,name=GpsLocation" json:"GpsLocation,omitempty"`
+	GpsLocation *Loc `protobuf:"bytes,3,opt,name=gps_location,json=gpsLocation" json:"gps_location,omitempty"`
 	// Distance of cloudlet vs loc in request
-	Distance float64 `protobuf:"fixed64,4,opt,name=Distance,proto3" json:"Distance,omitempty"`
+	Distance float64 `protobuf:"fixed64,4,opt,name=distance,proto3" json:"distance,omitempty"`
 	// App instances
-	Appinstances []*Appinstance `protobuf:"bytes,5,rep,name=Appinstances" json:"Appinstances,omitempty"`
+	Appinstances []*Appinstance `protobuf:"bytes,5,rep,name=appinstances" json:"appinstances,omitempty"`
 }
 
 func (m *CloudletLocation) Reset()                    { *m = CloudletLocation{} }
@@ -510,9 +511,9 @@ func (*CloudletLocation) Descriptor() ([]byte, []int) { return fileDescriptorApp
 
 type AppInstListReply struct {
 	// API version
-	Ver       uint32                     `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
-	Status    AppInstListReply_AI_Status `protobuf:"varint,2,opt,name=Status,proto3,enum=distributed_match_engine.AppInstListReply_AI_Status" json:"Status,omitempty"`
-	Cloudlets []*CloudletLocation        `protobuf:"bytes,3,rep,name=Cloudlets" json:"Cloudlets,omitempty"`
+	Ver       uint32                    `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	Status    AppInstListReply_AIStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.AppInstListReply_AIStatus" json:"status,omitempty"`
+	Cloudlets []*CloudletLocation       `protobuf:"bytes,3,rep,name=cloudlets" json:"cloudlets,omitempty"`
 }
 
 func (m *AppInstListReply) Reset()                    { *m = AppInstListReply{} }
@@ -522,9 +523,9 @@ func (*AppInstListReply) Descriptor() ([]byte, []int) { return fileDescriptorApp
 
 type FqdnListRequest struct {
 	// API version
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 }
 
 func (m *FqdnListRequest) Reset()                    { *m = FqdnListRequest{} }
@@ -534,15 +535,15 @@ func (*FqdnListRequest) Descriptor() ([]byte, []int) { return fileDescriptorAppC
 
 type AppFqdn struct {
 	// App  Name
-	AppName string `protobuf:"bytes,1,opt,name=AppName,proto3" json:"AppName,omitempty"`
+	AppName string `protobuf:"bytes,1,opt,name=app_name,json=appName,proto3" json:"app_name,omitempty"`
 	// App Version
-	AppVers string `protobuf:"bytes,2,opt,name=AppVers,proto3" json:"AppVers,omitempty"`
+	AppVers string `protobuf:"bytes,2,opt,name=app_vers,json=appVers,proto3" json:"app_vers,omitempty"`
 	// developer name
-	DevName string `protobuf:"bytes,3,opt,name=DevName,proto3" json:"DevName,omitempty"`
+	DevName string `protobuf:"bytes,3,opt,name=dev_name,json=devName,proto3" json:"dev_name,omitempty"`
 	// App FQDN
-	FQDNs []string `protobuf:"bytes,4,rep,name=FQDNs" json:"FQDNs,omitempty"`
+	Fqdns []string `protobuf:"bytes,4,rep,name=fqdns" json:"fqdns,omitempty"`
 	// optional android package name
-	AndroidPackageName string `protobuf:"bytes,5,opt,name=AndroidPackageName,proto3" json:"AndroidPackageName,omitempty"`
+	AndroidPackageName string `protobuf:"bytes,5,opt,name=android_package_name,json=androidPackageName,proto3" json:"android_package_name,omitempty"`
 }
 
 func (m *AppFqdn) Reset()                    { *m = AppFqdn{} }
@@ -552,9 +553,9 @@ func (*AppFqdn) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, [
 
 type FqdnListReply struct {
 	// API version
-	Ver      uint32                  `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
-	AppFqdns []*AppFqdn              `protobuf:"bytes,3,rep,name=AppFqdns" json:"AppFqdns,omitempty"`
-	Status   FqdnListReply_FL_Status `protobuf:"varint,4,opt,name=Status,proto3,enum=distributed_match_engine.FqdnListReply_FL_Status" json:"Status,omitempty"`
+	Ver      uint32                 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
+	AppFqdns []*AppFqdn             `protobuf:"bytes,3,rep,name=app_fqdns,json=appFqdns" json:"app_fqdns,omitempty"`
+	Status   FqdnListReply_FLStatus `protobuf:"varint,4,opt,name=status,proto3,enum=distributed_match_engine.FqdnListReply_FLStatus" json:"status,omitempty"`
 }
 
 func (m *FqdnListReply) Reset()                    { *m = FqdnListReply{} }
@@ -563,14 +564,14 @@ func (*FqdnListReply) ProtoMessage()               {}
 func (*FqdnListReply) Descriptor() ([]byte, []int) { return fileDescriptorAppClient, []int{14} }
 
 type DynamicLocGroupRequest struct {
-	Ver uint32 `protobuf:"varint,1,opt,name=Ver,proto3" json:"Ver,omitempty"`
+	Ver uint32 `protobuf:"varint,1,opt,name=ver,proto3" json:"ver,omitempty"`
 	// Session Cookie from RegisterClientRequest
-	SessionCookie string `protobuf:"bytes,2,opt,name=SessionCookie,proto3" json:"SessionCookie,omitempty"`
+	SessionCookie string `protobuf:"bytes,2,opt,name=session_cookie,json=sessionCookie,proto3" json:"session_cookie,omitempty"`
 	// Dynamic Location Group Id
-	LgId     uint64                             `protobuf:"varint,3,opt,name=LgId,proto3" json:"LgId,omitempty"`
-	CommType DynamicLocGroupRequest_DlgCommType `protobuf:"varint,11,opt,name=CommType,proto3,enum=distributed_match_engine.DynamicLocGroupRequest_DlgCommType" json:"CommType,omitempty"`
+	LgId     uint64                             `protobuf:"varint,3,opt,name=lg_id,json=lgId,proto3" json:"lg_id,omitempty"`
+	CommType DynamicLocGroupRequest_DlgCommType `protobuf:"varint,11,opt,name=comm_type,json=commType,proto3,enum=distributed_match_engine.DynamicLocGroupRequest_DlgCommType" json:"comm_type,omitempty"`
 	// Unused
-	UserData string `protobuf:"bytes,12,opt,name=UserData,proto3" json:"UserData,omitempty"`
+	UserData string `protobuf:"bytes,12,opt,name=user_data,json=userData,proto3" json:"user_data,omitempty"`
 }
 
 func (m *DynamicLocGroupRequest) Reset()                    { *m = DynamicLocGroupRequest{} }
@@ -583,9 +584,9 @@ type DynamicLocGroupReply struct {
 	// Status of the reply
 	Status ReplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=distributed_match_engine.ReplyStatus" json:"status,omitempty"`
 	// Error Code based on Failure
-	ErrorCode uint32 `protobuf:"varint,3,opt,name=ErrorCode,proto3" json:"ErrorCode,omitempty"`
+	ErrorCode uint32 `protobuf:"varint,3,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
 	// Group Cookie for Secure Group Communication
-	GroupCookie string `protobuf:"bytes,5,opt,name=GroupCookie,proto3" json:"GroupCookie,omitempty"`
+	GroupCookie string `protobuf:"bytes,5,opt,name=group_cookie,json=groupCookie,proto3" json:"group_cookie,omitempty"`
 }
 
 func (m *DynamicLocGroupReply) Reset()                    { *m = DynamicLocGroupReply{} }
@@ -614,11 +615,11 @@ func init() {
 	proto.RegisterEnum("distributed_match_engine.IDTypes", IDTypes_name, IDTypes_value)
 	proto.RegisterEnum("distributed_match_engine.ReplyStatus", ReplyStatus_name, ReplyStatus_value)
 	proto.RegisterEnum("distributed_match_engine.FindCloudletReply_FindStatus", FindCloudletReply_FindStatus_name, FindCloudletReply_FindStatus_value)
-	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_Tower_Status", VerifyLocationReply_Tower_Status_name, VerifyLocationReply_Tower_Status_value)
-	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPS_Location_Status", VerifyLocationReply_GPS_Location_Status_name, VerifyLocationReply_GPS_Location_Status_value)
-	proto.RegisterEnum("distributed_match_engine.GetLocationReply_Loc_Status", GetLocationReply_Loc_Status_name, GetLocationReply_Loc_Status_value)
-	proto.RegisterEnum("distributed_match_engine.AppInstListReply_AI_Status", AppInstListReply_AI_Status_name, AppInstListReply_AI_Status_value)
-	proto.RegisterEnum("distributed_match_engine.FqdnListReply_FL_Status", FqdnListReply_FL_Status_name, FqdnListReply_FL_Status_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_TowerStatus", VerifyLocationReply_TowerStatus_name, VerifyLocationReply_TowerStatus_value)
+	proto.RegisterEnum("distributed_match_engine.VerifyLocationReply_GPSLocationStatus", VerifyLocationReply_GPSLocationStatus_name, VerifyLocationReply_GPSLocationStatus_value)
+	proto.RegisterEnum("distributed_match_engine.GetLocationReply_LocStatus", GetLocationReply_LocStatus_name, GetLocationReply_LocStatus_value)
+	proto.RegisterEnum("distributed_match_engine.AppInstListReply_AIStatus", AppInstListReply_AIStatus_name, AppInstListReply_AIStatus_value)
+	proto.RegisterEnum("distributed_match_engine.FqdnListReply_FLStatus", FqdnListReply_FLStatus_name, FqdnListReply_FLStatus_value)
 	proto.RegisterEnum("distributed_match_engine.DynamicLocGroupRequest_DlgCommType", DynamicLocGroupRequest_DlgCommType_name, DynamicLocGroupRequest_DlgCommType_value)
 }
 
@@ -630,9 +631,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// Client API for Match_Engine_Api service
+// Client API for MatchEngineApi service
 
-type Match_Engine_ApiClient interface {
+type MatchEngineApiClient interface {
 	RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error)
 	FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error)
 	VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error)
@@ -642,80 +643,80 @@ type Match_Engine_ApiClient interface {
 	GetFqdnList(ctx context.Context, in *FqdnListRequest, opts ...grpc.CallOption) (*FqdnListReply, error)
 }
 
-type match_Engine_ApiClient struct {
+type matchEngineApiClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewMatch_Engine_ApiClient(cc *grpc.ClientConn) Match_Engine_ApiClient {
-	return &match_Engine_ApiClient{cc}
+func NewMatchEngineApiClient(cc *grpc.ClientConn) MatchEngineApiClient {
+	return &matchEngineApiClient{cc}
 }
 
-func (c *match_Engine_ApiClient) RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error) {
+func (c *matchEngineApiClient) RegisterClient(ctx context.Context, in *RegisterClientRequest, opts ...grpc.CallOption) (*RegisterClientReply, error) {
 	out := new(RegisterClientReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/RegisterClient", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/RegisterClient", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error) {
+func (c *matchEngineApiClient) FindCloudlet(ctx context.Context, in *FindCloudletRequest, opts ...grpc.CallOption) (*FindCloudletReply, error) {
 	out := new(FindCloudletReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/FindCloudlet", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/FindCloudlet", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error) {
+func (c *matchEngineApiClient) VerifyLocation(ctx context.Context, in *VerifyLocationRequest, opts ...grpc.CallOption) (*VerifyLocationReply, error) {
 	out := new(VerifyLocationReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/VerifyLocation", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/VerifyLocation", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) GetLocation(ctx context.Context, in *GetLocationRequest, opts ...grpc.CallOption) (*GetLocationReply, error) {
+func (c *matchEngineApiClient) GetLocation(ctx context.Context, in *GetLocationRequest, opts ...grpc.CallOption) (*GetLocationReply, error) {
 	out := new(GetLocationReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetLocation", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/GetLocation", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) AddUserToGroup(ctx context.Context, in *DynamicLocGroupRequest, opts ...grpc.CallOption) (*DynamicLocGroupReply, error) {
+func (c *matchEngineApiClient) AddUserToGroup(ctx context.Context, in *DynamicLocGroupRequest, opts ...grpc.CallOption) (*DynamicLocGroupReply, error) {
 	out := new(DynamicLocGroupReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/AddUserToGroup", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/AddUserToGroup", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) GetAppInstList(ctx context.Context, in *AppInstListRequest, opts ...grpc.CallOption) (*AppInstListReply, error) {
+func (c *matchEngineApiClient) GetAppInstList(ctx context.Context, in *AppInstListRequest, opts ...grpc.CallOption) (*AppInstListReply, error) {
 	out := new(AppInstListReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetAppInstList", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/GetAppInstList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *match_Engine_ApiClient) GetFqdnList(ctx context.Context, in *FqdnListRequest, opts ...grpc.CallOption) (*FqdnListReply, error) {
+func (c *matchEngineApiClient) GetFqdnList(ctx context.Context, in *FqdnListRequest, opts ...grpc.CallOption) (*FqdnListReply, error) {
 	out := new(FqdnListReply)
-	err := grpc.Invoke(ctx, "/distributed_match_engine.Match_Engine_Api/GetFqdnList", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/distributed_match_engine.MatchEngineApi/GetFqdnList", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for Match_Engine_Api service
+// Server API for MatchEngineApi service
 
-type Match_Engine_ApiServer interface {
+type MatchEngineApiServer interface {
 	RegisterClient(context.Context, *RegisterClientRequest) (*RegisterClientReply, error)
 	FindCloudlet(context.Context, *FindCloudletRequest) (*FindCloudletReply, error)
 	VerifyLocation(context.Context, *VerifyLocationRequest) (*VerifyLocationReply, error)
@@ -725,167 +726,167 @@ type Match_Engine_ApiServer interface {
 	GetFqdnList(context.Context, *FqdnListRequest) (*FqdnListReply, error)
 }
 
-func RegisterMatch_Engine_ApiServer(s *grpc.Server, srv Match_Engine_ApiServer) {
-	s.RegisterService(&_Match_Engine_Api_serviceDesc, srv)
+func RegisterMatchEngineApiServer(s *grpc.Server, srv MatchEngineApiServer) {
+	s.RegisterService(&_MatchEngineApi_serviceDesc, srv)
 }
 
-func _Match_Engine_Api_RegisterClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_RegisterClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RegisterClientRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, in)
+		return srv.(MatchEngineApiServer).RegisterClient(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/RegisterClient",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/RegisterClient",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).RegisterClient(ctx, req.(*RegisterClientRequest))
+		return srv.(MatchEngineApiServer).RegisterClient(ctx, req.(*RegisterClientRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_FindCloudlet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_FindCloudlet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FindCloudletRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, in)
+		return srv.(MatchEngineApiServer).FindCloudlet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/FindCloudlet",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/FindCloudlet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).FindCloudlet(ctx, req.(*FindCloudletRequest))
+		return srv.(MatchEngineApiServer).FindCloudlet(ctx, req.(*FindCloudletRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_VerifyLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_VerifyLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyLocationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, in)
+		return srv.(MatchEngineApiServer).VerifyLocation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/VerifyLocation",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/VerifyLocation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).VerifyLocation(ctx, req.(*VerifyLocationRequest))
+		return srv.(MatchEngineApiServer).VerifyLocation(ctx, req.(*VerifyLocationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_GetLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_GetLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetLocationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).GetLocation(ctx, in)
+		return srv.(MatchEngineApiServer).GetLocation(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetLocation",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/GetLocation",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).GetLocation(ctx, req.(*GetLocationRequest))
+		return srv.(MatchEngineApiServer).GetLocation(ctx, req.(*GetLocationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_AddUserToGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_AddUserToGroup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DynamicLocGroupRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).AddUserToGroup(ctx, in)
+		return srv.(MatchEngineApiServer).AddUserToGroup(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/AddUserToGroup",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/AddUserToGroup",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).AddUserToGroup(ctx, req.(*DynamicLocGroupRequest))
+		return srv.(MatchEngineApiServer).AddUserToGroup(ctx, req.(*DynamicLocGroupRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_GetAppInstList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_GetAppInstList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AppInstListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).GetAppInstList(ctx, in)
+		return srv.(MatchEngineApiServer).GetAppInstList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetAppInstList",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/GetAppInstList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).GetAppInstList(ctx, req.(*AppInstListRequest))
+		return srv.(MatchEngineApiServer).GetAppInstList(ctx, req.(*AppInstListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Match_Engine_Api_GetFqdnList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _MatchEngineApi_GetFqdnList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(FqdnListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(Match_Engine_ApiServer).GetFqdnList(ctx, in)
+		return srv.(MatchEngineApiServer).GetFqdnList(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/distributed_match_engine.Match_Engine_Api/GetFqdnList",
+		FullMethod: "/distributed_match_engine.MatchEngineApi/GetFqdnList",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(Match_Engine_ApiServer).GetFqdnList(ctx, req.(*FqdnListRequest))
+		return srv.(MatchEngineApiServer).GetFqdnList(ctx, req.(*FqdnListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Match_Engine_Api_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "distributed_match_engine.Match_Engine_Api",
-	HandlerType: (*Match_Engine_ApiServer)(nil),
+var _MatchEngineApi_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "distributed_match_engine.MatchEngineApi",
+	HandlerType: (*MatchEngineApiServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "RegisterClient",
-			Handler:    _Match_Engine_Api_RegisterClient_Handler,
+			Handler:    _MatchEngineApi_RegisterClient_Handler,
 		},
 		{
 			MethodName: "FindCloudlet",
-			Handler:    _Match_Engine_Api_FindCloudlet_Handler,
+			Handler:    _MatchEngineApi_FindCloudlet_Handler,
 		},
 		{
 			MethodName: "VerifyLocation",
-			Handler:    _Match_Engine_Api_VerifyLocation_Handler,
+			Handler:    _MatchEngineApi_VerifyLocation_Handler,
 		},
 		{
 			MethodName: "GetLocation",
-			Handler:    _Match_Engine_Api_GetLocation_Handler,
+			Handler:    _MatchEngineApi_GetLocation_Handler,
 		},
 		{
 			MethodName: "AddUserToGroup",
-			Handler:    _Match_Engine_Api_AddUserToGroup_Handler,
+			Handler:    _MatchEngineApi_AddUserToGroup_Handler,
 		},
 		{
 			MethodName: "GetAppInstList",
-			Handler:    _Match_Engine_Api_GetAppInstList_Handler,
+			Handler:    _MatchEngineApi_GetAppInstList_Handler,
 		},
 		{
 			MethodName: "GetFqdnList",
-			Handler:    _Match_Engine_Api_GetFqdnList_Handler,
+			Handler:    _MatchEngineApi_GetFqdnList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -976,11 +977,11 @@ func (m *RegisterClientReply) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.SessionCookie)))
 		i += copy(dAtA[i:], m.SessionCookie)
 	}
-	if len(m.TokenServerURI) > 0 {
+	if len(m.TokenServerUri) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.TokenServerURI)))
-		i += copy(dAtA[i:], m.TokenServerURI)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.TokenServerUri)))
+		i += copy(dAtA[i:], m.TokenServerUri)
 	}
 	return i, nil
 }
@@ -1073,11 +1074,11 @@ func (m *FindCloudletReply) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.Status))
 	}
-	if len(m.FQDN) > 0 {
+	if len(m.Fqdn) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.FQDN)))
-		i += copy(dAtA[i:], m.FQDN)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Fqdn)))
+		i += copy(dAtA[i:], m.Fqdn)
 	}
 	if len(m.Ports) > 0 {
 		for _, msg := range m.Ports {
@@ -1185,10 +1186,10 @@ func (m *VerifyLocationReply) MarshalTo(dAtA []byte) (int, error) {
 		i++
 		i = encodeVarintAppClient(dAtA, i, uint64(m.GpsLocationStatus))
 	}
-	if m.GPS_Location_Accuracy_KM != 0 {
+	if m.GpsLocationAccuracyKm != 0 {
 		dAtA[i] = 0x21
 		i++
-		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.GPS_Location_Accuracy_KM))))
+		binary.LittleEndian.PutUint64(dAtA[i:], uint64(math.Float64bits(float64(m.GpsLocationAccuracyKm))))
 		i += 8
 	}
 	return i, nil
@@ -1350,11 +1351,11 @@ func (m *Appinstance) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.AppVers)))
 		i += copy(dAtA[i:], m.AppVers)
 	}
-	if len(m.FQDN) > 0 {
+	if len(m.Fqdn) > 0 {
 		dAtA[i] = 0x1a
 		i++
-		i = encodeVarintAppClient(dAtA, i, uint64(len(m.FQDN)))
-		i += copy(dAtA[i:], m.FQDN)
+		i = encodeVarintAppClient(dAtA, i, uint64(len(m.Fqdn)))
+		i += copy(dAtA[i:], m.Fqdn)
 	}
 	if len(m.Ports) > 0 {
 		for _, msg := range m.Ports {
@@ -1531,8 +1532,8 @@ func (m *AppFqdn) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintAppClient(dAtA, i, uint64(len(m.DevName)))
 		i += copy(dAtA[i:], m.DevName)
 	}
-	if len(m.FQDNs) > 0 {
-		for _, s := range m.FQDNs {
+	if len(m.Fqdns) > 0 {
+		for _, s := range m.Fqdns {
 			dAtA[i] = 0x22
 			i++
 			l = len(s)
@@ -1706,7 +1707,7 @@ func (m *RegisterClientReply) CopyInFields(src *RegisterClientReply) {
 	m.Ver = src.Ver
 	m.Status = src.Status
 	m.SessionCookie = src.SessionCookie
-	m.TokenServerURI = src.TokenServerURI
+	m.TokenServerUri = src.TokenServerUri
 }
 
 // Helper method to check that enums have valid values
@@ -1752,7 +1753,7 @@ func (m *FindCloudletRequest) ValidateEnums() error {
 func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 	m.Ver = src.Ver
 	m.Status = src.Status
-	m.FQDN = src.FQDN
+	m.Fqdn = src.Fqdn
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
@@ -1763,7 +1764,7 @@ func (m *FindCloudletReply) CopyInFields(src *FindCloudletReply) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
+			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
 		}
 	}
 	if src.CloudletLocation != nil {
@@ -1833,15 +1834,15 @@ func (m *VerifyLocationReply) CopyInFields(src *VerifyLocationReply) {
 	m.Ver = src.Ver
 	m.TowerStatus = src.TowerStatus
 	m.GpsLocationStatus = src.GpsLocationStatus
-	m.GPS_Location_Accuracy_KM = src.GPS_Location_Accuracy_KM
+	m.GpsLocationAccuracyKm = src.GpsLocationAccuracyKm
 }
 
 // Helper method to check that enums have valid values
 func (m *VerifyLocationReply) ValidateEnums() error {
-	if _, ok := VerifyLocationReply_Tower_Status_name[int32(m.TowerStatus)]; !ok {
+	if _, ok := VerifyLocationReply_TowerStatus_name[int32(m.TowerStatus)]; !ok {
 		return errors.New("invalid TowerStatus")
 	}
-	if _, ok := VerifyLocationReply_GPS_Location_Status_name[int32(m.GpsLocationStatus)]; !ok {
+	if _, ok := VerifyLocationReply_GPSLocationStatus_name[int32(m.GpsLocationStatus)]; !ok {
 		return errors.New("invalid GpsLocationStatus")
 	}
 	return nil
@@ -1882,7 +1883,7 @@ func (m *GetLocationReply) CopyInFields(src *GetLocationReply) {
 
 // Helper method to check that enums have valid values
 func (m *GetLocationReply) ValidateEnums() error {
-	if _, ok := GetLocationReply_Loc_Status_name[int32(m.Status)]; !ok {
+	if _, ok := GetLocationReply_LocStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	if err := m.NetworkLocation.ValidateEnums(); err != nil {
@@ -1923,7 +1924,7 @@ func (m *AppInstListRequest) ValidateEnums() error {
 func (m *Appinstance) CopyInFields(src *Appinstance) {
 	m.AppName = src.AppName
 	m.AppVers = src.AppVers
-	m.FQDN = src.FQDN
+	m.Fqdn = src.Fqdn
 	if src.Ports != nil {
 		if m.Ports == nil || len(m.Ports) != len(src.Ports) {
 			m.Ports = make([]*AppPort, len(src.Ports))
@@ -1934,7 +1935,7 @@ func (m *Appinstance) CopyInFields(src *Appinstance) {
 			m.Ports[i0].InternalPort = src.Ports[i0].InternalPort
 			m.Ports[i0].PublicPort = src.Ports[i0].PublicPort
 			m.Ports[i0].PathPrefix = src.Ports[i0].PathPrefix
-			m.Ports[i0].FQDNPrefix = src.Ports[i0].FQDNPrefix
+			m.Ports[i0].FqdnPrefix = src.Ports[i0].FqdnPrefix
 		}
 	}
 }
@@ -1976,7 +1977,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 			m.Appinstances[i0] = &Appinstance{}
 			m.Appinstances[i0].AppName = src.Appinstances[i0].AppName
 			m.Appinstances[i0].AppVers = src.Appinstances[i0].AppVers
-			m.Appinstances[i0].FQDN = src.Appinstances[i0].FQDN
+			m.Appinstances[i0].Fqdn = src.Appinstances[i0].Fqdn
 			if src.Appinstances[i0].Ports != nil {
 				if m.Appinstances[i0].Ports == nil || len(m.Appinstances[i0].Ports) != len(src.Appinstances[i0].Ports) {
 					m.Appinstances[i0].Ports = make([]*AppPort, len(src.Appinstances[i0].Ports))
@@ -1987,7 +1988,7 @@ func (m *CloudletLocation) CopyInFields(src *CloudletLocation) {
 					m.Appinstances[i0].Ports[i1].InternalPort = src.Appinstances[i0].Ports[i1].InternalPort
 					m.Appinstances[i0].Ports[i1].PublicPort = src.Appinstances[i0].Ports[i1].PublicPort
 					m.Appinstances[i0].Ports[i1].PathPrefix = src.Appinstances[i0].Ports[i1].PathPrefix
-					m.Appinstances[i0].Ports[i1].FQDNPrefix = src.Appinstances[i0].Ports[i1].FQDNPrefix
+					m.Appinstances[i0].Ports[i1].FqdnPrefix = src.Appinstances[i0].Ports[i1].FqdnPrefix
 				}
 			}
 		}
@@ -2042,7 +2043,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 					m.Cloudlets[i0].Appinstances[i1] = &Appinstance{}
 					m.Cloudlets[i0].Appinstances[i1].AppName = src.Cloudlets[i0].Appinstances[i1].AppName
 					m.Cloudlets[i0].Appinstances[i1].AppVers = src.Cloudlets[i0].Appinstances[i1].AppVers
-					m.Cloudlets[i0].Appinstances[i1].FQDN = src.Cloudlets[i0].Appinstances[i1].FQDN
+					m.Cloudlets[i0].Appinstances[i1].Fqdn = src.Cloudlets[i0].Appinstances[i1].Fqdn
 					if src.Cloudlets[i0].Appinstances[i1].Ports != nil {
 						if m.Cloudlets[i0].Appinstances[i1].Ports == nil || len(m.Cloudlets[i0].Appinstances[i1].Ports) != len(src.Cloudlets[i0].Appinstances[i1].Ports) {
 							m.Cloudlets[i0].Appinstances[i1].Ports = make([]*AppPort, len(src.Cloudlets[i0].Appinstances[i1].Ports))
@@ -2053,7 +2054,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].InternalPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PublicPort
 							m.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].PathPrefix
-							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FQDNPrefix
+							m.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix = src.Cloudlets[i0].Appinstances[i1].Ports[i2].FqdnPrefix
 						}
 					}
 				}
@@ -2064,7 +2065,7 @@ func (m *AppInstListReply) CopyInFields(src *AppInstListReply) {
 
 // Helper method to check that enums have valid values
 func (m *AppInstListReply) ValidateEnums() error {
-	if _, ok := AppInstListReply_AI_Status_name[int32(m.Status)]; !ok {
+	if _, ok := AppInstListReply_AIStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	for _, e := range m.Cloudlets {
@@ -2089,10 +2090,10 @@ func (m *AppFqdn) CopyInFields(src *AppFqdn) {
 	m.AppName = src.AppName
 	m.AppVers = src.AppVers
 	m.DevName = src.DevName
-	if m.FQDNs == nil || len(m.FQDNs) != len(src.FQDNs) {
-		m.FQDNs = make([]string, len(src.FQDNs))
+	if m.Fqdns == nil || len(m.Fqdns) != len(src.Fqdns) {
+		m.Fqdns = make([]string, len(src.Fqdns))
 	}
-	copy(m.FQDNs, src.FQDNs)
+	copy(m.Fqdns, src.Fqdns)
 	m.AndroidPackageName = src.AndroidPackageName
 }
 
@@ -2112,10 +2113,10 @@ func (m *FqdnListReply) CopyInFields(src *FqdnListReply) {
 			m.AppFqdns[i0].AppName = src.AppFqdns[i0].AppName
 			m.AppFqdns[i0].AppVers = src.AppFqdns[i0].AppVers
 			m.AppFqdns[i0].DevName = src.AppFqdns[i0].DevName
-			if m.AppFqdns[i0].FQDNs == nil || len(m.AppFqdns[i0].FQDNs) != len(src.AppFqdns[i0].FQDNs) {
-				m.AppFqdns[i0].FQDNs = make([]string, len(src.AppFqdns[i0].FQDNs))
+			if m.AppFqdns[i0].Fqdns == nil || len(m.AppFqdns[i0].Fqdns) != len(src.AppFqdns[i0].Fqdns) {
+				m.AppFqdns[i0].Fqdns = make([]string, len(src.AppFqdns[i0].Fqdns))
 			}
-			copy(m.AppFqdns[i0].FQDNs, src.AppFqdns[i0].FQDNs)
+			copy(m.AppFqdns[i0].Fqdns, src.AppFqdns[i0].Fqdns)
 			m.AppFqdns[i0].AndroidPackageName = src.AppFqdns[i0].AndroidPackageName
 		}
 	}
@@ -2129,7 +2130,7 @@ func (m *FqdnListReply) ValidateEnums() error {
 			return err
 		}
 	}
-	if _, ok := FqdnListReply_FL_Status_name[int32(m.Status)]; !ok {
+	if _, ok := FqdnListReply_FLStatus_name[int32(m.Status)]; !ok {
 		return errors.New("invalid Status")
 	}
 	return nil
@@ -2180,19 +2181,36 @@ const (
 	IDTypesIPADDR       uint64 = 1 << 3
 )
 
+var IDTypes_CamelName = map[int32]string{
+	// ID_UNDEFINED -> IdUndefined
+	0: "IdUndefined",
+	// IMEI -> Imei
+	1: "Imei",
+	// MSISDN -> Msisdn
+	2: "Msisdn",
+	// IPADDR -> Ipaddr
+	3: "Ipaddr",
+}
+var IDTypes_CamelValue = map[string]int32{
+	"IdUndefined": 0,
+	"Imei":        1,
+	"Msisdn":      2,
+	"Ipaddr":      3,
+}
+
 func (e *IDTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := IDTypes_value[str]
+	val, ok := IDTypes_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = IDTypes_name[val]
+			_, ok = IDTypes_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2203,7 +2221,7 @@ func (e *IDTypes) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e IDTypes) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(IDTypes_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2211,13 +2229,13 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := IDTypes_value[str]
+		val, ok := IDTypes_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = IDTypes_name[val]
+				_, ok = IDTypes_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2236,7 +2254,8 @@ func (e *IDTypes) UnmarshalJSON(b []byte) error {
 }
 
 func (e IDTypes) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(IDTypes_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 var ReplyStatusStrings = []string{
@@ -2251,19 +2270,33 @@ const (
 	ReplyStatusRS_FAIL      uint64 = 1 << 2
 )
 
+var ReplyStatus_CamelName = map[int32]string{
+	// RS_UNDEFINED -> RsUndefined
+	0: "RsUndefined",
+	// RS_SUCCESS -> RsSuccess
+	1: "RsSuccess",
+	// RS_FAIL -> RsFail
+	2: "RsFail",
+}
+var ReplyStatus_CamelValue = map[string]int32{
+	"RsUndefined": 0,
+	"RsSuccess":   1,
+	"RsFail":      2,
+}
+
 func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := ReplyStatus_value[str]
+	val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = ReplyStatus_name[val]
+			_, ok = ReplyStatus_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2274,7 +2307,7 @@ func (e *ReplyStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e ReplyStatus) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(ReplyStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2282,13 +2315,13 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := ReplyStatus_value[str]
+		val, ok := ReplyStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = ReplyStatus_name[val]
+				_, ok = ReplyStatus_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2307,7 +2340,8 @@ func (e *ReplyStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e ReplyStatus) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(ReplyStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 var FindStatusStrings = []string{
@@ -2322,19 +2356,33 @@ const (
 	FindStatusFIND_NOTFOUND uint64 = 1 << 2
 )
 
+var FindCloudletReply_FindStatus_CamelName = map[int32]string{
+	// FIND_UNKNOWN -> FindUnknown
+	0: "FindUnknown",
+	// FIND_FOUND -> FindFound
+	1: "FindFound",
+	// FIND_NOTFOUND -> FindNotfound
+	2: "FindNotfound",
+}
+var FindCloudletReply_FindStatus_CamelValue = map[string]int32{
+	"FindUnknown":  0,
+	"FindFound":    1,
+	"FindNotfound": 2,
+}
+
 func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := FindCloudletReply_FindStatus_value[str]
+	val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = FindCloudletReply_FindStatus_name[val]
+			_, ok = FindCloudletReply_FindStatus_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2345,7 +2393,7 @@ func (e *FindCloudletReply_FindStatus) UnmarshalYAML(unmarshal func(interface{})
 }
 
 func (e FindCloudletReply_FindStatus) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2353,13 +2401,13 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := FindCloudletReply_FindStatus_value[str]
+		val, ok := FindCloudletReply_FindStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = FindCloudletReply_FindStatus_name[val]
+				_, ok = FindCloudletReply_FindStatus_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2378,81 +2426,97 @@ func (e *FindCloudletReply_FindStatus) UnmarshalJSON(b []byte) error {
 }
 
 func (e FindCloudletReply_FindStatus) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(FindCloudletReply_FindStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
-var Tower_StatusStrings = []string{
+var TowerStatusStrings = []string{
 	"TOWER_UNKNOWN",
 	"CONNECTED_TO_SPECIFIED_TOWER",
 	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
 }
 
 const (
-	Tower_StatusTOWER_UNKNOWN                    uint64 = 1 << 0
-	Tower_StatusCONNECTED_TO_SPECIFIED_TOWER     uint64 = 1 << 1
-	Tower_StatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
+	TowerStatusTOWER_UNKNOWN                    uint64 = 1 << 0
+	TowerStatusCONNECTED_TO_SPECIFIED_TOWER     uint64 = 1 << 1
+	TowerStatusNOT_CONNECTED_TO_SPECIFIED_TOWER uint64 = 1 << 2
 )
 
-func (e *VerifyLocationReply_Tower_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+var VerifyLocationReply_TowerStatus_CamelName = map[int32]string{
+	// TOWER_UNKNOWN -> TowerUnknown
+	0: "TowerUnknown",
+	// CONNECTED_TO_SPECIFIED_TOWER -> ConnectedToSpecifiedTower
+	1: "ConnectedToSpecifiedTower",
+	// NOT_CONNECTED_TO_SPECIFIED_TOWER -> NotConnectedToSpecifiedTower
+	2: "NotConnectedToSpecifiedTower",
+}
+var VerifyLocationReply_TowerStatus_CamelValue = map[string]int32{
+	"TowerUnknown":                 0,
+	"ConnectedToSpecifiedTower":    1,
+	"NotConnectedToSpecifiedTower": 2,
+}
+
+func (e *VerifyLocationReply_TowerStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := VerifyLocationReply_Tower_Status_value[str]
+	val, ok := VerifyLocationReply_TowerStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = VerifyLocationReply_Tower_Status_name[val]
+			_, ok = VerifyLocationReply_TowerStatus_CamelName[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = VerifyLocationReply_Tower_Status(val)
+	*e = VerifyLocationReply_TowerStatus(val)
 	return nil
 }
 
-func (e VerifyLocationReply_Tower_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+func (e VerifyLocationReply_TowerStatus) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
-func (e *VerifyLocationReply_Tower_Status) UnmarshalJSON(b []byte) error {
+func (e *VerifyLocationReply_TowerStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := VerifyLocationReply_Tower_Status_value[str]
+		val, ok := VerifyLocationReply_TowerStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = VerifyLocationReply_Tower_Status_name[val]
+				_, ok = VerifyLocationReply_TowerStatus_CamelName[val]
 			}
 		}
 		if !ok {
 			return errors.New(fmt.Sprintf("No enum value for %s", str))
 		}
-		*e = VerifyLocationReply_Tower_Status(val)
+		*e = VerifyLocationReply_TowerStatus(val)
 		return nil
 	}
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*e = VerifyLocationReply_Tower_Status(val)
+		*e = VerifyLocationReply_TowerStatus(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e VerifyLocationReply_Tower_Status) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+func (e VerifyLocationReply_TowerStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(VerifyLocationReply_TowerStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
-var GPS_Location_StatusStrings = []string{
+var GPSLocationStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_VERIFIED",
 	"LOC_MISMATCH_SAME_COUNTRY",
@@ -2464,299 +2528,388 @@ var GPS_Location_StatusStrings = []string{
 }
 
 const (
-	GPS_Location_StatusLOC_UNKNOWN                  uint64 = 1 << 0
-	GPS_Location_StatusLOC_VERIFIED                 uint64 = 1 << 1
-	GPS_Location_StatusLOC_MISMATCH_SAME_COUNTRY    uint64 = 1 << 2
-	GPS_Location_StatusLOC_MISMATCH_OTHER_COUNTRY   uint64 = 1 << 3
-	GPS_Location_StatusLOC_ROAMING_COUNTRY_MATCH    uint64 = 1 << 4
-	GPS_Location_StatusLOC_ROAMING_COUNTRY_MISMATCH uint64 = 1 << 5
-	GPS_Location_StatusLOC_ERROR_UNAUTHORIZED       uint64 = 1 << 6
-	GPS_Location_StatusLOC_ERROR_OTHER              uint64 = 1 << 7
+	GPSLocationStatusLOC_UNKNOWN                  uint64 = 1 << 0
+	GPSLocationStatusLOC_VERIFIED                 uint64 = 1 << 1
+	GPSLocationStatusLOC_MISMATCH_SAME_COUNTRY    uint64 = 1 << 2
+	GPSLocationStatusLOC_MISMATCH_OTHER_COUNTRY   uint64 = 1 << 3
+	GPSLocationStatusLOC_ROAMING_COUNTRY_MATCH    uint64 = 1 << 4
+	GPSLocationStatusLOC_ROAMING_COUNTRY_MISMATCH uint64 = 1 << 5
+	GPSLocationStatusLOC_ERROR_UNAUTHORIZED       uint64 = 1 << 6
+	GPSLocationStatusLOC_ERROR_OTHER              uint64 = 1 << 7
 )
 
-func (e *VerifyLocationReply_GPS_Location_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+var VerifyLocationReply_GPSLocationStatus_CamelName = map[int32]string{
+	// LOC_UNKNOWN -> LocUnknown
+	0: "LocUnknown",
+	// LOC_VERIFIED -> LocVerified
+	1: "LocVerified",
+	// LOC_MISMATCH_SAME_COUNTRY -> LocMismatchSameCountry
+	2: "LocMismatchSameCountry",
+	// LOC_MISMATCH_OTHER_COUNTRY -> LocMismatchOtherCountry
+	3: "LocMismatchOtherCountry",
+	// LOC_ROAMING_COUNTRY_MATCH -> LocRoamingCountryMatch
+	4: "LocRoamingCountryMatch",
+	// LOC_ROAMING_COUNTRY_MISMATCH -> LocRoamingCountryMismatch
+	5: "LocRoamingCountryMismatch",
+	// LOC_ERROR_UNAUTHORIZED -> LocErrorUnauthorized
+	6: "LocErrorUnauthorized",
+	// LOC_ERROR_OTHER -> LocErrorOther
+	7: "LocErrorOther",
+}
+var VerifyLocationReply_GPSLocationStatus_CamelValue = map[string]int32{
+	"LocUnknown":                0,
+	"LocVerified":               1,
+	"LocMismatchSameCountry":    2,
+	"LocMismatchOtherCountry":   3,
+	"LocRoamingCountryMatch":    4,
+	"LocRoamingCountryMismatch": 5,
+	"LocErrorUnauthorized":      6,
+	"LocErrorOther":             7,
+}
+
+func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := VerifyLocationReply_GPS_Location_Status_value[str]
+	val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = VerifyLocationReply_GPS_Location_Status_name[val]
+			_, ok = VerifyLocationReply_GPSLocationStatus_CamelName[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = VerifyLocationReply_GPS_Location_Status(val)
+	*e = VerifyLocationReply_GPSLocationStatus(val)
 	return nil
 }
 
-func (e VerifyLocationReply_GPS_Location_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+func (e VerifyLocationReply_GPSLocationStatus) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
-func (e *VerifyLocationReply_GPS_Location_Status) UnmarshalJSON(b []byte) error {
+func (e *VerifyLocationReply_GPSLocationStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := VerifyLocationReply_GPS_Location_Status_value[str]
+		val, ok := VerifyLocationReply_GPSLocationStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = VerifyLocationReply_GPS_Location_Status_name[val]
+				_, ok = VerifyLocationReply_GPSLocationStatus_CamelName[val]
 			}
 		}
 		if !ok {
 			return errors.New(fmt.Sprintf("No enum value for %s", str))
 		}
-		*e = VerifyLocationReply_GPS_Location_Status(val)
+		*e = VerifyLocationReply_GPSLocationStatus(val)
 		return nil
 	}
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*e = VerifyLocationReply_GPS_Location_Status(val)
+		*e = VerifyLocationReply_GPSLocationStatus(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e VerifyLocationReply_GPS_Location_Status) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+func (e VerifyLocationReply_GPSLocationStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(VerifyLocationReply_GPSLocationStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
-var Loc_StatusStrings = []string{
+var LocStatusStrings = []string{
 	"LOC_UNKNOWN",
 	"LOC_FOUND",
 	"LOC_DENIED",
 }
 
 const (
-	Loc_StatusLOC_UNKNOWN uint64 = 1 << 0
-	Loc_StatusLOC_FOUND   uint64 = 1 << 1
-	Loc_StatusLOC_DENIED  uint64 = 1 << 2
+	LocStatusLOC_UNKNOWN uint64 = 1 << 0
+	LocStatusLOC_FOUND   uint64 = 1 << 1
+	LocStatusLOC_DENIED  uint64 = 1 << 2
 )
 
-func (e *GetLocationReply_Loc_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+var GetLocationReply_LocStatus_CamelName = map[int32]string{
+	// LOC_UNKNOWN -> LocUnknown
+	0: "LocUnknown",
+	// LOC_FOUND -> LocFound
+	1: "LocFound",
+	// LOC_DENIED -> LocDenied
+	2: "LocDenied",
+}
+var GetLocationReply_LocStatus_CamelValue = map[string]int32{
+	"LocUnknown": 0,
+	"LocFound":   1,
+	"LocDenied":  2,
+}
+
+func (e *GetLocationReply_LocStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := GetLocationReply_Loc_Status_value[str]
+	val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = GetLocationReply_Loc_Status_name[val]
+			_, ok = GetLocationReply_LocStatus_CamelName[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = GetLocationReply_Loc_Status(val)
+	*e = GetLocationReply_LocStatus(val)
 	return nil
 }
 
-func (e GetLocationReply_Loc_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+func (e GetLocationReply_LocStatus) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
-func (e *GetLocationReply_Loc_Status) UnmarshalJSON(b []byte) error {
+func (e *GetLocationReply_LocStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := GetLocationReply_Loc_Status_value[str]
+		val, ok := GetLocationReply_LocStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = GetLocationReply_Loc_Status_name[val]
+				_, ok = GetLocationReply_LocStatus_CamelName[val]
 			}
 		}
 		if !ok {
 			return errors.New(fmt.Sprintf("No enum value for %s", str))
 		}
-		*e = GetLocationReply_Loc_Status(val)
+		*e = GetLocationReply_LocStatus(val)
 		return nil
 	}
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*e = GetLocationReply_Loc_Status(val)
+		*e = GetLocationReply_LocStatus(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e GetLocationReply_Loc_Status) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+func (e GetLocationReply_LocStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(GetLocationReply_LocStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
-var AI_StatusStrings = []string{
+var AIStatusStrings = []string{
 	"AI_UNDEFINED",
 	"AI_SUCCESS",
 	"AI_FAIL",
 }
 
 const (
-	AI_StatusAI_UNDEFINED uint64 = 1 << 0
-	AI_StatusAI_SUCCESS   uint64 = 1 << 1
-	AI_StatusAI_FAIL      uint64 = 1 << 2
+	AIStatusAI_UNDEFINED uint64 = 1 << 0
+	AIStatusAI_SUCCESS   uint64 = 1 << 1
+	AIStatusAI_FAIL      uint64 = 1 << 2
 )
 
-func (e *AppInstListReply_AI_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+var AppInstListReply_AIStatus_CamelName = map[int32]string{
+	// AI_UNDEFINED -> AiUndefined
+	0: "AiUndefined",
+	// AI_SUCCESS -> AiSuccess
+	1: "AiSuccess",
+	// AI_FAIL -> AiFail
+	2: "AiFail",
+}
+var AppInstListReply_AIStatus_CamelValue = map[string]int32{
+	"AiUndefined": 0,
+	"AiSuccess":   1,
+	"AiFail":      2,
+}
+
+func (e *AppInstListReply_AIStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := AppInstListReply_AI_Status_value[str]
+	val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = AppInstListReply_AI_Status_name[val]
+			_, ok = AppInstListReply_AIStatus_CamelName[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = AppInstListReply_AI_Status(val)
+	*e = AppInstListReply_AIStatus(val)
 	return nil
 }
 
-func (e AppInstListReply_AI_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+func (e AppInstListReply_AIStatus) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
-func (e *AppInstListReply_AI_Status) UnmarshalJSON(b []byte) error {
+func (e *AppInstListReply_AIStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := AppInstListReply_AI_Status_value[str]
+		val, ok := AppInstListReply_AIStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = AppInstListReply_AI_Status_name[val]
+				_, ok = AppInstListReply_AIStatus_CamelName[val]
 			}
 		}
 		if !ok {
 			return errors.New(fmt.Sprintf("No enum value for %s", str))
 		}
-		*e = AppInstListReply_AI_Status(val)
+		*e = AppInstListReply_AIStatus(val)
 		return nil
 	}
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*e = AppInstListReply_AI_Status(val)
+		*e = AppInstListReply_AIStatus(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e AppInstListReply_AI_Status) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+func (e AppInstListReply_AIStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(AppInstListReply_AIStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
-var FL_StatusStrings = []string{
+var FLStatusStrings = []string{
 	"FL_UNDEFINED",
 	"FL_SUCCESS",
 	"FL_FAIL",
 }
 
 const (
-	FL_StatusFL_UNDEFINED uint64 = 1 << 0
-	FL_StatusFL_SUCCESS   uint64 = 1 << 1
-	FL_StatusFL_FAIL      uint64 = 1 << 2
+	FLStatusFL_UNDEFINED uint64 = 1 << 0
+	FLStatusFL_SUCCESS   uint64 = 1 << 1
+	FLStatusFL_FAIL      uint64 = 1 << 2
 )
 
-func (e *FqdnListReply_FL_Status) UnmarshalYAML(unmarshal func(interface{}) error) error {
+var FqdnListReply_FLStatus_CamelName = map[int32]string{
+	// FL_UNDEFINED -> FlUndefined
+	0: "FlUndefined",
+	// FL_SUCCESS -> FlSuccess
+	1: "FlSuccess",
+	// FL_FAIL -> FlFail
+	2: "FlFail",
+}
+var FqdnListReply_FLStatus_CamelValue = map[string]int32{
+	"FlUndefined": 0,
+	"FlSuccess":   1,
+	"FlFail":      2,
+}
+
+func (e *FqdnListReply_FLStatus) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := FqdnListReply_FL_Status_value[str]
+	val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = FqdnListReply_FL_Status_name[val]
+			_, ok = FqdnListReply_FLStatus_CamelName[val]
 		}
 	}
 	if !ok {
 		return errors.New(fmt.Sprintf("No enum value for %s", str))
 	}
-	*e = FqdnListReply_FL_Status(val)
+	*e = FqdnListReply_FLStatus(val)
 	return nil
 }
 
-func (e FqdnListReply_FL_Status) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+func (e FqdnListReply_FLStatus) MarshalYAML() (interface{}, error) {
+	return proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
-func (e *FqdnListReply_FL_Status) UnmarshalJSON(b []byte) error {
+func (e *FqdnListReply_FLStatus) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := FqdnListReply_FL_Status_value[str]
+		val, ok := FqdnListReply_FLStatus_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = FqdnListReply_FL_Status_name[val]
+				_, ok = FqdnListReply_FLStatus_CamelName[val]
 			}
 		}
 		if !ok {
 			return errors.New(fmt.Sprintf("No enum value for %s", str))
 		}
-		*e = FqdnListReply_FL_Status(val)
+		*e = FqdnListReply_FLStatus(val)
 		return nil
 	}
 	var val int32
 	err = json.Unmarshal(b, &val)
 	if err == nil {
-		*e = FqdnListReply_FL_Status(val)
+		*e = FqdnListReply_FLStatus(val)
 		return nil
 	}
 	return fmt.Errorf("No enum value for %v", b)
 }
 
-func (e FqdnListReply_FL_Status) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+func (e FqdnListReply_FLStatus) MarshalJSON() ([]byte, error) {
+	str := proto.EnumName(FqdnListReply_FLStatus_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 var DlgCommTypeStrings = []string{
-	"DlgUndefined",
-	"DlgSecure",
-	"DlgOpen",
+	"DLG_UNDEFINED",
+	"DLG_SECURE",
+	"DLG_OPEN",
 }
 
 const (
-	DlgCommTypeDlgUndefined uint64 = 1 << 0
-	DlgCommTypeDlgSecure    uint64 = 1 << 1
-	DlgCommTypeDlgOpen      uint64 = 1 << 2
+	DlgCommTypeDLG_UNDEFINED uint64 = 1 << 0
+	DlgCommTypeDLG_SECURE    uint64 = 1 << 1
+	DlgCommTypeDLG_OPEN      uint64 = 1 << 2
 )
+
+var DynamicLocGroupRequest_DlgCommType_CamelName = map[int32]string{
+	// DLG_UNDEFINED -> DlgUndefined
+	0: "DlgUndefined",
+	// DLG_SECURE -> DlgSecure
+	1: "DlgSecure",
+	// DLG_OPEN -> DlgOpen
+	2: "DlgOpen",
+}
+var DynamicLocGroupRequest_DlgCommType_CamelValue = map[string]int32{
+	"DlgUndefined": 0,
+	"DlgSecure":    1,
+	"DlgOpen":      2,
+}
 
 func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
@@ -2764,13 +2917,13 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 	if err != nil {
 		return err
 	}
-	val, ok := DynamicLocGroupRequest_DlgCommType_value[str]
+	val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = DynamicLocGroupRequest_DlgCommType_name[val]
+			_, ok = DynamicLocGroupRequest_DlgCommType_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2781,7 +2934,7 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalYAML(unmarshal func(interf
 }
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2789,13 +2942,13 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := DynamicLocGroupRequest_DlgCommType_value[str]
+		val, ok := DynamicLocGroupRequest_DlgCommType_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = DynamicLocGroupRequest_DlgCommType_name[val]
+				_, ok = DynamicLocGroupRequest_DlgCommType_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2814,7 +2967,8 @@ func (e *DynamicLocGroupRequest_DlgCommType) UnmarshalJSON(b []byte) error {
 }
 
 func (e DynamicLocGroupRequest_DlgCommType) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(DynamicLocGroupRequest_DlgCommType_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 type MatchOptions struct {
@@ -2862,15 +3016,15 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 	}
 	switch to {
 	case reflect.TypeOf(LProto(0)):
-		if en, ok := LProto_value[data.(string)]; ok {
+		if en, ok := LProto_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(IDTypes(0)):
-		if en, ok := IDTypes_value[data.(string)]; ok {
+		if en, ok := IDTypes_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	case reflect.TypeOf(ReplyStatus(0)):
-		if en, ok := ReplyStatus_value[data.(string)]; ok {
+		if en, ok := ReplyStatus_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}
@@ -2919,7 +3073,7 @@ func (m *RegisterClientReply) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.TokenServerURI)
+	l = len(m.TokenServerUri)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -2968,7 +3122,7 @@ func (m *FindCloudletReply) Size() (n int) {
 	if m.Status != 0 {
 		n += 1 + sovAppClient(uint64(m.Status))
 	}
-	l = len(m.FQDN)
+	l = len(m.Fqdn)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -3022,7 +3176,7 @@ func (m *VerifyLocationReply) Size() (n int) {
 	if m.GpsLocationStatus != 0 {
 		n += 1 + sovAppClient(uint64(m.GpsLocationStatus))
 	}
-	if m.GPS_Location_Accuracy_KM != 0 {
+	if m.GpsLocationAccuracyKm != 0 {
 		n += 9
 	}
 	return n
@@ -3100,7 +3254,7 @@ func (m *Appinstance) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	l = len(m.FQDN)
+	l = len(m.Fqdn)
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
@@ -3186,8 +3340,8 @@ func (m *AppFqdn) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovAppClient(uint64(l))
 	}
-	if len(m.FQDNs) > 0 {
-		for _, s := range m.FQDNs {
+	if len(m.Fqdns) > 0 {
+		for _, s := range m.Fqdns {
 			l = len(s)
 			n += 1 + l + sovAppClient(uint64(l))
 		}
@@ -3584,7 +3738,7 @@ func (m *RegisterClientReply) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TokenServerURI", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TokenServerUri", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3609,7 +3763,7 @@ func (m *RegisterClientReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TokenServerURI = string(dAtA[iNdEx:postIndex])
+			m.TokenServerUri = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -3948,7 +4102,7 @@ func (m *FindCloudletReply) Unmarshal(dAtA []byte) error {
 			}
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FQDN", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Fqdn", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -3973,7 +4127,7 @@ func (m *FindCloudletReply) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FQDN = string(dAtA[iNdEx:postIndex])
+			m.Fqdn = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -4311,7 +4465,7 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.TowerStatus |= (VerifyLocationReply_Tower_Status(b) & 0x7F) << shift
+				m.TowerStatus |= (VerifyLocationReply_TowerStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4330,14 +4484,14 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.GpsLocationStatus |= (VerifyLocationReply_GPS_Location_Status(b) & 0x7F) << shift
+				m.GpsLocationStatus |= (VerifyLocationReply_GPSLocationStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
 		case 4:
 			if wireType != 1 {
-				return fmt.Errorf("proto: wrong wireType = %d for field GPS_Location_Accuracy_KM", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field GpsLocationAccuracyKm", wireType)
 			}
 			var v uint64
 			if (iNdEx + 8) > l {
@@ -4345,7 +4499,7 @@ func (m *VerifyLocationReply) Unmarshal(dAtA []byte) error {
 			}
 			v = uint64(binary.LittleEndian.Uint64(dAtA[iNdEx:]))
 			iNdEx += 8
-			m.GPS_Location_Accuracy_KM = float64(math.Float64frombits(v))
+			m.GpsLocationAccuracyKm = float64(math.Float64frombits(v))
 		default:
 			iNdEx = preIndex
 			skippy, err := skipAppClient(dAtA[iNdEx:])
@@ -4556,7 +4710,7 @@ func (m *GetLocationReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (GetLocationReply_Loc_Status(b) & 0x7F) << shift
+				m.Status |= (GetLocationReply_LocStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -4912,7 +5066,7 @@ func (m *Appinstance) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FQDN", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Fqdn", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -4937,7 +5091,7 @@ func (m *Appinstance) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FQDN = string(dAtA[iNdEx:postIndex])
+			m.Fqdn = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -5236,7 +5390,7 @@ func (m *AppInstListReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (AppInstListReply_AI_Status(b) & 0x7F) << shift
+				m.Status |= (AppInstListReply_AIStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -5509,7 +5663,7 @@ func (m *AppFqdn) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FQDNs", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Fqdns", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5534,7 +5688,7 @@ func (m *AppFqdn) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.FQDNs = append(m.FQDNs, string(dAtA[iNdEx:postIndex]))
+			m.Fqdns = append(m.Fqdns, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		case 5:
 			if wireType != 2 {
@@ -5679,7 +5833,7 @@ func (m *FqdnListReply) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= (FqdnListReply_FL_Status(b) & 0x7F) << shift
+				m.Status |= (FqdnListReply_FLStatus(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -6114,108 +6268,111 @@ var (
 func init() { proto.RegisterFile("app-client.proto", fileDescriptorAppClient) }
 
 var fileDescriptorAppClient = []byte{
-	// 1648 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0xcd, 0x6f, 0xe3, 0x4c,
-	0x19, 0x5f, 0xe7, 0xa3, 0x6d, 0x9e, 0xa4, 0xa9, 0x3b, 0x6d, 0x97, 0x10, 0xba, 0x55, 0xb1, 0x76,
-	0x97, 0xa5, 0xb0, 0x29, 0x5b, 0x3e, 0x56, 0x5a, 0x76, 0x85, 0x4c, 0xec, 0xa4, 0x66, 0x13, 0xa7,
-	0xd8, 0x49, 0x17, 0x90, 0x90, 0xe5, 0x8d, 0xa7, 0x59, 0xab, 0xa9, 0xed, 0xda, 0x4e, 0x57, 0x3d,
-	0x20, 0x21, 0x38, 0xa0, 0xbd, 0x80, 0x10, 0x07, 0x4e, 0x9c, 0x39, 0x22, 0x21, 0x24, 0xfe, 0x85,
-	0x3d, 0x82, 0xb8, 0x71, 0x82, 0x15, 0x08, 0xf1, 0x1f, 0x70, 0x42, 0xaf, 0x66, 0x6c, 0x27, 0xb6,
-	0xf3, 0xf1, 0xa6, 0xef, 0xbb, 0xef, 0x61, 0x6f, 0x9e, 0xe7, 0x99, 0x79, 0x3e, 0x7e, 0xcf, 0x6f,
-	0x66, 0x9e, 0x31, 0xb0, 0xba, 0xe3, 0x3c, 0xec, 0x0f, 0x4d, 0x6c, 0xf9, 0x35, 0xc7, 0xb5, 0x7d,
-	0x1b, 0x55, 0x0c, 0xd3, 0xf3, 0x5d, 0xf3, 0xe5, 0xc8, 0xc7, 0x86, 0x76, 0xa1, 0xfb, 0xfd, 0x57,
-	0x1a, 0xb6, 0x06, 0xa6, 0x85, 0xab, 0xbb, 0x03, 0xdb, 0x1e, 0x0c, 0xf1, 0xa1, 0xee, 0x98, 0x87,
-	0xba, 0x65, 0xd9, 0xbe, 0xee, 0x9b, 0xb6, 0xe5, 0x05, 0xeb, 0xaa, 0x85, 0xa1, 0xdd, 0x0f, 0x3f,
-	0x37, 0x74, 0xc7, 0xe9, 0xdb, 0x17, 0x17, 0xb6, 0x15, 0x08, 0xb8, 0x3f, 0x33, 0xb0, 0xa3, 0xe0,
-	0x81, 0xe9, 0xf9, 0xd8, 0xad, 0x53, 0x67, 0x0a, 0xbe, 0x1c, 0x61, 0xcf, 0x47, 0x2c, 0x64, 0x4f,
-	0xb1, 0x5b, 0x61, 0xf6, 0x99, 0x07, 0xeb, 0x0a, 0xf9, 0x44, 0x15, 0x58, 0x15, 0xf0, 0x95, 0xac,
-	0x5f, 0xe0, 0x4a, 0x66, 0x9f, 0x79, 0x50, 0x50, 0xa2, 0x21, 0xd1, 0xf0, 0x8e, 0x43, 0x35, 0xd9,
-	0x40, 0x13, 0x0e, 0x43, 0xcd, 0x29, 0x76, 0xbd, 0x4a, 0x6e, 0xac, 0x21, 0x43, 0xb4, 0x0f, 0xc5,
-	0xba, 0xee, 0xba, 0x26, 0x76, 0xe9, 0xba, 0x3c, 0xd5, 0xc6, 0x45, 0x68, 0x17, 0x0a, 0xfc, 0xc8,
-	0x7f, 0xd5, 0xb5, 0xcf, 0xb1, 0x55, 0x59, 0xa1, 0xfa, 0x89, 0x80, 0xfb, 0x13, 0x03, 0x5b, 0xe9,
-	0xc8, 0x9d, 0xe1, 0xf5, 0x8c, 0xb8, 0x9f, 0xc1, 0x8a, 0xea, 0xeb, 0xfe, 0xc8, 0xa3, 0x61, 0x97,
-	0x8f, 0xee, 0xd5, 0xe6, 0x01, 0x59, 0xa3, 0x26, 0x82, 0xc9, 0x4a, 0xb8, 0x08, 0xdd, 0x85, 0x75,
-	0x15, 0x7b, 0x9e, 0x69, 0x5b, 0x75, 0xdb, 0x3e, 0x37, 0xa3, 0x14, 0x93, 0x42, 0x74, 0x1f, 0xca,
-	0x34, 0x2e, 0x15, 0xbb, 0x57, 0xd8, 0xed, 0x29, 0x52, 0x98, 0x6f, 0x4a, 0xca, 0xfd, 0x9f, 0x81,
-	0xad, 0x86, 0x69, 0x19, 0xf5, 0xa1, 0x3d, 0x32, 0x86, 0x78, 0x01, 0xdc, 0x53, 0x7e, 0x33, 0xb3,
-	0xfc, 0xa6, 0x60, 0xcc, 0x4e, 0xc3, 0xf8, 0x1d, 0x28, 0x36, 0x1d, 0xaf, 0x65, 0xf7, 0x29, 0x29,
-	0x68, 0x58, 0xc5, 0xa3, 0x3b, 0xf3, 0x31, 0x68, 0xd9, 0x7d, 0x25, 0xbe, 0x22, 0x5e, 0xf7, 0xfc,
-	0xdc, 0xba, 0xaf, 0xcc, 0xad, 0xfb, 0x6a, 0xa2, 0xee, 0xdc, 0x5f, 0x33, 0xb0, 0x99, 0x04, 0x60,
-	0x76, 0xd5, 0x64, 0x58, 0xf1, 0xe2, 0x55, 0xfb, 0xd6, 0xfc, 0x88, 0xa7, 0xcc, 0x51, 0x49, 0x54,
-	0xc6, 0xc0, 0x0a, 0x42, 0x90, 0x6b, 0x7c, 0x5f, 0x90, 0x43, 0x84, 0xe8, 0x37, 0x7a, 0x0c, 0x79,
-	0xc7, 0x76, 0x7d, 0xc2, 0xcd, 0xec, 0x83, 0xe2, 0xd1, 0x17, 0xe7, 0xbb, 0xe0, 0x1d, 0xe7, 0xc4,
-	0x76, 0x7d, 0x25, 0x98, 0x8f, 0xbe, 0x07, 0x9b, 0xfd, 0xd0, 0xa1, 0x36, 0x8c, 0x90, 0xcd, 0x2f,
-	0x83, 0x2c, 0x1b, 0xad, 0x8b, 0xe0, 0xe5, 0x78, 0x80, 0x49, 0xb8, 0x88, 0x85, 0x52, 0x43, 0x92,
-	0x05, 0xad, 0x27, 0x3f, 0x97, 0x3b, 0x2f, 0x64, 0xf6, 0x16, 0x2a, 0x03, 0x50, 0x49, 0xa3, 0xd3,
-	0x93, 0x05, 0x96, 0x41, 0x9b, 0xb0, 0x4e, 0xc7, 0x72, 0xa7, 0x1b, 0x88, 0x32, 0xdc, 0xdf, 0x19,
-	0xd8, 0x39, 0xc5, 0xae, 0x79, 0x76, 0x1d, 0x59, 0xfd, 0x00, 0x68, 0x75, 0x1f, 0xca, 0xe3, 0x98,
-	0x83, 0x3d, 0x1e, 0xb0, 0x2b, 0x25, 0xe5, 0xde, 0xe4, 0x61, 0x2b, 0x9d, 0x5c, 0x48, 0x99, 0xab,
-	0x49, 0x6a, 0x57, 0xd8, 0x45, 0x3f, 0x86, 0x92, 0x6f, 0xbf, 0xc6, 0xae, 0x96, 0x20, 0xce, 0x93,
-	0xf9, 0x31, 0xcd, 0x30, 0x5b, 0xeb, 0x52, 0x0b, 0x21, 0x79, 0x8a, 0xd4, 0x5e, 0x58, 0x9a, 0x4b,
-	0xd8, 0x1a, 0x38, 0xde, 0xb8, 0xde, 0x91, 0x97, 0x2c, 0xf5, 0xc2, 0xdf, 0xcc, 0x4b, 0xf3, 0x44,
-	0xd5, 0x22, 0x49, 0xe4, 0x6c, 0x73, 0x30, 0x41, 0x27, 0x74, 0xf9, 0x18, 0x2a, 0x89, 0x99, 0x7c,
-	0xbf, 0x3f, 0x72, 0xf5, 0xfe, 0xb5, 0xf6, 0xbc, 0x4d, 0x11, 0x67, 0x94, 0x9d, 0xe6, 0x89, 0x1a,
-	0xa9, 0x23, 0xed, 0xf3, 0x36, 0x67, 0x42, 0x29, 0x9e, 0x08, 0x21, 0x4d, 0xb7, 0xf3, 0x42, 0x54,
-	0x62, 0xbc, 0xda, 0x87, 0xdd, 0x7a, 0x47, 0x96, 0xc5, 0x7a, 0x57, 0x14, 0xb4, 0x6e, 0x47, 0x53,
-	0x4f, 0xc4, 0xba, 0xd4, 0x90, 0xe8, 0xe0, 0x85, 0xa8, 0xb0, 0x0c, 0xba, 0x0b, 0xfb, 0x72, 0xa7,
-	0xab, 0x2d, 0x9c, 0x95, 0xe1, 0xfe, 0xcb, 0xc0, 0xd6, 0x8c, 0x74, 0xd0, 0x06, 0x14, 0x5b, 0x9d,
-	0x7a, 0xcc, 0x21, 0x0b, 0x25, 0x22, 0x38, 0x15, 0x15, 0x6a, 0x80, 0x65, 0xd0, 0x1d, 0xf8, 0x3c,
-	0x91, 0xb4, 0x25, 0xb5, 0xcd, 0x77, 0xeb, 0xc7, 0x9a, 0xca, 0xb7, 0x45, 0xad, 0xde, 0xe9, 0xc9,
-	0x5d, 0xe5, 0x87, 0x6c, 0x06, 0xed, 0x41, 0x35, 0xa1, 0xee, 0x74, 0x8f, 0x45, 0x65, 0xac, 0xcf,
-	0x46, 0xcb, 0x95, 0x0e, 0xdf, 0x96, 0xe4, 0x66, 0xa4, 0xd0, 0xe8, 0x64, 0x36, 0x47, 0x12, 0x9c,
-	0xa9, 0x0e, 0xcd, 0xb1, 0x79, 0x54, 0x85, 0xdb, 0x64, 0x86, 0xa8, 0x28, 0x1d, 0x82, 0x0c, 0xdf,
-	0xeb, 0x1e, 0x77, 0x14, 0xe9, 0x47, 0xa2, 0xc0, 0xae, 0xa0, 0x2d, 0xd8, 0x98, 0xe8, 0xa8, 0x67,
-	0x76, 0x95, 0xb3, 0x00, 0x35, 0x27, 0x5b, 0xf7, 0x33, 0xdf, 0x64, 0xdc, 0x1f, 0x33, 0xc0, 0x26,
-	0x1c, 0xce, 0x3e, 0x2b, 0xdb, 0xa9, 0x1b, 0xee, 0x9b, 0xf3, 0xc9, 0x98, 0xb6, 0x46, 0xf6, 0xa5,
-	0x96, 0xba, 0xf1, 0x3e, 0x7e, 0xf3, 0x6f, 0x43, 0x9e, 0xd2, 0x8b, 0x92, 0x30, 0xa7, 0x04, 0x03,
-	0xd4, 0x84, 0x0d, 0x19, 0xfb, 0xaf, 0x6d, 0xf7, 0xbc, 0x75, 0xa3, 0x33, 0x31, 0xbd, 0x8a, 0x7b,
-	0x0a, 0x30, 0x09, 0x6b, 0x9a, 0x48, 0xeb, 0x50, 0x20, 0x82, 0xe8, 0x40, 0x2c, 0x03, 0x90, 0xa1,
-	0x20, 0xca, 0x84, 0x55, 0x19, 0xee, 0x0f, 0x0c, 0x20, 0xde, 0x71, 0x24, 0xcb, 0xf3, 0x5b, 0xa6,
-	0xf7, 0x01, 0xdc, 0xb0, 0xdc, 0x2f, 0x19, 0x28, 0xf2, 0x8e, 0x63, 0x5a, 0x9e, 0xaf, 0x5b, 0xfd,
-	0xc4, 0xbd, 0xca, 0xcc, 0xbd, 0x57, 0x33, 0xc9, 0x7e, 0xea, 0x7d, 0xde, 0x6f, 0xdc, 0x4f, 0x33,
-	0xc0, 0xd6, 0x53, 0x17, 0x55, 0x1a, 0x08, 0x66, 0x1a, 0x08, 0x0e, 0x4a, 0xd1, 0xaa, 0x58, 0x9b,
-	0x98, 0x90, 0xa5, 0xc1, 0xca, 0xde, 0xf8, 0xde, 0xa8, 0xc2, 0x9a, 0x60, 0x06, 0x40, 0x85, 0x67,
-	0xe0, 0x78, 0x8c, 0x24, 0x28, 0xc5, 0x70, 0xf4, 0x2a, 0x79, 0x9a, 0xf7, 0xbd, 0x85, 0x79, 0x47,
-	0xb3, 0x95, 0xc4, 0x52, 0xee, 0x7f, 0x0c, 0xb0, 0x09, 0x16, 0xcd, 0xde, 0x7a, 0xad, 0xd4, 0xd6,
-	0xfb, 0xc6, 0x42, 0x5f, 0x09, 0x6b, 0x35, 0x5e, 0x4a, 0xef, 0xbc, 0x63, 0x28, 0x44, 0x60, 0x91,
-	0x8b, 0x85, 0x04, 0x7f, 0x30, 0xdf, 0x60, 0xba, 0x42, 0xca, 0x64, 0x31, 0xf7, 0x04, 0x0a, 0x63,
-	0xf3, 0xe4, 0xe4, 0xe5, 0x25, 0xad, 0x27, 0x0b, 0x62, 0x43, 0x92, 0x45, 0x21, 0x68, 0x2a, 0x88,
-	0xba, 0x57, 0xaf, 0x8b, 0xaa, 0xca, 0x32, 0xa8, 0x08, 0xab, 0xbc, 0xa4, 0x35, 0x78, 0xa9, 0xc5,
-	0x66, 0x38, 0x09, 0x36, 0x1a, 0x97, 0x86, 0xf5, 0x1e, 0x36, 0x0f, 0xf7, 0x3b, 0x86, 0x12, 0x96,
-	0x98, 0xfb, 0x44, 0xac, 0x8e, 0xf5, 0x9e, 0xd9, 0x64, 0xef, 0xb9, 0x0d, 0x79, 0xc2, 0xf1, 0x80,
-	0xdb, 0x05, 0x25, 0x18, 0xa0, 0x1a, 0x20, 0xde, 0x32, 0x5c, 0xdb, 0x34, 0x4e, 0xf4, 0xfe, 0xb9,
-	0x3e, 0xc0, 0xb1, 0xb6, 0x75, 0x86, 0x86, 0xfb, 0x0f, 0x03, 0xeb, 0x93, 0x5c, 0x67, 0xb7, 0x15,
-	0xcf, 0x60, 0x2d, 0x4c, 0x21, 0xaa, 0xc9, 0xe2, 0x8d, 0x44, 0x66, 0x2a, 0xe3, 0x25, 0x48, 0x1a,
-	0x33, 0x24, 0x47, 0x19, 0xf2, 0x68, 0x41, 0x23, 0x1b, 0x8f, 0xa4, 0xd6, 0x68, 0xa5, 0xe8, 0x41,
-	0x8a, 0x3a, 0x16, 0xd2, 0x4e, 0xb1, 0x95, 0x2e, 0x2a, 0x51, 0xc7, 0x8b, 0xda, 0x68, 0x45, 0x45,
-	0xfd, 0x6d, 0x06, 0x6e, 0x0b, 0xd7, 0x96, 0x7e, 0x61, 0xf6, 0x5b, 0x76, 0xbf, 0xe9, 0xda, 0x23,
-	0xe7, 0xd3, 0x9e, 0x8c, 0x08, 0x72, 0xad, 0x81, 0x64, 0xd0, 0xca, 0xe4, 0x14, 0xfa, 0x8d, 0x7e,
-	0x00, 0x6b, 0x75, 0xfb, 0xe2, 0xa2, 0x7b, 0xed, 0xe0, 0x4a, 0x91, 0xe6, 0xfb, 0x74, 0x7e, 0xbe,
-	0xb3, 0xe3, 0xa9, 0x09, 0xc3, 0x41, 0x64, 0x43, 0x19, 0x5b, 0x23, 0xfb, 0xbe, 0xe7, 0x61, 0x57,
-	0xd0, 0x7d, 0xbd, 0x52, 0xa2, 0xe1, 0x8c, 0xc7, 0xdc, 0xb7, 0xa1, 0x18, 0x5b, 0x44, 0xa0, 0x11,
-	0x86, 0x83, 0x9e, 0x65, 0xe0, 0x33, 0xd3, 0xc2, 0x46, 0x70, 0x65, 0x08, 0xc3, 0x81, 0x8a, 0xfb,
-	0x23, 0x17, 0x07, 0xc8, 0x08, 0xc3, 0x41, 0xc7, 0xc1, 0x16, 0x9b, 0xe1, 0x7e, 0xcf, 0xc0, 0xf6,
-	0x54, 0x24, 0xf3, 0xa8, 0x90, 0x7c, 0x94, 0x2c, 0xfb, 0x94, 0x0c, 0xdf, 0x20, 0xbb, 0x50, 0x10,
-	0x5d, 0xd7, 0x76, 0xeb, 0xb6, 0x11, 0xf0, 0x79, 0x5d, 0x99, 0x08, 0xc8, 0xf9, 0x4a, 0x9d, 0x87,
-	0x90, 0x87, 0x2f, 0xe2, 0x98, 0xe8, 0xe0, 0x19, 0xac, 0x4a, 0x02, 0xc9, 0x90, 0x56, 0x5f, 0x12,
-	0x12, 0xd5, 0x5f, 0x83, 0x9c, 0xd4, 0x16, 0x25, 0x96, 0x41, 0x00, 0x2b, 0x6d, 0x55, 0x52, 0x05,
-	0x99, 0xcd, 0x90, 0x6f, 0xe9, 0x84, 0x17, 0x04, 0x85, 0xcd, 0x1e, 0x3c, 0x85, 0x62, 0x2c, 0x2a,
-	0x62, 0x42, 0x51, 0xd3, 0x04, 0x52, 0xd4, 0x24, 0x81, 0x14, 0x35, 0x24, 0xd0, 0xd1, 0xbf, 0x57,
-	0x81, 0x6d, 0xd3, 0x0c, 0x45, 0x9a, 0xa1, 0xc6, 0x3b, 0x26, 0xfa, 0x15, 0x03, 0xe5, 0xe4, 0x2b,
-	0x1c, 0x1d, 0x2e, 0xc2, 0x64, 0xc6, 0x9f, 0x86, 0xea, 0xc3, 0xe5, 0x17, 0x38, 0xc3, 0x6b, 0xee,
-	0xce, 0xcf, 0xfe, 0xf6, 0xaf, 0xdf, 0x64, 0x3e, 0xc7, 0xa1, 0xc3, 0xab, 0x47, 0x87, 0x6e, 0x38,
-	0x21, 0xf8, 0x51, 0xf2, 0x84, 0x39, 0x40, 0xbf, 0x60, 0xa0, 0x14, 0x7f, 0x10, 0xa2, 0x87, 0xcb,
-	0x3e, 0x1c, 0x83, 0x68, 0xbe, 0x72, 0x83, 0x77, 0x26, 0xf7, 0x05, 0x1a, 0xcb, 0x0e, 0xc7, 0x92,
-	0x58, 0xce, 0x4c, 0xcb, 0x88, 0x5e, 0x77, 0x24, 0x12, 0x82, 0x4d, 0xb2, 0xf7, 0x5f, 0x84, 0xcd,
-	0xcc, 0xf7, 0xdb, 0x22, 0x6c, 0x66, 0x3c, 0x2b, 0x92, 0xd8, 0x5c, 0xd1, 0x09, 0xd1, 0x73, 0x85,
-	0x44, 0xf4, 0x73, 0x06, 0x8a, 0xb1, 0x06, 0x10, 0x7d, 0x75, 0xc9, 0x3e, 0x31, 0x88, 0xe5, 0x60,
-	0xf9, 0xae, 0x92, 0xab, 0xd2, 0x40, 0xb6, 0xb9, 0x0d, 0x12, 0xc8, 0x00, 0xfb, 0xf1, 0x28, 0x7e,
-	0xcd, 0x40, 0x99, 0x37, 0x0c, 0xb2, 0x79, 0xbb, 0x36, 0xa5, 0x37, 0xfa, 0xda, 0x4d, 0xcf, 0x88,
-	0x6a, 0xed, 0x06, 0x2b, 0xa6, 0x90, 0xd1, 0x0d, 0x63, 0xe4, 0x61, 0xd7, 0xb7, 0x07, 0x64, 0x02,
-	0x89, 0xe9, 0x0d, 0x03, 0xe5, 0x26, 0xf6, 0x63, 0x57, 0xf4, 0x22, 0x70, 0xa6, 0xbb, 0xcb, 0x45,
-	0xe0, 0xa4, 0xef, 0xfd, 0x64, 0x2c, 0x03, 0xec, 0xeb, 0x41, 0xdf, 0x31, 0x34, 0x3d, 0xca, 0x9b,
-	0x9f, 0xd0, 0x22, 0x45, 0x77, 0x01, 0xfa, 0xf2, 0x32, 0xf7, 0x45, 0x10, 0xc4, 0x97, 0x96, 0xbc,
-	0x5a, 0xa6, 0xca, 0x73, 0x76, 0x69, 0x58, 0xa1, 0xfb, 0xef, 0xb2, 0x6f, 0xff, 0xb9, 0x77, 0xeb,
-	0xed, 0xbb, 0x3d, 0xe6, 0x2f, 0xef, 0xf6, 0x98, 0x7f, 0xbc, 0xdb, 0x63, 0x5e, 0xae, 0xd0, 0x7f,
-	0x85, 0x5f, 0xff, 0x28, 0x00, 0x00, 0xff, 0xff, 0x32, 0xc5, 0x87, 0x92, 0x93, 0x14, 0x00, 0x00,
+	// 1684 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x4f, 0x73, 0xdb, 0x5a,
+	0x15, 0x7f, 0x92, 0xed, 0x24, 0x3e, 0x76, 0x1c, 0xe5, 0x26, 0x79, 0xf8, 0xf9, 0xbd, 0x64, 0xf2,
+	0x04, 0x1d, 0x42, 0xa0, 0x4e, 0x49, 0x19, 0x3a, 0x85, 0xb6, 0x20, 0x2c, 0x39, 0x51, 0xeb, 0xc8,
+	0x19, 0xd9, 0x6e, 0xa7, 0x0c, 0x33, 0x1a, 0x55, 0xba, 0x75, 0x35, 0xb1, 0x25, 0x55, 0x92, 0xdd,
+	0xc9, 0x82, 0x0d, 0x65, 0x86, 0x61, 0x05, 0x0c, 0x7b, 0x16, 0xec, 0xd8, 0x76, 0xc3, 0x86, 0x0f,
+	0xd0, 0x25, 0x0c, 0x1f, 0x00, 0x28, 0x0c, 0x7c, 0x03, 0xd6, 0xcc, 0xbd, 0x92, 0x62, 0x49, 0xfe,
+	0x33, 0x0e, 0x94, 0x37, 0xd3, 0x9d, 0xee, 0xb9, 0x7f, 0xce, 0xef, 0xfc, 0xee, 0xef, 0xde, 0x73,
+	0xae, 0x80, 0xd3, 0x5d, 0xf7, 0xa6, 0x31, 0xb0, 0xb0, 0x1d, 0xd4, 0x5d, 0xcf, 0x09, 0x1c, 0x54,
+	0x35, 0x2d, 0x3f, 0xf0, 0xac, 0x67, 0xa3, 0x00, 0x9b, 0xda, 0x50, 0x0f, 0x8c, 0x17, 0x1a, 0xb6,
+	0xfb, 0x96, 0x8d, 0x6b, 0x9f, 0xf5, 0x1d, 0xa7, 0x3f, 0xc0, 0x47, 0xba, 0x6b, 0x1d, 0xe9, 0xb6,
+	0xed, 0x04, 0x7a, 0x60, 0x39, 0xb6, 0x1f, 0xce, 0xab, 0x15, 0x07, 0x8e, 0x11, 0x7d, 0x6e, 0xe8,
+	0xae, 0x6b, 0x38, 0xc3, 0xa1, 0x63, 0x87, 0x06, 0xfe, 0x0f, 0x0c, 0xec, 0xa8, 0xb8, 0x6f, 0xf9,
+	0x01, 0xf6, 0x1a, 0xd4, 0x99, 0x8a, 0x5f, 0x8e, 0xb0, 0x1f, 0x20, 0x0e, 0x72, 0x63, 0xec, 0x55,
+	0x99, 0x7d, 0xe6, 0x60, 0x5d, 0x25, 0x9f, 0xe8, 0x13, 0x58, 0x33, 0xf1, 0x58, 0xb3, 0xf5, 0x21,
+	0xae, 0xb2, 0xfb, 0xcc, 0x41, 0x51, 0x5d, 0x35, 0xf1, 0x58, 0xd1, 0x87, 0x98, 0x74, 0xe9, 0xae,
+	0x1b, 0x76, 0xe5, 0xc2, 0x2e, 0xdd, 0x75, 0x93, 0x5d, 0x63, 0xec, 0xf9, 0xd5, 0xfc, 0x55, 0xd7,
+	0x63, 0xec, 0xf9, 0xe8, 0x73, 0x28, 0x1b, 0xba, 0xe7, 0x59, 0xd8, 0x0b, 0x67, 0x16, 0x68, 0x77,
+	0x29, 0xb2, 0xd1, 0xd9, 0xbb, 0x00, 0xfa, 0x28, 0x78, 0xa1, 0x05, 0xce, 0x05, 0xb6, 0xab, 0x2b,
+	0x74, 0x40, 0x91, 0x58, 0xba, 0xc4, 0xc0, 0xff, 0x9e, 0x81, 0xad, 0x2c, 0x7c, 0x77, 0x70, 0x39,
+	0x03, 0xfc, 0x7d, 0x58, 0xf1, 0x03, 0x3d, 0x18, 0xf9, 0x14, 0x7a, 0xe5, 0xf8, 0x46, 0x7d, 0x1e,
+	0x9b, 0x75, 0xba, 0x44, 0x87, 0x0e, 0x56, 0xa3, 0x49, 0xe8, 0x06, 0x54, 0x7c, 0xec, 0xfb, 0x96,
+	0x63, 0x6b, 0x86, 0xe3, 0x5c, 0x58, 0x71, 0x98, 0xeb, 0x91, 0xb5, 0x41, 0x8d, 0xe8, 0x00, 0x38,
+	0x8a, 0x54, 0xf3, 0xb1, 0x37, 0xc6, 0x9e, 0x36, 0xf2, 0xac, 0x28, 0xe8, 0x0a, 0xb5, 0x77, 0xa8,
+	0xb9, 0xe7, 0x59, 0xfc, 0x4f, 0x59, 0xd8, 0x6a, 0x5a, 0xb6, 0xd9, 0x18, 0x38, 0x23, 0x73, 0x80,
+	0x17, 0xd0, 0x3e, 0xed, 0x9a, 0x9d, 0xe5, 0x3a, 0x4b, 0x66, 0x6e, 0x9a, 0xcc, 0xef, 0x43, 0xb9,
+	0xef, 0xfa, 0xda, 0xc0, 0x31, 0xa8, 0x3e, 0x28, 0xb2, 0xd2, 0xf1, 0xee, 0x7c, 0x26, 0x5a, 0x8e,
+	0xa1, 0x96, 0xfa, 0xae, 0xdf, 0x8a, 0x66, 0xa4, 0x24, 0x50, 0x98, 0x2f, 0x81, 0x95, 0xf9, 0x12,
+	0x58, 0x4d, 0x49, 0x80, 0xff, 0x13, 0x0b, 0x9b, 0x69, 0x1a, 0x66, 0x6f, 0x9f, 0x92, 0xd9, 0xbe,
+	0x6f, 0xcf, 0x07, 0x3d, 0xb5, 0x1c, 0xb5, 0x64, 0xf6, 0x13, 0x41, 0xfe, 0xf9, 0x4b, 0xd3, 0x8e,
+	0x58, 0xa2, 0xdf, 0xe8, 0x0e, 0x14, 0x5c, 0xc7, 0x0b, 0x88, 0x4c, 0x73, 0x07, 0xa5, 0xe3, 0xcf,
+	0xe7, 0xbb, 0x10, 0x5c, 0xf7, 0xdc, 0xf1, 0x02, 0x35, 0x1c, 0x8f, 0x1e, 0xc2, 0xa6, 0x11, 0x39,
+	0x9c, 0x90, 0x5b, 0x58, 0x86, 0x5c, 0x2e, 0x9e, 0x17, 0x33, 0xcc, 0x0b, 0x00, 0x13, 0xb8, 0x88,
+	0x83, 0x72, 0x53, 0x56, 0x44, 0xad, 0xa7, 0x3c, 0x52, 0xda, 0x4f, 0x14, 0xee, 0x23, 0x54, 0x01,
+	0xa0, 0x96, 0x66, 0xbb, 0xa7, 0x88, 0x1c, 0x83, 0x36, 0x61, 0x9d, 0xb6, 0x95, 0x76, 0x37, 0x34,
+	0xb1, 0xfc, 0x5f, 0x18, 0xd8, 0x79, 0x8c, 0x3d, 0xeb, 0xf9, 0x65, 0xbc, 0xea, 0x87, 0x21, 0xae,
+	0x03, 0xe0, 0xc6, 0x14, 0x36, 0x59, 0x24, 0x3a, 0xf1, 0xa1, 0xc8, 0x2a, 0xe3, 0x38, 0x9c, 0xf0,
+	0xd8, 0xbf, 0x2e, 0xc0, 0x56, 0x36, 0xc2, 0xd9, 0xba, 0xf9, 0x11, 0x94, 0x03, 0xe7, 0x15, 0xf6,
+	0xb4, 0x94, 0x7a, 0xee, 0xce, 0x47, 0x35, 0x63, 0xd9, 0x7a, 0x97, 0xac, 0x10, 0x09, 0xa8, 0x14,
+	0x4c, 0x1a, 0xc8, 0x81, 0xad, 0x64, 0xcc, 0xb1, 0x93, 0x1c, 0x75, 0xf2, 0xbd, 0xeb, 0x39, 0x39,
+	0x39, 0xef, 0xc4, 0x86, 0xc8, 0xd5, 0x66, 0x82, 0x9c, 0xc8, 0xe1, 0x1d, 0xa8, 0xa6, 0x1c, 0xea,
+	0x86, 0x31, 0xf2, 0x74, 0xe3, 0x52, 0xbb, 0x18, 0x52, 0xc2, 0x19, 0x75, 0x27, 0x31, 0x49, 0x88,
+	0x7a, 0x1f, 0x0d, 0xf9, 0x17, 0x50, 0x4a, 0x44, 0x41, 0x54, 0xd3, 0x6d, 0x3f, 0x91, 0xd4, 0x84,
+	0xb0, 0xf6, 0xe1, 0xb3, 0x46, 0x5b, 0x51, 0xa4, 0x46, 0x57, 0x12, 0xb5, 0x6e, 0x5b, 0xeb, 0x9c,
+	0x4b, 0x0d, 0xb9, 0x29, 0xd3, 0xc6, 0x13, 0x49, 0xe5, 0x18, 0xf4, 0x15, 0xd8, 0x57, 0xda, 0x5d,
+	0x6d, 0xe1, 0x28, 0x96, 0xff, 0x17, 0x03, 0x9b, 0x53, 0xb1, 0xa0, 0x0d, 0x28, 0xb5, 0xda, 0x8d,
+	0x84, 0x3b, 0x0e, 0xca, 0xc4, 0xf0, 0x58, 0x52, 0xe9, 0x74, 0x8e, 0x41, 0xbb, 0xf0, 0x09, 0xb1,
+	0x9c, 0xc9, 0x9d, 0x33, 0xa1, 0xdb, 0x38, 0xd5, 0x3a, 0xc2, 0x99, 0xa4, 0x35, 0xda, 0x3d, 0xa5,
+	0xab, 0x3e, 0xe5, 0x58, 0xb4, 0x07, 0xb5, 0x54, 0x77, 0xbb, 0x7b, 0x2a, 0xa9, 0x57, 0xfd, 0xb9,
+	0x78, 0xba, 0xda, 0x16, 0xce, 0x64, 0xe5, 0x24, 0xee, 0xd0, 0xe8, 0x60, 0x2e, 0x4f, 0xc2, 0x9b,
+	0xd9, 0x1d, 0x2d, 0xc7, 0x15, 0x50, 0x0d, 0x3e, 0x26, 0x23, 0x24, 0x55, 0x6d, 0x13, 0x5e, 0x84,
+	0x5e, 0xf7, 0xb4, 0xad, 0xca, 0x3f, 0x94, 0x44, 0x6e, 0x05, 0x6d, 0xc1, 0xc6, 0xa4, 0x8f, 0x7a,
+	0xe6, 0x56, 0x79, 0x17, 0xd0, 0xc9, 0xe4, 0xe4, 0x7e, 0x01, 0x67, 0x8c, 0x7f, 0xc3, 0x02, 0x97,
+	0x72, 0x39, 0x5b, 0xf4, 0xad, 0xcc, 0x65, 0xf9, 0xad, 0xf9, 0x4a, 0xcc, 0xae, 0x46, 0x4e, 0x65,
+	0xe6, 0xaa, 0x5c, 0xe2, 0xec, 0x6f, 0x43, 0x81, 0x1e, 0x0b, 0xaa, 0xc1, 0xbc, 0x1a, 0x36, 0xd0,
+	0x29, 0x70, 0x36, 0x0e, 0x5e, 0x39, 0xde, 0xc5, 0x35, 0x6f, 0xc5, 0x8d, 0x68, 0xda, 0xd5, 0xa5,
+	0xf8, 0x5d, 0x28, 0x5e, 0xe1, 0x9a, 0x96, 0xd2, 0x3a, 0x14, 0x89, 0x21, 0xbe, 0x11, 0x2b, 0x00,
+	0xa4, 0x29, 0x4a, 0x0a, 0xd1, 0x15, 0xcb, 0xbf, 0x61, 0x00, 0x09, 0xae, 0x2b, 0xdb, 0x7e, 0xd0,
+	0xb2, 0xfc, 0x0f, 0x23, 0xd1, 0xf2, 0xbf, 0x64, 0xa0, 0x24, 0xb8, 0xae, 0x65, 0xfb, 0x81, 0x6e,
+	0x1b, 0xe9, 0xec, 0xca, 0xcc, 0xcf, 0xae, 0x6c, 0xba, 0xc0, 0x7a, 0x9f, 0x59, 0x8e, 0x7f, 0xcd,
+	0x02, 0xd7, 0xc8, 0xa4, 0xab, 0x29, 0x32, 0x98, 0x69, 0x32, 0xbe, 0x0c, 0xeb, 0x57, 0xd9, 0x31,
+	0x51, 0x3b, 0x96, 0x63, 0xe3, 0x4c, 0xc6, 0x72, 0xd7, 0xce, 0x1e, 0x35, 0x58, 0x23, 0x83, 0x09,
+	0x5b, 0xd1, 0x55, 0x78, 0xd5, 0x46, 0x32, 0x94, 0xf5, 0x09, 0x99, 0x7e, 0xb5, 0x40, 0x43, 0xbf,
+	0xb1, 0x30, 0xf4, 0x78, 0xb4, 0x9a, 0x9a, 0xca, 0xff, 0x9b, 0x01, 0x2e, 0xa5, 0xa6, 0xd9, 0x47,
+	0xf0, 0x51, 0xe6, 0x08, 0xde, 0x5e, 0xe8, 0x2b, 0xb5, 0x5a, 0x5d, 0x90, 0x33, 0x27, 0xf0, 0x14,
+	0x8a, 0x31, 0x59, 0x24, 0xb9, 0x10, 0xec, 0x87, 0xf3, 0xd7, 0xcb, 0xee, 0x91, 0x3a, 0x99, 0xcc,
+	0xdf, 0x85, 0xb5, 0x78, 0x75, 0x72, 0x03, 0x0b, 0xb2, 0xd6, 0x53, 0x44, 0xa9, 0x29, 0x2b, 0x92,
+	0x18, 0xd6, 0x16, 0x82, 0xac, 0x75, 0x7a, 0x8d, 0x86, 0xd4, 0xe9, 0x70, 0x0c, 0x2a, 0xc1, 0xaa,
+	0x20, 0x6b, 0x4d, 0x41, 0x6e, 0x71, 0x2c, 0xff, 0x10, 0x36, 0x9a, 0x2f, 0x4d, 0xfb, 0x7d, 0x1c,
+	0x21, 0xfe, 0xb7, 0x0c, 0xac, 0x0a, 0xae, 0x4b, 0xd6, 0xfb, 0x2f, 0x95, 0x9d, 0x2c, 0x44, 0x73,
+	0xe9, 0x42, 0x74, 0x1b, 0x0a, 0x44, 0xe8, 0xa1, 0xc0, 0x8b, 0x6a, 0xd8, 0x40, 0xb7, 0x60, 0x5b,
+	0xb7, 0x4d, 0xcf, 0xb1, 0x4c, 0xcd, 0xd5, 0x8d, 0x0b, 0xbd, 0x8f, 0x93, 0x55, 0x2c, 0x8a, 0xfa,
+	0xce, 0xc3, 0x2e, 0x7a, 0xd9, 0xfe, 0x93, 0x81, 0xf5, 0x49, 0xc4, 0xb3, 0xb7, 0xf9, 0x01, 0x14,
+	0x09, 0xc2, 0xd0, 0x5f, 0x6e, 0x89, 0x03, 0x45, 0x16, 0x54, 0x49, 0x54, 0x4d, 0x8a, 0xea, 0xf4,
+	0x4a, 0x26, 0x79, 0x2a, 0x93, 0x5b, 0x0b, 0xca, 0xda, 0x24, 0x94, 0x7a, 0xb3, 0x95, 0xd6, 0x08,
+	0xd9, 0xd9, 0xd8, 0x46, 0xab, 0xc6, 0x56, 0x76, 0x67, 0x9b, 0xad, 0xf4, 0xce, 0x36, 0x5b, 0xf1,
+	0xce, 0xfe, 0x86, 0x85, 0x8f, 0xc5, 0x4b, 0x5b, 0x1f, 0x5a, 0x46, 0xcb, 0x31, 0x4e, 0x3c, 0x67,
+	0xe4, 0xfe, 0xcf, 0x97, 0xe4, 0x16, 0x14, 0x06, 0x7d, 0xcd, 0x32, 0xe9, 0xe6, 0xe4, 0xd5, 0xfc,
+	0xa0, 0x2f, 0x9b, 0xe8, 0x29, 0x14, 0xc9, 0xe3, 0x53, 0x0b, 0x2e, 0x5d, 0x5c, 0x2d, 0xd1, 0x80,
+	0xef, 0xcd, 0x0f, 0x78, 0x36, 0xa4, 0xba, 0x38, 0xe8, 0x37, 0x9c, 0xe1, 0xb0, 0x7b, 0xe9, 0x62,
+	0x75, 0xcd, 0x88, 0xbe, 0xd0, 0xa7, 0x50, 0x1c, 0xf9, 0xd8, 0xd3, 0x4c, 0x3d, 0xd0, 0xab, 0x65,
+	0x8a, 0x68, 0x8d, 0x18, 0x44, 0x3d, 0xd0, 0xf9, 0x07, 0x50, 0x4a, 0xcc, 0x22, 0xc5, 0x8f, 0xd8,
+	0x3a, 0xc9, 0xf2, 0x43, 0x4c, 0x1d, 0xa9, 0xd1, 0x53, 0x25, 0x8e, 0x41, 0x65, 0x58, 0x23, 0xed,
+	0xf6, 0xb9, 0xa4, 0x70, 0x2c, 0xff, 0x3b, 0x06, 0xb6, 0xa7, 0xd0, 0xfc, 0x5f, 0x9e, 0x99, 0xbb,
+	0x00, 0xd8, 0xf3, 0x1c, 0x4f, 0x33, 0x1c, 0x33, 0x14, 0xf6, 0xba, 0x5a, 0xa4, 0x96, 0x86, 0x63,
+	0xd2, 0xd4, 0xd3, 0x27, 0xde, 0x63, 0xea, 0xa3, 0x07, 0x33, 0xb5, 0x85, 0xc4, 0x1f, 0xde, 0x87,
+	0x55, 0x59, 0x24, 0x61, 0x52, 0x19, 0xc8, 0x62, 0x2a, 0xcc, 0x35, 0xc8, 0xcb, 0x67, 0x92, 0xcc,
+	0x31, 0x08, 0x60, 0xe5, 0xac, 0x23, 0x77, 0x44, 0x85, 0x63, 0xc9, 0xb7, 0x7c, 0x2e, 0x88, 0xa2,
+	0xca, 0xe5, 0x0e, 0xef, 0x41, 0x29, 0x81, 0x8b, 0x2c, 0xa1, 0x76, 0xb2, 0x4c, 0xa9, 0x9d, 0xb4,
+	0x92, 0xd4, 0x4e, 0xa4, 0xa4, 0xe3, 0xbf, 0xaf, 0x42, 0xe5, 0x8c, 0xc4, 0x28, 0xd1, 0x10, 0x05,
+	0xd7, 0x42, 0xbf, 0x60, 0xa0, 0x92, 0x7e, 0xa1, 0xa3, 0xa3, 0x45, 0x9c, 0xcc, 0xf8, 0x15, 0x51,
+	0xbb, 0xb9, 0xfc, 0x04, 0x77, 0x70, 0xc9, 0xef, 0xfe, 0xe4, 0xcf, 0xff, 0xf8, 0x35, 0xfb, 0x25,
+	0x1e, 0x1d, 0x8d, 0xbf, 0x79, 0xe4, 0x45, 0x03, 0xc2, 0x3f, 0x29, 0xdf, 0x61, 0x0e, 0xd1, 0xcf,
+	0x18, 0x28, 0x27, 0xdf, 0x88, 0xe8, 0xe6, 0xb2, 0x6f, 0xc9, 0x10, 0xcd, 0xd7, 0xaf, 0xf1, 0xf4,
+	0xe4, 0x3f, 0xa5, 0x58, 0x76, 0x78, 0x8e, 0x60, 0x79, 0x6e, 0xd9, 0x66, 0x7c, 0x17, 0x13, 0x24,
+	0x84, 0x9b, 0xf4, 0x53, 0x60, 0x11, 0x37, 0x33, 0x9f, 0x74, 0x8b, 0xb8, 0x99, 0xf1, 0xca, 0x48,
+	0x73, 0x13, 0xbe, 0xaa, 0xe2, 0x9c, 0x4b, 0x10, 0xbd, 0x66, 0xa0, 0x94, 0x28, 0x09, 0xd1, 0x37,
+	0x96, 0xac, 0x1c, 0x43, 0x2c, 0x87, 0xcb, 0xd7, 0x99, 0x7c, 0x8d, 0x02, 0xd9, 0xe6, 0x37, 0x08,
+	0x90, 0x3e, 0x0e, 0x92, 0x28, 0x7e, 0xc5, 0x40, 0x45, 0x30, 0xcd, 0x9e, 0x8f, 0xbd, 0xae, 0x43,
+	0x8f, 0x1b, 0xba, 0x75, 0xdd, 0x7b, 0xa2, 0x56, 0xbf, 0xc6, 0x8c, 0x29, 0x66, 0x74, 0xd3, 0x24,
+	0xb7, 0x47, 0xe0, 0xd0, 0xa3, 0x45, 0x30, 0xfd, 0x9c, 0x81, 0xca, 0x09, 0x0e, 0x12, 0xc9, 0x7a,
+	0x11, 0x39, 0xd3, 0xf5, 0xe6, 0x22, 0x72, 0xb2, 0x15, 0x40, 0x1a, 0x4b, 0x1f, 0x07, 0x51, 0x05,
+	0x32, 0xb0, 0x7c, 0xaa, 0x9b, 0x1f, 0xd3, 0x4d, 0x8a, 0x13, 0x02, 0xfa, 0xda, 0x32, 0x49, 0x23,
+	0x04, 0xf1, 0xd5, 0x25, 0xf3, 0xcb, 0xd4, 0xf6, 0x90, 0x0c, 0x17, 0xb9, 0xff, 0x01, 0xf7, 0xf6,
+	0x6f, 0x7b, 0x1f, 0xbd, 0x7d, 0xb7, 0xc7, 0xfc, 0xf1, 0xdd, 0x1e, 0xf3, 0xd7, 0x77, 0x7b, 0xcc,
+	0xb3, 0x15, 0xfa, 0x33, 0xf1, 0xf6, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x39, 0xb8, 0x0b, 0xff,
+	0xb4, 0x14, 0x00, 0x00,
 }

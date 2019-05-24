@@ -1,15 +1,15 @@
-status: FIND_FOUND
+status: FindFound
 fqdn: acmeappcosomeapplication110.autoclustersomeapplication1.azure-cloud-9.azure.mobiledgex.net
 ports:
-- proto: LProtoTCP
+- proto: LProtoTcp
   internalport: 80
   publicport: 80
   fqdnprefix: someapplication1-tcp.
-- proto: LProtoTCP
+- proto: LProtoTcp
   internalport: 443
   publicport: 443
   fqdnprefix: someapplication1-tcp.
-- proto: LProtoUDP
+- proto: LProtoUdp
   internalport: 10002
   publicport: 10002
   fqdnprefix: someapplication1-udp.

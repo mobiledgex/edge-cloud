@@ -71,14 +71,14 @@ func TestNotifyTree(t *testing.T) {
 	top.handler.FlavorCache.Update(&testutil.FlavorData[1], 0)
 	top.handler.FlavorCache.Update(&testutil.FlavorData[2], 0)
 
-	// set ClusterInst and AppInst state to CreateRequested so they get
+	// set ClusterInst and AppInst state to CREATE_REQUESTED so they get
 	// sent to the CRM.
 	for ii, _ := range testutil.ClusterInstData {
-		testutil.ClusterInstData[ii].State = edgeproto.TrackedState_CreateRequested
+		testutil.ClusterInstData[ii].State = edgeproto.TrackedState_CREATE_REQUESTED
 		top.handler.ClusterInstCache.Update(&testutil.ClusterInstData[ii], 0)
 	}
 	for ii, _ := range testutil.AppInstData {
-		testutil.AppInstData[ii].State = edgeproto.TrackedState_CreateRequested
+		testutil.AppInstData[ii].State = edgeproto.TrackedState_CREATE_REQUESTED
 		top.handler.AppInstCache.Update(&testutil.AppInstData[ii], 0)
 	}
 	top.handler.CloudletCache.Update(&testutil.CloudletData[0], 0)

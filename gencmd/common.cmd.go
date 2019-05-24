@@ -51,10 +51,10 @@ var TrackedStateStrings = []string{
 
 var CRMOverrideStrings = []string{
 	"NoOverride",
-	"IgnoreCRMErrors",
-	"IgnoreCRM",
+	"IgnoreCrmErrors",
+	"IgnoreCrm",
 	"IgnoreTransientState",
-	"IgnoreCRMandTransientState",
+	"IgnoreCrmAndTransientState",
 }
 
 func init() {

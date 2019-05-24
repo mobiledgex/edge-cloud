@@ -6,28 +6,28 @@ package distributed_match_engine;
 message DlgMessage {
   uint32 ver = 1;
   // Dynamic Location Group Id
-  uint64 LgId = 2;
+  uint64 lg_id = 2;
   // Group Cookie if secure
-  string GroupCookie = 3;
+  string group_cookie = 3;
   // Message ID
-  uint64 MessageId = 4;
+  uint64 message_id = 4;
   // Need acknowledgement
   enum DlgAck {
-    DlgAckEachMessage = 0;
-    DlgAsyEveryNMessage = 1;
-    DlgNoAck = 2;
+    DLG_ACK_EACH_MESSAGE = 0;
+    DLG_ASY_EVERY_N_MESSAGE = 1;
+    DLG_NO_ACK = 2;
   }
-  DlgAck AckType = 5;
+  DlgAck ack_type = 5;
   // Message
-  string Message = 6;
+  string message = 6;
 }
 
 message DlgReply {
   uint32 ver = 1;
   // AckId
-  uint64 AckId = 2;
+  uint64 ack_id = 2;
   // Group Cookie for Secure comm
-  string GroupCookie = 3;
+  string group_cookie = 3;
 }
 
 service DynamicLocGroupApi {

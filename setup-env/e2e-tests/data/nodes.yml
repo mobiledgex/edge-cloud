@@ -1,72 +1,72 @@
 nodes:
 - key:
-    nodetype: NodeDME
+    nodetype: NodeDme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-1
 - key:
-    nodetype: NodeDME
+    nodetype: NodeDme
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: gcp
       name: gcp-cloud-10
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-8
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: azure
       name: azure-cloud-9
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-5
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-6
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-2
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-4
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-7
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus
       name: dmuus-cloud-3
 - key:
-    nodetype: NodeCRM
+    nodetype: NodeCrm
     cloudletkey:
       operatorkey:
         name: dmuus

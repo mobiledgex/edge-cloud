@@ -91,17 +91,17 @@ func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, c
 	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
 }
 
-func FQDNPrefix(svcName string) string {
+func FqdnPrefix(svcName string) string {
 	return svcName + "."
 }
 
 func ServiceFQDN(svcName, baseFQDN string) string {
-	return fmt.Sprintf("%s%s", FQDNPrefix(svcName), baseFQDN)
+	return fmt.Sprintf("%s%s", FqdnPrefix(svcName), baseFQDN)
 }
 
 // GetL7Path gets the L7 path for L7 access behind the "shared"
 // global Load Balancer (reverse proxy). This only the path and
-// does not include the FQDN and port.
+// does not include the Fqdn and port.
 func GetL7Path(key *edgeproto.AppInstKey, internalPort int32) string {
 	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
 	app := util.DNSSanitize(key.AppKey.Name)

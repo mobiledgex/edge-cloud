@@ -7,3 +7,5 @@ notify/*.notify.go
 testutil/*_testutil.go
 *.postgres
 *__pycache__
+link-gogo-protobuf
+link-grpc-gateway

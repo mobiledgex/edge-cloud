@@ -25,8 +25,8 @@ func TestYaml(t *testing.T) {
 
 	strout := string(out)
 	fmt.Println(strout)
-	assert.True(t, strings.Index(strout, "lvl: api") != -1, "has api")
-	assert.True(t, strings.Index(strout, "lvls: [notify, etcd]") != -1, "has array")
+	assert.True(t, strings.Index(strout, "lvl: Api") != -1, "has api")
+	assert.True(t, strings.Index(strout, "lvls: [Notify, Etcd]") != -1, "has array")
 
 	yin := yamltest{}
 	err = yaml.Unmarshal(out, &yin)

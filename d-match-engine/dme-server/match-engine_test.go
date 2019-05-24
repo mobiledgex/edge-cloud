@@ -60,7 +60,7 @@ func TestAddRemove(t *testing.T) {
 		assert.Nil(t, err, "find cloudlet")
 		assert.Equal(t, rr.Reply.Status, reply.Status, "findCloudletData[%d]", ii)
 		if reply.Status == dme.FindCloudletReply_FIND_FOUND {
-			assert.Equal(t, rr.Reply.FQDN, reply.FQDN,
+			assert.Equal(t, rr.Reply.Fqdn, reply.Fqdn,
 				"findCloudletData[%d]", ii)
 		}
 	}

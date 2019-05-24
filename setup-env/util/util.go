@@ -339,7 +339,7 @@ func checkCloudletState(p *process.Crm, timeout time.Duration) error {
 			err = fmt.Errorf("CloudletInfo not found")
 			continue
 		}
-		if info.State != edgeproto.CloudletState_CloudletStateReady && info.State != edgeproto.CloudletState_CloudletStateErrors {
+		if info.State != edgeproto.CloudletState_CLOUDLET_STATE_READY && info.State != edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 			err = fmt.Errorf("CloudletInfo bad state %s", edgeproto.CloudletState_name[int32(info.State)])
 			continue
 		}

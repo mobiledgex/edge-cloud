@@ -317,22 +317,22 @@ func GetLProto(s string) (dme.LProto, error) {
 	s = strings.ToLower(s)
 	switch s {
 	case "tcp":
-		return dme.LProto_LProtoTCP, nil
+		return dme.LProto_L_PROTO_TCP, nil
 	case "udp":
-		return dme.LProto_LProtoUDP, nil
+		return dme.LProto_L_PROTO_UDP, nil
 	case "http":
-		return dme.LProto_LProtoHTTP, nil
+		return dme.LProto_L_PROTO_HTTP, nil
 	}
 	return 0, fmt.Errorf("%s is not a supported Protocol", s)
 }
 
 func LProtoStr(proto dme.LProto) (string, error) {
 	switch proto {
-	case dme.LProto_LProtoTCP:
+	case dme.LProto_L_PROTO_TCP:
 		return "tcp", nil
-	case dme.LProto_LProtoUDP:
+	case dme.LProto_L_PROTO_UDP:
 		return "udp", nil
-	case dme.LProto_LProtoHTTP:
+	case dme.LProto_L_PROTO_HTTP:
 		return "http", nil
 	}
 	return "", fmt.Errorf("Invalid proto %d", proto)
@@ -340,11 +340,11 @@ func LProtoStr(proto dme.LProto) (string, error) {
 
 func L4ProtoStr(proto dme.LProto) (string, error) {
 	switch proto {
-	case dme.LProto_LProtoHTTP:
+	case dme.LProto_L_PROTO_HTTP:
 		fallthrough
-	case dme.LProto_LProtoTCP:
+	case dme.LProto_L_PROTO_TCP:
 		return "tcp", nil
-	case dme.LProto_LProtoUDP:
+	case dme.LProto_L_PROTO_UDP:
 		return "udp", nil
 	}
 	return "", fmt.Errorf("Invalid proto %d", proto)

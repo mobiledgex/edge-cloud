@@ -95,9 +95,9 @@ var MEXMetricsExporterApp = edgeproto.App{
 		},
 	},
 	ImagePath:     deploygen.MexRegistry + "/mobiledgex/images/metrics-exporter:latest",
-	ImageType:     edgeproto.ImageType_ImageTypeDocker,
+	ImageType:     edgeproto.ImageType_IMAGE_TYPE_DOCKER,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
-	DelOpt:        edgeproto.DeleteType_AutoDelete,
+	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 }
 
 var MEXPrometheusAppName = "MEXPrometheusAppName"
@@ -114,7 +114,7 @@ var MEXPrometheusApp = edgeproto.App{
 	ImagePath:     "stable/prometheus-operator",
 	Deployment:    cloudcommon.AppDeploymentTypeHelm,
 	DefaultFlavor: edgeproto.FlavorKey{Name: *appFlavor},
-	DelOpt:        edgeproto.DeleteType_AutoDelete,
+	DelOpt:        edgeproto.DeleteType_AUTO_DELETE,
 }
 
 var dialOpts grpc.DialOption
@@ -138,7 +138,7 @@ func (c *ClusterInstHandler) Update(in *edgeproto.ClusterInst, rev int64) {
 	log.DebugLog(log.DebugLevelNotify, "cluster update", "cluster", in.Key.ClusterKey.Name,
 		"cloudlet", in.Key.CloudletKey.Name, "state", edgeproto.TrackedState_name[int32(in.State)])
 	// Need to create a connection to server, as passed to us by commands
-	if in.State == edgeproto.TrackedState_Ready {
+	if in.State == edgeproto.TrackedState_READY {
 		// Create Two applications on the cluster after creation
 		//   - Prometheus and MetricsExporter
 		if err = createMEXPromInst(dialOpts, in.Key); err != nil {
