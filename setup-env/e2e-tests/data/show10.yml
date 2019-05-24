@@ -26,6 +26,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -41,6 +42,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessDedicated
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -56,6 +58,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -71,6 +74,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -86,6 +90,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -101,6 +106,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -116,6 +122,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -131,6 +138,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -146,6 +154,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessDedicated
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -161,6 +170,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -176,6 +186,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -191,6 +202,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -206,6 +218,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -221,6 +234,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -236,6 +250,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -251,6 +266,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -266,6 +282,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -281,6 +298,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -296,6 +314,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessDedicated
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 - key:
@@ -311,6 +330,7 @@ clusterinsts:
   liveness: LivenessDynamic
   auto: true
   ipaccess: IpAccessDedicated
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 
