@@ -124,29 +124,29 @@ func AppInstSlicer(in *edgeproto.AppInst) []string {
 	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CloudletLoc.Timestamp.Nanos), 10))
 	s = append(s, in.Uri)
-	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
+	s = append(s, edgeproto.Liveness_CamelName[int32(in.Liveness)])
 	if in.MappedPorts == nil {
 		in.MappedPorts = make([]distributed_match_engine.AppPort, 1)
 	}
-	s = append(s, distributed_match_engine.LProto_name[int32(in.MappedPorts[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.MappedPorts[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.MappedPorts[0].PublicPort), 10))
 	s = append(s, in.MappedPorts[0].PathPrefix)
-	s = append(s, in.MappedPorts[0].FQDNPrefix)
+	s = append(s, in.MappedPorts[0].FqdnPrefix)
 	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
-	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
+	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
 	if in.RuntimeInfo.ContainerIds == nil {
 		in.RuntimeInfo.ContainerIds = make([]string, 1)
 	}
 	s = append(s, in.RuntimeInfo.ContainerIds[0])
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.CreatedAt.Nanos), 10))
-	s = append(s, edgeproto.IpAccess_name[int32(in.AutoClusterIpAccess)])
+	s = append(s, edgeproto.IpAccess_CamelName[int32(in.AutoClusterIpAccess)])
 	return s
 }
 
@@ -175,7 +175,7 @@ func AppInstHeaderSlicer() []string {
 	s = append(s, "MappedPorts-InternalPort")
 	s = append(s, "MappedPorts-PublicPort")
 	s = append(s, "MappedPorts-PathPrefix")
-	s = append(s, "MappedPorts-FQDNPrefix")
+	s = append(s, "MappedPorts-FqdnPrefix")
 	s = append(s, "Flavor-Name")
 	s = append(s, "State")
 	s = append(s, "Errors")
@@ -262,7 +262,7 @@ func AppInstInfoSlicer(in *edgeproto.AppInstInfo) []string {
 	s = append(s, in.Key.ClusterInstKey.CloudletKey.Name)
 	s = append(s, in.Key.ClusterInstKey.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -781,7 +781,7 @@ func init() {
 	AppInstNoConfigFlagSet.StringVar(&AppInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	AppInstFlagSet.StringVar(&AppInstIn.Flavor.Name, "flavor-name", "", "Flavor.Name")
 	AppInstFlagSet.StringVar(&AppInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
+	AppInstFlagSet.StringVar(&AppInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	AppInstNoConfigFlagSet.Int64Var(&AppInstIn.CreatedAt.Seconds, "createdat-seconds", 0, "CreatedAt.Seconds")
 	AppInstNoConfigFlagSet.Int32Var(&AppInstIn.CreatedAt.Nanos, "createdat-nanos", 0, "CreatedAt.Nanos")
 	AppInstFlagSet.StringVar(&AppInstInAutoClusterIpAccess, "autoclusteripaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
@@ -942,11 +942,11 @@ func parseAppInstEnums() error {
 		switch AppInstInMappedPortsProto {
 		case "LProtoUnknown":
 			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(0)
-		case "LProtoTCP":
+		case "LProtoTcp":
 			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(1)
-		case "LProtoUDP":
+		case "LProtoUdp":
 			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(2)
-		case "LProtoHTTP":
+		case "LProtoHttp":
 			AppInstIn.MappedPorts[0].Proto = distributed_match_engine.LProto(3)
 		default:
 			return errors.New("Invalid value for AppInstInMappedPortsProto")
@@ -988,13 +988,13 @@ func parseAppInstEnums() error {
 		switch AppInstInCrmOverride {
 		case "NoOverride":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(0)
-		case "IgnoreCRMErrors":
+		case "IgnoreCrmErrors":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(1)
-		case "IgnoreCRM":
+		case "IgnoreCrm":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(2)
 		case "IgnoreTransientState":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(3)
-		case "IgnoreCRMandTransientState":
+		case "IgnoreCrmAndTransientState":
 			AppInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for AppInstInCrmOverride")

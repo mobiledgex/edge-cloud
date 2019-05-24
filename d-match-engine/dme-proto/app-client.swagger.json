@@ -37,7 +37,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -63,7 +63,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -89,7 +89,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -115,7 +115,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -141,7 +141,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -167,7 +167,7 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     },
@@ -193,13 +193,13 @@
           }
         ],
         "tags": [
-          "Match_Engine_Api"
+          "MatchEngineApi"
         ]
       }
     }
   },
   "definitions": {
-    "AppInstListReplyAI_Status": {
+    "AppInstListReplyAIStatus": {
       "type": "string",
       "enum": [
         "AI_UNDEFINED",
@@ -212,21 +212,21 @@
     "DlgMessageDlgAck": {
       "type": "string",
       "enum": [
-        "DlgAckEachMessage",
-        "DlgAsyEveryNMessage",
-        "DlgNoAck"
+        "DLG_ACK_EACH_MESSAGE",
+        "DLG_ASY_EVERY_N_MESSAGE",
+        "DLG_NO_ACK"
       ],
-      "default": "DlgAckEachMessage",
+      "default": "DLG_ACK_EACH_MESSAGE",
       "title": "Need acknowledgement"
     },
     "DynamicLocGroupRequestDlgCommType": {
       "type": "string",
       "enum": [
-        "DlgUndefined",
-        "DlgSecure",
-        "DlgOpen"
+        "DLG_UNDEFINED",
+        "DLG_SECURE",
+        "DLG_OPEN"
       ],
-      "default": "DlgUndefined",
+      "default": "DLG_UNDEFINED",
       "title": "Use Secure communication or Open with the group"
     },
     "FindCloudletReplyFindStatus": {
@@ -238,7 +238,7 @@
       ],
       "default": "FIND_UNKNOWN"
     },
-    "FqdnListReplyFL_Status": {
+    "FqdnListReplyFLStatus": {
       "type": "string",
       "enum": [
         "FL_UNDEFINED",
@@ -248,7 +248,7 @@
       "default": "FL_UNDEFINED",
       "title": "Status of the reply"
     },
-    "GetLocationReplyLoc_Status": {
+    "GetLocationReplyLocStatus": {
       "type": "string",
       "enum": [
         "LOC_UNKNOWN",
@@ -259,7 +259,7 @@
       "description": "- LOC_DENIED: The user does not allow his location to be tracked",
       "title": "Status of the reply"
     },
-    "VerifyLocationReplyGPS_Location_Status": {
+    "VerifyLocationReplyGPSLocationStatus": {
       "type": "string",
       "enum": [
         "LOC_UNKNOWN",
@@ -273,7 +273,7 @@
       ],
       "default": "LOC_UNKNOWN"
     },
-    "VerifyLocationReplyTower_Status": {
+    "VerifyLocationReplyTowerStatus": {
       "type": "string",
       "enum": [
         "TOWER_UNKNOWN",
@@ -286,26 +286,26 @@
     "distributed_match_engineAppFqdn": {
       "type": "object",
       "properties": {
-        "AppName": {
+        "app_name": {
           "type": "string",
           "title": "App  Name"
         },
-        "AppVers": {
+        "app_vers": {
           "type": "string",
           "title": "App Version"
         },
-        "DevName": {
+        "dev_name": {
           "type": "string",
           "title": "developer name"
         },
-        "FQDNs": {
+        "fqdns": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "title": "App FQDN"
         },
-        "AndroidPackageName": {
+        "android_package_name": {
           "type": "string",
           "title": "optional android package name"
         }
@@ -314,15 +314,15 @@
     "distributed_match_engineAppInstListReply": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "Status": {
-          "$ref": "#/definitions/AppInstListReplyAI_Status"
+        "status": {
+          "$ref": "#/definitions/AppInstListReplyAIStatus"
         },
-        "Cloudlets": {
+        "cloudlets": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/distributed_match_engineCloudletLocation"
@@ -333,20 +333,20 @@
     "distributed_match_engineAppInstListRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "gps_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
         }
@@ -373,7 +373,7 @@
           "type": "string",
           "description": "Public facing path for HTTP L7 access."
         },
-        "FQDN_prefix": {
+        "fqdn_prefix": {
           "type": "string",
           "description": "FQDN prefix to append to base FQDN in FindCloudlet response. May be empty."
         }
@@ -383,15 +383,15 @@
     "distributed_match_engineAppinstance": {
       "type": "object",
       "properties": {
-        "AppName": {
+        "app_name": {
           "type": "string",
           "title": "App Instance Name"
         },
-        "AppVers": {
+        "app_vers": {
           "type": "string",
           "title": "App Instance Version"
         },
-        "FQDN": {
+        "fqdn": {
           "type": "string",
           "title": "App Instance FQDN"
         },
@@ -407,24 +407,24 @@
     "distributed_match_engineCloudletLocation": {
       "type": "object",
       "properties": {
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "CloudletName": {
+        "cloudlet_name": {
           "type": "string",
           "title": "Cloudlet Name"
         },
-        "GpsLocation": {
+        "gps_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS Location of the user"
         },
-        "Distance": {
+        "distance": {
           "type": "number",
           "format": "double",
           "title": "Distance of cloudlet vs loc in request"
         },
-        "Appinstances": {
+        "appinstances": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/distributed_match_engineAppinstance"
@@ -440,12 +440,12 @@
           "type": "integer",
           "format": "int64"
         },
-        "AckId": {
+        "ack_id": {
           "type": "string",
           "format": "uint64",
           "title": "AckId"
         },
-        "GroupCookie": {
+        "group_cookie": {
           "type": "string",
           "title": "Group Cookie for Secure comm"
         }
@@ -462,12 +462,12 @@
           "$ref": "#/definitions/distributed_match_engineReplyStatus",
           "title": "Status of the reply"
         },
-        "ErrorCode": {
+        "error_code": {
           "type": "integer",
           "format": "int64",
           "title": "Error Code based on Failure"
         },
-        "GroupCookie": {
+        "group_cookie": {
           "type": "string",
           "title": "Group Cookie for Secure Group Communication"
         }
@@ -476,23 +476,23 @@
     "distributed_match_engineDynamicLocGroupRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         },
-        "LgId": {
+        "lg_id": {
           "type": "string",
           "format": "uint64",
           "title": "Dynamic Location Group Id"
         },
-        "CommType": {
+        "comm_type": {
           "$ref": "#/definitions/DynamicLocGroupRequestDlgCommType"
         },
-        "UserData": {
+        "user_data": {
           "type": "string",
           "title": "Unused"
         }
@@ -501,7 +501,7 @@
     "distributed_match_engineFindCloudletReply": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
@@ -510,7 +510,7 @@
           "$ref": "#/definitions/FindCloudletReplyFindStatus",
           "title": "Status return"
         },
-        "FQDN": {
+        "fqdn": {
           "type": "string",
           "title": "Full Qualified Domain Name of Closest App instance"
         },
@@ -530,32 +530,32 @@
     "distributed_match_engineFindCloudletRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "gps_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
         },
-        "DevName": {
+        "dev_name": {
           "type": "string",
           "title": "DevName is applicable to Platform apps only"
         },
-        "AppName": {
+        "app_name": {
           "type": "string",
           "title": "App Name is applicable to Platform apps only"
         },
-        "AppVers": {
+        "app_vers": {
           "type": "string",
           "title": "App Version is applicable to Platform apps only"
         }
@@ -569,26 +569,26 @@
           "format": "int64",
           "title": "API version"
         },
-        "AppFqdns": {
+        "app_fqdns": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/distributed_match_engineAppFqdn"
           }
         },
-        "Status": {
-          "$ref": "#/definitions/FqdnListReplyFL_Status"
+        "status": {
+          "$ref": "#/definitions/FqdnListReplyFLStatus"
         }
       }
     },
     "distributed_match_engineFqdnListRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         }
@@ -597,23 +597,23 @@
     "distributed_match_engineGetLocationReply": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64"
         },
-        "Status": {
-          "$ref": "#/definitions/GetLocationReplyLoc_Status"
+        "status": {
+          "$ref": "#/definitions/GetLocationReplyLocStatus"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "Tower": {
+        "tower": {
           "type": "string",
           "format": "uint64",
           "title": "The tower that user is currently connected to"
         },
-        "NetworkLocation": {
+        "network_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location of the user"
         }
@@ -622,16 +622,16 @@
     "distributed_match_engineGetLocationRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         }
@@ -640,13 +640,13 @@
     "distributed_match_engineLProto": {
       "type": "string",
       "enum": [
-        "LProtoUnknown",
-        "LProtoTCP",
-        "LProtoUDP",
-        "LProtoHTTP"
+        "L_PROTO_UNKNOWN",
+        "L_PROTO_TCP",
+        "L_PROTO_UDP",
+        "L_PROTO_HTTP"
       ],
-      "default": "LProtoUnknown",
-      "description": "LProto indicates which protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.\n\n - LProtoUnknown: Unknown protocol\n - LProtoTCP: TCP (L4) protocol\n - LProtoUDP: UDP (L4) protocol\n - LProtoHTTP: HTTP (L7 tcp) protocol"
+      "default": "L_PROTO_UNKNOWN",
+      "description": "LProto indicates which protocol to use for accessing an application on a particular port. This is required by Kubernetes for port mapping.\n\n - L_PROTO_UNKNOWN: Unknown protocol\n - L_PROTO_TCP: TCP (L4) protocol\n - L_PROTO_UDP: UDP (L4) protocol\n - L_PROTO_HTTP: HTTP (L7 tcp) protocol"
     },
     "distributed_match_engineLoc": {
       "type": "object",
@@ -695,20 +695,20 @@
     "distributed_match_engineRegisterClientReply": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "Status": {
+        "status": {
           "$ref": "#/definitions/distributed_match_engineReplyStatus",
           "title": "Status of the reply"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie to be used in later API calls"
         },
-        "TokenServerURI": {
+        "token_server_uri": {
           "type": "string",
           "title": "URI for Token Server"
         }
@@ -717,28 +717,28 @@
     "distributed_match_engineRegisterClientRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "DevName": {
+        "dev_name": {
           "type": "string",
           "title": "App Developer Name"
         },
-        "AppName": {
+        "app_name": {
           "type": "string",
           "title": "App Name"
         },
-        "AppVers": {
+        "app_vers": {
           "type": "string",
           "title": "App Version"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "carrier name, not currently used"
         },
-        "AuthToken": {
+        "auth_token": {
           "type": "string",
           "title": "authentication token"
         }
@@ -776,12 +776,12 @@
           "title": "API version"
         },
         "tower_status": {
-          "$ref": "#/definitions/VerifyLocationReplyTower_Status"
+          "$ref": "#/definitions/VerifyLocationReplyTowerStatus"
         },
         "gps_location_status": {
-          "$ref": "#/definitions/VerifyLocationReplyGPS_Location_Status"
+          "$ref": "#/definitions/VerifyLocationReplyGPSLocationStatus"
         },
-        "GPS_Location_Accuracy_KM": {
+        "gps_location_accuracy_km": {
           "type": "number",
           "format": "double",
           "title": "location accuracy, the location is verified to \nbe within this number of kilometers.  Negative value\nmeans no verification was done"
@@ -791,24 +791,24 @@
     "distributed_match_engineVerifyLocationRequest": {
       "type": "object",
       "properties": {
-        "Ver": {
+        "ver": {
           "type": "integer",
           "format": "int64",
           "title": "API version"
         },
-        "SessionCookie": {
+        "session_cookie": {
           "type": "string",
           "title": "Session Cookie from RegisterClientRequest"
         },
-        "CarrierName": {
+        "carrier_name": {
           "type": "string",
           "title": "The carrier name that user is connected to (\"Cellular Carrier Name\")"
         },
-        "GpsLocation": {
+        "gps_location": {
           "$ref": "#/definitions/distributed_match_engineLoc",
           "title": "The GPS location to verify"
         },
-        "VerifyLocToken": {
+        "verify_loc_token": {
           "type": "string",
           "title": "token used for location verification, app must retrieve from TokenServerURI"
         }

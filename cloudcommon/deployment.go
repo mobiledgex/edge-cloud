@@ -33,15 +33,15 @@ func IsValidDeploymentType(appDeploymentType string) bool {
 
 func IsValidDeploymentForImage(imageType edgeproto.ImageType, deployment string) bool {
 	switch imageType {
-	case edgeproto.ImageType_ImageTypeDocker:
+	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
 		if deployment == AppDeploymentTypeKubernetes || deployment == AppDeploymentTypeDocker {
 			return true
 		}
-	case edgeproto.ImageType_ImageTypeQCOW:
+	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
 		if deployment == AppDeploymentTypeVM {
 			return true
 		}
-	case edgeproto.ImageType_ImageTypeUnknown:
+	case edgeproto.ImageType_IMAGE_TYPE_UNKNOWN:
 		if deployment == AppDeploymentTypeHelm {
 			return true
 		}
@@ -64,9 +64,9 @@ func IsValidDeploymentManifest(appDeploymentType, command, manifest string) erro
 
 func GetDefaultDeploymentType(imageType edgeproto.ImageType) (string, error) {
 	switch imageType {
-	case edgeproto.ImageType_ImageTypeDocker:
+	case edgeproto.ImageType_IMAGE_TYPE_DOCKER:
 		return AppDeploymentTypeKubernetes, nil
-	case edgeproto.ImageType_ImageTypeQCOW:
+	case edgeproto.ImageType_IMAGE_TYPE_QCOW:
 		return AppDeploymentTypeVM, nil
 	}
 	return "", fmt.Errorf("unknown image type %s", imageType)

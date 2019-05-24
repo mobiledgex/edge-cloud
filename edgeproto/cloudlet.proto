@@ -28,13 +28,13 @@ message CloudletInfraCommon{
     // the mex docker registry, e.g.  registry.mobiledgex.net:5000. 
     string docker_registry = 1;
      // DNS Zone
-    string DNS_zone = 2;
+    string dns_zone = 2;
     // registry file server contains files which get pulled on instantiation such as certs and images
     string registry_file_server = 3;
     // Cloudflare key
-    string CF_key = 4; //MEX_CF_KEY
+    string cf_key = 4; //MEX_CF_KEY
     // Cloudflare key
-    string CF_user = 5; //MEX_CF_KEY
+    string cf_user = 5; //MEX_CF_KEY
     // Docker registry password
     string docker_reg_pass = 6; //MEX_DOCKER_REG_PASS
      // network scheme
@@ -62,18 +62,18 @@ message GcpProperties{
   // service account to login with
   string service_account = 3;
   // vault credentials link
-  string GCP_auth_key_url = 4;
+  string gcp_auth_key_url = 4;
 }
 
 message OpenStackProperties{
   // name of the external network, e.g. external-network-shared
-  string OS_external_network_name = 1; 
+  string os_external_network_name = 1; 
   //openstack image , e.g. mobiledgex
-  string OS_image_name = 2;
+  string os_image_name = 2;
   // openstack router
-  string OS_external_router_name = 3;
+  string os_external_router_name = 3;
   // openstack internal network
-  string OS_mex_network = 4;
+  string os_mex_network = 4;
   // openrc env vars 
   map<string, string> open_rc_vars = 5;
 }
@@ -160,15 +160,15 @@ service CloudletApi {
 // CloudletState is the state of the Cloudlet.
 enum CloudletState {
   // Unknown
-  CloudletStateUnknown = 0;
+  CLOUDLET_STATE_UNKNOWN = 0;
   // Create/Delete/Update encountered errors (see Errors field of CloudletInfo)
-  CloudletStateErrors = 1;
+  CLOUDLET_STATE_ERRORS = 1;
   // Cloudlet is created and ready
-  CloudletStateReady = 2;
+  CLOUDLET_STATE_READY = 2;
   // Cloudlet is offline (unreachable)
-  CloudletStateOffline = 3;
+  CLOUDLET_STATE_OFFLINE = 3;
   // Cloudlet is not present
-  CloudletStateNotPresent = 4;
+  CLOUDLET_STATE_NOT_PRESENT = 4;
 }
 
 // Flavor details from the Cloudlet

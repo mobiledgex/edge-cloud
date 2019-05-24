@@ -22,7 +22,7 @@ func main() {
 	}
 	defer conn.Close()
 
-	client := dme.NewMatch_Engine_ApiClient(conn)
+	client := dme.NewMatchEngineApiClient(conn)
 
 	_, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()

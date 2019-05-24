@@ -36,14 +36,14 @@ var NodeNoConfigFlagSet = pflag.NewFlagSet("NodeNoConfig", pflag.ExitOnError)
 var NodeInKeyNodeType string
 var NodeTypeStrings = []string{
 	"NodeUnknown",
-	"NodeDME",
-	"NodeCRM",
+	"NodeDme",
+	"NodeCrm",
 }
 
 func NodeKeySlicer(in *edgeproto.NodeKey) []string {
 	s := make([]string, 0, 3)
 	s = append(s, in.Name)
-	s = append(s, edgeproto.NodeType_name[int32(in.NodeType)])
+	s = append(s, edgeproto.NodeType_CamelName[int32(in.NodeType)])
 	s = append(s, in.CloudletKey.OperatorKey.Name)
 	s = append(s, in.CloudletKey.Name)
 	return s
@@ -88,7 +88,7 @@ func NodeSlicer(in *edgeproto.Node) []string {
 	}
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.Name)
-	s = append(s, edgeproto.NodeType_name[int32(in.Key.NodeType)])
+	s = append(s, edgeproto.NodeType_CamelName[int32(in.Key.NodeType)])
 	s = append(s, in.Key.CloudletKey.OperatorKey.Name)
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
@@ -285,7 +285,7 @@ var NodeApiCmds = []*cobra.Command{
 
 func init() {
 	NodeFlagSet.StringVar(&NodeIn.Key.Name, "key-name", "", "Key.Name")
-	NodeFlagSet.StringVar(&NodeInKeyNodeType, "key-nodetype", "", "one of [NodeUnknown NodeDME NodeCRM]")
+	NodeFlagSet.StringVar(&NodeInKeyNodeType, "key-nodetype", "", "one of [NodeUnknown NodeDme NodeCrm]")
 	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.OperatorKey.Name, "key-cloudletkey-operatorkey-name", "", "Key.CloudletKey.OperatorKey.Name")
 	NodeFlagSet.StringVar(&NodeIn.Key.CloudletKey.Name, "key-cloudletkey-name", "", "Key.CloudletKey.Name")
 	NodeFlagSet.Int64Var(&NodeIn.NotifyId, "notifyid", 0, "NotifyId")
@@ -322,9 +322,9 @@ func parseNodeEnums() error {
 		switch NodeInKeyNodeType {
 		case "NodeUnknown":
 			NodeIn.Key.NodeType = edgeproto.NodeType(0)
-		case "NodeDME":
+		case "NodeDme":
 			NodeIn.Key.NodeType = edgeproto.NodeType(1)
-		case "NodeCRM":
+		case "NodeCrm":
 			NodeIn.Key.NodeType = edgeproto.NodeType(2)
 		default:
 			return errors.New("Invalid value for NodeInKeyNodeType")

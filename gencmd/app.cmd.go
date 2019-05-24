@@ -103,7 +103,7 @@ var AppInDelOpt string
 var ImageTypeStrings = []string{
 	"ImageTypeUnknown",
 	"ImageTypeDocker",
-	"ImageTypeQCOW",
+	"ImageTypeQcow",
 }
 
 var DeleteTypeStrings = []string{
@@ -197,7 +197,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.Key.Name)
 	s = append(s, in.Key.Version)
 	s = append(s, in.ImagePath)
-	s = append(s, edgeproto.ImageType_name[int32(in.ImageType)])
+	s = append(s, edgeproto.ImageType_CamelName[int32(in.ImageType)])
 	s = append(s, in.AccessPorts)
 	s = append(s, in.Config)
 	s = append(s, in.DefaultFlavor.Name)
@@ -211,7 +211,7 @@ func AppSlicer(in *edgeproto.App) []string {
 	s = append(s, in.DeploymentGenerator)
 	s = append(s, in.AndroidPackageName)
 	s = append(s, strconv.FormatBool(in.PermitsPlatformApps))
-	s = append(s, edgeproto.DeleteType_name[int32(in.DelOpt)])
+	s = append(s, edgeproto.DeleteType_CamelName[int32(in.DelOpt)])
 	if in.Configs == nil {
 		in.Configs = make([]*edgeproto.ConfigFile, 1)
 	}
@@ -502,7 +502,7 @@ func init() {
 	AppFlagSet.StringVar(&AppIn.Key.Name, "key-name", "", "Key.Name")
 	AppFlagSet.StringVar(&AppIn.Key.Version, "key-version", "", "Key.Version")
 	AppFlagSet.StringVar(&AppIn.ImagePath, "imagepath", "", "ImagePath")
-	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQCOW]")
+	AppFlagSet.StringVar(&AppInImageType, "imagetype", "", "one of [ImageTypeUnknown ImageTypeDocker ImageTypeQcow]")
 	AppFlagSet.StringVar(&AppIn.AccessPorts, "accessports", "", "AccessPorts")
 	AppFlagSet.StringVar(&AppIn.Config, "config", "", "Config")
 	AppFlagSet.StringVar(&AppIn.DefaultFlavor.Name, "defaultflavor-name", "", "DefaultFlavor.Name")
@@ -598,7 +598,7 @@ func parseAppEnums() error {
 			AppIn.ImageType = edgeproto.ImageType(0)
 		case "ImageTypeDocker":
 			AppIn.ImageType = edgeproto.ImageType(1)
-		case "ImageTypeQCOW":
+		case "ImageTypeQcow":
 			AppIn.ImageType = edgeproto.ImageType(2)
 		default:
 			return errors.New("Invalid value for AppInImageType")

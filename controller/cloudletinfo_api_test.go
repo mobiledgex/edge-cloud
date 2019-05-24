@@ -33,7 +33,7 @@ func TestCloudletInfo(t *testing.T) {
 func insertCloudletInfo(data []edgeproto.CloudletInfo) {
 	for ii, _ := range data {
 		in := &data[ii]
-		in.State = edgeproto.CloudletState_CloudletStateReady
+		in.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		cloudletInfoApi.Update(in, 0)
 	}
 }

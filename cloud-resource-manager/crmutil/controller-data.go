@@ -56,11 +56,11 @@ func (cd *ControllerData) GatherCloudletInfo(info *edgeproto.CloudletInfo) {
 	if err != nil {
 		str := fmt.Sprintf("get limits failed: %s", err)
 		info.Errors = append(info.Errors, str)
-		info.State = edgeproto.CloudletState_CloudletStateErrors
+		info.State = edgeproto.CloudletState_CLOUDLET_STATE_ERRORS
 	} else {
 		// Is the cloudlet ready at this point?
 		info.Errors = nil
-		info.State = edgeproto.CloudletState_CloudletStateReady
+		info.State = edgeproto.CloudletState_CLOUDLET_STATE_READY
 		log.DebugLog(log.DebugLevelMexos, "cloudlet state ready", "info", info)
 	}
 }
@@ -81,10 +81,10 @@ func (cd *ControllerData) GatherInsts() {
 	// TODO: Implement me.
 	// for _, cluster := range MexClusterShowClustInst() {
 	//   key := get key from cluster
-	//   cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
+	//   cd.clusterInstInfoState(key, edgeproto.TrackedState_READY)
 	//   for _, app := range MexAppShowAppInst(cluster) {
 	//      key := get key from app
-	//      cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
+	//      cd.appInstInfoState(key, edgeproto.TrackedState_READY)
 	//   }
 	// }
 }
@@ -123,19 +123,19 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 	// the info state which can tell us if a thread is in progress.
 	info := edgeproto.ClusterInstInfo{}
 	if infoFound := cd.ClusterInstInfoCache.Get(key, &info); infoFound {
-		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
+		if info.State == edgeproto.TrackedState_CREATING || info.State == edgeproto.TrackedState_UPDATING || info.State == edgeproto.TrackedState_DELETING {
 			log.DebugLog(log.DebugLevelMexos, "clusterInst conflicting state", "state", info.State)
 			return
 		}
 	}
 	// do request
-	if clusterInst.State == edgeproto.TrackedState_CreateRequested {
+	if clusterInst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		log.DebugLog(log.DebugLevelMexos, "cluster inst create", "clusterInst", clusterInst)
 		// create or update k8s cluster on this cloudlet
 
 		// XXX clusterInstCache has clusterInst but FlavorCache has clusterInst.Flavor.
-		cd.clusterInstInfoState(key, edgeproto.TrackedState_Creating)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_CREATING)
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "create cluster inst", "clusterinst", clusterInst)
@@ -143,17 +143,17 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 			err = cd.platform.CreateClusterInst(&clusterInst)
 			if err != nil {
 				log.DebugLog(log.DebugLevelMexos, "error cluster create fail", "error", err)
-				cd.clusterInstInfoError(key, edgeproto.TrackedState_CreateError, fmt.Sprintf("Create failed: %s", err))
+				cd.clusterInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, fmt.Sprintf("Create failed: %s", err))
 				//XXX seems clusterInstInfoError is overloaded with status for flavor and clustinst.
 				return
 			}
 
 			log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
-			cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
+			cd.clusterInstInfoState(key, edgeproto.TrackedState_READY)
 		}()
-	} else if clusterInst.State == edgeproto.TrackedState_UpdateRequested {
+	} else if clusterInst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst update", "clusterinst", clusterInst)
-		cd.clusterInstInfoState(key, edgeproto.TrackedState_Updating)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_UPDATING)
 
 		var err error
 		log.DebugLog(log.DebugLevelMexos, "update cluster inst", "clusterinst", clusterInst)
@@ -161,44 +161,44 @@ func (cd *ControllerData) clusterInstChanged(key *edgeproto.ClusterInstKey, old 
 		err = cd.platform.UpdateClusterInst(&clusterInst)
 		if err != nil {
 			str := fmt.Sprintf("update failed: %s", err)
-			cd.clusterInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+			cd.clusterInstInfoError(key, edgeproto.TrackedState_DELETE_ERROR, str)
 			return
 		}
 
 		log.DebugLog(log.DebugLevelMexos, "cluster state ready", "clusterinst", clusterInst)
-		cd.clusterInstInfoState(key, edgeproto.TrackedState_Ready)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_READY)
 
-	} else if clusterInst.State == edgeproto.TrackedState_DeleteRequested {
+	} else if clusterInst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		log.DebugLog(log.DebugLevelMexos, "cluster inst delete", "clusterinst", clusterInst)
 		// clusterInst was deleted
-		cd.clusterInstInfoState(key, edgeproto.TrackedState_Deleting)
+		cd.clusterInstInfoState(key, edgeproto.TrackedState_DELETING)
 		go func() {
 			var err error
 			log.DebugLog(log.DebugLevelMexos, "delete cluster inst", "clusterinst", clusterInst)
 			err = cd.platform.DeleteClusterInst(&clusterInst)
 			if err != nil {
 				str := fmt.Sprintf("Delete failed: %s", err)
-				cd.clusterInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+				cd.clusterInstInfoError(key, edgeproto.TrackedState_DELETE_ERROR, str)
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "set cluster inst deleted", "clusterinst", clusterInst)
-			// Deleting local info signals to controller that
+			// DELETING local info signals to controller that
 			// delete was successful.
 			info := edgeproto.ClusterInstInfo{Key: *key}
 			cd.ClusterInstInfoCache.Delete(&info, 0)
 		}()
-	} else if clusterInst.State == edgeproto.TrackedState_Creating {
-		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Creating,
-			edgeproto.TrackedState_Ready,
-			edgeproto.TrackedState_CreateError)
-	} else if clusterInst.State == edgeproto.TrackedState_Updating {
-		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Updating,
-			edgeproto.TrackedState_Ready,
-			edgeproto.TrackedState_UpdateError)
-	} else if clusterInst.State == edgeproto.TrackedState_Deleting {
-		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_Deleting,
-			edgeproto.TrackedState_NotPresent,
-			edgeproto.TrackedState_DeleteError)
+	} else if clusterInst.State == edgeproto.TrackedState_CREATING {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_CREATING,
+			edgeproto.TrackedState_READY,
+			edgeproto.TrackedState_CREATE_ERROR)
+	} else if clusterInst.State == edgeproto.TrackedState_UPDATING {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_UPDATING,
+			edgeproto.TrackedState_READY,
+			edgeproto.TrackedState_UPDATE_ERROR)
+	} else if clusterInst.State == edgeproto.TrackedState_DELETING {
+		cd.clusterInstInfoCheckState(key, edgeproto.TrackedState_DELETING,
+			edgeproto.TrackedState_NOT_PRESENT,
+			edgeproto.TrackedState_DELETE_ERROR)
 	}
 }
 
@@ -212,7 +212,7 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 	// Check current thread state. See comment in clusterInstChanged.
 	info := edgeproto.AppInstInfo{}
 	if infoFound := cd.AppInstInfoCache.Get(key, &info); infoFound {
-		if info.State == edgeproto.TrackedState_Creating || info.State == edgeproto.TrackedState_Updating || info.State == edgeproto.TrackedState_Deleting {
+		if info.State == edgeproto.TrackedState_CREATING || info.State == edgeproto.TrackedState_UPDATING || info.State == edgeproto.TrackedState_DELETING {
 			return
 		}
 	}
@@ -225,14 +225,14 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 
 	// do request
 	log.DebugLog(log.DebugLevelMexos, "appInstChanged", "appInst", appInst)
-	if appInst.State == edgeproto.TrackedState_CreateRequested {
+	if appInst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		flavor := edgeproto.Flavor{}
 		flavorFound := cd.FlavorCache.Get(&appInst.Flavor, &flavor)
 		if !flavorFound {
 			str := fmt.Sprintf("Flavor %s not found",
 				appInst.Flavor.Name)
-			cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
+			cd.appInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, str)
 			return
 		}
 		clusterInst := edgeproto.ClusterInst{}
@@ -241,19 +241,19 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					appInst.Key.ClusterInstKey.ClusterKey.Name)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, str)
+				cd.appInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, str)
 				return
 			}
 		}
 
-		cd.appInstInfoState(key, edgeproto.TrackedState_Creating)
+		cd.appInstInfoState(key, edgeproto.TrackedState_CREATING)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "update kube config", "appinst", appInst, "clusterinst", clusterInst)
 
 			err := cd.platform.CreateAppInst(&clusterInst, &app, &appInst, &flavor)
 			if err != nil {
 				errstr := fmt.Sprintf("Create App Inst failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_CreateError, errstr)
+				cd.appInstInfoError(key, edgeproto.TrackedState_CREATE_ERROR, errstr)
 				log.InfoLog("can't create app inst", "error", errstr, "key", key)
 				log.DebugLog(log.DebugLevelMexos, "cleaning up failed appinst", "key", key)
 				derr := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
@@ -267,59 +267,59 @@ func (cd *ControllerData) appInstChanged(key *edgeproto.AppInstKey, old *edgepro
 			rt, err := cd.platform.GetAppInstRuntime(&clusterInst, &app, &appInst)
 			if err != nil {
 				log.InfoLog("unable to get AppInstRuntime", "key", key, "err", err)
-				cd.appInstInfoState(key, edgeproto.TrackedState_Ready)
+				cd.appInstInfoState(key, edgeproto.TrackedState_READY)
 			} else {
-				cd.appInstInfoRuntime(key, edgeproto.TrackedState_Ready, rt)
+				cd.appInstInfoRuntime(key, edgeproto.TrackedState_READY, rt)
 			}
 		}()
-	} else if appInst.State == edgeproto.TrackedState_UpdateRequested {
+	} else if appInst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update (TODO)
-	} else if appInst.State == edgeproto.TrackedState_DeleteRequested {
+	} else if appInst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		clusterInst := edgeproto.ClusterInst{}
 		if cloudcommon.IsClusterInstReqd(&app) {
 			clusterInstFound := cd.ClusterInstCache.Get(&appInst.Key.ClusterInstKey, &clusterInst)
 			if !clusterInstFound {
 				str := fmt.Sprintf("Cluster instance %s not found",
 					appInst.Key.ClusterInstKey.ClusterKey.Name)
-				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, str)
+				cd.appInstInfoError(key, edgeproto.TrackedState_DELETE_ERROR, str)
 				return
 			}
 		}
 		// appInst was deleted
-		cd.appInstInfoState(key, edgeproto.TrackedState_Deleting)
+		cd.appInstInfoState(key, edgeproto.TrackedState_DELETING)
 		go func() {
 			log.DebugLog(log.DebugLevelMexos, "delete app inst", "appinst", appInst, "clusterinst", clusterInst)
 
 			err := cd.platform.DeleteAppInst(&clusterInst, &app, &appInst)
 			if err != nil {
 				errstr := fmt.Sprintf("Delete App Inst failed: %s", err)
-				cd.appInstInfoError(key, edgeproto.TrackedState_DeleteError, errstr)
+				cd.appInstInfoError(key, edgeproto.TrackedState_DELETE_ERROR, errstr)
 				log.DebugLog(log.DebugLevelMexos, "can't delete app inst", "error", errstr, "key", key)
 				return
 			}
 			log.DebugLog(log.DebugLevelMexos, "deleted app inst", "appisnt", appInst, "clusterinst", clusterInst)
-			// Deleting local info signals to controller that
+			// DELETING local info signals to controller that
 			// delete was successful.
 			info := edgeproto.AppInstInfo{Key: *key}
 			cd.AppInstInfoCache.Delete(&info, 0)
 		}()
-	} else if appInst.State == edgeproto.TrackedState_Creating {
+	} else if appInst.State == edgeproto.TrackedState_CREATING {
 		// Controller may send a CRM transitional state after a
 		// disconnect or crash. Controller thinks CRM is creating
 		// the appInst, and Controller is waiting for a new state from
 		// the CRM. If CRM is not creating, or has not just finished
 		// creating (ready), set an error state.
-		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Creating,
-			edgeproto.TrackedState_Ready,
-			edgeproto.TrackedState_CreateError)
-	} else if appInst.State == edgeproto.TrackedState_Updating {
-		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Updating,
-			edgeproto.TrackedState_Ready,
-			edgeproto.TrackedState_UpdateError)
-	} else if appInst.State == edgeproto.TrackedState_Deleting {
-		cd.appInstInfoCheckState(key, edgeproto.TrackedState_Deleting,
-			edgeproto.TrackedState_NotPresent,
-			edgeproto.TrackedState_DeleteError)
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_CREATING,
+			edgeproto.TrackedState_READY,
+			edgeproto.TrackedState_CREATE_ERROR)
+	} else if appInst.State == edgeproto.TrackedState_UPDATING {
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_UPDATING,
+			edgeproto.TrackedState_READY,
+			edgeproto.TrackedState_UPDATE_ERROR)
+	} else if appInst.State == edgeproto.TrackedState_DELETING {
+		cd.appInstInfoCheckState(key, edgeproto.TrackedState_DELETING,
+			edgeproto.TrackedState_NOT_PRESENT,
+			edgeproto.TrackedState_DELETE_ERROR)
 	}
 }
 
@@ -351,7 +351,7 @@ func (cd *ControllerData) appInstInfoRuntime(key *edgeproto.AppInstKey, state ed
 func (cd *ControllerData) clusterInstInfoCheckState(key *edgeproto.ClusterInstKey, transState, finalState, errState edgeproto.TrackedState) {
 	cd.ClusterInstInfoCache.UpdateModFunc(key, 0, func(old *edgeproto.ClusterInstInfo) (newObj *edgeproto.ClusterInstInfo, changed bool) {
 		if old == nil {
-			if transState == edgeproto.TrackedState_NotPresent || finalState == edgeproto.TrackedState_NotPresent {
+			if transState == edgeproto.TrackedState_NOT_PRESENT || finalState == edgeproto.TrackedState_NOT_PRESENT {
 				return old, false
 			}
 			old = &edgeproto.ClusterInstInfo{Key: *key}
@@ -370,7 +370,7 @@ func (cd *ControllerData) clusterInstInfoCheckState(key *edgeproto.ClusterInstKe
 func (cd *ControllerData) appInstInfoCheckState(key *edgeproto.AppInstKey, transState, finalState, errState edgeproto.TrackedState) {
 	cd.AppInstInfoCache.UpdateModFunc(key, 0, func(old *edgeproto.AppInstInfo) (newObj *edgeproto.AppInstInfo, changed bool) {
 		if old == nil {
-			if transState == edgeproto.TrackedState_NotPresent || finalState == edgeproto.TrackedState_NotPresent {
+			if transState == edgeproto.TrackedState_NOT_PRESENT || finalState == edgeproto.TrackedState_NOT_PRESENT {
 				return old, false
 			}
 			old = &edgeproto.AppInstInfo{Key: *key}

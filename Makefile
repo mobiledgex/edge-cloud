@@ -62,9 +62,15 @@ tools:
 doc:
 	make -C edgeproto doc
 
+lint:
+	@ln -sfh $(GOGOPROTO) link-gogo-protobuf
+	@ln -sfh $(GRPCGATEWAY) link-grpc-gateway
+	prototool lint edgeproto
+	prototool lint d-match-engine
+
 UNIT_TEST_LOG = /tmp/edge-cloud-unit-test.log
 
-unit-test:
+unit-test: lint
 	go test ./... > $(UNIT_TEST_LOG) || !(grep FAIL $(UNIT_TEST_LOG))
 
 test:

@@ -47,17 +47,17 @@ var TestGenNoConfigFlagSet = pflag.NewFlagSet("TestGenNoConfig", pflag.ExitOnErr
 var TestGenInOuterEn string
 var TestGenInInnerEn string
 var OuterEnumStrings = []string{
-	"OUTER0",
-	"OUTER1",
-	"OUTER2",
-	"OUTER3",
+	"Outer0",
+	"Outer1",
+	"Outer2",
+	"Outer3",
 }
 
 var InnerEnumStrings = []string{
-	"INNER0",
-	"INNER1",
-	"INNER2",
-	"INNER3",
+	"Inner0",
+	"Inner1",
+	"Inner2",
+	"Inner3",
 }
 
 func NestedMessageSlicer(in *testgen.NestedMessage) []string {
@@ -197,8 +197,8 @@ func TestGenSlicer(in *testgen.TestGen) []string {
 	s = append(s, strconv.FormatUint(uint64(in.Sf32), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Sf64), 10))
 	s = append(s, strconv.FormatBool(in.Bb))
-	s = append(s, testgen.OuterEnum_name[int32(in.OuterEn)])
-	s = append(s, testgen.TestGen_InnerEnum_name[int32(in.InnerEn)])
+	s = append(s, testgen.OuterEnum_CamelName[int32(in.OuterEn)])
+	s = append(s, testgen.TestGen_InnerEnum_CamelName[int32(in.InnerEn)])
 	if in.InnerMsg == nil {
 		in.InnerMsg = &testgen.TestGen_InnerMessage{}
 	}
@@ -579,8 +579,8 @@ func init() {
 	TestGenFlagSet.Int32Var(&TestGenIn.Sf32, "sf32", 0, "Sf32")
 	TestGenFlagSet.Int64Var(&TestGenIn.Sf64, "sf64", 0, "Sf64")
 	TestGenFlagSet.BoolVar(&TestGenIn.Bb, "bb", false, "Bb")
-	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "one of [OUTER0 OUTER1 OUTER2 OUTER3]")
-	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "one of [INNER0 INNER1 INNER2 INNER3]")
+	TestGenFlagSet.StringVar(&TestGenInOuterEn, "outeren", "", "one of [Outer0 Outer1 Outer2 Outer3]")
+	TestGenFlagSet.StringVar(&TestGenInInnerEn, "inneren", "", "one of [Inner0 Inner1 Inner2 Inner3]")
 	TestGenIn.InnerMsg = &testgen.TestGen_InnerMessage{}
 	TestGenFlagSet.StringVar(&TestGenIn.InnerMsg.Url, "innermsg-url", "", "InnerMsg.Url")
 	TestGenFlagSet.Int64Var(&TestGenIn.InnerMsg.Id, "innermsg-id", 0, "InnerMsg.Id")
@@ -775,13 +775,13 @@ func TestGenSetFields() {
 func parseTestGenEnums() error {
 	if TestGenInOuterEn != "" {
 		switch TestGenInOuterEn {
-		case "OUTER0":
+		case "Outer0":
 			TestGenIn.OuterEn = testgen.OuterEnum(0)
-		case "OUTER1":
+		case "Outer1":
 			TestGenIn.OuterEn = testgen.OuterEnum(1)
-		case "OUTER2":
+		case "Outer2":
 			TestGenIn.OuterEn = testgen.OuterEnum(2)
-		case "OUTER3":
+		case "Outer3":
 			TestGenIn.OuterEn = testgen.OuterEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInOuterEn")
@@ -789,13 +789,13 @@ func parseTestGenEnums() error {
 	}
 	if TestGenInInnerEn != "" {
 		switch TestGenInInnerEn {
-		case "INNER0":
+		case "Inner0":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(0)
-		case "INNER1":
+		case "Inner1":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(1)
-		case "INNER2":
+		case "Inner2":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(2)
-		case "INNER3":
+		case "Inner3":
 			TestGenIn.InnerEn = testgen.TestGen_InnerEnum(3)
 		default:
 			return errors.New("Invalid value for TestGenInInnerEn")

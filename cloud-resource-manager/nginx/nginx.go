@@ -88,12 +88,12 @@ func CreateNginxProxy(client pc.PlatformClient, name, originIP string, ports []d
 	cmdArgs := []string{"run", "-d", "--restart=unless-stopped", "--name", name}
 	if opts.DockerPublishPorts {
 		for _, p := range ports {
-			if p.Proto == dme.LProto_LProtoHTTP {
+			if p.Proto == dme.LProto_L_PROTO_HTTP {
 				// L7 is handled by the L7 instance
 				continue
 			}
 			proto := "tcp"
-			if p.Proto == dme.LProto_LProtoUDP {
+			if p.Proto == dme.LProto_L_PROTO_UDP {
 				proto = "udp"
 			}
 			pstr := fmt.Sprintf("%d:%d/%s", p.PublicPort, p.PublicPort, proto)
@@ -142,7 +142,7 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 	for _, p := range ports {
 		origin := fmt.Sprintf("%s:%d", originIP, p.InternalPort)
 		switch p.Proto {
-		case dme.LProto_LProtoHTTP:
+		case dme.LProto_L_PROTO_HTTP:
 			httpPort := HTTPSpecDetail{
 				Port:       p.PublicPort,
 				PathPrefix: p.PathPrefix,
@@ -150,14 +150,14 @@ func createNginxConf(client pc.PlatformClient, confname, name, l7dir, originIP s
 			}
 			httpPorts = append(httpPorts, httpPort)
 			continue
-		case dme.LProto_LProtoTCP:
+		case dme.LProto_L_PROTO_TCP:
 			tcpPort := TCPSpecDetail{
 				Port:   p.PublicPort,
 				Origin: origin,
 			}
 			spec.TCPSpec = append(spec.TCPSpec, &tcpPort)
 			spec.L4 = true
-		case dme.LProto_LProtoUDP:
+		case dme.LProto_L_PROTO_UDP:
 			udpPort := UDPSpecDetail{
 				Port:   p.PublicPort,
 				Origin: origin,
