@@ -17,6 +17,7 @@ import (
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
 )
 
 func RegisterMex() {
@@ -34,6 +35,7 @@ type mex struct {
 	enumTemplate  *template.Template
 	cacheTemplate *template.Template
 	importUtil    bool
+	importLog     bool
 	importStrings bool
 	importErrors  bool
 	importStrconv bool
@@ -80,6 +82,7 @@ func (m *mex) Generate(file *generator.FileDescriptor) {
 	m.support.InitFile()
 	m.support.SetPbGoPackage(file.GetPackage())
 	m.importUtil = false
+	m.importLog = false
 	m.importStrings = false
 	m.importErrors = false
 	m.importStrconv = false
@@ -122,6 +125,8 @@ func (m *mex) GenerateImports(file *generator.FileDescriptor) {
 	}
 	if m.importUtil {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/util")
+	}
+	if m.importLog {
 		m.gen.PrintImport("", "github.com/mobiledgex/edge-cloud/log")
 	}
 	if m.importStrings {
@@ -188,11 +193,27 @@ func (m *mex) generateEnum(file *generator.FileDescriptor, desc *generator.EnumD
 		m.P(")")
 		m.P()
 	}
+	// generate camel case maps
+	fqname := m.support.FQTypeName(m.gen, desc)
+	m.P("var ", fqname, "_CamelName = map[int32]string{")
+	for _, val := range en.Value {
+		m.P("// ", val.Name, " -> ", util.CamelCase(*val.Name))
+		m.P(val.Number, ": \"", util.CamelCase(*val.Name), "\",")
+	}
+	m.P("}")
+	m.P("var ", fqname, "_CamelValue = map[string]int32{")
+	for _, val := range en.Value {
+		m.P("\"", util.CamelCase(*val.Name), "\": ", val.Number, ",")
+	}
+	m.P("}")
+	m.P()
+
 	args := enumTempl{Name: m.support.FQTypeName(m.gen, desc)}
 	m.enumTemplate.Execute(m.gen.Buffer, args)
 	m.importErrors = true
 	m.importStrconv = true
 	m.importJson = true
+	m.importUtil = true
 
 	if GetVersionHashOpt(en) {
 		// Collect all key objects
@@ -218,13 +239,13 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil { return err }
-	val, ok := {{.Name}}_value[str]
+	val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = {{.Name}}_name[val]
+			_, ok = {{.Name}}_CamelName[val]
 		}
 	}
 	if !ok {
@@ -235,7 +256,7 @@ func (e *{{.Name}}) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e {{.Name}}) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName({{.Name}}_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -243,13 +264,13 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := {{.Name}}_value[str]
+		val, ok := {{.Name}}_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = {{.Name}}_name[val]
+				_, ok = {{.Name}}_CamelName[val]
 			}
 		}
 		if !ok {
@@ -268,7 +289,8 @@ func (e *{{.Name}}) UnmarshalJSON(b []byte) error {
 }
 
 func (e {{.Name}}) MarshalJSON() ([]byte, error) {
-	return []byte("\""+e.String()+"\""), nil
+	str := proto.EnumName({{.Name}}_CamelName, int32(e))
+	return []byte("\""+str+"\""), nil
 }
 
 `
@@ -1125,7 +1147,7 @@ func (c *{{.Name}}Cache) SyncListEnd() {
 
 {{if ne (.WaitForState) ("")}}
 func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, targetState {{.WaitForState}}, transitionStates map[{{.WaitForState}}]struct{}, errorState {{.WaitForState}}, timeout time.Duration, successMsg string, send func(*Result) error) error {
-	curState := {{.WaitForState}}_{{.WaitForState}}Unknown
+	curState := {{.WaitForState}}_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	var err error
@@ -1135,13 +1157,13 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 		if c.Get(key, &info) {
 			curState = info.State
 		} else {
-			curState = {{.WaitForState}}_NotPresent
+			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			msg := {{.WaitForState}}_name[int32(curState)]
+			msg := {{.WaitForState}}_CamelName[int32(curState)]
 			send(&Result{Message: msg})
 		}
-		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_name[int32(curState)])
+		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
@@ -1154,7 +1176,7 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 	if c.Get(key, &info) {
 		curState = info.State
 	} else {
-		curState = {{.WaitForState}}_NotPresent
+		curState = {{.WaitForState}}_NOT_PRESENT
 	}
 	if curState == targetState {
 		done <- true
@@ -1186,13 +1208,13 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_name[int32(info.State)])
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(info.State)])
 			send(&Result{Message: msg})
 			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				{{.WaitForState}}_name[int32(targetState)],
-				{{.WaitForState}}_name[int32(curState)])
+				{{.WaitForState}}_CamelName[int32(targetState)],
+				{{.WaitForState}}_CamelName[int32(curState)])
 		}
 	}
 	cancel()
@@ -1311,6 +1333,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		}
 		m.cacheTemplate.Execute(m.gen.Buffer, args)
 		m.importUtil = true
+		m.importLog = true
 		if args.WaitForState != "" {
 			m.importErrors = true
 			m.importTime = true
@@ -1335,6 +1358,7 @@ func (m *mex) generateMessage(file *generator.FileDescriptor, desc *generator.De
 		m.P("}")
 		m.P("")
 		m.importUtil = true
+		m.importLog = true
 	}
 	if field := gensupport.GetMessageKey(message); field != nil {
 		//m.P("func (m *", message.Name, ") GetKey() *", m.support.GoType(m.gen, field), " {")
@@ -1583,7 +1607,7 @@ func (m *mex) generateEnumDecodeHook() {
 		}
 		for _, en := range file.EnumType {
 			m.P("case reflect.TypeOf(", en.Name, "(0)):")
-			m.P("if en, ok := ", en.Name, "_value[data.(string)]; ok {")
+			m.P("if en, ok := ", en.Name, "_CamelValue[util.CamelCase(data.(string))]; ok {")
 			m.P("return en, nil")
 			m.P("}")
 		}

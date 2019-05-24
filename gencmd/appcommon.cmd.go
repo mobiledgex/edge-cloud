@@ -21,18 +21,18 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var LProtoStrings = []string{
 	"LProtoUnknown",
-	"LProtoTCP",
-	"LProtoUDP",
-	"LProtoHTTP",
+	"LProtoTcp",
+	"LProtoUdp",
+	"LProtoHttp",
 }
 
 func AppPortSlicer(in *distributed_match_engine.AppPort) []string {
 	s := make([]string, 0, 5)
-	s = append(s, distributed_match_engine.LProto_name[int32(in.Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.PublicPort), 10))
 	s = append(s, in.PathPrefix)
-	s = append(s, in.FQDNPrefix)
+	s = append(s, in.FqdnPrefix)
 	return s
 }
 
@@ -42,7 +42,7 @@ func AppPortHeaderSlicer() []string {
 	s = append(s, "InternalPort")
 	s = append(s, "PublicPort")
 	s = append(s, "PathPrefix")
-	s = append(s, "FQDNPrefix")
+	s = append(s, "FqdnPrefix")
 	return s
 }
 

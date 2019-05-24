@@ -24,7 +24,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 	key.Version = ckey.AppVers
 
 	mreply.GpsLocationStatus = dme.VerifyLocationReply_LOC_UNKNOWN
-	mreply.GPS_Location_Accuracy_KM = -1
+	mreply.GpsLocationAccuracyKm = -1
 
 	log.DebugLog(log.DebugLevelDmereq, "Received Verify Location",
 		"appName", key.Name,
@@ -63,7 +63,7 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		}
 		result := locapi.CallTDGLocationVerifyAPI(locVerUrl, mreq.GpsLocation.Latitude, mreq.GpsLocation.Longitude, mreq.VerifyLocToken, tokSrvUrl)
 		mreply.GpsLocationStatus = result.MatchEngineLocStatus
-		mreply.GPS_Location_Accuracy_KM = result.DistanceRange
+		mreply.GpsLocationAccuracyKm = result.DistanceRange
 	default:
 		// non-API based location uses cloudlets and so default and public cloudlets are not applicable
 		carr, ok := app.carriers[mreq.CarrierName]
@@ -94,13 +94,13 @@ func VerifyClientLoc(mreq *dme.VerifyLocationRequest, mreply *dme.VerifyLocation
 		locval := dmecommon.GetDistanceAndStatusForLocationResult(locresult)
 
 		mreply.GpsLocationStatus = locval.MatchEngineLocStatus
-		mreply.GPS_Location_Accuracy_KM = locval.DistanceRange
+		mreply.GpsLocationAccuracyKm = locval.DistanceRange
 
 		log.DebugLog(log.DebugLevelDmereq, "verified location at",
 			"lat", found.location.Latitude,
 			"long", found.location.Longitude,
 			"actual distance", distance,
-			"distance range", mreply.GPS_Location_Accuracy_KM,
+			"distance range", mreply.GpsLocationAccuracyKm,
 			"status", mreply.GpsLocationStatus,
 			"uri", found.uri)
 

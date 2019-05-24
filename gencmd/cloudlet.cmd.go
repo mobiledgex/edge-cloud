@@ -93,10 +93,10 @@ func CloudletKeyWriteOutputOne(obj *edgeproto.CloudletKey) {
 func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
 	s := make([]string, 0, 8)
 	s = append(s, in.DockerRegistry)
-	s = append(s, in.DNSZone)
+	s = append(s, in.DnsZone)
 	s = append(s, in.RegistryFileServer)
-	s = append(s, in.CFKey)
-	s = append(s, in.CFUser)
+	s = append(s, in.CfKey)
+	s = append(s, in.CfUser)
 	s = append(s, in.DockerRegPass)
 	s = append(s, in.NetworkScheme)
 	s = append(s, in.DockerRegistrySecret)
@@ -106,10 +106,10 @@ func CloudletInfraCommonSlicer(in *edgeproto.CloudletInfraCommon) []string {
 func CloudletInfraCommonHeaderSlicer() []string {
 	s := make([]string, 0, 8)
 	s = append(s, "DockerRegistry")
-	s = append(s, "DNSZone")
+	s = append(s, "DnsZone")
 	s = append(s, "RegistryFileServer")
-	s = append(s, "CFKey")
-	s = append(s, "CFUser")
+	s = append(s, "CfKey")
+	s = append(s, "CfUser")
 	s = append(s, "DockerRegPass")
 	s = append(s, "NetworkScheme")
 	s = append(s, "DockerRegistrySecret")
@@ -185,7 +185,7 @@ func GcpPropertiesSlicer(in *edgeproto.GcpProperties) []string {
 	s = append(s, in.Project)
 	s = append(s, in.Zone)
 	s = append(s, in.ServiceAccount)
-	s = append(s, in.GCPAuthKeyUrl)
+	s = append(s, in.GcpAuthKeyUrl)
 	return s
 }
 
@@ -194,7 +194,7 @@ func GcpPropertiesHeaderSlicer() []string {
 	s = append(s, "Project")
 	s = append(s, "Zone")
 	s = append(s, "ServiceAccount")
-	s = append(s, "GCPAuthKeyUrl")
+	s = append(s, "GcpAuthKeyUrl")
 	return s
 }
 
@@ -223,19 +223,19 @@ func GcpPropertiesWriteOutputOne(obj *edgeproto.GcpProperties) {
 }
 func OpenStackPropertiesSlicer(in *edgeproto.OpenStackProperties) []string {
 	s := make([]string, 0, 5)
-	s = append(s, in.OSExternalNetworkName)
-	s = append(s, in.OSImageName)
-	s = append(s, in.OSExternalRouterName)
-	s = append(s, in.OSMexNetwork)
+	s = append(s, in.OsExternalNetworkName)
+	s = append(s, in.OsImageName)
+	s = append(s, in.OsExternalRouterName)
+	s = append(s, in.OsMexNetwork)
 	return s
 }
 
 func OpenStackPropertiesHeaderSlicer() []string {
 	s := make([]string, 0, 5)
-	s = append(s, "OSExternalNetworkName")
-	s = append(s, "OSImageName")
-	s = append(s, "OSExternalRouterName")
-	s = append(s, "OSMexNetwork")
+	s = append(s, "OsExternalNetworkName")
+	s = append(s, "OsImageName")
+	s = append(s, "OsExternalRouterName")
+	s = append(s, "OsMexNetwork")
 	return s
 }
 
@@ -269,10 +269,10 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	if in.OpenstackProperties == nil {
 		in.OpenstackProperties = &edgeproto.OpenStackProperties{}
 	}
-	s = append(s, in.OpenstackProperties.OSExternalNetworkName)
-	s = append(s, in.OpenstackProperties.OSImageName)
-	s = append(s, in.OpenstackProperties.OSExternalRouterName)
-	s = append(s, in.OpenstackProperties.OSMexNetwork)
+	s = append(s, in.OpenstackProperties.OsExternalNetworkName)
+	s = append(s, in.OpenstackProperties.OsImageName)
+	s = append(s, in.OpenstackProperties.OsExternalRouterName)
+	s = append(s, in.OpenstackProperties.OsMexNetwork)
 	if in.AzureProperties == nil {
 		in.AzureProperties = &edgeproto.AzureProperties{}
 	}
@@ -286,7 +286,7 @@ func CloudletInfraPropertiesSlicer(in *edgeproto.CloudletInfraProperties) []stri
 	s = append(s, in.GcpProperties.Project)
 	s = append(s, in.GcpProperties.Zone)
 	s = append(s, in.GcpProperties.ServiceAccount)
-	s = append(s, in.GcpProperties.GCPAuthKeyUrl)
+	s = append(s, in.GcpProperties.GcpAuthKeyUrl)
 	return s
 }
 
@@ -294,10 +294,10 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s := make([]string, 0, 5)
 	s = append(s, "CloudletKind")
 	s = append(s, "MexosContainerImageName")
-	s = append(s, "OpenstackProperties-OSExternalNetworkName")
-	s = append(s, "OpenstackProperties-OSImageName")
-	s = append(s, "OpenstackProperties-OSExternalRouterName")
-	s = append(s, "OpenstackProperties-OSMexNetwork")
+	s = append(s, "OpenstackProperties-OsExternalNetworkName")
+	s = append(s, "OpenstackProperties-OsImageName")
+	s = append(s, "OpenstackProperties-OsExternalRouterName")
+	s = append(s, "OpenstackProperties-OsMexNetwork")
 	s = append(s, "AzureProperties-Location")
 	s = append(s, "AzureProperties-ResourceGroup")
 	s = append(s, "AzureProperties-UserName")
@@ -305,7 +305,7 @@ func CloudletInfraPropertiesHeaderSlicer() []string {
 	s = append(s, "GcpProperties-Project")
 	s = append(s, "GcpProperties-Zone")
 	s = append(s, "GcpProperties-ServiceAccount")
-	s = append(s, "GcpProperties-GCPAuthKeyUrl")
+	s = append(s, "GcpProperties-GcpAuthKeyUrl")
 	return s
 }
 
@@ -353,7 +353,7 @@ func CloudletSlicer(in *edgeproto.Cloudlet) []string {
 	}
 	s = append(s, strconv.FormatUint(uint64(in.Location.Timestamp.Seconds), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Location.Timestamp.Nanos), 10))
-	s = append(s, edgeproto.IpSupport_name[int32(in.IpSupport)])
+	s = append(s, edgeproto.IpSupport_CamelName[int32(in.IpSupport)])
 	s = append(s, in.StaticIps)
 	s = append(s, strconv.FormatUint(uint64(in.NumDynamicIps), 10))
 	return s
@@ -452,7 +452,7 @@ func CloudletInfoSlicer(in *edgeproto.CloudletInfo) []string {
 	s = append(s, in.Fields[0])
 	s = append(s, in.Key.OperatorKey.Name)
 	s = append(s, in.Key.Name)
-	s = append(s, edgeproto.CloudletState_name[int32(in.State)])
+	s = append(s, edgeproto.CloudletState_CamelName[int32(in.State)])
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
 	s = append(s, in.Controller)
 	s = append(s, strconv.FormatUint(uint64(in.OsMaxRam), 10))

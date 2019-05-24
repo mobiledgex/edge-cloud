@@ -291,15 +291,15 @@ appinstances:
   uri: tmus-cloud-2.tmus.mobiledgex.net
   liveness: LivenessStatic
   mappedports:
-  - proto: LProtoTCP
+  - proto: LProtoTcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHTTP
+  - proto: LProtoHttp
     internalport: 443
     publicport: 443
     pathprefix: acmeappco/someapplication110/p443
-  - proto: LProtoUDP
+  - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.
@@ -392,15 +392,15 @@ appinstances:
   uri: tmus-cloud-1.tmus.mobiledgex.net
   liveness: LivenessStatic
   mappedports:
-  - proto: LProtoTCP
+  - proto: LProtoTcp
     internalport: 80
     publicport: 80
     fqdnprefix: someapplication1-tcp.
-  - proto: LProtoHTTP
+  - proto: LProtoHttp
     internalport: 443
     publicport: 443
     pathprefix: acmeappco/someapplication110/p443
-  - proto: LProtoUDP
+  - proto: LProtoUdp
     internalport: 10002
     publicport: 10002
     fqdnprefix: someapplication1-udp.

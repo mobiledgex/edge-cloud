@@ -77,38 +77,38 @@ func (d *DummyInfoResponder) clusterInstChanged(key *edgeproto.ClusterInstKey) {
 	if !found {
 		return
 	}
-	if inst.State == edgeproto.TrackedState_UpdateRequested {
+	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
 		log.DebugLog(log.DebugLevelApi, "Update ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_Updating)
+		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_UPDATING)
 		log.DebugLog(log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterUpdateFailure {
-			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_UpdateError, "crm update ClusterInst failed")
+			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_UPDATE_ERROR, "crm update ClusterInst failed")
 		} else {
-			d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_Ready)
+			d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_READY)
 		}
-	} else if inst.State == edgeproto.TrackedState_CreateRequested {
+	} else if inst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		log.DebugLog(log.DebugLevelApi, "Create ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_Creating)
+		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
 		log.DebugLog(log.DebugLevelApi, "ClusterInst ready", "key", key)
 		if d.simulateClusterCreateFailure {
-			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_CreateError, "crm create ClusterInst failed")
+			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_CREATE_ERROR, "crm create ClusterInst failed")
 		} else {
-			d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_Ready)
+			d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_READY)
 		}
-	} else if inst.State == edgeproto.TrackedState_DeleteRequested {
+	} else if inst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// delete
 		log.DebugLog(log.DebugLevelApi, "Delete ClusterInst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_Deleting)
+		d.ClusterInstInfoCache.SetState(key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
 		log.DebugLog(log.DebugLevelApi, "ClusterInst deleted", "key", key)
 		if d.simulateClusterDeleteFailure {
-			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_DeleteError, "crm delete ClusterInst failed")
+			d.ClusterInstInfoCache.SetError(key, edgeproto.TrackedState_DELETE_ERROR, "crm delete ClusterInst failed")
 		} else {
 			info := edgeproto.ClusterInstInfo{Key: *key}
 			d.ClusterInstInfoCache.Delete(&info, 0)
@@ -122,38 +122,38 @@ func (d *DummyInfoResponder) appInstChanged(key *edgeproto.AppInstKey) {
 	if !found {
 		return
 	}
-	if inst.State == edgeproto.TrackedState_UpdateRequested {
+	if inst.State == edgeproto.TrackedState_UPDATE_REQUESTED {
 		// update
 		log.DebugLog(log.DebugLevelApi, "Update app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_Updating)
+		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_UPDATING)
 		log.DebugLog(log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppUpdateFailure {
-			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_UpdateError, "crm update app inst failed")
+			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_UPDATE_ERROR, "crm update app inst failed")
 		} else {
-			d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_Ready)
+			d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_READY)
 		}
-	} else if inst.State == edgeproto.TrackedState_CreateRequested {
+	} else if inst.State == edgeproto.TrackedState_CREATE_REQUESTED {
 		// create
 		log.DebugLog(log.DebugLevelApi, "Create app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_Creating)
+		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_CREATING)
 		time.Sleep(DummyInfoDelay)
 		log.DebugLog(log.DebugLevelApi, "app inst ready", "key", key)
 		if d.simulateAppCreateFailure {
-			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_CreateError, "crm create app inst failed")
+			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_CREATE_ERROR, "crm create app inst failed")
 		} else {
-			d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_Ready)
+			d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_READY)
 		}
-	} else if inst.State == edgeproto.TrackedState_DeleteRequested {
+	} else if inst.State == edgeproto.TrackedState_DELETE_REQUESTED {
 		// delete
 		log.DebugLog(log.DebugLevelApi, "Delete app inst", "key", key)
 		time.Sleep(DummyInfoDelay)
-		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_Deleting)
+		d.AppInstInfoCache.SetState(key, edgeproto.TrackedState_DELETING)
 		time.Sleep(DummyInfoDelay)
 		log.DebugLog(log.DebugLevelApi, "app inst deleted", "key", key)
 		if d.simulateAppDeleteFailure {
-			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_DeleteError, "crm delete app inst failed")
+			d.AppInstInfoCache.SetError(key, edgeproto.TrackedState_DELETE_ERROR, "crm delete app inst failed")
 		} else {
 			info := edgeproto.AppInstInfo{Key: *key}
 			d.AppInstInfoCache.Delete(&info, 0)

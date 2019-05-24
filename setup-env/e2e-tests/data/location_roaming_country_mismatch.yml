@@ -1,2 +1,2 @@
-gpslocationstatus: LOC_ROAMING_COUNTRY_MISMATCH
-gps_location_accuracy_km: -1
+gpslocationstatus: LocRoamingCountryMismatch
+gpslocationaccuracykm: -1

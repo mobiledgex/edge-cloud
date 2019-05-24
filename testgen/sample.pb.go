@@ -27,6 +27,7 @@ import grpc "google.golang.org/grpc"
 
 import binary "encoding/binary"
 
+import "github.com/mobiledgex/edge-cloud/util"
 import "errors"
 import "strconv"
 import "encoding/json"
@@ -2264,19 +2265,36 @@ const (
 	OuterEnumOUTER3 uint64 = 1 << 3
 )
 
+var OuterEnum_CamelName = map[int32]string{
+	// OUTER0 -> Outer0
+	0: "Outer0",
+	// OUTER1 -> Outer1
+	1: "Outer1",
+	// OUTER2 -> Outer2
+	2: "Outer2",
+	// OUTER3 -> Outer3
+	3: "Outer3",
+}
+var OuterEnum_CamelValue = map[string]int32{
+	"Outer0": 0,
+	"Outer1": 1,
+	"Outer2": 2,
+	"Outer3": 3,
+}
+
 func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := OuterEnum_value[str]
+	val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = OuterEnum_name[val]
+			_, ok = OuterEnum_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2287,7 +2305,7 @@ func (e *OuterEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e OuterEnum) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(OuterEnum_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2295,13 +2313,13 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := OuterEnum_value[str]
+		val, ok := OuterEnum_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = OuterEnum_name[val]
+				_, ok = OuterEnum_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2320,7 +2338,8 @@ func (e *OuterEnum) UnmarshalJSON(b []byte) error {
 }
 
 func (e OuterEnum) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(OuterEnum_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 var InnerEnumStrings = []string{
@@ -2337,19 +2356,36 @@ const (
 	InnerEnumINNER3 uint64 = 1 << 3
 )
 
+var TestGen_InnerEnum_CamelName = map[int32]string{
+	// INNER0 -> Inner0
+	0: "Inner0",
+	// INNER1 -> Inner1
+	1: "Inner1",
+	// INNER2 -> Inner2
+	2: "Inner2",
+	// INNER3 -> Inner3
+	3: "Inner3",
+}
+var TestGen_InnerEnum_CamelValue = map[string]int32{
+	"Inner0": 0,
+	"Inner1": 1,
+	"Inner2": 2,
+	"Inner3": 3,
+}
+
 func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := TestGen_InnerEnum_value[str]
+	val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = TestGen_InnerEnum_name[val]
+			_, ok = TestGen_InnerEnum_CamelName[val]
 		}
 	}
 	if !ok {
@@ -2360,7 +2396,7 @@ func (e *TestGen_InnerEnum) UnmarshalYAML(unmarshal func(interface{}) error) err
 }
 
 func (e TestGen_InnerEnum) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(TestGen_InnerEnum_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -2368,13 +2404,13 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := TestGen_InnerEnum_value[str]
+		val, ok := TestGen_InnerEnum_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = TestGen_InnerEnum_name[val]
+				_, ok = TestGen_InnerEnum_CamelName[val]
 			}
 		}
 		if !ok {
@@ -2393,7 +2429,8 @@ func (e *TestGen_InnerEnum) UnmarshalJSON(b []byte) error {
 }
 
 func (e TestGen_InnerEnum) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(TestGen_InnerEnum_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 type MatchOptions struct {
@@ -2441,7 +2478,7 @@ func EnumDecodeHook(from, to reflect.Type, data interface{}) (interface{}, error
 	}
 	switch to {
 	case reflect.TypeOf(OuterEnum(0)):
-		if en, ok := OuterEnum_value[data.(string)]; ok {
+		if en, ok := OuterEnum_CamelValue[util.CamelCase(data.(string))]; ok {
 			return en, nil
 		}
 	}

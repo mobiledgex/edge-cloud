@@ -17,10 +17,11 @@ var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
 var VersionHashStrings = []string{
-	"HASH_d41d8cd98f00b204e9800998ecf8427e",
-	"HASH_b35326df0fcd1550b7c0cf6460c4bca2",
-	"HASH_52e6980599cd59bbbd0de8d5f4d53d4b",
-	"HASH_00bdcfa956ca4ee42be87abcd8fcaf1c",
+	"HashD41D8Cd98F00B204E9800998Ecf8427E",
+	"HashB35326Df0Fcd1550B7C0Cf6460C4Bca2",
+	"Hash52E6980599Cd59Bbbd0De8D5F4D53D4B",
+	"Hash00Bdcfa956Ca4Ee42Be87Abcd8Fcaf1C",
+	"Hash0D2D9C0B07Ad989E96Fb3B3A44924316",
 }
 
 func init() {

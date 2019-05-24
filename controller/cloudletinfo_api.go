@@ -68,7 +68,7 @@ func (s *CloudletInfoApi) Delete(in *edgeproto.CloudletInfo, rev int64) {
 			// updated by another thread or controller
 			return nil
 		}
-		buf.State = edgeproto.CloudletState_CloudletStateOffline
+		buf.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
 		buf.Fields = []string{edgeproto.CloudletInfoFieldState}
 		s.store.STMPut(stm, &buf, objstore.WithLease(controllerAliveLease))
 		return nil
@@ -101,7 +101,7 @@ func (s *CloudletInfoApi) Flush(notifyId int64) {
 					return nil
 				}
 			}
-			info.State = edgeproto.CloudletState_CloudletStateOffline
+			info.State = edgeproto.CloudletState_CLOUDLET_STATE_OFFLINE
 			log.DebugLog(log.DebugLevelNotify, "mark cloudlet offline", "key", matches[ii], "notifyid", notifyId)
 			s.store.STMPut(stm, &info, objstore.WithLease(controllerAliveLease))
 			return nil
@@ -116,7 +116,7 @@ func (s *CloudletInfoApi) Prune(keys map[edgeproto.CloudletKey]struct{}) {}
 
 func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto.CloudletState {
 	if *key == cloudcommon.DefaultCloudletKey {
-		return edgeproto.CloudletState_CloudletStateReady
+		return edgeproto.CloudletState_CLOUDLET_STATE_READY
 	}
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
@@ -125,15 +125,15 @@ func (s *CloudletInfoApi) getCloudletState(key *edgeproto.CloudletKey) edgeproto
 			return obj.State
 		}
 	}
-	return edgeproto.CloudletState_CloudletStateNotPresent
+	return edgeproto.CloudletState_CLOUDLET_STATE_NOT_PRESENT
 }
 
 func (s *CloudletInfoApi) checkCloudletReady(key *edgeproto.CloudletKey) error {
 	// For testing, state is Errors due to openstack limits not found.
 	// Errors state does indicate it is online, so consider it ok.
 	state := s.getCloudletState(key)
-	if state == edgeproto.CloudletState_CloudletStateReady ||
-		state == edgeproto.CloudletState_CloudletStateErrors {
+	if state == edgeproto.CloudletState_CLOUDLET_STATE_READY ||
+		state == edgeproto.CloudletState_CLOUDLET_STATE_ERRORS {
 		return nil
 	}
 	return fmt.Errorf("Cloudlet %v not ready, state is %s", key,

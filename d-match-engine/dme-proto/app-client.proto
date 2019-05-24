@@ -22,50 +22,50 @@ enum ReplyStatus {
 
 message RegisterClientRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // App Developer Name
-  string DevName = 2;
+  string dev_name = 2;
   // App Name
-  string AppName = 3;
+  string app_name = 3;
   // App Version
-  string AppVers = 4;
+  string app_vers = 4;
   // carrier name, not currently used
-  string CarrierName = 5;
+  string carrier_name = 5;
   // authentication token
-  string AuthToken = 6;
+  string auth_token = 6;
 }
 
 message RegisterClientReply {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Status of the reply
-  ReplyStatus Status = 2;
+  ReplyStatus status = 2;
   // Session Cookie to be used in later API calls
-  string SessionCookie = 3;
+  string session_cookie = 3;
   // URI for Token Server
-  string TokenServerURI = 4;
+  string token_server_uri = 4;
 }
 
 message FindCloudletRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 3;
+  string carrier_name = 3;
   // The GPS location of the user
-  Loc GpsLocation = 4;
+  Loc gps_location = 4;
   // DevName is applicable to Platform apps only
-  string DevName = 5;
+  string dev_name = 5;
   // App Name is applicable to Platform apps only
-  string AppName = 6;
+  string app_name = 6;
   // App Version is applicable to Platform apps only
-  string AppVers = 7;
+  string app_vers = 7;
 }
 
 message FindCloudletReply {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   enum FindStatus {
     FIND_UNKNOWN = 0;
     FIND_FOUND = 1;
@@ -74,7 +74,7 @@ message FindCloudletReply {
   // Status return
   FindStatus status = 2;
   // Full Qualified Domain Name of Closest App instance
-  string FQDN = 3;
+  string fqdn = 3;
   // List of Service Endpoints for AppInst
   repeated AppPort ports = 4;
   // Location of the cloudlet
@@ -83,28 +83,28 @@ message FindCloudletReply {
 
 message VerifyLocationRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 3;
+  string carrier_name = 3;
   // The GPS location to verify
-  Loc GpsLocation = 4;
+  Loc gps_location = 4;
   // token used for location verification, app must retrieve from TokenServerURI
-  string VerifyLocToken = 5;
+  string verify_loc_token = 5;
 }
 
 message VerifyLocationReply {
   // API version
   uint32 ver = 1;
   // Status of the reply
-  enum Tower_Status {
+  enum TowerStatus {
     TOWER_UNKNOWN = 0;
     CONNECTED_TO_SPECIFIED_TOWER = 1;
     NOT_CONNECTED_TO_SPECIFIED_TOWER = 2;
   }
-  Tower_Status tower_status = 2;
-  enum GPS_Location_Status {
+  TowerStatus tower_status = 2;
+  enum GPSLocationStatus {
     LOC_UNKNOWN = 0;
     LOC_VERIFIED = 1;
     LOC_MISMATCH_SAME_COUNTRY = 2;
@@ -114,136 +114,136 @@ message VerifyLocationReply {
     LOC_ERROR_UNAUTHORIZED = 6;
     LOC_ERROR_OTHER = 7;
   }
-  GPS_Location_Status gps_location_status = 3;
+  GPSLocationStatus gps_location_status = 3;
   // location accuracy, the location is verified to 
   // be within this number of kilometers.  Negative value
   // means no verification was done 
-  double GPS_Location_Accuracy_KM = 4;
+  double gps_location_accuracy_km = 4;
 }
 
 message GetLocationRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 3;
+  string carrier_name = 3;
 }
 
 message GetLocationReply {
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Status of the reply
-  enum Loc_Status {
+  enum LocStatus {
     LOC_UNKNOWN = 0;
     LOC_FOUND = 1;
     // The user does not allow his location to be tracked
     LOC_DENIED = 2;
   }
-  Loc_Status Status = 2;
+  LocStatus status = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 3;
+  string carrier_name = 3;
   // The tower that user is currently connected to
-  uint64 Tower = 4;
+  uint64 tower = 4;
   // The GPS location of the user 
-  Loc NetworkLocation = 5;
+  Loc network_location = 5;
 }
 
 message AppInstListRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 3;
+  string carrier_name = 3;
   // The GPS location of the user 
-  Loc GpsLocation = 4;
+  Loc gps_location = 4;
 }
 
 message Appinstance{
   // App Instance Name
-  string AppName = 1;
+  string app_name = 1;
   // App Instance Version
-  string AppVers = 2;
+  string app_vers = 2;
   // App Instance FQDN
-  string FQDN = 3;
+  string fqdn = 3;
   // ports to access app
   repeated AppPort ports = 4;
 }
 
 message CloudletLocation {
   // The carrier name that user is connected to ("Cellular Carrier Name")
-  string CarrierName = 1;
+  string carrier_name = 1;
   // Cloudlet Name
-  string CloudletName = 2;
+  string cloudlet_name = 2;
   // The GPS Location of the user
-  Loc GpsLocation = 3;
+  Loc gps_location = 3;
   // Distance of cloudlet vs loc in request
-  double Distance = 4;
+  double distance = 4;
   // App instances
-  repeated Appinstance Appinstances = 5;
+  repeated Appinstance appinstances = 5;
 }
 
 message AppInstListReply {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Status of the reply
-  enum AI_Status {
+  enum AIStatus {
     AI_UNDEFINED = 0;
     AI_SUCCESS = 1;
     AI_FAIL = 2;
   }
-  AI_Status Status = 2;
-  repeated CloudletLocation Cloudlets = 3;
+  AIStatus status = 2;
+  repeated CloudletLocation cloudlets = 3;
 }
 
 message FqdnListRequest {
   // API version
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
 }
 
 message AppFqdn{
   // App  Name
-  string AppName = 1;
+  string app_name = 1;
   // App Version
-  string AppVers = 2;
+  string app_vers = 2;
   // developer name
-  string DevName = 3;
+  string dev_name = 3;
   // App FQDN
-  repeated string FQDNs = 4;
+  repeated string fqdns = 4;
   // optional android package name
-  string AndroidPackageName = 5;
+  string android_package_name = 5;
 }
 
 message FqdnListReply{
   // API version
   uint32 ver = 1;
   // Status of the reply
-  enum FL_Status {
+  enum FLStatus {
     FL_UNDEFINED = 0;
     FL_SUCCESS = 1;
     FL_FAIL = 2;
   }
-  repeated AppFqdn AppFqdns = 3;
-  FL_Status Status = 4;
+  repeated AppFqdn app_fqdns = 3;
+  FLStatus status = 4;
 }
 
 message DynamicLocGroupRequest {
-  uint32 Ver = 1;
+  uint32 ver = 1;
   // Session Cookie from RegisterClientRequest
-  string SessionCookie = 2;
+  string session_cookie = 2;
   // Dynamic Location Group Id
-  uint64 LgId = 3;
+  uint64 lg_id = 3;
   // Use Secure communication or Open with the group
   enum DlgCommType {
-    DlgUndefined = 0;
-    DlgSecure = 1;
-    DlgOpen = 2;
+    DLG_UNDEFINED = 0;
+    DLG_SECURE = 1;
+    DLG_OPEN = 2;
   }
-  DlgCommType CommType = 11;
+  DlgCommType comm_type = 11;
   // Unused
-  string UserData = 12;
+  string user_data = 12;
 }
 
 message DynamicLocGroupReply {
@@ -251,12 +251,12 @@ message DynamicLocGroupReply {
   // Status of the reply
   ReplyStatus status = 2;
   // Error Code based on Failure
-  uint32 ErrorCode = 3;
+  uint32 error_code = 3;
   // Group Cookie for Secure Group Communication
-  string GroupCookie = 5;
+  string group_cookie = 5;
 }
 
-service Match_Engine_Api {
+service MatchEngineApi {
   rpc RegisterClient(RegisterClientRequest) returns (RegisterClientReply) {
       option (google.api.http) = {
       post: "/v1/registerclient"

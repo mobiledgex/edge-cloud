@@ -58,7 +58,7 @@ var _ = fmt.Errorf
 var _ = math.Inf
 
 // Auto-generated code: DO NOT EDIT
-var Match_Engine_ApiCmd distributed_match_engine.Match_Engine_ApiClient
+var MatchEngineApiCmd distributed_match_engine.MatchEngineApiClient
 var AppInstListRequestIn distributed_match_engine.AppInstListRequest
 var AppInstListRequestFlagSet = pflag.NewFlagSet("AppInstListRequest", pflag.ExitOnError)
 var AppInstListRequestNoConfigFlagSet = pflag.NewFlagSet("AppInstListRequestNoConfig", pflag.ExitOnError)
@@ -82,57 +82,57 @@ var VerifyLocationRequestIn distributed_match_engine.VerifyLocationRequest
 var VerifyLocationRequestFlagSet = pflag.NewFlagSet("VerifyLocationRequest", pflag.ExitOnError)
 var VerifyLocationRequestNoConfigFlagSet = pflag.NewFlagSet("VerifyLocationRequestNoConfig", pflag.ExitOnError)
 var IDTypesStrings = []string{
-	"ID_UNDEFINED",
-	"IMEI",
-	"MSISDN",
-	"IPADDR",
+	"IdUndefined",
+	"Imei",
+	"Msisdn",
+	"Ipaddr",
 }
 
 var ReplyStatusStrings = []string{
-	"RS_UNDEFINED",
-	"RS_SUCCESS",
-	"RS_FAIL",
+	"RsUndefined",
+	"RsSuccess",
+	"RsFail",
 }
 
 var FindStatusStrings = []string{
-	"FIND_UNKNOWN",
-	"FIND_FOUND",
-	"FIND_NOTFOUND",
+	"FindUnknown",
+	"FindFound",
+	"FindNotfound",
 }
 
-var Tower_StatusStrings = []string{
-	"TOWER_UNKNOWN",
-	"CONNECTED_TO_SPECIFIED_TOWER",
-	"NOT_CONNECTED_TO_SPECIFIED_TOWER",
+var TowerStatusStrings = []string{
+	"TowerUnknown",
+	"ConnectedToSpecifiedTower",
+	"NotConnectedToSpecifiedTower",
 }
 
-var GPS_Location_StatusStrings = []string{
-	"LOC_UNKNOWN",
-	"LOC_VERIFIED",
-	"LOC_MISMATCH_SAME_COUNTRY",
-	"LOC_MISMATCH_OTHER_COUNTRY",
-	"LOC_ROAMING_COUNTRY_MATCH",
-	"LOC_ROAMING_COUNTRY_MISMATCH",
-	"LOC_ERROR_UNAUTHORIZED",
-	"LOC_ERROR_OTHER",
+var GPSLocationStatusStrings = []string{
+	"LocUnknown",
+	"LocVerified",
+	"LocMismatchSameCountry",
+	"LocMismatchOtherCountry",
+	"LocRoamingCountryMatch",
+	"LocRoamingCountryMismatch",
+	"LocErrorUnauthorized",
+	"LocErrorOther",
 }
 
-var Loc_StatusStrings = []string{
-	"LOC_UNKNOWN",
-	"LOC_FOUND",
-	"LOC_DENIED",
+var LocStatusStrings = []string{
+	"LocUnknown",
+	"LocFound",
+	"LocDenied",
 }
 
-var AI_StatusStrings = []string{
-	"AI_UNDEFINED",
-	"AI_SUCCESS",
-	"AI_FAIL",
+var AIStatusStrings = []string{
+	"AiUndefined",
+	"AiSuccess",
+	"AiFail",
 }
 
-var FL_StatusStrings = []string{
-	"FL_UNDEFINED",
-	"FL_SUCCESS",
-	"FL_FAIL",
+var FLStatusStrings = []string{
+	"FlUndefined",
+	"FlSuccess",
+	"FlFail",
 }
 
 var DlgCommTypeStrings = []string{
@@ -189,9 +189,9 @@ func RegisterClientRequestWriteOutputOne(obj *distributed_match_engine.RegisterC
 func RegisterClientReplySlicer(in *distributed_match_engine.RegisterClientReply) []string {
 	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.ReplyStatus_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.ReplyStatus_CamelName[int32(in.Status)])
 	s = append(s, in.SessionCookie)
-	s = append(s, in.TokenServerURI)
+	s = append(s, in.TokenServerUri)
 	return s
 }
 
@@ -200,7 +200,7 @@ func RegisterClientReplyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "Status")
 	s = append(s, "SessionCookie")
-	s = append(s, "TokenServerURI")
+	s = append(s, "TokenServerUri")
 	return s
 }
 
@@ -299,19 +299,19 @@ func FindCloudletRequestWriteOutputOne(obj *distributed_match_engine.FindCloudle
 func FindCloudletReplySlicer(in *distributed_match_engine.FindCloudletReply) []string {
 	s := make([]string, 0, 5)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.FindCloudletReply_FindStatus_name[int32(in.Status)])
-	s = append(s, in.FQDN)
+	s = append(s, distributed_match_engine.FindCloudletReply_FindStatus_CamelName[int32(in.Status)])
+	s = append(s, in.Fqdn)
 	if in.Ports == nil {
 		in.Ports = make([]*distributed_match_engine.AppPort, 1)
 	}
 	if in.Ports[0] == nil {
 		in.Ports[0] = &distributed_match_engine.AppPort{}
 	}
-	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
 	s = append(s, in.Ports[0].PathPrefix)
-	s = append(s, in.Ports[0].FQDNPrefix)
+	s = append(s, in.Ports[0].FqdnPrefix)
 	if in.CloudletLocation == nil {
 		in.CloudletLocation = &distributed_match_engine.Loc{}
 	}
@@ -334,12 +334,12 @@ func FindCloudletReplyHeaderSlicer() []string {
 	s := make([]string, 0, 5)
 	s = append(s, "Ver")
 	s = append(s, "Status")
-	s = append(s, "FQDN")
+	s = append(s, "Fqdn")
 	s = append(s, "Ports-Proto")
 	s = append(s, "Ports-InternalPort")
 	s = append(s, "Ports-PublicPort")
 	s = append(s, "Ports-PathPrefix")
-	s = append(s, "Ports-FQDNPrefix")
+	s = append(s, "Ports-FqdnPrefix")
 	s = append(s, "CloudletLocation-Latitude")
 	s = append(s, "CloudletLocation-Longitude")
 	s = append(s, "CloudletLocation-HorizontalAccuracy")
@@ -443,9 +443,9 @@ func VerifyLocationRequestWriteOutputOne(obj *distributed_match_engine.VerifyLoc
 func VerifyLocationReplySlicer(in *distributed_match_engine.VerifyLocationReply) []string {
 	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.VerifyLocationReply_Tower_Status_name[int32(in.TowerStatus)])
-	s = append(s, distributed_match_engine.VerifyLocationReply_GPS_Location_Status_name[int32(in.GpsLocationStatus)])
-	s = append(s, strconv.FormatFloat(float64(in.GPS_Location_Accuracy_KM), 'e', -1, 32))
+	s = append(s, distributed_match_engine.VerifyLocationReply_TowerStatus_CamelName[int32(in.TowerStatus)])
+	s = append(s, distributed_match_engine.VerifyLocationReply_GPSLocationStatus_CamelName[int32(in.GpsLocationStatus)])
+	s = append(s, strconv.FormatFloat(float64(in.GpsLocationAccuracyKm), 'e', -1, 32))
 	return s
 }
 
@@ -454,7 +454,7 @@ func VerifyLocationReplyHeaderSlicer() []string {
 	s = append(s, "Ver")
 	s = append(s, "TowerStatus")
 	s = append(s, "GpsLocationStatus")
-	s = append(s, "GPS_Location_Accuracy_KM")
+	s = append(s, "GpsLocationAccuracyKm")
 	return s
 }
 
@@ -523,7 +523,7 @@ func GetLocationRequestWriteOutputOne(obj *distributed_match_engine.GetLocationR
 func GetLocationReplySlicer(in *distributed_match_engine.GetLocationReply) []string {
 	s := make([]string, 0, 5)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.GetLocationReply_Loc_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.GetLocationReply_LocStatus_CamelName[int32(in.Status)])
 	s = append(s, in.CarrierName)
 	s = append(s, strconv.FormatUint(uint64(in.Tower), 10))
 	if in.NetworkLocation == nil {
@@ -652,18 +652,18 @@ func AppinstanceSlicer(in *distributed_match_engine.Appinstance) []string {
 	s := make([]string, 0, 4)
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
-	s = append(s, in.FQDN)
+	s = append(s, in.Fqdn)
 	if in.Ports == nil {
 		in.Ports = make([]*distributed_match_engine.AppPort, 1)
 	}
 	if in.Ports[0] == nil {
 		in.Ports[0] = &distributed_match_engine.AppPort{}
 	}
-	s = append(s, distributed_match_engine.LProto_name[int32(in.Ports[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Ports[0].PublicPort), 10))
 	s = append(s, in.Ports[0].PathPrefix)
-	s = append(s, in.Ports[0].FQDNPrefix)
+	s = append(s, in.Ports[0].FqdnPrefix)
 	return s
 }
 
@@ -671,12 +671,12 @@ func AppinstanceHeaderSlicer() []string {
 	s := make([]string, 0, 4)
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
-	s = append(s, "FQDN")
+	s = append(s, "Fqdn")
 	s = append(s, "Ports-Proto")
 	s = append(s, "Ports-InternalPort")
 	s = append(s, "Ports-PublicPort")
 	s = append(s, "Ports-PathPrefix")
-	s = append(s, "Ports-FQDNPrefix")
+	s = append(s, "Ports-FqdnPrefix")
 	return s
 }
 
@@ -731,18 +731,18 @@ func CloudletLocationSlicer(in *distributed_match_engine.CloudletLocation) []str
 	}
 	s = append(s, in.Appinstances[0].AppName)
 	s = append(s, in.Appinstances[0].AppVers)
-	s = append(s, in.Appinstances[0].FQDN)
+	s = append(s, in.Appinstances[0].Fqdn)
 	if in.Appinstances[0].Ports == nil {
 		in.Appinstances[0].Ports = make([]*distributed_match_engine.AppPort, 1)
 	}
 	if in.Appinstances[0].Ports[0] == nil {
 		in.Appinstances[0].Ports[0] = &distributed_match_engine.AppPort{}
 	}
-	s = append(s, distributed_match_engine.LProto_name[int32(in.Appinstances[0].Ports[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Appinstances[0].Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Appinstances[0].Ports[0].PublicPort), 10))
 	s = append(s, in.Appinstances[0].Ports[0].PathPrefix)
-	s = append(s, in.Appinstances[0].Ports[0].FQDNPrefix)
+	s = append(s, in.Appinstances[0].Ports[0].FqdnPrefix)
 	return s
 }
 
@@ -762,12 +762,12 @@ func CloudletLocationHeaderSlicer() []string {
 	s = append(s, "Distance")
 	s = append(s, "Appinstances-AppName")
 	s = append(s, "Appinstances-AppVers")
-	s = append(s, "Appinstances-FQDN")
+	s = append(s, "Appinstances-Fqdn")
 	s = append(s, "Appinstances-Ports-Proto")
 	s = append(s, "Appinstances-Ports-InternalPort")
 	s = append(s, "Appinstances-Ports-PublicPort")
 	s = append(s, "Appinstances-Ports-PathPrefix")
-	s = append(s, "Appinstances-Ports-FQDNPrefix")
+	s = append(s, "Appinstances-Ports-FqdnPrefix")
 	return s
 }
 
@@ -797,7 +797,7 @@ func CloudletLocationWriteOutputOne(obj *distributed_match_engine.CloudletLocati
 func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []string {
 	s := make([]string, 0, 3)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.AppInstListReply_AI_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.AppInstListReply_AIStatus_CamelName[int32(in.Status)])
 	if in.Cloudlets == nil {
 		in.Cloudlets = make([]*distributed_match_engine.CloudletLocation, 1)
 	}
@@ -830,18 +830,18 @@ func AppInstListReplySlicer(in *distributed_match_engine.AppInstListReply) []str
 	}
 	s = append(s, in.Cloudlets[0].Appinstances[0].AppName)
 	s = append(s, in.Cloudlets[0].Appinstances[0].AppVers)
-	s = append(s, in.Cloudlets[0].Appinstances[0].FQDN)
+	s = append(s, in.Cloudlets[0].Appinstances[0].Fqdn)
 	if in.Cloudlets[0].Appinstances[0].Ports == nil {
 		in.Cloudlets[0].Appinstances[0].Ports = make([]*distributed_match_engine.AppPort, 1)
 	}
 	if in.Cloudlets[0].Appinstances[0].Ports[0] == nil {
 		in.Cloudlets[0].Appinstances[0].Ports[0] = &distributed_match_engine.AppPort{}
 	}
-	s = append(s, distributed_match_engine.LProto_name[int32(in.Cloudlets[0].Appinstances[0].Ports[0].Proto)])
+	s = append(s, distributed_match_engine.LProto_CamelName[int32(in.Cloudlets[0].Appinstances[0].Ports[0].Proto)])
 	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].InternalPort), 10))
 	s = append(s, strconv.FormatUint(uint64(in.Cloudlets[0].Appinstances[0].Ports[0].PublicPort), 10))
 	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].PathPrefix)
-	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].FQDNPrefix)
+	s = append(s, in.Cloudlets[0].Appinstances[0].Ports[0].FqdnPrefix)
 	return s
 }
 
@@ -863,12 +863,12 @@ func AppInstListReplyHeaderSlicer() []string {
 	s = append(s, "Cloudlets-Distance")
 	s = append(s, "Cloudlets-Appinstances-AppName")
 	s = append(s, "Cloudlets-Appinstances-AppVers")
-	s = append(s, "Cloudlets-Appinstances-FQDN")
+	s = append(s, "Cloudlets-Appinstances-Fqdn")
 	s = append(s, "Cloudlets-Appinstances-Ports-Proto")
 	s = append(s, "Cloudlets-Appinstances-Ports-InternalPort")
 	s = append(s, "Cloudlets-Appinstances-Ports-PublicPort")
 	s = append(s, "Cloudlets-Appinstances-Ports-PathPrefix")
-	s = append(s, "Cloudlets-Appinstances-Ports-FQDNPrefix")
+	s = append(s, "Cloudlets-Appinstances-Ports-FqdnPrefix")
 	return s
 }
 
@@ -937,10 +937,10 @@ func AppFqdnSlicer(in *distributed_match_engine.AppFqdn) []string {
 	s = append(s, in.AppName)
 	s = append(s, in.AppVers)
 	s = append(s, in.DevName)
-	if in.FQDNs == nil {
-		in.FQDNs = make([]string, 1)
+	if in.Fqdns == nil {
+		in.Fqdns = make([]string, 1)
 	}
-	s = append(s, in.FQDNs[0])
+	s = append(s, in.Fqdns[0])
 	s = append(s, in.AndroidPackageName)
 	return s
 }
@@ -950,7 +950,7 @@ func AppFqdnHeaderSlicer() []string {
 	s = append(s, "AppName")
 	s = append(s, "AppVers")
 	s = append(s, "DevName")
-	s = append(s, "FQDNs")
+	s = append(s, "Fqdns")
 	s = append(s, "AndroidPackageName")
 	return s
 }
@@ -990,12 +990,12 @@ func FqdnListReplySlicer(in *distributed_match_engine.FqdnListReply) []string {
 	s = append(s, in.AppFqdns[0].AppName)
 	s = append(s, in.AppFqdns[0].AppVers)
 	s = append(s, in.AppFqdns[0].DevName)
-	if in.AppFqdns[0].FQDNs == nil {
-		in.AppFqdns[0].FQDNs = make([]string, 1)
+	if in.AppFqdns[0].Fqdns == nil {
+		in.AppFqdns[0].Fqdns = make([]string, 1)
 	}
-	s = append(s, in.AppFqdns[0].FQDNs[0])
+	s = append(s, in.AppFqdns[0].Fqdns[0])
 	s = append(s, in.AppFqdns[0].AndroidPackageName)
-	s = append(s, distributed_match_engine.FqdnListReply_FL_Status_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.FqdnListReply_FLStatus_CamelName[int32(in.Status)])
 	return s
 }
 
@@ -1005,7 +1005,7 @@ func FqdnListReplyHeaderSlicer() []string {
 	s = append(s, "AppFqdns-AppName")
 	s = append(s, "AppFqdns-AppVers")
 	s = append(s, "AppFqdns-DevName")
-	s = append(s, "AppFqdns-FQDNs")
+	s = append(s, "AppFqdns-Fqdns")
 	s = append(s, "AppFqdns-AndroidPackageName")
 	s = append(s, "Status")
 	return s
@@ -1039,7 +1039,7 @@ func DynamicLocGroupRequestSlicer(in *distributed_match_engine.DynamicLocGroupRe
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
 	s = append(s, in.SessionCookie)
 	s = append(s, strconv.FormatUint(uint64(in.LgId), 10))
-	s = append(s, distributed_match_engine.DynamicLocGroupRequest_DlgCommType_name[int32(in.CommType)])
+	s = append(s, distributed_match_engine.DynamicLocGroupRequest_DlgCommType_CamelName[int32(in.CommType)])
 	s = append(s, in.UserData)
 	return s
 }
@@ -1080,7 +1080,7 @@ func DynamicLocGroupRequestWriteOutputOne(obj *distributed_match_engine.DynamicL
 func DynamicLocGroupReplySlicer(in *distributed_match_engine.DynamicLocGroupReply) []string {
 	s := make([]string, 0, 4)
 	s = append(s, strconv.FormatUint(uint64(in.Ver), 10))
-	s = append(s, distributed_match_engine.ReplyStatus_name[int32(in.Status)])
+	s = append(s, distributed_match_engine.ReplyStatus_CamelName[int32(in.Status)])
 	s = append(s, strconv.FormatUint(uint64(in.ErrorCode), 10))
 	s = append(s, in.GroupCookie)
 	return s
@@ -1129,11 +1129,11 @@ var RegisterClientCmd = &cobra.Command{
 }
 
 func RegisterClient(in *distributed_match_engine.RegisterClientRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.RegisterClient(ctx, in)
+	obj, err := MatchEngineApiCmd.RegisterClient(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1170,11 +1170,11 @@ var FindCloudletCmd = &cobra.Command{
 }
 
 func FindCloudlet(in *distributed_match_engine.FindCloudletRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.FindCloudlet(ctx, in)
+	obj, err := MatchEngineApiCmd.FindCloudlet(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1211,11 +1211,11 @@ var VerifyLocationCmd = &cobra.Command{
 }
 
 func VerifyLocation(in *distributed_match_engine.VerifyLocationRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.VerifyLocation(ctx, in)
+	obj, err := MatchEngineApiCmd.VerifyLocation(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1252,11 +1252,11 @@ var GetLocationCmd = &cobra.Command{
 }
 
 func GetLocation(in *distributed_match_engine.GetLocationRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.GetLocation(ctx, in)
+	obj, err := MatchEngineApiCmd.GetLocation(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1297,11 +1297,11 @@ var AddUserToGroupCmd = &cobra.Command{
 }
 
 func AddUserToGroup(in *distributed_match_engine.DynamicLocGroupRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.AddUserToGroup(ctx, in)
+	obj, err := MatchEngineApiCmd.AddUserToGroup(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1338,11 +1338,11 @@ var GetAppInstListCmd = &cobra.Command{
 }
 
 func GetAppInstList(in *distributed_match_engine.AppInstListRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.GetAppInstList(ctx, in)
+	obj, err := MatchEngineApiCmd.GetAppInstList(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1379,11 +1379,11 @@ var GetFqdnListCmd = &cobra.Command{
 }
 
 func GetFqdnList(in *distributed_match_engine.FqdnListRequest) error {
-	if Match_Engine_ApiCmd == nil {
-		return fmt.Errorf("Match_Engine_Api client not initialized")
+	if MatchEngineApiCmd == nil {
+		return fmt.Errorf("MatchEngineApi client not initialized")
 	}
 	ctx := context.Background()
-	obj, err := Match_Engine_ApiCmd.GetFqdnList(ctx, in)
+	obj, err := MatchEngineApiCmd.GetFqdnList(ctx, in)
 	if err != nil {
 		errstr := err.Error()
 		st, ok := status.FromError(err)
@@ -1410,7 +1410,7 @@ func GetFqdnLists(data []distributed_match_engine.FqdnListRequest, err *error) {
 	}
 }
 
-var Match_Engine_ApiCmds = []*cobra.Command{
+var MatchEngineApiCmds = []*cobra.Command{
 	RegisterClientCmd,
 	FindCloudletCmd,
 	VerifyLocationCmd,
@@ -1492,7 +1492,7 @@ func init() {
 	GetFqdnListCmd.Flags().AddFlagSet(FqdnListRequestFlagSet)
 }
 
-func Match_Engine_ApiAllowNoConfig() {
+func MatchEngineApiAllowNoConfig() {
 	RegisterClientCmd.Flags().AddFlagSet(RegisterClientRequestNoConfigFlagSet)
 	FindCloudletCmd.Flags().AddFlagSet(FindCloudletRequestNoConfigFlagSet)
 	VerifyLocationCmd.Flags().AddFlagSet(VerifyLocationRequestNoConfigFlagSet)

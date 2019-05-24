@@ -14,6 +14,7 @@ import _ "github.com/gogo/protobuf/gogoproto"
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"
 
+import "github.com/mobiledgex/edge-cloud/util"
 import "errors"
 import "strconv"
 import "encoding/json"
@@ -299,19 +300,39 @@ const (
 	NoticeActionSENDALL_END uint64 = 1 << 4
 )
 
+var NoticeAction_CamelName = map[int32]string{
+	// NONE -> None
+	0: "None",
+	// UPDATE -> Update
+	1: "Update",
+	// DELETE -> Delete
+	2: "Delete",
+	// VERSION -> Version
+	3: "Version",
+	// SENDALL_END -> SendallEnd
+	4: "SendallEnd",
+}
+var NoticeAction_CamelValue = map[string]int32{
+	"None":       0,
+	"Update":     1,
+	"Delete":     2,
+	"Version":    3,
+	"SendallEnd": 4,
+}
+
 func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	var str string
 	err := unmarshal(&str)
 	if err != nil {
 		return err
 	}
-	val, ok := NoticeAction_value[str]
+	val, ok := NoticeAction_CamelValue[util.CamelCase(str)]
 	if !ok {
 		// may be enum value instead of string
 		ival, err := strconv.Atoi(str)
 		val = int32(ival)
 		if err == nil {
-			_, ok = NoticeAction_name[val]
+			_, ok = NoticeAction_CamelName[val]
 		}
 	}
 	if !ok {
@@ -322,7 +343,7 @@ func (e *NoticeAction) UnmarshalYAML(unmarshal func(interface{}) error) error {
 }
 
 func (e NoticeAction) MarshalYAML() (interface{}, error) {
-	return e.String(), nil
+	return proto.EnumName(NoticeAction_CamelName, int32(e)), nil
 }
 
 // custom JSON encoding/decoding
@@ -330,13 +351,13 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 	var str string
 	err := json.Unmarshal(b, &str)
 	if err == nil {
-		val, ok := NoticeAction_value[str]
+		val, ok := NoticeAction_CamelValue[util.CamelCase(str)]
 		if !ok {
 			// may be int value instead of enum name
 			ival, err := strconv.Atoi(str)
 			val = int32(ival)
 			if err == nil {
-				_, ok = NoticeAction_name[val]
+				_, ok = NoticeAction_CamelName[val]
 			}
 		}
 		if !ok {
@@ -355,7 +376,8 @@ func (e *NoticeAction) UnmarshalJSON(b []byte) error {
 }
 
 func (e NoticeAction) MarshalJSON() ([]byte, error) {
-	return []byte("\"" + e.String() + "\""), nil
+	str := proto.EnumName(NoticeAction_CamelName, int32(e))
+	return []byte("\"" + str + "\""), nil
 }
 
 func (m *Notice) Size() (n int) {

@@ -53,7 +53,7 @@ require (
 	github.com/gogo/googleapis v1.0.0
 	github.com/gogo/protobuf v1.0.0
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef // indirect
-	github.com/golang/protobuf v1.2.0
+	github.com/golang/protobuf v1.3.1
 	github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 // indirect
 	github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 // indirect
 	github.com/golangplus/testing v0.0.0-20180327235837-af21d9c3145e // indirect
@@ -83,7 +83,6 @@ require (
 	github.com/hashicorp/vault v0.11.5
 	github.com/hashicorp/vault-plugin-secrets-kv v0.0.0-20190404212640-4807e6564154 // indirect
 	github.com/imdario/mergo v0.3.4 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/influxdata/influxdb v1.6.2
 	github.com/jefferai/jsonx v1.0.0 // indirect
 	github.com/jinzhu/gorm v1.9.1
@@ -128,21 +127,19 @@ require (
 	github.com/soheilhy/cmux v0.1.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/cobra v0.0.3
-	github.com/spf13/pflag v1.0.1
+	github.com/spf13/pflag v1.0.3
 	github.com/stretchr/testify v1.3.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect
+	github.com/uber/prototool v1.7.0 // indirect
 	github.com/ugorji/go v1.1.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/xanzy/go-gitlab v0.16.0
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.etcd.io/bbolt v1.3.2 // indirect
 	go.opencensus.io v0.19.0 // indirect
-	go.uber.org/atomic v1.3.2 // indirect
-	go.uber.org/multierr v1.1.0 // indirect
-	go.uber.org/zap v1.8.0
+	go.uber.org/zap v1.10.0
 	golang.org/x/build v0.0.0-20190314133821-5284462c4bec // indirect
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
-	golang.org/x/lint v0.0.0-20190301231843-5614ed5bae6f // indirect
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/oauth2 v0.0.0-20190226205417-e64efc72b421 // indirect
 	golang.org/x/text v0.3.1-0.20180807135948-17ff2d5776d2
@@ -150,7 +147,7 @@ require (
 	golang.org/x/tools v0.0.0-20190312170243-e65039ee4138 // indirect
 	google.golang.org/api v0.1.0 // indirect
 	google.golang.org/genproto v0.0.0-20190307195333-5fe7a883aa19 // indirect
-	google.golang.org/grpc v1.19.0
+	google.golang.org/grpc v1.20.1
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/asn1-ber.v1 v1.0.0-20181015200546-f715ec2f112d // indirect
 	gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce // indirect

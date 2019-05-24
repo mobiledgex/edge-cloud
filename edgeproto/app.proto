@@ -32,18 +32,18 @@ message AppKey {
 // ImageType specifies the image type of the application.
 enum ImageType {
   // Unknown image type
-  ImageTypeUnknown = 0;
+  IMAGE_TYPE_UNKNOWN = 0;
   // Docker container image type compatible with Kubernetes
-  ImageTypeDocker = 1;
+  IMAGE_TYPE_DOCKER = 1;
   // QCOW2 virtual machine image type
-  ImageTypeQCOW = 2;
+  IMAGE_TYPE_QCOW = 2;
 }
 
 enum DeleteType {
   // No autodelete
-  NoAutoDelete = 0;
+  NO_AUTO_DELETE = 0;
   // Autodelete
-  AutoDelete = 1;
+  AUTO_DELETE = 1;
 }
 
 message ConfigFile {

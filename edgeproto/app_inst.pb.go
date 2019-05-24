@@ -1112,7 +1112,7 @@ const AppInstFieldMappedPortsProto = "9.1"
 const AppInstFieldMappedPortsInternalPort = "9.2"
 const AppInstFieldMappedPortsPublicPort = "9.3"
 const AppInstFieldMappedPortsPathPrefix = "9.4"
-const AppInstFieldMappedPortsFQDNPrefix = "9.5"
+const AppInstFieldMappedPortsFqdnPrefix = "9.5"
 const AppInstFieldFlavor = "12"
 const AppInstFieldFlavorName = "12.1"
 const AppInstFieldState = "14"
@@ -1148,7 +1148,7 @@ var AppInstAllFields = []string{
 	AppInstFieldMappedPortsInternalPort,
 	AppInstFieldMappedPortsPublicPort,
 	AppInstFieldMappedPortsPathPrefix,
-	AppInstFieldMappedPortsFQDNPrefix,
+	AppInstFieldMappedPortsFqdnPrefix,
 	AppInstFieldFlavorName,
 	AppInstFieldState,
 	AppInstFieldErrors,
@@ -1182,7 +1182,7 @@ var AppInstAllFieldsMap = map[string]struct{}{
 	AppInstFieldMappedPortsInternalPort:                     struct{}{},
 	AppInstFieldMappedPortsPublicPort:                       struct{}{},
 	AppInstFieldMappedPortsPathPrefix:                       struct{}{},
-	AppInstFieldMappedPortsFQDNPrefix:                       struct{}{},
+	AppInstFieldMappedPortsFqdnPrefix:                       struct{}{},
 	AppInstFieldFlavorName:                                  struct{}{},
 	AppInstFieldState:                                       struct{}{},
 	AppInstFieldErrors:                                      struct{}{},
@@ -1298,8 +1298,8 @@ func (m *AppInst) DiffFields(o *AppInst, fields map[string]struct{}) {
 				fields[AppInstFieldMappedPortsPathPrefix] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
-			if m.MappedPorts[i0].FQDNPrefix != o.MappedPorts[i0].FQDNPrefix {
-				fields[AppInstFieldMappedPortsFQDNPrefix] = struct{}{}
+			if m.MappedPorts[i0].FqdnPrefix != o.MappedPorts[i0].FqdnPrefix {
+				fields[AppInstFieldMappedPortsFqdnPrefix] = struct{}{}
 				fields[AppInstFieldMappedPorts] = struct{}{}
 			}
 		}
@@ -1442,7 +1442,7 @@ func (m *AppInst) CopyInFields(src *AppInst) {
 				m.MappedPorts[i0].PathPrefix = src.MappedPorts[i0].PathPrefix
 			}
 			if _, set := fmap["9.5"]; set {
-				m.MappedPorts[i0].FQDNPrefix = src.MappedPorts[i0].FQDNPrefix
+				m.MappedPorts[i0].FqdnPrefix = src.MappedPorts[i0].FqdnPrefix
 			}
 		}
 	}
@@ -1893,7 +1893,7 @@ func (c *AppInstCache) SyncListEnd() {
 }
 
 func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
-	curState := TrackedState_TrackedStateUnknown
+	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	var err error
@@ -1903,13 +1903,13 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 		if c.Get(key, &info) {
 			curState = info.State
 		} else {
-			curState = TrackedState_NotPresent
+			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			msg := TrackedState_name[int32(curState)]
+			msg := TrackedState_CamelName[int32(curState)]
 			send(&Result{Message: msg})
 		}
-		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_name[int32(curState)])
+		log.DebugLog(log.DebugLevelApi, "Watch event for AppInst", "key", key, "state", TrackedState_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
@@ -1922,7 +1922,7 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 	if c.Get(key, &info) {
 		curState = info.State
 	} else {
-		curState = TrackedState_NotPresent
+		curState = TrackedState_NOT_PRESENT
 	}
 	if curState == targetState {
 		done <- true
@@ -1954,13 +1954,13 @@ func (c *AppInstCache) WaitForState(ctx context.Context, key *AppInstKey, target
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowAppInst to check current status", TrackedState_name[int32(info.State)])
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowAppInst to check current status", TrackedState_CamelName[int32(info.State)])
 			send(&Result{Message: msg})
 			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				TrackedState_name[int32(targetState)],
-				TrackedState_name[int32(curState)])
+				TrackedState_CamelName[int32(targetState)],
+				TrackedState_CamelName[int32(curState)])
 		}
 	}
 	cancel()

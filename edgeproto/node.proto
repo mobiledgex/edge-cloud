@@ -12,11 +12,11 @@ import "github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd/protocmd.proto"
 // NodeType defines the type of Node
 enum NodeType {
   // Unknown
-  NodeUnknown = 0;
+  NODE_UNKNOWN = 0;
   // Distributed Matching Engine
-  NodeDME = 1;
+  NODE_DME = 1;
   // Cloudlet Resource Manager
-  NodeCRM = 2;
+  NODE_CRM = 2;
 }
 
 // NodeKey uniquely identifies a DME or CRM node
