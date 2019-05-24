@@ -48,7 +48,7 @@ func (s *AppApi) UsesDeveloper(in *edgeproto.DeveloperKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for key, app := range s.cache.Objs {
-		if key.DeveloperKey.Matches(in) && app.DelOpt != edgeproto.DeleteType_AutoDelete {
+		if key.DeveloperKey.Matches(in) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
 			return true
 		}
 	}
@@ -59,7 +59,7 @@ func (s *AppApi) UsesFlavor(key *edgeproto.FlavorKey) bool {
 	s.cache.Mux.Lock()
 	defer s.cache.Mux.Unlock()
 	for _, app := range s.cache.Objs {
-		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AutoDelete {
+		if app.DefaultFlavor.Matches(key) && app.DelOpt != edgeproto.DeleteType_AUTO_DELETE {
 			return true
 		}
 	}
@@ -71,7 +71,7 @@ func (s *AppApi) AutoDeleteAppsForDeveloper(ctx context.Context, key *edgeproto.
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting apps ", "developer", key)
 	s.cache.Mux.Lock()
 	for k, app := range s.cache.Objs {
-		if app.Key.DeveloperKey.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
+		if app.Key.DeveloperKey.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
 	}
@@ -89,7 +89,7 @@ func (s *AppApi) AutoDeleteApps(ctx context.Context, key *edgeproto.FlavorKey) {
 	log.DebugLog(log.DebugLevelApi, "Auto-deleting apps ", "flavor", key)
 	s.cache.Mux.Lock()
 	for k, app := range s.cache.Objs {
-		if app.DefaultFlavor.Matches(key) && app.DelOpt == edgeproto.DeleteType_AutoDelete {
+		if app.DefaultFlavor.Matches(key) && app.DelOpt == edgeproto.DeleteType_AUTO_DELETE {
 			apps[k] = app
 		}
 	}
@@ -125,12 +125,12 @@ func (s *AppApi) AndroidPackageConflicts(a *edgeproto.App) bool {
 func updateAppFields(in *edgeproto.App) error {
 
 	if in.ImagePath == "" {
-		if in.ImageType == edgeproto.ImageType_ImageTypeDocker {
+		if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_DOCKER {
 			in.ImagePath = deploygen.MexRegistry + "/" +
 				util.DockerSanitize(in.Key.DeveloperKey.Name) + "/images/" +
 				util.DockerSanitize(in.Key.Name) + ":" +
 				util.DockerSanitize(in.Key.Version)
-		} else if in.ImageType == edgeproto.ImageType_ImageTypeQCOW {
+		} else if in.ImageType == edgeproto.ImageType_IMAGE_TYPE_QCOW {
 			return fmt.Errorf("imagepath is required for imagetype %s", in.ImageType)
 		} else if in.Deployment == cloudcommon.AppDeploymentTypeHelm {
 			in.ImagePath = deploygen.MexRegistry + "/" +

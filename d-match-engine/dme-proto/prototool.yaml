@@ -1,0 +1,6 @@
+protoc:
+  version: 3.7.0
+  includes:
+    - ../../link-grpc-gateway/third_party/googleapis/
+lint:
+  group: google

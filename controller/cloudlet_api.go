@@ -46,14 +46,14 @@ func (s *CloudletApi) UsesOperator(in *edgeproto.OperatorKey) bool {
 }
 
 func (s *CloudletApi) CreateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.CloudletApi_CreateCloudletServer) error {
-	if in.IpSupport == edgeproto.IpSupport_IpSupportUnknown {
-		in.IpSupport = edgeproto.IpSupport_IpSupportDynamic
+	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_UNKNOWN {
+		in.IpSupport = edgeproto.IpSupport_IP_SUPPORT_DYNAMIC
 	}
 	// TODO: support static IP assignment.
-	if in.IpSupport != edgeproto.IpSupport_IpSupportDynamic {
+	if in.IpSupport != edgeproto.IpSupport_IP_SUPPORT_DYNAMIC {
 		return errors.New("Only dynamic IPs are supported currently")
 	}
-	if in.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+	if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_STATIC {
 		// TODO: Validate static ips
 	} else {
 		// dynamic
@@ -74,7 +74,7 @@ func (s *CloudletApi) UpdateCloudlet(in *edgeproto.Cloudlet, cb edgeproto.Cloudl
 	if _, found := fmap[edgeproto.CloudletFieldNumDynamicIps]; found {
 		staticSet := false
 		if _, staticFound := fmap[edgeproto.CloudletFieldIpSupport]; staticFound {
-			if in.IpSupport == edgeproto.IpSupport_IpSupportStatic {
+			if in.IpSupport == edgeproto.IpSupport_IP_SUPPORT_STATIC {
 				staticSet = true
 			}
 		}

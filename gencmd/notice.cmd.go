@@ -25,16 +25,16 @@ var _ = math.Inf
 // Auto-generated code: DO NOT EDIT
 var NotifyApiCmd edgeproto.NotifyApiClient
 var NoticeActionStrings = []string{
-	"NONE",
-	"UPDATE",
-	"DELETE",
-	"VERSION",
-	"SENDALL_END",
+	"None",
+	"Update",
+	"Delete",
+	"Version",
+	"SendallEnd",
 }
 
 func NoticeSlicer(in *edgeproto.Notice) []string {
 	s := make([]string, 0, 5)
-	s = append(s, edgeproto.NoticeAction_name[int32(in.Action)])
+	s = append(s, edgeproto.NoticeAction_CamelName[int32(in.Action)])
 	s = append(s, strconv.FormatUint(uint64(in.Version), 10))
 	s = append(s, in.Any.TypeUrl)
 	s = append(s, "")

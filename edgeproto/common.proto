@@ -8,63 +8,63 @@ import "google/api/annotations.proto";
 // Liveness indicates if an object was created statically via an external API call, or dynamically via an internal algorithm.
 enum Liveness {
   // Unknown liveness
-  LivenessUnknown = 0;
+  LIVENESS_UNKNOWN = 0;
   // Object managed by external entity
-  LivenessStatic = 1;
+  LIVENESS_STATIC = 1;
   // Object managed internally
-  LivenessDynamic = 2;
+  LIVENESS_DYNAMIC = 2;
 }
 
 // IpSupport indicates the type of public IP support provided by the Cloudlet. Static IP support indicates a set of static public IPs are available for use, and managed by the Controller. Dynamic indicates the Cloudlet uses a DHCP server to provide public IP addresses, and the controller has no control over which IPs are assigned.
 enum IpSupport {
   // Unknown IP support
-  IpSupportUnknown = 0;
+  IP_SUPPORT_UNKNOWN = 0;
   // Static IP addresses are provided to and managed by Controller
-  IpSupportStatic = 1;
+  IP_SUPPORT_STATIC = 1;
   // IP addresses are dynamically provided by an Operator's DHCP server
-  IpSupportDynamic = 2;
+  IP_SUPPORT_DYNAMIC = 2;
 }
 
 enum IpAccess {
   // Unknown IP access
-  IpAccessUnknown = 0;
+  IP_ACCESS_UNKNOWN = 0;
   // Dedicated IP access
-  IpAccessDedicated = 1;
+  IP_ACCESS_DEDICATED = 1;
   // Dedicated or shared (prefers dedicated) access
-  IpAccessDedicatedOrShared = 2;
+  IP_ACCESS_DEDICATED_OR_SHARED = 2;
   // Shared IP access
-  IpAccessShared = 3;
+  IP_ACCESS_SHARED = 3;
 }
 
 // TrackedState is used to track the state of an object on a remote node,
 // i.e. track the state of a ClusterInst object on the CRM (Cloudlet).
 enum TrackedState {
   // Unknown state
-  TrackedStateUnknown = 0;
+  TRACKED_STATE_UNKNOWN = 0;
   // Not present (does not exist)
-  NotPresent = 1;
+  NOT_PRESENT = 1;
   // Create requested
-  CreateRequested = 2;
+  CREATE_REQUESTED = 2;
   // Creating
-  Creating = 3;
+  CREATING = 3;
   // Create error
-  CreateError = 4;
+  CREATE_ERROR = 4;
   // Ready
-  Ready = 5;
+  READY = 5;
   // Update requested
-  UpdateRequested = 6;
+  UPDATE_REQUESTED = 6;
   // Updating
-  Updating = 7;
+  UPDATING = 7;
   // Update error
-  UpdateError = 8;
+  UPDATE_ERROR = 8;
   // Delete requested
-  DeleteRequested = 9;
+  DELETE_REQUESTED = 9;
   // Deleting
-  Deleting = 10;
+  DELETING = 10;
   // Delete error
-  DeleteError = 11;
+  DELETE_ERROR = 11;
   // Delete prepare (extra state used by controller to block other changes)
-  DeletePrepare = 12;
+  DELETE_PREPARE = 12;
 }
 
 // CRMOverride can be applied to commands that issue requests to the CRM.
@@ -74,13 +74,13 @@ enum TrackedState {
 // (messages will not be sent to CRM).
 enum CRMOverride {
   // No override
-  NoOverride = 0;
+  NO_OVERRIDE = 0;
   // Ignore errors from CRM
-  IgnoreCRMErrors = 1;
+  IGNORE_CRM_ERRORS = 1;
   // Ignore CRM completely (does not inform CRM of operation)
-  IgnoreCRM = 2;
+  IGNORE_CRM = 2;
   // Ignore Transient State (only admin should use if CRM crashed)
-  IgnoreTransientState = 3;
+  IGNORE_TRANSIENT_STATE = 3;
   // Ignore CRM and Transient State
-  IgnoreCRMandTransientState = 4;
+  IGNORE_CRM_AND_TRANSIENT_STATE = 4;
 }

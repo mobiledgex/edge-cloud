@@ -237,7 +237,7 @@ func (s *server) RegisterClient(ctx context.Context,
 		return mstatus, grpc.Errorf(codes.Internal, err.Error())
 	}
 	mstatus.SessionCookie = cookie
-	mstatus.TokenServerURI = *tokSrvUrl
+	mstatus.TokenServerUri = *tokSrvUrl
 	mstatus.Status = dme.ReplyStatus_RS_SUCCESS
 	return mstatus, nil
 }
@@ -255,7 +255,7 @@ func main() {
 	flag.Parse()
 	log.SetDebugLevelStrs(*debugLevels)
 	cloudcommon.ParseMyCloudletKey(*standalone, cloudletKeyStr, &myCloudletKey)
-	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NodeDME, &myCloudletKey, &myNode.Key)
+	cloudcommon.SetNodeKey(scaleID, edgeproto.NodeType_NODE_DME, &myCloudletKey, &myNode.Key)
 
 	dmecommon.InitVault(*vaultAddr)
 
@@ -299,7 +299,7 @@ func main() {
 	grpcOpts = append(grpcOpts, grpc.Creds(creds))
 	s := grpc.NewServer(grpcOpts...)
 
-	dme.RegisterMatch_Engine_ApiServer(s, &server{})
+	dme.RegisterMatchEngineApiServer(s, &server{})
 
 	if *standalone {
 		saServer := standaloneServer{}
@@ -322,7 +322,7 @@ func main() {
 		ApiAddr:     *apiAddr,
 		TlsCertFile: *tlsCertFile,
 		ApiHandles: []func(context.Context, *gwruntime.ServeMux, *grpc.ClientConn) error{
-			dme.RegisterMatch_Engine_ApiHandler,
+			dme.RegisterMatchEngineApiHandler,
 		},
 	}
 	gw, err := cloudcommon.GrpcGateway(gwcfg)

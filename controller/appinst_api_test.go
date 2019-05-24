@@ -85,50 +85,50 @@ func TestAppInstApi(t *testing.T) {
 	err := appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.NotNil(t, err, "Delete AppInst responder failure")
 	responder.SetSimulateAppDeleteFailure(false)
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_READY)
 
 	obj = testutil.AppInstData[0]
-	// check override of error DeleteError
-	err = forceAppInstState(&obj, edgeproto.TrackedState_DeleteError)
+	// check override of error DELETE_ERROR
+	err = forceAppInstState(&obj, edgeproto.TrackedState_DELETE_ERROR)
 	require.Nil(t, err, "force state")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_DeleteError)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_DELETE_ERROR)
 	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "create overrides delete error")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_Ready)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_READY)
 
-	// check override of error CreateError
-	err = forceAppInstState(&obj, edgeproto.TrackedState_CreateError)
+	// check override of error CREATE_ERROR
+	err = forceAppInstState(&obj, edgeproto.TrackedState_CREATE_ERROR)
 	require.Nil(t, err, "force state")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_CreateError)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_CREATE_ERROR)
 	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "delete overrides create error")
-	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_NotPresent)
+	checkAppInstState(t, commonApi, &obj, edgeproto.TrackedState_NOT_PRESENT)
 
 	// override CRM error
 	responder.SetSimulateAppCreateFailure(true)
 	responder.SetSimulateAppDeleteFailure(true)
 	obj = testutil.AppInstData[0]
-	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "override crm error")
 	obj = testutil.AppInstData[0]
-	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRMErrors
+	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM_ERRORS
 	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "override crm error")
 
 	// ignore CRM
 	obj = testutil.AppInstData[0]
-	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
 	err = appInstApi.CreateAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "ignore crm")
 	obj = testutil.AppInstData[0]
-	obj.CrmOverride = edgeproto.CRMOverride_IgnoreCRM
+	obj.CrmOverride = edgeproto.CRMOverride_IGNORE_CRM
 	err = appInstApi.DeleteAppInst(&obj, &testutil.CudStreamoutAppInst{})
 	require.Nil(t, err, "ignore crm")
 	responder.SetSimulateAppCreateFailure(false)
 	responder.SetSimulateAppDeleteFailure(false)
 
-	// Test FQDN prefix
+	// Test Fqdn prefix
 	for _, obj := range appInstApi.cache.Objs {
 		app_name := util.K8SSanitize(obj.Key.AppKey.Name)
 		if app_name == "helmapp" {
@@ -143,7 +143,7 @@ func TestAppInstApi(t *testing.T) {
 				continue
 			}
 			test_prefix := fmt.Sprintf("%s-%s.", app_name, lproto)
-			require.Equal(t, test_prefix, port.FQDNPrefix, "check port fqdn prefix")
+			require.Equal(t, test_prefix, port.FqdnPrefix, "check port fqdn prefix")
 		}
 	}
 
@@ -252,7 +252,7 @@ func TestAutoClusterInst(t *testing.T) {
 func checkAppInstState(t *testing.T, api *testutil.AppInstCommonApi, in *edgeproto.AppInst, state edgeproto.TrackedState) {
 	out := edgeproto.AppInst{}
 	found := testutil.GetAppInst(t, api, &in.Key, &out)
-	if state == edgeproto.TrackedState_NotPresent {
+	if state == edgeproto.TrackedState_NOT_PRESENT {
 		require.False(t, found, "get app inst")
 	} else {
 		require.True(t, found, "get app inst")

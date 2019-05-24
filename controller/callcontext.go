@@ -26,9 +26,9 @@ func (c *CallContext) WithUndo() *CallContext {
 // Override is only meant as a switch to the current operation,
 // not as a persistent state on the object.
 func (c *CallContext) SetOverride(o *edgeproto.CRMOverride) {
-	if *o == edgeproto.CRMOverride_NoOverride {
+	if *o == edgeproto.CRMOverride_NO_OVERRIDE {
 		return
 	}
 	c.Override = *o
-	*o = edgeproto.CRMOverride_NoOverride
+	*o = edgeproto.CRMOverride_NO_OVERRIDE
 }

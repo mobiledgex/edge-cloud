@@ -95,15 +95,15 @@ func ClusterInstSlicer(in *edgeproto.ClusterInst) []string {
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, in.Key.Developer)
 	s = append(s, in.Flavor.Name)
-	s = append(s, edgeproto.Liveness_name[int32(in.Liveness)])
+	s = append(s, edgeproto.Liveness_CamelName[int32(in.Liveness)])
 	s = append(s, strconv.FormatBool(in.Auto))
-	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
 	s = append(s, in.Errors[0])
-	s = append(s, edgeproto.CRMOverride_name[int32(in.CrmOverride)])
-	s = append(s, edgeproto.IpAccess_name[int32(in.IpAccess)])
+	s = append(s, edgeproto.CRMOverride_CamelName[int32(in.CrmOverride)])
+	s = append(s, edgeproto.IpAccess_CamelName[int32(in.IpAccess)])
 	s = append(s, in.AllocatedIp)
 	s = append(s, in.NodeFlavor)
 	s = append(s, strconv.FormatUint(uint64(in.NumMasters), 10))
@@ -166,7 +166,7 @@ func ClusterInstInfoSlicer(in *edgeproto.ClusterInstInfo) []string {
 	s = append(s, in.Key.CloudletKey.Name)
 	s = append(s, in.Key.Developer)
 	s = append(s, strconv.FormatUint(uint64(in.NotifyId), 10))
-	s = append(s, edgeproto.TrackedState_name[int32(in.State)])
+	s = append(s, edgeproto.TrackedState_CamelName[int32(in.State)])
 	if in.Errors == nil {
 		in.Errors = make([]string, 1)
 	}
@@ -551,7 +551,7 @@ func init() {
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstInLiveness, "liveness", "", "one of [LivenessUnknown LivenessStatic LivenessDynamic]")
 	ClusterInstNoConfigFlagSet.BoolVar(&ClusterInstIn.Auto, "auto", false, "Auto")
 	ClusterInstFlagSet.StringVar(&ClusterInstInState, "state", "", "one of [TrackedStateUnknown NotPresent CreateRequested Creating CreateError Ready UpdateRequested Updating UpdateError DeleteRequested Deleting DeleteError DeletePrepare]")
-	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCRMErrors IgnoreCRM IgnoreTransientState IgnoreCRMandTransientState]")
+	ClusterInstFlagSet.StringVar(&ClusterInstInCrmOverride, "crmoverride", "", "one of [NoOverride IgnoreCrmErrors IgnoreCrm IgnoreTransientState IgnoreCrmAndTransientState]")
 	ClusterInstFlagSet.StringVar(&ClusterInstInIpAccess, "ipaccess", "", "one of [IpAccessUnknown IpAccessDedicated IpAccessDedicatedOrShared IpAccessShared]")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.AllocatedIp, "allocatedip", "", "AllocatedIp")
 	ClusterInstNoConfigFlagSet.StringVar(&ClusterInstIn.NodeFlavor, "nodeflavor", "", "NodeFlavor")
@@ -698,13 +698,13 @@ func parseClusterInstEnums() error {
 		switch ClusterInstInCrmOverride {
 		case "NoOverride":
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(0)
-		case "IgnoreCRMErrors":
+		case "IgnoreCrmErrors":
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(1)
-		case "IgnoreCRM":
+		case "IgnoreCrm":
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(2)
 		case "IgnoreTransientState":
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(3)
-		case "IgnoreCRMandTransientState":
+		case "IgnoreCrmAndTransientState":
 			ClusterInstIn.CrmOverride = edgeproto.CRMOverride(4)
 		default:
 			return errors.New("Invalid value for ClusterInstInCrmOverride")

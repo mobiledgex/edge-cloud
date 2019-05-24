@@ -1482,7 +1482,7 @@ func (c *ClusterInstCache) SyncListEnd() {
 }
 
 func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey, targetState TrackedState, transitionStates map[TrackedState]struct{}, errorState TrackedState, timeout time.Duration, successMsg string, send func(*Result) error) error {
-	curState := TrackedState_TrackedStateUnknown
+	curState := TrackedState_TRACKED_STATE_UNKNOWN
 	done := make(chan bool, 1)
 	failed := make(chan bool, 1)
 	var err error
@@ -1492,13 +1492,13 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 		if c.Get(key, &info) {
 			curState = info.State
 		} else {
-			curState = TrackedState_NotPresent
+			curState = TrackedState_NOT_PRESENT
 		}
 		if send != nil {
-			msg := TrackedState_name[int32(curState)]
+			msg := TrackedState_CamelName[int32(curState)]
 			send(&Result{Message: msg})
 		}
-		log.DebugLog(log.DebugLevelApi, "Watch event for ClusterInst", "key", key, "state", TrackedState_name[int32(curState)])
+		log.DebugLog(log.DebugLevelApi, "Watch event for ClusterInst", "key", key, "state", TrackedState_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
@@ -1511,7 +1511,7 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 	if c.Get(key, &info) {
 		curState = info.State
 	} else {
-		curState = TrackedState_NotPresent
+		curState = TrackedState_NOT_PRESENT
 	}
 	if curState == targetState {
 		done <- true
@@ -1543,13 +1543,13 @@ func (c *ClusterInstCache) WaitForState(ctx context.Context, key *ClusterInstKey
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowClusterInst to check current status", TrackedState_name[int32(info.State)])
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use ShowClusterInst to check current status", TrackedState_CamelName[int32(info.State)])
 			send(&Result{Message: msg})
 			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				TrackedState_name[int32(targetState)],
-				TrackedState_name[int32(curState)])
+				TrackedState_CamelName[int32(targetState)],
+				TrackedState_CamelName[int32(curState)])
 		}
 	}
 	cancel()
