@@ -34,6 +34,7 @@ clusterinsts:
     name: x1.small
   liveness: LivenessStatic
   ipaccess: IpAccessShared
+  deployment: kubernetes
   nummasters: 1
   numnodes: 1
 
