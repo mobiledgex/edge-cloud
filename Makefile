@@ -63,6 +63,8 @@ doc:
 	make -C edgeproto doc
 
 lint:
+	@ln -sfh $(GOGOPROTO) link-gogo-protobuf
+	@ln -sfh $(GRPCGATEWAY) link-grpc-gateway
 	prototool lint edgeproto
 	prototool lint d-match-engine
 

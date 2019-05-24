@@ -13,6 +13,7 @@ import (
 	"github.com/mobiledgex/edge-cloud/gensupport"
 	"github.com/mobiledgex/edge-cloud/protoc-gen-cmd/protocmd"
 	"github.com/mobiledgex/edge-cloud/protogen"
+	"github.com/mobiledgex/edge-cloud/util"
 	"github.com/spf13/cobra"
 )
 
@@ -375,7 +376,7 @@ func (g *GenCmd) generateEnumValSlice(desc *generator.EnumDescriptor) {
 	en := desc.EnumDescriptorProto
 	g.P("var ", en.Name, "Strings = []string{")
 	for _, val := range en.Value {
-		g.P("\"", val.Name, "\",")
+		g.P("\"", util.CamelCase(*val.Name), "\",")
 	}
 	g.P("}")
 	g.P()
@@ -532,7 +533,7 @@ func (g *GenCmd) generateVarFlags(msgName string, parents, enumParents []string,
 			en := enumDesc.EnumDescriptorProto
 			strs := make([]string, 0, len(en.Value))
 			for _, val := range en.Value {
-				strs = append(strs, *val.Name)
+				strs = append(strs, util.CamelCase(*val.Name))
 			}
 			text := "one of"
 			if *field.Label == descriptor.FieldDescriptorProto_LABEL_REPEATED {
@@ -628,7 +629,7 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 			g.P("for _, str := range strings.Split(", enumArg.inVar, ", \",\") {")
 			g.P("switch str {")
 			for _, val := range en.Value {
-				g.P("case \"", *val.Name, "\":")
+				g.P("case \"", util.CamelCase(*val.Name), "\":")
 
 				g.P(enumVar, " = append(", enumVar, ", ", typeName, "(", val.Number, "))")
 			}
@@ -639,7 +640,7 @@ func (g *GenCmd) generateParseEnums(msgName string, enumList []*EnumArg) {
 		} else {
 			g.P("switch ", enumArg.inVar, " {")
 			for _, val := range en.Value {
-				g.P("case \"", *val.Name, "\":")
+				g.P("case \"", util.CamelCase(*val.Name), "\":")
 				g.P(enumVar, " = ", typeName, "(", val.Number, ")")
 			}
 			g.P("default:")
@@ -753,7 +754,7 @@ func (g *GenCmd) generateSlicerFields(desc *generator.Descriptor, parents []stri
 			if en == nil {
 				g.Fail("Enum for ", *desc.DescriptorProto.Name, " field ", name, " not found")
 			}
-			g.P("s = append(s, ", g.FQTypeName(en), "_name[int32(in.", hierName, idx, ")])")
+			g.P("s = append(s, ", g.FQTypeName(en), "_CamelName[int32(in.", hierName, idx, ")])")
 		default:
 			// all integers
 			g.importStrconv = true

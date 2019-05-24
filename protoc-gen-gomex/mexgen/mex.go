@@ -1160,10 +1160,10 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			curState = {{.WaitForState}}_NOT_PRESENT
 		}
 		if send != nil {
-			msg := {{.WaitForState}}_name[int32(curState)]
+			msg := {{.WaitForState}}_CamelName[int32(curState)]
 			send(&Result{Message: msg})
 		}
-		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_name[int32(curState)])
+		log.DebugLog(log.DebugLevelApi, "Watch event for {{.Name}}", "key", key, "state", {{.WaitForState}}_CamelName[int32(curState)])
 		if curState == errorState {
 			failed <- true
 		} else if curState == targetState {
@@ -1208,13 +1208,13 @@ func (c *{{.Name}}Cache) WaitForState(ctx context.Context, key *{{.KeyType}}, ta
 			// state. That means work is still in progress.
 			// Notify user that this is not an error.
 			// Do not undo since CRM is still busy.
-			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_name[int32(info.State)])
+			msg := fmt.Sprintf("Timed out while work still in progress state %s. Please use Show{{.Name}} to check current status", {{.WaitForState}}_CamelName[int32(info.State)])
 			send(&Result{Message: msg})
 			err = nil
 		} else {
 			err = fmt.Errorf("Timed out; expected state %s but is %s",
-				{{.WaitForState}}_name[int32(targetState)],
-				{{.WaitForState}}_name[int32(curState)])
+				{{.WaitForState}}_CamelName[int32(targetState)],
+				{{.WaitForState}}_CamelName[int32(curState)])
 		}
 	}
 	cancel()

@@ -3,8 +3,8 @@ protoc:
   includes:
     - .
     - ../../../..
-    - ../../../gogo/protobuf/
-    - ../../../grpc-ecosystem/grpc-gateway/third_party/googleapis/
+    - ../link-gogo-protobuf/
+    - ../link-grpc-gateway/third_party/googleapis/
 lint:
   group: google
   ignores:
