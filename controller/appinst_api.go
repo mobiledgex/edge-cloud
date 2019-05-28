@@ -229,6 +229,10 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// indicates special default cloudlet maintained by the developer
 	var defaultCloudlet bool
 
+	if err := in.Key.AppKey.Validate(); err != nil {
+		return err
+	}
+
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
 		log.DebugLog(log.DebugLevelApi, "special default public cloud case", "appinst", in)
 		defaultCloudlet = true
@@ -236,11 +240,14 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
 		}
 	}
-	if in.Key.AppKey.DeveloperKey.Name == "" {
-		// we still allow this to deal with existing clusters, but eventually will be disallowed
-		log.DebugLog(log.DebugLevelApi, "Notice: empty appinst developer name is deprecated")
+	if in.Key.ClusterInstKey.Developer == "" {
+		// This is allowed for:
+		// 1) older clusters that were created before it was required
+		// 2) autoclusters
+		// We do ClusterInst lookup for both cases below.
 	} else if in.Key.AppKey.DeveloperKey.Name != cloudcommon.DeveloperMobiledgeX &&
 		in.Key.AppKey.DeveloperKey.Name != in.Key.ClusterInstKey.Developer {
+		// both are specified, make sure they match
 		return fmt.Errorf("Developer name mismatch between app: %s and cluster inst: %s", in.Key.AppKey.DeveloperKey.Name, in.Key.ClusterInstKey.Developer)
 	}
 	appDeploymentType := ""
@@ -284,13 +291,18 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 			appDeploymentType = app.Deployment
 			// Check if specified ClusterInst exists
 			if !strings.HasPrefix(cikey.ClusterKey.Name, ClusterAutoPrefix) && cloudcommon.IsClusterInstReqd(&app) {
-				if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
-					// developer may or may not be specified
+				found := clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+				if !found && in.Key.ClusterInstKey.Developer == "" {
+					// developer may not be specified
 					// in clusterinst.
 					in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
-					if !clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil) {
-						return errors.New("Specified ClusterInst not found")
+					found = clusterInstApi.store.STMGet(stm, &in.Key.ClusterInstKey, nil)
+					if found {
+						cb.Send(&edgeproto.Result{Message: "Setting ClusterInst developer to match App developer"})
 					}
+				}
+				if !found {
+					return errors.New("Specified ClusterInst not found")
 				}
 				// cluster inst exists so we're good.
 				return nil
@@ -343,7 +355,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		}
 		defer func() {
 			if reterr != nil && !cctx.Undo {
-				cb.Send(&edgeproto.Result{Message: "DELETING auto-ClusterInst due to failure"})
+				cb.Send(&edgeproto.Result{Message: "Deleting auto-ClusterInst due to failure"})
 				undoErr := clusterInstApi.deleteClusterInstInternal(cctx.WithUndo(), &clusterInst, cb)
 				if undoErr != nil {
 					log.DebugLog(log.DebugLevelApi,
@@ -557,7 +569,7 @@ func (s *AppInstApi) createAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		// XXX should probably track mod revision ID and only undo
 		// if no other changes were made to appInst in the meantime.
 		// crm failed or some other err, undo
-		cb.Send(&edgeproto.Result{Message: "DELETING AppInst due to failure"})
+		cb.Send(&edgeproto.Result{Message: "Deleting AppInst due to failure"})
 		undoErr := s.deleteAppInstInternal(cctx.WithUndo(), in, cb)
 		if undoErr != nil {
 			log.InfoLog("Undo create appinst", "undoErr", undoErr)
@@ -614,6 +626,15 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	clusterInstKey := edgeproto.ClusterInstKey{}
 	err := s.sync.ApplySTMWait(func(stm concurrency.STM) error {
 		if !s.store.STMGet(stm, &in.Key, in) {
+			if in.Key.ClusterInstKey.Developer == "" {
+				// create still allows it be unset on input,
+				// but will set it internally. But it is required
+				// on delete just in case another ClusterInst
+				// exists without it set. So be nice and
+				// remind them they may have forgotten to
+				// specify it.
+				cb.Send(&edgeproto.Result{Message: "ClusterInstKey developer not specified, may need to specify it"})
+			}
 			// already deleted
 			return objstore.ErrKVStoreKeyNotFound
 		}
@@ -695,7 +716,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	// delete clusterinst afterwards if it was auto-created and nobody is left using it
 	clusterInst := edgeproto.ClusterInst{}
 	if clusterInstApi.Get(&clusterInstKey, &clusterInst) && clusterInst.Auto && !appInstApi.UsesClusterInst(&clusterInstKey) {
-		cb.Send(&edgeproto.Result{Message: "DELETING auto-cluster inst"})
+		cb.Send(&edgeproto.Result{Message: "Deleting auto-cluster inst"})
 		autoerr := clusterInstApi.deleteClusterInstInternal(cctx, &clusterInst, cb)
 		if autoerr != nil {
 			log.InfoLog("Failed to delete auto cluster inst",
