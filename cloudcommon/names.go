@@ -91,6 +91,16 @@ func GetAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey, c
 	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
 }
 
+// GetVMAppFQDN gets the app-specific Fully Qualified Domain Name
+// for VM based apps
+func GetVMAppFQDN(key *edgeproto.AppInstKey, cloudletKey *edgeproto.CloudletKey) string {
+	lb := GetRootLBFQDN(cloudletKey)
+	app := util.DNSSanitize(key.AppKey.Name)
+	dev := util.DNSSanitize(key.AppKey.DeveloperKey.Name)
+	ver := util.DNSSanitize(key.AppKey.Version)
+	return fmt.Sprintf("%s%s%s.%s", dev, app, ver, lb)
+}
+
 func FqdnPrefix(svcName string) string {
 	return svcName + "."
 }
