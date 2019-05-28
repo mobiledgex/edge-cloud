@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	fmt "fmt"
 
-	"github.com/coreos/etcd/clientv3/concurrency"
 	distributed_match_engine "github.com/mobiledgex/edge-cloud/d-match-engine/dme-proto"
 	"github.com/mobiledgex/edge-cloud/log"
 	"github.com/mobiledgex/edge-cloud/objstore"
@@ -37,7 +36,7 @@ type AppInstV1_LintFixAppInstFields struct {
 // Below is an implementation of AddClusterInstKeyToAppInstKey
 // This upgrade modifies AppInstKey to include ClusterInstKey rather than CloudletKey+Id
 // This allows multiple instances of an app on the same cloudlet, but different cluster instances
-func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore, stm concurrency.STM) error {
+func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore) error {
 	// Below are the data-structures for the older version of AppInstKey and AppInst
 	type AppInstKeyV0_AddClusterInstKeyToAppInstKey struct {
 		AppKey      AppKey      `protobuf:"bytes,1,opt,name=app_key,json=appKey" json:"app_key"`
@@ -64,9 +63,6 @@ func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore, stm concurrency.ST
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		// this extra get is needed to put the key into the txn's read set
-		val = []byte(stm.Get(string(key)))
-
 		var appV0 AppInstV0_AddClusterInstKeyToAppInstKey
 		err2 := json.Unmarshal(val, &appV0)
 		if err2 != nil {
@@ -92,14 +88,14 @@ func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore, stm concurrency.ST
 		appV1.CrmOverride = appV0.CrmOverride
 		appV1.CreatedAt = appV0.CreatedAt
 		log.DebugLog(log.DebugLevelUpgrade, "Upgraded AppInstV1", "AppInstV1", appV1)
-		stm.Del(string(key))
-		keystr := objstore.DbKeyString("AppInst", &appV1.Key)
+		objStore.Delete(string(key))
+		newkey := objstore.DbKeyString("AppInst", &appV1.Key)
 		val, err2 = json.Marshal(appV1)
 		if err2 != nil {
-			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", appV1, "err", err2)
+			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", newkey, "obj", appV1, "err", err2)
 			return err2
 		}
-		stm.Put(keystr, string(val))
+		objStore.Put(newkey, string(val))
 		upgCount++
 		return nil
 	})
@@ -110,15 +106,12 @@ func AddClusterInstKeyToAppInstKey(objStore objstore.KVStore, stm concurrency.ST
 // Below is an implementation of LintFixAppInstFields
 // This upgrade modifies takes care of lint fix for AppPort JSON field
 // The change is in effect after marshalling AppV2
-func LintFixAppInstFields(objStore objstore.KVStore, stm concurrency.STM) error {
+func LintFixAppInstFields(objStore objstore.KVStore) error {
 	var upgCount uint
 	log.DebugLog(log.DebugLevelUpgrade, "LintFixAppInstFields - Fix lint issue on AppInst Fields")
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("AppInst"))
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		// this extra get is needed to put the key into the txn's read set
-		val = []byte(stm.Get(string(key)))
-
 		var appV1 AppInstV1_LintFixAppInstFields
 		err2 := json.Unmarshal(val, &appV1)
 		if err2 != nil {
@@ -154,7 +147,7 @@ func LintFixAppInstFields(objStore objstore.KVStore, stm concurrency.STM) error 
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", appV2, "err", err2)
 			return err2
 		}
-		stm.Put(string(key), string(val))
+		objStore.Put(string(key), string(val))
 		upgCount++
 		return nil
 	})
@@ -162,14 +155,11 @@ func LintFixAppInstFields(objStore objstore.KVStore, stm concurrency.STM) error 
 	return err
 }
 
-func AddClusterInstDeploymentField(objStore objstore.KVStore, stm concurrency.STM) error {
+func AddClusterInstDeploymentField(objStore objstore.KVStore) error {
 	var upgCount uint
 	log.DebugLog(log.DebugLevelUpgrade, "AddClusterInstDeploymentField - defaults to kubernetes")
 	keystr := fmt.Sprintf("%s/", objstore.DbKeyPrefixString("ClusterInst"))
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		// this extra get is needed to put the key into the txn's read set
-		val = []byte(stm.Get(string(key)))
-
 		dat := make(map[string]interface{})
 		err2 := json.Unmarshal(val, &dat)
 		if err2 != nil {
@@ -186,7 +176,7 @@ func AddClusterInstDeploymentField(objStore objstore.KVStore, stm concurrency.ST
 			log.DebugLog(log.DebugLevelUpgrade, "Failed to marshal obj", "key", key, "obj", dat, "err", err2)
 			return err2
 		}
-		stm.Put(string(key), string(val))
+		objStore.Put(string(key), string(val))
 		upgCount++
 		return nil
 	})

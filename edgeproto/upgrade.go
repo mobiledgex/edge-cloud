@@ -12,15 +12,13 @@ var testDataKeyPrefix = "_testdatakey"
 
 // Prototype for the upgrade function - takes an objectstore and stm to ensure
 // automicity of each upgrade function
-type VersionUpgradeFunc func(objstore.KVStore, concurrency.STM) error
+type VersionUpgradeFunc func(objstore.KVStore) error
 
 // Helper function to run a single upgrade function across all the elements of a KVStore
 // fn will be called for each of the entries, and therefore it's up to the
 // fn implementation to filter based on the prefix
 func RunSingleUpgrade(objStore objstore.KVStore, fn VersionUpgradeFunc) error {
-	_, err := objStore.ApplySTM(func(stm concurrency.STM) error {
-		return fn(objStore, stm)
-	})
+	err := fn(objStore)
 	if err != nil {
 		return fmt.Errorf("Could not upgrade objects store entries, err: %v\n", err)
 	}
@@ -67,16 +65,17 @@ func UpgradeToLatest(fromVersion string, objStore objstore.KVStore) error {
 		}
 		nextVer++
 	}
+	log.InfoLog("Upgrade done")
 	return nil
 }
 
-func TestUpgradeExample(objStore objstore.KVStore, stm concurrency.STM) error {
+func TestUpgradeExample(objStore objstore.KVStore) error {
 	log.DebugLog(log.DebugLevelUpgrade, "TestUpgradeExample - reverse keys and values")
 	// Define a prefix for a walk
 	keystr := fmt.Sprintf("%s/", testDataKeyPrefix)
 	err := objStore.List(keystr, func(key, val []byte, rev int64) error {
-		stm.Del(string(key))
-		stm.Put(string(val), string(key))
+		objStore.Delete(string(key))
+		objStore.Put(string(val), string(key))
 		return nil
 	})
 	return err
