@@ -607,7 +607,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 	log.DebugLog(log.DebugLevelApi, "deleteAppInstInternal", "appinst", in)
 
 	if in.Key.ClusterInstKey.CloudletKey == cloudcommon.DefaultCloudletKey {
-		log.DebugLog(log.DebugLevelApi, "special public cloud case", "appinst", in)
+		log.DebugLog(log.DebugLevelApi, "special default cloud case", "appinst", in)
 		defaultCloudlet = true
 		if in.Key.ClusterInstKey.Developer == "" {
 			in.Key.ClusterInstKey.Developer = in.Key.AppKey.DeveloperKey.Name
@@ -695,6 +695,7 @@ func (s *AppInstApi) deleteAppInstInternal(cctx *CallContext, in *edgeproto.AppI
 		return err
 	}
 	if ignoreCRM(cctx) || defaultCloudlet {
+		cb.Send(&edgeproto.Result{Message: "Deleted AppInst successfully"})
 		return nil
 	}
 	err = appInstApi.cache.WaitForState(cb.Context(), &in.Key, edgeproto.TrackedState_NOT_PRESENT, DeleteAppInstTransitions, edgeproto.TrackedState_DELETE_ERROR, DeleteAppInstTimeout, "Deleted AppInst successfully", cb.Send)
