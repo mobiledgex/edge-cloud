@@ -251,6 +251,43 @@ apps:
           ## https://github.com/coreos/prometheus-operator/issues/926
           ##
           https: true
+- key:
+    developerkey:
+      name: AcmeAppCo1
+    name: vmapp1
+    version: "1.0"
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img
+  imagetype: ImageTypeQcow
+  accessports: tcp:80,http:443,udp:10002
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SomeCluster
+  authpublickey: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0Spdynjh+MPcziCH2Gij
+    TkK9fspTH4onMtPTgxo+MQC+OZTwetvYFJjGV8jnYebtuvWWUCctYmt0SIPmA0F0
+    VU6qzSlrBOKZ9yA7Rj3jSQtNrI5vfBIzK1wPDm7zuy5hytzauFupyfboXf4qS4uC
+    GJCm9EOzUSCLRryyh7kTxa4cYHhhTTKNTTy06lc7YyxBsRsN/4jgxjjkxe3J0SfS
+    z3eaHmfFn/GNwIAqy1dddTJSPugRkK7ZjFR+9+sscY9u1+F5QPwxa8vTB0U6hh1m
+    QnhVd1d9osRwbyALfBY8R+gMgGgEBCPYpL3u5iSjgD6+n4d9RQS5zYRpeMJ1fX0C
+    /QIDAQAB
+    -----END PUBLIC KEY-----
+  deployment: vm
+- key:
+    developerkey:
+      name: AcmeAppCo1
+    name: vmapp2
+    version: "1.0"
+  imagepath: https://download.cirros-cloud.net/0.4.0/cirros-0.4.0-arm-disk.img
+  imagetype: ImageTypeQcow
+  accessports: tcp:80,http:443,udp:10002
+  defaultflavor:
+    name: x1.small
+  cluster:
+    name: SomeCluster
+  command: touch "/tmp/test.txt"
+  deployment: vm
 
 appinstances:
 - key:
@@ -436,3 +473,43 @@ appinstances:
   liveness: LivenessStatic
   flavor:
     name: x1.medium
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo1
+      name: vmapp1
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SomeCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-1
+      developer: AcmeAppCo1
+  cloudletloc:
+    latitude: 40
+    longitude: -99
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
+- key:
+    appkey:
+      developerkey:
+        name: AcmeAppCo1
+      name: vmapp2
+      version: "1.0"
+    clusterinstkey:
+      clusterkey:
+        name: SomeCluster
+      cloudletkey:
+        operatorkey:
+          name: tmus
+        name: tmus-cloud-2
+      developer: AcmeAppCo1
+  cloudletloc:
+    latitude: 35
+    longitude: -95
+  liveness: LivenessStatic
+  flavor:
+    name: x1.small
