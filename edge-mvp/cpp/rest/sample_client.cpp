@@ -98,7 +98,7 @@ class MexRestClient {
         regClientRequest["dev_name"] = devName;
         regClientRequest["app_vers"] = appVersionStr;
         regClientRequest["carrier_name"] = getCarrierName();
-        regClientRequest["AuthToken"] = ""; // Developer supplied user auth token.
+        regClientRequest["auth_token"] = ""; // Developer supplied user auth token.
 
         return regClientRequest;
     }
@@ -413,8 +413,8 @@ int main() {
             return 1;
         } else {
             cout << "REST RegisterClient Status: "
-                 << ", Version: " << registerClientReply["Ver"]
-                 << ", Client Status: " << registerClientReply["Status"]
+                 << " Version: " << registerClientReply["ver"]
+                 << ", Client Status: " << registerClientReply["status"]
                  << endl
                  << endl;
         }
@@ -457,11 +457,11 @@ int main() {
         }
         else {
             cout << "REST FindCloudlet Status: "
-                 << "Version: " << findCloudletReply["Ver"]
+                 << "Version: " << findCloudletReply["ver"]
                  << ", Location Found Status: " << findCloudletReply["status"]
                  << ", Location of Cloudlet, Longitude: " << findCloudletReply["cloudlet_location"]["longitude"]
                  << ", Latitude: " << findCloudletReply["cloudlet_location"]["latitude"]
-                 << ", Cloudlet FQDN: " << findCloudletReply["FQDN"]
+                 << ", Cloudlet FQDN: " << findCloudletReply["fqdn"]
                  << endl;
             json ports = findCloudletReply["ports"];
             size_t size = ports.size();
